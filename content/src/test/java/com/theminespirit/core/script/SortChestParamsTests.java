@@ -16,9 +16,13 @@ class SortChestParamsTests {
                 ContainerTarget.NEAREST,
                 params.container(),
                 "Контейнер nearest обязан разбираться в цель поиска ближайшего: иначе дух искал бы "
-                        + "контейнер с буквальным именем nearest");
+                        + "контейнер с буквальным именем nearest"
+                        + " При смене from_NearestContainer_ParsesTargetAndRadius проверь это утверждение.");
         assertEquals(
-                8, params.radius(), "Радиус 8 обязан сохраняться: по нему ограничивается поиск ближайшего контейнера");
+                8,
+                params.radius(),
+                "Радиус 8 обязан сохраняться: по нему ограничивается поиск ближайшего контейнера"
+                        + " Иначе тест from_NearestContainer_ParsesTargetAndRadius перестанет ловить эту поломку. При смене from_NearestContainer_ParsesTargetAndRadius проверь это утверждение.");
     }
 
     @Test
@@ -28,7 +32,8 @@ class SortChestParamsTests {
         assertEquals(
                 new ContainerTarget.Position(12, 64, -7),
                 params.container(),
-                "Координаты обязаны разбираться в точную позицию: иначе сортировка шла бы не в тот сундук");
+                "Координаты обязаны разбираться в точную позицию: иначе сортировка шла бы не в тот сундук"
+                        + " При смене from_CoordinatesTarget_ParsesPosition проверь это утверждение.");
     }
 
     @Test
@@ -36,11 +41,13 @@ class SortChestParamsTests {
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,
                 () -> SortChestParams.from(Map.of("container", "nearest", "radius", 17)),
-                "Радиус 17 при пределе 16 обязан отклоняться: иначе дух уходил бы из базовой зоны");
+                "Радиус 17 при пределе 16 обязан отклоняться: иначе дух уходил бы из базовой зоны"
+                        + " При смене from_RadiusBeyondLimits_Rejected проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("вне диапазона"),
                 "Радиус 17 при пределе 16 обязан отклоняться с объяснением диапазона, иначе дух уходил бы "
-                        + "из базовой зоны: " + error.getMessage());
+                        + "из базовой зоны: " + error.getMessage()
+                        + " При смене from_RadiusBeyondLimits_Rejected проверь это утверждение.");
     }
 }

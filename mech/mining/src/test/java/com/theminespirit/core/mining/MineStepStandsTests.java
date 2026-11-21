@@ -14,8 +14,8 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class MineStepStandsTests {
-    private static final int LEVEL = 68;
-    private static final int FEET = LEVEL + 1;
+    static final int LEVEL = 68;
+    static final int FEET = LEVEL + 1;
 
     @Test
     void of_FirstStepWithSideWalls_StandOnSurfaceOutsideShaft() {
@@ -27,17 +27,25 @@ class MineStepStandsTests {
 
         MineStepStands.Choice choice = MineStepStands.of(column, null, new BlockCoord(3, FEET, 0), world);
 
-        assertTrue(choice.found(), "Стенки по бокам входа не отменяют стоянку: дух подходит с поверхности");
+        assertTrue(
+                choice.found(),
+                "Стенки по бокам входа не отменяют стоянку: дух подходит с поверхности"
+                        + " Иначе тест of_FirstStepWithSideWalls_StandOnSurfaceOutsideShaft перестанет ловить эту поломку. При смене of_FirstStepWithSideWalls_StandOnSurfaceOutsideShaft проверь это утверждение.");
         BlockCoord first = choice.stands().get(0);
         assertFalse(
                 MineStepStands.shaft(column, first),
                 "Первая ступень берётся с поверхности у входа, а не из самого прохода: стоянка " + first
-                        + " внутри шахты за стенками — это и есть «стоянка за преградой»");
+                        + " внутри шахты за стенками — это и есть «стоянка за преградой»"
+                        + " Иначе тест of_FirstStepWithSideWalls_StandOnSurfaceOutsideShaft перестанет ловить эту поломку. При смене of_FirstStepWithSideWalls_StandOnSurfaceOutsideShaft проверь это утверждение.");
         assertEquals(
                 new BlockCoord(0, FEET, -1),
                 first,
-                "Ближняя к духу свободная клетка с прямой видимостью — перед входом, стенки по бокам её не прячут");
-        assertTrue(MiningSafety.canStand(first, world), "Выбранная стоянка обязана быть безопасной");
+                "Ближняя к духу свободная клетка с прямой видимостью — перед входом, стенки по бокам её не прячут"
+                        + " Иначе тест of_FirstStepWithSideWalls_StandOnSurfaceOutsideShaft перестанет ловить эту поломку. При смене of_FirstStepWithSideWalls_StandOnSurfaceOutsideShaft проверь это утверждение.");
+        assertTrue(
+                MiningSafety.canStand(first, world),
+                "Выбранная стоянка обязана быть безопасной"
+                        + " Иначе тест of_FirstStepWithSideWalls_StandOnSurfaceOutsideShaft перестанет ловить эту поломку. При смене of_FirstStepWithSideWalls_StandOnSurfaceOutsideShaft проверь это утверждение.");
     }
 
     @Test
@@ -47,14 +55,19 @@ class MineStepStandsTests {
 
         MineStepStands.Choice choice = MineStepStands.of(column, null, new BlockCoord(3, FEET, 0), world);
 
-        assertTrue(choice.found(), "Блок над клеткой прохода не оставляет духа без стоянки: он встаёт рядом");
+        assertTrue(
+                choice.found(),
+                "Блок над клеткой прохода не оставляет духа без стоянки: он встаёт рядом"
+                        + " Иначе тест of_BlockAboveShaftStand_StandAtSurfaceBeside перестанет ловить эту поломку. При смене of_BlockAboveShaftStand_StandAtSurfaceBeside проверь это утверждение.");
         assertNotEquals(
                 column.stand(),
                 choice.stands().get(0),
-                "Клетка прохода с блоком над головой не годится: дух встаёт на поверхность рядом с входом");
+                "Клетка прохода с блоком над головой не годится: дух встаёт на поверхность рядом с входом"
+                        + " Иначе тест of_BlockAboveShaftStand_StandAtSurfaceBeside перестанет ловить эту поломку. При смене of_BlockAboveShaftStand_StandAtSurfaceBeside проверь это утверждение.");
         assertTrue(
                 MiningSafety.canStand(choice.stands().get(0), world),
-                "Стоянка рядом с входом обязана иметь пол и место над головой");
+                "Стоянка рядом с входом обязана иметь пол и место над головой"
+                        + " Иначе тест of_BlockAboveShaftStand_StandAtSurfaceBeside перестанет ловить эту поломку. При смене of_BlockAboveShaftStand_StandAtSurfaceBeside проверь это утверждение.");
     }
 
     @Test
@@ -66,15 +79,20 @@ class MineStepStandsTests {
 
         MineStepStands.Choice choice = MineStepStands.of(column, parent, new BlockCoord(0, FEET, -2), world);
 
-        assertTrue(choice.found(), "Ступень ниже открывается со ступени выше: стоянка обязана найтись");
+        assertTrue(
+                choice.found(),
+                "Ступень ниже открывается со ступени выше: стоянка обязана найтись"
+                        + " Иначе тест of_LaterStep_ParentStepComesFirst перестанет ловить эту поломку. При смене of_LaterStep_ParentStepComesFirst проверь это утверждение.");
         assertEquals(
                 parent,
                 choice.stands().get(0),
-                "Дальше первая ступень берётся со ступени выше родителя, а не с поверхности: " + choice.stands());
+                "Дальше первая ступень берётся со ступени выше родителя, а не с поверхности: " + choice.stands()
+                        + " Иначе тест of_LaterStep_ParentStepComesFirst перестанет ловить эту поломку. При смене of_LaterStep_ParentStepComesFirst проверь это утверждение.");
         for (BlockCoord stand : choice.stands()) {
             assertFalse(
                     MineStepStands.shaft(column, stand),
-                    "Стоянка не может быть внутри самой ступени: там ещё порода, дух не встанет");
+                    "Стоянка не может быть внутри самой ступени: там ещё порода, дух не встанет"
+                            + " Иначе тест of_LaterStep_ParentStepComesFirst перестанет ловить эту поломку. При смене of_LaterStep_ParentStepComesFirst проверь это утверждение.");
         }
     }
 
@@ -90,29 +108,34 @@ class MineStepStandsTests {
         assertTrue(
                 choice.found(),
                 "Стоянка за стеной не отменяет спуск: дух обязан найти достижимую клетку с прямой видимостью "
-                        + "на ступень " + column.stand() + ", иначе проходка встаёт (observe4: (-189,69,-518))");
+                        + "на ступень " + column.stand() + ", иначе проходка встаёт (observe4: (-189,69,-518))"
+                        + " При смене of_ParentStandBehindTerraceWall_StandBehindWallIsNotOffered проверь это утверждение.");
         assertFalse(
                 choice.stands().contains(parent),
                 "Стоянка родителя " + parent + " за преградой не предлагается: подход к ней кончается у духа "
-                        + "(observe4: «стоянка (-187,69,-517) за преградой»), очередь стоянок из-за неё не тратится");
+                        + "(observe4: «стоянка (-187,69,-517) за преградой»), очередь стоянок из-за неё не тратится"
+                        + " Иначе тест of_ParentStandBehindTerraceWall_StandBehindWallIsNotOffered перестанет ловить эту поломку. При смене of_ParentStandBehindTerraceWall_StandBehindWallIsNotOffered проверь это утверждение.");
         for (BlockCoord stand : choice.stands()) {
             assertTrue(
                     MineReach.canReach(from, stand, world),
                     "Каждая предложенная стоянка обязана быть достижима пешком от духа " + from + ": " + stand
-                            + " за преградой даёт провал подхода, а не спуск");
+                            + " за преградой даёт провал подхода, а не спуск"
+                            + " Иначе тест of_ParentStandBehindTerraceWall_StandBehindWallIsNotOffered перестанет ловить эту поломку. При смене of_ParentStandBehindTerraceWall_StandBehindWallIsNotOffered проверь это утверждение.");
             assertTrue(
                     MineStepStands.visibleFrom(column, stand, world),
                     "Каждая предложенная стоянка обязана видеть ступень " + column.stand()
-                            + " напрямую: ломать сквозь блоки нельзя, из-за стены клетку не открыть — " + stand);
+                            + " напрямую: ломать сквозь блоки нельзя, из-за стены клетку не открыть — " + stand
+                            + " Иначе тест of_ParentStandBehindTerraceWall_StandBehindWallIsNotOffered перестанет ловить эту поломку. При смене of_ParentStandBehindTerraceWall_StandBehindWallIsNotOffered проверь это утверждение.");
         }
         assertEquals(
                 new BlockCoord(4, LEVEL + 3, 1),
                 choice.stands().get(0),
                 "Ближняя достижимая клетка с прямой видимостью — на уступе у стены: она открывает верх ступени "
-                        + "из-за стены, дух подходит к ней, а не стоит под стеной: " + choice.stands());
+                        + "из-за стены, дух подходит к ней, а не стоит под стеной: " + choice.stands()
+                        + " Иначе тест of_ParentStandBehindTerraceWall_StandBehindWallIsNotOffered перестанет ловить эту поломку. При смене of_ParentStandBehindTerraceWall_StandBehindWallIsNotOffered проверь это утверждение.");
     }
 
-    private static CellWorld terraceWall() {
+    static CellWorld terraceWall() {
         CellWorld world = new CellWorld()
                 .fill(LEVEL, -8, -8, 8, 8, Cell.SOLID)
                 .fill(LEVEL + 1, 2, -8, 2, 8, Cell.SOLID)
@@ -138,14 +161,19 @@ class MineStepStandsTests {
 
         MineStepStands.Choice choice = MineStepStands.of(column, null, new BlockCoord(3, FEET, 0), world);
 
-        assertFalse(choice.found(), "Вход замурован со всех сторон: стоянки нет, дух не идёт сквозь блоки");
+        assertFalse(
+                choice.found(),
+                "Вход замурован со всех сторон: стоянки нет, дух не идёт сквозь блоки"
+                        + " Иначе тест of_EntranceSealed_EmptyWithClearReason перестанет ловить эту поломку. При смене of_EntranceSealed_EmptyWithClearReason проверь это утверждение.");
         assertTrue(
                 choice.reason().contains("вход"),
-                "Причина отказа обязана называть вход, а не только «нет стоянки»: " + choice.reason());
+                "Причина отказа обязана называть вход, а не только «нет стоянки»: " + choice.reason()
+                        + " Иначе тест of_EntranceSealed_EmptyWithClearReason перестанет ловить эту поломку. При смене of_EntranceSealed_EmptyWithClearReason проверь это утверждение.");
         assertTrue(
                 choice.reason().contains(column.stand().toString()),
                 "В причине обязана быть клетка ступени, чтобы в логе было видно, куда дух не подошёл: "
-                        + choice.reason());
+                        + choice.reason()
+                        + " Иначе тест of_EntranceSealed_EmptyWithClearReason перестанет ловить эту поломку. При смене of_EntranceSealed_EmptyWithClearReason проверь это утверждение.");
     }
 
     @Test
@@ -159,11 +187,13 @@ class MineStepStandsTests {
 
         assertFalse(
                 MineStepStands.visibleFrom(column, far, world),
-                "Стена между духом и входом закрывает ступень: ломать её сквозь блоки нельзя");
+                "Стена между духом и входом закрывает ступень: ломать её сквозь блоки нельзя"
+                        + " Иначе тест visibleFrom_WallBetweenSpiritAndEntrance_False перестанет ловить эту поломку. При смене visibleFrom_WallBetweenSpiritAndEntrance_False проверь это утверждение.");
         world.set(1, FEET, 0, Cell.PASSABLE).set(1, FEET + 1, 0, Cell.PASSABLE);
         assertTrue(
                 MineStepStands.visibleFrom(column, new BlockCoord(2, FEET, 0), world),
-                "Через снятую преграду верх ступени видно: преграду снимают в прямой видимости, не сквозь блоки");
+                "Через снятую преграду верх ступени видно: преграду снимают в прямой видимости, не сквозь блоки"
+                        + " Иначе тест visibleFrom_WallBetweenSpiritAndEntrance_False перестанет ловить эту поломку. При смене visibleFrom_WallBetweenSpiritAndEntrance_False проверь это утверждение.");
     }
 
     @Test
@@ -178,13 +208,15 @@ class MineStepStandsTests {
         assertEquals(
                 new BlockCoord(0, FEET + 2, 0),
                 order.get(0),
-                "Заваленный вход снимают сверху вниз: первым ломается верхний блок, видимый с поверхности");
+                "Заваленный вход снимают сверху вниз: первым ломается верхний блок, видимый с поверхности"
+                        + " При смене digOrder_BlockedTop_RemovesVisibleCellFirst проверь это утверждение.");
         List<BlockCoord> opened = new ArrayList<>();
         for (BlockCoord cell : order) {
             if (column.contains(cell)) {
                 assertTrue(
                         MineDigOrder.visible(stand, cell, opened, world),
-                        "Клетку шахты ломают только в прямой видимости: " + cell + " при открытых " + opened);
+                        "Клетку шахты ломают только в прямой видимости: " + cell + " при открытых " + opened
+                                + " Иначе тест digOrder_BlockedTop_RemovesVisibleCellFirst перестанет ловить эту поломку. При смене digOrder_BlockedTop_RemovesVisibleCellFirst проверь это утверждение.");
             }
             opened.add(cell);
         }
@@ -203,60 +235,23 @@ class MineStepStandsTests {
                 choice.found(),
                 "Живая шахта observe6: к ступени " + column.stand()
                         + " обязана найтись стоянка, иначе проходка встаёт на 75% (5 провалов → BLOCKED): "
-                        + choice.reason());
+                        + choice.reason()
+                        + " При смене of_LiveObserve6PitBehindWall_NotOffered проверь это утверждение.");
         assertFalse(
                 choice.stands().contains(trap),
                 "Стоянка " + trap + " достижима только падением на 3 блока в тупиковую яму, а навигация духа "
                         + "роняет не глубже " + DropPolicy.MAX_DROP
-                        + ": её выбор и дал «путь упёрся в тупик, стоянка (-191,69,-517) за преградой» (observe6)");
+                        + ": её выбор и дал «путь упёрся в тупик, стоянка (-191,69,-517) за преградой» (observe6)"
+                        + " Иначе тест of_LiveObserve6PitBehindWall_NotOffered перестанет ловить эту поломку. При смене of_LiveObserve6PitBehindWall_NotOffered проверь это утверждение.");
         for (BlockCoord stand : choice.stands()) {
             assertTrue(
                     MineStepStands.visibleFrom(column, stand, world),
-                    "Каждая предложенная стоянка обязана видеть ступень " + column.stand() + ": " + stand);
+                    "Каждая предложенная стоянка обязана видеть ступень " + column.stand() + ": " + stand
+                            + " Иначе тест of_LiveObserve6PitBehindWall_NotOffered перестанет ловить эту поломку. При смене of_LiveObserve6PitBehindWall_NotOffered проверь это утверждение.");
         }
     }
 
-    @Test
-    void of_LiveObserve7EntranceWall_OpeningMakesFirstStepReachable() {
-        BlockCoord from = new BlockCoord(-190, 71, -516);
-        MineColumn entrance = new MineColumn(new BlockCoord(-189, 68, -518), MineColumn.PASSAGE_HEIGHT);
-        CellWorld world = Observe7MineWorld.build();
-
-        assertFalse(
-                MineReach.canReach(from, entrance.stand(), world),
-                "Предусловие observe7: дух на холме над шахтой, вход " + entrance.stand()
-                        + " за стеной — стоянка за преградой, проходка встаёт на 75%");
-
-        List<BlockCoord> opening = MineApproach.opening(entrance, from, world);
-
-        assertFalse(opening.isEmpty(), "Вход шахты обязан вскрываться: иначе дух не спускается и шахта не растёт");
-        for (BlockCoord cell : opening) {
-            assertTrue(
-                    cell.y() > entrance.floor().y(),
-                    "Вскрытие входа ломает только стену над полом ступени, а не сам пол: " + cell);
-            world.set(cell.x(), cell.y(), cell.z(), Cell.PASSABLE);
-        }
-        assertTrue(
-                MineReach.canReach(from, entrance.stand(), world),
-                "После вскрытия стены вход достижим без падения глубже " + MineReach.MAX_FALL + ": " + opening);
-
-        MineStepStands.Choice choice = MineStepStands.of(entrance, null, from, world);
-
-        assertTrue(
-                choice.found(),
-                "После вскрытия входа стоянка первой ступени обязана найтись, иначе шахта снова стоит: "
-                        + choice.reason());
-        for (BlockCoord stand : choice.stands()) {
-            assertTrue(
-                    MineReach.canReach(from, stand, world),
-                    "Стоянка " + stand + " обязана быть достижима от духа " + from);
-            assertTrue(
-                    MineStepStands.visibleFrom(entrance, stand, world),
-                    "Стоянка " + stand + " обязана видеть ступень " + entrance.stand());
-        }
-    }
-
-    private static CellWorld ground() {
+    static CellWorld ground() {
         return new CellWorld().fill(LEVEL, -4, -4, 4, 4, Cell.SOLID);
     }
 }

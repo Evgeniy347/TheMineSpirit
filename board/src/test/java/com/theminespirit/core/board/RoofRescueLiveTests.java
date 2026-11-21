@@ -44,8 +44,16 @@ class RoofRescueLiveTests {
                 .orElseThrow(() -> new AssertionError("spirit-3 стоял на крыше " + feet + " и не получал спасения: "
                         + live.get("stuck_ticks") + " тиков, home ниже " + home));
 
-        assertEquals(SelfEscape.Method.DESCEND, plan.method(), "с крыши нужен спуск, а не подъём");
-        assertEquals(home, plan.target(), "спуск ведёт к дому на земле");
+        assertEquals(
+                SelfEscape.Method.DESCEND,
+                plan.method(),
+                "с крыши нужен спуск, а не подъём"
+                        + " Иначе тест selfEscape_LiveRoofWithLowerHome_Descends перестанет ловить эту поломку. При смене selfEscape_LiveRoofWithLowerHome_Descends проверь это утверждение.");
+        assertEquals(
+                home,
+                plan.target(),
+                "спуск ведёт к дому на земле"
+                        + " Иначе тест selfEscape_LiveRoofWithLowerHome_Descends перестанет ловить эту поломку. При смене selfEscape_LiveRoofWithLowerHome_Descends проверь это утверждение.");
     }
 
     @Test
@@ -65,8 +73,12 @@ class RoofRescueLiveTests {
         assertEquals(
                 List.of("dig_out", "goto"),
                 calls.stream().map(ScriptCall::script).toList(),
-                "план спасения с крыши: сначала спуск, потом дорога к поселению");
-        assertTrue(plan instanceof SequenceNode, "спуск и дорога — последовательность, а не одиночный goto");
+                "план спасения с крыши: сначала спуск, потом дорога к поселению"
+                        + " Иначе тест rescuePlan_LiveRoof_DigsDownThenWalksHome перестанет ловить эту поломку. При смене rescuePlan_LiveRoof_DigsDownThenWalksHome проверь это утверждение.");
+        assertTrue(
+                plan instanceof SequenceNode,
+                "спуск и дорога — последовательность, а не одиночный goto"
+                        + " Иначе тест rescuePlan_LiveRoof_DigsDownThenWalksHome перестанет ловить эту поломку. При смене rescuePlan_LiveRoof_DigsDownThenWalksHome проверь это утверждение.");
     }
 
     private static void collect(TaskNode plan, List<ScriptCall> calls) {

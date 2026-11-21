@@ -14,17 +14,30 @@ class RoutePlanTests {
     void mark_PointThenPathThenRoute_KeepsOrder() {
         RoutePlan plan = RoutePlan.empty().mark(RouteResource.SAND, new BlockCoord(150, 70, 20));
 
-        assertFalse(plan.pathDone(RouteResource.SAND), "До тропы маршрут не готов: дух не дойдёт до места добычи");
-        assertFalse(plan.routeDone(RouteResource.SAND), "Без тропы точка добычи не ставится раньше времени");
+        assertFalse(
+                plan.pathDone(RouteResource.SAND),
+                "До тропы маршрут не готов: дух не дойдёт до места добычи"
+                        + " При смене mark_PointThenPathThenRoute_KeepsOrder проверь это утверждение.");
+        assertFalse(
+                plan.routeDone(RouteResource.SAND),
+                "Без тропы точка добычи не ставится раньше времени"
+                        + " Иначе тест mark_PointThenPathThenRoute_KeepsOrder перестанет ловить эту поломку. При смене mark_PointThenPathThenRoute_KeepsOrder проверь это утверждение.");
 
         plan = plan.pathBuilt(RouteResource.SAND);
-        assertTrue(plan.pathDone(RouteResource.SAND), "Тропа проложена — точка добычи становится следующей");
-        assertFalse(plan.routeDone(RouteResource.SAND), "Точка добычи ждёт своей очереди после тропы");
+        assertTrue(
+                plan.pathDone(RouteResource.SAND),
+                "Тропа проложена — точка добычи становится следующей"
+                        + " Иначе тест mark_PointThenPathThenRoute_KeepsOrder перестанет ловить эту поломку. При смене mark_PointThenPathThenRoute_KeepsOrder проверь это утверждение.");
+        assertFalse(
+                plan.routeDone(RouteResource.SAND),
+                "Точка добычи ждёт своей очереди после тропы"
+                        + " Иначе тест mark_PointThenPathThenRoute_KeepsOrder перестанет ловить эту поломку. При смене mark_PointThenPathThenRoute_KeepsOrder проверь это утверждение.");
 
         plan = plan.routeBuilt(RouteResource.SAND);
         assertTrue(
                 plan.pathDone(RouteResource.SAND) && plan.routeDone(RouteResource.SAND),
-                "Тропа и точка готовы — дальше идут задания пополнения");
+                "Тропа и точка готовы — дальше идут задания пополнения"
+                        + " Иначе тест mark_PointThenPathThenRoute_KeepsOrder перестанет ловить эту поломку. При смене mark_PointThenPathThenRoute_KeepsOrder проверь это утверждение.");
     }
 
     @Test
@@ -36,7 +49,8 @@ class RoutePlanTests {
         assertEquals(
                 plan,
                 plan.mark(RouteResource.SNOW, new BlockCoord(0, 64, 40)),
-                "Повторная постановка в ту же точку не сбрасывает проложенную тропу");
+                "Повторная постановка в ту же точку не сбрасывает проложенную тропу"
+                        + " Иначе тест mark_SamePoint_KeepsProgress перестанет ловить эту поломку. При смене mark_SamePoint_KeepsProgress проверь это утверждение.");
     }
 
     @Test
@@ -48,7 +62,10 @@ class RoutePlanTests {
         } catch (IllegalArgumentException expected) {
             rejected = true;
         }
-        assertTrue(rejected, "Готовая точка добычи без тропы — ложное состояние: порядок держит конструктор маркера");
+        assertTrue(
+                rejected,
+                "Готовая точка добычи без тропы — ложное состояние: порядок держит конструктор маркера"
+                        + " Иначе тест marker_RouteWithoutPath_Rejected перестанет ловить эту поломку. При смене marker_RouteWithoutPath_Rejected проверь это утверждение.");
     }
 
     @Test
@@ -58,9 +75,21 @@ class RoutePlanTests {
         RoutePlan plan = RoutePlan.empty().mark(site);
 
         RouteMarker marker = plan.marker(RouteResource.DIRT).orElseThrow();
-        assertEquals(120, marker.initialReserve(), "Запас места сохраняется: от него считается остаток %");
-        assertEquals(6, marker.radius(), "Радиус области сохраняется: оценка и копание одной формы");
-        assertEquals("minecraft:meadow", marker.biome(), "Биом места сохраняется для поиска и объяснения");
+        assertEquals(
+                120,
+                marker.initialReserve(),
+                "Запас места сохраняется: от него считается остаток %"
+                        + " Иначе тест mark_Site_StoresReserveAndBiome перестанет ловить эту поломку. При смене mark_Site_StoresReserveAndBiome проверь это утверждение.");
+        assertEquals(
+                6,
+                marker.radius(),
+                "Радиус области сохраняется: оценка и копание одной формы"
+                        + " Иначе тест mark_Site_StoresReserveAndBiome перестанет ловить эту поломку. При смене mark_Site_StoresReserveAndBiome проверь это утверждение.");
+        assertEquals(
+                "minecraft:meadow",
+                marker.biome(),
+                "Биом места сохраняется для поиска и объяснения"
+                        + " Иначе тест mark_Site_StoresReserveAndBiome перестанет ловить эту поломку. При смене mark_Site_StoresReserveAndBiome проверь это утверждение.");
     }
 
     @Test
@@ -68,7 +97,11 @@ class RoutePlanTests {
         QuarrySite site = new QuarrySite(RouteResource.SAND, new BlockCoord(0, 64, 40), 4, "minecraft:desert", 90);
         RoutePlan plan = RoutePlan.empty().mark(site).pathBuilt(RouteResource.SAND);
 
-        assertEquals(plan, plan.mark(site), "Повторная установка того же места не сбрасывает проложенную тропу");
+        assertEquals(
+                plan,
+                plan.mark(site),
+                "Повторная установка того же места не сбрасывает проложенную тропу"
+                        + " Иначе тест mark_SameSite_KeepsPathAndReserve перестанет ловить эту поломку. При смене mark_SameSite_KeepsPathAndReserve проверь это утверждение.");
     }
 
     @Test
@@ -79,8 +112,15 @@ class RoutePlanTests {
         RoutePlan moved =
                 plan.mark(new QuarrySite(RouteResource.SAND, new BlockCoord(200, 64, 0), 4, "minecraft:beach", 60));
 
-        assertFalse(moved.pathDone(RouteResource.SAND), "Новое место отменяет старую тропу: она ведёт не туда");
-        assertEquals(60, moved.marker(RouteResource.SAND).orElseThrow().initialReserve(), "Запас пересчитан");
+        assertFalse(
+                moved.pathDone(RouteResource.SAND),
+                "Новое место отменяет старую тропу: она ведёт не туда"
+                        + " Иначе тест mark_NewSite_ResetsPathAndKeepsNewReserve перестанет ловить эту поломку. При смене mark_NewSite_ResetsPathAndKeepsNewReserve проверь это утверждение.");
+        assertEquals(
+                60,
+                moved.marker(RouteResource.SAND).orElseThrow().initialReserve(),
+                "Запас пересчитан"
+                        + " Иначе тест mark_NewSite_ResetsPathAndKeepsNewReserve перестанет ловить эту поломку. При смене mark_NewSite_ResetsPathAndKeepsNewReserve проверь это утверждение.");
     }
 
     @Test
@@ -91,7 +131,13 @@ class RoutePlanTests {
 
         RoutePlan next = plan.unmark(RouteResource.DIRT);
 
-        assertTrue(next.point(RouteResource.DIRT).isEmpty(), "Снятое место больше не ведёт граф");
-        assertTrue(next.point(RouteResource.SAND).isPresent(), "Второе место снятие первого не трогает");
+        assertTrue(
+                next.point(RouteResource.DIRT).isEmpty(),
+                "Снятое место больше не ведёт граф"
+                        + " Иначе тест unmark_Site_RemovesMarkerOnly перестанет ловить эту поломку. При смене unmark_Site_RemovesMarkerOnly проверь это утверждение.");
+        assertTrue(
+                next.point(RouteResource.SAND).isPresent(),
+                "Второе место снятие первого не трогает"
+                        + " Иначе тест unmark_Site_RemovesMarkerOnly перестанет ловить эту поломку. При смене unmark_Site_RemovesMarkerOnly проверь это утверждение.");
     }
 }

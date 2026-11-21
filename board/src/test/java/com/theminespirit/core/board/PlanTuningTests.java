@@ -24,11 +24,13 @@ class PlanTuningTests {
                 5,
                 tuning.mineTunnelSize(),
                 "Поле plans.mineTunnelSize не прочитано: сечение ствола шахты снова берётся из Java-константы, "
-                        + "и правка данных не меняет план");
+                        + "и правка данных не меняет план"
+                        + " Иначе тест fromJson_AllFieldsPresent_ValuesRead перестанет ловить эту поломку. При смене fromJson_AllFieldsPresent_ValuesRead проверь это утверждение.");
         assertEquals(
                 16,
                 tuning.torchBatch(),
-                "Поле plans.torchBatch не прочитано: размер партии факелов останется в коде и разойдётся с данными");
+                "Поле plans.torchBatch не прочитано: размер партии факелов останется в коде и разойдётся с данными"
+                        + " Иначе тест fromJson_AllFieldsPresent_ValuesRead перестанет ловить эту поломку. При смене fromJson_AllFieldsPresent_ValuesRead проверь это утверждение.");
     }
 
     @Test
@@ -36,11 +38,13 @@ class PlanTuningTests {
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,
                 () -> PlanTuning.fromJson(JsonResource.parse(zeroTunnelJson(), "board.json"), "board.json"),
-                "Нулевое сечение ствола обязано быть ошибкой: пустой план поставит духа в тупик");
+                "Нулевое сечение ствола обязано быть ошибкой: пустой план поставит духа в тупик"
+                        + " Иначе тест fromJson_ZeroSize_Rejected перестанет ловить эту поломку. При смене fromJson_ZeroSize_Rejected проверь это утверждение.");
         assertEquals(
                 "Поле plans.mineTunnelSize = 0: размер плана обязан быть положительным, иначе задание пустое и дух встанет",
                 error.getMessage(),
-                "Сообщение об ошибке обязано назвать поле и цену: без этого правку данных не найти");
+                "Сообщение об ошибке обязано назвать поле и цену: без этого правку данных не найти"
+                        + " При смене fromJson_ZeroSize_Rejected проверь это утверждение.");
     }
 
     @Test
@@ -50,10 +54,12 @@ class PlanTuningTests {
                 () -> PlanTuning.fromJson(
                         JsonResource.parse(allFieldsJson().replace("}", ",\"mineTunnelSide\":5}"), "board.json"),
                         "board.json"),
-                "Опечатка в имени поля обязана быть ошибкой: иначе правка данных молча не применяется");
+                "Опечатка в имени поля обязана быть ошибкой: иначе правка данных молча не применяется"
+                        + " При смене fromJson_UnknownField_Rejected проверь это утверждение.");
         assertTrue(
                 error.getMessage().contains("mineTunnelSide"),
-                "Сообщение обязано назвать неизвестное поле: «" + error.getMessage() + "»");
+                "Сообщение обязано назвать неизвестное поле: «" + error.getMessage() + "»"
+                        + " Иначе тест fromJson_UnknownField_Rejected перестанет ловить эту поломку. При смене fromJson_UnknownField_Rejected проверь это утверждение.");
     }
 
     @Test
@@ -63,10 +69,12 @@ class PlanTuningTests {
                 () -> PlanTuning.fromJson(
                         JsonResource.parse(allFieldsJson().replace(",\"fenceParts\":4", ""), "board.json"),
                         "board.json"),
-                "Отсутствующее поле плана обязано быть ошибкой: иначе план молча собирается без числа");
+                "Отсутствующее поле плана обязано быть ошибкой: иначе план молча собирается без числа"
+                        + " При смене fromJson_MissingField_Rejected проверь это утверждение.");
         assertTrue(
                 error.getMessage().contains("plans.fenceParts"),
-                "Сообщение обязано назвать отсутствующее поле: «" + error.getMessage() + "»");
+                "Сообщение обязано назвать отсутствующее поле: «" + error.getMessage() + "»"
+                        + " Иначе тест fromJson_MissingField_Rejected перестанет ловить эту поломку. При смене fromJson_MissingField_Rejected проверь это утверждение.");
     }
 
     private static String zeroTunnelJson() {

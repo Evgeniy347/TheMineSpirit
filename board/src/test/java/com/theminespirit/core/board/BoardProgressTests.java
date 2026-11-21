@@ -37,17 +37,22 @@ class BoardProgressTests {
         Board board = new Board(() -> 10);
         finish(board, "repair:build_house");
 
-        assertTrue(board.reopen("repair:build_house"), "DONE-задание переоткрывается: ремонт снова ставит работу");
+        assertTrue(
+                board.reopen("repair:build_house"),
+                "DONE-задание переоткрывается: ремонт снова ставит работу"
+                        + " Иначе тест reopen_AfterDone_KeepsDoneTotalAndCountsReopenedSeparately перестанет ловить эту поломку. При смене reopen_AfterDone_KeepsDoneTotalAndCountsReopenedSeparately проверь это утверждение.");
 
         assertEquals(
                 1,
                 board.ledger().doneTotal(),
                 "Счётчик DONE не откатывается при REOPENED: иначе наблюдатель видит 1230→1229, хотя "
-                        + "работа не пропадала; REOPENED ведётся отдельно");
+                        + "работа не пропадала; REOPENED ведётся отдельно"
+                        + " При смене reopen_AfterDone_KeepsDoneTotalAndCountsReopenedSeparately проверь это утверждение.");
         assertEquals(
                 1,
                 board.ledger().reopenedTotal(),
-                "REOPENED учитывается своим счётчиком: по нему видно, сколько выполненного открыто заново");
+                "REOPENED учитывается своим счётчиком: по нему видно, сколько выполненного открыто заново"
+                        + " Иначе тест reopen_AfterDone_KeepsDoneTotalAndCountsReopenedSeparately перестанет ловить эту поломку. При смене reopen_AfterDone_KeepsDoneTotalAndCountsReopenedSeparately проверь это утверждение.");
     }
 
     @Test
@@ -69,13 +74,15 @@ class BoardProgressTests {
 
         assertTrue(
                 board.reopen(harvest.id()),
-                "Клетка сада снова с деревом возвращает выполненную рубку: иначе сад зарастает навсегда");
+                "Клетка сада снова с деревом возвращает выполненную рубку: иначе сад зарастает навсегда"
+                        + " При смене reopen_OrchardSpotGrownAgain_TakesSameId проверь это утверждение.");
         board.submit(harvest);
 
         assertEquals(
                 BoardStatus.PENDING,
                 board.statusOf(harvest.id()).orElse(null),
-                "Заявка на ту же клетку сада после переоткрытия снова в доске: id места постоянный");
+                "Заявка на ту же клетку сада после переоткрытия снова в доске: id места постоянный"
+                        + " Иначе тест reopen_OrchardSpotGrownAgain_TakesSameId перестанет ловить эту поломку. При смене reopen_OrchardSpotGrownAgain_TakesSameId проверь это утверждение.");
     }
 
     @Test
@@ -90,10 +97,12 @@ class BoardProgressTests {
                 2,
                 board.ledger().doneTotal(),
                 "Повторное выполнение после ремонта добавляет DONE: кумулятивный счётчик считает переходы, "
-                        + "а не текущие статусы, поэтому только растёт");
+                        + "а не текущие статусы, поэтому только растёт"
+                        + " Иначе тест complete_AfterReopen_GrowsDoneTotalAgain перестанет ловить эту поломку. При смене complete_AfterReopen_GrowsDoneTotalAgain проверь это утверждение.");
         assertEquals(
                 1,
                 board.ledger().reopenedTotal(),
-                "Повторное выполнение не трогает счётчик REOPENED: открытий было ровно одно");
+                "Повторное выполнение не трогает счётчик REOPENED: открытий было ровно одно"
+                        + " Иначе тест complete_AfterReopen_GrowsDoneTotalAgain перестанет ловить эту поломку. При смене complete_AfterReopen_GrowsDoneTotalAgain проверь это утверждение.");
     }
 }

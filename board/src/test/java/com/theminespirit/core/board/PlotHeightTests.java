@@ -22,7 +22,8 @@ class PlotHeightTests {
                 new PlotHeight(64, 36, 0, 25),
                 height,
                 "Холм 3×3 на 4 блока над ровным: высота — ровное место, срезка 36 без подсыпки; иначе участок "
-                        + "срезается ниже нужного и работа растёт");
+                        + "срезается ниже нужного и работа растёт"
+                        + " При смене choose_HillOnFlat_MedianKeptCutCoversNoFill проверь это утверждение.");
     }
 
     @Test
@@ -33,7 +34,8 @@ class PlotHeightTests {
                 new PlotHeight(63, 112, 27, 25),
                 height,
                 "Яма 3×3 на 4 блока: на медиане 64 земли со срезки нет — высота опускается на блок, срезка 112 "
-                        + "кормит подсыпку 27 с запасом; иначе дух копает землю за участком (INC-73)");
+                        + "кормит подсыпку 27 с запасом; иначе дух копает землю за участком (INC-73)"
+                        + " При смене choose_PitInFlat_LevelDropsUntilCutFeedsFill проверь это утверждение.");
     }
 
     @Test
@@ -42,19 +44,32 @@ class PlotHeightTests {
         assertEquals(
                 63,
                 height.level(),
-                "Склон 66/64/62: на медиане 64 срезка 110 равна подсыпке 110 без запаса — выбирается 63; " + height);
+                "Склон 66/64/62: на медиане 64 срезка 110 равна подсыпке 110 без запаса — выбирается 63; " + height
+                        + " Иначе тест choose_MixedSlope_MedianWithoutSurplusRejected перестанет ловить эту поломку. При смене choose_MixedSlope_MedianWithoutSurplusRejected проверь это утверждение.");
         assertTrue(
                 RULES.enough(height.cut(), height.fill()),
-                "Выбранная высота даёт срезку ≥ подсыпки × (1 + запас): " + height.describe());
+                "Выбранная высота даёт срезку ≥ подсыпки × (1 + запас): " + height.describe()
+                        + " Иначе тест choose_MixedSlope_MedianWithoutSurplusRejected перестанет ловить эту поломку. При смене choose_MixedSlope_MedianWithoutSurplusRejected проверь это утверждение.");
     }
 
     @Test
     void choose_WaterBelow_LevelStaysAbove() {
         PlotHeight height = PlotHeight.choose(square(CENTER, HALF), (x, z) -> 60, RULES, 67);
 
-        assertEquals(67, height.level(), "Уровень воды — жёсткая нижняя граница: поселение не опускают под воду");
-        assertEquals(0, height.cut(), "Над водой рельеф только поднимают, срезки нет");
-        assertTrue(height.fill() > 0, "Колонки ниже воды подсыпаются до сухого уровня: " + height.describe());
+        assertEquals(
+                67,
+                height.level(),
+                "Уровень воды — жёсткая нижняя граница: поселение не опускают под воду"
+                        + " Иначе тест choose_WaterBelow_LevelStaysAbove перестанет ловить эту поломку. При смене choose_WaterBelow_LevelStaysAbove проверь это утверждение.");
+        assertEquals(
+                0,
+                height.cut(),
+                "Над водой рельеф только поднимают, срезки нет"
+                        + " Иначе тест choose_WaterBelow_LevelStaysAbove перестанет ловить эту поломку. При смене choose_WaterBelow_LevelStaysAbove проверь это утверждение.");
+        assertTrue(
+                height.fill() > 0,
+                "Колонки ниже воды подсыпаются до сухого уровня: " + height.describe()
+                        + " Иначе тест choose_WaterBelow_LevelStaysAbove перестанет ловить эту поломку. При смене choose_WaterBelow_LevelStaysAbove проверь это утверждение.");
     }
 
     @Test
@@ -63,7 +78,8 @@ class PlotHeightTests {
                 "[plot] высота 63: срезка 176, подсыпка 55, запас 25%",
                 PlotHeight.choose(square(CENTER, HALF), SLOPE, RULES, 0).describe(),
                 "Строка [plot] в логе и журнале доски называет высоту, срезку, подсыпку и запас — по ней видно, "
-                        + "почему выбрана высота");
+                        + "почему выбрана высота"
+                        + " Иначе тест describe_Height_LineForLogAndJournal перестанет ловить эту поломку. При смене describe_Height_LineForLogAndJournal проверь это утверждение.");
     }
 
     private static ColumnMask square(BlockCoord center, int half) {

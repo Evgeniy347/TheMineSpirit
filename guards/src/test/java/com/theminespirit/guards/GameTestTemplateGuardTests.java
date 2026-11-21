@@ -30,7 +30,8 @@ class GameTestTemplateGuardTests {
                 "GameTest, который спавнит духа или ставит блоки, не должен использовать шаблон \"empty\" (3×3×3): "
                         + "сцена вылезает в соседний неактивный чанк, дух/блок не делает первого тика и тест флекает "
                         + "примерно 1 из 8. Такому тесту нужен шаблон \"arena\" (11×8×11), и вся сцена — внутри "
-                        + "площадки. Правило: docs/TESTING.md → «Два уровня». Нарушители");
+                        + "площадки. Правило: docs/TESTING.md → «Два уровня». Нарушители"
+                        + " При смене gameTestTemplate_SpiritSpawnOrBlockPlacementOnEmpty_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -48,7 +49,8 @@ class GameTestTemplateGuardTests {
         assertEquals(
                 List.of("spawn_SpiritType_Lives"),
                 offendersOf(sample),
-                "Сторож ослеп: спавн духа в шаблоне \"empty\" должен попадать в нарушители");
+                "Сторож ослеп: спавн духа в шаблоне \"empty\" должен попадать в нарушители"
+                        + " Иначе тест spawn_SpiritType_Lives перестанет ловить эту поломку. При смене spawn_SpiritType_Lives проверь это утверждение.");
     }
 
     @Test
@@ -66,7 +68,8 @@ class GameTestTemplateGuardTests {
         assertEquals(
                 List.of("floor_Stone_IsBuilt"),
                 offendersOf(sample),
-                "Сторож ослеп: постановка блока в шаблоне \"empty\" должна попадать в нарушители");
+                "Сторож ослеп: постановка блока в шаблоне \"empty\" должна попадать в нарушители"
+                        + " Иначе тест floor_Stone_IsBuilt перестанет ловить эту поломку. При смене floor_Stone_IsBuilt проверь это утверждение.");
     }
 
     @Test
@@ -84,7 +87,8 @@ class GameTestTemplateGuardTests {
         assertEquals(
                 List.of(),
                 offendersOf(sample),
-                "Сторож ложно срабатывает: шаблон \"arena\" со сценой внутри площадки — законное решение");
+                "Сторож ложно срабатывает: шаблон \"arena\" со сценой внутри площадки — законное решение"
+                        + " Иначе тест spawn_SpiritType_Lives перестанет ловить эту поломку. При смене spawn_SpiritType_Lives проверь это утверждение.");
     }
 
     @Test
@@ -102,7 +106,8 @@ class GameTestTemplateGuardTests {
         assertEquals(
                 List.of(),
                 offendersOf(sample),
-                "Сторож ложно срабатывает: \"empty\" без спавна и блоков безопасен — читать нечего");
+                "Сторож ложно срабатывает: \"empty\" без спавна и блоков безопасен — читать нечего"
+                        + " Иначе тест registry_EveryScript_IsDescribed перестанет ловить эту поломку. При смене registry_EveryScript_IsDescribed проверь это утверждение.");
     }
 
     private static void collectOffenders(Map<Path, String> sources, List<String> offenders) {

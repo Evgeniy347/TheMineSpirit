@@ -40,8 +40,16 @@ class OrchardReadinessTests {
 
     @Test
     void trace_OrchardWithSaplings_IsComplete() {
-        assertEquals(28, gap(standing(true)).total(), "сад считает 20 дорожек, 4 факела и 4 саженца");
-        assertEquals(0, gap(standing(true)).shortage(), "сад с посаженными саженцами готов на 100%");
+        assertEquals(
+                28,
+                gap(standing(true)).total(),
+                "сад считает 20 дорожек, 4 факела и 4 саженца"
+                        + " Иначе тест trace_OrchardWithSaplings_IsComplete перестанет ловить эту поломку. При смене trace_OrchardWithSaplings_IsComplete проверь это утверждение.");
+        assertEquals(
+                0,
+                gap(standing(true)).shortage(),
+                "сад с посаженными саженцами готов на 100%"
+                        + " Иначе тест trace_OrchardWithSaplings_IsComplete перестанет ловить эту поломку. При смене trace_OrchardWithSaplings_IsComplete проверь это утверждение.");
     }
 
     @Test
@@ -49,7 +57,8 @@ class OrchardReadinessTests {
         assertEquals(
                 0,
                 gap(standing(false)).shortage(),
-                "выросшие деревья того же вида заменяют саженцы: закрытие этапа не ждёт роста дерева");
+                "выросшие деревья того же вида заменяют саженцы: закрытие этапа не ждёт роста дерева"
+                        + " Иначе тест trace_OrchardWithGrownTrees_IsComplete перестанет ловить эту поломку. При смене trace_OrchardWithGrownTrees_IsComplete проверь это утверждение.");
     }
 
     @Test
@@ -58,11 +67,16 @@ class OrchardReadinessTests {
         empty.replaceAll((cell, block) -> block.endsWith("_sapling") ? "minecraft:air" : block);
         BuildGap.Gap gap = gap(empty);
 
-        assertEquals(4, gap.shortage(), "пустая клетка сада — недостроенный сад: нужен саженец");
+        assertEquals(
+                4,
+                gap.shortage(),
+                "пустая клетка сада — недостроенный сад: нужен саженец"
+                        + " Иначе тест trace_EmptyOrchardCells_NeedSaplings перестанет ловить эту поломку. При смене trace_EmptyOrchardCells_NeedSaplings проверь это утверждение.");
         assertEquals(
                 Map.of(SAPLING, 4),
                 gap.missingItems(),
-                "недостача сада называет саженцы: по ней ставится задача посадки");
+                "недостача сада называет саженцы: по ней ставится задача посадки"
+                        + " Иначе тест trace_EmptyOrchardCells_NeedSaplings перестанет ловить эту поломку. При смене trace_EmptyOrchardCells_NeedSaplings проверь это утверждение.");
     }
 
     private static BuildGap.Gap gap(Map<BlockCoord, String> world) {

@@ -20,7 +20,11 @@ class MineDetourTests {
         List<MineColumn> detour =
                 MineDetour.around(PARENT, BLOCKED, FORWARD, cell -> false).orElseThrow();
 
-        assertEquals(3, detour.size(), "обход ступени — три колонки сбоку: у родителя, у руды и у следующей");
+        assertEquals(
+                3,
+                detour.size(),
+                "обход ступени — три колонки сбоку: у родителя, у руды и у следующей"
+                        + " Иначе тест around_DescentStepWithOre_SideColumnsKeepStepHeights перестанет ловить эту поломку. При смене around_DescentStepWithOre_SideColumnsKeepStepHeights проверь это утверждение.");
         List<MineColumn> path = new ArrayList<>();
         path.add(PARENT);
         path.addAll(detour);
@@ -30,11 +34,13 @@ class MineDetourTests {
                     path.get(i - 1).walksTo(path.get(i)),
                     "путь родитель → обход → следующая обязан идти пешком (шаг ≤ 1 блока, соседние клетки), "
                             + "иначе дух застрянет и не выйдет наверх; разрыв между " + path.get(i - 1) + " и "
-                            + path.get(i));
+                            + path.get(i)
+                            + " При смене around_DescentStepWithOre_SideColumnsKeepStepHeights проверь это утверждение.");
         }
         assertTrue(
                 detour.stream().noneMatch(column -> column.contains(new BlockCoord(1, 1, 0))),
-                "обход не вскрывает клетки оставленной колонки — руда остаётся на месте");
+                "обход не вскрывает клетки оставленной колонки — руда остаётся на месте"
+                        + " Иначе тест around_DescentStepWithOre_SideColumnsKeepStepHeights перестанет ловить эту поломку. При смене around_DescentStepWithOre_SideColumnsKeepStepHeights проверь это утверждение.");
     }
 
     @Test
@@ -46,7 +52,8 @@ class MineDetourTests {
 
         assertTrue(
                 detour.stream().allMatch(column -> column.floor().z() == 1),
-                "справа снова руда на удачу — обход идёт слева; фактически " + detour);
+                "справа снова руда на удачу — обход идёт слева; фактически " + detour
+                        + " Иначе тест around_RightSideHasLuckOre_UsesLeftSide перестанет ловить эту поломку. При смене around_RightSideHasLuckOre_UsesLeftSide проверь это утверждение.");
     }
 
     @Test
@@ -56,7 +63,8 @@ class MineDetourTests {
         assertEquals(
                 Optional.empty(),
                 MineDetour.around(PARENT, BLOCKED, FORWARD, ores::contains),
-                "руда с обеих сторон — обхода нет, стройка называет причину, а не копает в руду");
+                "руда с обеих сторон — обхода нет, стройка называет причину, а не копает в руду"
+                        + " Иначе тест around_BothSidesBlocked_ReturnsEmpty перестанет ловить эту поломку. При смене around_BothSidesBlocked_ReturnsEmpty проверь это утверждение.");
     }
 
     @Test
@@ -67,6 +75,7 @@ class MineDetourTests {
         assertEquals(
                 2,
                 detour.size(),
-                "у последней колонки нет следующей — обход доходит только до её уровня; фактически " + detour);
+                "у последней колонки нет следующей — обход доходит только до её уровня; фактически " + detour
+                        + " Иначе тест around_LastColumn_TwoColumnsOnly перестанет ловить эту поломку. При смене around_LastColumn_TwoColumnsOnly проверь это утверждение.");
     }
 }

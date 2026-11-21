@@ -35,7 +35,8 @@ class CatalogDefaultGuardTests {
                         + "Цена: /v1/capabilities и ИИ не видят умолчания, валидатор его не подставляет, а два места "
                         + "решают одно и то же по-разному. Как надо: умолчание — в ParamSpec (перегрузка с defaultValue), "
                         + "*Params.from требует значение (requireString/requireInt). Исключение — только в "
-                        + "OPTIONAL_WITHOUT_DEFAULT с причиной; список только сокращается. Нарушители (скрипт.параметр)");
+                        + "OPTIONAL_WITHOUT_DEFAULT с причиной; список только сокращается. Нарушители (скрипт.параметр)"
+                        + " При смене defaultCatalog_OptionalParams_DeclareDefaultInCatalog проверь это утверждение.");
     }
 
     @Test
@@ -54,7 +55,8 @@ class CatalogDefaultGuardTests {
                 List.of("sample.kind"),
                 optionalWithoutDefault(List.of(sample)),
                 "Сторож ослеп или ложно срабатывает: ловится только необязательный параметр без умолчания, "
-                        + "параметр с умолчанием и обязательный параметр — не нарушение");
+                        + "параметр с умолчанием и обязательный параметр — не нарушение"
+                        + " Иначе тест optionalWithoutDefault_OptionalParamWithoutDefault_IsReported перестанет ловить эту поломку. При смене optionalWithoutDefault_OptionalParamWithoutDefault_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -66,7 +68,8 @@ class CatalogDefaultGuardTests {
                 List.of(),
                 stale,
                 "Запись исключения больше не нарушает правило (умолчание появилось или параметр удалён): "
-                        + "вычеркни её из OPTIONAL_WITHOUT_DEFAULT — список только сокращается");
+                        + "вычеркни её из OPTIONAL_WITHOUT_DEFAULT — список только сокращается"
+                        + " Иначе тест optionalWithoutDefault_AllowListedEntries_ExistInCatalog перестанет ловить эту поломку. При смене optionalWithoutDefault_AllowListedEntries_ExistInCatalog проверь это утверждение.");
     }
 
     private static List<String> optionalWithoutDefault(List<ScriptSpec> scripts) {

@@ -30,8 +30,13 @@ class SettlementTemporaryTraceTests {
                 1,
                 found.strays().size(),
                 "Земля, поставленная духом вне плана, — след перемещения и убирается, хотя природная земля "
-                        + "обычно не лишняя");
-        assertEquals("minecraft:dirt", found.strays().get(0).blockId(), "Тип лишнего называет блок");
+                        + "обычно не лишняя"
+                        + " Иначе тест scan_SpiritPlacedDirt_IsStrayEvenThoughDirtIsNatural перестанет ловить эту поломку. При смене scan_SpiritPlacedDirt_IsStrayEvenThoughDirtIsNatural проверь это утверждение.");
+        assertEquals(
+                "minecraft:dirt",
+                found.strays().get(0).blockId(),
+                "Тип лишнего называет блок"
+                        + " Иначе тест scan_SpiritPlacedDirt_IsStrayEvenThoughDirtIsNatural перестанет ловить эту поломку. При смене scan_SpiritPlacedDirt_IsStrayEvenThoughDirtIsNatural проверь это утверждение.");
     }
 
     @Test
@@ -46,7 +51,8 @@ class SettlementTemporaryTraceTests {
                 List.of(new BlockCoord(2, LEVEL + 8, 2)),
                 found.pillars(),
                 "Мост или столб духа на высоте 8 над лотом — дефект зоны поселения, а не рядовое лишнее: "
-                        + "скан обязан видеть его, а не обрываться на четырёх блоках над землёй");
+                        + "скан обязан видеть его, а не обрываться на четырёх блоках над землёй"
+                        + " Иначе тест scan_HighBridgeBlock_IsPillarDefect перестанет ловить эту поломку. При смене scan_HighBridgeBlock_IsPillarDefect проверь это утверждение.");
     }
 
     private static BlockProtection rules() {

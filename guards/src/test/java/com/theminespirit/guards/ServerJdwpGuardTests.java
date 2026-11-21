@@ -21,15 +21,18 @@ class ServerJdwpGuardTests {
                 jvm.contains("-agentlib:jdwp"),
                 "Основной сервер не держит JDWP на *:5005 всегда: отладочный порт в локальной сети открыт "
                         + "постоянно и подозревался в зависании консоли (debtmisc7). Как надо: без строки jdwp "
-                        + "в user_jvm_args.txt, включать переменной окружения");
+                        + "в user_jvm_args.txt, включать переменной окружения"
+                        + " Иначе тест serverJdwp_OffByDefault_EnabledByEnvironment перестанет ловить эту поломку. При смене serverJdwp_OffByDefault_EnabledByEnvironment проверь это утверждение.");
         String run = read(RUN);
         assertTrue(
                 run.contains("MINESPIRIT_JDWP_PORT") && run.contains("agentlib:jdwp"),
                 "run.sh обязан включать JDWP только по MINESPIRIT_JDWP_PORT: иначе вернуть отладку можно "
-                        + "лишь ручной правкой user_jvm_args.txt, которую publish.sh перезапишет");
+                        + "лишь ручной правкой user_jvm_args.txt, которую publish.sh перезапишет"
+                        + " При смене serverJdwp_OffByDefault_EnabledByEnvironment проверь это утверждение.");
         assertTrue(
                 run.contains("127.0.0.1:"),
-                "JDWP основного сервера слушает 127.0.0.1, а не *: отладочный порт не выставляется в сеть");
+                "JDWP основного сервера слушает 127.0.0.1, а не *: отладочный порт не выставляется в сеть"
+                        + " Иначе тест serverJdwp_OffByDefault_EnabledByEnvironment перестанет ловить эту поломку. При смене serverJdwp_OffByDefault_EnabledByEnvironment проверь это утверждение.");
     }
 
     private static String read(Path path) {

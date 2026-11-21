@@ -19,7 +19,8 @@ class ToolTierScenarioTests {
         assertTrue(
                 stone > wooden && stone > iron,
                 "Топоры в пределах набора этапа: каменный раньше деревянного; железный выше набора — удача, а не "
-                        + "план, и не обгоняет каменный: " + iron + ", " + stone + ", " + wooden + ". " + ORDER_HINT);
+                        + "план, и не обгоняет каменный: " + iron + ", " + stone + ", " + wooden + ". " + ORDER_HINT
+                        + " Иначе тест axes_LogLacking_StoneAheadOfWoodenAndAboveKitIron перестанет ловить эту поломку. При смене axes_LogLacking_StoneAheadOfWoodenAndAboveKitIron проверь это утверждение.");
     }
 
     @Test
@@ -37,7 +38,8 @@ class ToolTierScenarioTests {
             assertTrue(
                     iron.priority(ironTool) > iron.priority(stoneTool),
                     kind + ": железо на складе — переход на железный инструмент, он раньше каменного ("
-                            + iron.priority(ironTool) + "/" + iron.priority(stoneTool) + "). " + ORDER_HINT);
+                            + iron.priority(ironTool) + "/" + iron.priority(stoneTool) + "). " + ORDER_HINT
+                            + " Иначе тест everyKind_IronInStock_IronOvertakesStone перестанет ловить эту поломку. При смене everyKind_IronInStock_IronOvertakesStone проверь это утверждение.");
         }
     }
 
@@ -57,7 +59,8 @@ class ToolTierScenarioTests {
             assertTrue(
                     rich.priority(diamondTool) > rich.priority(ironTool),
                     kind + ": алмазы и железо на складе — переход на лучший инструмент, алмазный раньше железного ("
-                            + rich.priority(diamondTool) + "/" + rich.priority(ironTool) + "). " + ORDER_HINT);
+                            + rich.priority(diamondTool) + "/" + rich.priority(ironTool) + "). " + ORDER_HINT
+                            + " Иначе тест everyKind_DiamondsInStock_DiamondOvertakesIron перестанет ловить эту поломку. При смене everyKind_DiamondsInStock_DiamondOvertakesIron проверь это утверждение.");
         }
     }
 }

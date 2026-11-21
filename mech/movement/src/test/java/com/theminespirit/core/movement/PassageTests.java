@@ -23,12 +23,17 @@ class PassageTests {
             assertFalse(
                     closed.passable(),
                     "Закрытая " + kind + " не проходима: дух обязан сначала открыть створку, иначе упрётся и "
-                            + "телепортируется сквозь неё");
-            assertTrue(open.passable(), "Открытая " + kind + " проходима: створка не мешает шагу");
+                            + "телепортируется сквозь неё"
+                            + " При смене passable_ClosedAndOpenDoorAndGate_ClosedBlocksOpenLetsThrough проверь это утверждение.");
+            assertTrue(
+                    open.passable(),
+                    "Открытая " + kind + " проходима: створка не мешает шагу"
+                            + " Иначе тест passable_ClosedAndOpenDoorAndGate_ClosedBlocksOpenLetsThrough перестанет ловить эту поломку. При смене passable_ClosedAndOpenDoorAndGate_ClosedBlocksOpenLetsThrough проверь это утверждение.");
             assertTrue(
                     closed.routePassable(),
                     "Закрытая " + kind + " — законный проход для планирования: дух подойдёт и откроет её, а не обойдёт "
-                            + "стену телепортом");
+                            + "стену телепортом"
+                            + " Иначе тест passable_ClosedAndOpenDoorAndGate_ClosedBlocksOpenLetsThrough перестанет ловить эту поломку. При смене passable_ClosedAndOpenDoorAndGate_ClosedBlocksOpenLetsThrough проверь это утверждение.");
         }
     }
 
@@ -59,7 +64,8 @@ class PassageTests {
                         Passage.Step.DONE),
                 steps,
                 "План закрытой калитки: подойти, открыть, пройти, закрыть за собой; иначе калитка остаётся открытой "
-                        + "или дух телепортируется вместо прохода");
+                        + "или дух телепортируется вместо прохода"
+                        + " При смене next_ClosedGate_ApproachOpenPassCloseDone проверь это утверждение.");
     }
 
     @Test
@@ -74,6 +80,7 @@ class PassageTests {
                 Optional.of(gate),
                 pick,
                 "Калитка в ограде — ближайший законный проход к цели: выбирается она, а не перенос сквозь забор; "
-                        + "дверь позади и уже открытая калитка не годятся");
+                        + "дверь позади и уже открытая калитка не годятся"
+                        + " Иначе тест towardTarget_ClosedGateInFence_ChosenInsteadOfTeleport перестанет ловить эту поломку. При смене towardTarget_ClosedGateInFence_ChosenInsteadOfTeleport проверь это утверждение.");
     }
 }

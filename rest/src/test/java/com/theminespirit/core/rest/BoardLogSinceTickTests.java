@@ -41,8 +41,13 @@ class BoardLogSinceTickTests {
                 Set.of("middle", "new"),
                 ids,
                 "sinceTick отдаёт только записи новее названного тика: наблюдатель продолжает журнал без "
-                        + "повторов и потерь: " + response.body());
-        assertEquals(30L, body.get("sinceTick").asLong(), "Ответ называет последний тик порции: с него читают дальше");
+                        + "повторов и потерь: " + response.body()
+                        + " Иначе тест get_LogSinceTick_ReturnsOnlyNewerEntriesAndEchoesNextTick перестанет ловить эту поломку. При смене get_LogSinceTick_ReturnsOnlyNewerEntriesAndEchoesNextTick проверь это утверждение.");
+        assertEquals(
+                30L,
+                body.get("sinceTick").asLong(),
+                "Ответ называет последний тик порции: с него читают дальше"
+                        + " Иначе тест get_LogSinceTick_ReturnsOnlyNewerEntriesAndEchoesNextTick перестанет ловить эту поломку. При смене get_LogSinceTick_ReturnsOnlyNewerEntriesAndEchoesNextTick проверь это утверждение.");
     }
 
     @Test
@@ -50,7 +55,11 @@ class BoardLogSinceTickTests {
         RestResponse response = router.handle(new RestRequest(
                 "GET", "/v1/board/log", Map.of("sinceTick", "-1"), Map.of(), "".getBytes(StandardCharsets.UTF_8)));
 
-        assertEquals(400, response.status(), "Отрицательный sinceTick — ошибка запроса: " + response.body());
+        assertEquals(
+                400,
+                response.status(),
+                "Отрицательный sinceTick — ошибка запроса: " + response.body()
+                        + " Иначе тест get_LogSinceTickNegative_Returns400NamingField перестанет ловить эту поломку. При смене get_LogSinceTickNegative_Returns400NamingField проверь это утверждение.");
     }
 
     private static BoardLogEntry entry(String id, long tick) {

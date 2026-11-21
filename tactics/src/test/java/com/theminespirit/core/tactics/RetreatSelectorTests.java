@@ -152,7 +152,8 @@ class RetreatSelectorTests {
                 List.of(method, entry),
                 List.of(choice.method(), choice.rule().orElse("")),
                 "Ситуация «" + name + "»: способ отхода выбирается по условиям requires и наибольшей полезности; "
-                        + "ошибка здесь отправила бы духа туда, где враг его достанет");
+                        + "ошибка здесь отправила бы духа туда, где враг его достанет"
+                        + " Иначе тест evaluate_EnemyAndAvailableWays_ChoosesExpectedMethod перестанет ловить эту поломку. При смене evaluate_EnemyAndAvailableWays_ChoosesExpectedMethod проверь это утверждение.");
     }
 
     @Test
@@ -173,7 +174,8 @@ class RetreatSelectorTests {
                 RetreatMethod.COVER,
                 choice.method(),
                 "При равной полезности (укрытие 0.7 и обстрел 0.7) выигрывает способ раньше в порядке HOME, COVER, KITE: "
-                        + "иначе выбор зависел бы от порядка строк в файле");
+                        + "иначе выбор зависел бы от порядка строк в файле"
+                        + " При смене choice_EqualUtility_FollowsMethodOrderHomeCoverKite проверь это утверждение.");
     }
 
     @Test
@@ -190,7 +192,8 @@ class RetreatSelectorTests {
         assertEquals(
                 4,
                 options.routes(),
-                "Водоём и ведро — один способ WATER: доступность отхода считается по способам (дом, укрытие, вода, бег прочь), а не по строкам");
+                "Водоём и ведро — один способ WATER: доступность отхода считается по способам (дом, укрытие, вода, бег прочь), а не по строкам"
+                        + " Иначе тест routes_SeveralWaysOfSameMethod_CountsMethodOnce перестанет ловить эту поломку. При смене routes_SeveralWaysOfSameMethod_CountsMethodOnce проверь это утверждение.");
     }
 
     @Test
@@ -202,7 +205,8 @@ class RetreatSelectorTests {
         assertEquals(
                 0,
                 options.routes(),
-                "Без способов отхода routes = 0: жёсткое правило «отступать некуда» опирается на это число");
+                "Без способов отхода routes = 0: жёсткое правило «отступать некуда» опирается на это число"
+                        + " Иначе тест routes_NothingApplies_IsZero перестанет ловить эту поломку. При смене routes_NothingApplies_IsZero проверь это утверждение.");
     }
 
     @Test
@@ -217,7 +221,8 @@ class RetreatSelectorTests {
                 RetreatMethod.RALLY,
                 choice.method(),
                 "При доступном сборе дух идёт к союзнику, а не в дом с большей полезностью: зов сильнее укрытия, "
-                        + "иначе товарищ остаётся без помощи");
+                        + "иначе товарищ остаётся без помощи"
+                        + " При смене choice_RallyAvailable_ChosenEvenWhenAnotherRouteHasHigherUtility проверь это утверждение.");
     }
 
     @Test
@@ -231,6 +236,7 @@ class RetreatSelectorTests {
                 List.of(
                         selector.callHelp(Assessments.facts(withHelp)),
                         selector.callHelp(Assessments.facts(withoutHelp))),
-                "Зов на помощь добавляется к любому способу отхода, даже к NONE, когда помощь доступна");
+                "Зов на помощь добавляется к любому способу отхода, даже к NONE, когда помощь доступна"
+                        + " Иначе тест callHelp_HelpAvailable_IsAddedRegardlessOfMethod перестанет ловить эту поломку. При смене callHelp_HelpAvailable_IsAddedRegardlessOfMethod проверь это утверждение.");
     }
 }

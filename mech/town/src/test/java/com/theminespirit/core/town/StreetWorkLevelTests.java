@@ -12,7 +12,8 @@ class StreetWorkLevelTests {
                 3,
                 StreetWork.level(3),
                 "Уровень плиток улиц берётся из stages.json и доходит до механики поселения числом: "
-                        + "поселению незачем знать правила доски");
+                        + "поселению незачем знать правила доски"
+                        + " Иначе тест level_StageLevelFromRules_IsReturned перестанет ловить эту поломку. При смене level_StageLevelFromRules_IsReturned проверь это утверждение.");
     }
 
     @Test
@@ -20,6 +21,7 @@ class StreetWorkLevelTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> StreetWork.level(0),
-                "Нулевой уровень BUILD_STREETS: улицу не из чего класть, молчаливая плитка скрыла бы ошибку данных");
+                "Нулевой уровень BUILD_STREETS: улицу не из чего класть, молчаливая плитка скрыла бы ошибку данных"
+                        + " Иначе тест level_StageWithoutStreets_IsRejected перестанет ловить эту поломку. При смене level_StageWithoutStreets_IsRejected проверь это утверждение.");
     }
 }

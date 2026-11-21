@@ -37,7 +37,8 @@ class HangVerdictTests {
                 verdict,
                 "Сторож зависания обязан различать живой тик, зависание, паузу отладки и отсутствие данных "
                         + "о тике: " + condition + ". Иначе он либо перезапустит сервер на брейкпоинте, либо "
-                        + "пропустит настоящее зависание");
+                        + "пропустит настоящее зависание"
+                        + " При смене decide_TableCase_ReturnsExpectedVerdict проверь это утверждение.");
     }
 
     @Test
@@ -45,12 +46,14 @@ class HangVerdictTests {
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,
                 () -> HangVerdict.decide(NOW, NOW - 1, 0, false),
-                "Нулевой порог сделал бы любой простой зависанием и вызвал перезапуск живого сервера");
+                "Нулевой порог сделал бы любой простой зависанием и вызвал перезапуск живого сервера"
+                        + " Иначе тест decide_ZeroThreshold_IsRejected перестанет ловить эту поломку. При смене decide_ZeroThreshold_IsRejected проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("больше нуля"),
                 "Сообщение об ошибке обязано объяснять, что порог зависания должен быть больше нуля: "
-                        + error.getMessage());
+                        + error.getMessage()
+                        + " Иначе тест decide_ZeroThreshold_IsRejected перестанет ловить эту поломку. При смене decide_ZeroThreshold_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -61,7 +64,8 @@ class HangVerdictTests {
                 -1L,
                 snapshot.ageMillis(),
                 "Без первого тика возраст неизвестен: -1 отличает «ещё не тикал» от «тикал давно», иначе "
-                        + "сторож примет старт сервера за зависание");
+                        + "сторож примет старт сервера за зависание"
+                        + " При смене ageMillis_NoTickYet_ReturnsMinusOne проверь это утверждение.");
     }
 
     @Test
@@ -72,7 +76,8 @@ class HangVerdictTests {
                 0L,
                 snapshot.ageMillis(),
                 "Возраст тика не бывает отрицательным: после перевода часов назад сторож не должен видеть "
-                        + "бессмысленное число и принимать его за зависание");
+                        + "бессмысленное число и принимать его за зависание"
+                        + " Иначе тест ageMillis_ClockWentBackwards_ReturnsZero перестанет ловить эту поломку. При смене ageMillis_ClockWentBackwards_ReturnsZero проверь это утверждение.");
     }
 
     @Test
@@ -83,6 +88,7 @@ class HangVerdictTests {
                 HangVerdict.DEBUG_PAUSED,
                 snapshot.verdict(),
                 "Пауза отладки важнее зависания: иначе сторож перезапустит сервер, который агент остановил "
-                        + "на брейкпоинте намеренно");
+                        + "на брейкпоинте намеренно"
+                        + " При смене snapshot_StaleTickWithDebugPause_ReportsDebugVerdict проверь это утверждение.");
     }
 }

@@ -50,7 +50,8 @@ class MethodShapeGuardTests {
                 "У метода 3+ boolean-параметра: по вызову не видно, что означают флаги. Как надо: флаги одного "
                         + "смысла — enum/тип. Внешний контракт (override Minecraft/NeoForge) — только в EXCEPTIONS "
                         + "с причиной; длинный список параметров (8+) ловит Checkstyle ParameterNumber. "
-                        + "Нарушители (файл:строка)");
+                        + "Нарушители (файл:строка)"
+                        + " Иначе тест productionMethods_ThreeBooleanFlags_AreAbsent перестанет ловить эту поломку. При смене productionMethods_ThreeBooleanFlags_AreAbsent проверь это утверждение.");
     }
 
     @Test
@@ -65,7 +66,8 @@ class MethodShapeGuardTests {
         assertEquals(
                 List.of("2 Sample.flags"),
                 violationsOf(sample),
-                "Сторож ослеп: 3 boolean-параметра обязаны находиться, 2 boolean — нет");
+                "Сторож ослеп: 3 boolean-параметра обязаны находиться, 2 boolean — нет"
+                        + " Иначе тест narrow перестанет ловить эту поломку. При смене narrow проверь это утверждение.");
     }
 
     @Test
@@ -75,7 +77,8 @@ class MethodShapeGuardTests {
         assertEquals(
                 List.of("1 Sample.flags"),
                 violationsOf(sample, URI.create("file:///F:/repo/mod/src/main/java/Sample.java")),
-                "Сторож обязан назвать нарушителя и на абсолютном пути Windows, а не падать на Path.of");
+                "Сторож обязан назвать нарушителя и на абсолютном пути Windows, а не падать на Path.of"
+                        + " Иначе тест flags перестанет ловить эту поломку. При смене flags проверь это утверждение.");
     }
 
     @Test
@@ -85,7 +88,8 @@ class MethodShapeGuardTests {
         assertEquals(
                 List.of(),
                 violationsOf(sample),
-                "Сторож ложно срабатывает: канонический конструктор record — это форма данных, а не метод");
+                "Сторож ложно срабатывает: канонический конструктор record — это форма данных, а не метод"
+                        + " Иначе тест methodShapePattern_RecordCanonicalConstructor_IsClean перестанет ловить эту поломку. При смене methodShapePattern_RecordCanonicalConstructor_IsClean проверь это утверждение.");
     }
 
     @Test
@@ -102,7 +106,8 @@ class MethodShapeGuardTests {
                 List.of(),
                 violationsOf(sample),
                 "Сторож ложно срабатывает: вторичный конструктор record только подставляет умолчания "
-                        + "в канонический и не задаёт новую форму");
+                        + "в канонический и не задаёт новую форму"
+                        + " Иначе тест methodShapePattern_RecordDelegatingConstructor_IsClean перестанет ловить эту поломку. При смене methodShapePattern_RecordDelegatingConstructor_IsClean проверь это утверждение.");
     }
 
     private static List<String> violations(Path root, Map<String, String> exceptions) {
@@ -211,7 +216,8 @@ class MethodShapeGuardTests {
             assertTrue(
                     seen.contains(exception),
                     "Устаревшее исключение метода " + exception + ": нарушение "
-                            + "исчезло или сигнатура изменилась, причина в EXCEPTIONS больше не нужна");
+                            + "исчезло или сигнатура изменилась, причина в EXCEPTIONS больше не нужна"
+                            + " Иначе тест methodShapePattern_RecordDelegatingConstructor_IsClean перестанет ловить эту поломку. При смене methodShapePattern_RecordDelegatingConstructor_IsClean проверь это утверждение.");
         }
         return violations;
     }

@@ -55,12 +55,33 @@ class GraphStateExportTests {
 
         String json = new ObjectMapper().writeValueAsString(GraphStateJson.state(state));
 
-        assertTrue(json.contains("\"facts\""), "Выгрузка обязана содержать новые факты графа");
-        assertTrue(json.contains("\"spirit-1\""), "Выгрузка обязана содержать факты духа");
-        assertTrue(json.contains("\"auditPercent\""), "Выгрузка обязана содержать факт аудита постройки");
-        assertTrue(json.contains("\"resources\""), "Выгрузка обязана содержать ресурсы с расстоянием");
-        assertTrue(json.contains("\"distances\""), "Выгрузка обязана содержать расстояния для модели");
-        assertTrue(json.contains("\"stations\""), "Выгрузка обязана содержать станции для модели");
-        assertTrue(json.contains("\"orders\""), "Выгрузка обязана содержать заказы игрока");
+        assertTrue(
+                json.contains("\"facts\""),
+                "Выгрузка обязана содержать новые факты графа"
+                        + " Иначе тест state_Export_ContainsNewFields перестанет ловить эту поломку. При смене state_Export_ContainsNewFields проверь это утверждение.");
+        assertTrue(
+                json.contains("\"spirit-1\""),
+                "Выгрузка обязана содержать факты духа"
+                        + " Иначе тест state_Export_ContainsNewFields перестанет ловить эту поломку. При смене state_Export_ContainsNewFields проверь это утверждение.");
+        assertTrue(
+                json.contains("\"auditPercent\""),
+                "Выгрузка обязана содержать факт аудита постройки"
+                        + " Иначе тест state_Export_ContainsNewFields перестанет ловить эту поломку. При смене state_Export_ContainsNewFields проверь это утверждение.");
+        assertTrue(
+                json.contains("\"resources\""),
+                "Выгрузка обязана содержать ресурсы с расстоянием"
+                        + " Иначе тест state_Export_ContainsNewFields перестанет ловить эту поломку. При смене state_Export_ContainsNewFields проверь это утверждение.");
+        assertTrue(
+                json.contains("\"distances\""),
+                "Выгрузка обязана содержать расстояния для модели"
+                        + " Иначе тест state_Export_ContainsNewFields перестанет ловить эту поломку. При смене state_Export_ContainsNewFields проверь это утверждение.");
+        assertTrue(
+                json.contains("\"stations\""),
+                "Выгрузка обязана содержать станции для модели"
+                        + " Иначе тест state_Export_ContainsNewFields перестанет ловить эту поломку. При смене state_Export_ContainsNewFields проверь это утверждение.");
+        assertTrue(
+                json.contains("\"orders\""),
+                "Выгрузка обязана содержать заказы игрока"
+                        + " Иначе тест state_Export_ContainsNewFields перестанет ловить эту поломку. При смене state_Export_ContainsNewFields проверь это утверждение.");
     }
 }

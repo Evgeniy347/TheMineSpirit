@@ -18,9 +18,19 @@ class SettlementChestsTests {
     void add_RepeatedChest_DoesNotDuplicate() {
         SettlementChests chests = new SettlementChests();
 
-        assertTrue(chests.add(new BlockCoord(1, 64, 1)), "первая установка сундука обязана попасть в реестр");
-        assertFalse(chests.add(new BlockCoord(1, 64, 1)), "повторное событие того же сундука не делает дубль");
-        assertEquals(1, chests.size(), "в реестре один сундук: повторная установка не раздувает его");
+        assertTrue(
+                chests.add(new BlockCoord(1, 64, 1)),
+                "первая установка сундука обязана попасть в реестр"
+                        + " Иначе тест add_RepeatedChest_DoesNotDuplicate перестанет ловить эту поломку. При смене add_RepeatedChest_DoesNotDuplicate проверь это утверждение.");
+        assertFalse(
+                chests.add(new BlockCoord(1, 64, 1)),
+                "повторное событие того же сундука не делает дубль"
+                        + " Иначе тест add_RepeatedChest_DoesNotDuplicate перестанет ловить эту поломку. При смене add_RepeatedChest_DoesNotDuplicate проверь это утверждение.");
+        assertEquals(
+                1,
+                chests.size(),
+                "в реестре один сундук: повторная установка не раздувает его"
+                        + " Иначе тест add_RepeatedChest_DoesNotDuplicate перестанет ловить эту поломку. При смене add_RepeatedChest_DoesNotDuplicate проверь это утверждение.");
     }
 
     @Test
@@ -29,9 +39,19 @@ class SettlementChestsTests {
         BlockCoord chest = new BlockCoord(5, 64, 5);
         chests.add(chest);
 
-        assertTrue(chests.remove(chest), "снятие поставленного сундука обязано менять реестр");
-        assertFalse(chests.remove(chest), "повторное снятие не считается изменением");
-        assertEquals(List.of(), chests.nearest(ORIGIN, 1), "снятый сундук не находится поиском ближайших");
+        assertTrue(
+                chests.remove(chest),
+                "снятие поставленного сундука обязано менять реестр"
+                        + " Иначе тест remove_RegisteredChest_LeavesNoNeighbour перестанет ловить эту поломку. При смене remove_RegisteredChest_LeavesNoNeighbour проверь это утверждение.");
+        assertFalse(
+                chests.remove(chest),
+                "повторное снятие не считается изменением"
+                        + " Иначе тест remove_RegisteredChest_LeavesNoNeighbour перестанет ловить эту поломку. При смене remove_RegisteredChest_LeavesNoNeighbour проверь это утверждение.");
+        assertEquals(
+                List.of(),
+                chests.nearest(ORIGIN, 1),
+                "снятый сундук не находится поиском ближайших"
+                        + " Иначе тест remove_RegisteredChest_LeavesNoNeighbour перестанет ловить эту поломку. При смене remove_RegisteredChest_LeavesNoNeighbour проверь это утверждение.");
     }
 
     @Test
@@ -47,11 +67,13 @@ class SettlementChestsTests {
         assertEquals(
                 List.of(near, middle, far),
                 chests.nearest(ORIGIN, 3),
-                "заход берёт ближайший сундук первым: порядок обязан идти по расстоянию, а не по установке");
+                "заход берёт ближайший сундук первым: порядок обязан идти по расстоянию, а не по установке"
+                        + " Иначе тест nearest_ChestsAround_ReturnsDistanceOrder перестанет ловить эту поломку. При смене nearest_ChestsAround_ReturnsDistanceOrder проверь это утверждение.");
         assertEquals(
                 List.of(near),
                 chests.nearest(ORIGIN, 1),
-                "порция из одного сундука — только самый ближний: дальше дух не ходит зря");
+                "порция из одного сундука — только самый ближний: дальше дух не ходит зря"
+                        + " Иначе тест nearest_ChestsAround_ReturnsDistanceOrder перестанет ловить эту поломку. При смене nearest_ChestsAround_ReturnsDistanceOrder проверь это утверждение.");
     }
 
     @Test
@@ -72,8 +94,16 @@ class SettlementChestsTests {
 
         List<BlockCoord> found = chests.nearest(ORIGIN, all.size());
 
-        assertEquals(all, found, "поиск ближайших обязан отдать каждый сундук ровно раз и в порядке расстояния");
-        assertEquals(new HashSet<>(all).size(), new HashSet<>(found).size(), "дубликатов в выдаче реестра нет");
+        assertEquals(
+                all,
+                found,
+                "поиск ближайших обязан отдать каждый сундук ровно раз и в порядке расстояния"
+                        + " Иначе тест nearest_AcrossCellRings_ReturnsEachChestOnceAndInOrder перестанет ловить эту поломку. При смене nearest_AcrossCellRings_ReturnsEachChestOnceAndInOrder проверь это утверждение.");
+        assertEquals(
+                new HashSet<>(all).size(),
+                new HashSet<>(found).size(),
+                "дубликатов в выдаче реестра нет"
+                        + " Иначе тест nearest_AcrossCellRings_ReturnsEachChestOnceAndInOrder перестанет ловить эту поломку. При смене nearest_AcrossCellRings_ReturnsEachChestOnceAndInOrder проверь это утверждение.");
     }
 
     @Test
@@ -90,14 +120,26 @@ class SettlementChestsTests {
         List<BlockCoord> largeFound = large.nearest(ORIGIN, 1);
         long largeCost = large.probes() - largeBefore;
 
-        assertEquals(List.of(near), smallFound, "ближний сундук обязан находиться и среди сотни далёких");
-        assertEquals(List.of(near), largeFound, "ближний сундук обязан находиться и среди тысячи далёких");
+        assertEquals(
+                List.of(near),
+                smallFound,
+                "ближний сундук обязан находиться и среди сотни далёких"
+                        + " Иначе тест settlementChests_ManyDistantChests_NearestLookupCostStaysFlat перестанет ловить эту поломку. При смене settlementChests_ManyDistantChests_NearestLookupCostStaysFlat проверь это утверждение.");
+        assertEquals(
+                List.of(near),
+                largeFound,
+                "ближний сундук обязан находиться и среди тысячи далёких"
+                        + " Иначе тест settlementChests_ManyDistantChests_NearestLookupCostStaysFlat перестанет ловить эту поломку. При смене settlementChests_ManyDistantChests_NearestLookupCostStaysFlat проверь это утверждение.");
         assertEquals(
                 smallCost,
                 largeCost,
                 "стоимость поиска ближайшего не растёт от числа далёких сундуков: реестр не перебирает весь склад, "
-                        + "а читает ячейки от ближних к дальним. Было " + smallCost + ", стало " + largeCost);
-        assertTrue(largeCost <= 16, "поиск ближайшего читает лишь ближние ячейки, а прочитал " + largeCost);
+                        + "а читает ячейки от ближних к дальним. Было " + smallCost + ", стало " + largeCost
+                        + " Иначе тест settlementChests_ManyDistantChests_NearestLookupCostStaysFlat перестанет ловить эту поломку. При смене settlementChests_ManyDistantChests_NearestLookupCostStaysFlat проверь это утверждение.");
+        assertTrue(
+                largeCost <= 16,
+                "поиск ближайшего читает лишь ближние ячейки, а прочитал " + largeCost
+                        + " Иначе тест settlementChests_ManyDistantChests_NearestLookupCostStaysFlat перестанет ловить эту поломку. При смене settlementChests_ManyDistantChests_NearestLookupCostStaysFlat проверь это утверждение.");
     }
 
     @Test
@@ -111,7 +153,8 @@ class SettlementChestsTests {
                 List.of(yard),
                 chests.warehouse(spirit),
                 "без границы поселения склад — весь реестр сундуков, а не 16 блоков вокруг случайной точки духа: "
-                        + "сундук двора в 29 блоках обязан попасть в выбор точки сдачи и еды");
+                        + "сундук двора в 29 блоках обязан попасть в выбор точки сдачи и еды"
+                        + " Иначе тест warehouse_WithoutSettlementBoundary_KeepsWholeRegistry перестанет ловить эту поломку. При смене warehouse_WithoutSettlementBoundary_KeepsWholeRegistry проверь это утверждение.");
     }
 
     @Test
@@ -127,7 +170,8 @@ class SettlementChestsTests {
                 chests.warehouse(
                         spirit, pos -> pos.x() >= -200 && pos.x() <= -140 && pos.z() >= -540 && pos.z() <= -460),
                 "Склад поселения — только контейнеры внутри его границ: бочка −73,75,−119 в ~100 блоках вне ограды "
-                        + "не склад поселения (аномалия 6), иначе дух идёт за материалом за пределы поселения");
+                        + "не склад поселения (аномалия 6), иначе дух идёт за материалом за пределы поселения"
+                        + " При смене warehouse_ChestOutsideSettlement_IsNotOffered проверь это утверждение.");
     }
 
     @Test
@@ -139,7 +183,11 @@ class SettlementChestsTests {
 
         Set<BlockCoord> saved = new HashSet<>(chests.all());
 
-        assertEquals(2, saved.size(), "снимок для сохранения содержит каждый сундук один раз");
+        assertEquals(
+                2,
+                saved.size(),
+                "снимок для сохранения содержит каждый сундук один раз"
+                        + " Иначе тест all_RegisteredChests_KeepInsertionSetWithoutDuplicates перестанет ловить эту поломку. При смене all_RegisteredChests_KeepInsertionSetWithoutDuplicates проверь это утверждение.");
     }
 
     private static SettlementChests crowded(int farChests) {

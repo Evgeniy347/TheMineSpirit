@@ -59,7 +59,11 @@ class ServerThreadCallTests {
 
         int result = call.call(() -> 42, LONG_ENOUGH);
 
-        assertEquals(42, result, "Результат задачи с серверного потока обязан дойти до HTTP-потока без потерь");
+        assertEquals(
+                42,
+                result,
+                "Результат задачи с серверного потока обязан дойти до HTTP-потока без потерь"
+                        + " Иначе тест call_TaskOnRealExecutor_ReturnsResult перестанет ловить эту поломку. При смене call_TaskOnRealExecutor_ReturnsResult проверь это утверждение.");
     }
 
     @Test
@@ -72,8 +76,12 @@ class ServerThreadCallTests {
         assertEquals(
                 SERVER_THREAD_NAME,
                 ranOn,
-                "Задача обязана выполняться на серверном потоке: HTTP-потоки не имеют права трогать мир");
-        assertFalse(caller.getName().equals(ranOn), "Поток вызывающего не должен исполнять задачу сам");
+                "Задача обязана выполняться на серверном потоке: HTTP-потоки не имеют права трогать мир"
+                        + " Иначе тест call_Task_RunsOnExecutorThreadNotOnCaller перестанет ловить эту поломку. При смене call_Task_RunsOnExecutorThreadNotOnCaller проверь это утверждение.");
+        assertFalse(
+                caller.getName().equals(ranOn),
+                "Поток вызывающего не должен исполнять задачу сам"
+                        + " Иначе тест call_Task_RunsOnExecutorThreadNotOnCaller перестанет ловить эту поломку. При смене call_Task_RunsOnExecutorThreadNotOnCaller проверь это утверждение.");
     }
 
     @Test
@@ -83,15 +91,18 @@ class ServerThreadCallTests {
         ApiException error = assertThrows(
                 ApiException.class,
                 () -> call.call(() -> 1, SHORT),
-                "Зависший тик не должен вешать запрос навсегда: после тайм-аута клиент получает ошибку");
+                "Зависший тик не должен вешать запрос навсегда: после тайм-аута клиент получает ошибку"
+                        + " Иначе тест await_ExecutorNeverRunsTask_ThrowsInternalNamingTimeout перестанет ловить эту поломку. При смене await_ExecutorNeverRunsTask_ThrowsInternalNamingTimeout проверь это утверждение.");
 
         assertEquals(
                 ErrorCode.INTERNAL,
                 error.error().code(),
-                "Тайм-аут серверного потока — ошибка internal (500), а не 404 или 400");
+                "Тайм-аут серверного потока — ошибка internal (500), а не 404 или 400"
+                        + " Иначе тест await_ExecutorNeverRunsTask_ThrowsInternalNamingTimeout перестанет ловить эту поломку. При смене await_ExecutorNeverRunsTask_ThrowsInternalNamingTimeout проверь это утверждение.");
         assertTrue(
                 error.getMessage().contains("Сервер не ответил за 0.1 с"),
-                "Сообщение называет, сколько секунд ждали: " + error.getMessage());
+                "Сообщение называет, сколько секунд ждали: " + error.getMessage()
+                        + " Иначе тест await_ExecutorNeverRunsTask_ThrowsInternalNamingTimeout перестанет ловить эту поломку. При смене await_ExecutorNeverRunsTask_ThrowsInternalNamingTimeout проверь это утверждение.");
     }
 
     @Test
@@ -103,14 +114,16 @@ class ServerThreadCallTests {
         assertThrows(
                 ApiException.class,
                 () -> call.call(bodyRuns::incrementAndGet, SHORT),
-                "Без запуска задача обязана упереться в тайм-аут");
+                "Без запуска задача обязана упереться в тайм-аут"
+                        + " Иначе тест await_TaskStartsAfterTimeout_BodyIsSkipped перестанет ловить эту поломку. При смене await_TaskStartsAfterTimeout_BodyIsSkipped проверь это утверждение.");
         executor.runAll();
 
         assertEquals(
                 0,
                 bodyRuns.get(),
                 "Задача, не стартовавшая до тайм-аута, обязана пропускаться: иначе зависший тик выполнит "
-                        + "накопившиеся запросы уже ушедших клиентов и снова встанет");
+                        + "накопившиеся запросы уже ушедших клиентов и снова встанет"
+                        + " При смене await_TaskStartsAfterTimeout_BodyIsSkipped проверь это утверждение.");
     }
 
     @Test
@@ -126,15 +139,25 @@ class ServerThreadCallTests {
         ApiException error = assertThrows(
                 ApiException.class,
                 () -> call.await(future, LONG_ENOUGH),
-                "Исключение задачи не должно пропадать молча: клиент обязан получить internal");
+                "Исключение задачи не должно пропадать молча: клиент обязан получить internal"
+                        + " Иначе тест await_TaskThrowsRuntimeException_KeepsCauseInErrorAndDetails перестанет ловить эту поломку. При смене await_TaskThrowsRuntimeException_KeepsCauseInErrorAndDetails проверь это утверждение.");
 
-        assertEquals(ErrorCode.INTERNAL, error.error().code(), "Падение задачи — internal (500)");
-        assertSame(boom, error.getCause(), "Причина исключения сохраняется для лога");
+        assertEquals(
+                ErrorCode.INTERNAL,
+                error.error().code(),
+                "Падение задачи — internal (500)"
+                        + " Иначе тест await_TaskThrowsRuntimeException_KeepsCauseInErrorAndDetails перестанет ловить эту поломку. При смене await_TaskThrowsRuntimeException_KeepsCauseInErrorAndDetails проверь это утверждение.");
+        assertSame(
+                boom,
+                error.getCause(),
+                "Причина исключения сохраняется для лога"
+                        + " Иначе тест await_TaskThrowsRuntimeException_KeepsCauseInErrorAndDetails перестанет ловить эту поломку. При смене await_TaskThrowsRuntimeException_KeepsCauseInErrorAndDetails проверь это утверждение.");
         assertEquals(
                 "java.lang.IllegalStateException: мир сломан",
                 error.error().details().get("cause"),
                 "details.cause называет тип и сообщение исключения: "
-                        + error.error().details());
+                        + error.error().details()
+                        + " Иначе тест await_TaskThrowsRuntimeException_KeepsCauseInErrorAndDetails перестанет ловить эту поломку. При смене await_TaskThrowsRuntimeException_KeepsCauseInErrorAndDetails проверь это утверждение.");
     }
 
     @Test
@@ -149,9 +172,14 @@ class ServerThreadCallTests {
                             throw original;
                         },
                         LONG_ENOUGH),
-                "Ошибка API из задачи обязана дойти до клиента как есть");
+                "Ошибка API из задачи обязана дойти до клиента как есть"
+                        + " Иначе тест await_TaskThrowsApiException_PassesItUnchanged перестанет ловить эту поломку. При смене await_TaskThrowsApiException_PassesItUnchanged проверь это утверждение.");
 
-        assertSame(original, error, "not_found из задачи не должен превращаться в internal");
+        assertSame(
+                original,
+                error,
+                "not_found из задачи не должен превращаться в internal"
+                        + " Иначе тест await_TaskThrowsApiException_PassesItUnchanged перестанет ловить эту поломку. При смене await_TaskThrowsApiException_PassesItUnchanged проверь это утверждение.");
     }
 
     @Test
@@ -164,7 +192,8 @@ class ServerThreadCallTests {
         assertEquals(
                 2,
                 call.submittedCount(),
-                "Счётчик считает переходы на серверный поток: по одному на запрос, иначе тест на масштаб слеп");
+                "Счётчик считает переходы на серверный поток: по одному на запрос, иначе тест на масштаб слеп"
+                        + " При смене submittedCount_EachSubmit_CountsOneHop проверь это утверждение.");
     }
 
     @Test
@@ -176,9 +205,14 @@ class ServerThreadCallTests {
         ApiException error = assertThrows(
                 ApiException.class,
                 () -> call.submit(() -> 1),
-                "Остановленный сервер не принимает задачи: клиент обязан получить внятную ошибку");
+                "Остановленный сервер не принимает задачи: клиент обязан получить внятную ошибку"
+                        + " Иначе тест submit_RejectedByExecutor_ThrowsInternalApiException перестанет ловить эту поломку. При смене submit_RejectedByExecutor_ThrowsInternalApiException проверь это утверждение.");
 
-        assertEquals(ErrorCode.INTERNAL, error.error().code(), "Отказ исполнителя — internal (500)");
+        assertEquals(
+                ErrorCode.INTERNAL,
+                error.error().code(),
+                "Отказ исполнителя — internal (500)"
+                        + " Иначе тест submit_RejectedByExecutor_ThrowsInternalApiException перестанет ловить эту поломку. При смене submit_RejectedByExecutor_ThrowsInternalApiException проверь это утверждение.");
     }
 
     @Test
@@ -202,7 +236,8 @@ class ServerThreadCallTests {
 
         assertTrue(
                 awaiting.await(LONG_ENOUGH.toMillis(), TimeUnit.MILLISECONDS),
-                "Ожидальец обязан дойти до await: иначе тест проверяет запуск потока, а не остановку сервера");
+                "Ожидальец обязан дойти до await: иначе тест проверяет запуск потока, а не остановку сервера"
+                        + " При смене await_StopWhileTaskNeverRuns_ThrowsNamingShutdown проверь это утверждение.");
         call.stop();
         waiter.join(LONG_ENOUGH.toMillis());
 
@@ -210,15 +245,18 @@ class ServerThreadCallTests {
                 waiter.isAlive(),
                 "Остановка сервера обязана будить ждущий запрос через сигнал остановки: "
                         + "само-пробуждение по тайм-ауту исключено (WITHOUT_TIMEOUT), поэтому живой "
-                        + "ожидальец означает, что stop() его не разбудил и запрос висит");
+                        + "ожидальец означает, что stop() его не разбудил и запрос висит"
+                        + " Иначе тест await_StopWhileTaskNeverRuns_ThrowsNamingShutdown перестанет ловить эту поломку. При смене await_StopWhileTaskNeverRuns_ThrowsNamingShutdown проверь это утверждение.");
         Throwable thrown = failure.get();
         assertTrue(
                 thrown instanceof ApiException,
                 "Ждущий запрос при остановке обязан кидать ApiException, а не молча возвращаться или "
-                        + "умирать с другим: фактически " + thrown);
+                        + "умирать с другим: фактически " + thrown
+                        + " Иначе тест await_StopWhileTaskNeverRuns_ThrowsNamingShutdown перестанет ловить эту поломку. При смене await_StopWhileTaskNeverRuns_ThrowsNamingShutdown проверь это утверждение.");
         assertTrue(
                 thrown.getMessage().contains("останавливается"),
-                "Сообщение обязано называть остановку сервера, а не истечение тайм-аута: " + thrown.getMessage());
+                "Сообщение обязано называть остановку сервера, а не истечение тайм-аута: " + thrown.getMessage()
+                        + " Иначе тест await_StopWhileTaskNeverRuns_ThrowsNamingShutdown перестанет ловить эту поломку. При смене await_StopWhileTaskNeverRuns_ThrowsNamingShutdown проверь это утверждение.");
     }
 
     @Test
@@ -229,12 +267,18 @@ class ServerThreadCallTests {
         ApiException error = assertThrows(
                 ApiException.class,
                 () -> call.submit(() -> 1),
-                "После остановки новые задачи не принимаются: иначе HTTP-поток снова начнёт читать мир");
+                "После остановки новые задачи не принимаются: иначе HTTP-поток снова начнёт читать мир"
+                        + " При смене submit_AfterStop_ThrowsImmediatelyNamingShutdown проверь это утверждение.");
 
-        assertEquals(ErrorCode.INTERNAL, error.error().code(), "Отказ после остановки — internal (500)");
+        assertEquals(
+                ErrorCode.INTERNAL,
+                error.error().code(),
+                "Отказ после остановки — internal (500)"
+                        + " Иначе тест submit_AfterStop_ThrowsImmediatelyNamingShutdown перестанет ловить эту поломку. При смене submit_AfterStop_ThrowsImmediatelyNamingShutdown проверь это утверждение.");
         assertTrue(
                 error.getMessage().contains("останавливается"),
-                "Сообщение обязано называть остановку сервера: " + error.getMessage());
+                "Сообщение обязано называть остановку сервера: " + error.getMessage()
+                        + " Иначе тест submit_AfterStop_ThrowsImmediatelyNamingShutdown перестанет ловить эту поломку. При смене submit_AfterStop_ThrowsImmediatelyNamingShutdown проверь это утверждение.");
     }
 
     @Test
@@ -242,10 +286,12 @@ class ServerThreadCallTests {
         assertEquals(
                 "5",
                 ServerThreadCall.formatSeconds(Duration.ofSeconds(5)),
-                "Целые секунды пишутся без дроби: «не ответил за 5 с»");
+                "Целые секунды пишутся без дроби: «не ответил за 5 с»"
+                        + " Иначе тест formatSeconds_WholeAndFractionalDurations_ReadNaturally перестанет ловить эту поломку. При смене formatSeconds_WholeAndFractionalDurations_ReadNaturally проверь это утверждение.");
         assertEquals(
                 "1.5",
                 ServerThreadCall.formatSeconds(Duration.ofMillis(1500)),
-                "Дробные секунды — с одним знаком и точкой независимо от локали");
+                "Дробные секунды — с одним знаком и точкой независимо от локали"
+                        + " Иначе тест formatSeconds_WholeAndFractionalDurations_ReadNaturally перестанет ловить эту поломку. При смене formatSeconds_WholeAndFractionalDurations_ReadNaturally проверь это утверждение.");
     }
 }

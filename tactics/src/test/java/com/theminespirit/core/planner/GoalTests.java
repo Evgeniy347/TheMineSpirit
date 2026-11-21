@@ -14,7 +14,8 @@ class GoalTests {
                 IllegalArgumentException.class,
                 () -> new Goal("   ", Map.of()),
                 "Цель с пустым текстом обязана отвергаться: по тексту планировщик выбирает сценарий, "
-                        + "а пустая цель приведёт к произвольному действию духа");
+                        + "а пустая цель приведёт к произвольному действию духа"
+                        + " При смене goal_BlankText_ThrowsIllegalArgumentException проверь это утверждение.");
     }
 
     @Test
@@ -22,7 +23,8 @@ class GoalTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new Goal(null, Map.of()),
-                "Цель с null-текстом обязана отвергаться: без текста не из чего строить промпт и выбирать fallback-правило");
+                "Цель с null-текстом обязана отвергаться: без текста не из чего строить промпт и выбирать fallback-правило"
+                        + " Иначе тест goal_NullText_ThrowsIllegalArgumentException перестанет ловить эту поломку. При смене goal_NullText_ThrowsIllegalArgumentException проверь это утверждение.");
     }
 
     @Test
@@ -31,7 +33,8 @@ class GoalTests {
                 NullPointerException.class,
                 () -> new Goal("добыть руду", null),
                 "Цель с null-параметрами обязана отвергаться: без карты параметров планировщик не узнает радиус "
-                        + "и количество, а подстановка пустой карты молча оставит их по умолчанию");
+                        + "и количество, а подстановка пустой карты молча оставит их по умолчанию"
+                        + " Иначе тест goal_NullParams_ThrowsNullPointerException перестанет ловить эту поломку. При смене goal_NullParams_ThrowsNullPointerException проверь это утверждение.");
     }
 
     @Test
@@ -45,7 +48,8 @@ class GoalTests {
                 Map.of("radius", 32),
                 goal.params(),
                 "Goal обязан копировать параметры при создании: мутация исходной карты изменила бы план задним "
-                        + "числом, и цель исполнилась бы не так, как её утвердил вызывающий");
+                        + "числом, и цель исполнилась бы не так, как её утвердил вызывающий"
+                        + " Иначе тест goal_ParamsMapMutated_ConstructorKeepsCopy перестанет ловить эту поломку. При смене goal_ParamsMapMutated_ConstructorKeepsCopy проверь это утверждение.");
     }
 
     @Test
@@ -58,6 +62,7 @@ class GoalTests {
                 UnsupportedOperationException.class,
                 () -> goal.params().put("count", 1),
                 "params() обязан возвращать неизменяемую карту: иначе движок может незаметно подменить параметры "
-                        + "цели, и планировщик будет думать, что решил одну задачу, а исполнит другую");
+                        + "цели, и планировщик будет думать, что решил одну задачу, а исполнит другую"
+                        + " При смене goal_ParamsReturned_IsUnmodifiable проверь это утверждение.");
     }
 }

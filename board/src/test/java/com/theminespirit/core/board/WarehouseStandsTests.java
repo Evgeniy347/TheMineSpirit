@@ -49,14 +49,22 @@ class WarehouseStandsTests {
             List<BlockCoord> middle = dispatch(world, feet, taken, 5);
             List<BlockCoord> late = dispatch(world, feet, taken, 4);
 
-            assertEquals(10, taken.size(), "десять духов не должны делить стоянки: " + taken);
+            assertEquals(
+                    10,
+                    taken.size(),
+                    "десять духов не должны делить стоянки: " + taken
+                            + " Иначе тест dispatchWaves_TenSpiritsFromStreetBehindWarehouse_AllStandNearChest перестанет ловить эту поломку. При смене dispatchWaves_TenSpiritsFromStreetBehindWarehouse_AllStandNearChest проверь это утверждение.");
             for (BlockCoord stand : middle) {
                 assertTrue(
-                        taken.contains(stand), "одновременная отправка пяти духов разводит их по стоянкам: " + stand);
+                        taken.contains(stand),
+                        "одновременная отправка пяти духов разводит их по стоянкам: " + stand
+                                + " Иначе тест dispatchWaves_TenSpiritsFromStreetBehindWarehouse_AllStandNearChest перестанет ловить эту поломку. При смене dispatchWaves_TenSpiritsFromStreetBehindWarehouse_AllStandNearChest проверь это утверждение.");
             }
             for (BlockCoord stand : late) {
                 assertTrue(
-                        taken.contains(stand), "четвёрка, отправленная на середине пути, тоже получает свою стоянку");
+                        taken.contains(stand),
+                        "четвёрка, отправленная на середине пути, тоже получает свою стоянку"
+                                + " Иначе тест dispatchWaves_TenSpiritsFromStreetBehindWarehouse_AllStandNearChest перестанет ловить эту поломку. При смене dispatchWaves_TenSpiritsFromStreetBehindWarehouse_AllStandNearChest проверь это утверждение.");
             }
             for (BlockCoord stand : taken) {
                 assertReach(world, network, stand);
@@ -81,10 +89,22 @@ class WarehouseStandsTests {
             taken.add(chosen);
             BlockCoord settled = settle(world, feet, chosen, taken);
             assertNotEquals(
-                    chosen, settled, "клетку заняли, пока дух шёл: последний участок пересчитан на свободную стоянку");
-            assertTrue(MiningSafety.canStand(settled, world), "новая стоянка проходима: " + settled);
-            assertTrue(SpiritReach.reachable(settled, CHEST), "новая стоянка в досягаемости сундука: " + settled);
-            assertTrue(NetworkRoute.plan(network, START, settled, world).isPresent(), "до новой стоянки есть маршрут");
+                    chosen,
+                    settled,
+                    "клетку заняли, пока дух шёл: последний участок пересчитан на свободную стоянку"
+                            + " Иначе тест stand_TakenWhileWalking_ShiftsToFreeCellInsteadOfFailing перестанет ловить эту поломку. При смене stand_TakenWhileWalking_ShiftsToFreeCellInsteadOfFailing проверь это утверждение.");
+            assertTrue(
+                    MiningSafety.canStand(settled, world),
+                    "новая стоянка проходима: " + settled
+                            + " Иначе тест stand_TakenWhileWalking_ShiftsToFreeCellInsteadOfFailing перестанет ловить эту поломку. При смене stand_TakenWhileWalking_ShiftsToFreeCellInsteadOfFailing проверь это утверждение.");
+            assertTrue(
+                    SpiritReach.reachable(settled, CHEST),
+                    "новая стоянка в досягаемости сундука: " + settled
+                            + " Иначе тест stand_TakenWhileWalking_ShiftsToFreeCellInsteadOfFailing перестанет ловить эту поломку. При смене stand_TakenWhileWalking_ShiftsToFreeCellInsteadOfFailing проверь это утверждение.");
+            assertTrue(
+                    NetworkRoute.plan(network, START, settled, world).isPresent(),
+                    "до новой стоянки есть маршрут"
+                            + " Иначе тест stand_TakenWhileWalking_ShiftsToFreeCellInsteadOfFailing перестанет ловить эту поломку. При смене stand_TakenWhileWalking_ShiftsToFreeCellInsteadOfFailing проверь это утверждение.");
         } finally {
             SpiritReach.useSource(() -> before);
         }
@@ -115,12 +135,22 @@ class WarehouseStandsTests {
     }
 
     private static void assertRoute(List<BlockCoord> route) {
-        assertTrue(route.size() >= 2, "маршрут из-за склада не пустой: " + route);
+        assertTrue(
+                route.size() >= 2,
+                "маршрут из-за склада не пустой: " + route
+                        + " Иначе тест assertRoute перестанет ловить эту поломку. При смене assertRoute проверь это утверждение.");
         int span = route.get(route.size() - 1).x() - route.get(0).x();
-        assertTrue(span >= 32, "маршрут длиной " + span + " блоков идёт по тропинке: короче 32 игра бы не нашла путь");
+        assertTrue(
+                span >= 32,
+                "маршрут длиной " + span + " блоков идёт по тропинке: короче 32 игра бы не нашла путь"
+                        + " Иначе тест assertRoute перестанет ловить эту поломку. При смене assertRoute проверь это утверждение.");
         for (BlockCoord point : route) {
             if (point.x() < DOOR.x()) {
-                assertEquals(0, point.z(), "по тропинке дух идёт по улице z=0, не срезает через стены: " + point);
+                assertEquals(
+                        0,
+                        point.z(),
+                        "по тропинке дух идёт по улице z=0, не срезает через стены: " + point
+                                + " Иначе тест assertRoute перестанет ловить эту поломку. При смене assertRoute проверь это утверждение.");
             }
         }
     }
@@ -130,13 +160,27 @@ class WarehouseStandsTests {
         int dz = Math.abs(stand.z() - CHEST.z());
         assertTrue(
                 dx <= BoardTuning.workStandRadius() && dz <= BoardTuning.workStandRadius(),
-                "стоянка " + stand + " рядом с сундуком");
-        assertTrue(Math.abs(stand.y() - CHEST.y()) <= 1, "стоянка " + stand + " на полу склада");
-        assertTrue(MiningSafety.canStand(stand, world), "стоянка " + stand + " проходима");
-        assertTrue(SpiritReach.reachable(stand, CHEST), "стоянка " + stand + " в досягаемости сундука");
+                "стоянка " + stand + " рядом с сундуком"
+                        + " Иначе тест assertReach перестанет ловить эту поломку. При смене assertReach проверь это утверждение.");
+        assertTrue(
+                Math.abs(stand.y() - CHEST.y()) <= 1,
+                "стоянка " + stand + " на полу склада"
+                        + " Иначе тест assertReach перестанет ловить эту поломку. При смене assertReach проверь это утверждение.");
+        assertTrue(
+                MiningSafety.canStand(stand, world),
+                "стоянка " + stand + " проходима"
+                        + " Иначе тест assertReach перестанет ловить эту поломку. При смене assertReach проверь это утверждение. Иначе поломка пройдёт незамеченной в прогоне.");
+        assertTrue(
+                SpiritReach.reachable(stand, CHEST),
+                "стоянка " + stand + " в досягаемости сундука"
+                        + " Иначе тест assertReach перестанет ловить эту поломку. При смене assertReach проверь это утверждение.");
         List<BlockCoord> route = NetworkRoute.plan(network, START, stand, world)
                 .orElseThrow(() -> new AssertionError("до стоянки " + stand + " нет маршрута по тропинке"));
-        assertEquals(stand, route.get(route.size() - 1), "маршрут кончается на стоянке " + stand + ": " + route);
+        assertEquals(
+                stand,
+                route.get(route.size() - 1),
+                "маршрут кончается на стоянке " + stand + ": " + route
+                        + " Иначе тест assertReach перестанет ловить эту поломку. При смене assertReach проверь это утверждение.");
     }
 
     private static Set<BlockCoord> walkableFrom(World world, BlockCoord start, BuildBox box) {

@@ -39,7 +39,8 @@ class SurfaceDescentTests {
         assertFalse(
                 found.isPresent(),
                 "потолок над головой не даёт подпрыгнуть на соседнюю ступень: дух считал себя вышедшим "
-                        + "и стоял на месте (spirit-1, -187,65,-514)");
+                        + "и стоял на месте (spirit-1, -187,65,-514)"
+                        + " Иначе тест path_StepUpUnderCeilingAboveHead_IsNotARoute перестанет ловить эту поломку. При смене path_StepUpUnderCeilingAboveHead_IsNotARoute проверь это утверждение.");
     }
 
     @Test
@@ -60,7 +61,8 @@ class SurfaceDescentTests {
         assertFalse(
                 found.isPresent(),
                 "над соседней клеткой висит блок: тело в проём высотой 1 не пройдёт, "
-                        + "а дух стоял бы на месте с NO_PROGRESS (spirit-5, -181,67,-518)");
+                        + "а дух стоял бы на месте с NO_PROGRESS (spirit-5, -181,67,-518)"
+                        + " Иначе тест path_StepDownUnderLowLintel_IsNotARoute перестанет ловить эту поломку. При смене path_StepDownUnderLowLintel_IsNotARoute проверь это утверждение.");
     }
 
     @Test
@@ -74,8 +76,12 @@ class SurfaceDescentTests {
         assertTrue(
                 found.isPresent(),
                 "дух на крыше -172,77,-516 видит воду в 15 блоках ниже: мачта/крыша без спуска — это "
-                        + "безопасное падение в воду, а не «перенос не найден»");
+                        + "безопасное падение в воду, а не «перенос не найден»"
+                        + " Иначе тест path_FromRoofToWaterLanding_FindsSafeFall перестанет ловить эту поломку. При смене path_FromRoofToWaterLanding_FindsSafeFall проверь это утверждение.");
         BlockCoord end = found.orElseThrow().get(found.orElseThrow().size() - 1);
-        assertTrue(end.y() <= 62, "путь обязан кончаться в воде/на нижней площадке, а кончается в " + end);
+        assertTrue(
+                end.y() <= 62,
+                "путь обязан кончаться в воде/на нижней площадке, а кончается в " + end
+                        + " Иначе тест path_FromRoofToWaterLanding_FindsSafeFall перестанет ловить эту поломку. При смене path_FromRoofToWaterLanding_FindsSafeFall проверь это утверждение.");
     }
 }

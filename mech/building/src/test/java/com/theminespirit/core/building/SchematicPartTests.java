@@ -36,13 +36,23 @@ class SchematicPartTests {
         int total = 0;
         for (int part = 1; part <= 4; part++) {
             List<Schematic.Entry> blocks = SchematicPart.of(whole, part, 4).blocks();
-            assertTrue(blocks.size() >= 8, "кусок " + part + " почти пуст: " + blocks.size());
+            assertTrue(
+                    blocks.size() >= 8,
+                    "кусок " + part + " почти пуст: " + blocks.size()
+                            + " Иначе тест of_FourParts_CoverWholeWithoutOverlap перестанет ловить эту поломку. При смене of_FourParts_CoverWholeWithoutOverlap проверь это утверждение.");
             for (Schematic.Entry entry : blocks) {
-                assertTrue(seen.add(entry.dx() + "," + entry.dy() + "," + entry.dz()), "клетка в двух кусках");
+                assertTrue(
+                        seen.add(entry.dx() + "," + entry.dy() + "," + entry.dz()),
+                        "клетка в двух кусках"
+                                + " Иначе тест of_FourParts_CoverWholeWithoutOverlap перестанет ловить эту поломку. При смене of_FourParts_CoverWholeWithoutOverlap проверь это утверждение.");
             }
             total += blocks.size();
         }
-        assertEquals(whole.blocks().size(), total, "куски вместе — вся схема");
+        assertEquals(
+                whole.blocks().size(),
+                total,
+                "куски вместе — вся схема"
+                        + " Иначе тест of_FourParts_CoverWholeWithoutOverlap перестанет ловить эту поломку. При смене of_FourParts_CoverWholeWithoutOverlap проверь это утверждение.");
     }
 
     @Test
@@ -54,15 +64,31 @@ class SchematicPartTests {
             blocks.stream().filter(e -> e.dy() == 0).forEach(e -> posts.add(e.dx() + "," + e.dz()));
             blocks.stream()
                     .filter(e -> e.dy() == 1)
-                    .forEach(e -> assertTrue(posts.contains(e.dx() + "," + e.dz()), "факел без своего столба"));
+                    .forEach(
+                            e -> assertTrue(
+                                    posts.contains(e.dx() + "," + e.dz()),
+                                    "факел без своего столба"
+                                            + " Иначе тест of_TorchOnPost_StaysInPostPart перестанет ловить эту поломку. При смене of_TorchOnPost_StaysInPostPart проверь это утверждение."));
         }
     }
 
     @Test
     void parse_PartName_RoundTrips() {
         String name = SchematicPart.name("fence", 3, 4);
-        assertEquals(Optional.of(new SchematicPart.Ref("fence", 3, 4)), SchematicPart.parse(name), "имя куска");
-        assertEquals(Optional.empty(), SchematicPart.parse("fence"), "целая схема");
-        assertEquals(Optional.empty(), SchematicPart.parse("fence#9/4"), "кусок вне числа кусков");
+        assertEquals(
+                Optional.of(new SchematicPart.Ref("fence", 3, 4)),
+                SchematicPart.parse(name),
+                "имя куска"
+                        + " Иначе тест parse_PartName_RoundTrips перестанет ловить эту поломку. При смене parse_PartName_RoundTrips проверь это утверждение.");
+        assertEquals(
+                Optional.empty(),
+                SchematicPart.parse("fence"),
+                "целая схема"
+                        + " Иначе тест parse_PartName_RoundTrips перестанет ловить эту поломку. При смене parse_PartName_RoundTrips проверь это утверждение.");
+        assertEquals(
+                Optional.empty(),
+                SchematicPart.parse("fence#9/4"),
+                "кусок вне числа кусков"
+                        + " Иначе тест parse_PartName_RoundTrips перестанет ловить эту поломку. При смене parse_PartName_RoundTrips проверь это утверждение.");
     }
 }

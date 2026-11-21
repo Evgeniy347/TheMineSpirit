@@ -28,7 +28,8 @@ class TacticsScheduleProperties {
             assertTrue(
                     evaluationTicks[i] - evaluationTicks[i - 1] >= interval,
                     "Два вызова step ближе интервала " + interval + " без события: " + evaluationTicks[i - 1] + " и "
-                            + evaluationTicks[i] + "; тактика не должна оценивать чаще раза в интервал");
+                            + evaluationTicks[i] + "; тактика не должна оценивать чаще раза в интервал"
+                            + " Иначе тест due_WithoutEvents_AtMostOneEvaluationPerInterval перестанет ловить эту поломку. При смене due_WithoutEvents_AtMostOneEvaluationPerInterval проверь это утверждение.");
         }
     }
 
@@ -52,6 +53,7 @@ class TacticsScheduleProperties {
                 "Оценок за " + hurtPerTick.size() + " тиков " + evaluations + " при пределе "
                         + bound + " (интервал " + interval + " плюс события не чаще раза в "
                         + TacticsSchedule.HURT_MIN_GAP_TICKS
-                        + " тиков); град ударов не должен превращаться в оценку на каждом тике");
+                        + " тиков); град ударов не должен превращаться в оценку на каждом тике"
+                        + " Иначе тест due_HurtOnAnyTick_EvaluationsBoundedByIntervalPlusEventGap перестанет ловить эту поломку. При смене due_HurtOnAnyTick_EvaluationsBoundedByIntervalPlusEventGap проверь это утверждение.");
     }
 }

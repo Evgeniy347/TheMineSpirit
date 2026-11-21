@@ -17,10 +17,12 @@ class LogRecordTests {
             assertTrue(
                     spec.allowed().containsAll(spec.required()),
                     "Каждое обязательное поле обязано быть разрешённым: иначе запись типа " + type.json()
-                            + " невозможно собрать без нарушения схемы");
+                            + " невозможно собрать без нарушения схемы"
+                            + " При смене of_EveryLogType_RequiredFieldsAreAllowedAndCommonFieldsPresent проверь это утверждение.");
             assertTrue(
                     spec.allowed().containsAll(Set.of("ts", "tick", "build", "source")),
-                    "Общие колонки ts, tick, build и source обязаны быть в схеме каждого типа: " + type.json());
+                    "Общие колонки ts, tick, build и source обязаны быть в схеме каждого типа: " + type.json()
+                            + " Иначе тест of_EveryLogType_RequiredFieldsAreAllowedAndCommonFieldsPresent перестанет ловить эту поломку. При смене of_EveryLogType_RequiredFieldsAreAllowedAndCommonFieldsPresent проверь это утверждение.");
         }
     }
 
@@ -35,14 +37,16 @@ class LogRecordTests {
                         .put("block_before", "minecraft:stone")
                         .at(1, 2, 1)
                         .build(),
-                "Запись блока без block_after обязана отвергаться схемой: без состояния после изменения нельзя понять, что получилось");
+                "Запись блока без block_after обязана отвергаться схемой: без состояния после изменения нельзя понять, что получилось"
+                        + " Иначе тест builder_MissingRequiredField_Throws перестанет ловить эту поломку. При смене builder_MissingRequiredField_Throws проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("блок")
                         || error.getMessage().contains("block_after")
                         || error.getMessage().contains("block_before"),
                 "Запись блока без координаты или состояния не должна собираться: без них загрузчик не ответит, "
-                        + "какая клетка изменилась. Сообщение: " + error.getMessage());
+                        + "какая клетка изменилась. Сообщение: " + error.getMessage()
+                        + " Иначе тест builder_MissingRequiredField_Throws перестанет ловить эту поломку. При смене builder_MissingRequiredField_Throws проверь это утверждение.");
     }
 
     @Test
@@ -54,12 +58,14 @@ class LogRecordTests {
                         .put("text", "строка")
                         .put("secret", "лишнее")
                         .build(),
-                "Лишнее поле обязано отвергаться схемой: иначе оно молча пропадёт при загрузке в SQLite");
+                "Лишнее поле обязано отвергаться схемой: иначе оно молча пропадёт при загрузке в SQLite"
+                        + " При смене builder_UnknownField_Throws проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("secret"),
                 "Лишнее поле должно отвергаться схемой: иначе оно молча пропадёт при загрузке в SQLite. "
-                        + "Сообщение: " + error.getMessage());
+                        + "Сообщение: " + error.getMessage()
+                        + " При смене builder_UnknownField_Throws проверь это утверждение.");
     }
 
     @Test
@@ -67,12 +73,14 @@ class LogRecordTests {
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,
                 () -> typeOf("no_such_type"),
-                "Неизвестный type в JSONL не должен попадать в базу: загрузчик обязан назвать его в ошибке");
+                "Неизвестный type в JSONL не должен попадать в базу: загрузчик обязан назвать его в ошибке"
+                        + " Иначе тест fromJson_UnknownType_Throws перестанет ловить эту поломку. При смене fromJson_UnknownType_Throws проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("no_such_type"),
                 "Неизвестный type в JSONL не должен попадать в базу: загрузчик обязан назвать его в ошибке. "
-                        + "Сообщение: " + error.getMessage());
+                        + "Сообщение: " + error.getMessage()
+                        + " Иначе тест fromJson_UnknownType_Throws перестанет ловить эту поломку. При смене fromJson_UnknownType_Throws проверь это утверждение.");
     }
 
     @Test
@@ -94,10 +102,26 @@ class LogRecordTests {
 
         Map<String, Object> parsed = TestJson.read(record.toJson());
 
-        assertEquals("route", parsed.get("type"), "Тип записи обязан быть в JSONL: загрузчик по нему выбирает таблицу");
-        assertEquals(77, ((Number) parsed.get("tick")).intValue(), "Тик обязан сохраниться числом");
-        assertEquals("дух-1", parsed.get("spirit"), "Имя духа обязано сохраниться в JSONL");
-        assertEquals("chosen", parsed.get("cause"), "Причина обязана писаться кодом закрытого набора");
+        assertEquals(
+                "route",
+                parsed.get("type"),
+                "Тип записи обязан быть в JSONL: загрузчик по нему выбирает таблицу"
+                        + " Иначе тест record_ValidFields_SerializesTypeAndCommonColumns перестанет ловить эту поломку. При смене record_ValidFields_SerializesTypeAndCommonColumns проверь это утверждение.");
+        assertEquals(
+                77,
+                ((Number) parsed.get("tick")).intValue(),
+                "Тик обязан сохраниться числом"
+                        + " Иначе тест record_ValidFields_SerializesTypeAndCommonColumns перестанет ловить эту поломку. При смене record_ValidFields_SerializesTypeAndCommonColumns проверь это утверждение.");
+        assertEquals(
+                "дух-1",
+                parsed.get("spirit"),
+                "Имя духа обязано сохраниться в JSONL"
+                        + " Иначе тест record_ValidFields_SerializesTypeAndCommonColumns перестанет ловить эту поломку. При смене record_ValidFields_SerializesTypeAndCommonColumns проверь это утверждение.");
+        assertEquals(
+                "chosen",
+                parsed.get("cause"),
+                "Причина обязана писаться кодом закрытого набора"
+                        + " Иначе тест record_ValidFields_SerializesTypeAndCommonColumns перестанет ловить эту поломку. При смене record_ValidFields_SerializesTypeAndCommonColumns проверь это утверждение.");
     }
 
     @Test
@@ -123,7 +147,8 @@ class LogRecordTests {
 
         assertTrue(
                 record.toJson().contains("minecraft:oak_log"),
-                "Состояние блока до изменения обязано попасть в JSONL: иначе по логу не понять, что сломали");
+                "Состояние блока до изменения обязано попасть в JSONL: иначе по логу не понять, что сломали"
+                        + " При смене blockChange_AllFormats_HaveRequiredColumns проверь это утверждение.");
     }
 
     private static LogType typeOf(String json) {

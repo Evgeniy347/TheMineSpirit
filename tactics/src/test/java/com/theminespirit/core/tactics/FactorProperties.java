@@ -57,7 +57,8 @@ class FactorProperties {
             assertTrue(
                     Double.isFinite(value) && value >= -1 && value <= 1,
                     "Фактор " + factor + " обязан быть конечным и лежать в [-1; 1], а получили " + value
-                            + ": иначе один фактор перевесит все правила и веса");
+                            + ": иначе один фактор перевесит все правила и веса"
+                            + " При смене factors_AnyAdmissibleSituation_AreFiniteAndWithinRange проверь это утверждение.");
         }
     }
 
@@ -76,7 +77,8 @@ class FactorProperties {
         assertTrue(
                 margin(stronger) >= margin(situation) - SLACK,
                 "Больше брони, HP или урона у нас — запас победы не убывает: " + margin(situation) + " → "
-                        + margin(stronger) + "; иначе дух отступает именно после усиления");
+                        + margin(stronger) + "; иначе дух отступает именно после усиления"
+                        + " При смене winMargin_MoreArmorHpOrDamage_NeverDecreases проверь это утверждение.");
     }
 
     @Property
@@ -97,7 +99,8 @@ class FactorProperties {
         assertTrue(
                 pressure(stronger) <= pressure(situation) + SLACK,
                 "Давление считается от перевеса духа: больше брони, HP или урона у нас — давление не растёт: "
-                        + pressure(situation) + " → " + pressure(stronger) + "; иначе дух бежит именно после усиления");
+                        + pressure(situation) + " → " + pressure(stronger) + "; иначе дух бежит именно после усиления"
+                        + " При смене pressure_MoreArmorHpOrDamage_NeverIncreases проверь это утверждение.");
     }
 
     private static double pressure(Situation situation) {
@@ -118,7 +121,8 @@ class FactorProperties {
                 urgency(weaker) >= urgency(situation) - SLACK,
                 "Срочность считается от абсолютного времени до смерти: меньше HP при тех же врагах — время меньше, "
                         + "срочность не убывает: " + urgency(situation) + " → " + urgency(weaker)
-                        + "; иначе дух спокойнее именно когда умирает быстрее");
+                        + "; иначе дух спокойнее именно когда умирает быстрее"
+                        + " При смене urgency_LessOwnHp_NeverDecreases проверь это утверждение.");
     }
 
     @Provide
@@ -147,6 +151,7 @@ class FactorProperties {
         assertTrue(
                 margin(crowded) <= margin(situation) + SLACK,
                 "Больше врагов того же типа — запас победы не растёт: " + margin(situation) + " → " + margin(crowded)
-                        + "; иначе подкрепление врага заставляло бы духа смелеть");
+                        + "; иначе подкрепление врага заставляло бы духа смелеть"
+                        + " При смене winMargin_MoreEnemiesOfSameType_NeverIncreases проверь это утверждение.");
     }
 }

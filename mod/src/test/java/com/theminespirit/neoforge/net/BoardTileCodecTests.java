@@ -39,7 +39,8 @@ class BoardTileCodecTests {
             assertEquals(
                     List.of(repair, plain()),
                     BoardTileCodec.read(buf),
-                    "Плитка обязана пережить пакет доски: иначе клиент не увидит, что нужно для постройки");
+                    "Плитка обязана пережить пакет доски: иначе клиент не увидит, что нужно для постройки"
+                            + " При смене writeRead_NonEmptyRequiredItems_KeepsValuesAndDetails проверь это утверждение.");
         } finally {
             buf.release();
         }

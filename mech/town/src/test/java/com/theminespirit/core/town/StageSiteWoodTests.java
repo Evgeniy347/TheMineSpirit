@@ -31,7 +31,8 @@ class StageSiteWoodTests {
                         BASE.fenceStrip(),
                         BASE.ring()),
                 "Порода дерева проверяется в самом конструкторе места этапа: обход через StageSites.of "
-                        + "пропускал прямую сборку и нёс негодную породу в схемы");
+                        + "пропускал прямую сборку и нёс негодную породу в схемы"
+                        + " Иначе тест canonicalConstructor_UnknownWood_IsRejected перестанет ловить эту поломку. При смене canonicalConstructor_UnknownWood_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -39,6 +40,7 @@ class StageSiteWoodTests {
         assertThrows(
                 NullPointerException.class,
                 () -> TownFixtures.flatSite(null),
-                "Пустая порода отвергается там же, где остальные обязательные поля места этапа");
+                "Пустая порода отвергается там же, где остальные обязательные поля места этапа"
+                        + " Иначе тест canonicalConstructor_NullWood_IsRejected перестанет ловить эту поломку. При смене canonicalConstructor_NullWood_IsRejected проверь это утверждение.");
     }
 }

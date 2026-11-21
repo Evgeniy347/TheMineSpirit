@@ -49,10 +49,12 @@ class StageSettleRepairTests {
                 1,
                 repair.work().blocks().size(),
                 "Ремонт ограды ставит только реально недостающий блок, а не весь сегмент: "
-                        + repair.work().blocks());
+                        + repair.work().blocks()
+                        + " Иначе тест repairTarget_FenceWithOneMissingBlock_KeepsOnlyThatBlock перестанет ловить эту поломку. При смене repairTarget_FenceWithOneMissingBlock_KeepsOnlyThatBlock проверь это утверждение.");
         assertTrue(
                 repair.work().blocks().get(0).at().equals(MISSING),
                 "Оставлен именно недостающий блок " + MISSING + ": "
-                        + repair.work().blocks());
+                        + repair.work().blocks()
+                        + " Иначе тест repairTarget_FenceWithOneMissingBlock_KeepsOnlyThatBlock перестанет ловить эту поломку. При смене repairTarget_FenceWithOneMissingBlock_KeepsOnlyThatBlock проверь это утверждение.");
     }
 }

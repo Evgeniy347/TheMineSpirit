@@ -11,6 +11,7 @@ class ModIdentityTests {
                 ModIdentity.MOD_ID,
                 System.getProperty("theminespirit.modId"),
                 "ModIdentity.MOD_ID должен совпадать с mod_id в gradle.properties: из mod_id генерируется "
-                        + "neoforge.mods.toml, и при расхождении NeoForge не найдёт класс с @Mod для этого мода");
+                        + "neoforge.mods.toml, и при расхождении NeoForge не найдёт класс с @Mod для этого мода"
+                        + " При смене modId_JavaConstant_MatchesGradleProperty проверь это утверждение.");
     }
 }

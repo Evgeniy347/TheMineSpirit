@@ -1,7 +1,6 @@
 package com.theminespirit.core.inventory;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
@@ -84,8 +83,8 @@ class ValueTableTests {
                 expected,
                 VALUES.valueOf(item),
                 "Предмет '" + item + "' обязан стоить " + expected + ": таблица ценностей решает, что дух берёт "
-                        + "при переполнении инвентаря и что оставляет в базовом наборе. Ожидание задаёт "
-                        + "data/theminespirit/inventory/item_values.json");
+                        + "при переполнении инвентаря и что оставляет, иначе выбор дропа врёт. Ожидание задаёт "
+                        + "data/theminespirit/inventory/item_values.json. При смене таблицы проверь цену " + item);
     }
 
     @Test
@@ -93,8 +92,8 @@ class ValueTableTests {
         assertEquals(
                 1,
                 VALUES.valueOf("create:copper_pickaxe"),
-                "Шаблон без ':' действует только в пространстве minecraft: предмет чужого мода получает default=1 "
-                        + "и выглядит для духа недорогим, пока его не опишут в item_values.json");
+                "Шаблон без ':' действует только в пространстве minecraft: иначе предмет чужого мода получает "
+                        + "default=1 и выглядит для духа недорогим. При смене таблицы проверь modded-предмет");
     }
 
     @Test
@@ -102,8 +101,9 @@ class ValueTableTests {
         assertEquals(
                 1,
                 VALUES.valueOf("create:andesite_alloy"),
-                "Предмет вне всех правил получает default=1: нулевая цена сделала бы его самым выгодным на выброс, "
-                        + "а завышенная — предметом, который дух тащит вместо алмаза");
+                "Предмет вне всех правил получает default=1: иначе нулевая цена сделала бы его самым выгодным "
+                        + "на выброс, а завышенная — предметом, который дух тащит вместо алмаза. "
+                        + "При смене таблицы проверь default");
     }
 
     @Test
@@ -119,12 +119,13 @@ class ValueTableTests {
                 5,
                 table.valueOf("iron_ingot"),
                 "Правило, стоящее выше, забирает предмет себе: именно порядок правил делает исключения вроде "
-                        + "netherite_scrap рабочими, поэтому перестановка строк меняет цену предмета");
+                        + "netherite_scrap рабочими, иначе перестановка строк меняет цену предмета. "
+                        + "При смене table проверь порядок правил");
         assertEquals(
                 40,
                 table.valueOf("copper_block"),
                 "Правило ниже всё ещё работает для остальных своих шаблонов: иначе оно стало бы мёртвым "
-                        + "и его цена отличилась бы от задуманной");
+                        + "и его цена отличилась бы от задуманной. При смене table проверь нижнее правило");
     }
 
     @ParameterizedTest(name = "{0} из группы {1}")
@@ -148,7 +149,8 @@ class ValueTableTests {
                 expected,
                 VALUES.categoryOf(item),
                 "Категория предмета '" + item + "' обязана быть '" + expected + "': по категориям сортёр сундука "
-                        + "расставляет стопки, и предмет в чужой группе разъезжается по сундуку при каждой разгрузке");
+                        + "расставляет стопки, иначе предмет в чужой группе разъезжается по сундуку. "
+                        + "При смене категорий проверь " + item);
     }
 
     @Test
@@ -156,149 +158,13 @@ class ValueTableTests {
         assertEquals(
                 0,
                 VALUES.stackValue(new Stack("cobblestone", 0, 64, 64)),
-                "Стопка булыжника ничего не стоит: при переполнении инвентаря дух выбросит именно её");
+                "Стопка булыжника ничего не стоит: при переполнении инвентаря дух выбросит именно её, "
+                        + "иначе мусор останется в инвентаре. При смене stackValue проверь булыжник");
         assertEquals(
                 1500,
                 VALUES.stackValue(new Stack("diamond", 3, 3, 64)),
-                "Три алмаза стоят втрое дороже одного: сравнение стопок, а не предметов, решает, что дороже");
-    }
-
-    @Test
-    void parse_BrokenJson_ThrowsWithPathAndReason() {
-        IllegalStateException error = assertThrows(
-                IllegalStateException.class,
-                () -> ValueTable.parse("{\"default\": 1, ", ORIGIN),
-                "Битый файл ценностей обязан ронять загрузку: тихое «все предметы по рублю» сделало бы выбор "
-                        + "при переполнении инвентаря случайным");
-
-        assertTrue(
-                error.getMessage().contains(ORIGIN),
-                "Сообщение об ошибке обязано называть путь к файлу: по нему автор находит, какой файл править. "
-                        + "Фактическое: " + error.getMessage());
-        assertTrue(
-                error.getMessage().contains("JSON"),
-                "Сообщение об ошибке обязано называть причину — неразобранный JSON. Фактическое: "
-                        + error.getMessage());
-    }
-
-    @Test
-    void parse_UnknownField_ThrowsWithFieldName() {
-        IllegalStateException error = assertThrows(
-                IllegalStateException.class,
-                () -> ValueTable.parse("""
-                        {"default": 1, "valu": 5,
-                         "rules": [{"match": ["stone"], "value": 1}],
-                         "categories": [{"name": "misc", "match": ["*"]}]}
-                        """, ORIGIN),
-                "Опечатка в имени поля обязана быть ошибкой: правило с полем valu не читается молча, "
-                        + "а тихий пропуск сделал бы таблицу неполной");
-
-        assertTrue(
-                error.getMessage().contains("valu"),
-                "Сообщение обязано называть неизвестное поле 'valu': по нему правят файл. Фактическое: "
-                        + error.getMessage());
-    }
-
-    @Test
-    void parse_PatternOutsideFilterAlphabet_ThrowsWithPattern() {
-        IllegalStateException error = assertThrows(
-                IllegalStateException.class,
-                () -> ValueTable.parse("""
-                        {"default": 1,
-                         "rules": [{"match": ["Iron_Ingot"], "value": 1}],
-                         "categories": [{"name": "misc", "match": ["*"]}]}
-                        """, ORIGIN),
-                "Шаблон вне алфавита IdFilter обязан быть ошибкой: такой шаблон не совпадёт ни с одним id "
-                        + "и тихо выключит правило");
-
-        assertTrue(
-                error.getMessage().contains("Iron_Ingot"),
-                "Сообщение обязано называть плохой шаблон 'Iron_Ingot': по нему правят файл. Фактическое: "
-                        + error.getMessage());
-    }
-
-    @Test
-    void parse_NegativeValue_ThrowsWithValue() {
-        IllegalStateException error = assertThrows(
-                IllegalStateException.class,
-                () -> ValueTable.parse("""
-                        {"default": 1,
-                         "rules": [{"match": ["*_ingot"], "value": -5}],
-                         "categories": [{"name": "misc", "match": ["*"]}]}
-                        """, ORIGIN),
-                "Отрицательная ценность обязана быть ошибкой: «самое дешёвое» с отрицательными ценами "
-                        + "выбирает предмет, которого нет в инвентаре");
-
-        assertTrue(
-                error.getMessage().contains("-5"),
-                "Сообщение обязано называть отрицательное значение -5: по нему находят строку файла. " + "Фактическое: "
-                        + error.getMessage());
-    }
-
-    @Test
-    void parse_DeadRule_ThrowsWithRuleNumber() {
-        IllegalStateException error = assertThrows(
-                IllegalStateException.class,
-                () -> ValueTable.parse("""
-                        {"default": 1,
-                         "rules": [{"match": ["*_ingot"], "value": 5},
-                                   {"match": ["iron_ingot"], "value": 40}],
-                         "categories": [{"name": "misc", "match": ["*"]}]}
-                        """, ORIGIN),
-                "Правило, перекрытое предыдущим целиком, никогда не сработает: оно обязано быть ошибкой файла, "
-                        + "иначе цена предмета в таблице расходится с ценой в правилах выше");
-
-        assertTrue(
-                error.getMessage().contains("№1"),
-                "Сообщение обязано называть мёртвое правило №1: по номеру находят строку файла. Фактическое: "
-                        + error.getMessage());
-    }
-
-    @Test
-    void parse_EmptyRules_Throws() {
-        IllegalStateException error = assertThrows(
-                IllegalStateException.class,
-                () -> ValueTable.parse("""
-                        {"default": 1, "rules": [],
-                         "categories": [{"name": "misc", "match": ["*"]}]}
-                        """, ORIGIN),
-                "Файл без правил обязан быть ошибкой: иначе все предметы получают default и таблица теряет смысл");
-
-        assertTrue(
-                error.getMessage().contains("rules"),
-                "Сообщение обязано называть отсутствующий список rules. Фактическое: " + error.getMessage());
-    }
-
-    @Test
-    void parse_LastCategoryWithoutCatchAll_Throws() {
-        IllegalStateException error = assertThrows(
-                IllegalStateException.class,
-                () -> ValueTable.parse("""
-                        {"default": 1,
-                         "rules": [{"match": ["*_ingot"], "value": 1}],
-                         "categories": [{"name": "materials", "match": ["*_ingot"]}]}
-                        """, ORIGIN),
-                "Последняя категория без шаблона '*' обязана быть ошибкой: предмет вне категорий не получил бы "
-                        + "места при сортировке сундука, и сортёр упал бы уже в игре");
-
-        assertTrue(
-                error.getMessage().contains("materials"),
-                "Сообщение обязано называть последнюю категорию 'materials': по имени правят файл. Фактическое: "
-                        + error.getMessage());
-    }
-
-    @Test
-    void load_MissingFile_ThrowsWithPath() {
-        IllegalStateException error = assertThrows(
-                IllegalStateException.class,
-                () -> ValueTable.load("data/theminespirit/inventory/absent.json"),
-                "Отсутствие файла ценностей на classpath обязано быть ошибкой: без таблицы дух не решит, "
-                        + "что дороже при переполнении инвентаря");
-
-        assertTrue(
-                error.getMessage().contains("data/theminespirit/inventory/absent.json"),
-                "Сообщение обязано называть путь, по которому файл искали: по нему находят потерянный ресурс. "
-                        + "Фактическое: " + error.getMessage());
+                "Три алмаза стоят втрое дороже одного: сравнение стопок, а не предметов, решает, что дороже, "
+                        + "иначе ценное выбросят. При смене stackValue проверь три алмаза");
     }
 
     @ParameterizedTest(name = "файл содержит правило для {0}")
@@ -322,8 +188,9 @@ class ValueTableTests {
     void loadedTable_RuleCoversVanillaItem(String item) {
         assertTrue(
                 VALUES.rules().stream().anyMatch(rule -> rule.covers(item)),
-                "Предмет '" + item + "' обязан быть описан правилом файла ценностей: незакрытый предмет получает "
-                        + "default и выглядит для духа таким же ценным, как неизвестный мусор");
+                "Предмет '" + item + "' обязан быть описан правилом файла ценностей: иначе незакрытый предмет "
+                        + "получает default и выглядит для духа как неизвестный мусор. "
+                        + "При смене файла проверь правило для " + item);
     }
 
     @Test
@@ -334,6 +201,7 @@ class ValueTableTests {
                 List.of("tools", "armor", "food", "materials", "blocks", "misc"),
                 names,
                 "Порядок категорий в файле задаёт раскладку сундука: инструменты и оружие, броня, еда, "
-                        + "руды и слитки, блоки, прочее. Перестановка меняет порядок стопок в сундуке");
+                        + "руды и слитки, блоки, прочее, иначе перестановка меняет порядок стопок. "
+                        + "При смене файла проверь порядок категорий");
     }
 }

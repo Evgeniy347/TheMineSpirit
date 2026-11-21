@@ -20,6 +20,7 @@ class ClearDropsTests {
         assertFalse(
                 ClearDrops.continues(false),
                 "прочие сбои подбора (не дотянулся, таймаут) по-прежнему останавливают расчистку с причиной:"
-                        + " молча бросать дроп из-за пути нельзя. Проверить при смене: DropCollector.fail");
+                        + " молча бросать дроп из-за пути нельзя. Проверить при смене: DropCollector.fail"
+                        + " Иначе тест continues_OtherPickupFailure_Stops перестанет ловить эту поломку.");
     }
 }

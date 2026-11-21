@@ -25,7 +25,8 @@ class ContainerLidGuardTests {
                 lines(CHEST_TYPE_READ, Files.readString(LID, StandardCharsets.UTF_8)),
                 "ContainerLid читает ChestBlock.TYPE только через ContainerCells.chestType, где есть проверка "
                         + "instanceof ChestBlock и hasProperty(TYPE). Прямое чтение на клетке air с BlockEntity "
-                        + "сундука бросает IllegalArgumentException в тике и валит сервер (observe10, A1)");
+                        + "сундука бросает IllegalArgumentException в тике и валит сервер (observe10, A1)"
+                        + " Иначе тест containerLid_ChestTypeReadsOutsideHelper_AreAbsent перестанет ловить эту поломку. При смене containerLid_ChestTypeReadsOutsideHelper_AreAbsent проверь это утверждение.");
     }
 
     @Test
@@ -37,15 +38,18 @@ class ContainerLidGuardTests {
                 1,
                 reads.size(),
                 "свойство ChestBlock.TYPE читается в одном месте — ContainerCells.chestType: второе чтение "
-                        + "легко останется без проверки и снова уронит тик на воздухе с BlockEntity");
+                        + "легко останется без проверки и снова уронит тик на воздухе с BlockEntity"
+                        + " Иначе тест containerCells_OnlyChestTypeRead_IsGuarded перестанет ловить эту поломку. При смене containerCells_OnlyChestTypeRead_IsGuarded проверь это утверждение.");
         assertTrue(
                 source.contains("state.getBlock() instanceof ChestBlock"),
                 "перед getValue(ChestBlock.TYPE) обязательна проверка instanceof ChestBlock: у воздуха "
-                        + "свойства type нет");
+                        + "свойства type нет"
+                        + " Иначе тест containerCells_OnlyChestTypeRead_IsGuarded перестанет ловить эту поломку. При смене containerCells_OnlyChestTypeRead_IsGuarded проверь это утверждение.");
         assertTrue(
                 source.contains("state.hasProperty(ChestBlock.TYPE)"),
                 "перед getValue(ChestBlock.TYPE) обязательна проверка hasProperty(TYPE): без неё воздух "
-                        + "с BlockEntity сундука снова даст исключение");
+                        + "с BlockEntity сундука снова даст исключение"
+                        + " Иначе тест containerCells_OnlyChestTypeRead_IsGuarded перестанет ловить эту поломку. При смене containerCells_OnlyChestTypeRead_IsGuarded проверь это утверждение.");
     }
 
     @Test
@@ -56,7 +60,8 @@ class ContainerLidGuardTests {
                 List.of(1),
                 lines(CHEST_TYPE_READ, sample),
                 "сторож ослеп: прямое чтение ChestBlock.TYPE в образце обязано находиться, иначе он пропустит "
-                        + "возврат старого падения в ContainerLid");
+                        + "возврат старого падения в ContainerLid"
+                        + " При смене chestTypeReadPattern_UncheckedSample_IsReported проверь это утверждение.");
     }
 
     private static List<Integer> lines(Pattern pattern, String source) {

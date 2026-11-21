@@ -47,11 +47,13 @@ class StageTwoClosureTests {
         assertEquals(
                 2,
                 SettlementStage.of(board.ledger()),
-                "Без амбара этап 2 не закрыт: состав этапа — план stages.json, а не только три кейса");
+                "Без амбара этап 2 не закрыт: состав этапа — план stages.json, а не только три кейса"
+                        + " Иначе тест plan_AllStageTwoBuildingsExceptBarn_StageTwoStaysOpen перестанет ловить эту поломку. При смене plan_AllStageTwoBuildingsExceptBarn_StageTwoStaysOpen проверь это утверждение.");
         assertEquals(
                 Set.of("barn"),
                 SettlementStage.missing(board.ledger()).keySet(),
-                "Остаток этапа 2 после всех построек плана — только амбар");
+                "Остаток этапа 2 после всех построек плана — только амбар"
+                        + " Иначе тест plan_AllStageTwoBuildingsExceptBarn_StageTwoStaysOpen перестанет ловить эту поломку. При смене plan_AllStageTwoBuildingsExceptBarn_StageTwoStaysOpen проверь это утверждение.");
     }
 
     @Test
@@ -73,10 +75,12 @@ class StageTwoClosureTests {
         assertEquals(
                 List.of("mine_level_2"),
                 BoardStages.held(board),
-                "Задача этапа 2 при незакрытом этапе 1 снимается с доски, а не висит и падает");
+                "Задача этапа 2 при незакрытом этапе 1 снимается с доски, а не висит и падает"
+                        + " Иначе тест held_NextStageTicket_ListedWhenPreviousStageOpen перестанет ловить эту поломку. При смене held_NextStageTicket_ListedWhenPreviousStageOpen проверь это утверждение.");
         assertTrue(
                 board.ledger().stageGate().missing().containsKey("BUILD_MINE"),
-                "Причина снятия видна на доске: этап 1 не закрыт, шахта не готова в мире");
+                "Причина снятия видна на доске: этап 1 не закрыт, шахта не готова в мире"
+                        + " Иначе тест held_NextStageTicket_ListedWhenPreviousStageOpen перестанет ловить эту поломку. При смене held_NextStageTicket_ListedWhenPreviousStageOpen проверь это утверждение.");
     }
 
     @Test
@@ -91,7 +95,11 @@ class StageTwoClosureTests {
             built(board, id);
         }
 
-        assertEquals(3, SettlementStage.of(board.ledger()), "Все постройки плана этапа 2 построены — этап 2 закрыт");
+        assertEquals(
+                3,
+                SettlementStage.of(board.ledger()),
+                "Все постройки плана этапа 2 построены — этап 2 закрыт"
+                        + " Иначе тест plan_AllStageTwoBuildingsBuilt_StageThreeOpened перестанет ловить эту поломку. При смене plan_AllStageTwoBuildingsBuilt_StageThreeOpened проверь это утверждение.");
     }
 
     private static Board stageTwoReady() {

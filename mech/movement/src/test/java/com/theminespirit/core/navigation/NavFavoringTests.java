@@ -17,11 +17,32 @@ class NavFavoringTests {
         NavPath previous = path(0, 3, 5);
         NavFavoring favoring = NavFavoring.of(previous, 0.5);
 
-        assertEquals(0.5, favoring.factor(0, 3, 0), 0, "клетка прошлого пути дешевле");
-        assertEquals(0.5, favoring.factor(5, 3, 0), 0, "конец прошлого пути тоже дешевле");
-        assertEquals(1.0, favoring.factor(9, 3, 0), 0, "новая клетка стоит обычную цену");
-        assertFalse(favoring.isEmpty(), "прошлый путь не пуст");
-        assertTrue(NavFavoring.EMPTY.isEmpty(), "пустое favoring не меняет цены");
+        assertEquals(
+                0.5,
+                favoring.factor(0, 3, 0),
+                0,
+                "клетка прошлого пути дешевле"
+                        + " Иначе тест of_PreviousPath_ReducesOnlyItsCells перестанет ловить эту поломку. При смене of_PreviousPath_ReducesOnlyItsCells проверь это утверждение.");
+        assertEquals(
+                0.5,
+                favoring.factor(5, 3, 0),
+                0,
+                "конец прошлого пути тоже дешевле"
+                        + " Иначе тест of_PreviousPath_ReducesOnlyItsCells перестанет ловить эту поломку. При смене of_PreviousPath_ReducesOnlyItsCells проверь это утверждение.");
+        assertEquals(
+                1.0,
+                favoring.factor(9, 3, 0),
+                0,
+                "новая клетка стоит обычную цену"
+                        + " Иначе тест of_PreviousPath_ReducesOnlyItsCells перестанет ловить эту поломку. При смене of_PreviousPath_ReducesOnlyItsCells проверь это утверждение.");
+        assertFalse(
+                favoring.isEmpty(),
+                "прошлый путь не пуст"
+                        + " Иначе тест of_PreviousPath_ReducesOnlyItsCells перестанет ловить эту поломку. При смене of_PreviousPath_ReducesOnlyItsCells проверь это утверждение.");
+        assertTrue(
+                NavFavoring.EMPTY.isEmpty(),
+                "пустое favoring не меняет цены"
+                        + " Иначе тест of_PreviousPath_ReducesOnlyItsCells перестанет ловить эту поломку. При смене of_PreviousPath_ReducesOnlyItsCells проверь это утверждение.");
     }
 
     @Test
@@ -29,7 +50,8 @@ class NavFavoringTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> NavFavoring.of(path(0, 3, 0), 0),
-                "нулевой множитель сделал бы клетку бесплатной и сломал A*");
+                "нулевой множитель сделал бы клетку бесплатной и сломал A*"
+                        + " Иначе тест of_NonPositiveFactor_IsRejected перестанет ловить эту поломку. При смене of_NonPositiveFactor_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -51,7 +73,8 @@ class NavFavoringTests {
         assertTrue(
                 result.path().positions().stream().anyMatch(cell -> cell.z() == 3),
                 "при равных обходах выбирается тот, что дешевле по прошлому пути: "
-                        + result.path().positions());
+                        + result.path().positions()
+                        + " Иначе тест favoring_SymmetricWall_ChoosesFavoredSide перестанет ловить эту поломку. При смене favoring_SymmetricWall_ChoosesFavoredSide проверь это утверждение.");
     }
 
     private static NavPath path(int fromX, int y, int toX) {

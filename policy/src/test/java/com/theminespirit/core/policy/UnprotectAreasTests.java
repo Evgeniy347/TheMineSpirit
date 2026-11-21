@@ -66,7 +66,7 @@ class UnprotectAreasTests {
         BlockProtection.Refused refused = assertInstanceOf(
                 BlockProtection.Refused.class,
                 check(areas, new BlockCoord(3, 1, 1), NOW),
-                "Снаружи разрешённой области осторожная защита остаётся: радиус разрешения не расширяется. "
+                "Снаружи разрешённой области осторожная защита остаётся: радиус разрешения не расширяется, иначе защита станет дырой. "
                         + "При смене covers проверь клетку сразу за границей бокса");
         assertEquals(
                 PolicyId.PLAYER_BUILDINGS,
@@ -97,7 +97,7 @@ class UnprotectAreasTests {
                 4096,
                 ProtectionConfig.readClasspath().maxUnprotectVolume(),
                 "Предел объёма разрешённой области берётся из protection.json → maxUnprotectVolume, иначе "
-                        + "ограничение живёт только в коде. При смене файла сверь значение 4096");
+                        + "ограничение живёт только в коде. При смене файла проверь значение 4096");
     }
 
     @Test
@@ -109,7 +109,7 @@ class UnprotectAreasTests {
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,
                 () -> areas.add(tooBig, limit, NOW),
-                "Область объёмом больше предела отвергается до сохранения: снятие защиты на весь мир недопустимо. "
+                "Область объёмом больше предела отвергается до сохранения: снятие защиты на весь мир недопустимо, иначе защита пропадёт. "
                         + "При смене add проверь объём предел+1");
 
         assertTrue(
@@ -117,7 +117,7 @@ class UnprotectAreasTests {
                         && error.getMessage().contains("больше предела " + limit),
                 "Отказ называет фактический объём и предел из данных, иначе игрок не поймёт, насколько зона "
                         + "велика. Фактическое: " + error.getMessage()
-                        + ". При смене текста сверь оба числа");
+                        + ". При смене текста проверь оба числа");
         assertEquals(
                 0,
                 areas.size(),

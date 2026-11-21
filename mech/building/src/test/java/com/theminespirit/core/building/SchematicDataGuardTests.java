@@ -36,7 +36,8 @@ class SchematicDataGuardTests {
                 "Каждая постройка обязана разбираться и проходить правила качества (стены, вход, крыша, высота, окна, "
                         + "дверь, опора, сундук, свет) или иметь исключение с причиной в своём файле; устаревшее "
                         + "исключение — тоже ошибка: оно молча ослабляет сторож. Проверка вне тестов — "
-                        + "scripts/schematic.sh check. Нарушения");
+                        + "scripts/schematic.sh check. Нарушения"
+                        + " Иначе тест realSchematics_EachFile_ParsesAndPassesRules перестанет ловить эту поломку. При смене realSchematics_EachFile_ParsesAndPassesRules проверь это утверждение.");
     }
 
     @Test
@@ -57,7 +58,8 @@ class SchematicDataGuardTests {
                 List.of(),
                 untyped,
                 "Каждая постройка демо-каталога обязана нести type и entrance: без них сторожа качества её не "
-                        + "проверяют, и демо покажет игроку дом без двери или крыши. Без типа");
+                        + "проверяют, и демо покажет игроку дом без двери или крыши. Без типа"
+                        + " Иначе тест demoBuildings_EachLevel_IsTypedPreset перестанет ловить эту поломку. При смене demoBuildings_EachLevel_IsTypedPreset проверь это утверждение.");
     }
 
     @Test
@@ -81,8 +83,12 @@ class SchematicDataGuardTests {
         assertTrue(
                 report.stale().stream().anyMatch(problem -> problem.contains("probe|support")),
                 "Исключение для уже проходящего правила обязано считаться устаревшим: иначе сторож ослабляют "
-                        + "навсегда; фактически: " + report.stale());
-        assertFalse(report.ok(), "Отчёт с устаревшим исключением не может быть зелёным");
+                        + "навсегда; фактически: " + report.stale()
+                        + " При смене check_StaleExemption_IsReported проверь это утверждение.");
+        assertFalse(
+                report.ok(),
+                "Отчёт с устаревшим исключением не может быть зелёным"
+                        + " Иначе тест check_StaleExemption_IsReported перестанет ловить эту поломку. При смене check_StaleExemption_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -100,12 +106,14 @@ class SchematicDataGuardTests {
                   - y0: |
                       #
                 """, "тест"),
-                "Исключение с несуществующим правилом обязано отвергаться: опечатка иначе молча не применится");
+                "Исключение с несуществующим правилом обязано отвергаться: опечатка иначе молча не применится"
+                        + " При смене parse_ExemptionWithUnknownRule_IsRejected проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("ghost") && error.getMessage().contains("строка 3"),
                 "Ошибка обязана называть неизвестное правило и строку: без них непонятно, что чинить; фактически: "
-                        + error.getMessage());
+                        + error.getMessage()
+                        + " Иначе тест parse_ExemptionWithUnknownRule_IsRejected перестанет ловить эту поломку. При смене parse_ExemptionWithUnknownRule_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -122,20 +130,28 @@ class SchematicDataGuardTests {
                   - y0: |
                       #
                 """, "тест"),
-                "Исключение без причины обязано отвергаться: иначе правило ослабляется молча");
+                "Исключение без причины обязано отвергаться: иначе правило ослабляется молча"
+                        + " При смене parse_ExemptionWithoutReason_IsRejected проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("reason"),
-                "Ошибка обязана называть поле reason; фактически: " + error.getMessage());
+                "Ошибка обязана называть поле reason; фактически: " + error.getMessage()
+                        + " Иначе тест parse_ExemptionWithoutReason_IsRejected перестанет ловить эту поломку. При смене parse_ExemptionWithoutReason_IsRejected проверь это утверждение.");
     }
 
     private static List<Path> files() throws IOException {
-        assertTrue(Files.isDirectory(ROOT), "Сторож не нашёл " + ROOT + ": тесты запускаются из корня проекта");
+        assertTrue(
+                Files.isDirectory(ROOT),
+                "Сторож не нашёл " + ROOT + ": тесты запускаются из корня проекта"
+                        + " Иначе тест parse_ExemptionWithoutReason_IsRejected перестанет ловить эту поломку. При смене parse_ExemptionWithoutReason_IsRejected проверь это утверждение.");
         try (Stream<Path> stream = Files.list(ROOT)) {
             List<Path> files = stream.filter(path -> path.toString().endsWith(SchematicTextParser.EXTENSION))
                     .sorted()
                     .toList();
-            assertFalse(files.isEmpty(), "В " + ROOT + " нет ни одной постройки: сторож проверял бы пустоту");
+            assertFalse(
+                    files.isEmpty(),
+                    "В " + ROOT + " нет ни одной постройки: сторож проверял бы пустоту"
+                            + " Иначе тест parse_ExemptionWithoutReason_IsRejected перестанет ловить эту поломку. При смене parse_ExemptionWithoutReason_IsRejected проверь это утверждение.");
             return files;
         }
     }

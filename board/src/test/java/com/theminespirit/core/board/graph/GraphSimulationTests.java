@@ -39,7 +39,8 @@ class GraphSimulationTests {
         assertEquals(
                 List.of(),
                 stuck.subList(0, Math.min(5, stuck.size())),
-                "Поселение застряло (" + stuck.size() + " стартов)");
+                "Поселение застряло (" + stuck.size() + " стартов)"
+                        + " Иначе тест simulate_EveryStartClass_ReachesLastStage перестанет ловить эту поломку. При смене simulate_EveryStartClass_ReachesLastStage проверь это утверждение.");
     }
 
     @Test
@@ -83,6 +84,10 @@ class GraphSimulationTests {
         }
         Files.createDirectories(REPORT.getParent());
         Files.writeString(REPORT, report, StandardCharsets.UTF_8);
-        assertEquals(true, Files.exists(REPORT), "Отчёт пути поселения записан в " + REPORT);
+        assertEquals(
+                true,
+                Files.exists(REPORT),
+                "Отчёт пути поселения записан в " + REPORT
+                        + " Иначе тест simulate_Baselines_WriteTrailReport перестанет ловить эту поломку. При смене simulate_Baselines_WriteTrailReport проверь это утверждение.");
     }
 }

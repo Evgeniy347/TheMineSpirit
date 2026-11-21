@@ -18,34 +18,39 @@ class StandPathGateTests {
         assertFalse(
                 StandPathGate.usable(true, true, walkable, PIT),
                 "Стоянка в яме ниже площадки не входит в обратимый обход от духа: подходить к ней нельзя, "
-                        + "иначе он уйдёт на y=58 при площадке y=69 и выхода не найдёт");
+                        + "иначе он уйдёт на y=58 при площадке y=69 и выхода не найдёт"
+                        + " При смене usable_NearStandOutsideWalkablePit_Refused проверь это утверждение.");
     }
 
     @Test
     void usable_NearStandInWalkableSet_Accepted() {
         assertTrue(
                 StandPathGate.usable(true, true, Optional.of(Set.of(STAND)), STAND),
-                "Стоянка, до которой дух доходит и возвращается пешком, годится");
+                "Стоянка, до которой дух доходит и возвращается пешком, годится"
+                        + " Иначе тест usable_NearStandInWalkableSet_Accepted перестанет ловить эту поломку. При смене usable_NearStandInWalkableSet_Accepted проверь это утверждение.");
     }
 
     @Test
     void usable_NearStandWithoutFloor_Refused() {
         assertFalse(
                 StandPathGate.usable(false, true, Optional.of(Set.of(STAND)), STAND),
-                "Стоянка без пола в живом мире (под ней воздух) не годится, даже если план её предполагал");
+                "Стоянка без пола в живом мире (под ней воздух) не годится, даже если план её предполагал"
+                        + " Иначе тест usable_NearStandWithoutFloor_Refused перестанет ловить эту поломку. При смене usable_NearStandWithoutFloor_Refused проверь это утверждение.");
     }
 
     @Test
     void usable_FarStandNotChecked_Accepted() {
         assertTrue(
                 StandPathGate.usable(true, false, Optional.of(Set.of()), STAND),
-                "Издалека набор обхода вокруг площадки ничего не знает о стоянке: путь проверит подход, а не отказ");
+                "Издалека набор обхода вокруг площадки ничего не знает о стоянке: путь проверит подход, а не отказ"
+                        + " Иначе тест usable_FarStandNotChecked_Accepted перестанет ловить эту поломку. При смене usable_FarStandNotChecked_Accepted проверь это утверждение.");
     }
 
     @Test
     void usable_NearStandWalkableUnknown_Accepted() {
         assertTrue(
                 StandPathGate.usable(true, true, Optional.empty(), STAND),
-                "Обход не построился (предел узлов) — это «неизвестно», а не «пути нет»: стоянку не отбрасываем");
+                "Обход не построился (предел узлов) — это «неизвестно», а не «пути нет»: стоянку не отбрасываем"
+                        + " Иначе тест usable_NearStandWalkableUnknown_Accepted перестанет ловить эту поломку. При смене usable_NearStandWalkableUnknown_Accepted проверь это утверждение.");
     }
 }

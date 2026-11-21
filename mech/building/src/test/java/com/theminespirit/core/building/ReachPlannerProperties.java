@@ -61,7 +61,8 @@ class ReachPlannerProperties {
                 expected,
                 workable,
                 "С места делается ровно то, что досягаемо, готово и не в теле духа, в порядке вызывающего: пропуск "
-                        + "или лишняя клетка ломают постановку без подходов");
+                        + "или лишняя клетка ломают постановку без подходов"
+                        + " Иначе тест workableNow_AnyTargets_ReturnsExactlyReachableReadyCellsOutsideBody перестанет ловить эту поломку. При смене workableNow_AnyTargets_ReturnsExactlyReachableReadyCellsOutsideBody проверь это утверждение.");
     }
 
     @Property
@@ -86,14 +87,22 @@ class ReachPlannerProperties {
             return;
         }
         BlockCoord spot = stand.get();
-        assertTrue(world.standable(spot), "Стоянка обязана быть клеткой, где можно стоять");
+        assertTrue(
+                world.standable(spot),
+                "Стоянка обязана быть клеткой, где можно стоять"
+                        + " Иначе тест nextStand_AnyTargets_StandIsFreeOutsideSchemeAndCoversSomething перестанет ловить эту поломку. При смене nextStand_AnyTargets_StandIsFreeOutsideSchemeAndCoversSomething проверь это утверждение.");
         assertFalse(
                 scheme.contains(spot) || scheme.contains(new BlockCoord(spot.x(), spot.y() + 1, spot.z())),
-                "Стоянка и голова духа не могут быть клетками схемы: дух встанет в будущий блок, фактически " + spot);
-        assertFalse(spot.equals(feet), "Стоянка не совпадает с текущей: иначе подход не начнётся");
+                "Стоянка и голова духа не могут быть клетками схемы: дух встанет в будущий блок, фактически " + spot
+                        + " Иначе тест nextStand_AnyTargets_StandIsFreeOutsideSchemeAndCoversSomething перестанет ловить эту поломку. При смене nextStand_AnyTargets_StandIsFreeOutsideSchemeAndCoversSomething проверь это утверждение.");
+        assertFalse(
+                spot.equals(feet),
+                "Стоянка не совпадает с текущей: иначе подход не начнётся"
+                        + " При смене nextStand_AnyTargets_StandIsFreeOutsideSchemeAndCoversSomething проверь это утверждение.");
         assertTrue(
                 cells.stream().anyMatch(cell -> REACH.reaches(spot, cell) && !SpiritReach.forbiddenStand(spot, cell)),
-                "Со стоянки обязана быть досягаема хотя бы одна клетка: иначе шаг бесполезен");
+                "Со стоянки обязана быть досягаема хотя бы одна клетка: иначе шаг бесполезен"
+                        + " При смене nextStand_AnyTargets_StandIsFreeOutsideSchemeAndCoversSomething проверь это утверждение.");
     }
 
     @Property
@@ -120,7 +129,8 @@ class ReachPlannerProperties {
                     steps++ < limit,
                     "Планировщик обязан завершить работу за конечное число шагов: зацикливание "
                             + "на стоянках оставило бы духа бегать вокруг дома, осталось " + remaining.size()
-                            + " клеток");
+                            + " клеток"
+                            + " Иначе тест plan_AnyTargetsWithGround_FinishesWithoutCycle перестанет ловить эту поломку. При смене plan_AnyTargetsWithGround_FinishesWithoutCycle проверь это утверждение.");
             List<BlockCoord> pending = new ArrayList<>(remaining);
             List<BlockCoord> workable = ReachPlanner.workableNow(REACH, feet, pending, world);
             if (!workable.isEmpty()) {
@@ -132,7 +142,8 @@ class ReachPlannerProperties {
             assertTrue(
                     stand.isPresent(),
                     "Пока есть клетки, обязана найтись следующая стоянка: иначе стройка " + "брошена на "
-                            + remaining.size() + " клетках");
+                            + remaining.size() + " клетках"
+                            + " При смене plan_AnyTargetsWithGround_FinishesWithoutCycle проверь это утверждение.");
             feet = stand.get();
             excluded.add(feet);
         }

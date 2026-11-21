@@ -10,13 +10,15 @@ class UrgentReleaseTests {
         assertTrue(
                 UrgentRelease.holdInsteadOfReset(true),
                 "Снятие срочного приказа у занятого духа удерживает приказ: иначе режим обороны сбрасывается "
-                        + "посреди работы и мигает GUARD_AREA ↔ DEFENSIVE (observe24 B8)");
+                        + "посреди работы и мигает GUARD_AREA ↔ DEFENSIVE (observe24 B8)"
+                        + " При смене urgentOrderEnded_WorkingSpirit_HoldsDirectiveInsteadOfReset проверь это утверждение.");
     }
 
     @Test
     void urgentOrderEnded_IdleSpirit_ReleasesDirective() {
         assertTrue(
                 !UrgentRelease.holdInsteadOfReset(false),
-                "Свободный дух после снятия срочности приказ отпускает: держать нечего");
+                "Свободный дух после снятия срочности приказ отпускает: держать нечего"
+                        + " Иначе тест urgentOrderEnded_IdleSpirit_ReleasesDirective перестанет ловить эту поломку. При смене urgentOrderEnded_IdleSpirit_ReleasesDirective проверь это утверждение.");
     }
 }

@@ -32,11 +32,13 @@ class TacticsAdapterSettingsTests {
                         defaults.journalMaxPerSecond()),
                 "Умолчания адаптера: снятие фактов раз в 10 тиков, не более 16 врагов, радиус поиска 32, бюджет 64 "
                         + "чтения блока, удержание отхода 200 тиков, журнал на 32 записи не чаще одной в секунду. "
-                        + "Изменили число — обновите adapter.json и docs/tactics/README.md");
+                        + "Изменили число — обновите adapter.json и docs/tactics/README.md"
+                        + " Иначе тест defaults_DocumentedNumbers_MatchShippedResource перестанет ловить эту поломку. При смене defaults_DocumentedNumbers_MatchShippedResource проверь это утверждение.");
         assertEquals(
                 TacticsAdapterSettings.defaults(),
                 TacticsAdapterSettings.loadDefault(),
-                "adapter.json обязан повторять умолчания: иначе числа кода и данных разойдутся молча");
+                "adapter.json обязан повторять умолчания: иначе числа кода и данных разойдутся молча"
+                        + " При смене defaults_DocumentedNumbers_MatchShippedResource проверь это утверждение.");
     }
 
     static Stream<Arguments> acceptedBounds() {
@@ -58,8 +60,8 @@ class TacticsAdapterSettingsTests {
         assertEquals(
                 value,
                 read(settings, field),
-                "Граница поля " + field
-                        + " входит в допустимый диапазон: конструктор держит границы чисел, а не парсер");
+                "Граница поля " + field + " входит в допустимый диапазон: конструктор держит границы чисел, а не парсер"
+                        + " Иначе тест constructor_ValueAtBoundary_IsAccepted перестанет ловить эту поломку. При смене constructor_ValueAtBoundary_IsAccepted проверь это утверждение.");
     }
 
     static Stream<Arguments> rejectedBounds() {
@@ -80,12 +82,13 @@ class TacticsAdapterSettingsTests {
                 IllegalArgumentException.class,
                 () -> with(field, value),
                 "Число адаптера вне границ обязано отклоняться конструктором: иначе чтения блоков или время "
-                        + "удержания отхода уйдут за бюджет тика");
+                        + "удержания отхода уйдут за бюджет тика"
+                        + " При смене constructor_ValueOutsideBounds_IsRejected проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains(field),
-                "Сообщение называет поле " + field + ", чтобы правка шла по подсказке; получили: "
-                        + error.getMessage());
+                "Сообщение называет поле " + field + ", чтобы правка шла по подсказке; получили: " + error.getMessage()
+                        + " Иначе тест constructor_ValueOutsideBounds_IsRejected перестанет ловить эту поломку. При смене constructor_ValueOutsideBounds_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -93,7 +96,8 @@ class TacticsAdapterSettingsTests {
         assertEquals(
                 TacticsAdapterSettings.defaults(),
                 TacticsAdapterSettings.fromJson(GOOD),
-                "Полный adapter.json читается в запись без подстановок: все семь полей обязательны");
+                "Полный adapter.json читается в запись без подстановок: все семь полей обязательны"
+                        + " Иначе тест fromJson_GoodText_LoadsAllFields перестанет ловить эту поломку. При смене fromJson_GoodText_LoadsAllFields проверь это утверждение.");
     }
 
     @Test
@@ -104,12 +108,14 @@ class TacticsAdapterSettingsTests {
                 IllegalStateException.class,
                 () -> TacticsAdapterSettings.fromJson(text),
                 "Лишнее поле в adapter.json — ошибка, а не молчаливый пропуск: иначе опечатка в имени поля "
-                        + "оставит настройку умолчанию");
+                        + "оставит настройку умолчанию"
+                        + " При смене fromJson_UnknownField_IsRejectedWithFileAndField проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("adapter.json")
                         && error.getMessage().contains("extra"),
-                "Сообщение называет файл и поле; получили: " + error.getMessage());
+                "Сообщение называет файл и поле; получили: " + error.getMessage()
+                        + " Иначе тест fromJson_UnknownField_IsRejectedWithFileAndField перестанет ловить эту поломку. При смене fromJson_UnknownField_IsRejectedWithFileAndField проверь это утверждение.");
     }
 
     @Test
@@ -119,11 +125,13 @@ class TacticsAdapterSettingsTests {
         IllegalStateException error = assertThrows(
                 IllegalStateException.class,
                 () -> TacticsAdapterSettings.fromJson(text),
-                "Без факт-радиуса адаптер не знает, кого считать врагом: загрузка обязана назвать пропущенное поле");
+                "Без факт-радиуса адаптер не знает, кого считать врагом: загрузка обязана назвать пропущенное поле"
+                        + " Иначе тест fromJson_MissingField_IsRejectedWithField перестанет ловить эту поломку. При смене fromJson_MissingField_IsRejectedWithField проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("factRadius"),
-                "Сообщение называет факт-радиус; получили: " + error.getMessage());
+                "Сообщение называет факт-радиус; получили: " + error.getMessage()
+                        + " Иначе тест fromJson_MissingField_IsRejectedWithField перестанет ловить эту поломку. При смене fromJson_MissingField_IsRejectedWithField проверь это утверждение.");
     }
 
     @Test
@@ -133,11 +141,13 @@ class TacticsAdapterSettingsTests {
         IllegalStateException error = assertThrows(
                 IllegalStateException.class,
                 () -> TacticsAdapterSettings.fromJson(text),
-                "Число в кавычках — ошибка схемы: парсер читает число без границ, но тип проверяет");
+                "Число в кавычках — ошибка схемы: парсер читает число без границ, но тип проверяет"
+                        + " Иначе тест fromJson_WrongType_IsRejectedWithField перестанет ловить эту поломку. При смене fromJson_WrongType_IsRejectedWithField проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("factRadius"),
-                "Сообщение называет поле с неверным типом; получили: " + error.getMessage());
+                "Сообщение называет поле с неверным типом; получили: " + error.getMessage()
+                        + " Иначе тест fromJson_WrongType_IsRejectedWithField перестанет ловить эту поломку. При смене fromJson_WrongType_IsRejectedWithField проверь это утверждение.");
     }
 
     @Test
@@ -147,12 +157,14 @@ class TacticsAdapterSettingsTests {
         IllegalStateException error = assertThrows(
                 IllegalStateException.class,
                 () -> TacticsAdapterSettings.fromJson(text),
-                "Факт-радиус 300 вне границ конструктора: загрузка обязана отклонить файл, а не чинить число молча");
+                "Факт-радиус 300 вне границ конструктора: загрузка обязана отклонить файл, а не чинить число молча"
+                        + " Иначе тест fromJson_OutOfRangeValue_IsRejectedWithFileAndField перестанет ловить эту поломку. При смене fromJson_OutOfRangeValue_IsRejectedWithFileAndField проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("adapter.json")
                         && error.getMessage().contains("factRadius"),
-                "Сообщение называет файл и поле; получили: " + error.getMessage());
+                "Сообщение называет файл и поле; получили: " + error.getMessage()
+                        + " Иначе тест fromJson_OutOfRangeValue_IsRejectedWithFileAndField перестанет ловить эту поломку. При смене fromJson_OutOfRangeValue_IsRejectedWithFileAndField проверь это утверждение.");
     }
 
     @Test
@@ -162,11 +174,13 @@ class TacticsAdapterSettingsTests {
         IllegalStateException error = assertThrows(
                 IllegalStateException.class,
                 () -> TacticsAdapterSettings.fromJson(text),
-                "Дубль ключа — ошибка: какое из двух значений верно, неизвестно");
+                "Дубль ключа — ошибка: какое из двух значений верно, неизвестно"
+                        + " Иначе тест fromJson_DuplicateKey_IsRejected перестанет ловить эту поломку. При смене fromJson_DuplicateKey_IsRejected проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("adapter.json"),
-                "Сообщение называет файл; получили: " + error.getMessage());
+                "Сообщение называет файл; получили: " + error.getMessage()
+                        + " Иначе тест fromJson_DuplicateKey_IsRejected перестанет ловить эту поломку. При смене fromJson_DuplicateKey_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -174,11 +188,13 @@ class TacticsAdapterSettingsTests {
         IllegalStateException error = assertThrows(
                 IllegalStateException.class,
                 () -> TacticsAdapterSettings.fromJson("{"),
-                "Сломанный JSON отклоняется на разборе с указанием файла, а не падает позже в бою");
+                "Сломанный JSON отклоняется на разборе с указанием файла, а не падает позже в бою"
+                        + " Иначе тест fromJson_MalformedText_IsRejected перестанет ловить эту поломку. При смене fromJson_MalformedText_IsRejected проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("adapter.json"),
-                "Сообщение называет файл; получили: " + error.getMessage());
+                "Сообщение называет файл; получили: " + error.getMessage()
+                        + " Иначе тест fromJson_MalformedText_IsRejected перестанет ловить эту поломку. При смене fromJson_MalformedText_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -186,12 +202,14 @@ class TacticsAdapterSettingsTests {
         IllegalStateException error = assertThrows(
                 IllegalStateException.class,
                 () -> TacticsAdapterSettings.fromJson("[]"),
-                "Корень adapter.json — объект, а не массив: иначе поля неоткуда взять");
+                "Корень adapter.json — объект, а не массив: иначе поля неоткуда взять"
+                        + " При смене fromJson_ArrayRoot_IsRejected проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("adapter.json")
                         && error.getMessage().contains("объект"),
-                "Сообщение называет файл и требует объект в корне; получили: " + error.getMessage());
+                "Сообщение называет файл и требует объект в корне; получили: " + error.getMessage()
+                        + " Иначе тест fromJson_ArrayRoot_IsRejected перестанет ловить эту поломку. При смене fromJson_ArrayRoot_IsRejected проверь это утверждение.");
     }
 
     private static TacticsAdapterSettings with(String field, int value) {

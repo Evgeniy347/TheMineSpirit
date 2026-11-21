@@ -26,7 +26,8 @@ class TicketToolPlanTests {
                                 call -> "acquire".equals(call.script())
                                         && "*_pickaxe".equals(call.params().get("item")))
                         < index(steps, call -> "mine_vein".equals(call.script())),
-                "Кирка берётся со склада до добычи жилы: без неё шахта ждёт инструмент, а задание падает: " + steps);
+                "Кирка берётся со склада до добычи жилы: без неё шахта ждёт инструмент, а задание падает: " + steps
+                        + " Иначе тест plan_GatherCoal_AcquiresPickaxeBeforeVein перестанет ловить эту поломку. При смене plan_GatherCoal_AcquiresPickaxeBeforeVein проверь это утверждение.");
     }
 
     @Test
@@ -43,7 +44,8 @@ class TicketToolPlanTests {
                                 steps,
                                 call -> "gather".equals(call.script())
                                         && "stone".equals(call.params().get("block"))),
-                "Кирка берётся со склада до сбора камня: руками булыжник не добыть: " + steps);
+                "Кирка берётся со склада до сбора камня: руками булыжник не добыть: " + steps
+                        + " Иначе тест plan_GatherCobblestone_AcquiresPickaxeBeforeStone перестанет ловить эту поломку. При смене plan_GatherCobblestone_AcquiresPickaxeBeforeStone проверь это утверждение.");
     }
 
     @Test
@@ -61,12 +63,13 @@ class TicketToolPlanTests {
                                         && "*_shovel".equals(call.params().get("item")))
                         < index(steps, call -> "clear_area".equals(call.script())),
                 "Лопата берётся со склада до расчистки: иначе дёрн и земля снимаются руками и работа не кончается: "
-                        + steps);
+                        + steps + " При смене plan_ClearGrounds_TakesShovelBeforeClear проверь это утверждение.");
         assertTrue(
                 steps.stream()
                         .noneMatch(call -> "acquire".equals(call.script())
                                 && "*_shovel".equals(call.params().get("item"))),
-                "Лопата не крафтится местным acquire мимо графа: снабжение инструментом ставит отдельный узел");
+                "Лопата не крафтится местным acquire мимо графа: снабжение инструментом ставит отдельный узел"
+                        + " Иначе тест plan_ClearGrounds_TakesShovelBeforeClear перестанет ловить эту поломку. При смене plan_ClearGrounds_TakesShovelBeforeClear проверь это утверждение.");
     }
 
     @Test
@@ -82,7 +85,8 @@ class TicketToolPlanTests {
                                 call -> "acquire".equals(call.script())
                                         && "*_pickaxe".equals(call.params().get("item")))
                         < index(steps, call -> "mine_vein".equals(call.script())),
-                "Оставленную руду тоже берут киркой со склада, а не голыми руками: " + steps);
+                "Оставленную руду тоже берут киркой со склада, а не голыми руками: " + steps
+                        + " Иначе тест plan_MineLeftOre_AcquiresPickaxeBeforeVein перестанет ловить эту поломку. При смене plan_MineLeftOre_AcquiresPickaxeBeforeVein проверь это утверждение.");
     }
 
     @Test
@@ -95,11 +99,13 @@ class TicketToolPlanTests {
                         && fallback.steps().get(fallback.steps().size() - 1) instanceof ScriptCall wait
                         && "wait".equals(wait.script()),
                 "Нет лопаты нигде — забор инструмента завершается ожиданием, а расчистка идёт руками: инструмент — "
-                        + "предпочтение, а не запрет: " + steps);
+                        + "предпочтение, а не запрет: " + steps
+                        + " Иначе тест shovel_NoShovelAnywhere_WithdrawsFromWarehouseThenWorksByHand перестанет ловить эту поломку. При смене shovel_NoShovelAnywhere_WithdrawsFromWarehouseThenWorksByHand проверь это утверждение.");
         assertTrue(
                 steps.stream().noneMatch(call -> "acquire".equals(call.script())),
                 "Лопата берётся только со склада: местный acquire/крафт обходил граф и делал инструмент мимо "
-                        + "учёта поселения, крафт ставит отдельный узел графа: " + steps);
+                        + "учёта поселения, крафт ставит отдельный узел графа: " + steps
+                        + " Иначе тест shovel_NoShovelAnywhere_WithdrawsFromWarehouseThenWorksByHand перестанет ловить эту поломку. При смене shovel_NoShovelAnywhere_WithdrawsFromWarehouseThenWorksByHand проверь это утверждение.");
         int nearby = index(
                 steps,
                 call -> "withdraw".equals(call.script())
@@ -112,7 +118,8 @@ class TicketToolPlanTests {
         assertTrue(
                 nearby < warehouse && warehouse < hands,
                 "Сначала лопату ищут в контейнерах рядом с духом, затем на складе поселения, и только потом "
-                        + "работают руками: " + steps);
+                        + "работают руками: " + steps
+                        + " Иначе тест shovel_NoShovelAnywhere_WithdrawsFromWarehouseThenWorksByHand перестанет ловить эту поломку. При смене shovel_NoShovelAnywhere_WithdrawsFromWarehouseThenWorksByHand проверь это утверждение.");
     }
 
     @Test
@@ -121,7 +128,8 @@ class TicketToolPlanTests {
 
         assertTrue(
                 steps.stream().allMatch(step -> step instanceof ScriptCall call && "acquire".equals(call.script())),
-                "Камень без кирки не добывается: ветка кирки — честный acquire/крафт без перехода на руки: " + steps);
+                "Камень без кирки не добывается: ветка кирки — честный acquire/крафт без перехода на руки: " + steps
+                        + " Иначе тест pickaxe_StoneNeedsTool_StaysMandatory перестанет ловить эту поломку. При смене pickaxe_StoneNeedsTool_StaysMandatory проверь это утверждение.");
     }
 
     @Test
@@ -144,11 +152,16 @@ class TicketToolPlanTests {
 
         assertTrue(
                 nearby < warehouse,
-                "Сначала топор ищут в контейнерах рядом с духом, потом на складе поселения: " + steps);
-        assertTrue(warehouse < hands, "Топор со склада берут раньше, чем соглашаются рубить руками: " + steps);
+                "Сначала топор ищут в контейнерах рядом с духом, потом на складе поселения: " + steps
+                        + " Иначе тест saplingPlan_NoAxeNearby_TakesFromWarehouseThenWorksByHand перестанет ловить эту поломку. При смене saplingPlan_NoAxeNearby_TakesFromWarehouseThenWorksByHand проверь это утверждение.");
+        assertTrue(
+                warehouse < hands,
+                "Топор со склада берут раньше, чем соглашаются рубить руками: " + steps
+                        + " Иначе тест saplingPlan_NoAxeNearby_TakesFromWarehouseThenWorksByHand перестанет ловить эту поломку. При смене saplingPlan_NoAxeNearby_TakesFromWarehouseThenWorksByHand проверь это утверждение.");
         assertTrue(
                 hands < chop,
-                "Если топора нет нигде, рубка всё равно идёт руками: задание не ждёт инструмент: " + steps);
+                "Если топора нет нигде, рубка всё равно идёт руками: задание не ждёт инструмент: " + steps
+                        + " Иначе тест saplingPlan_NoAxeNearby_TakesFromWarehouseThenWorksByHand перестанет ловить эту поломку. При смене saplingPlan_NoAxeNearby_TakesFromWarehouseThenWorksByHand проверь это утверждение.");
     }
 
     private static TaskNode gather(String item, int count) {

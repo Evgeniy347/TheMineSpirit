@@ -75,13 +75,27 @@ class TaskEventLogTests {
                 "sse-writer-test");
         writer.start();
 
-        assertTrue(writerDone.await(10, TimeUnit.SECONDS), "Писатель обязан завершить работу за 10 с");
+        assertTrue(
+                writerDone.await(10, TimeUnit.SECONDS),
+                "Писатель обязан завершить работу за 10 с"
+                        + " Иначе тест append_TwoHundredEvents_ReaderInOtherThreadGetsAllInOrderWithoutDuplicates перестанет ловить эту поломку. При смене append_TwoHundredEvents_ReaderInOtherThreadGetsAllInOrderWithoutDuplicates проверь это утверждение.");
         reader.join(TimeUnit.SECONDS.toMillis(10));
-        assertNull(failure.get(), "Ни писатель, ни читатель не должны падать: " + failure.get());
+        assertNull(
+                failure.get(),
+                "Ни писатель, ни читатель не должны падать: " + failure.get()
+                        + " Иначе тест append_TwoHundredEvents_ReaderInOtherThreadGetsAllInOrderWithoutDuplicates перестанет ловить эту поломку. При смене append_TwoHundredEvents_ReaderInOtherThreadGetsAllInOrderWithoutDuplicates проверь это утверждение.");
         List<Long> ids = readIds.get();
-        assertEquals(total, ids.size(), "Читатель обязан получить все 200 событий, получили " + ids.size());
+        assertEquals(
+                total,
+                ids.size(),
+                "Читатель обязан получить все 200 событий, получили " + ids.size()
+                        + " Иначе тест append_TwoHundredEvents_ReaderInOtherThreadGetsAllInOrderWithoutDuplicates перестанет ловить эту поломку. При смене append_TwoHundredEvents_ReaderInOtherThreadGetsAllInOrderWithoutDuplicates проверь это утверждение.");
         for (int i = 0; i < total; i++) {
-            assertEquals(i + 1, ids.get(i), "События обязаны идти по порядку возрастющих id без повторов");
+            assertEquals(
+                    i + 1,
+                    ids.get(i),
+                    "События обязаны идти по порядку возрастющих id без повторов"
+                            + " Иначе тест append_TwoHundredEvents_ReaderInOtherThreadGetsAllInOrderWithoutDuplicates перестанет ловить эту поломку. При смене append_TwoHundredEvents_ReaderInOtherThreadGetsAllInOrderWithoutDuplicates проверь это утверждение.");
         }
     }
 
@@ -91,7 +105,11 @@ class TaskEventLogTests {
 
         TaskEventLog.ReadResult result = log.awaitAfter(0, Duration.ofMillis(20));
 
-        assertEquals(TaskEventLog.Kind.TIMEOUT, result.kind(), "Пустой журнал обязан таймаутиться, а не закрываться");
+        assertEquals(
+                TaskEventLog.Kind.TIMEOUT,
+                result.kind(),
+                "Пустой журнал обязан таймаутиться, а не закрываться"
+                        + " Иначе тест awaitAfter_NothingAppended_TimesOutWithoutEvent перестанет ловить эту поломку. При смене awaitAfter_NothingAppended_TimesOutWithoutEvent проверь это утверждение.");
     }
 
     @Test
@@ -103,7 +121,11 @@ class TaskEventLogTests {
 
         TaskEventLog.ReadResult drained = log.awaitAfter(last, Duration.ofSeconds(1));
 
-        assertEquals(TaskEventLog.Kind.CLOSED, drained.kind(), "После финального кадра поток обязан закрыться");
+        assertEquals(
+                TaskEventLog.Kind.CLOSED,
+                drained.kind(),
+                "После финального кадра поток обязан закрыться"
+                        + " Иначе тест awaitAfter_ClosedAndDrained_ReturnsClosed перестанет ловить эту поломку. При смене awaitAfter_ClosedAndDrained_ReturnsClosed проверь это утверждение.");
     }
 
     @Test
@@ -114,11 +136,14 @@ class TaskEventLogTests {
         TaskEventLog.Catchup catchup = log.since(1);
 
         assertTrue(
-                catchup.gap(), "Last-Event-ID старше окна обязан помечаться gap: клиент поймёт, что кадры пропущены");
+                catchup.gap(),
+                "Last-Event-ID старше окна обязан помечаться gap: клиент поймёт, что кадры пропущены"
+                        + " Иначе тест since_ReaderWithStaleLastEventId_GetsGapAndRemainingEvents перестанет ловить эту поломку. При смене since_ReaderWithStaleLastEventId_GetsGapAndRemainingEvents проверь это утверждение.");
         assertEquals(
                 TaskEventLog.CAPACITY,
                 catchup.events().size(),
-                "После вытеснения читатель обязан получить только остаток окна, а не 300 событий");
+                "После вытеснения читатель обязан получить только остаток окна, а не 300 событий"
+                        + " Иначе тест since_ReaderWithStaleLastEventId_GetsGapAndRemainingEvents перестанет ловить эту поломку. При смене since_ReaderWithStaleLastEventId_GetsGapAndRemainingEvents проверь это утверждение.");
     }
 
     @Test
@@ -129,8 +154,16 @@ class TaskEventLogTests {
 
         TaskEventLog.Catchup catchup = log.since(last);
 
-        assertEquals(false, catchup.gap(), "Ни один кадр не потерян — gap не должен подниматься");
-        assertEquals(2, catchup.events().size(), "Читатель обязан получить только кадры после Last-Event-ID");
+        assertEquals(
+                false,
+                catchup.gap(),
+                "Ни один кадр не потерян — gap не должен подниматься"
+                        + " Иначе тест since_RecentLastEventId_NoGapOnlyLaterEvents перестанет ловить эту поломку. При смене since_RecentLastEventId_NoGapOnlyLaterEvents проверь это утверждение.");
+        assertEquals(
+                2,
+                catchup.events().size(),
+                "Читатель обязан получить только кадры после Last-Event-ID"
+                        + " Иначе тест since_RecentLastEventId_NoGapOnlyLaterEvents перестанет ловить эту поломку. При смене since_RecentLastEventId_NoGapOnlyLaterEvents проверь это утверждение.");
     }
 
     @Property(tries = 200)
@@ -142,10 +175,17 @@ class TaskEventLogTests {
 
         List<TaskEvent> all = log.since(0).events();
 
-        assertEquals(size * 2, all.size(), "Оба блока событий обязаны целиком остаться в журнале");
+        assertEquals(
+                size * 2,
+                all.size(),
+                "Оба блока событий обязаны целиком остаться в журнале"
+                        + " Иначе тест append_AnyChunkSize_IdsStayIncreasingAndAllEventsKept перестанет ловить эту поломку. При смене append_AnyChunkSize_IdsStayIncreasingAndAllEventsKept проверь это утверждение.");
         long previous = 0;
         for (TaskEvent event : all) {
-            assertTrue(event.id() > previous, "id событий обязаны строго возрастать: " + previous + " → " + event.id());
+            assertTrue(
+                    event.id() > previous,
+                    "id событий обязаны строго возрастать: " + previous + " → " + event.id()
+                            + " Иначе тест append_AnyChunkSize_IdsStayIncreasingAndAllEventsKept перестанет ловить эту поломку. При смене append_AnyChunkSize_IdsStayIncreasingAndAllEventsKept проверь это утверждение.");
             previous = event.id();
         }
     }

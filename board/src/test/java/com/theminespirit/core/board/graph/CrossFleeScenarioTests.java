@@ -73,29 +73,35 @@ class CrossFleeScenarioTests {
                 "Граф ставит retreat даже при занятой рубке: "
                         + dangerTickets.post().stream()
                                 .map(GraphTickets.Ticket::id)
-                                .toList());
+                                .toList()
+                        + " Иначе тест flee_WhileChopping_RetreatPreemptsChopAndChopReturnsToBoard перестанет ловить эту поломку. При смене flee_WhileChopping_RetreatPreemptsChopAndChopReturnsToBoard проверь это утверждение.");
         assertTrue(
                 dangerTickets.post().stream().anyMatch(ticket -> ticket.node().startsWith("chop_")),
-                "Рубка не исчезает из графа при угрозе: " + dangerTickets.post());
+                "Рубка не исчезает из графа при угрозе: " + dangerTickets.post()
+                        + " Иначе тест flee_WhileChopping_RetreatPreemptsChopAndChopReturnsToBoard перестанет ловить эту поломку. При смене flee_WhileChopping_RetreatPreemptsChopAndChopReturnsToBoard проверь это утверждение.");
         assertTrue(
                 round.choose(boardTicket(retreat, Optional.of(id("spirit-1"))), List.of(chopper))
                         .isPresent(),
-                "Бегство выше работы: рубящий дух бросает дерево и уходит от мобов");
+                "Бегство выше работы: рубящий дух бросает дерево и уходит от мобов"
+                        + " Иначе тест flee_WhileChopping_RetreatPreemptsChopAndChopReturnsToBoard перестанет ловить эту поломку. При смене flee_WhileChopping_RetreatPreemptsChopAndChopReturnsToBoard проверь это утверждение.");
         assertEquals(
                 List.of(chop.id()),
                 round.drainDisplaced(id("spirit-1")).stream()
                         .map(BoardTicket::id)
                         .toList(),
-                "Вытесненная рубка возвращается на доску, а не пропадает");
+                "Вытесненная рубка возвращается на доску, а не пропадает"
+                        + " Иначе тест flee_WhileChopping_RetreatPreemptsChopAndChopReturnsToBoard перестанет ловить эту поломку. При смене flee_WhileChopping_RetreatPreemptsChopAndChopReturnsToBoard проверь это утверждение.");
         assertEquals(
                 BoardStatus.PENDING,
                 board.statusOf(chop.id()).orElseThrow(),
-                "Рубка больше не держится за убегающим духом: её возьмёт другой или он сам после бегства");
+                "Рубка больше не держится за убегающим духом: её возьмёт другой или он сам после бегства"
+                        + " Иначе тест flee_WhileChopping_RetreatPreemptsChopAndChopReturnsToBoard перестанет ловить эту поломку. При смене flee_WhileChopping_RetreatPreemptsChopAndChopReturnsToBoard проверь это утверждение.");
         assertTrue(
                 round.refusal(boardTicket(retreat, Optional.of(id("spirit-1"))), chopper)
                         .isEmpty(),
                 "После вытеснения дух свободен для бегства: "
-                        + round.refusal(boardTicket(retreat, Optional.of(id("spirit-1"))), chopper));
+                        + round.refusal(boardTicket(retreat, Optional.of(id("spirit-1"))), chopper)
+                        + " Иначе тест flee_WhileChopping_RetreatPreemptsChopAndChopReturnsToBoard перестанет ловить эту поломку. При смене flee_WhileChopping_RetreatPreemptsChopAndChopReturnsToBoard проверь это утверждение.");
     }
 
     @Test
@@ -118,22 +124,39 @@ class CrossFleeScenarioTests {
         GraphPlan.Task sleep = task(plan, "event:life_threat:sleep");
         GraphPlan.Task expedition = task(plan, "event:expedition_ready:expedition");
 
-        assertEquals(List.of(), ahead(plan, defend), "Ночные мобы поднимают защиту на потолок: " + ids(plan));
-        assertTrue(defend.priority() > retreat.priority(), "Сначала бой, потом отход: " + ids(plan));
-        assertTrue(retreat.priority() > sleep.priority(), "Отход от мобов важнее сна: " + ids(plan));
-        assertTrue(retreat.priority() > expedition.priority(), "Отход важнее похода: " + ids(plan));
+        assertEquals(
+                List.of(),
+                ahead(plan, defend),
+                "Ночные мобы поднимают защиту на потолок: " + ids(plan)
+                        + " Иначе тест flee_NightMobsAndExpedition_RetreatBeatsSleepAndFollow перестанет ловить эту поломку. При смене flee_NightMobsAndExpedition_RetreatBeatsSleepAndFollow проверь это утверждение.");
+        assertTrue(
+                defend.priority() > retreat.priority(),
+                "Сначала бой, потом отход: " + ids(plan)
+                        + " Иначе тест flee_NightMobsAndExpedition_RetreatBeatsSleepAndFollow перестанет ловить эту поломку. При смене flee_NightMobsAndExpedition_RetreatBeatsSleepAndFollow проверь это утверждение.");
+        assertTrue(
+                retreat.priority() > sleep.priority(),
+                "Отход от мобов важнее сна: " + ids(plan)
+                        + " Иначе тест flee_NightMobsAndExpedition_RetreatBeatsSleepAndFollow перестанет ловить эту поломку. При смене flee_NightMobsAndExpedition_RetreatBeatsSleepAndFollow проверь это утверждение.");
+        assertTrue(
+                retreat.priority() > expedition.priority(),
+                "Отход важнее похода: " + ids(plan)
+                        + " Иначе тест flee_NightMobsAndExpedition_RetreatBeatsSleepAndFollow перестанет ловить эту поломку. При смене flee_NightMobsAndExpedition_RetreatBeatsSleepAndFollow проверь это утверждение.");
         assertTrue(
                 SleepRule.timeToSleep(new SleepFacts(true, false, true, false)),
-                "Ночью в поселении без опасности механика сна разрешает спать");
+                "Ночью в поселении без опасности механика сна разрешает спать"
+                        + " Иначе тест flee_NightMobsAndExpedition_RetreatBeatsSleepAndFollow перестанет ловить эту поломку. При смене flee_NightMobsAndExpedition_RetreatBeatsSleepAndFollow проверь это утверждение.");
         assertFalse(
                 SleepRule.timeToSleep(new SleepFacts(true, true, true, false)),
-                "Под мобами механика сна спать не даёт, хотя задание sleep на доске есть");
+                "Под мобами механика сна спать не даёт, хотя задание sleep на доске есть"
+                        + " Иначе тест flee_NightMobsAndExpedition_RetreatBeatsSleepAndFollow перестанет ловить эту поломку. При смене flee_NightMobsAndExpedition_RetreatBeatsSleepAndFollow проверь это утверждение.");
         assertTrue(
                 DisengageRoute.reached(new Point(-8, 64, 0), new Point(2, 64, 0), 8),
-                "Точка отхода в восьми блоках от угрозы считается достигнутой");
+                "Точка отхода в восьми блоках от угрозы считается достигнутой"
+                        + " Иначе тест flee_NightMobsAndExpedition_RetreatBeatsSleepAndFollow перестанет ловить эту поломку. При смене flee_NightMobsAndExpedition_RetreatBeatsSleepAndFollow проверь это утверждение.");
         assertEquals(
                 BoardCase.ACTIVITY_RETREAT,
                 BoardActivities.caseOfScript("retreat").orElseThrow(),
-                "Бегство выполняется действием retreat");
+                "Бегство выполняется действием retreat"
+                        + " Иначе тест flee_NightMobsAndExpedition_RetreatBeatsSleepAndFollow перестанет ловить эту поломку. При смене flee_NightMobsAndExpedition_RetreatBeatsSleepAndFollow проверь это утверждение.");
     }
 }

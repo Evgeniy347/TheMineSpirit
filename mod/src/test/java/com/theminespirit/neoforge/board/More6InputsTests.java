@@ -20,10 +20,23 @@ class More6InputsTests {
 
         GraphState next = More6Inputs.events(state, Set.of("more6_spirits_short", "more6_spirit_idle"));
 
-        assertTrue(next.events().contains("night"), "Вход области не теряет события других сборщиков");
-        assertTrue(next.events().contains("more6_spirits_short"), "Свободное жильё добавляется к событиям");
-        assertTrue(next.events().contains("more6_spirit_idle"), "Простой добавляется к событиям");
-        assertEquals(state.facts(), next.facts(), "Сборщик не подменяет факты графа");
+        assertTrue(
+                next.events().contains("night"),
+                "Вход области не теряет события других сборщиков"
+                        + " Иначе тест events_AddToBase_WithoutLosingThem перестанет ловить эту поломку. При смене events_AddToBase_WithoutLosingThem проверь это утверждение.");
+        assertTrue(
+                next.events().contains("more6_spirits_short"),
+                "Свободное жильё добавляется к событиям"
+                        + " Иначе тест events_AddToBase_WithoutLosingThem перестанет ловить эту поломку. При смене events_AddToBase_WithoutLosingThem проверь это утверждение.");
+        assertTrue(
+                next.events().contains("more6_spirit_idle"),
+                "Простой добавляется к событиям"
+                        + " Иначе тест events_AddToBase_WithoutLosingThem перестанет ловить эту поломку. При смене events_AddToBase_WithoutLosingThem проверь это утверждение.");
+        assertEquals(
+                state.facts(),
+                next.facts(),
+                "Сборщик не подменяет факты графа"
+                        + " Иначе тест events_AddToBase_WithoutLosingThem перестанет ловить эту поломку. При смене events_AddToBase_WithoutLosingThem проверь это утверждение.");
     }
 
     @Test
@@ -48,7 +61,8 @@ class More6InputsTests {
         assertEquals(
                 Map.of("oak_log", 7, "coal", 2),
                 More6Inputs.carried(facts),
-                "Предметы духов складываются по узлам графа без namespace");
+                "Предметы духов складываются по узлам графа без namespace"
+                        + " Иначе тест carried_NamespacedInventory_NormalizedAndSummed перестанет ловить эту поломку. При смене carried_NamespacedInventory_NormalizedAndSummed проверь это утверждение.");
     }
 
     @Test
@@ -61,7 +75,8 @@ class More6InputsTests {
         assertEquals(
                 Set.of("oak_log", "cobblestone", "coal"),
                 More6Inputs.needed(state),
-                "Нужны и материалы построек, и недостача заказов");
+                "Нужны и материалы построек, и недостача заказов"
+                        + " Иначе тест needed_MaterialsAndOrders_AreUnioned перестанет ловить эту поломку. При смене needed_MaterialsAndOrders_AreUnioned проверь это утверждение.");
     }
 
     @Test
@@ -97,7 +112,8 @@ class More6InputsTests {
         assertEquals(
                 List.of(new GraphFacts.Position(1, 64, 1)),
                 More6Inputs.fields(state, facts),
-                "Поле считается только построенным и с координатой");
+                "Поле считается только построенным и с координатой"
+                        + " Иначе тест fields_OnlyBuiltFieldsAndFarms_WithPosition перестанет ловить эту поломку. При смене fields_OnlyBuiltFieldsAndFarms_WithPosition проверь это утверждение.");
     }
 
     @Test
@@ -124,7 +140,8 @@ class More6InputsTests {
         assertEquals(
                 Set.of("furnace"),
                 More6Inputs.builtStations(state, facts),
-                "Сломанной считается только построенная станция");
+                "Сломанной считается только построенная станция"
+                        + " Иначе тест builtStations_OnlyBuilt_AreTaken перестанет ловить эту поломку. При смене builtStations_OnlyBuilt_AreTaken проверь это утверждение.");
     }
 
     @Test
@@ -150,7 +167,8 @@ class More6InputsTests {
         assertEquals(
                 List.of("blank", "free"),
                 More6Inputs.idleSpirits(facts),
-                "Дух без занятия или с пустым занятием простаивает");
+                "Дух без занятия или с пустым занятием простаивает"
+                        + " Иначе тест idleSpirits_NullAndBlank_AreIdle перестанет ловить эту поломку. При смене idleSpirits_NullAndBlank_AreIdle проверь это утверждение.");
     }
 
     private static GraphState state(

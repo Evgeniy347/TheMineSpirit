@@ -24,7 +24,8 @@ class PickupSpotTests {
                 new BlockCoord(0, 1, 0),
                 PickupSpot.accessCell(new BlockCoord(0, 0, 0), safety),
                 "Ягода падает сквозь куст на землю: клетка доступа — сам куст над предметом, иначе подбор пойдёт "
-                        + "к пашне под кустом, куда не встать");
+                        + "к пашне под кустом, куда не встать"
+                        + " При смене accessCell_ItemUnderBush_ReturnsBushCell проверь это утверждение.");
     }
 
     @Test
@@ -34,7 +35,8 @@ class PickupSpotTests {
         assertEquals(
                 ITEM,
                 PickupSpot.accessCell(ITEM, safety),
-                "Предмет на открытом месте доступен из своей клетки: поведение обычного дропа не меняется");
+                "Предмет на открытом месте доступен из своей клетки: поведение обычного дропа не меняется"
+                        + " Иначе тест accessCell_ItemOnOpenGround_ReturnsItemCell перестанет ловить эту поломку. При смене accessCell_ItemOnOpenGround_ReturnsItemCell проверь это утверждение.");
     }
 
     @Test
@@ -47,7 +49,8 @@ class PickupSpotTests {
                 Optional.of(new BlockCoord(2, 1, 0)),
                 spot,
                 "Ягоды выпадают в клетку куста (HAZARD), а дух не заходит в куст: подбор обязан встать на ближайшую "
-                        + "безопасную клетку в двух шагах от духа — с неё куст достаётся, иначе сбор падает");
+                        + "безопасную клетку в двух шагах от духа — с неё куст достаётся, иначе сбор падает"
+                        + " При смене forDrop_ItemInsideHazardBush_ReturnsAdjacentStand проверь это утверждение.");
     }
 
     @Test
@@ -67,7 +70,8 @@ class PickupSpotTests {
                 Optional.empty(),
                 spot,
                 "Если все клетки вокруг куста — тоже кусты, стоять негде: подбор не выдумывает стоянку в опасной "
-                        + "клетке, и вызывающий обрабатывает недостижимость как раньше");
+                        + "клетке, и вызывающий обрабатывает недостижимость как раньше"
+                        + " Иначе тест forDrop_EveryStandWithinRadiusIsHazard_ReturnsEmpty перестанет ловить эту поломку. При смене forDrop_EveryStandWithinRadiusIsHazard_ReturnsEmpty проверь это утверждение.");
     }
 
     @Test
@@ -85,7 +89,8 @@ class PickupSpotTests {
                 Optional.of(new BlockCoord(2, 1, 3)),
                 spot,
                 "В центре грядки 3x3 стоянка обязана быть ближайшей безопасной клеткой у духа, а не на другой стороне "
-                        + "грядки: иначе дух идёт через кусты, получает урон и бросает подбор");
+                        + "грядки: иначе дух идёт через кусты, получает урон и бросает подбор"
+                        + " При смене forDrop_BedFieldItemCenter_ReturnsWestStand проверь это утверждение.");
     }
 
     @Test
@@ -98,7 +103,8 @@ class PickupSpotTests {
                 Optional.empty(),
                 spot,
                 "В воду за предметом дух не лезет и рядом с водой не встаёт: стоянка не находится, "
-                        + "и вызывающий сохраняет прежнее поведение");
+                        + "и вызывающий сохраняет прежнее поведение"
+                        + " Иначе тест forDrop_ItemInWater_ReturnsEmpty перестанет ловить эту поломку. При смене forDrop_ItemInWater_ReturnsEmpty проверь это утверждение.");
     }
 
     @Test
@@ -110,7 +116,8 @@ class PickupSpotTests {
         assertEquals(
                 Optional.empty(),
                 spot,
-                "Возле лавы стоять нельзя: подбор не имеет права предлагать стоянку у лавовой клетки");
+                "Возле лавы стоять нельзя: подбор не имеет права предлагать стоянку у лавовой клетки"
+                        + " Иначе тест forDrop_ItemInLava_ReturnsEmpty перестанет ловить эту поломку. При смене forDrop_ItemInLava_ReturnsEmpty проверь это утверждение.");
     }
 
     @Test
@@ -124,7 +131,8 @@ class PickupSpotTests {
                 Optional.of(new BlockCoord(2, 1, 0)),
                 spot,
                 "Вода у пола рядом со стоянкой не запрещает подбор (дух стоит на твёрдом полу у воды, как на ферме): "
-                        + "запрет отправлял духа в обход грядки, где он застревал");
+                        + "запрет отправлял духа в обход грядки, где он застревал"
+                        + " Иначе тест forDrop_WaterBesideStand_StillReturnsStand перестанет ловить эту поломку. При смене forDrop_WaterBesideStand_StillReturnsStand проверь это утверждение.");
     }
 
     @Test
@@ -136,7 +144,8 @@ class PickupSpotTests {
         assertEquals(
                 Optional.of(ITEM),
                 spot,
-                "Предмет на проходимой клетке подбирается с неё же: поведение обычного дропа не меняется");
+                "Предмет на проходимой клетке подбирается с неё же: поведение обычного дропа не меняется"
+                        + " Иначе тест forDrop_ItemOnOpenGround_ReturnsItemCell перестанет ловить эту поломку. При смене forDrop_ItemOnOpenGround_ReturnsItemCell проверь это утверждение.");
     }
 
     @Test
@@ -155,7 +164,8 @@ class PickupSpotTests {
 
         assertTrue(
                 spot.isEmpty(),
-                "Куст в лавовом кольце: безопасной стоянки рядом нет, подбор не должен подставлять духа под лаву");
+                "Куст в лавовом кольце: безопасной стоянки рядом нет, подбор не должен подставлять духа под лаву"
+                        + " Иначе тест forDrop_BushSurroundedByLava_ReturnsEmpty перестанет ловить эту поломку. При смене forDrop_BushSurroundedByLava_ReturnsEmpty проверь это утверждение.");
     }
 
     @Test
@@ -168,19 +178,23 @@ class PickupSpotTests {
                 new BlockCoord(2, 1, 0),
                 stands.get(0),
                 "Ближайшая к духу стоянка у куста обязана быть первой: по ней подбор идёт до того, как пробовать "
-                        + "следующие");
+                        + "следующие"
+                        + " Иначе тест standsFor_ItemInsideHazardBush_ReturnsEveryStandOrderedByDistance перестанет ловить эту поломку. При смене standsFor_ItemInsideHazardBush_ReturnsEveryStandOrderedByDistance проверь это утверждение.");
         assertTrue(
                 stands.size() > 1,
                 "Куст на открытом месте обязан дать больше одной стоянки: без запаса подбор бросал предмет, если "
-                        + "ближайшая стоянка оказалась за заградой, фактически " + stands);
+                        + "ближайшая стоянка оказалась за заградой, фактически " + stands
+                        + " Иначе тест standsFor_ItemInsideHazardBush_ReturnsEveryStandOrderedByDistance перестанет ловить эту поломку. При смене standsFor_ItemInsideHazardBush_ReturnsEveryStandOrderedByDistance проверь это утверждение.");
         assertTrue(
                 stands.indexOf(new BlockCoord(1, 1, 2)) > 0,
                 "Дальняя стоянка обязана остаться в списке после ближней: именно её берёт повторная попытка, а не "
-                        + "пропуск предмета, список " + stands);
+                        + "пропуск предмета, список " + stands
+                        + " Иначе тест standsFor_ItemInsideHazardBush_ReturnsEveryStandOrderedByDistance перестанет ловить эту поломку. При смене standsFor_ItemInsideHazardBush_ReturnsEveryStandOrderedByDistance проверь это утверждение.");
         assertEquals(
                 Optional.of(new BlockCoord(2, 1, 0)),
                 PickupSpot.forDrop(ITEM, new BlockCoord(3, 1, 0), safety),
-                "forDrop обязан остаться ближайшей стоянкой из standsFor: поведение одиночного подбора не меняется");
+                "forDrop обязан остаться ближайшей стоянкой из standsFor: поведение одиночного подбора не меняется"
+                        + " Иначе тест standsFor_ItemInsideHazardBush_ReturnsEveryStandOrderedByDistance перестанет ловить эту поломку. При смене standsFor_ItemInsideHazardBush_ReturnsEveryStandOrderedByDistance проверь это утверждение.");
     }
 
     @Test
@@ -191,7 +205,8 @@ class PickupSpotTests {
                 List.of(ITEM),
                 PickupSpot.standsFor(ITEM, new BlockCoord(3, 1, 0), safety),
                 "Предмет на проходимой клетке подбирается с неё же: список из одной клетки, поведение обычного дропа "
-                        + "не меняется");
+                        + "не меняется"
+                        + " Иначе тест standsFor_ItemOnOpenGround_ReturnsItsOwnCellOnly перестанет ловить эту поломку. При смене standsFor_ItemOnOpenGround_ReturnsItsOwnCellOnly проверь это утверждение.");
     }
 
     private static MapSafety plantedBed() {

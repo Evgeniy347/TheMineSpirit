@@ -30,7 +30,8 @@ class TokenBucketTests {
         assertEquals(
                 40,
                 granted,
-                "всплеск обязан выдать ровно ёмкость 40: больше мгновенных запросов лимитер не пропускает");
+                "всплеск обязан выдать ровно ёмкость 40: больше мгновенных запросов лимитер не пропускает"
+                        + " Иначе тест tryAcquire_BurstOverCapacity_DeniesFortyFirstToken перестанет ловить эту поломку. При смене tryAcquire_BurstOverCapacity_DeniesFortyFirstToken проверь это утверждение.");
     }
 
     @Test
@@ -40,9 +41,18 @@ class TokenBucketTests {
             bucket.tryAcquire(KEY, 0);
         }
 
-        assertFalse(bucket.tryAcquire(KEY, 0), "пустое ведро отказывает сразу");
-        assertFalse(bucket.tryAcquire(KEY, SECOND / 25), "за 0.04 с набегает 0.8 токена — до запроса ещё не хватает");
-        assertTrue(bucket.tryAcquire(KEY, SECOND / 10), "за 0.1 с набегает 2 токена — запрос обязан пройти");
+        assertFalse(
+                bucket.tryAcquire(KEY, 0),
+                "пустое ведро отказывает сразу"
+                        + " Иначе тест tryAcquire_WithElapsedTime_RefillsAtTwentyPerSecond перестанет ловить эту поломку. При смене tryAcquire_WithElapsedTime_RefillsAtTwentyPerSecond проверь это утверждение.");
+        assertFalse(
+                bucket.tryAcquire(KEY, SECOND / 25),
+                "за 0.04 с набегает 0.8 токена — до запроса ещё не хватает"
+                        + " Иначе тест tryAcquire_WithElapsedTime_RefillsAtTwentyPerSecond перестанет ловить эту поломку. При смене tryAcquire_WithElapsedTime_RefillsAtTwentyPerSecond проверь это утверждение.");
+        assertTrue(
+                bucket.tryAcquire(KEY, SECOND / 10),
+                "за 0.1 с набегает 2 токена — запрос обязан пройти"
+                        + " Иначе тест tryAcquire_WithElapsedTime_RefillsAtTwentyPerSecond перестанет ловить эту поломку. При смене tryAcquire_WithElapsedTime_RefillsAtTwentyPerSecond проверь это утверждение.");
     }
 
     @Test
@@ -59,7 +69,11 @@ class TokenBucketTests {
             }
         }
 
-        assertEquals(40, granted, "после долгого простоя ведро не может держать больше ёмкости: выдача ограничена 40");
+        assertEquals(
+                40,
+                granted,
+                "после долгого простоя ведро не может держать больше ёмкости: выдача ограничена 40"
+                        + " Иначе тест tryAcquire_AfterLongIdle_CapsAtCapacity перестанет ловить эту поломку. При смене tryAcquire_AfterLongIdle_CapsAtCapacity проверь это утверждение.");
     }
 
     @Test
@@ -70,10 +84,14 @@ class TokenBucketTests {
             bucket.tryAcquire(KEY, 0);
         }
 
-        assertFalse(bucket.tryAcquire(KEY, 0), "первый ключ пуст");
+        assertFalse(
+                bucket.tryAcquire(KEY, 0),
+                "первый ключ пуст"
+                        + " Иначе тест tryAcquire_DifferentKeys_AreIndependent перестанет ловить эту поломку. При смене tryAcquire_DifferentKeys_AreIndependent проверь это утверждение.");
         assertTrue(
                 bucket.tryAcquire(other, 0),
-                "лимит обязан быть по адресу клиента: расход одного ключа не трогает другой");
+                "лимит обязан быть по адресу клиента: расход одного ключа не трогает другой"
+                        + " Иначе тест tryAcquire_DifferentKeys_AreIndependent перестанет ловить эту поломку. При смене tryAcquire_DifferentKeys_AreIndependent проверь это утверждение.");
     }
 
     @Test
@@ -90,7 +108,8 @@ class TokenBucketTests {
         assertTrue(
                 bucket.tryAcquire("ip-0", 0),
                 "таблица обязана вытеснять старейший ключ за пределами 256: вытесненный ключ получает полное "
-                        + "ведро заново, иначе память растёт с числом адресов");
+                        + "ведро заново, иначе память растёт с числом адресов"
+                        + " При смене tryAcquire_MoreThan256Keys_EvictsOldest проверь это утверждение.");
     }
 
     @Test
@@ -105,10 +124,17 @@ class TokenBucketTests {
 
         assertTrue(
                 immediate >= 1,
-                "голодному клиенту Retry-After обязан быть хотя бы 1 секунда: 0 означал бы «повтори сейчас»");
-        assertTrue(soon >= 1, "пока токенов меньше единицы, Retry-After обязан оставаться хотя бы 1 с");
+                "голодному клиенту Retry-After обязан быть хотя бы 1 секунда: 0 означал бы «повтори сейчас»"
+                        + " Иначе тест retryAfterSeconds_WhenStarved_IsAtLeastOneAndGrowsWithWait перестанет ловить эту поломку. При смене retryAfterSeconds_WhenStarved_IsAtLeastOneAndGrowsWithWait проверь это утверждение.");
+        assertTrue(
+                soon >= 1,
+                "пока токенов меньше единицы, Retry-After обязан оставаться хотя бы 1 с"
+                        + " Иначе тест retryAfterSeconds_WhenStarved_IsAtLeastOneAndGrowsWithWait перестанет ловить эту поломку. При смене retryAfterSeconds_WhenStarved_IsAtLeastOneAndGrowsWithWait проверь это утверждение.");
         assertEquals(
-                0, bucket.retryAfterSeconds("never-seen", 0), "ключ, которого нет в таблице, не получает Retry-After");
+                0,
+                bucket.retryAfterSeconds("never-seen", 0),
+                "ключ, которого нет в таблице, не получает Retry-After"
+                        + " Иначе тест retryAfterSeconds_WhenStarved_IsAtLeastOneAndGrowsWithWait перестанет ловить эту поломку. При смене retryAfterSeconds_WhenStarved_IsAtLeastOneAndGrowsWithWait проверь это утверждение.");
     }
 
     @Property(tries = 200)
@@ -130,7 +156,8 @@ class TokenBucketTests {
         assertTrue(
                 issued <= budget,
                 "выдано " + issued + " больше ёмкости + скорость×время = " + budget
-                        + ": лимитер обязан держать общий бюджет");
+                        + ": лимитер обязан держать общий бюджет"
+                        + " Иначе тест tryAcquire_AnySchedule_NeverExceedsBudget перестанет ловить эту поломку. При смене tryAcquire_AnySchedule_NeverExceedsBudget проверь это утверждение.");
     }
 
     @Provide

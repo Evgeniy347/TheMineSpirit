@@ -19,7 +19,8 @@ class BuildBoxTests {
         assertEquals(
                 forward,
                 reversed,
-                "Коробка обязана нормализовать порядок углов: стратег задаёт углы в любом порядке, иначе коробка зависит от порядка");
+                "Коробка обязана нормализовать порядок углов: стратег задаёт углы в любом порядке, иначе коробка зависит от порядка"
+                        + " При смене of_ReversedCorners_SameBox проверь это утверждение.");
     }
 
     @Test
@@ -27,11 +28,13 @@ class BuildBoxTests {
         assertEquals(
                 1L,
                 BuildBox.of(5, 5, 5, 5, 5, 5).volume(),
-                "Коробка 1×1×1 обязана иметь объём 1: иначе счёт лимита объёма врёт и стройка либо запрещена, либо безлимитна");
+                "Коробка 1×1×1 обязана иметь объём 1: иначе счёт лимита объёма врёт и стройка либо запрещена, либо безлимитна"
+                        + " При смене volume_SingleAndBox_MatchesSides проверь это утверждение.");
         assertEquals(
                 24L,
                 BuildBox.of(0, 0, 0, 1, 2, 3).volume(),
-                "Коробка 2×3×4 обязана иметь объём 24: иначе лимит BUILD_VOLUME_MAX проверяет не то число");
+                "Коробка 2×3×4 обязана иметь объём 24: иначе лимит BUILD_VOLUME_MAX проверяет не то число"
+                        + " При смене volume_SingleAndBox_MatchesSides проверь это утверждение.");
     }
 
     @Test
@@ -41,7 +44,8 @@ class BuildBoxTests {
         for (int i = 1; i < ordered.size(); i++) {
             assertTrue(
                     ordered.get(i - 1).y() <= ordered.get(i).y(),
-                    "Порядок постановки обязан идти снизу вверх: верхний блок без опоры снизу обвалится или повиснет");
+                    "Порядок постановки обязан идти снизу вверх: верхний блок без опоры снизу обвалится или повиснет"
+                            + " Иначе тест cellsBottomUp_LowerLayer_PrecedesUpper перестанет ловить эту поломку. При смене cellsBottomUp_LowerLayer_PrecedesUpper проверь это утверждение.");
         }
     }
 
@@ -52,11 +56,13 @@ class BuildBoxTests {
         assertEquals(
                 new HashSet<>(box.cells()),
                 new HashSet<>(box.cellsBottomUp()),
-                "Список снизу вверх обязан содержать те же ячейки, что cells(): потеря или дубль ячейки даёт дырку или двойной расход");
+                "Список снизу вверх обязан содержать те же ячейки, что cells(): потеря или дубль ячейки даёт дырку или двойной расход"
+                        + " Иначе тест cellsBottomUp_FullBox_IsPermutationWithoutDuplicates перестанет ловить эту поломку. При смене cellsBottomUp_FullBox_IsPermutationWithoutDuplicates проверь это утверждение.");
         assertEquals(
                 box.cells().size(),
                 new HashSet<>(box.cellsBottomUp()).size(),
-                "Список снизу вверх обязан идти без дублей: дубль ячейки ставит блок дважды и тратит материал");
+                "Список снизу вверх обязан идти без дублей: дубль ячейки ставит блок дважды и тратит материал"
+                        + " Иначе тест cellsBottomUp_FullBox_IsPermutationWithoutDuplicates перестанет ловить эту поломку. При смене cellsBottomUp_FullBox_IsPermutationWithoutDuplicates проверь это утверждение.");
     }
 
     @Test
@@ -65,10 +71,12 @@ class BuildBoxTests {
 
         assertTrue(
                 box.exceeds(CatalogLimits.BUILD_VOLUME_MAX - 1),
-                "Объём сверх предела обязан ловиться до первого блока: иначе дух начнёт стройку, которую запрет оборвёт на середине");
+                "Объём сверх предела обязан ловиться до первого блока: иначе дух начнёт стройку, которую запрет оборвёт на середине"
+                        + " При смене exceeds_VolumeAboveLimit_IsDetected проверь это утверждение.");
         assertTrue(
                 !BuildBox.of(0, 0, 0, 1, 1, 1).exceeds(CatalogLimits.BUILD_VOLUME_MAX),
-                "Маленькая коробка обязана проходить лимит: иначе запрет бьёт по любой стройке");
+                "Маленькая коробка обязана проходить лимит: иначе запрет бьёт по любой стройке"
+                        + " При смене exceeds_VolumeAboveLimit_IsDetected проверь это утверждение.");
     }
 
     @Test
@@ -76,9 +84,13 @@ class BuildBoxTests {
         BuildBox box = BuildBox.cube(3, 5, 7, 2);
 
         assertEquals(
-                8L, box.volume(), "Куб 2×2×2 от угла обязан покрыть 8 клеток: иначе dig_area копает не ту область");
+                8L,
+                box.volume(),
+                "Куб 2×2×2 от угла обязан покрыть 8 клеток: иначе dig_area копает не ту область"
+                        + " При смене cube_SizeTwo_CoversEightCells проверь это утверждение.");
         assertTrue(
                 box.contains(new BlockCoord(4, 6, 8)),
-                "Куб обязан включать дальний угол: иначе край области остаётся нетронутым");
+                "Куб обязан включать дальний угол: иначе край области остаётся нетронутым"
+                        + " При смене cube_SizeTwo_CoversEightCells проверь это утверждение.");
     }
 }

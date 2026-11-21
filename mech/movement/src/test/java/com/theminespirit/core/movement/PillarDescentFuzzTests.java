@@ -31,20 +31,26 @@ class PillarDescentFuzzTests {
 
             Set<BlockCoord> removed = new HashSet<>();
             for (BlockCoord cell : plan.dig()) {
-                assertTrue(own.contains(cell), "Разбирают только свои блоки, а план назвал " + cell);
+                assertTrue(
+                        own.contains(cell),
+                        "Разбирают только свои блоки, а план назвал " + cell
+                                + " Иначе тест ownColumns_EveryHeight_StayWithinBody перестанет ловить эту поломку. При смене ownColumns_EveryHeight_StayWithinBody проверь это утверждение.");
                 removed.add(cell);
                 BlockCoord at = cell;
                 assertTrue(
                         BodyMotion.fits(after(world, removed), at),
-                        "После снятия " + cell + " тело обязано помещаться в " + at);
+                        "После снятия " + cell + " тело обязано помещаться в " + at
+                                + " Иначе тест ownColumns_EveryHeight_StayWithinBody перестанет ловить эту поломку. При смене ownColumns_EveryHeight_StayWithinBody проверь это утверждение.");
             }
             assertEquals(
                     new BlockCoord(5, 1, 5),
                     plan.landing(),
-                    "Спуск с высоты " + top + " обязан кончиться на земле, а не посередине столба");
+                    "Спуск с высоты " + top + " обязан кончиться на земле, а не посередине столба"
+                            + " Иначе тест ownColumns_EveryHeight_StayWithinBody перестанет ловить эту поломку. При смене ownColumns_EveryHeight_StayWithinBody проверь это утверждение.");
             assertTrue(
                     BodyMotion.standable(after(world, removed), plan.landing()),
-                    "Спуск обязан кончаться на твёрдой опоре");
+                    "Спуск обязан кончаться на твёрдой опоре"
+                            + " Иначе тест ownColumns_EveryHeight_StayWithinBody перестанет ловить эту поломку. При смене ownColumns_EveryHeight_StayWithinBody проверь это утверждение.");
         }
     }
 
@@ -67,7 +73,8 @@ class PillarDescentFuzzTests {
 
         assertTrue(
                 PillarDescent.plan(world, feet, own::contains, 64).isEmpty(),
-                "Мост — не столб: под ним провал. Спуск разбором не выдумывается, мост убирает уборка следа");
+                "Мост — не столб: под ним провал. Спуск разбором не выдумывается, мост убирает уборка следа"
+                        + " Иначе тест bridgeWithoutColumn_NoColumn_NoDescent перестанет ловить эту поломку. При смене bridgeWithoutColumn_NoColumn_NoDescent проверь это утверждение.");
     }
 
     @Test
@@ -78,7 +85,8 @@ class PillarDescentFuzzTests {
                 PillarDescent.plan(world, new BlockCoord(0, 0, 0), cell -> true, 64)
                         .isEmpty(),
                 "Живой мост-Г: под духом мост, а под мостом провал. Разбор под собой оставил бы духа падать, "
-                        + "поэтому спуск не выдумывается: уборка следа идёт заданием графа");
+                        + "поэтому спуск не выдумывается: уборка следа идёт заданием графа"
+                        + " Иначе тест pillarDescentCases_LiveBridge_NoDescentColumn перестанет ловить эту поломку. При смене pillarDescentCases_LiveBridge_NoDescentColumn проверь это утверждение.");
     }
 
     private static RouteWorld after(FuzzWorld world, Set<BlockCoord> removed) {

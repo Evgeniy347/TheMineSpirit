@@ -85,19 +85,21 @@ class OverflowPolicyProperties {
         int give = Protected.of(patterns, inventory, KIT, VALUES).giveAway(decision.slot());
         assertTrue(
                 give > 0,
-                "Выброшен слот " + decision.slot() + " инвентаря " + inventory + " не имеет излишка: "
+                "Выброшен слот " + decision.slot() + " инвентаря " + inventory + " не имеет излишка: иначе "
                         + "политика отдала бы в контейнер то, что базовый набор придержал. Излишек " + give
-                        + ", решено отдать " + decision.count());
+                        + ", решено отдать " + decision.count() + ". При смене decide проверь слот с излишком");
         assertEquals(
                 dropped.count(),
                 decision.count(),
-                "Выбрасывается слот целиком (" + decision.count() + " из " + dropped.count() + "): "
-                        + "частичный выброс оставляет слот занятым, и подобранной кучке некуда деться");
+                "Выбрасывается слот целиком (" + decision.count() + " из " + dropped.count() + "), иначе "
+                        + "частичный выброс оставляет слот занятым и подобранной кучке некуда деться. "
+                        + "При смене decide проверь выброс слота целиком");
         assertEquals(
                 dropped.count(),
                 give,
                 "Слот выбирается, только когда весь он излишек: в слоте " + decision.slot() + " лежит "
-                        + dropped.count() + ", излишек " + give);
+                        + dropped.count() + ", излишек " + give + ", иначе часть набора уйдёт в контейнер. "
+                        + "При смене decide проверь выбор слота");
     }
 
     @Property
@@ -110,7 +112,8 @@ class OverflowPolicyProperties {
                 OverflowPolicy.decide(inventory, incoming, VALUES, patterns, KIT),
                 "Решение политики детерминировано: на одном и том же инвентаре дух должен принимать "
                         + "одно и то же решение, иначе подбор дропа зависит от порядка вызовов. "
-                        + "Инвентарь " + inventory + ", кучка " + incoming);
+                        + "Инвентарь " + inventory + ", кучка " + incoming
+                        + ". При смене decide проверь детерминизм");
     }
 
     @Property
@@ -130,16 +133,18 @@ class OverflowPolicyProperties {
                     left >= Math.min(before, rule.keep()),
                     "Правило набора " + rule.match() + rule.category() + " с квотой " + rule.keep()
                             + " до обмена имело " + before + " предметов, после — " + left
-                            + ": набор обязан придержать своё, а не отдавать его вместе с лишком. "
-                            + "Инвентарь " + inventory + ", кучка " + incoming);
+                            + ": набор обязан придержать своё, а не отдавать его вместе с лишком, иначе "
+                            + "набор разъедется. Инвентарь " + inventory + ", кучка " + incoming
+                            + ". При смене decide проверь квоты набора");
         }
         int incomingValue = VALUES.stackValue(incoming);
         assertTrue(
                 totalValue(after) + incomingValue > totalValue(inventory),
                 "Ценность того, что осталось, плюс ценность кучки выше прежней: было "
                         + totalValue(inventory) + ", осталось " + totalValue(after) + " и пришло "
-                        + incomingValue + ". Обмен, делающий духа беднее, — дефект политики. "
-                        + "Инвентарь " + inventory + ", кучка " + incoming);
+                        + incomingValue + ". Обмен, делающий духа беднее, — дефект политики, иначе "
+                        + "дух теряет ценность при подборе. Инвентарь " + inventory + ", кучка " + incoming
+                        + ". При смене decide проверь рост ценности");
     }
 
     @Property
@@ -157,12 +162,14 @@ class OverflowPolicyProperties {
                 dropGivenAway(inventory, decision).get(decision.slot()),
                 "После DROP слот " + decision.slot() + " пуст: кучка '" + incoming.item() + "' должна "
                         + "занять его место, иначе обмен не освобождает место и перенос некуда делать. "
-                        + "Инвентарь " + inventory + ", кучка " + incoming);
+                        + "Инвентарь " + inventory + ", кучка " + incoming
+                        + ". При смене decide проверь освобождение слота");
         assertTrue(
                 incoming.count() <= incoming.maxStack(),
                 "Кучка '" + incoming.item() + "' × " + incoming.count() + " обязана влезать в свой максимум "
-                        + incoming.maxStack() + ": пустой слот принимает любую корректную стопку, и обмен "
-                        + "освобождает место именно под неё. Инвентарь " + inventory);
+                        + incoming.maxStack() + ": пустой слот принимает любую корректную стопку, иначе "
+                        + "обмен не пройдёт и кучка потеряется. Инвентарь " + inventory
+                        + ". При смене decide проверь максимум кучки");
     }
 
     private static int countOfRule(List<Stack> inventory, KitRule rule) {

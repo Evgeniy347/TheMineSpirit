@@ -18,12 +18,17 @@ class NetworkAreasTests {
     void prepare_SameHouseTwice_BuildsOnce() {
         NetworkAreas areas = new NetworkAreas();
         List<Integer> first = areas.prepare(FEET, CHEST, 0);
-        assertEquals(1, first.size(), "первый маршрут в округе строит участок: " + first);
+        assertEquals(
+                1,
+                first.size(),
+                "первый маршрут в округе строит участок: " + first
+                        + " Иначе тест prepare_SameHouseTwice_BuildsOnce перестанет ловить эту поломку. При смене prepare_SameHouseTwice_BuildsOnce проверь это утверждение.");
         areas.rebuilt(first.get(0), Set.of(1, 2), 0);
         assertEquals(
                 List.of(),
                 areas.prepare(cell(6, 70, 4), CHEST, 1000),
-                "второй маршрут в том же доме участок не перестраивает: сеть строится один раз, а не на каждый подход");
+                "второй маршрут в том же доме участок не перестраивает: сеть строится один раз, а не на каждый подход"
+                        + " Иначе тест prepare_SameHouseTwice_BuildsOnce перестанет ловить эту поломку. При смене prepare_SameHouseTwice_BuildsOnce проверь это утверждение.");
     }
 
     @Test
@@ -35,11 +40,13 @@ class NetworkAreasTests {
         assertEquals(
                 List.of(),
                 areas.prepare(FEET, CHEST, NetworkAreas.REBUILD_TICKS - 1),
-                "участок без отрезка перестраивается не чаще раза в " + NetworkAreas.REBUILD_TICKS + " тиков");
+                "участок без отрезка перестраивается не чаще раза в " + NetworkAreas.REBUILD_TICKS + " тиков"
+                        + " Иначе тест prepare_LostSegment_RebuildsNotBeforeThrottle перестанет ловить эту поломку. При смене prepare_LostSegment_RebuildsNotBeforeThrottle проверь это утверждение.");
         assertEquals(
                 List.of(area),
                 areas.prepare(FEET, CHEST, NetworkAreas.REBUILD_TICKS),
-                "по истечении паузы участок, потерявший отрезок (проход заложили), строится заново");
+                "по истечении паузы участок, потерявший отрезок (проход заложили), строится заново"
+                        + " Иначе тест prepare_LostSegment_RebuildsNotBeforeThrottle перестанет ловить эту поломку. При смене prepare_LostSegment_RebuildsNotBeforeThrottle проверь это утверждение.");
     }
 
     @Test
@@ -48,23 +55,29 @@ class NetworkAreasTests {
         BuildBox box = BuildBox.of(0, 60, 0, 25, 80, 10);
         int site = areas.beginSite(box, List.of(cell(10, 64, 0)));
         List<Integer> build = areas.prepare(FEET, CHEST, 0);
-        assertTrue(build.contains(site), "площадка стройки строится при первой нужде: " + build);
+        assertTrue(
+                build.contains(site),
+                "площадка стройки строится при первой нужде: " + build
+                        + " Иначе тест prepare_SiteWithPlacedBlock_RebuildsAfterThrottleOnly перестанет ловить эту поломку. При смене prepare_SiteWithPlacedBlock_RebuildsAfterThrottleOnly проверь это утверждение.");
         build.forEach(id -> areas.rebuilt(id, Set.of(), 0));
         areas.blockPlaced(cell(12, 66, 4));
         assertEquals(
                 List.of(),
                 areas.prepare(FEET, CHEST, 30),
                 "поставленный блок пересчитывает площадку не сразу, а не чаще раза в " + NetworkAreas.REBUILD_TICKS
-                        + " тиков (ответ владельца 2: «раз в несколько секунд»)");
+                        + " тиков (ответ владельца 2: «раз в несколько секунд»)"
+                        + " Иначе тест prepare_SiteWithPlacedBlock_RebuildsAfterThrottleOnly перестанет ловить эту поломку. При смене prepare_SiteWithPlacedBlock_RebuildsAfterThrottleOnly проверь это утверждение.");
         assertEquals(
                 List.of(site),
                 areas.prepare(FEET, CHEST, NetworkAreas.REBUILD_TICKS),
-                "по истечении паузы площадка с поставленным блоком пересчитывается целиком");
+                "по истечении паузы площадка с поставленным блоком пересчитывается целиком"
+                        + " Иначе тест prepare_SiteWithPlacedBlock_RebuildsAfterThrottleOnly перестанет ловить эту поломку. При смене prepare_SiteWithPlacedBlock_RebuildsAfterThrottleOnly проверь это утверждение.");
         areas.rebuilt(site, Set.of(), NetworkAreas.REBUILD_TICKS);
         assertEquals(
                 List.of(),
                 areas.prepare(FEET, CHEST, 10 * NetworkAreas.REBUILD_TICKS),
-                "без новых блоков площадка не пересчитывается");
+                "без новых блоков площадка не пересчитывается"
+                        + " Иначе тест prepare_SiteWithPlacedBlock_RebuildsAfterThrottleOnly перестанет ловить эту поломку. При смене prepare_SiteWithPlacedBlock_RebuildsAfterThrottleOnly проверь это утверждение.");
     }
 
     @Test
@@ -79,7 +92,8 @@ class NetworkAreasTests {
         assertTrue(
                 areas.entrances(plain).contains(doorway),
                 "проём двери стройки — начало сети и для участка вокруг: дверь как будто уже стоит, иначе сеть "
-                        + "участка не заходит на площадку");
+                        + "участка не заходит на площадку"
+                        + " При смене entrances_PlainAreaOverSite_IncludesSiteDoorway проверь это утверждение.");
     }
 
     @Test
@@ -89,6 +103,7 @@ class NetworkAreasTests {
                 List.of(),
                 areas.prepare(cell(0, 64, 0), cell(500, 64, 0), 0),
                 "цель дальше стороны участка " + NetworkAreas.MAX_SIDE + " — участок не строится (дальний путь — "
-                        + "отдельная задача, обход мира такого размера разом — лаг)");
+                        + "отдельная задача, обход мира такого размера разом — лаг)"
+                        + " Иначе тест prepare_FarApart_NoArea перестанет ловить эту поломку. При смене prepare_FarApart_NoArea проверь это утверждение.");
     }
 }

@@ -27,11 +27,13 @@ class PendingEvictTests {
                 Optional.of(BoardStatus.CANCELLED),
                 board.statusOf("repair:step_0"),
                 "Ремонты имеют свой предел: переполнение ремонтов разгружает самые старые repair-билеты, "
-                        + "а не оставляет доску расти без границы");
+                        + "а не оставляет доску расти без границы"
+                        + " Иначе тест evictOverflow_RepairOverLimit_EvictsOldestRepairsOnly перестанет ловить эту поломку. При смене evictOverflow_RepairOverLimit_EvictsOldestRepairsOnly проверь это утверждение.");
         assertEquals(
                 Optional.of(BoardStatus.PENDING),
                 board.statusOf("repair:step_" + (BoardTuning.maxRepairPending() + 1)),
-                "Свежий ремонт остаётся: вытесняются только самые старые сверх предела");
+                "Свежий ремонт остаётся: вытесняются только самые старые сверх предела"
+                        + " Иначе тест evictOverflow_RepairOverLimit_EvictsOldestRepairsOnly перестанет ловить эту поломку. При смене evictOverflow_RepairOverLimit_EvictsOldestRepairsOnly проверь это утверждение.");
         long left = board.all().stream()
                 .filter(ticket -> ticket.id().startsWith("repair:"))
                 .filter(ticket -> board.statusOf(ticket.id()).orElse(null) == BoardStatus.PENDING)
@@ -39,6 +41,7 @@ class PendingEvictTests {
         assertEquals(
                 BoardTuning.maxRepairPending(),
                 left,
-                "Ремонтов на доске ровно столько, сколько разрешает отдельный предел");
+                "Ремонтов на доске ровно столько, сколько разрешает отдельный предел"
+                        + " Иначе тест evictOverflow_RepairOverLimit_EvictsOldestRepairsOnly перестанет ловить эту поломку. При смене evictOverflow_RepairOverLimit_EvictsOldestRepairsOnly проверь это утверждение.");
     }
 }

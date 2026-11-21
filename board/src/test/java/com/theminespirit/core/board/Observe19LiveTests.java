@@ -37,7 +37,8 @@ class Observe19LiveTests {
                 LeftOreRules.isToolTier(marker),
                 "Фикстура наблюдения 19: '" + marker + "' — требование кирки, из-за которого провалилась "
                         + root.path("pickaxeSupplyTask").asText() + " ("
-                        + root.path("pickaxeError").asText() + ")");
+                        + root.path("pickaxeError").asText() + ")"
+                        + " Иначе тест liveObserve19_PickaxeMarker_NotTurnedIntoGatherGoal перестанет ловить эту поломку. При смене liveObserve19_PickaxeMarker_NotTurnedIntoGatherGoal проверь это утверждение.");
 
         SupplyGate.Decision onlyMarker =
                 SupplyGate.decide(Map.of(marker, 1), Map.of(), 0, Map.of(), 0, BoardTuning.FAIL_BACKOFF_TICKS);
@@ -45,7 +46,8 @@ class Observe19LiveTests {
         assertTrue(
                 onlyMarker.supply().isEmpty() && onlyMarker.gather().isEmpty(),
                 "Маркер кирки не порождает ни снабжение, ни добычу: иначе дух снова ищет способ добычи "
-                        + "несуществующего предмета");
+                        + "несуществующего предмета"
+                        + " При смене liveObserve19_PickaxeMarker_NotTurnedIntoGatherGoal проверь это утверждение.");
         assertEquals(
                 List.of(new SupplyGate.Request(ordinary, count)),
                 SupplyGate.decide(
@@ -56,6 +58,7 @@ class Observe19LiveTests {
                                 0,
                                 BoardTuning.FAIL_BACKOFF_TICKS)
                         .gather(),
-                "Обычный материал рядом с маркером добывается как раньше — фильтр не глушит всю нехватку");
+                "Обычный материал рядом с маркером добывается как раньше — фильтр не глушит всю нехватку"
+                        + " Иначе тест liveObserve19_PickaxeMarker_NotTurnedIntoGatherGoal перестанет ловить эту поломку. При смене liveObserve19_PickaxeMarker_NotTurnedIntoGatherGoal проверь это утверждение.");
     }
 }

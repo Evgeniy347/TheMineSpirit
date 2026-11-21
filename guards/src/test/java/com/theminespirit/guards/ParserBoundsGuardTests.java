@@ -38,7 +38,8 @@ class ParserBoundsGuardTests {
                 "Парсер задаёт границы числа сам, а конструктор записи проверяет их тоже: правка одного места оставит "
                         + "другое старым (docs/CONVENTIONS.md: одно правило — одно место). Читай число без аргументов "
                         + "(number()/integer()), границы держит FactChecks.range в конструкторе, а ConfigNode.build "
-                        + "превращает отказ в ошибку с путём в файле. Нарушители");
+                        + "превращает отказ в ошибку с путём в файле. Нарушители"
+                        + " Иначе тест tacticsParsers_Scanned_ReadNumbersWithoutOwnBounds перестанет ловить эту поломку. При смене tacticsParsers_Scanned_ReadNumbersWithoutOwnBounds проверь это утверждение.");
     }
 
     @Test
@@ -46,18 +47,21 @@ class ParserBoundsGuardTests {
         assertEquals(
                 1,
                 boundedReads("X.java", "return node.get(\"a\").number(0, 1);").size(),
-                "Сторож ослеп: чтение числа с границами number(0, 1) должно находиться");
+                "Сторож ослеп: чтение числа с границами number(0, 1) должно находиться"
+                        + " Иначе тест boundedReadPattern_NumberWithBounds_IsDetected перестанет ловить эту поломку. При смене boundedReadPattern_NumberWithBounds_IsDetected проверь это утверждение.");
         assertEquals(
                 1,
                 boundedReads("X.java", "return node.get(\"a\").integer(0, MAX);")
                         .size(),
-                "Сторож ослеп: чтение целого с границами из константы должно находиться");
+                "Сторож ослеп: чтение целого с границами из константы должно находиться"
+                        + " Иначе тест boundedReadPattern_NumberWithBounds_IsDetected перестанет ловить эту поломку. При смене boundedReadPattern_NumberWithBounds_IsDetected проверь это утверждение.");
     }
 
     @Test
     void boundedReadPattern_ReadWithoutBounds_IsIgnored() {
         assertTrue(
                 boundedReads("X.java", "return node.get(\"a\").number();").isEmpty(),
-                "Сторож ложно срабатывает: чтение числа без границ — как раз то, что нужно");
+                "Сторож ложно срабатывает: чтение числа без границ — как раз то, что нужно"
+                        + " Иначе тест boundedReadPattern_ReadWithoutBounds_IsIgnored перестанет ловить эту поломку. При смене boundedReadPattern_ReadWithoutBounds_IsIgnored проверь это утверждение.");
     }
 }

@@ -26,10 +26,20 @@ class NetworkRouteTests {
         GridWorld world = GridWorld.twoFloors();
         PathNetwork network = network(world);
         Optional<List<BlockCoord>> route = NetworkRoute.plan(network, cell(19, 5, 0), cell(1, 1, 2), world);
-        assertTrue(route.isPresent(), "из дальнего угла второго этажа к двери есть маршрут по сети");
+        assertTrue(
+                route.isPresent(),
+                "из дальнего угла второго этажа к двери есть маршрут по сети"
+                        + " Иначе тест plan_FarCornerUpstairsToDoor_RoutesOverNetworkInShortLegs перестанет ловить эту поломку. При смене plan_FarCornerUpstairsToDoor_RoutesOverNetworkInShortLegs проверь это утверждение.");
         List<BlockCoord> points = route.get();
-        assertEquals(1, points.get(points.size() - 1).y(), "маршрут кончается на первом этаже у двери: " + points);
-        assertTrue(points.size() >= 3, "путь со второго этажа к двери длиннее отрезка — идёт через узлы: " + points);
+        assertEquals(
+                1,
+                points.get(points.size() - 1).y(),
+                "маршрут кончается на первом этаже у двери: " + points
+                        + " Иначе тест plan_FarCornerUpstairsToDoor_RoutesOverNetworkInShortLegs перестанет ловить эту поломку. При смене plan_FarCornerUpstairsToDoor_RoutesOverNetworkInShortLegs проверь это утверждение.");
+        assertTrue(
+                points.size() >= 3,
+                "путь со второго этажа к двери длиннее отрезка — идёт через узлы: " + points
+                        + " Иначе тест plan_FarCornerUpstairsToDoor_RoutesOverNetworkInShortLegs перестанет ловить эту поломку. При смене plan_FarCornerUpstairsToDoor_RoutesOverNetworkInShortLegs проверь это утверждение.");
     }
 
     @Test
@@ -37,7 +47,10 @@ class NetworkRouteTests {
         GridWorld world = GridWorld.twoFloors().solid(2, 1, 2);
         PathNetwork network = network(world);
         Optional<List<BlockCoord>> route = NetworkRoute.plan(network, cell(19, 5, 4), cell(2, 1, 2), world);
-        assertTrue(route.isPresent(), "цель — сундук (твёрдый блок): выход сети — клетка рядом, где можно встать");
+        assertTrue(
+                route.isPresent(),
+                "цель — сундук (твёрдый блок): выход сети — клетка рядом, где можно встать"
+                        + " Иначе тест plan_TargetIsChestBlock_ExitsBesideIt перестанет ловить эту поломку. При смене plan_TargetIsChestBlock_ExitsBesideIt проверь это утверждение.");
     }
 
     @Test
@@ -50,8 +63,14 @@ class NetworkRouteTests {
         PathSegment segment = new PathSegment(0, straight);
         world.solid(4, 1, 1).solid(4, 2, 1);
         Optional<List<BlockCoord>> repaired = NetworkRoute.repair(segment, world);
-        assertTrue(repaired.isPresent(), "столб поперёк коридора шириной 3 обходится: отрезок пересчитан, не удалён");
-        assertTrue(!repaired.get().contains(cell(4, 1, 1)), "новый путь не идёт сквозь столб: " + repaired.get());
+        assertTrue(
+                repaired.isPresent(),
+                "столб поперёк коридора шириной 3 обходится: отрезок пересчитан, не удалён"
+                        + " Иначе тест repair_WallAcrossCorridorWithDetour_FindsNewPath перестанет ловить эту поломку. При смене repair_WallAcrossCorridorWithDetour_FindsNewPath проверь это утверждение.");
+        assertTrue(
+                !repaired.get().contains(cell(4, 1, 1)),
+                "новый путь не идёт сквозь столб: " + repaired.get()
+                        + " Иначе тест repair_WallAcrossCorridorWithDetour_FindsNewPath перестанет ловить эту поломку. При смене repair_WallAcrossCorridorWithDetour_FindsNewPath проверь это утверждение.");
     }
 
     @Test
@@ -65,7 +84,8 @@ class NetworkRouteTests {
         assertEquals(
                 Optional.empty(),
                 NetworkRoute.repair(new PathSegment(0, straight), world),
-                "проход заложен — отрезок не пересчитать, его убирают из сети");
+                "проход заложен — отрезок не пересчитать, его убирают из сети"
+                        + " Иначе тест repair_CorridorWalledOff_IsGone перестанет ловить эту поломку. При смене repair_CorridorWalledOff_IsGone проверь это утверждение.");
     }
 
     @Test
@@ -85,6 +105,7 @@ class NetworkRouteTests {
                 room.reads(),
                 hall.reads(),
                 "пересчёт отрезка в зале 9×401 читает столько же клеток, сколько в комнате 9×13: обход ограничен "
-                        + "габаритом отрезка с запасом, иначе изменение блока стоит обхода здания");
+                        + "габаритом отрезка с запасом, иначе изменение блока стоит обхода здания"
+                        + " При смене repair_SegmentInHugeHall_ReadsAsInSmallRoom проверь это утверждение.");
     }
 }

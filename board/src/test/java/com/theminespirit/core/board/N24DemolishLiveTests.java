@@ -47,11 +47,13 @@ class N24DemolishLiveTests {
         assertEquals(
                 "DISMANTLE_SHELTER",
                 ticket.get("case").asText(),
-                "Живой тикет обязан быть разбором хижины: иначе тест проверяет не тот путь");
+                "Живой тикет обязан быть разбором хижины: иначе тест проверяет не тот путь"
+                        + " При смене liveDemolishTicket_ClearCannotRemoveBlocks_TaskFailsInsteadOfDone проверь это утверждение.");
         assertEquals(
                 BoardTicket.ALWAYS_CAUSE,
                 ticket.get("cause").asText(),
-                "Живой тикет закрывался по причине always, не сверяясь с миром");
+                "Живой тикет закрывался по причине always, не сверяясь с миром"
+                        + " Иначе тест liveDemolishTicket_ClearCannotRemoveBlocks_TaskFailsInsteadOfDone перестанет ловить эту поломку. При смене liveDemolishTicket_ClearCannotRemoveBlocks_TaskFailsInsteadOfDone проверь это утверждение.");
         TaskNode plan = TicketPlans.plan(BoardCase.DISMANTLE_SHELTER, target());
         TaskRunner runner = TaskRunner.start(plan, registry(), ConditionRegistry.of(Map.of()));
 
@@ -62,11 +64,13 @@ class N24DemolishLiveTests {
                 status,
                 "Дух отработал план разбора, clear_area ответил «убрано 0 из 1 … не убран ни один блок», "
                         + "а задание закрылось DONE: блоки остаются висеть навсегда. Провал расчистки обязан "
-                        + "проваливать разбор, иначе доска врёт о факте мира");
+                        + "проваливать разбор, иначе доска врёт о факте мира"
+                        + " При смене liveDemolishTicket_ClearCannotRemoveBlocks_TaskFailsInsteadOfDone проверь это утверждение.");
         assertTrue(
                 runner.failureReason().orElse("").contains("недостижимо"),
                 "Причина провала обязана называть недостижимость из clear_area, а не теряться в fallback: "
-                        + runner.failureReason().orElse("причина не записана"));
+                        + runner.failureReason().orElse("причина не записана")
+                        + " Иначе тест liveDemolishTicket_ClearCannotRemoveBlocks_TaskFailsInsteadOfDone перестанет ловить эту поломку. При смене liveDemolishTicket_ClearCannotRemoveBlocks_TaskFailsInsteadOfDone проверь это утверждение.");
     }
 
     @Test
@@ -74,18 +78,23 @@ class N24DemolishLiveTests {
         Optional<String> partial = DemolishAudit.stillStanding(HANGING.size(), HANGING.subList(0, 2));
 
         assertTrue(
-                partial.isPresent(), "Два висящих блока из четырёх ещё стоят в мире: разбор нельзя закрывать успехом");
+                partial.isPresent(),
+                "Два висящих блока из четырёх ещё стоят в мире: разбор нельзя закрывать успехом"
+                        + " Иначе тест liveHangingBlocks_StillInWorld_FailTheTaskWithCoordinates перестанет ловить эту поломку. При смене liveHangingBlocks_StillInWorld_FailTheTaskWithCoordinates проверь это утверждение.");
         assertTrue(
                 partial.orElse("").contains("2 из 4"),
-                "Причина обязана называть, сколько блоков не убрано: " + partial.orElse("причины нет"));
+                "Причина обязана называть, сколько блоков не убрано: " + partial.orElse("причины нет")
+                        + " Иначе тест liveHangingBlocks_StillInWorld_FailTheTaskWithCoordinates перестанет ловить эту поломку. При смене liveHangingBlocks_StillInWorld_FailTheTaskWithCoordinates проверь это утверждение.");
         assertTrue(
                 partial.orElse("").contains(LIVE_A.toString()),
                 "Причина обязана называть координаты оставшихся блоков, иначе игрок не найдёт их: "
-                        + partial.orElse("причины нет"));
+                        + partial.orElse("причины нет")
+                        + " При смене liveHangingBlocks_StillInWorld_FailTheTaskWithCoordinates проверь это утверждение.");
         assertEquals(
                 Optional.empty(),
                 DemolishAudit.stillStanding(HANGING.size(), List.of()),
-                "Когда в мире не осталось ни одного блока плана, разбор закрывается успехом");
+                "Когда в мире не осталось ни одного блока плана, разбор закрывается успехом"
+                        + " Иначе тест liveHangingBlocks_StillInWorld_FailTheTaskWithCoordinates перестанет ловить эту поломку. При смене liveHangingBlocks_StillInWorld_FailTheTaskWithCoordinates проверь это утверждение.");
     }
 
     private static TicketTarget target() {

@@ -21,8 +21,8 @@ class TicketPlanPickTests {
         assertEquals(
                 explicit,
                 plan,
-                "Явный план задания исполняется вместо плана по кейсу: иначе действие "
-                        + "more нельзя связать с доской");
+                "Явный план задания исполняется вместо плана по кейсу: иначе действие " + "more нельзя связать с доской"
+                        + " При смене explicitPlan_PlanGiven_WinsOverBoardCasePlan проверь это утверждение.");
     }
 
     @Test
@@ -32,6 +32,7 @@ class TicketPlanPickTests {
         assertNotEquals(
                 MorePlans.returnHome(),
                 plan,
-                "Без явного плана задание собирается по кейсу доски, а не подменяется чужим действием");
+                "Без явного плана задание собирается по кейсу доски, а не подменяется чужим действием"
+                        + " Иначе тест boardCase_NoExplicitPlan_UsesCasePlan перестанет ловить эту поломку. При смене boardCase_NoExplicitPlan_UsesCasePlan проверь это утверждение.");
     }
 }

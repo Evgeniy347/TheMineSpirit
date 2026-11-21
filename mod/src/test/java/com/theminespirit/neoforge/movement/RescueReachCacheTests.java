@@ -28,13 +28,21 @@ class RescueReachCacheTests {
         cache.request(new Blocked(), cell -> false, HELPER, FROM, TARGET, 110);
         RescueReach.Verdict repeated = cache.verdict(HELPER, FROM, TARGET, 110);
 
-        assertTrue(cached != null && cached.reachable(), "Путь по ровному полу обязан найтись: " + cached);
-        assertEquals(cached, repeated, "Повторный вопрос отдаёт тот же вердикт из кэша");
+        assertTrue(
+                cached != null && cached.reachable(),
+                "Путь по ровному полу обязан найтись: " + cached
+                        + " Иначе тест cache_SameHelperAndTarget_KeepsVerdictDespiteNewWorld перестанет ловить эту поломку. При смене cache_SameHelperAndTarget_KeepsVerdictDespiteNewWorld проверь это утверждение.");
+        assertEquals(
+                cached,
+                repeated,
+                "Повторный вопрос отдаёт тот же вердикт из кэша"
+                        + " Иначе тест cache_SameHelperAndTarget_KeepsVerdictDespiteNewWorld перестанет ловить эту поломку. При смене cache_SameHelperAndTarget_KeepsVerdictDespiteNewWorld проверь это утверждение.");
         assertEquals(
                 cached,
                 cache.verdict(HELPER, FROM, TARGET, 110),
                 "Пока (помощник, цель) не изменились и вердикт не истёк, новый мир в том же тике не запускает "
-                        + "поиск снова: иначе тик графа снова ждёт до 600 мс на кандидата (debtnav, п.2)");
+                        + "поиск снова: иначе тик графа снова ждёт до 600 мс на кандидата (debtnav, п.2)"
+                        + " При смене cache_SameHelperAndTarget_KeepsVerdictDespiteNewWorld проверь это утверждение.");
     }
 
     @Test
@@ -45,12 +53,16 @@ class RescueReachCacheTests {
 
         assertNull(
                 cache.verdict(HELPER, FROM, TARGET, 100 + 1200),
-                "Просроченный вердикт не выдаётся за свежий: обстановка могла измениться");
+                "Просроченный вердикт не выдаётся за свежий: обстановка могла измениться"
+                        + " Иначе тест cache_ExpiredVerdict_SearchRunsAgain перестанет ловить эту поломку. При смене cache_ExpiredVerdict_SearchRunsAgain проверь это утверждение.");
         cache.request(new Blocked(), cell -> false, HELPER, FROM, TARGET, 100 + 1200);
         finish(cache, 100 + 1200);
 
         RescueReach.Verdict fresh = cache.verdict(HELPER, FROM, TARGET, 100 + 1200);
-        assertTrue(fresh != null && !fresh.reachable(), "После срока годности путь считается заново: " + fresh);
+        assertTrue(
+                fresh != null && !fresh.reachable(),
+                "После срока годности путь считается заново: " + fresh
+                        + " Иначе тест cache_ExpiredVerdict_SearchRunsAgain перестанет ловить эту поломку. При смене cache_ExpiredVerdict_SearchRunsAgain проверь это утверждение.");
     }
 
     @Test
@@ -59,24 +71,30 @@ class RescueReachCacheTests {
         cache.request(new Blocked(), cell -> false, HELPER, FROM, TARGET, 100);
         finish(cache, 100);
         RescueReach.Verdict before = cache.verdict(HELPER, FROM, TARGET, 100);
-        assertTrue(before != null && !before.reachable(), "До спасения пути домой нет: " + before);
+        assertTrue(
+                before != null && !before.reachable(),
+                "До спасения пути домой нет: " + before
+                        + " Иначе тест cache_ClearedAfterRescue_FindsPathLeaderDug перестанет ловить эту поломку. При смене cache_ClearedAfterRescue_FindsPathLeaderDug проверь это утверждение.");
         long generation = cache.generation();
 
         cache.clear();
 
         assertNull(
                 cache.verdict(HELPER, FROM, TARGET, 100),
-                "После завершения спасения старый вердикт не годится: ведущий мог прокопать путь");
+                "После завершения спасения старый вердикт не годится: ведущий мог прокопать путь"
+                        + " Иначе тест cache_ClearedAfterRescue_FindsPathLeaderDug перестанет ловить эту поломку. При смене cache_ClearedAfterRescue_FindsPathLeaderDug проверь это утверждение.");
         assertTrue(
                 cache.generation() > generation,
-                "Сброс кэша обязан разбудить граф: ведомые ждут решения, а не следующего цикла до 600 тиков");
+                "Сброс кэша обязан разбудить граф: ведомые ждут решения, а не следующего цикла до 600 тиков"
+                        + " Иначе тест cache_ClearedAfterRescue_FindsPathLeaderDug перестанет ловить эту поломку. При смене cache_ClearedAfterRescue_FindsPathLeaderDug проверь это утверждение.");
         cache.request(FLAT, cell -> false, HELPER, FROM, TARGET, 100);
         finish(cache, 100);
 
         RescueReach.Verdict after = cache.verdict(HELPER, FROM, TARGET, 100);
         assertTrue(
                 after != null && after.reachable(),
-                "После сброса путь пересчитывается по новому миру и ведомые идут следом: " + after);
+                "После сброса путь пересчитывается по новому миру и ведомые идут следом: " + after
+                        + " Иначе тест cache_ClearedAfterRescue_FindsPathLeaderDug перестанет ловить эту поломку. При смене cache_ClearedAfterRescue_FindsPathLeaderDug проверь это утверждение.");
     }
 
     @Test
@@ -89,7 +107,8 @@ class RescueReachCacheTests {
 
         assertNull(
                 cache.verdict(HELPER, FROM, TARGET, 0),
-                "Незавершённый поиск после сброса не возвращает старый мир: его результаты уже не нужны");
+                "Незавершённый поиск после сброса не возвращает старый мир: его результаты уже не нужны"
+                        + " Иначе тест cache_Cleared_DropsPendingSearch перестанет ловить эту поломку. При смене cache_Cleared_DropsPendingSearch проверь это утверждение.");
     }
 
     @Test
@@ -99,11 +118,15 @@ class RescueReachCacheTests {
 
         assertNull(
                 cache.verdict(HELPER, FROM, TARGET, 0),
-                "Сразу после запроса вердикта ещё нет: поиск вынесен из тика графа, а не считается целиком (debtnav, п.2)");
+                "Сразу после запроса вердикта ещё нет: поиск вынесен из тика графа, а не считается целиком (debtnav, п.2)"
+                        + " Иначе тест cache_Advance_CompletesWithoutFullTick перестанет ловить эту поломку. При смене cache_Advance_CompletesWithoutFullTick проверь это утверждение.");
         finish(cache, 0);
 
         RescueReach.Verdict done = cache.verdict(HELPER, FROM, TARGET, 30);
-        assertTrue(done != null && done.reachable(), "Добор по тикам доводит поиск до вердикта: " + done);
+        assertTrue(
+                done != null && done.reachable(),
+                "Добор по тикам доводит поиск до вердикта: " + done
+                        + " Иначе тест cache_Advance_CompletesWithoutFullTick перестанет ловить эту поломку. При смене cache_Advance_CompletesWithoutFullTick проверь это утверждение.");
     }
 
     @Test
@@ -111,20 +134,28 @@ class RescueReachCacheTests {
         RescueReach.Cache cache = new RescueReach.Cache();
         GraphCadence cadence = new GraphCadence();
         Set<String> before = Set.of(cache.readyEvent());
-        assertTrue(cadence.due(100, before), "Первый прогон графа идёт сразу: вход ещё не запоминался");
+        assertTrue(
+                cadence.due(100, before),
+                "Первый прогон графа идёт сразу: вход ещё не запоминался"
+                        + " Иначе тест cache_CompletedVerdict_WakesGraphCadenceInSameTick перестанет ловить эту поломку. При смене cache_CompletedVerdict_WakesGraphCadenceInSameTick проверь это утверждение.");
         cadence.finished(100, before);
-        assertFalse(cadence.due(110, before), "Между прогонами граф спит: вход не менялся, а 600 тиков не прошло");
+        assertFalse(
+                cadence.due(110, before),
+                "Между прогонами граф спит: вход не менялся, а 600 тиков не прошло"
+                        + " Иначе тест cache_CompletedVerdict_WakesGraphCadenceInSameTick перестанет ловить эту поломку. При смене cache_CompletedVerdict_WakesGraphCadenceInSameTick проверь это утверждение.");
         cache.request(FLAT, cell -> false, HELPER, FROM, TARGET, 110);
         assertFalse(
                 cadence.due(120, Set.of(cache.readyEvent())),
-                "Пока вердикта нет, событие «вердикт готов» не меняется: граф не просыпается зря");
+                "Пока вердикта нет, событие «вердикт готов» не меняется: граф не просыпается зря"
+                        + " Иначе тест cache_CompletedVerdict_WakesGraphCadenceInSameTick перестанет ловить эту поломку. При смене cache_CompletedVerdict_WakesGraphCadenceInSameTick проверь это утверждение.");
         finish(cache, 120);
 
         assertTrue(
                 cadence.due(120, Set.of(cache.readyEvent())),
                 "Готовый вердикт меняет событие «вердикт готов» (поколение " + cache.generation()
                         + "): граф обязан проснуться в тот же тик и выдать помощника, а не ждать следующего цикла "
-                        + "до 600 тиков (debtnav, п.2)");
+                        + "до 600 тиков (debtnav, п.2)"
+                        + " Иначе тест cache_CompletedVerdict_WakesGraphCadenceInSameTick перестанет ловить эту поломку. При смене cache_CompletedVerdict_WakesGraphCadenceInSameTick проверь это утверждение.");
     }
 
     @Test
@@ -136,7 +167,8 @@ class RescueReachCacheTests {
         RescueReach.Verdict verdict = cache.verdict(HELPER, FROM, TARGET, 30);
         assertFalse(
                 verdict != null && verdict.reachable(),
-                "Путь, кончающийся в воде, не считается выходом к помощнику: " + verdict);
+                "Путь, кончающийся в воде, не считается выходом к помощнику: " + verdict
+                        + " Иначе тест verdict_WaterAtEnd_NotReachable перестанет ловить эту поломку. При смене verdict_WaterAtEnd_NotReachable проверь это утверждение.");
     }
 
     private static void finish(RescueReach.Cache cache, long now) {

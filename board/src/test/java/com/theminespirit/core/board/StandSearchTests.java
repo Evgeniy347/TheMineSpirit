@@ -10,7 +10,11 @@ class StandSearchTests {
 
     @Test
     void nearest_CenterIsStandable_KeepsCenter() {
-        assertEquals(WALL, StandSearch.nearest(WALL, cell -> true), "свободный центр остаётся домом");
+        assertEquals(
+                WALL,
+                StandSearch.nearest(WALL, cell -> true),
+                "свободный центр остаётся домом"
+                        + " Иначе тест nearest_CenterIsStandable_KeepsCenter перестанет ловить эту поломку. При смене nearest_CenterIsStandable_KeepsCenter проверь это утверждение.");
     }
 
     @Test
@@ -21,12 +25,16 @@ class StandSearchTests {
         assertEquals(
                 door,
                 StandSearch.nearest(WALL, cell -> cell.equals(door) || cell.equals(far)),
-                "якорь под стеной склада: дом — ближайшая клетка, где можно стоять, иначе все «иди домой» падают");
+                "якорь под стеной склада: дом — ближайшая клетка, где можно стоять, иначе все «иди домой» падают"
+                        + " При смене nearest_CenterInsideWall_ReturnsClosestStand проверь это утверждение.");
     }
 
     @Test
     void nearest_NoStandNearby_KeepsCenter() {
         assertEquals(
-                WALL, StandSearch.nearest(WALL, cell -> false), "стоянки нет: центр без подмены, ошибку покажет путь");
+                WALL,
+                StandSearch.nearest(WALL, cell -> false),
+                "стоянки нет: центр без подмены, ошибку покажет путь"
+                        + " Иначе тест nearest_NoStandNearby_KeepsCenter перестанет ловить эту поломку. При смене nearest_NoStandNearby_KeepsCenter проверь это утверждение.");
     }
 }

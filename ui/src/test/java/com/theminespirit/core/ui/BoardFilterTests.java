@@ -27,7 +27,8 @@ class BoardFilterTests {
         assertEquals(
                 List.of("a"),
                 filter.apply(TILES).stream().map(BoardTile::id).toList(),
-                "Фильтр обязан оставить только активные задания Якова");
+                "Фильтр обязан оставить только активные задания Якова"
+                        + " Иначе тест apply_GroupAndSpirit_KeepsOnlyMatching перестанет ловить эту поломку. При смене apply_GroupAndSpirit_KeepsOnlyMatching проверь это утверждение.");
     }
 
     @Test
@@ -37,7 +38,8 @@ class BoardFilterTests {
         assertEquals(
                 List.of("c"),
                 filter.apply(TILES).stream().map(BoardTile::id).toList(),
-                "Режим «…» оставляет только невыданные задания");
+                "Режим «…» оставляет только невыданные задания"
+                        + " Иначе тест apply_Nobody_KeepsUnassigned перестанет ловить эту поломку. При смене apply_Nobody_KeepsUnassigned проверь это утверждение.");
     }
 
     @Test
@@ -45,13 +47,29 @@ class BoardFilterTests {
         List<String> names = List.of("Агафья", "Яков");
         BoardFilter filter = BoardFilter.ALL;
         filter = filter.nextSpiritNames(names);
-        assertEquals(BoardFilter.Spirit.NOBODY, filter.spirit(), "После «все» идёт «…»");
+        assertEquals(
+                BoardFilter.Spirit.NOBODY,
+                filter.spirit(),
+                "После «все» идёт «…»"
+                        + " Иначе тест nextSpirit_Cycle_AnyNobodyNamesAlphabeticallyAny перестанет ловить эту поломку. При смене nextSpirit_Cycle_AnyNobodyNamesAlphabeticallyAny проверь это утверждение.");
         filter = filter.nextSpiritNames(names);
-        assertEquals("Агафья", filter.spiritName(), "После «…» идёт первый дух по алфавиту");
+        assertEquals(
+                "Агафья",
+                filter.spiritName(),
+                "После «…» идёт первый дух по алфавиту"
+                        + " Иначе тест nextSpirit_Cycle_AnyNobodyNamesAlphabeticallyAny перестанет ловить эту поломку. При смене nextSpirit_Cycle_AnyNobodyNamesAlphabeticallyAny проверь это утверждение.");
         filter = filter.nextSpiritNames(names);
-        assertEquals("Яков", filter.spiritName(), "Духи перебираются по алфавиту");
+        assertEquals(
+                "Яков",
+                filter.spiritName(),
+                "Духи перебираются по алфавиту"
+                        + " Иначе тест nextSpirit_Cycle_AnyNobodyNamesAlphabeticallyAny перестанет ловить эту поломку. При смене nextSpirit_Cycle_AnyNobodyNamesAlphabeticallyAny проверь это утверждение.");
         filter = filter.nextSpiritNames(names);
-        assertEquals(BoardFilter.ALL, filter, "После последнего духа фильтр возвращается к «все»");
+        assertEquals(
+                BoardFilter.ALL,
+                filter,
+                "После последнего духа фильтр возвращается к «все»"
+                        + " Иначе тест nextSpirit_Cycle_AnyNobodyNamesAlphabeticallyAny перестанет ловить эту поломку. При смене nextSpirit_Cycle_AnyNobodyNamesAlphabeticallyAny проверь это утверждение.");
     }
 
     @Test
@@ -59,9 +77,16 @@ class BoardFilterTests {
         BoardFilter filter = BoardFilter.ALL;
         for (BoardTileGroup expected : BoardTileGroup.values()) {
             filter = filter.nextGroup();
-            assertEquals(expected, filter.group(), "Группы перебираются в порядке показа");
+            assertEquals(
+                    expected,
+                    filter.group(),
+                    "Группы перебираются в порядке показа"
+                            + " Иначе тест nextGroup_Cycle_ReturnsToAll перестанет ловить эту поломку. При смене nextGroup_Cycle_ReturnsToAll проверь это утверждение.");
         }
-        assertNull(filter.nextGroup().group(), "После последней группы фильтр возвращается к «все»");
+        assertNull(
+                filter.nextGroup().group(),
+                "После последней группы фильтр возвращается к «все»"
+                        + " Иначе тест nextGroup_Cycle_ReturnsToAll перестанет ловить эту поломку. При смене nextGroup_Cycle_ReturnsToAll проверь это утверждение.");
     }
 
     @Test
@@ -69,6 +94,7 @@ class BoardFilterTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new BoardFilter(null, BoardFilter.Spirit.NAMED, " "),
-                "Фильтр по духу без имени — ошибка вызова");
+                "Фильтр по духу без имени — ошибка вызова"
+                        + " Иначе тест constructor_NamedWithoutName_Throws перестанет ловить эту поломку. При смене constructor_NamedWithoutName_Throws проверь это утверждение.");
     }
 }

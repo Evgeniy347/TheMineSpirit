@@ -14,9 +14,21 @@ class FactTuningTests {
                 JsonResource.parse(allFieldsJson().replace("\"animalRadius\":48", "\"animalRadius\":40"), "board.json"),
                 "board.json");
 
-        assertEquals(40, facts.animalRadius(), "радиус животных читается из данных");
-        assertEquals(12, facts.penRadius(), "радиус загона читается из данных");
-        assertEquals(8, facts.flowRadius(), "радиус потока читается из данных");
+        assertEquals(
+                40,
+                facts.animalRadius(),
+                "радиус животных читается из данных"
+                        + " Иначе тест fromJson_AllFieldsPresent_ValuesRead перестанет ловить эту поломку. При смене fromJson_AllFieldsPresent_ValuesRead проверь это утверждение.");
+        assertEquals(
+                12,
+                facts.penRadius(),
+                "радиус загона читается из данных"
+                        + " Иначе тест fromJson_AllFieldsPresent_ValuesRead перестанет ловить эту поломку. При смене fromJson_AllFieldsPresent_ValuesRead проверь это утверждение.");
+        assertEquals(
+                8,
+                facts.flowRadius(),
+                "радиус потока читается из данных"
+                        + " Иначе тест fromJson_AllFieldsPresent_ValuesRead перестанет ловить эту поломку. При смене fromJson_AllFieldsPresent_ValuesRead проверь это утверждение.");
     }
 
     @Test
@@ -27,11 +39,13 @@ class FactTuningTests {
                         JsonResource.parse(
                                 allFieldsJson().replace("\"animalRadius\":48", "\"animalRadius\":0"), "board.json"),
                         "board.json"),
-                "нулевой радиус ослепляет сканирование мира — таблица обязана падать");
+                "нулевой радиус ослепляет сканирование мира — таблица обязана падать"
+                        + " Иначе тест fromJson_ZeroRadius_Rejected перестанет ловить эту поломку. При смене fromJson_ZeroRadius_Rejected проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("facts.animalRadius"),
-                "Сообщение обязано назвать поле: «" + error.getMessage() + "»");
+                "Сообщение обязано назвать поле: «" + error.getMessage() + "»"
+                        + " Иначе тест fromJson_ZeroRadius_Rejected перестанет ловить эту поломку. При смене fromJson_ZeroRadius_Rejected проверь это утверждение.");
     }
 
     @Test
@@ -41,11 +55,13 @@ class FactTuningTests {
                 () -> FactTuning.fromJson(
                         JsonResource.parse(allFieldsJson().replace("}", ",\"extraRadius\":1}"), "board.json"),
                         "board.json"),
-                "Опечатка в имени поля обязана быть ошибкой: иначе правка данных молча не применяется");
+                "Опечатка в имени поля обязана быть ошибкой: иначе правка данных молча не применяется"
+                        + " При смене fromJson_UnknownField_Rejected проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("extraRadius"),
-                "Сообщение обязано назвать неизвестное поле: «" + error.getMessage() + "»");
+                "Сообщение обязано назвать неизвестное поле: «" + error.getMessage() + "»"
+                        + " Иначе тест fromJson_UnknownField_Rejected перестанет ловить эту поломку. При смене fromJson_UnknownField_Rejected проверь это утверждение.");
     }
 
     @Test
@@ -55,11 +71,13 @@ class FactTuningTests {
                 () -> FactTuning.fromJson(
                         JsonResource.parse(allFieldsJson().replace(",\"flowRadius\":8", ""), "board.json"),
                         "board.json"),
-                "без радиуса потока факт не считается — таблица обязана падать");
+                "без радиуса потока факт не считается — таблица обязана падать"
+                        + " Иначе тест fromJson_MissingField_Rejected перестанет ловить эту поломку. При смене fromJson_MissingField_Rejected проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("facts.flowRadius"),
-                "Сообщение обязано назвать поле: «" + error.getMessage() + "»");
+                "Сообщение обязано назвать поле: «" + error.getMessage() + "»"
+                        + " Иначе тест fromJson_MissingField_Rejected перестанет ловить эту поломку. При смене fromJson_MissingField_Rejected проверь это утверждение.");
     }
 
     private static String allFieldsJson() {

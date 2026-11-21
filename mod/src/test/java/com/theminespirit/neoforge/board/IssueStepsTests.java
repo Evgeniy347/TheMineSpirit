@@ -48,12 +48,14 @@ class IssueStepsTests {
                 List.of(IssueSteps.HEAD, IssueSteps.HEAD + IssueSteps.TAIL - 1),
                 List.of(first.get(IssueSteps.HEAD), first.get(first.size() - 1)),
                 "хвост начинается сразу за головой: заявка не должна попасть в окно дважды — двойной выбор духа"
-                        + " удваивает стоимость. Проверить при смене: смещение HEAD в IssueSteps.window");
+                        + " удваивает стоимость. Проверить при смене: смещение HEAD в IssueSteps.window"
+                        + " Иначе тест window_BigBoard_HeadPlusRotatingTail перестанет ловить эту поломку.");
         assertEquals(
                 List.of(board.size() - 1, IssueSteps.HEAD),
                 List.of(wrapped.get(IssueSteps.HEAD), wrapped.get(IssueSteps.HEAD + 1)),
                 "окно хвоста идёт по кругу: каждая низкоприоритетная заявка рано или поздно рассматривается."
-                        + " Сломается: дешёвые заявки в конце доски не получат духа никогда (голодание)");
+                        + " Сломается: дешёвые заявки в конце доски не получат духа никогда (голодание)"
+                        + " При смене window_BigBoard_HeadPlusRotatingTail проверь это утверждение.");
     }
 
     @Test

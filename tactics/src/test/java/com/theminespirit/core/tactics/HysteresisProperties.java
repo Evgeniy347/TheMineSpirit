@@ -56,7 +56,8 @@ class HysteresisProperties {
                 List.of(afterRule.option(), afterRule.rule(), afterRule.excluded()),
                 "Решение, принятое жёстким правилом (" + previous + " " + decidedAgo + " тиков назад), не создаёт "
                         + "удержания: решение равно решению без памяти. Если удержание правила нужно осознанно, "
-                        + "пересмотрите Hysteresis.status");
+                        + "пересмотрите Hysteresis.status"
+                        + " Иначе тест decide_PreviousFromRule_EqualsDecisionWithoutMemory перестанет ловить эту поломку. При смене decide_PreviousFromRule_EqualsDecisionWithoutMemory проверь это утверждение.");
     }
 
     @Provide
@@ -82,7 +83,8 @@ class HysteresisProperties {
                         windowOver || hardReason,
                         "Решение сменилось с " + previous + " на " + decision.option() + " через " + (tick - lastChange)
                                 + " тиков без жёсткой причины (правило " + decision.rule() + "): гистерезис обязан "
-                                + "держать решение минимум holdTicks, кроме жёстких правил и вычёркивания");
+                                + "держать решение минимум holdTicks, кроме жёстких правил и вычёркивания"
+                                + " Иначе тест decisions_RandomSeries_ChangeOnlyAfterWindowOrByHardReason перестанет ловить эту поломку. При смене decisions_RandomSeries_ChangeOnlyAfterWindowOrByHardReason проверь это утверждение.");
             }
             if (previous == null || decision.option() != previous || decision.source() != previousSource) {
                 lastChange = tick;

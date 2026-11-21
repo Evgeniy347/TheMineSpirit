@@ -27,26 +27,31 @@ class FencePlanTests {
                 3,
                 sequence.steps().size(),
                 "План ограды — шаг к первой клетке и по заливке на каждую клетку: одной областью проломы "
-                        + "разной формы не закрыть");
+                        + "разной формы не закрыть"
+                        + " Иначе тест repairFence_CellBatch_FillsEachCellOwnBlock перестанет ловить эту поломку. При смене repairFence_CellBatch_FillsEachCellOwnBlock проверь это утверждение.");
         assertEquals(
                 new ScriptCall("goto", Map.of("x", -2, "y", 71, "z", 4)),
                 sequence.steps().get(0),
-                "Дух стартует у первой клетки: порядок клеток задаёт реестр проломов");
+                "Дух стартует у первой клетки: порядок клеток задаёт реестр проломов"
+                        + " Иначе тест repairFence_CellBatch_FillsEachCellOwnBlock перестанет ловить эту поломку. При смене repairFence_CellBatch_FillsEachCellOwnBlock проверь это утверждение.");
         assertEquals(
                 fillCell(first, "minecraft:cobblestone_wall"),
                 fillOf(sequence.steps().get(1)),
-                "Первая клетка чинится своим блоком: чужая заливка оставила бы пролом");
+                "Первая клетка чинится своим блоком: чужая заливка оставила бы пролом"
+                        + " Иначе тест repairFence_CellBatch_FillsEachCellOwnBlock перестанет ловить эту поломку. При смене repairFence_CellBatch_FillsEachCellOwnBlock проверь это утверждение.");
         assertEquals(
                 fillCell(second, "minecraft:oak_fence"),
                 fillOf(sequence.steps().get(2)),
-                "Каждая следующая клетка чинится своим блоком: наборы блоков у проломов разные");
+                "Каждая следующая клетка чинится своим блоком: наборы блоков у проломов разные"
+                        + " Иначе тест repairFence_CellBatch_FillsEachCellOwnBlock перестанет ловить эту поломку. При смене repairFence_CellBatch_FillsEachCellOwnBlock проверь это утверждение.");
     }
 
     private static ScriptCall fillOf(TaskNode step) {
         assertEquals(
                 FallbackNode.class,
                 step.getClass(),
-                "Клетка чинится с откатом: один недостижимый блок не обрывает починку остальных");
+                "Клетка чинится с откатом: один недостижимый блок не обрывает починку остальных"
+                        + " Иначе тест repairFence_CellBatch_FillsEachCellOwnBlock перестанет ловить эту поломку. При смене repairFence_CellBatch_FillsEachCellOwnBlock проверь это утверждение.");
         return (ScriptCall) ((FallbackNode) step).steps().get(0);
     }
 

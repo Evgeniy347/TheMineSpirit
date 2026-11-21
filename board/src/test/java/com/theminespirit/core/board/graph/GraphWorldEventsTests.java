@@ -14,7 +14,11 @@ class GraphWorldEventsTests {
     void facts_FlatAndClean_GiveNoWorldEvents() {
         GraphFacts facts = facts(List.of(), GraphSiteFacts.Terrain.empty(), Map.of());
 
-        assertEquals(Set.of(), GraphWorldEvents.of(facts), "Ровный участок без следов не ставит уборку");
+        assertEquals(
+                Set.of(),
+                GraphWorldEvents.of(facts),
+                "Ровный участок без следов не ставит уборку"
+                        + " Иначе тест facts_FlatAndClean_GiveNoWorldEvents перестанет ловить эту поломку. При смене facts_FlatAndClean_GiveNoWorldEvents проверь это утверждение.");
     }
 
     @Test
@@ -29,12 +33,30 @@ class GraphWorldEventsTests {
 
         Set<String> events = GraphWorldEvents.of(facts);
 
-        assertTrue(events.contains(GraphWorldEvents.DEMOLISH_STRAY), "Лишняя постройка требует сноса");
-        assertTrue(events.contains(GraphWorldEvents.BACKFILL), "Яма требует засыпки");
-        assertTrue(events.contains(GraphWorldEvents.CLEAR_FLOATING), "Висящее требует уборки");
-        assertTrue(events.contains(GraphWorldEvents.LEVEL_LOT), "Перепад требует выравнивания");
-        assertTrue(events.contains(GraphWorldEvents.RESTORE_TRACE), "Следы требуют возврата как было");
-        assertTrue(events.contains("repair_hut"), "Повреждение постройки требует ремонта");
+        assertTrue(
+                events.contains(GraphWorldEvents.DEMOLISH_STRAY),
+                "Лишняя постройка требует сноса"
+                        + " Иначе тест facts_StraysTerrainAndDamage_GiveNodes перестанет ловить эту поломку. При смене facts_StraysTerrainAndDamage_GiveNodes проверь это утверждение.");
+        assertTrue(
+                events.contains(GraphWorldEvents.BACKFILL),
+                "Яма требует засыпки"
+                        + " Иначе тест facts_StraysTerrainAndDamage_GiveNodes перестанет ловить эту поломку. При смене facts_StraysTerrainAndDamage_GiveNodes проверь это утверждение.");
+        assertTrue(
+                events.contains(GraphWorldEvents.CLEAR_FLOATING),
+                "Висящее требует уборки"
+                        + " Иначе тест facts_StraysTerrainAndDamage_GiveNodes перестанет ловить эту поломку. При смене facts_StraysTerrainAndDamage_GiveNodes проверь это утверждение.");
+        assertTrue(
+                events.contains(GraphWorldEvents.LEVEL_LOT),
+                "Перепад требует выравнивания"
+                        + " Иначе тест facts_StraysTerrainAndDamage_GiveNodes перестанет ловить эту поломку. При смене facts_StraysTerrainAndDamage_GiveNodes проверь это утверждение.");
+        assertTrue(
+                events.contains(GraphWorldEvents.RESTORE_TRACE),
+                "Следы требуют возврата как было"
+                        + " Иначе тест facts_StraysTerrainAndDamage_GiveNodes перестанет ловить эту поломку. При смене facts_StraysTerrainAndDamage_GiveNodes проверь это утверждение.");
+        assertTrue(
+                events.contains("repair_hut"),
+                "Повреждение постройки требует ремонта"
+                        + " Иначе тест facts_StraysTerrainAndDamage_GiveNodes перестанет ловить эту поломку. При смене facts_StraysTerrainAndDamage_GiveNodes проверь это утверждение.");
     }
 
     @Test
@@ -50,8 +72,14 @@ class GraphWorldEventsTests {
 
         Set<String> events = GraphWorldEvents.of(facts);
 
-        assertFalse(events.contains("repair_hut"), "Неизвестный аудит не ставит ремонт");
-        assertFalse(events.contains("repair_mine"), "Целая постройка не ставит ремонт");
+        assertFalse(
+                events.contains("repair_hut"),
+                "Неизвестный аудит не ставит ремонт"
+                        + " Иначе тест facts_UnknownOrUndamagedBuilding_GiveNoRepair перестанет ловить эту поломку. При смене facts_UnknownOrUndamagedBuilding_GiveNoRepair проверь это утверждение.");
+        assertFalse(
+                events.contains("repair_mine"),
+                "Целая постройка не ставит ремонт"
+                        + " Иначе тест facts_UnknownOrUndamagedBuilding_GiveNoRepair перестанет ловить эту поломку. При смене facts_UnknownOrUndamagedBuilding_GiveNoRepair проверь это утверждение.");
     }
 
     @Test
@@ -63,7 +91,8 @@ class GraphWorldEventsTests {
 
         assertTrue(
                 GraphWorldEvents.of(facts).contains(GraphWorldEvents.DEMOLISH_STRAY),
-                "старый мусор без записи журнала — всё равно лишнее: его сносит граф, а не журнал");
+                "старый мусор без записи журнала — всё равно лишнее: его сносит граф, а не журнал"
+                        + " Иначе тест facts_OldStrayWithoutBuilder_GivesDemolition перестанет ловить эту поломку. При смене facts_OldStrayWithoutBuilder_GivesDemolition проверь это утверждение.");
     }
 
     @Test
@@ -76,8 +105,14 @@ class GraphWorldEventsTests {
 
         Set<String> events = GraphWorldEvents.of(facts);
 
-        assertTrue(events.contains(GraphWorldEvents.LEVEL_LOT), "бугор из блоков требует срезки");
-        assertTrue(events.contains(GraphWorldEvents.CLEAR_FLOATING), "состав висящего требует уборки");
+        assertTrue(
+                events.contains(GraphWorldEvents.LEVEL_LOT),
+                "бугор из блоков требует срезки"
+                        + " Иначе тест facts_LotAndFloatingComposition_GiveNodes перестанет ловить эту поломку. При смене facts_LotAndFloatingComposition_GiveNodes проверь это утверждение.");
+        assertTrue(
+                events.contains(GraphWorldEvents.CLEAR_FLOATING),
+                "состав висящего требует уборки"
+                        + " Иначе тест facts_LotAndFloatingComposition_GiveNodes перестанет ловить эту поломку. При смене facts_LotAndFloatingComposition_GiveNodes проверь это утверждение.");
     }
 
     @Test
@@ -89,8 +124,14 @@ class GraphWorldEventsTests {
 
         Set<String> events = GraphWorldEvents.of(facts);
 
-        assertFalse(events.contains(GraphWorldEvents.LEVEL_LOT), "природный склон вне лотов — не работа выравнивания");
-        assertFalse(events.contains(GraphWorldEvents.BACKFILL), "природная впадина — не яма для засыпки");
+        assertFalse(
+                events.contains(GraphWorldEvents.LEVEL_LOT),
+                "природный склон вне лотов — не работа выравнивания"
+                        + " Иначе тест facts_NaturalSlopeOnly_GivesNoLevelLot перестанет ловить эту поломку. При смене facts_NaturalSlopeOnly_GivesNoLevelLot проверь это утверждение.");
+        assertFalse(
+                events.contains(GraphWorldEvents.BACKFILL),
+                "природная впадина — не яма для засыпки"
+                        + " Иначе тест facts_NaturalSlopeOnly_GivesNoLevelLot перестанет ловить эту поломку. При смене facts_NaturalSlopeOnly_GivesNoLevelLot проверь это утверждение.");
     }
 
     @Test
@@ -100,7 +141,10 @@ class GraphWorldEventsTests {
                 new GraphSiteFacts.Terrain(0, 0, 0, 0, 0, Map.of(), Map.of("minecraft:dirt", 3), Map.of(), false),
                 Map.of());
 
-        assertTrue(GraphWorldEvents.of(facts).contains(GraphWorldEvents.BACKFILL), "яма из блоков требует подсыпки");
+        assertTrue(
+                GraphWorldEvents.of(facts).contains(GraphWorldEvents.BACKFILL),
+                "яма из блоков требует подсыпки"
+                        + " Иначе тест facts_FillComposition_GivesBackfill перестанет ловить эту поломку. При смене facts_FillComposition_GivesBackfill проверь это утверждение.");
     }
 
     @Test
@@ -111,8 +155,14 @@ class GraphWorldEventsTests {
                         facts(List.of(), new GraphSiteFacts.Terrain(1, 0, 0, 2, 0), Map.of()),
                         GraphWorld.GRAPH.costs().life());
 
-        assertTrue(state.events().contains("night"), "Старое событие не теряется");
-        assertTrue(state.events().contains(GraphWorldEvents.BACKFILL), "Вход графа добавляет узел засыпки");
+        assertTrue(
+                state.events().contains("night"),
+                "Старое событие не теряется"
+                        + " Иначе тест state_WithWorldFacts_MergesDerivedEvents перестанет ловить эту поломку. При смене state_WithWorldFacts_MergesDerivedEvents проверь это утверждение.");
+        assertTrue(
+                state.events().contains(GraphWorldEvents.BACKFILL),
+                "Вход графа добавляет узел засыпки"
+                        + " Иначе тест state_WithWorldFacts_MergesDerivedEvents перестанет ловить эту поломку. При смене state_WithWorldFacts_MergesDerivedEvents проверь это утверждение.");
     }
 
     private static GraphFacts facts(

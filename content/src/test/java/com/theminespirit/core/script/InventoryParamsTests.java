@@ -23,16 +23,23 @@ class InventoryParamsTests {
                 ContainerTarget.NEAREST,
                 transfer.container(),
                 "container='nearest' из плана даёт ближайший контейнер: именно это делает перенос "
-                        + "рабочим без выдумывания координат");
+                        + "рабочим без выдумывания координат"
+                        + " Иначе тест transferParams_FromValidatedPlan_ReadsContainerItemCountAndRadius перестанет ловить эту поломку. При смене transferParams_FromValidatedPlan_ReadsContainerItemCountAndRadius проверь это утверждение.");
         assertEquals(
                 "cobblestone",
                 transfer.item(),
-                "item переносится в параметры без изменений: по нему фильтр решает, что идёт в контейнер");
-        assertEquals(10, transfer.count(), "count переноса — приказ плана: сколько предметов кладём в контейнер");
+                "item переносится в параметры без изменений: по нему фильтр решает, что идёт в контейнер"
+                        + " Иначе тест transferParams_FromValidatedPlan_ReadsContainerItemCountAndRadius перестанет ловить эту поломку. При смене transferParams_FromValidatedPlan_ReadsContainerItemCountAndRadius проверь это утверждение.");
+        assertEquals(
+                10,
+                transfer.count(),
+                "count переноса — приказ плана: сколько предметов кладём в контейнер"
+                        + " Иначе тест transferParams_FromValidatedPlan_ReadsContainerItemCountAndRadius перестанет ловить эту поломку. При смене transferParams_FromValidatedPlan_ReadsContainerItemCountAndRadius проверь это утверждение.");
         assertEquals(
                 8,
                 transfer.radius(),
-                "radius переноса берётся из плана: по умолчанию 8 — ближайший контейнер " + "обычно рядом с духом");
+                "radius переноса берётся из плана: по умолчанию 8 — ближайший контейнер " + "обычно рядом с духом"
+                        + " Иначе тест transferParams_FromValidatedPlan_ReadsContainerItemCountAndRadius перестанет ловить эту поломку. При смене transferParams_FromValidatedPlan_ReadsContainerItemCountAndRadius проверь это утверждение.");
     }
 
     @Test
@@ -47,7 +54,8 @@ class InventoryParamsTests {
                 false,
                 TransferParams.from(params).leftover(),
                 "обычный deposit не сдаёт весь излишек: иначе сборщик выложил бы в сундук и то, "
-                        + "что ещё нужно для постройки");
+                        + "что ещё нужно для постройки"
+                        + " При смене transferParams_LeftoverAbsent_DefaultsFalse проверь это утверждение.");
     }
 
     @Test
@@ -63,7 +71,8 @@ class InventoryParamsTests {
                 true,
                 TransferParams.from(params).leftover(),
                 "store передаёт leftover=true: после названного предмета дух обязан сдать мусор "
-                        + "(observe14 N7: 128 cobble и 64 dirt оставались в инвентарях)");
+                        + "(observe14 N7: 128 cobble и 64 dirt оставались в инвентарях)"
+                        + " Иначе тест transferParams_LeftoverTrue_ReadsFlag перестанет ловить эту поломку. При смене transferParams_LeftoverTrue_ReadsFlag проверь это утверждение.");
     }
 
     @Test
@@ -80,7 +89,8 @@ class InventoryParamsTests {
                 new ContainerTarget.Position(12, 64, -7),
                 transfer.container(),
                 "Координаты контейнера из плана доходят до скрипта: без них дух пойдёт к ближайшему "
-                        + "сундуку вместо названного");
+                        + "сундуку вместо названного"
+                        + " Иначе тест transferParams_CoordinatesTarget_GivesPosition перестанет ловить эту поломку. При смене transferParams_CoordinatesTarget_GivesPosition проверь это утверждение.");
     }
 
     @Test
@@ -94,13 +104,14 @@ class InventoryParamsTests {
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,
                 () -> TransferParams.from(params),
-                "Радиус вне [1, 16] обязан быть отказом: план мог обойти валидатор, "
-                        + "а дух ушёл бы из базовой зоны");
+                "Радиус вне [1, 16] обязан быть отказом: план мог обойти валидатор, " + "а дух ушёл бы из базовой зоны"
+                        + " Иначе тест transferParams_RadiusOutsideLimits_ThrowsWithRange перестанет ловить эту поломку. При смене transferParams_RadiusOutsideLimits_ThrowsWithRange проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("Радиус") && error.getMessage().contains("16"),
                 "Сообщение обязано называть параметр radius и его предел 16: по нему правят план. " + "Фактическое: "
-                        + error.getMessage());
+                        + error.getMessage()
+                        + " Иначе тест transferParams_RadiusOutsideLimits_ThrowsWithRange перестанет ловить эту поломку. При смене transferParams_RadiusOutsideLimits_ThrowsWithRange проверь это утверждение.");
     }
 
     @Test
@@ -114,7 +125,8 @@ class InventoryParamsTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> TransferParams.from(params),
-                "Число предметов вне [1, 256] обязательно отказом: перенос тысяч стопок " + "занял бы серверный тик");
+                "Число предметов вне [1, 256] обязательно отказом: перенос тысяч стопок " + "занял бы серверный тик"
+                        + " Иначе тест transferParams_CountOutsideLimits_Throws перестанет ловить эту поломку. При смене transferParams_CountOutsideLimits_Throws проверь это утверждение.");
     }
 
     @Test
@@ -129,13 +141,19 @@ class InventoryParamsTests {
         assertEquals(
                 ContainerTarget.NEAREST,
                 unload.container(),
-                "container разгрузки по умолчанию ближайший: база обычно стоит рядом с духом");
-        assertEquals(8, unload.radius(), "radius разгрузки по умолчанию 8: контейнер ищется в базовой зоне");
+                "container разгрузки по умолчанию ближайший: база обычно стоит рядом с духом"
+                        + " Иначе тест unloadParams_FromValidatedPlan_ReadsContainerRadiusAndForce перестанет ловить эту поломку. При смене unloadParams_FromValidatedPlan_ReadsContainerRadiusAndForce проверь это утверждение.");
+        assertEquals(
+                8,
+                unload.radius(),
+                "radius разгрузки по умолчанию 8: контейнер ищется в базовой зоне"
+                        + " Иначе тест unloadParams_FromValidatedPlan_ReadsContainerRadiusAndForce перестанет ловить эту поломку. При смене unloadParams_FromValidatedPlan_ReadsContainerRadiusAndForce проверь это утверждение.");
         assertEquals(
                 false,
                 unload.force(),
                 "force=false значит «разгрузка только при заполненном инвентаре»: "
-                        + "иначе дух носил бы в сундук каждый лишний камешек");
+                        + "иначе дух носил бы в сундук каждый лишний камешек"
+                        + " При смене unloadParams_FromValidatedPlan_ReadsContainerRadiusAndForce проверь это утверждение.");
     }
 
     @Test
@@ -151,7 +169,8 @@ class InventoryParamsTests {
                 true,
                 unload.force(),
                 "force=true снимает порог занятости: разгрузка выполняется по приказу, "
-                        + "даже если инвентарь почти пуст");
+                        + "даже если инвентарь почти пуст"
+                        + " Иначе тест unloadParams_ForceTrue_RequestsUnloadEvenWithEmptyInventory перестанет ловить эту поломку. При смене unloadParams_ForceTrue_RequestsUnloadEvenWithEmptyInventory проверь это утверждение.");
     }
 
     @Test
@@ -164,7 +183,8 @@ class InventoryParamsTests {
         assertEquals(
                 "*_pickaxe",
                 equip.item(),
-                "Шаблон equip доходит до скрипта: по нему выбирается самая ценная подходящая кирка");
+                "Шаблон equip доходит до скрипта: по нему выбирается самая ценная подходящая кирка"
+                        + " Иначе тест equipParams_FromValidatedPlan_ReadsItemPattern перестанет ловить эту поломку. При смене equipParams_FromValidatedPlan_ReadsItemPattern проверь это утверждение.");
     }
 
     @Test
@@ -172,6 +192,7 @@ class InventoryParamsTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> EquipParams.from(Map.of()),
-                "Equip без item обязан быть отказом: без шаблона непонятно, что надевать");
+                "Equip без item обязан быть отказом: без шаблона непонятно, что надевать"
+                        + " Иначе тест equipParams_MissingItem_Throws перестанет ловить эту поломку. При смене equipParams_MissingItem_Throws проверь это утверждение.");
     }
 }

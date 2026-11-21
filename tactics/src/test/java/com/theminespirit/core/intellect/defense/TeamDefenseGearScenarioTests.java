@@ -63,7 +63,8 @@ class TeamDefenseGearScenarioTests {
         assertEquals(
                 Set.of(CombatStance.HEAL, CombatStance.ENGAGE),
                 stances,
-                "В смешанной паре каждый решает по себе: раненый лечится, здоровый прикрывает, иначе оба гибнут");
+                "В смешанной паре каждый решает по себе: раненый лечится, здоровый прикрывает, иначе оба гибнут"
+                        + " При смене stance_MixedSquad_MeleeEngagesWhileWoundedHeals проверь это утверждение.");
     }
 
     @Test
@@ -79,7 +80,8 @@ class TeamDefenseGearScenarioTests {
         assertEquals(
                 Map.of(orderOf(plan, "S1").memberStances().keySet().iterator().next(), DefensePotion.STRENGTH),
                 orderOf(plan, "S1").memberPotions(),
-                "Сила пьётся против крипера: иначе зелье пропадает, а удар не пробивает угрозу");
+                "Сила пьётся против крипера: иначе зелье пропадает, а удар не пробивает угрозу"
+                        + " При смене potion_StrengthAgainstCreeper_IsDrunkBeforeStrike проверь это утверждение.");
     }
 
     @Test
@@ -95,7 +97,8 @@ class TeamDefenseGearScenarioTests {
         assertEquals(
                 Map.of(orderOf(plan, "S1").memberStances().keySet().iterator().next(), DefensePotion.SPEED),
                 orderOf(plan, "S1").memberPotions(),
-                "Скорость пьётся против лучника: иначе мечник не догонит скелета и попадёт под стрелы");
+                "Скорость пьётся против лучника: иначе мечник не догонит скелета и попадёт под стрелы"
+                        + " При смене potion_SpeedAgainstSkeleton_IsDrunkToCloseDistance проверь это утверждение.");
     }
 
     @Test
@@ -110,6 +113,7 @@ class TeamDefenseGearScenarioTests {
 
         assertTrue(
                 orderOf(plan, "S1").memberPotions().isEmpty(),
-                "Здоровый не пьёт лечилку: иначе зелье уходит впустую и не остаётся на ранение");
+                "Здоровый не пьёт лечилку: иначе зелье уходит впустую и не остаётся на ранение"
+                        + " При смене potion_FullHealthHeal_IsNotWasted проверь это утверждение.");
     }
 }

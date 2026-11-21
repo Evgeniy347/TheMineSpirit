@@ -45,16 +45,19 @@ class TacticsScaleTests {
         assertEquals(
                 Situation.MAX_ENEMIES,
                 crowd.enemies().size(),
-                "Проверка масштаба идёт на ситуации ровно с MAX_ENEMIES врагами");
+                "Проверка масштаба идёт на ситуации ровно с MAX_ENEMIES врагами"
+                        + " Иначе тест step_MaxEnemies_EvaluatesEachFactorOnceAndEachRuleAtMostOnce перестанет ловить эту поломку. При смене step_MaxEnemies_EvaluatesEachFactorOnceAndEachRuleAtMostOnce проверь это утверждение.");
         assertEquals(
                 Factor.values().length,
                 engine.scorer().factorEvaluations(),
-                "Число вычислений факторов за вызов равно числу факторов, а не числу факторов × враги × варианты");
+                "Число вычислений факторов за вызов равно числу факторов, а не числу факторов × враги × варианты"
+                        + " Иначе тест step_MaxEnemies_EvaluatesEachFactorOnceAndEachRuleAtMostOnce перестанет ловить эту поломку. При смене step_MaxEnemies_EvaluatesEachFactorOnceAndEachRuleAtMostOnce проверь это утверждение.");
         int totalRules = totalRules();
         assertTrue(
                 engine.ruleCounter().checks() <= totalRules,
                 "Обращений к таблицам правил за вызов не больше числа правил (" + totalRules + "), а было "
-                        + engine.ruleCounter().checks() + ": правило проверяется не более одного раза");
+                        + engine.ruleCounter().checks() + ": правило проверяется не более одного раза"
+                        + " Иначе тест step_MaxEnemies_EvaluatesEachFactorOnceAndEachRuleAtMostOnce перестанет ловить эту поломку. При смене step_MaxEnemies_EvaluatesEachFactorOnceAndEachRuleAtMostOnce проверь это утверждение.");
     }
 
     @Test
@@ -73,7 +76,8 @@ class TacticsScaleTests {
                 List.of(
                         engine.scorer().factorEvaluations(),
                         engine.ruleCounter().checks()),
-                "Стоимость вызова не растёт от вызова к вызову: нет накопления состояния внутри движка");
+                "Стоимость вызова не растёт от вызова к вызову: нет накопления состояния внутри движка"
+                        + " Иначе тест step_RepeatedCalls_CostTheSameEveryTime перестанет ловить эту поломку. При смене step_RepeatedCalls_CostTheSameEveryTime проверь это утверждение.");
     }
 
     @Test
@@ -91,7 +95,8 @@ class TacticsScaleTests {
         assertEquals(
                 readsBefore,
                 TacticsResources.reads(),
-                "После loadDefault() файлы тактики не читаются: чтение с диска в тике - дефект производительности");
+                "После loadDefault() файлы тактики не читаются: чтение с диска в тике - дефект производительности"
+                        + " Иначе тест step_AfterDefaultLoad_NeverReadsResourcesAgain перестанет ловить эту поломку. При смене step_AfterDefaultLoad_NeverReadsResourcesAgain проверь это утверждение.");
     }
 
     @Test
@@ -101,21 +106,28 @@ class TacticsScaleTests {
         assertThrows(
                 UnsupportedOperationException.class,
                 () -> rules.hard().add(rules.hard().get(0)),
-                "Список жёстких правил неизменяем: конфигурация общая для всех духов и читается из многих потоков");
+                "Список жёстких правил неизменяем: конфигурация общая для всех духов и читается из многих потоков"
+                        + " Иначе тест config_AllCollections_AreImmutableForSharedReading перестанет ловить эту поломку. При смене config_AllCollections_AreImmutableForSharedReading проверь это утверждение.");
         assertThrows(
-                UnsupportedOperationException.class, () -> rules.states().clear(), "Таблица состояний неизменяема");
+                UnsupportedOperationException.class,
+                () -> rules.states().clear(),
+                "Таблица состояний неизменяема"
+                        + " Иначе тест config_AllCollections_AreImmutableForSharedReading перестанет ловить эту поломку. При смене config_AllCollections_AreImmutableForSharedReading проверь это утверждение.");
         assertThrows(
                 UnsupportedOperationException.class,
                 () -> CONFIG.weights().matrix().get(Factor.BIAS).put(TacticalOption.FIGHT, 5.0),
-                "Матрица весов неизменяема");
+                "Матрица весов неизменяема"
+                        + " Иначе тест config_AllCollections_AreImmutableForSharedReading перестанет ловить эту поломку. При смене config_AllCollections_AreImmutableForSharedReading проверь это утверждение.");
         assertThrows(
                 UnsupportedOperationException.class,
                 () -> CONFIG.enemies().byType().clear(),
-                "Профили врагов неизменяемы");
+                "Профили врагов неизменяемы"
+                        + " Иначе тест config_AllCollections_AreImmutableForSharedReading перестанет ловить эту поломку. При смене config_AllCollections_AreImmutableForSharedReading проверь это утверждение.");
         assertThrows(
                 UnsupportedOperationException.class,
                 () -> CONFIG.modes().params().clear(),
-                "Параметры режимов неизменяемы");
+                "Параметры режимов неизменяемы"
+                        + " Иначе тест config_AllCollections_AreImmutableForSharedReading перестанет ловить эту поломку. При смене config_AllCollections_AreImmutableForSharedReading проверь это утверждение.");
     }
 
     @Test
@@ -134,7 +146,8 @@ class TacticsScaleTests {
                 assertEquals(
                         expected,
                         result.get(),
-                        "Чтение общей конфигурации из разных потоков не меняет результат: конфигурация неизменяема");
+                        "Чтение общей конфигурации из разных потоков не меняет результат: конфигурация неизменяема"
+                                + " Иначе тест step_ManyThreadsOnSharedEngine_GiveSameOutcomesAsSequentialRun перестанет ловить эту поломку. При смене step_ManyThreadsOnSharedEngine_GiveSameOutcomesAsSequentialRun проверь это утверждение.");
             }
         }
     }

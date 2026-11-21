@@ -75,7 +75,8 @@ class ExpeditionKitTests {
         assertEquals(
                 List.of(),
                 missing,
-                "Пустые слоты — не предметы: набор, собранный в остальных слотах, обязан считаться полным, а не ронять поход");
+                "Пустые слоты — не предметы: набор, собранный в остальных слотах, обязан считаться полным, а не ронять поход"
+                        + " Иначе тест missing_InventoryWithEmptySlots_CountsPresentKit перестанет ловить эту поломку. При смене missing_InventoryWithEmptySlots_CountsPresentKit проверь это утверждение.");
     }
 
     @Test
@@ -85,13 +86,19 @@ class ExpeditionKitTests {
 
         List<String> missing = ExpeditionKit.missing(team(first, second), new StockView(Map.of()));
 
-        assertEquals(2, missing.size(), "Кирка есть, факелов и еды нет: ровно две нехватки, фактически: " + missing);
+        assertEquals(
+                2,
+                missing.size(),
+                "Кирка есть, факелов и еды нет: ровно две нехватки, фактически: " + missing
+                        + " Иначе тест missing_InventoryWithEmptySlotsAndGap_ListsOnlyMissingKit перестанет ловить эту поломку. При смене missing_InventoryWithEmptySlotsAndGap_ListsOnlyMissingKit проверь это утверждение.");
         assertTrue(
                 missing.stream().anyMatch(line -> line.contains("torch")),
-                "Причина ожидания обязана называть факелы, иначе владелец не знает, что добрать: " + missing);
+                "Причина ожидания обязана называть факелы, иначе владелец не знает, что добрать: " + missing
+                        + " При смене missing_InventoryWithEmptySlotsAndGap_ListsOnlyMissingKit проверь это утверждение.");
         assertTrue(
                 missing.stream().anyMatch(line -> line.contains("food")),
-                "Причина ожидания обязана называть еду, иначе владелец не знает, что добрать: " + missing);
+                "Причина ожидания обязана называть еду, иначе владелец не знает, что добрать: " + missing
+                        + " При смене missing_InventoryWithEmptySlotsAndGap_ListsOnlyMissingKit проверь это утверждение.");
     }
 
     @Test
@@ -103,6 +110,7 @@ class ExpeditionKitTests {
         assertEquals(
                 List.of(torch),
                 present,
-                "Инвентарь духа для похода — только реальные стопки: пустые слоты не должны попадать в список и ронять копирование");
+                "Инвентарь духа для похода — только реальные стопки: пустые слоты не должны попадать в список и ронять копирование"
+                        + " Иначе тест present_EmptySlots_ReturnsOnlyItems перестанет ловить эту поломку. При смене present_EmptySlots_ReturnsOnlyItems проверь это утверждение.");
     }
 }

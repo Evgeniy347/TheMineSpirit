@@ -24,7 +24,8 @@ class BuildSupplyPickTests {
                 near,
                 chosen,
                 "Из достижимых сундуков берут ближайший с нужным материалом: стоянка недостижимого сундука не "
-                        + "становится началом плана, иначе аудит стройки пишет «стоянка плана недостижима»");
+                        + "становится началом плана, иначе аудит стройки пишет «стоянка плана недостижима»"
+                        + " При смене choose_FirstNeededChestUnreachable_TakesNextReachableWithMaterial проверь это утверждение.");
     }
 
     @Test
@@ -41,7 +42,8 @@ class BuildSupplyPickTests {
                 warehouse,
                 chosen,
                 "Если материала нет ни в одном достижимом сундуке, план начинается у ближайшего достижимого "
-                        + "склада: материал поднесёт граф, а не выдуманная стоянка");
+                        + "склада: материал поднесёт граф, а не выдуманная стоянка"
+                        + " Иначе тест choose_NoReachableChestWithMaterial_TakesNearestReachableWarehouse перестанет ловить эту поломку. При смене choose_NoReachableChestWithMaterial_TakesNearestReachableWarehouse проверь это утверждение.");
     }
 
     @Test
@@ -50,7 +52,8 @@ class BuildSupplyPickTests {
                 FEET,
                 BuildSupplyPick.choose(
                         FEET, List.of(new BuildSupplyPick.Candidate(new BlockCoord(1, 64, 1), FEET, false))),
-                "Достижимых сундуков нет — план начинается с места духа, а не с чужой стоянки без пути");
+                "Достижимых сундуков нет — план начинается с места духа, а не с чужой стоянки без пути"
+                        + " Иначе тест choose_NoReachableChest_StaysAtFeet перестанет ловить эту поломку. При смене choose_NoReachableChest_StaysAtFeet проверь это утверждение.");
     }
 
     @Test
@@ -58,6 +61,7 @@ class BuildSupplyPickTests {
         assertEquals(
                 FEET,
                 BuildSupplyPick.choose(FEET, List.of()),
-                "Сундуков поселения нет — снабжать нечего, план начинается с места духа");
+                "Сундуков поселения нет — снабжать нечего, план начинается с места духа"
+                        + " Иначе тест choose_NoCandidates_StaysAtFeet перестанет ловить эту поломку. При смене choose_NoCandidates_StaysAtFeet проверь это утверждение.");
     }
 }

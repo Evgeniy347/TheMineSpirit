@@ -31,7 +31,8 @@ class PackageOwnershipGuardTests {
         assertEquals(
                 List.of("com.x: один пакет объявлен в модулях api + mech/x"),
                 problems(Map.of("com.x", List.of("api", "mech/x")), Set.of()),
-                "Сторож ослеп: пакет в двух модулях обязан попасть в нарушители");
+                "Сторож ослеп: пакет в двух модулях обязан попасть в нарушители"
+                        + " Иначе тест package_DeclaredInTwoModules_IsReported перестанет ловить эту поломку. При смене package_DeclaredInTwoModules_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -39,7 +40,8 @@ class PackageOwnershipGuardTests {
         assertEquals(
                 List.of(),
                 problems(Map.of("com.x", List.of("api", "mech/x")), Set.of("com.x")),
-                "Сторож ложно срабатывает: известный дубль из списка исключений допустим до переноса");
+                "Сторож ложно срабатывает: известный дубль из списка исключений допустим до переноса"
+                        + " Иначе тест package_OnlyInBaseline_IsAccepted перестанет ловить эту поломку. При смене package_OnlyInBaseline_IsAccepted проверь это утверждение.");
     }
 
     @Test
@@ -47,7 +49,8 @@ class PackageOwnershipGuardTests {
         assertEquals(
                 List.of("com.x (api): пакет уже в одном модуле — убери запись из списка"),
                 problems(Map.of("com.x", List.of("api")), Set.of("com.x")),
-                "Сторож ослеп: исправленный пакет обязан уйти из списка исключений");
+                "Сторож ослеп: исправленный пакет обязан уйти из списка исключений"
+                        + " Иначе тест baseline_PackageMovedToOneModule_IsReported перестанет ловить эту поломку. При смене baseline_PackageMovedToOneModule_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -55,7 +58,8 @@ class PackageOwnershipGuardTests {
         assertEquals(
                 List.of(),
                 problems(owners(), baseline()),
-                RULE + System.lineSeparator() + "Нарушители (пакет: модули):");
+                RULE + System.lineSeparator() + "Нарушители (пакет: модули):"
+                        + " Иначе тест packages_RealOwners_AreSingleOrBaselined перестанет ловить эту поломку. При смене packages_RealOwners_AreSingleOrBaselined проверь это утверждение.");
     }
 
     private static Map<String, List<String>> owners() {

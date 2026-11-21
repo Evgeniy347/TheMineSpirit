@@ -10,7 +10,10 @@ class SlowSplitTests {
     void mark_FastPhase_IsNotRecorded() {
         SlowSplit split = new SlowSplit();
         split.mark("dispatch", System.nanoTime());
-        assertTrue(split.worst().isEmpty(), "быстрая фаза не засоряет сводку медленного тика");
+        assertTrue(
+                split.worst().isEmpty(),
+                "быстрая фаза не засоряет сводку медленного тика"
+                        + " Иначе тест mark_FastPhase_IsNotRecorded перестанет ловить эту поломку. При смене mark_FastPhase_IsNotRecorded проверь это утверждение.");
     }
 
     @Test
@@ -23,6 +26,7 @@ class SlowSplitTests {
                 millis,
                 split.worst().get("persist"),
                 "сводка держит худшее время фазы: удержание тика вне пересборки (сервер 12.11: BoardService 1–2 с"
-                        + " при пересборке 330 мс) иначе не найти");
+                        + " при пересборке 330 мс) иначе не найти"
+                        + " При смене mark_SlowPhase_KeepsWorst проверь это утверждение.");
     }
 }

@@ -92,7 +92,7 @@ class HazardReflexProperties {
                     Cell.PASSABLE,
                     surroundings.cellAt(cell),
                     "Клетка выхода из воды обязана быть проходимой, а не водой: " + cell
-                            + ". При смене ExitWater проверь, что вода не выдаётся за сушу");
+                            + ", иначе дух выйдет из воды в стену и застрянет. При смене ExitWater проверь, что вода не выдаётся за сушу");
             assertEquals(
                     Cell.PASSABLE,
                     surroundings.cellAt(head),
@@ -112,7 +112,8 @@ class HazardReflexProperties {
                         assertFalse(
                                 around == Cell.LAVA || around == Cell.FIRE || around == Cell.HAZARD,
                                 "Рядом с клеткой выхода из воды нет лавы, огня и опасных блоков: " + ring + " = "
-                                        + around + ". При смене проверки соседей сверь кольцо 3×3 на обоих слоях");
+                                        + around
+                                        + ". При смене проверки соседей сверь кольцо 3×3 на обоих слоях, иначе выход ведёт в опасность");
                     }
                 }
             }
@@ -131,7 +132,7 @@ class HazardReflexProperties {
                 new PolicyVerdict.Clear(),
                 verdict,
                 "Без лавы, огня, опасных блоков, воды и горения рефлексу нечего делать: ложное срабатывание уводит "
-                        + "духа с работы. При смене evaluate проверь безопасную палитру с любым флагом тела");
+                        + "духа с работы зря, иначе доверие к рефлексам пропадёт. При смене evaluate проверь безопасную палитру с любым флагом тела");
     }
 
     @Property(tries = 200)
@@ -145,11 +146,11 @@ class HazardReflexProperties {
             assertFalse(
                     reflex.action() instanceof ReflexAction.ExitWater,
                     "Исключение WATER обязано снимать выход из воды: " + reflex
-                            + ". При смене PolicyExemptions проверь, что ExitWater не возвращается ни в одном снимке");
+                            + ", иначе задание потеряется. При смене PolicyExemptions проверь, что ExitWater не возвращается ни в одном снимке");
             assertFalse(
                     reflex.policy() == PolicyId.WATER,
                     "Исключение WATER обязано снимать рефлексы политики воды: " + reflex
-                            + ", иначе плавающая рыба-задание прерывается выходом на берег. При смене сверь PolicyId.WATER");
+                            + ", иначе плавающая рыба-задание прерывается выходом на берег. При смене проверь PolicyId.WATER");
         }
     }
 

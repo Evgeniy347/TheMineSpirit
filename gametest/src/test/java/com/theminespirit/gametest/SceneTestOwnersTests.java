@@ -25,22 +25,25 @@ class SceneTestOwnersTests {
                 Set.of("minescene_minearenasteps_allpass"),
                 index.get("digoutgametests"),
                 "Фильтр gametest DigOutGameTests обязан находить сцену, которая гоняет его шаги @SceneStep — "
-                        + "иначе docs/TESTING.md обещает то, чего нет, а прогон падает на «фильтр не совпал»");
+                        + "иначе docs/TESTING.md обещает то, чего нет, а прогон падает на «фильтр не совпал». "
+                        + "При смене index проверь фильтр шагов");
         assertEquals(
                 Set.of("minescene_minearenasteps_allpass"),
                 index.get("minescenesgametests"),
-                "Фильтр по самой сцене работает как раньше: имя её теста остаётся в наборе");
+                "Фильтр по самой сцене работает как раньше: имя её теста остаётся в наборе, иначе сцена "
+                        + "выпадет из прогона. При смене index проверь фильтр по сцене");
         assertFalse(
                 index.containsKey("modidentity"),
-                "Класс без @SceneStep не становится фильтром: ссылка на обычный класс не добавляет ложных имён");
+                "Класс без @SceneStep не становится фильтром: иначе ссылка на обычный класс добавит ложных "
+                        + "имён. При смене index проверь класс без @SceneStep");
     }
 
     @Test
     void index_ClassWithoutGameTest_IsNotAFilterByItself() {
         assertTrue(
                 SceneTestOwners.index(List.of(), Set.of(DIG_OUT)).isEmpty(),
-                "Класс из одних @SceneStep сам тестов не несёт: фильтр по нему ищет сцены по ссылкам, "
-                        + "а не выдумывает тест с его именем");
+                "Класс из одних @SceneStep сам тестов не несёт: иначе фильтр по нему выдумает тест с его "
+                        + "именем. При смене index проверь класс без @GameTest");
     }
 
     @Test
@@ -54,7 +57,7 @@ class SceneTestOwnersTests {
                                 Set.of(DIG_OUT))
                         .isEmpty(),
                 "Класс без @GameTest в индекс не попадает: иначе фильтр по собственному имени сцены превращался бы "
-                        + "в пустой набор");
+                        + "в пустой набор. При смене index проверь сцену без тестов");
     }
 
     @Test
@@ -67,6 +70,6 @@ class SceneTestOwnersTests {
                 Set.of("movescene"),
                 index.get("digoutgametests"),
                 "Фильтр приходит в нижнем регистре (parseFilters): ключ индекса обязан быть в нижнем регистре, "
-                        + "иначе класс шагов снова не совпадает");
+                        + "иначе класс шагов снова не совпадает. При смене index проверь нижний регистр ключа");
     }
 }

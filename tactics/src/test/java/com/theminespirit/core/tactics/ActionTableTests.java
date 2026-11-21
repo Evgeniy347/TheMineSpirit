@@ -157,6 +157,7 @@ class ActionTableTests {
                 List.of(choice.action(), choice.rule()),
                 "Ситуация «" + name
                         + "»: действие выбирается первым подходящим правилом таблицы actions по приоритету, "
-                        + "и только среди правил своего решения");
+                        + "и только среди правил своего решения"
+                        + " Иначе тест choose_DecisionAndFacts_PicksActionByPriority перестанет ловить эту поломку. При смене choose_DecisionAndFacts_PicksActionByPriority проверь это утверждение.");
     }
 }

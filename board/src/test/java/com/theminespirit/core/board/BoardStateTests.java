@@ -39,19 +39,23 @@ class BoardStateTests {
         assertEquals(
                 Optional.of(BoardStatus.DONE),
                 restored.statusOf("first:clear_grounds"),
-                "DONE обязан пережить снимок: иначе выполненный шаг вернётся в очередь после перезапуска");
+                "DONE обязан пережить снимок: иначе выполненный шаг вернётся в очередь после перезапуска"
+                        + " При смене snapshot_Restore_KeepsTicketsStatusesAndHolders проверь это утверждение.");
         assertEquals(
                 Optional.of(BoardStatus.ASSIGNED),
                 restored.statusOf("first:stock_chests"),
                 "Статус выданного задания обязан пережить снимок: после перезапуска доска закрывает его, "
-                        + "а не выдаёт заново");
+                        + "а не выдаёт заново"
+                        + " Иначе тест snapshot_Restore_KeepsTicketsStatusesAndHolders перестанет ловить эту поломку. При смене snapshot_Restore_KeepsTicketsStatusesAndHolders проверь это утверждение.");
         assertEquals(
                 Optional.of(holder),
                 restored.holderOf("first:stock_chests"),
-                "Держатель задания обязан пережить снимок: без него выданное задание осталось бы без духа");
+                "Держатель задания обязан пережить снимок: без него выданное задание осталось бы без духа"
+                        + " Иначе тест snapshot_Restore_KeepsTicketsStatusesAndHolders перестанет ловить эту поломку. При смене snapshot_Restore_KeepsTicketsStatusesAndHolders проверь это утверждение.");
         assertTrue(
                 restored.ledger().has(BoardCase.CLEAR_GROUNDS, 1),
-                "Отметка ledger обязана пережить снимок: по ней первые шаги не открывают выполненный кейс");
+                "Отметка ledger обязана пережить снимок: по ней первые шаги не открывают выполненный кейс"
+                        + " Иначе тест snapshot_Restore_KeepsTicketsStatusesAndHolders перестанет ловить эту поломку. При смене snapshot_Restore_KeepsTicketsStatusesAndHolders проверь это утверждение.");
     }
 
     @Test
@@ -71,11 +75,13 @@ class BoardStateTests {
                 BoardOutcome.DUPLICATE,
                 outcome,
                 "Выполненный шаг первых шагов не переоткрывается и после загрузки снимка: повторная постановка "
-                        + "должна быть отклонена");
+                        + "должна быть отклонена"
+                        + " Иначе тест restore_DoneFirstStep_ReopenRefused перестанет ловить эту поломку. При смене restore_DoneFirstStep_ReopenRefused проверь это утверждение.");
         assertEquals(
                 Optional.of(BoardStatus.DONE),
                 restored.statusOf("first:clear_grounds"),
-                "После отказа от повторной постановки статус остаётся DONE, а не возвращается в PENDING");
+                "После отказа от повторной постановки статус остаётся DONE, а не возвращается в PENDING"
+                        + " Иначе тест restore_DoneFirstStep_ReopenRefused перестанет ловить эту поломку. При смене restore_DoneFirstStep_ReopenRefused проверь это утверждение.");
     }
 
     @Test
@@ -91,11 +97,13 @@ class BoardStateTests {
         assertTrue(
                 restored.recentlyFailed("supply:oak_planks", 10),
                 "Пауза после провала обязана пережить снимок: иначе сразу после перезапуска задание "
-                        + "поставится снова без выдержки");
+                        + "поставится снова без выдержки"
+                        + " При смене restore_FailureBackoff_KeepsCooldown проверь это утверждение.");
         assertEquals(
                 1,
                 restored.ticketFailures("supply:oak_planks"),
-                "Счётчик провалов задания обязан пережить снимок: по нему считается повторная постановка");
+                "Счётчик провалов задания обязан пережить снимок: по нему считается повторная постановка"
+                        + " Иначе тест restore_FailureBackoff_KeepsCooldown перестанет ловить эту поломку. При смене restore_FailureBackoff_KeepsCooldown проверь это утверждение.");
     }
 
     @Test
@@ -108,10 +116,12 @@ class BoardStateTests {
         assertFalse(
                 board.statusOf("first:clear_grounds").isPresent(),
                 "Пустой снимок обязан очистить доску: смешивание старого и нового состояния дало бы "
-                        + "задания, которых нет в сохранённом мире");
+                        + "задания, которых нет в сохранённом мире"
+                        + " Иначе тест restore_Empty_LeavesBoardClean перестанет ловить эту поломку. При смене restore_Empty_LeavesBoardClean проверь это утверждение.");
         assertFalse(
                 board.ledger().has(BoardCase.CLEAR_GROUNDS, 1),
-                "Пустой снимок не оставляет отметок ledger: иначе выдуманный факт откроет первые шаги");
+                "Пустой снимок не оставляет отметок ledger: иначе выдуманный факт откроет первые шаги"
+                        + " При смене restore_Empty_LeavesBoardClean проверь это утверждение.");
     }
 
     @Test
@@ -124,7 +134,8 @@ class BoardStateTests {
         assertFalse(
                 board.ledger().has(BoardCase.CRAFTING_STATION, 1),
                 "Снимок заменяет отметки ledger, а не дописывает: приёмка «джунгли» начинала с отметок журнала "
-                        + "прошлого прогона (верстак «построен», а его нет — «нужен верстак: рядом нет»)");
+                        + "прошлого прогона (верстак «построен», а его нет — «нужен верстак: рядом нет»)"
+                        + " Иначе тест restore_EmptyAfterNotedLedger_ClearsLedger перестанет ловить эту поломку. При смене restore_EmptyAfterNotedLedger_ClearsLedger проверь это утверждение.");
     }
 
     @Test
@@ -144,8 +155,13 @@ class BoardStateTests {
                 List.of("graph:chop_oak_log"),
                 filtered.entries().stream().map(entry -> entry.ticket().id()).toList(),
                 "При загрузке снимаются задания мимо графа: иначе после перезапуска духи снова берут старую "
-                        + "работу, которую граф не выбирал, и пересчёт спорит с доской");
-        assertEquals(1, filtered.entries().size(), "Снятие не трогает задание графа и убирает все чужие записи");
+                        + "работу, которую граф не выбирал, и пересчёт спорит с доской"
+                        + " При смене withoutLegacy_LegacyTickets_RemovedAndGraphKept проверь это утверждение.");
+        assertEquals(
+                1,
+                filtered.entries().size(),
+                "Снятие не трогает задание графа и убирает все чужие записи"
+                        + " Иначе тест withoutLegacy_LegacyTickets_RemovedAndGraphKept перестанет ловить эту поломку. При смене withoutLegacy_LegacyTickets_RemovedAndGraphKept проверь это утверждение.");
     }
 
     @Test
@@ -161,6 +177,7 @@ class BoardStateTests {
                 List.of("world:backfill:1,64,1", "demolish:abc"),
                 filtered.entries().stream().map(entry -> entry.ticket().id()).toList(),
                 "Задания, поставленные графом, опознаются по cause (graph:event:…), а не только по префиксу id: "
-                        + "world:/demolish: тоже граф, иначе после перезапуска они теряются и граф ставит их заново");
+                        + "world:/demolish: тоже граф, иначе после перезапуска они теряются и граф ставит их заново"
+                        + " При смене withoutLegacy_GraphCauseWorldTicket_KeptEvenWithoutGraphId проверь это утверждение.");
     }
 }

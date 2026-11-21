@@ -136,7 +136,8 @@ class ModeMachineTests {
                 List.of(expected, rule),
                 List.of(step.mode(), step.rule().orElse("")),
                 "Смена режима «" + name + "»: таблица переходов modeTransitions решает, когда режим деградирует и "
-                        + "когда возвращается к приказанному");
+                        + "когда возвращается к приказанному"
+                        + " Иначе тест next_ModeAndFacts_FollowsTransitionTable перестанет ловить эту поломку. При смене next_ModeAndFacts_FollowsTransitionTable проверь это утверждение.");
     }
 
     @Test
@@ -158,7 +159,8 @@ class ModeMachineTests {
                 List.of(CombatMode.DEFENSIVE, CombatMode.DEFENSIVE, CombatMode.AGGRESSIVE),
                 history,
                 "Приказ стратега не теряется при временной смене: при 20 % уходим в defensive, при 50 % остаёмся, "
-                        + "при 80 % возвращаемся в aggressive");
+                        + "при 80 % возвращаемся в aggressive"
+                        + " Иначе тест next_HpDipsAndRecovers_OrderedModeIsRestored перестанет ловить эту поломку. При смене next_HpDipsAndRecovers_OrderedModeIsRestored проверь это утверждение.");
     }
 
     @Test
@@ -168,6 +170,10 @@ class ModeMachineTests {
         ModeStep step =
                 machine().next(CombatMode.AGGRESSIVE, Assessments.factsInMode(situation, CombatMode.AGGRESSIVE));
 
-        assertEquals(Optional.empty(), step.rule(), "Без перехода правило не названо: trace не выдумывает причину");
+        assertEquals(
+                Optional.empty(),
+                step.rule(),
+                "Без перехода правило не названо: trace не выдумывает причину"
+                        + " Иначе тест next_NoTransitionApplies_ReportsNoRule перестанет ловить эту поломку. При смене next_NoTransitionApplies_ReportsNoRule проверь это утверждение.");
     }
 }

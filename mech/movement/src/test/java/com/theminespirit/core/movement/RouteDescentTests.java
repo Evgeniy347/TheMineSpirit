@@ -15,28 +15,32 @@ class RouteDescentTests {
         assertTrue(
                 refusal != null && refusal.contains("47"),
                 "Маршрут к поверхности не уходит на 23 блока вниз: это пещера, откуда дух не выйдет (observe24 B1): "
-                        + refusal);
+                        + refusal
+                        + " Иначе тест surfaceGoal_PathDropsIntoCave_Refused перестанет ловить эту поломку. При смене surfaceGoal_PathDropsIntoCave_Refused проверь это утверждение.");
     }
 
     @Test
     void surfaceGoal_PathStaysOnSurface_Allowed() {
         assertNull(
                 RouteDescent.refusal(70, 70, List.of(70, 69, 70, 71)),
-                "Обычный рельеф с подъёмом и спуском на блок не запрещён");
+                "Обычный рельеф с подъёмом и спуском на блок не запрещён"
+                        + " Иначе тест surfaceGoal_PathStaysOnSurface_Allowed перестанет ловить эту поломку. При смене surfaceGoal_PathStaysOnSurface_Allowed проверь это утверждение.");
     }
 
     @Test
     void lowerGoal_DescentToIt_Allowed() {
         assertNull(
                 RouteDescent.refusal(70, 40, List.of(70, 50, 40)),
-                "Спуск к цели, которая сама ниже, — работа, а не ловушка: маршрут разрешён");
+                "Спуск к цели, которая сама ниже, — работа, а не ловушка: маршрут разрешён"
+                        + " Иначе тест lowerGoal_DescentToIt_Allowed перестанет ловить эту поломку. При смене lowerGoal_DescentToIt_Allowed проверь это утверждение.");
     }
 
     @Test
     void deepStart_PathGoesUp_Allowed() {
         assertNull(
                 RouteDescent.refusal(27, 70, List.of(27, 30, 45, 70)),
-                "Дух уже в яме и идёт вверх: маршрут спасения не режется по глубине старта");
+                "Дух уже в яме и идёт вверх: маршрут спасения не режется по глубине старта"
+                        + " Иначе тест deepStart_PathGoesUp_Allowed перестанет ловить эту поломку. При смене deepStart_PathGoesUp_Allowed проверь это утверждение.");
     }
 
     @Test
@@ -45,6 +49,7 @@ class RouteDescentTests {
 
         assertTrue(
                 refusal != null,
-                "Даже 10 блоков ниже цели — уже ловушка: предел " + RouteDescent.MAX_BELOW + " блоков");
+                "Даже 10 блоков ниже цели — уже ловушка: предел " + RouteDescent.MAX_BELOW + " блоков"
+                        + " Иначе тест surfaceGoal_PathDropsTenBlocks_Refused перестанет ловить эту поломку. При смене surfaceGoal_PathDropsTenBlocks_Refused проверь это утверждение.");
     }
 }

@@ -16,11 +16,13 @@ class RestDefaultsTests {
                 RestDefaults.HEARTBEAT_FILE.startsWith("/"),
                 "Умолчание heartbeatFile снова абсолютное (" + RestDefaults.HEARTBEAT_FILE + "): на чужой машине "
                         + "и в dev-копии этот путь бессмысленен, а сторож зависания молча не находит файл. "
-                        + "Серверный путь задаётся в server/config/theminespirit-rest.toml");
+                        + "Серверный путь задаётся в server/config/theminespirit-rest.toml"
+                        + " Иначе тест files_DefaultPaths_AreRelative перестанет ловить эту поломку. При смене files_DefaultPaths_AreRelative проверь это утверждение.");
         assertFalse(
                 RestDefaults.DEBUG_LEASE_FILE.startsWith("/"),
                 "Умолчание debugLeaseFile снова абсолютное (" + RestDefaults.DEBUG_LEASE_FILE + "): замок живой "
-                        + "отладки не должен зависеть от раскладки /opt, его путь задаёт конфиг сервера");
+                        + "отладки не должен зависеть от раскладки /opt, его путь задаёт конфиг сервера"
+                        + " Иначе тест files_DefaultPaths_AreRelative перестанет ловить эту поломку. При смене files_DefaultPaths_AreRelative проверь это утверждение.");
     }
 
     @Test
@@ -29,10 +31,12 @@ class RestDefaultsTests {
         assertTrue(
                 toml.contains("heartbeatFile = \"/opt/minecraft/logs/tick.heartbeat\""),
                 "Опубликованный конфиг сервера обязан явно задать heartbeatFile: иначе серверный сторож зависания "
-                        + "получит относительное умолчание и перестанет видеть тик");
+                        + "получит относительное умолчание и перестанет видеть тик"
+                        + " При смене serverConfig_PublishesPaths_OverridesDefaults проверь это утверждение.");
         assertTrue(
                 toml.contains("debugLeaseFile = \"/opt/minecraft/debug.lease\""),
                 "Опубликованный конфиг сервера обязан явно задать debugLeaseFile: иначе замок отладки уедет "
-                        + "в рабочий каталог сервера");
+                        + "в рабочий каталог сервера"
+                        + " При смене serverConfig_PublishesPaths_OverridesDefaults проверь это утверждение.");
     }
 }

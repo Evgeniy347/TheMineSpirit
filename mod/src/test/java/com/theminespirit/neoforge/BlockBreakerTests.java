@@ -12,6 +12,7 @@ class BlockBreakerTests {
                 FarmTuning.REACH <= BlockBreaker.REACH,
                 "Досягаемость фермы " + FarmTuning.REACH + " обязана быть не больше досягаемости ломки "
                         + BlockBreaker.REACH + ": иначе планировщик поставит дух туда, откуда BlockBreaker "
-                        + "отвергнет обработку клетки");
+                        + "отвергнет обработку клетки"
+                        + " При смене reach_ComparedWithFarmTuningReach_IsNotSmaller проверь это утверждение.");
     }
 }

@@ -24,7 +24,8 @@ class WarehousePlanTests {
                     WarehouseRules.scheme(level),
                     build.params().get("file"),
                     "Уровень " + level + " склада строится своей схемой: чужая схема дала бы не тот "
-                            + "размер и не то число сундуков");
+                            + "размер и не то число сундуков"
+                            + " Иначе тест plan_BuildWarehouse_EachLevelUsesItsOwnScheme перестанет ловить эту поломку. При смене plan_BuildWarehouse_EachLevelUsesItsOwnScheme проверь это утверждение.");
         }
     }
 
@@ -39,16 +40,20 @@ class WarehousePlanTests {
         List<String> scripts = scripts(plan);
         assertTrue(
                 scripts.contains("clear_area"),
-                "Перенос склада обязан снести старый склад: иначе две постройки остались бы стоять");
+                "Перенос склада обязан снести старый склад: иначе две постройки остались бы стоять"
+                        + " При смене plan_RelocateWarehouse_CollectsDropsAndUnloadsIntoNewChests проверь это утверждение.");
         assertTrue(
                 scripts.contains("collect_drops"),
-                "Перенос склада обязан подобрать выпавшие из старых сундуков вещи: иначе они остались бы на земле");
+                "Перенос склада обязан подобрать выпавшие из старых сундуков вещи: иначе они остались бы на земле"
+                        + " При смене plan_RelocateWarehouse_CollectsDropsAndUnloadsIntoNewChests проверь это утверждение.");
         assertTrue(
                 scripts.contains("unload"),
-                "Перенос склада обязан разложить вещи в сундуки нового склада: иначе груз остался бы в инвентаре");
+                "Перенос склада обязан разложить вещи в сундуки нового склада: иначе груз остался бы в инвентаре"
+                        + " При смене plan_RelocateWarehouse_CollectsDropsAndUnloadsIntoNewChests проверь это утверждение.");
         assertTrue(
                 !scripts.contains("build_schematic"),
-                "Новый склад уже построен: перенос не должен строить его второй раз");
+                "Новый склад уже построен: перенос не должен строить его второй раз"
+                        + " Иначе тест plan_RelocateWarehouse_CollectsDropsAndUnloadsIntoNewChests перестанет ловить эту поломку. При смене plan_RelocateWarehouse_CollectsDropsAndUnloadsIntoNewChests проверь это утверждение.");
     }
 
     private static ScriptCall find(TaskNode node, String script) {

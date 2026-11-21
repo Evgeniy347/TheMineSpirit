@@ -16,7 +16,8 @@ class DescentPathTests {
 
         assertTrue(
                 refusal != null && refusal.contains("120"),
-                "Путь вниз на 120 блоков отвергается: помощник не уходит за духом в бездну (observe24 B3): " + refusal);
+                "Путь вниз на 120 блоков отвергается: помощник не уходит за духом в бездну (observe24 B3): " + refusal
+                        + " Иначе тест descent_OneHundredTwentyBlocks_Refused перестанет ловить эту поломку. При смене descent_OneHundredTwentyBlocks_Refused проверь это утверждение.");
     }
 
     @Test
@@ -25,7 +26,8 @@ class DescentPathTests {
 
         assertTrue(
                 DescentPath.refusalOrNull(path, false) != null,
-                "Спуск на 23 блока тоже «десятки блоков»: предел " + DescentPath.MAX_DESCENT);
+                "Спуск на 23 блока тоже «десятки блоков»: предел " + DescentPath.MAX_DESCENT
+                        + " Иначе тест descent_FortyTwoBlocks_Refused перестанет ловить эту поломку. При смене descent_FortyTwoBlocks_Refused проверь это утверждение.");
     }
 
     @Test
@@ -34,7 +36,8 @@ class DescentPathTests {
 
         assertNull(
                 DescentPath.refusalOrNull(path, false),
-                "Короткий спуск на блок к цели не запрещён: дух ходит по рельефу");
+                "Короткий спуск на блок к цели не запрещён: дух ходит по рельефу"
+                        + " Иначе тест descent_ShortStep_Allowed перестанет ловить эту поломку. При смене descent_ShortStep_Allowed проверь это утверждение.");
     }
 
     @Test
@@ -45,6 +48,7 @@ class DescentPathTests {
 
         assertTrue(
                 refusal != null && refusal.contains("воду"),
-                "Путь, упирающийся в воду, не выход: дух захлёбывается вместо спасения: " + refusal);
+                "Путь, упирающийся в воду, не выход: дух захлёбывается вместо спасения: " + refusal
+                        + " Иначе тест descent_EndsInWater_Refused перестанет ловить эту поломку. При смене descent_EndsInWater_Refused проверь это утверждение.");
     }
 }

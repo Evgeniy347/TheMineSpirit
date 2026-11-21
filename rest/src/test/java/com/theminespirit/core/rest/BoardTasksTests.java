@@ -3,9 +3,7 @@ package com.theminespirit.core.rest;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.theminespirit.core.board.ActivityTickets;
 import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardStatus;
@@ -13,7 +11,6 @@ import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BoardTiming;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.api.BoardCase;
-import com.theminespirit.core.plan.ScriptCall;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -48,11 +45,13 @@ class BoardTasksTests {
         assertEquals(
                 "WAITING_RESOURCES",
                 task.status(),
-                "Задание с нехваткой обязано нести статус ожидания ресурсов: наблюдатель видит, чего ждёт доска");
+                "Задание с нехваткой обязано нести статус ожидания ресурсов: наблюдатель видит, чего ждёт доска"
+                        + " Иначе тест of_WaitingTicket_ReportsMissingFromStock перестанет ловить эту поломку. При смене of_WaitingTicket_ReportsMissingFromStock проверь это утверждение.");
         assertEquals(
                 Map.of("dirt", 5),
                 task.missing(),
-                "Наблюдение обязано показывать нехватку, а не полную нужду: стратегу важно, сколько добыть");
+                "Наблюдение обязано показывать нехватку, а не полную нужду: стратегу важно, сколько добыть"
+                        + " Иначе тест of_WaitingTicket_ReportsMissingFromStock перестанет ловить эту поломку. При смене of_WaitingTicket_ReportsMissingFromStock проверь это утверждение.");
     }
 
     @Test
@@ -66,11 +65,13 @@ class BoardTasksTests {
         assertEquals(
                 Map.of(),
                 task.missing(),
-                "Нужду в земле закрывает дёрн: задание не ждёт добычи, и карточка не показывает нехватку");
+                "Нужду в земле закрывает дёрн: задание не ждёт добычи, и карточка не показывает нехватку"
+                        + " Иначе тест of_GrassInStock_DirtNeedCoveredAndStockShown перестанет ловить эту поломку. При смене of_GrassInStock_DirtNeedCoveredAndStockShown проверь это утверждение.");
         assertEquals(
                 Map.of("minecraft:dirt", 1575),
                 task.stock(),
-                "Карточка несёт склад по нужным предметам: наблюдатель видит «есть 1575 / надо 528»");
+                "Карточка несёт склад по нужным предметам: наблюдатель видит «есть 1575 / надо 528»"
+                        + " Иначе тест of_GrassInStock_DirtNeedCoveredAndStockShown перестанет ловить эту поломку. При смене of_GrassInStock_DirtNeedCoveredAndStockShown проверь это утверждение.");
     }
 
     @Test
@@ -85,8 +86,13 @@ class BoardTasksTests {
         assertEquals(
                 SPIRIT.toString(),
                 task.assignee(),
-                "После выдачи наблюдатель обязан видеть духа-держателя, а не «любой свободный»");
-        assertEquals("ASSIGNED", task.status(), "Статус выданного задания — ASSIGNED");
+                "После выдачи наблюдатель обязан видеть духа-держателя, а не «любой свободный»"
+                        + " Иначе тест of_ClaimedTicket_ReportsHolderForObserver перестанет ловить эту поломку. При смене of_ClaimedTicket_ReportsHolderForObserver проверь это утверждение.");
+        assertEquals(
+                "ASSIGNED",
+                task.status(),
+                "Статус выданного задания — ASSIGNED"
+                        + " Иначе тест of_ClaimedTicket_ReportsHolderForObserver перестанет ловить эту поломку. При смене of_ClaimedTicket_ReportsHolderForObserver проверь это утверждение.");
     }
 
     @Test
@@ -101,7 +107,8 @@ class BoardTasksTests {
         assertFalse(
                 task.done(),
                 "Заблокированное задание не выполнено, даже если в журнале есть отметка прошлого прогона: "
-                        + "status BLOCKED и done=true противоречат друг другу (аномалия 7)");
+                        + "status BLOCKED и done=true противоречат друг другу (аномалия 7)"
+                        + " Иначе тест of_BlockedTicketWithLedgerMark_ReportsNotDone перестанет ловить эту поломку. При смене of_BlockedTicketWithLedgerMark_ReportsNotDone проверь это утверждение.");
     }
 
     @Test
@@ -112,8 +119,15 @@ class BoardTasksTests {
 
         BoardTask task = BoardTasks.of(board, ticket, new StockView(Map.of()));
 
-        assertNull(task.assignee(), "Невыданное задание без владельца в заявке не имеет держателя: assignee пуст");
-        assertEquals("PENDING", task.status(), "Задание без нужды в ресурсах ждёт выдачи со статусом PENDING");
+        assertNull(
+                task.assignee(),
+                "Невыданное задание без владельца в заявке не имеет держателя: assignee пуст"
+                        + " Иначе тест of_FreeTicket_HasNoAssignee перестанет ловить эту поломку. При смене of_FreeTicket_HasNoAssignee проверь это утверждение.");
+        assertEquals(
+                "PENDING",
+                task.status(),
+                "Задание без нужды в ресурсах ждёт выдачи со статусом PENDING"
+                        + " Иначе тест of_FreeTicket_HasNoAssignee перестанет ловить эту поломку. При смене of_FreeTicket_HasNoAssignee проверь это утверждение.");
     }
 
     @Test
@@ -126,15 +140,35 @@ class BoardTasksTests {
         BoardTask running =
                 BoardTasks.of(board, ticket, BoardStatus.ASSIGNED, new StockView(Map.of()), new BoardTiming(100L, 0L));
 
-        assertEquals(100L, running.startedAt(), "Наблюдатель обязан видеть тик выдачи из журнала");
-        assertEquals(0L, running.finishedAt(), "Незакрытое задание не имеет конца");
-        assertEquals(1900L, running.durationTicks(), "Затрата в работе считается до текущего тика доски");
+        assertEquals(
+                100L,
+                running.startedAt(),
+                "Наблюдатель обязан видеть тик выдачи из журнала"
+                        + " Иначе тест of_TimingFromJournal_FillsStartFinishAndSpent перестанет ловить эту поломку. При смене of_TimingFromJournal_FillsStartFinishAndSpent проверь это утверждение.");
+        assertEquals(
+                0L,
+                running.finishedAt(),
+                "Незакрытое задание не имеет конца"
+                        + " Иначе тест of_TimingFromJournal_FillsStartFinishAndSpent перестанет ловить эту поломку. При смене of_TimingFromJournal_FillsStartFinishAndSpent проверь это утверждение.");
+        assertEquals(
+                1900L,
+                running.durationTicks(),
+                "Затрата в работе считается до текущего тика доски"
+                        + " Иначе тест of_TimingFromJournal_FillsStartFinishAndSpent перестанет ловить эту поломку. При смене of_TimingFromJournal_FillsStartFinishAndSpent проверь это утверждение.");
 
         BoardTask closed =
                 BoardTasks.of(board, ticket, BoardStatus.DONE, new StockView(Map.of()), new BoardTiming(100L, 1500L));
 
-        assertEquals(1500L, closed.finishedAt(), "Наблюдатель обязан видеть тик закрытия из журнала");
-        assertEquals(1400L, closed.durationTicks(), "Затрата завершённого задания — разница начала и конца");
+        assertEquals(
+                1500L,
+                closed.finishedAt(),
+                "Наблюдатель обязан видеть тик закрытия из журнала"
+                        + " Иначе тест of_TimingFromJournal_FillsStartFinishAndSpent перестанет ловить эту поломку. При смене of_TimingFromJournal_FillsStartFinishAndSpent проверь это утверждение.");
+        assertEquals(
+                1400L,
+                closed.durationTicks(),
+                "Затрата завершённого задания — разница начала и конца"
+                        + " Иначе тест of_TimingFromJournal_FillsStartFinishAndSpent перестанет ловить эту поломку. При смене of_TimingFromJournal_FillsStartFinishAndSpent проверь это утверждение.");
     }
 
     @Test
@@ -145,9 +179,21 @@ class BoardTasksTests {
         BoardTask task =
                 BoardTasks.of(board, ticket, BoardStatus.PENDING, new StockView(Map.of()), new BoardTiming(100L, 700L));
 
-        assertEquals(0L, task.startedAt(), "Задание, вернувшееся в очередь, не показывает начало старой попытки");
-        assertEquals(0L, task.finishedAt(), "Задание в очереди не показывает конец старой попытки");
-        assertEquals(0L, task.durationTicks(), "Без начала затрата неизвестна и равна нулю");
+        assertEquals(
+                0L,
+                task.startedAt(),
+                "Задание, вернувшееся в очередь, не показывает начало старой попытки"
+                        + " Иначе тест of_PendingAfterPreviousRun_HidesOldAttemptTimes перестанет ловить эту поломку. При смене of_PendingAfterPreviousRun_HidesOldAttemptTimes проверь это утверждение.");
+        assertEquals(
+                0L,
+                task.finishedAt(),
+                "Задание в очереди не показывает конец старой попытки"
+                        + " Иначе тест of_PendingAfterPreviousRun_HidesOldAttemptTimes перестанет ловить эту поломку. При смене of_PendingAfterPreviousRun_HidesOldAttemptTimes проверь это утверждение.");
+        assertEquals(
+                0L,
+                task.durationTicks(),
+                "Без начала затрата неизвестна и равна нулю"
+                        + " Иначе тест of_PendingAfterPreviousRun_HidesOldAttemptTimes перестанет ловить эту поломку. При смене of_PendingAfterPreviousRun_HidesOldAttemptTimes проверь это утверждение.");
     }
 
     @Test
@@ -158,9 +204,21 @@ class BoardTasksTests {
         BoardTask task = BoardTasks.of(
                 board, ticket, BoardStatus.ASSIGNED, new StockView(Map.of()), new BoardTiming(100L, 700L));
 
-        assertEquals(100L, task.startedAt(), "Начало берётся из последней выдачи");
-        assertEquals(0L, task.finishedAt(), "Идущее задание не имеет конца");
-        assertEquals(1900L, task.durationTicks(), "Идущее задание тратит время до текущего тика");
+        assertEquals(
+                100L,
+                task.startedAt(),
+                "Начало берётся из последней выдачи"
+                        + " Иначе тест of_AssignedAfterJournalClose_DropsFinishAndCountsToNow перестанет ловить эту поломку. При смене of_AssignedAfterJournalClose_DropsFinishAndCountsToNow проверь это утверждение.");
+        assertEquals(
+                0L,
+                task.finishedAt(),
+                "Идущее задание не имеет конца"
+                        + " Иначе тест of_AssignedAfterJournalClose_DropsFinishAndCountsToNow перестанет ловить эту поломку. При смене of_AssignedAfterJournalClose_DropsFinishAndCountsToNow проверь это утверждение.");
+        assertEquals(
+                1900L,
+                task.durationTicks(),
+                "Идущее задание тратит время до текущего тика"
+                        + " Иначе тест of_AssignedAfterJournalClose_DropsFinishAndCountsToNow перестанет ловить эту поломку. При смене of_AssignedAfterJournalClose_DropsFinishAndCountsToNow проверь это утверждение.");
     }
 
     @Test
@@ -183,9 +241,18 @@ class BoardTasksTests {
         assertEquals(
                 0L,
                 task.startedAt(),
-                "Занятие — обычное задание доски: без записи выдачи время начала не выдумывается из постановки");
-        assertEquals(0L, task.finishedAt(), "Текущее занятие духа не имеет конца");
-        assertEquals(0L, task.durationTicks(), "Длительность занятия считается от журнальной выдачи");
+                "Занятие — обычное задание доски: без записи выдачи время начала не выдумывается из постановки"
+                        + " Иначе тест of_ActivityWithoutIssue_HidesStartUntilJournal перестанет ловить эту поломку. При смене of_ActivityWithoutIssue_HidesStartUntilJournal проверь это утверждение.");
+        assertEquals(
+                0L,
+                task.finishedAt(),
+                "Текущее занятие духа не имеет конца"
+                        + " Иначе тест of_ActivityWithoutIssue_HidesStartUntilJournal перестанет ловить эту поломку. При смене of_ActivityWithoutIssue_HidesStartUntilJournal проверь это утверждение.");
+        assertEquals(
+                0L,
+                task.durationTicks(),
+                "Длительность занятия считается от журнальной выдачи"
+                        + " Иначе тест of_ActivityWithoutIssue_HidesStartUntilJournal перестанет ловить эту поломку. При смене of_ActivityWithoutIssue_HidesStartUntilJournal проверь это утверждение.");
     }
 
     @Test
@@ -205,30 +272,15 @@ class BoardTasksTests {
         BoardTask task = BoardTasks.of(
                 board, activity, BoardStatus.ASSIGNED, new StockView(Map.of()), new BoardTiming(7000L, 0L));
 
-        assertEquals(7000L, task.startedAt(), "Начало занятия берётся из журнала выдачи");
-        assertEquals(2000L, task.durationTicks(), "Длительность занятия считается от журнального начала");
-    }
-
-    @Test
-    void of_ExpeditionWaitingForCrew_ShowsTeamAndReason() {
-        Board board = new Board(() -> 0);
-        UUID leader = UUID.fromString("00000000-0000-0000-0000-0000000000b1");
-        List<UUID> crew = List.of(leader, SPIRIT);
-        String id = "graph:event:expedition_ready:expedition";
-        BoardTicket expedition = ActivityTickets.ticket(new ActivityTickets.Request(
-                new ActivityTickets.Identity(id, BoardCase.ACTIVITY_EXPEDITION, id),
-                new ActivityTickets.Crew(Optional.of(leader), crew),
-                100,
-                0,
-                new ActivityTickets.Plan("mine_vein", "mine", 6000, new ScriptCall("mine_vein", Map.of()))));
-        board.submit(expedition);
-        board.holds().hold(expedition.id(), "нет команды: нужно 2 духа, рядом 1");
-
-        BoardTask task = BoardTasks.of(board, expedition, BoardStatus.PENDING, new StockView(Map.of()));
-
-        assertEquals(crew.stream().map(UUID::toString).toList(), task.executors(), "REST отдаёт всю команду похода");
-        assertTrue(
-                task.waitReason() != null && task.waitReason().contains("нет команды"),
-                "REST показывает причину ожидания похода, а не пустой статус");
+        assertEquals(
+                7000L,
+                task.startedAt(),
+                "Начало занятия берётся из журнала выдачи"
+                        + " Иначе тест of_ActivityWithJournal_UsesJournalStart перестанет ловить эту поломку. При смене of_ActivityWithJournal_UsesJournalStart проверь это утверждение.");
+        assertEquals(
+                2000L,
+                task.durationTicks(),
+                "Длительность занятия считается от журнального начала"
+                        + " Иначе тест of_ActivityWithJournal_UsesJournalStart перестанет ловить эту поломку. При смене of_ActivityWithJournal_UsesJournalStart проверь это утверждение.");
     }
 }

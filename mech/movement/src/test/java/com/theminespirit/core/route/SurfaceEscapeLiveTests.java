@@ -26,11 +26,18 @@ class SurfaceEscapeLiveTests {
                 found.isPresent(),
                 "В observe14 дух стоял в воде -104,-52,-380, а над ним до y=100 сплошная порода: ближайший "
                         + "естественный выход на поверхность существует, но RoutePlanner даёт только PARTIAL "
-                        + "и дух не выходит. Путь по проходимым клеткам обязан найтись без ломания блоков");
+                        + "и дух не выходит. Путь по проходимым клеткам обязан найтись без ломания блоков"
+                        + " Иначе тест path_FromLiveWaterPool_ReachesSkyWithoutBreaking перестанет ловить эту поломку. При смене path_FromLiveWaterPool_ReachesSkyWithoutBreaking проверь это утверждение.");
         List<BlockCoord> path = found.orElseThrow();
-        assertTrue(path.size() > 100, "Путь до поверхности длинный, а найден " + path.size() + " клеток");
+        assertTrue(
+                path.size() > 100,
+                "Путь до поверхности длинный, а найден " + path.size() + " клеток"
+                        + " Иначе тест path_FromLiveWaterPool_ReachesSkyWithoutBreaking перестанет ловить эту поломку. При смене path_FromLiveWaterPool_ReachesSkyWithoutBreaking проверь это утверждение.");
         BlockCoord end = path.get(path.size() - 1);
-        assertTrue(sky(end), "Путь обязан кончаться под небом, а кончается в " + end);
+        assertTrue(
+                sky(end),
+                "Путь обязан кончаться под небом, а кончается в " + end
+                        + " Иначе тест path_FromLiveWaterPool_ReachesSkyWithoutBreaking перестанет ловить эту поломку. При смене path_FromLiveWaterPool_ReachesSkyWithoutBreaking проверь это утверждение.");
     }
 
     @Test
@@ -41,7 +48,8 @@ class SurfaceEscapeLiveTests {
         assertTrue(
                 found.isPresent(),
                 "После dig_out дух оказывается в сухой пещере -104,-20,-412 и там падает/теряется: путь из "
-                        + "пещеры к небу тоже обязан находиться, иначе спасение снова не закончится");
+                        + "пещеры к небу тоже обязан находиться, иначе спасение снова не закончится"
+                        + " При смене path_FromDryCavern_ReachesSky проверь это утверждение.");
     }
 
     @Test
@@ -55,16 +63,19 @@ class SurfaceEscapeLiveTests {
             int rise = to.y() - from.y();
             assertTrue(
                     Math.abs(to.x() - from.x()) + Math.abs(to.z() - from.z()) <= 1 && rise <= 1,
-                    "Шаг " + from + " → " + to + " не соседний: дух не перепрыгнет");
+                    "Шаг " + from + " → " + to + " не соседний: дух не перепрыгнет"
+                            + " Иначе тест path_LiveWaterPool_EveryStepIsWalkable перестанет ловить эту поломку. При смене path_LiveWaterPool_EveryStepIsWalkable проверь это утверждение.");
             if (rise == 0) {
                 assertTrue(
                         supported(to) || water(from) || climbable(to),
-                        "Ровный шаг " + from + " → " + to + " ведёт в неподпёртую клетку: дух упадёт, а не пройдёт");
+                        "Ровный шаг " + from + " → " + to + " ведёт в неподпёртую клетку: дух упадёт, а не пройдёт"
+                                + " Иначе тест path_LiveWaterPool_EveryStepIsWalkable перестанет ловить эту поломку. При смене path_LiveWaterPool_EveryStepIsWalkable проверь это утверждение.");
             }
             if (rise == 1) {
                 assertTrue(
                         supported(to) || climbable(to),
-                        "Подъём " + from + " → " + to + " без опоры или лианы: в воздухе не подняться");
+                        "Подъём " + from + " → " + to + " без опоры или лианы: в воздухе не подняться"
+                                + " Иначе тест path_LiveWaterPool_EveryStepIsWalkable перестанет ловить эту поломку. При смене path_LiveWaterPool_EveryStepIsWalkable проверь это утверждение.");
             }
         }
     }

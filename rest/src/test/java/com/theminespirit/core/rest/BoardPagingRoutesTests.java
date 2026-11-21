@@ -42,13 +42,22 @@ class BoardPagingRoutesTests {
         assertEquals(
                 BoardListQuery.DEFAULT_LIMIT,
                 body.get("tasks").size(),
-                "GET без параметров обязан отдавать разумную порцию, а не всю доску: " + response.body());
-        assertEquals(60, body.get("total").asInt(), "GET обязан сообщать общее число подходящих заданий");
-        assertTrue(body.hasNonNull("nextCursor"), "Пока есть хвост, ответ обязан давать курсор следующей порции");
+                "GET без параметров обязан отдавать разумную порцию, а не всю доску: " + response.body()
+                        + " Иначе тест get_DefaultPaging_ReturnsPortionWithTotalAndNextCursor перестанет ловить эту поломку. При смене get_DefaultPaging_ReturnsPortionWithTotalAndNextCursor проверь это утверждение.");
+        assertEquals(
+                60,
+                body.get("total").asInt(),
+                "GET обязан сообщать общее число подходящих заданий"
+                        + " Иначе тест get_DefaultPaging_ReturnsPortionWithTotalAndNextCursor перестанет ловить эту поломку. При смене get_DefaultPaging_ReturnsPortionWithTotalAndNextCursor проверь это утверждение.");
+        assertTrue(
+                body.hasNonNull("nextCursor"),
+                "Пока есть хвост, ответ обязан давать курсор следующей порции"
+                        + " Иначе тест get_DefaultPaging_ReturnsPortionWithTotalAndNextCursor перестанет ловить эту поломку. При смене get_DefaultPaging_ReturnsPortionWithTotalAndNextCursor проверь это утверждение.");
         assertEquals(
                 60,
                 body.get("groups").get("AVAILABLE").asInt(),
-                "Счётчики колонок обязаны считать всю подходящую доску, а не только порцию: " + response.body());
+                "Счётчики колонок обязаны считать всю подходящую доску, а не только порцию: " + response.body()
+                        + " Иначе тест get_DefaultPaging_ReturnsPortionWithTotalAndNextCursor перестанет ловить эту поломку. При смене get_DefaultPaging_ReturnsPortionWithTotalAndNextCursor проверь это утверждение.");
     }
 
     @Test
@@ -61,12 +70,21 @@ class BoardPagingRoutesTests {
                 router.handle(new RestRequest("GET", "/v1/board", Map.of("status", "DONE"), Map.of(), new byte[0]));
 
         JsonNode body = MAPPER.readTree(response.body());
-        assertEquals(2, body.get("tasks").size(), "Фильтр status обязан оставить только DONE: " + response.body());
-        assertEquals(2, body.get("total").asInt(), "total обязан считать отфильтрованные задания");
+        assertEquals(
+                2,
+                body.get("tasks").size(),
+                "Фильтр status обязан оставить только DONE: " + response.body()
+                        + " Иначе тест get_StatusFilter_ReturnsOnlyMatchingTasksWithTotal перестанет ловить эту поломку. При смене get_StatusFilter_ReturnsOnlyMatchingTasksWithTotal проверь это утверждение.");
+        assertEquals(
+                2,
+                body.get("total").asInt(),
+                "total обязан считать отфильтрованные задания"
+                        + " Иначе тест get_StatusFilter_ReturnsOnlyMatchingTasksWithTotal перестанет ловить эту поломку. При смене get_StatusFilter_ReturnsOnlyMatchingTasksWithTotal проверь это утверждение.");
         assertEquals(
                 Set.of("done-a", "done-b"),
                 ids(body),
-                "Фильтр status обязан отдавать именно задания этого статуса: " + response.body());
+                "Фильтр status обязан отдавать именно задания этого статуса: " + response.body()
+                        + " Иначе тест get_StatusFilter_ReturnsOnlyMatchingTasksWithTotal перестанет ловить эту поломку. При смене get_StatusFilter_ReturnsOnlyMatchingTasksWithTotal проверь это утверждение.");
     }
 
     @Test
@@ -83,8 +101,13 @@ class BoardPagingRoutesTests {
                 Set.of("board-2", "board-3", "board-4"),
                 ids(body),
                 "sinceTick на доске отдаёт задания, поставленные на этом тике и позже: наблюдатель опрашивает "
-                        + "только новое");
-        assertEquals(2L, body.get("sinceTick").asLong(), "Ответ эхает sinceTick: по нему клиент продолжает опрос");
+                        + "только новое"
+                        + " Иначе тест get_SinceTick_ReturnsOnlyNewerTasksAndEchoesTick перестанет ловить эту поломку. При смене get_SinceTick_ReturnsOnlyNewerTasksAndEchoesTick проверь это утверждение.");
+        assertEquals(
+                2L,
+                body.get("sinceTick").asLong(),
+                "Ответ эхает sinceTick: по нему клиент продолжает опрос"
+                        + " Иначе тест get_SinceTick_ReturnsOnlyNewerTasksAndEchoesTick перестанет ловить эту поломку. При смене get_SinceTick_ReturnsOnlyNewerTasksAndEchoesTick проверь это утверждение.");
     }
 
     @Test
@@ -98,8 +121,15 @@ class BoardPagingRoutesTests {
 
         JsonNode body = MAPPER.readTree(response.body());
         assertEquals(
-                List.of("board-2", "board-3"), sortedIds(body), "offset и limit обязаны нарезать ленту по порядку");
-        assertEquals(5, body.get("total").asInt(), "total обязан считать все подходящие задания, а не размер порции");
+                List.of("board-2", "board-3"),
+                sortedIds(body),
+                "offset и limit обязаны нарезать ленту по порядку"
+                        + " Иначе тест get_OffsetAndLimit_ReturnsSecondPortion перестанет ловить эту поломку. При смене get_OffsetAndLimit_ReturnsSecondPortion проверь это утверждение.");
+        assertEquals(
+                5,
+                body.get("total").asInt(),
+                "total обязан считать все подходящие задания, а не размер порции"
+                        + " Иначе тест get_OffsetAndLimit_ReturnsSecondPortion перестанет ловить эту поломку. При смене get_OffsetAndLimit_ReturnsSecondPortion проверь это утверждение.");
     }
 
     @Test
@@ -117,7 +147,8 @@ class BoardPagingRoutesTests {
         assertEquals(
                 List.of("board-2", "board-3"),
                 sortedIds(MAPPER.readTree(second.body())),
-                "Курсор обязан продолжить ленту со следующей порции без повторов: " + second.body());
+                "Курсор обязан продолжить ленту со следующей порции без повторов: " + second.body()
+                        + " Иначе тест get_CursorSecondPage_ContinuesWithoutDuplicates перестанет ловить эту поломку. При смене get_CursorSecondPage_ContinuesWithoutDuplicates проверь это утверждение.");
     }
 
     @Test
@@ -131,7 +162,8 @@ class BoardPagingRoutesTests {
         assertEquals(
                 Set.of("assigned-a"),
                 ids(MAPPER.readTree(response.body())),
-                "Фильтр group обязан отдавать только плитки запрошенной колонки: " + response.body());
+                "Фильтр group обязан отдавать только плитки запрошенной колонки: " + response.body()
+                        + " Иначе тест get_GroupFilter_ReturnsOnlyRequestedColumn перестанет ловить эту поломку. При смене get_GroupFilter_ReturnsOnlyRequestedColumn проверь это утверждение.");
     }
 
     @Test
@@ -139,8 +171,15 @@ class BoardPagingRoutesTests {
         RestResponse response =
                 router.handle(new RestRequest("GET", "/v1/board", Map.of("filter", "crater"), Map.of(), new byte[0]));
 
-        assertEquals(400, response.status(), "Неизвестный параметр доски обязан давать 400: " + response.body());
-        assertTrue(response.body().contains("filter"), "400 обязан называть параметр: " + response.body());
+        assertEquals(
+                400,
+                response.status(),
+                "Неизвестный параметр доски обязан давать 400: " + response.body()
+                        + " Иначе тест get_UnknownQueryParameter_Returns400WithName перестанет ловить эту поломку. При смене get_UnknownQueryParameter_Returns400WithName проверь это утверждение.");
+        assertTrue(
+                response.body().contains("filter"),
+                "400 обязан называть параметр: " + response.body()
+                        + " Иначе тест get_UnknownQueryParameter_Returns400WithName перестанет ловить эту поломку. При смене get_UnknownQueryParameter_Returns400WithName проверь это утверждение.");
     }
 
     private static BoardTask task(String id, String status, long createdAt, String assignee) {

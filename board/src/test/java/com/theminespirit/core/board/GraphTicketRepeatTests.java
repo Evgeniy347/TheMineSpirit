@@ -27,29 +27,38 @@ class GraphTicketRepeatTests {
         assertEquals(
                 BoardStatus.DONE,
                 board.statusOf("graph:dig_dirt").orElseThrow(),
-                "Живая доска observe23: добыча земли закрыта и больше не выдавалась");
+                "Живая доска observe23: добыча земли закрыта и больше не выдавалась"
+                        + " Иначе тест liveObserve23_FinishedDirtWay_RepeatsAsNewRun перестанет ловить эту поломку. При смене liveObserve23_FinishedDirtWay_RepeatsAsNewRun проверь это утверждение.");
 
         assertTrue(
                 board.reopen("graph:dig_dirt"),
-                "Граф снова просит землю — закрытая добыча открывается заново, иначе источник земли молчит навсегда");
+                "Граф снова просит землю — закрытая добыча открывается заново, иначе источник земли молчит навсегда"
+                        + " При смене liveObserve23_FinishedDirtWay_RepeatsAsNewRun проверь это утверждение.");
 
         assertEquals(
                 BoardOutcome.ACCEPTED,
                 board.submit(ticket("graph:dig_dirt")),
-                "После переоткрытия граф ставит новую добычу земли, а не получает дубликат старой");
+                "После переоткрытия граф ставит новую добычу земли, а не получает дубликат старой"
+                        + " Иначе тест liveObserve23_FinishedDirtWay_RepeatsAsNewRun перестанет ловить эту поломку. При смене liveObserve23_FinishedDirtWay_RepeatsAsNewRun проверь это утверждение.");
         assertEquals(
                 BoardStatus.PENDING,
                 board.statusOf("graph:dig_dirt").orElseThrow(),
-                "Новая добыча земли снова в очереди доски");
+                "Новая добыча земли снова в очереди доски"
+                        + " Иначе тест liveObserve23_FinishedDirtWay_RepeatsAsNewRun перестанет ловить эту поломку. При смене liveObserve23_FinishedDirtWay_RepeatsAsNewRun проверь это утверждение.");
         assertEquals(
                 BoardStatus.DONE,
                 board.statusOf("graph:dig_dirt:2").orElseThrow(),
-                "Вторая часть живой добычи земли тоже закрыта прошлым прогоном");
-        assertTrue(board.reopen("graph:dig_dirt:2"), "Вторая часть добычи открывается вместе с первой");
+                "Вторая часть живой добычи земли тоже закрыта прошлым прогоном"
+                        + " Иначе тест liveObserve23_FinishedDirtWay_RepeatsAsNewRun перестанет ловить эту поломку. При смене liveObserve23_FinishedDirtWay_RepeatsAsNewRun проверь это утверждение.");
+        assertTrue(
+                board.reopen("graph:dig_dirt:2"),
+                "Вторая часть добычи открывается вместе с первой"
+                        + " Иначе тест liveObserve23_FinishedDirtWay_RepeatsAsNewRun перестанет ловить эту поломку. При смене liveObserve23_FinishedDirtWay_RepeatsAsNewRun проверь это утверждение.");
         assertEquals(
                 BoardOutcome.ACCEPTED,
                 board.submit(ticket("graph:dig_dirt:2")),
-                "Иначе половина партии земли не выдаётся: первая часть собирает своё, вторая остаётся закрытой");
+                "Иначе половина партии земли не выдаётся: первая часть собирает своё, вторая остаётся закрытой"
+                        + " При смене liveObserve23_FinishedDirtWay_RepeatsAsNewRun проверь это утверждение.");
     }
 
     @Test
@@ -85,11 +94,13 @@ class GraphTicketRepeatTests {
                 BoardStatus.PENDING,
                 board.statusOf("graph:dig_dirt").orElseThrow(),
                 "Живая работа графа не вытесняется из переполненной доски: иначе добыча земли стареет и "
-                        + "снимается раньше, чем её возьмёт дух");
+                        + "снимается раньше, чем её возьмёт дух"
+                        + " При смене prune_LiveGraphTick_NotEvictedEvenWhenOldest проверь это утверждение.");
         assertEquals(
                 BoardStatus.CANCELLED,
                 board.statusOf("test:gather:0").orElseThrow(),
-                "Переполнение по-прежнему разгружает доску за счёт неживых заданий");
+                "Переполнение по-прежнему разгружает доску за счёт неживых заданий"
+                        + " Иначе тест prune_LiveGraphTick_NotEvictedEvenWhenOldest перестанет ловить эту поломку. При смене prune_LiveGraphTick_NotEvictedEvenWhenOldest проверь это утверждение.");
     }
 
     @Test
@@ -105,13 +116,18 @@ class GraphTicketRepeatTests {
                 "graph:event:backfill:backfill",
                 List.of(),
                 Map.of("dirt", 4));
-        assertEquals(BoardOutcome.ACCEPTED, board.submit(backfill), "Засыпка ставится в очередь");
+        assertEquals(
+                BoardOutcome.ACCEPTED,
+                board.submit(backfill),
+                "Засыпка ставится в очередь"
+                        + " Иначе тест submit_SameDoneTicket_StaysDone перестанет ловить эту поломку. При смене submit_SameDoneTicket_StaysDone проверь это утверждение.");
         board.claim(backfill.id(), SPIRIT, 0);
         board.complete(backfill.id());
 
         assertEquals(
                 BoardOutcome.DUPLICATE,
                 board.submit(backfill),
-                "Повтор без переоткрытия остаётся дубликатом: сданное задание не откатывается в очередь само");
+                "Повтор без переоткрытия остаётся дубликатом: сданное задание не откатывается в очередь само"
+                        + " Иначе тест submit_SameDoneTicket_StaysDone перестанет ловить эту поломку. При смене submit_SameDoneTicket_StaysDone проверь это утверждение.");
     }
 }

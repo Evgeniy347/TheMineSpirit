@@ -17,7 +17,11 @@ class More3RulesTests {
     void trash_KnownJunk_Counted() {
         int trash = More3Rules.trash(GRAPH, Map.of("rotten_flesh", 2, "poisonous_potato", 1, "stick", 5));
 
-        assertEquals(3, trash, "Мусор считается по группе #trash, полезные предметы не в счёт");
+        assertEquals(
+                3,
+                trash,
+                "Мусор считается по группе #trash, полезные предметы не в счёт"
+                        + " Иначе тест trash_KnownJunk_Counted перестанет ловить эту поломку. При смене trash_KnownJunk_Counted проверь это утверждение.");
     }
 
     @Test
@@ -28,7 +32,11 @@ class More3RulesTests {
                 chest(Map.of("rotten_flesh", 3)),
                 chest(Map.of()));
 
-        assertEquals(2, More3Rules.unlabeledChests(chests), "Смешанный и «прочий» сундук требуют назначения");
+        assertEquals(
+                2,
+                More3Rules.unlabeledChests(chests),
+                "Смешанный и «прочий» сундук требуют назначения"
+                        + " Иначе тест unlabeledChests_MixedAndOther_Counted перестанет ловить эту поломку. При смене unlabeledChests_MixedAndOther_Counted проверь это утверждение.");
     }
 
     @Test
@@ -38,9 +46,21 @@ class More3RulesTests {
         GraphFacts.Spirit same = spirit("three", 2, 64, 0, "mine");
         GraphFacts.Spirit far = spirit("four", 20, 64, 0, "build");
 
-        assertEquals(1, More3Rules.workConflicts(List.of(one, two)), "Разные работы рядом мешают друг другу");
-        assertEquals(0, More3Rules.workConflicts(List.of(one, same)), "Одна работа рядом — не конфликт");
-        assertEquals(0, More3Rules.workConflicts(List.of(one, far)), "Далеко — не конфликт");
+        assertEquals(
+                1,
+                More3Rules.workConflicts(List.of(one, two)),
+                "Разные работы рядом мешают друг другу"
+                        + " Иначе тест workConflicts_DifferentActivitiesNearby_Counted перестанет ловить эту поломку. При смене workConflicts_DifferentActivitiesNearby_Counted проверь это утверждение.");
+        assertEquals(
+                0,
+                More3Rules.workConflicts(List.of(one, same)),
+                "Одна работа рядом — не конфликт"
+                        + " Иначе тест workConflicts_DifferentActivitiesNearby_Counted перестанет ловить эту поломку. При смене workConflicts_DifferentActivitiesNearby_Counted проверь это утверждение.");
+        assertEquals(
+                0,
+                More3Rules.workConflicts(List.of(one, far)),
+                "Далеко — не конфликт"
+                        + " Иначе тест workConflicts_DifferentActivitiesNearby_Counted перестанет ловить эту поломку. При смене workConflicts_DifferentActivitiesNearby_Counted проверь это утверждение.");
     }
 
     @Test
@@ -49,23 +69,54 @@ class More3RulesTests {
                 "furnace", station("furnace", false),
                 "mine", station("mine", true));
 
-        assertEquals(0, More3Rules.idleStations(stations, Set.of("furnace")), "Занятая станция не простаивает");
-        assertEquals(1, More3Rules.idleStations(stations, Set.of()), "Свободная станция требует загрузки");
+        assertEquals(
+                0,
+                More3Rules.idleStations(stations, Set.of("furnace")),
+                "Занятая станция не простаивает"
+                        + " Иначе тест idleStations_BuiltNotBusy_Counted перестанет ловить эту поломку. При смене idleStations_BuiltNotBusy_Counted проверь это утверждение.");
+        assertEquals(
+                1,
+                More3Rules.idleStations(stations, Set.of()),
+                "Свободная станция требует загрузки"
+                        + " Иначе тест idleStations_BuiltNotBusy_Counted перестанет ловить эту поломку. При смене idleStations_BuiltNotBusy_Counted проверь это утверждение.");
     }
 
     @Test
     void workSlow_TwiceExpected_Flagged() {
-        assertTrue(More3Rules.workSlow(401, 100), "Работа дольше двух ожиданий — повод уточнить стоимость");
-        assertFalse(More3Rules.workSlow(400, 100), "Двукратное ожидание ещё не перебор");
-        assertFalse(More3Rules.workSlow(1000, 0), "Без ожидания нечего сравнивать");
+        assertTrue(
+                More3Rules.workSlow(401, 100),
+                "Работа дольше двух ожиданий — повод уточнить стоимость"
+                        + " Иначе тест workSlow_TwiceExpected_Flagged перестанет ловить эту поломку. При смене workSlow_TwiceExpected_Flagged проверь это утверждение.");
+        assertFalse(
+                More3Rules.workSlow(400, 100),
+                "Двукратное ожидание ещё не перебор"
+                        + " Иначе тест workSlow_TwiceExpected_Flagged перестанет ловить эту поломку. При смене workSlow_TwiceExpected_Flagged проверь это утверждение.");
+        assertFalse(
+                More3Rules.workSlow(1000, 0),
+                "Без ожидания нечего сравнивать"
+                        + " Иначе тест workSlow_TwiceExpected_Flagged перестанет ловить эту поломку. При смене workSlow_TwiceExpected_Flagged проверь это утверждение.");
     }
 
     @Test
     void stageSlow_OverBudget_Flagged() {
-        assertTrue(More3Rules.stageSlow(24_001, 1), "Этап дольше бюджета — отставание");
-        assertFalse(More3Rules.stageSlow(24_000, 1), "Ровно бюджет — ещё не отставание");
-        assertEquals(48_000, More3Rules.stageBudget(2), "Бюджет растёт с номером этапа");
-        assertThrows(IllegalArgumentException.class, () -> More3Rules.stageBudget(0), "Нулевого этапа нет");
+        assertTrue(
+                More3Rules.stageSlow(24_001, 1),
+                "Этап дольше бюджета — отставание"
+                        + " Иначе тест stageSlow_OverBudget_Flagged перестанет ловить эту поломку. При смене stageSlow_OverBudget_Flagged проверь это утверждение.");
+        assertFalse(
+                More3Rules.stageSlow(24_000, 1),
+                "Ровно бюджет — ещё не отставание"
+                        + " Иначе тест stageSlow_OverBudget_Flagged перестанет ловить эту поломку. При смене stageSlow_OverBudget_Flagged проверь это утверждение.");
+        assertEquals(
+                48_000,
+                More3Rules.stageBudget(2),
+                "Бюджет растёт с номером этапа"
+                        + " Иначе тест stageSlow_OverBudget_Flagged перестанет ловить эту поломку. При смене stageSlow_OverBudget_Flagged проверь это утверждение.");
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> More3Rules.stageBudget(0),
+                "Нулевого этапа нет"
+                        + " Иначе тест stageSlow_OverBudget_Flagged перестанет ловить эту поломку. При смене stageSlow_OverBudget_Flagged проверь это утверждение.");
     }
 
     @Test
@@ -87,7 +138,8 @@ class More3RulesTests {
                         "farmland_trampled",
                         "world_decay",
                         "stage_slow")),
-                "Все входы области дают свои события: " + events);
+                "Все входы области дают свои события: " + events
+                        + " Иначе тест events_AllSignals_AddExpected перестанет ловить эту поломку. При смене events_AllSignals_AddExpected проверь это утверждение.");
     }
 
     @Test
@@ -95,7 +147,11 @@ class More3RulesTests {
         Set<String> events =
                 More3Rules.events(new More3Rules.Signals(0, 0, 0, 0, 0, 0, 0, false, 0, 0, 0, false, false));
 
-        assertEquals(Set.of(), events, "Пустой вход не ставит работ");
+        assertEquals(
+                Set.of(),
+                events,
+                "Пустой вход не ставит работ"
+                        + " Иначе тест events_EmptySignals_AddNothing перестанет ловить эту поломку. При смене events_EmptySignals_AddNothing проверь это утверждение.");
     }
 
     @Test
@@ -103,7 +159,8 @@ class More3RulesTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new More3Rules.Signals(-1, 0, 0, 0, 0, 0, 0, false, 0, 0, 0, false, false),
-                "Отрицательное число опасных мест не имеет смысла");
+                "Отрицательное число опасных мест не имеет смысла"
+                        + " Иначе тест signals_Negative_Rejected перестанет ловить эту поломку. При смене signals_Negative_Rejected проверь это утверждение.");
     }
 
     private static GraphFacts.Chest chest(Map<String, Integer> contents) {

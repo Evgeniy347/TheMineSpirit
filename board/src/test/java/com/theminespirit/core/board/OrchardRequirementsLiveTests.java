@@ -79,17 +79,21 @@ class OrchardRequirementsLiveTests {
                 20,
                 requirements.get("dirt"),
                 "Требования задания обязаны совпадать с участком: дорожек 20, а в смете они землёй "
-                        + "(предмета dirt_path нет). Требования: " + requirements);
+                        + "(предмета dirt_path нет). Требования: " + requirements
+                        + " Иначе тест orchard_Requirements_MatchPlotDirtPathAndTorch перестанет ловить эту поломку. При смене orchard_Requirements_MatchPlotDirtPathAndTorch проверь это утверждение.");
         assertFalse(
                 requirements.containsKey("dirt_path"),
-                "dirt_path не предмет: земля под тропой — обычный dirt. Требования: " + requirements);
+                "dirt_path не предмет: земля под тропой — обычный dirt. Требования: " + requirements
+                        + " Иначе тест orchard_Requirements_MatchPlotDirtPathAndTorch перестанет ловить эту поломку. При смене orchard_Requirements_MatchPlotDirtPathAndTorch проверь это утверждение.");
         assertEquals(
                 4,
                 requirements.get("torch"),
-                "Требования задания обязаны совпадать с участком: факелов 4. Требования: " + requirements);
+                "Требования задания обязаны совпадать с участком: факелов 4. Требования: " + requirements
+                        + " Иначе тест orchard_Requirements_MatchPlotDirtPathAndTorch перестанет ловить эту поломку. При смене orchard_Requirements_MatchPlotDirtPathAndTorch проверь это утверждение.");
         assertTrue(
                 !requirements.containsKey("stick") && !requirements.containsKey("charcoal"),
                 "Рецепт факелов (stick/charcoal) — внутреннее дело плана, а не требования участка. Требования: "
-                        + requirements);
+                        + requirements
+                        + " Иначе тест orchard_Requirements_MatchPlotDirtPathAndTorch перестанет ловить эту поломку. При смене orchard_Requirements_MatchPlotDirtPathAndTorch проверь это утверждение.");
     }
 }

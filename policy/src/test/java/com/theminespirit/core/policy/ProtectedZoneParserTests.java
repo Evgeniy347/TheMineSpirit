@@ -21,7 +21,7 @@ class ProtectedZoneParserTests {
 
         assertTrue(
                 zones.contains("minecraft:overworld", new BlockCoord(10, 60, -5)),
-                "Угол зоны входит в неё, иначе край постройки не защищён. При смене parse проверь оба угла включительно");
+                "Угол зоны входит в неё, иначе край постройки не защищён. При смене parse проверь оба угла включительно и порядок точек в строке");
         assertTrue(
                 zones.contains("minecraft:overworld", new BlockCoord(20, 80, 5)),
                 "Противоположный угол входит в зону, иначе зона усечена по одной из осей и часть постройки "
@@ -87,14 +87,15 @@ class ProtectedZoneParserTests {
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,
                 () -> ProtectedZoneParser.parse(List.of("minecraft:overworld 0 0 0 1 1 1", line)),
-                "Строка «" + name + "» обязана отклоняться при старте: тихий пропуск оставил бы постройки без защиты. "
+                "Строка «" + name
+                        + "» обязана отклоняться при старте: тихий пропуск оставил бы постройки без защиты, иначе защита пропадёт. "
                         + "При смене parse проверь каждую битую строку таблицы brokenLines");
 
         assertTrue(
                 error.getMessage().startsWith("protectedZones, строка №2")
                         && error.getMessage().contains(expectedPart),
                 "Ошибка называет номер строки и проблему «" + expectedPart + "». Фактическое: " + error.getMessage()
-                        + ". При смене формата ошибки проверь, что номер строки считается с единицы, а не с нуля");
+                        + ". При смене формата ошибки проверь, что номер строки считается с единицы, а не с нуля, иначе разбор промахнётся мимо строки");
     }
 
     @Test
@@ -107,11 +108,11 @@ class ProtectedZoneParserTests {
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,
                 () -> ProtectedZoneParser.parse(lines),
-                "65 зон — сверх предела 64, иначе разметка растёт без ограничения и проверка защиты тормозит тик");
+                "65 зон — сверх предела 64, иначе разметка растёт без ограничения и проверка защиты тормозит тик. При смене parse проверь предел 64");
 
         assertTrue(
                 error.getMessage().startsWith("Защищённых зон 65"),
                 "Ошибка называет число зон, иначе непонятно, сколько строк лишние. Фактическое: " + error.getMessage()
-                        + ". При смене предела сверь границу 64 и 65");
+                        + ". При смене предела проверь границу 64 и 65");
     }
 }

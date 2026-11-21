@@ -29,10 +29,17 @@ class WalkwaysTests {
         for (int z = 15; z <= 19; z++) {
             assertTrue(
                     ways.contains(new ColumnMask.Cell(12, z)),
-                    "От середины стороны входа хижины тропа идёт до улицы, клетка z=" + z + ": " + ways);
+                    "От середины стороны входа хижины тропа идёт до улицы, клетка z=" + z + ": " + ways
+                            + " Иначе тест of_HutFacingStreet_LinkFromDoorSideReachesStreet перестанет ловить эту поломку. При смене of_HutFacingStreet_LinkFromDoorSideReachesStreet проверь это утверждение.");
         }
-        assertTrue(ways.contains(new ColumnMask.Cell(20, 20)), "Улица плана — часть сети троп");
-        assertTrue(ways.contains(new ColumnMask.Cell(0, 20)), "Калитка ограды — часть сети троп");
+        assertTrue(
+                ways.contains(new ColumnMask.Cell(20, 20)),
+                "Улица плана — часть сети троп"
+                        + " Иначе тест of_HutFacingStreet_LinkFromDoorSideReachesStreet перестанет ловить эту поломку. При смене of_HutFacingStreet_LinkFromDoorSideReachesStreet проверь это утверждение.");
+        assertTrue(
+                ways.contains(new ColumnMask.Cell(0, 20)),
+                "Калитка ограды — часть сети троп"
+                        + " Иначе тест of_HutFacingStreet_LinkFromDoorSideReachesStreet перестанет ловить эту поломку. При смене of_HutFacingStreet_LinkFromDoorSideReachesStreet проверь это утверждение.");
     }
 
     @Test
@@ -41,7 +48,10 @@ class WalkwaysTests {
 
         List<ColumnMask.Cell> ways = Walkways.of(plan(List.of(workshop), List.of()), 1);
 
-        assertTrue(!ways.contains(new ColumnMask.Cell(27, 24)), "Постройка этапа 2 на этапе 1 подхода не получает");
+        assertTrue(
+                !ways.contains(new ColumnMask.Cell(27, 24)),
+                "Постройка этапа 2 на этапе 1 подхода не получает"
+                        + " Иначе тест of_LaterStageBuilding_NotLinkedYet перестанет ловить эту поломку. При смене of_LaterStageBuilding_NotLinkedYet проверь это утверждение.");
     }
 
     @Test
@@ -58,6 +68,7 @@ class WalkwaysTests {
 
         assertTrue(
                 cut.equals(List.of(new BlockCoord(3, level + 1, 0), new BlockCoord(3, level, 0))),
-                "Над тропой срезаются 2 блока от пола сверху вниз, холм выше и сундук не трогаются: " + cut);
+                "Над тропой срезаются 2 блока от пола сверху вниз, холм выше и сундук не трогаются: " + cut
+                        + " Иначе тест clearance_MoundOnWalkway_CutsTwoAboveFloorKeepsChest перестанет ловить эту поломку. При смене clearance_MoundOnWalkway_CutsTwoAboveFloorKeepsChest проверь это утверждение.");
     }
 }

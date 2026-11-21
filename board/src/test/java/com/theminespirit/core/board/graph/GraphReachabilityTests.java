@@ -20,7 +20,8 @@ class GraphReachabilityTests {
 
         assertTrue(
                 outcome.finished(),
-                "Пустой мир с деревьями обязан дойти до последнего этапа. Застрял: " + outcome.stuck());
+                "Пустой мир с деревьями обязан дойти до последнего этапа. Застрял: " + outcome.stuck()
+                        + " Иначе тест emptyWorldWithTrees_Simulated_ReachesLastStage перестанет ловить эту поломку. При смене emptyWorldWithTrees_Simulated_ReachesLastStage проверь это утверждение.");
     }
 
     @Test
@@ -67,7 +68,11 @@ class GraphReachabilityTests {
                             ? ": нет источника у материалов " + building.materials()
                             : ": цикл зависимостей " + cycle));
         }
-        assertEquals(List.of(), holes, "Обязательная постройка этапа недостижима из пустого мира");
+        assertEquals(
+                List.of(),
+                holes,
+                "Обязательная постройка этапа недостижима из пустого мира"
+                        + " Иначе тест mandatoryBuildings_Loaded_CloseToSourceOrSubstitute перестанет ловить эту поломку. При смене mandatoryBuildings_Loaded_CloseToSourceOrSubstitute проверь это утверждение.");
     }
 
     private static boolean closed(String node, Set<String> items) {

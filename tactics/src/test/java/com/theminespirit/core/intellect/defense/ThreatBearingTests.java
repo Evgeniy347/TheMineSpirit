@@ -34,30 +34,39 @@ class ThreatBearingTests {
         assertEquals(
                 1,
                 threats.size(),
-                "Один враг даёт ровно один ненулевой сектор: иначе сила размажется и посты встанут не туда");
+                "Один враг даёт ровно один ненулевой сектор: иначе сила размажется и посты встанут не туда"
+                        + " При смене sum_SingleEnemy_OneNonZeroSector проверь это утверждение.");
         assertEquals(
                 1,
                 threats.get(0).enemies(),
-                "Сектор с одним врагом считает одного: иначе распределение выделит лишний пост");
+                "Сектор с одним врагом считает одного: иначе распределение выделит лишний пост"
+                        + " При смене sum_SingleEnemy_OneNonZeroSector проверь это утверждение.");
         assertEquals(
                 20 * 3.0,
                 threats.get(0).strength(),
-                "Сила сектора — hp × dps × count профиля: иначе вес направления не отражает опасность");
+                "Сила сектора — hp × dps × count профиля: иначе вес направления не отражает опасность"
+                        + " При смене sum_SingleEnemy_OneNonZeroSector проверь это утверждение.");
     }
 
     @Test
     void sum_TwoEnemiesOneSector_StrengthsAdd() {
         List<DirectionThreat> threats = ThreatBearing.sum(List.of(zombie(10, 0), zombie(12, 1)), CENTER, PROFILES);
 
-        assertEquals(1, threats.size(), "Два врага одного сектора дают один сектор: иначе направление раздвоится");
+        assertEquals(
+                1,
+                threats.size(),
+                "Два врага одного сектора дают один сектор: иначе направление раздвоится"
+                        + " При смене sum_TwoEnemiesOneSector_StrengthsAdd проверь это утверждение.");
         assertEquals(
                 2,
                 threats.get(0).enemies(),
-                "Два врага одного сектора суммируются в числе: иначе вес направления занижен вдвое");
+                "Два врага одного сектора суммируются в числе: иначе вес направления занижен вдвое"
+                        + " При смене sum_TwoEnemiesOneSector_StrengthsAdd проверь это утверждение.");
         assertEquals(
                 2 * 20 * 3.0,
                 threats.get(0).strength(),
-                "Сила сектора суммирует вклад обоих: иначе второй враг не усилит направление");
+                "Сила сектора суммирует вклад обоих: иначе второй враг не усилит направление"
+                        + " При смене sum_TwoEnemiesOneSector_StrengthsAdd проверь это утверждение.");
     }
 
     @Test
@@ -67,10 +76,12 @@ class ThreatBearingTests {
         assertEquals(
                 2,
                 threats.size(),
-                "Враги с противоположных сторон дают два сектора: иначе защитники встанут только на одно");
+                "Враги с противоположных сторон дают два сектора: иначе защитники встанут только на одно"
+                        + " При смене sum_EnemiesOppositeSides_TwoSectors проверь это утверждение.");
         assertTrue(
                 threats.get(0).bearing() < threats.get(1).bearing(),
-                "Сектора упорядочены по азимуту: иначе посты и распределение зависят от порядка входа");
+                "Сектора упорядочены по азимуту: иначе посты и распределение зависят от порядка входа"
+                        + " При смене sum_EnemiesOppositeSides_TwoSectors проверь это утверждение.");
     }
 
     @Test
@@ -83,7 +94,8 @@ class ThreatBearingTests {
         assertEquals(
                 20 * 0.1,
                 threats.get(0).strength(),
-                "Крипер с нулевым dps входит в вес через пол MIN_DPS: иначе взрывное направление весит ноль");
+                "Крипер с нулевым dps входит в вес через пол MIN_DPS: иначе взрывное направление весит ноль"
+                        + " При смене sum_CreeperWithZeroDps_CountsByFloor проверь это утверждение.");
     }
 
     @Test
@@ -96,7 +108,8 @@ class ThreatBearingTests {
         assertEquals(
                 20 * 4.0,
                 threats.get(0).strength(),
-                "Неизвестный тип оценивается профилем default: иначе модовый враг не усилит направление");
+                "Неизвестный тип оценивается профилем default: иначе модовый враг не усилит направление"
+                        + " При смене sum_UnknownType_UsesDefaultProfile проверь это утверждение.");
     }
 
     @Test
@@ -104,7 +117,8 @@ class ThreatBearingTests {
         assertEquals(
                 List.of(),
                 ThreatBearing.sum(List.of(), CENTER, PROFILES),
-                "Без врагов секторов нет: иначе посты встанут по нулевым угрозам");
+                "Без врагов секторов нет: иначе посты встанут по нулевым угрозам"
+                        + " При смене sum_EmptyList_ReturnsEmpty проверь это утверждение.");
     }
 
     @Test
@@ -112,7 +126,8 @@ class ThreatBearingTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> ThreatBearing.sum(List.of(zombie(10, 0)), null, PROFILES),
-                "Сектора без центра обязаны падать: иначе азимуты посчитаются из ничего");
+                "Сектора без центра обязаны падать: иначе азимуты посчитаются из ничего"
+                        + " При смене sum_NullCenter_Throws проверь это утверждение.");
     }
 
     @Test
@@ -120,6 +135,7 @@ class ThreatBearingTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new DirectionThreat(1.0, -1.0, 1),
-                "Отрицательная сила сектора обязана падать: иначе вес направления исказит распределение");
+                "Отрицательная сила сектора обязана падать: иначе вес направления исказит распределение"
+                        + " При смене threat_NegativeStrength_Throws проверь это утверждение.");
     }
 }

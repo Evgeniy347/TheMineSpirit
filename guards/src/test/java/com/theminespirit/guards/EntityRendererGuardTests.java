@@ -30,7 +30,8 @@ class EntityRendererGuardTests {
                         + "EntityRenderDispatcher.shouldRender берёт рендерер по типу и падает NPE, как только "
                         + "такая сущность попадает в дальность прорисовки — клиент игрока вылетает "
                         + "(18.10: /spirit demo house заспавнил духа рядом с игроком). Зарегистрируйте рендерер "
-                        + "в SpiritClientRenderers.registerRenderers. Без рендерера");
+                        + "в SpiritClientRenderers.registerRenderers. Без рендерера"
+                        + " Иначе тест modEntityType_WithoutClientRenderer_IsReported перестанет ловить эту поломку. При смене modEntityType_WithoutClientRenderer_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -48,7 +49,8 @@ class EntityRendererGuardTests {
                 offenders,
                 "Регистрация EntityRenderer живёт только в подписчике @EventBusSubscriber(value = Dist.CLIENT): "
                         + "классы net.minecraft.client на выделенном сервере отсутствуют, и сервер упадёт при загрузке "
-                        + "такого класса. Перенесите регистрацию в SpiritClientRenderers. Нарушители");
+                        + "такого класса. Перенесите регистрацию в SpiritClientRenderers. Нарушители"
+                        + " Иначе тест rendererRegistration_OutsideClientOnlySubscriber_IsReported перестанет ловить эту поломку. При смене rendererRegistration_OutsideClientOnlySubscriber_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -59,7 +61,8 @@ class EntityRendererGuardTests {
         assertEquals(
                 Set.of("SPIRIT"),
                 entityTypes(List.of(source)),
-                "Сторож ослеп: поле DeferredHolder<EntityType<?>, EntityType<…>> обязано находиться как тип сущности");
+                "Сторож ослеп: поле DeferredHolder<EntityType<?>, EntityType<…>> обязано находиться как тип сущности"
+                        + " Иначе тест entityTypes_DeferredHolderField_IsFound перестанет ловить эту поломку. При смене entityTypes_DeferredHolderField_IsFound проверь это утверждение.");
     }
 
     @Test
@@ -69,7 +72,8 @@ class EntityRendererGuardTests {
         assertEquals(
                 Set.of("SPIRIT"),
                 renderers(List.of(source)),
-                "Сторож ослеп: вызов registerEntityRenderer(ModEntities.X.get(), …) обязан находиться как рендерер X");
+                "Сторож ослеп: вызов registerEntityRenderer(ModEntities.X.get(), …) обязан находиться как рендерер X"
+                        + " Иначе тест renderers_RegisterEntityRendererCall_IsFound перестанет ловить эту поломку. При смене renderers_RegisterEntityRendererCall_IsFound проверь это утверждение.");
     }
 
     @Test
@@ -77,7 +81,8 @@ class EntityRendererGuardTests {
         assertEquals(
                 List.of("GOLEM"),
                 missingRenderers(Set.of("SPIRIT", "GOLEM"), Set.of("SPIRIT")),
-                "Сторож ослеп: тип сущности без зарегистрированного рендерера обязан попасть в отчёт");
+                "Сторож ослеп: тип сущности без зарегистрированного рендерера обязан попасть в отчёт"
+                        + " Иначе тест missingRenderers_TypeWithoutRenderer_IsReported перестанет ловить эту поломку. При смене missingRenderers_TypeWithoutRenderer_IsReported проверь это утверждение.");
     }
 
     private static Set<String> entityTypes(Iterable<String> sources) {

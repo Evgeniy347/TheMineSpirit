@@ -34,7 +34,8 @@ class BuildRepositoriesGuardTests {
                         + "dependencyResolutionManagement из settings (Gradle 9), и кэш, прогретый с одним набором "
                         + "репозиториев, перестаёт годиться для другого — offline-сборка сервера падает на "
                         + "«No cached version … available for offline mode». Объявляй репозитории только в "
-                        + "settings.gradle и build-logic/settings.gradle. Нарушители");
+                        + "settings.gradle и build-logic/settings.gradle. Нарушители"
+                        + " Иначе тест buildScripts_DeclareDependencyRepositories_OnlyInSettings перестанет ловить эту поломку. При смене buildScripts_DeclareDependencyRepositories_OnlyInSettings проверь это утверждение.");
     }
 
     @Test
@@ -46,39 +47,48 @@ class BuildRepositoriesGuardTests {
             assertTrue(
                     text.contains("dependencyResolutionManagement"),
                     where + " без dependencyResolutionManagement: репозитории снова расползутся по build-файлам, "
-                            + "и чистая offline-сборка не найдёт зависимости");
+                            + "и чистая offline-сборка не найдёт зависимости"
+                            + " При смене settings_ManageRepositories_WithExplicitMode проверь это утверждение.");
             assertTrue(
                     text.contains("RepositoriesMode."),
                     where + " без явного repositoriesMode: default PREFER_PROJECT молча игнорирует репозитории "
-                            + "из settings, как только project объявит свой — кэш и сборка расходятся");
+                            + "из settings, как только project объявит свой — кэш и сборка расходятся"
+                            + " Иначе тест settings_ManageRepositories_WithExplicitMode перестанет ловить эту поломку. При смене settings_ManageRepositories_WithExplicitMode проверь это утверждение.");
             assertTrue(
                     text.contains("mavenCentral()"),
                     where + " → dependencyResolutionManagement без mavenCentral(): JUnit, Error Prone, PMD, SpotBugs "
-                            + "не скачаются на чистом кэше");
+                            + "не скачаются на чистом кэше"
+                            + " Иначе тест settings_ManageRepositories_WithExplicitMode перестанет ловить эту поломку. При смене settings_ManageRepositories_WithExplicitMode проверь это утверждение.");
         }
         assertTrue(
                 root.contains("gradlePluginPortal()"),
-                "settings.gradle → pluginManagement без gradlePluginPortal(): плагины сборки не разрешатся");
+                "settings.gradle → pluginManagement без gradlePluginPortal(): плагины сборки не разрешатся"
+                        + " Иначе тест settings_ManageRepositories_WithExplicitMode перестанет ловить эту поломку. При смене settings_ManageRepositories_WithExplicitMode проверь это утверждение.");
         assertTrue(
                 root.contains("net.neoforged.moddev.repositories"),
                 "settings.gradle без net.neoforged.moddev.repositories: moddev снова добавит репозитории на "
-                        + "project-уровень, и Gradle предупредит, что настройки settings игнорируются");
+                        + "project-уровень, и Gradle предупредит, что настройки settings игнорируются"
+                        + " Иначе тест settings_ManageRepositories_WithExplicitMode перестанет ловить эту поломку. При смене settings_ManageRepositories_WithExplicitMode проверь это утверждение.");
         int managed = root.indexOf("dependencyResolutionManagement");
         assertFalse(
                 managed < 0 || root.substring(managed).contains("https://maven.neoforged.net/releases"),
                 "settings.gradle дублирует репозиторий NeoForged: его добавляет net.neoforged.moddev.repositories, "
-                        + "а вторая копия ломает порядок Mojang Meta → NeoForged Releases");
+                        + "а вторая копия ломает порядок Mojang Meta → NeoForged Releases"
+                        + " При смене settings_ManageRepositories_WithExplicitMode проверь это утверждение.");
         assertTrue(
                 root.contains("https://maven.blamejared.com"),
-                "settings.gradle без maven.blamejared.com: compileOnly JEI (mezz.jei) не разрешится");
+                "settings.gradle без maven.blamejared.com: compileOnly JEI (mezz.jei) не разрешится"
+                        + " Иначе тест settings_ManageRepositories_WithExplicitMode перестанет ловить эту поломку. При смене settings_ManageRepositories_WithExplicitMode проверь это утверждение.");
         assertTrue(
                 buildLogic.contains("https://maven.neoforged.net/releases"),
                 "build-logic/settings.gradle без maven.neoforged.net: moddev-gradle не найдётся, если плагин-портал "
-                        + "не отдал его (на сервере это и валило сборку)");
+                        + "не отдал его (на сервере это и валило сборку)"
+                        + " При смене settings_ManageRepositories_WithExplicitMode проверь это утверждение.");
         assertTrue(
                 buildLogic.contains("gradlePluginPortal()"),
                 "build-logic/settings.gradle без gradlePluginPortal(): spotless/moddev/errorprone/spotbugs "
-                        + "не разрешатся на чистом кэше");
+                        + "не разрешатся на чистом кэше"
+                        + " Иначе тест settings_ManageRepositories_WithExplicitMode перестанет ловить эту поломку. При смене settings_ManageRepositories_WithExplicitMode проверь это утверждение.");
     }
 
     @Test
@@ -100,10 +110,15 @@ class BuildRepositoriesGuardTests {
                         .count()
                 + 1;
 
-        assertEquals(1, offenders.size(), "Сторож ослеп: project-уровень repositories не найден: " + offenders);
+        assertEquals(
+                1,
+                offenders.size(),
+                "Сторож ослеп: project-уровень repositories не найден: " + offenders
+                        + " Иначе тест repositoriesParser_ProjectRepositories_AreReported перестанет ловить эту поломку. При смене repositoriesParser_ProjectRepositories_AreReported проверь это утверждение.");
         assertTrue(
                 offenders.get(0).contains(":" + expectedLine + " "),
-                "Сторож должен называть строку нарушения (" + expectedLine + "), получено: " + offenders);
+                "Сторож должен называть строку нарушения (" + expectedLine + "), получено: " + offenders
+                        + " Иначе тест repositoriesParser_ProjectRepositories_AreReported перестанет ловить эту поломку. При смене repositoriesParser_ProjectRepositories_AreReported проверь это утверждение.");
     }
 
     @Test
@@ -138,7 +153,8 @@ class BuildRepositoriesGuardTests {
                 List.of(),
                 projectRepositories(build),
                 "Сторож ложно срабатывает: repositories внутри publishing — цель публикации, а не источник "
-                        + "зависимостей; шаблон в комментарии и строке — не объявление");
+                        + "зависимостей; шаблон в комментарии и строке — не объявление"
+                        + " Иначе тест repositoriesParser_PublishingRepositoriesAndComments_AreAllowed перестанет ловить эту поломку. При смене repositoriesParser_PublishingRepositoriesAndComments_AreAllowed проверь это утверждение.");
     }
 
     private static List<String> offendersInTree() {

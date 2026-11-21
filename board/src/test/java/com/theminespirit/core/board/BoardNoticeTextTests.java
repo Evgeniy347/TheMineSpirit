@@ -57,8 +57,12 @@ class BoardNoticeTextTests {
         assertTrue(
                 line.contains("waitReason=заблокировано после " + BoardTuning.ticketFailLimit() + " провалов"),
                 "Строка BLOCKED обязана нести ту же причину, что REST: иначе grep по waitReason не находит "
-                        + "заблокированное задание (пункт E отчёта); строка: " + line);
-        assertFalse(line.contains("waitReason=—"), "Поле waitReason у BLOCKED больше не пустое: строка: " + line);
+                        + "заблокированное задание (пункт E отчёта); строка: " + line
+                        + " При смене blockedLine_BlockedEntry_WaitReasonSameTextAsRest проверь это утверждение.");
+        assertFalse(
+                line.contains("waitReason=—"),
+                "Поле waitReason у BLOCKED больше не пустое: строка: " + line
+                        + " Иначе тест blockedLine_BlockedEntry_WaitReasonSameTextAsRest перестанет ловить эту поломку. При смене blockedLine_BlockedEntry_WaitReasonSameTextAsRest проверь это утверждение.");
     }
 
     @Test
@@ -72,11 +76,13 @@ class BoardNoticeTextTests {
         assertFalse(
                 line.contains("история="),
                 "История провалов уже названа в причине (history=); второй раз в строке BLOCKED она раздувает "
-                        + "инцидент до килобайтов: " + line);
+                        + "инцидент до килобайтов: " + line
+                        + " Иначе тест blockedLine_HistoryInReason_IsNotRepeatedAsSecondField перестанет ловить эту поломку. При смене blockedLine_HistoryInReason_IsNotRepeatedAsSecondField проверь это утверждение.");
         assertEquals(
                 1,
                 line.split("history=", -1).length - 1,
-                "История провалов печатается ровно один раз: дубль мешает читать лог: " + line);
+                "История провалов печатается ровно один раз: дубль мешает читать лог: " + line
+                        + " Иначе тест blockedLine_HistoryInReason_IsNotRepeatedAsSecondField перестанет ловить эту поломку. При смене blockedLine_HistoryInReason_IsNotRepeatedAsSecondField проверь это утверждение.");
     }
 
     @Test
@@ -90,10 +96,14 @@ class BoardNoticeTextTests {
 
         String line = BoardNoticeText.line(board, entry, new StockView(Map.of("dirt", 9)), now[0]);
 
-        assertTrue(line.contains("id " + ID) || line.contains("задание=" + ID), "Строка называет задание: " + line);
+        assertTrue(
+                line.contains("id " + ID) || line.contains("задание=" + ID),
+                "Строка называет задание: " + line
+                        + " Иначе тест unblockedLine_UnblockedEntry_NamesOldReason перестанет ловить эту поломку. При смене unblockedLine_UnblockedEntry_NamesOldReason проверь это утверждение.");
         assertTrue(
                 line.contains("старая причина:"),
                 "При переиздании видно, из-за чего задание стояло: иначе новый createdAt выглядит как новое "
-                        + "задание без истории; строка: " + line);
+                        + "задание без истории; строка: " + line
+                        + " При смене unblockedLine_UnblockedEntry_NamesOldReason проверь это утверждение.");
     }
 }

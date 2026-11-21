@@ -26,11 +26,13 @@ class TargetRankerTests {
         assertEquals(
                 "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
                 ranked.get(0).enemy().id(),
-                "Лучник бьёт крипера первым даже рядом с зомби: взрыв у построек опаснее ближнего боя");
+                "Лучник бьёт крипера первым даже рядом с зомби: взрыв у построек опаснее ближнего боя"
+                        + " Иначе тест rank_Archer_PicksCreeperOverNearZombie перестанет ловить эту поломку. При смене rank_Archer_PicksCreeperOverNearZombie проверь это утверждение.");
         assertEquals(
                 TargetClass.CREEPER,
                 ranked.get(0).cls(),
-                "Первая цель лучника обязана иметь класс CREEPER: иначе приоритет посчитан не по таблице");
+                "Первая цель лучника обязана иметь класс CREEPER: иначе приоритет посчитан не по таблице"
+                        + " При смене rank_Archer_PicksCreeperOverNearZombie проверь это утверждение.");
     }
 
     @Test
@@ -44,11 +46,13 @@ class TargetRankerTests {
         assertEquals(
                 "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
                 ranked.get(0).enemy().id(),
-                "Мечник при живом лучнике не идёт на крипера: взрыв убьёт мечника раньше, чем подойдёт лучник");
+                "Мечник при живом лучнике не идёт на крипера: взрыв убьёт мечника раньше, чем подойдёт лучник"
+                        + " Иначе тест rank_Melee_PicksZombieOverCreeper перестанет ловить эту поломку. При смене rank_Melee_PicksZombieOverCreeper проверь это утверждение.");
         assertEquals(
                 2,
                 ranked.get(1).rank(),
-                "Крипер вне порядка мечника уходит в хвост: иначе мечник выберет взрыв вместо ближнего врага");
+                "Крипер вне порядка мечника уходит в хвост: иначе мечник выберет взрыв вместо ближнего врага"
+                        + " При смене rank_Melee_PicksZombieOverCreeper проверь это утверждение.");
     }
 
     @Test
@@ -62,7 +66,8 @@ class TargetRankerTests {
         assertEquals(
                 "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
                 ranked.get(0).enemy().id(),
-                "Мечник без лучника сближается со скелетом первым: иначе обстрел останется без ответа");
+                "Мечник без лучника сближается со скелетом первым: иначе обстрел останется без ответа"
+                        + " При смене rank_MeleeWithoutArcher_PicksSkeletonFirst проверь это утверждение.");
     }
 
     @Test
@@ -90,11 +95,13 @@ class TargetRankerTests {
         assertEquals(
                 ranked.get(0).distance(),
                 ranked.get(1).distance(),
-                "Подготовка ничьей: обе цели обязаны быть на равной дистанции от начала координат");
+                "Подготовка ничьей: обе цели обязаны быть на равной дистанции от начала координат"
+                        + " Иначе тест rank_DistanceTie_BreaksById перестанет ловить эту поломку. При смене rank_DistanceTie_BreaksById проверь это утверждение.");
         assertEquals(
                 "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
                 ranked.get(0).enemy().id(),
-                "Ничья по дистанции решается меньшим id: иначе порядок целей мигает между пересборками");
+                "Ничья по дистанции решается меньшим id: иначе порядок целей мигает между пересборками"
+                        + " При смене rank_DistanceTie_BreaksById проверь это утверждение.");
     }
 
     @Test
@@ -108,11 +115,13 @@ class TargetRankerTests {
         assertEquals(
                 "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
                 ranked.get(0).enemy().id(),
-                "Летающий вне приоритета уходит в хвост: иначе непроверенный класс вытеснит ближнюю цель");
+                "Летающий вне приоритета уходит в хвост: иначе непроверенный класс вытеснит ближнюю цель"
+                        + " При смене rank_ClassOutsidePriority_GoesLast проверь это утверждение.");
         assertEquals(
                 4,
                 ranked.get(1).rank(),
-                "Ранг внеприоритетного класса равен длине порядка: иначе хвост смешается с известными классами");
+                "Ранг внеприоритетного класса равен длине порядка: иначе хвост смешается с известными классами"
+                        + " При смене rank_ClassOutsidePriority_GoesLast проверь это утверждение.");
     }
 
     @Test
@@ -125,7 +134,8 @@ class TargetRankerTests {
                 TargetClass.MELEE,
                 ranked.get(0).cls(),
                 "Ранг считается по явной карте и fallback без профилей: карта накрывает все типы enemies.json "
-                        + "(сторож п. 3), модовый враг идёт классом fallback");
+                        + "(сторож п. 3), модовый враг идёт классом fallback"
+                        + " Иначе тест rank_UnknownType_RankedAsFallbackClass перестанет ловить эту поломку. При смене rank_UnknownType_RankedAsFallbackClass проверь это утверждение.");
     }
 
     @Test
@@ -133,7 +143,8 @@ class TargetRankerTests {
         assertEquals(
                 List.of(),
                 TargetRanker.rank(DefenderRole.MELEE, true, List.of(), DefenseProfileTests.PROFILE),
-                "Без врагов порядок пуст: иначе планировщик выдаст приказ на несуществующую цель");
+                "Без врагов порядок пуст: иначе планировщик выдаст приказ на несуществующую цель"
+                        + " При смене rank_EmptyList_ReturnsEmpty проверь это утверждение.");
     }
 
     @Test
@@ -141,7 +152,8 @@ class TargetRankerTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> TargetRanker.rank(DefenderRole.MELEE, true, null, DefenseProfileTests.PROFILE),
-                "Порядок без списка врагов обязан падать: иначе молчаливый приказ уйдёт в никуда");
+                "Порядок без списка врагов обязан падать: иначе молчаливый приказ уйдёт в никуда"
+                        + " При смене rank_NullEnemies_Throws проверь это утверждение.");
     }
 
     @Test
@@ -156,7 +168,8 @@ class TargetRankerTests {
         assertEquals(
                 "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
                 best.orElseThrow().enemy().id(),
-                "Лучшая цель лучника — крипер: иначе первая атака уйдёт не в главную угрозу");
+                "Лучшая цель лучника — крипер: иначе первая атака уйдёт не в главную угрозу"
+                        + " При смене best_MixedThreats_ReturnsFirstRanked проверь это утверждение.");
     }
 
     @Test
@@ -164,7 +177,8 @@ class TargetRankerTests {
         assertEquals(
                 Optional.empty(),
                 TargetRanker.best(DefenderRole.MELEE, true, List.of(), DefenseProfileTests.PROFILE),
-                "Без врагов лучшей цели нет: иначе планировщик выдаст приказ на несуществующую цель");
+                "Без врагов лучшей цели нет: иначе планировщик выдаст приказ на несуществующую цель"
+                        + " При смене best_EmptyList_ReturnsEmpty проверь это утверждение.");
     }
 
     @Test
@@ -178,9 +192,11 @@ class TargetRankerTests {
                 new Point(3, 64, 0).distanceTo(new Point(0, 0, 0)),
                 ranked.get(0).distance(),
                 "Дистанция — от начала координат: общий порядок отряда детерминирован, близость к духу учитывают "
-                        + "посты распределителя и передача цели");
+                        + "посты распределителя и передача цели"
+                        + " Иначе тест rank_Distance_MeasuredFromOriginAsDeterministicTiebreak перестанет ловить эту поломку. При смене rank_Distance_MeasuredFromOriginAsDeterministicTiebreak проверь это утверждение.");
         assertTrue(
                 ranked.get(0).distance() > 0,
-                "Дистанция положительна для вынесенной цели: иначе тай-брейк не различит дальних врагов");
+                "Дистанция положительна для вынесенной цели: иначе тай-брейк не различит дальних врагов"
+                        + " При смене rank_Distance_MeasuredFromOriginAsDeterministicTiebreak проверь это утверждение.");
     }
 }

@@ -5,21 +5,13 @@ core/board/BoardTests.java	967
 core/board/BoardTicketTests.java	402
 core/board/TicketPlansTests.java	1232
 core/board/graph/GraphPlannerTests.java	919
-core/building/BuildPlanner.java	838
-core/building/FillScenarioTests.java	323
-core/building/PresetLibraryTests.java	431
 core/engine/TaskRunnerRestoreTests.java	333
 core/engine/TaskRunnerTests.java	743
-core/inventory/BaseKitTests.java	321
-core/inventory/OverflowPolicyTests.java	464
-core/inventory/ValueTableTests.java	339
 core/observation/WorldObservationTests.java	463
 core/plan/PlanValidatorRulesTests.java	359
 core/planner/AcquireScriptTests.java	1000
 core/planner/FallbackPlannerTests.java	326
 core/planner/ResourceResolverTests.java	569
-core/rest/BoardRoutesTests.java	364
-core/rest/TaskRoutesTests.java	883
 core/script/ScriptCatalogTests.java	1114
 core/tactics/FactorTests.java	422
 core/tactics/TacticsConfigTests.java	370
@@ -33,3 +25,4 @@ guards/GameTestTimeoutGuardTests.java	484
 guards/ProductionCommentGuardTests.java	575
 guards/SucceedWhenReturnGuardTests.java	343
 neoforge/SpiritEntity.java	752
+core/building/BuildPlanner.java	838

@@ -30,7 +30,8 @@ class IntentActionExecutorTests {
                 row.expected(),
                 result,
                 "Исполнение решения «" + row.name() + "»: бой бьёт или стреляет по ближайшей видимой цели, отход "
-                        + "двигается или строит по способу, игнор и отход без способа — простой");
+                        + "двигается или строит по способу, игнор и отход без способа — простой"
+                        + " Иначе тест execute_Outcome_ProducesExpectedIntent перестанет ловить эту поломку. При смене execute_Outcome_ProducesExpectedIntent проверь это утверждение.");
     }
 
     static Stream<Row> rows() {
@@ -121,9 +122,13 @@ class IntentActionExecutorTests {
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,
                 () -> EXECUTOR.execute(null, AdapterFixtures.context(List.of())),
-                "Решение без исхода — ошибка вызова, а не простой: тихий пропуск скрыл бы неверный код исполнения");
+                "Решение без исхода — ошибка вызова, а не простой: тихий пропуск скрыл бы неверный код исполнения"
+                        + " Иначе тест execute_NullOutcome_IsRejected перестанет ловить эту поломку. При смене execute_NullOutcome_IsRejected проверь это утверждение.");
 
-        assertTrue(error.getMessage().contains("outcome"), "Сообщение называет исход; получили: " + error.getMessage());
+        assertTrue(
+                error.getMessage().contains("outcome"),
+                "Сообщение называет исход; получили: " + error.getMessage()
+                        + " Иначе тест execute_NullOutcome_IsRejected перестанет ловить эту поломку. При смене execute_NullOutcome_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -133,10 +138,13 @@ class IntentActionExecutorTests {
                 () -> EXECUTOR.execute(
                         AdapterFixtures.outcome(TacticalOption.IGNORE, TacticalAction.CONTINUE, RetreatMethod.NONE),
                         null),
-                "Решение без контекста не знает цели — ошибка вызова, а не простой");
+                "Решение без контекста не знает цели — ошибка вызова, а не простой"
+                        + " Иначе тест execute_NullContext_IsRejected перестанет ловить эту поломку. При смене execute_NullContext_IsRejected проверь это утверждение.");
 
         assertTrue(
-                error.getMessage().contains("context"), "Сообщение называет контекст; получили: " + error.getMessage());
+                error.getMessage().contains("context"),
+                "Сообщение называет контекст; получили: " + error.getMessage()
+                        + " Иначе тест execute_NullContext_IsRejected перестанет ловить эту поломку. При смене execute_NullContext_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -144,11 +152,13 @@ class IntentActionExecutorTests {
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,
                 () -> new ExecutionResult.Moving(RetreatMethod.NONE),
-                "Движение без способа отхода бессмысленно: вариант обязан отказаться, а не тащить NONE в мир");
+                "Движение без способа отхода бессмысленно: вариант обязан отказаться, а не тащить NONE в мир"
+                        + " Иначе тест moving_NoneMethod_IsRejected перестанет ловить эту поломку. При смене moving_NoneMethod_IsRejected проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("NONE"),
-                "Сообщение называет запрещённый способ; получили: " + error.getMessage());
+                "Сообщение называет запрещённый способ; получили: " + error.getMessage()
+                        + " Иначе тест moving_NoneMethod_IsRejected перестанет ловить эту поломку. При смене moving_NoneMethod_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -156,9 +166,13 @@ class IntentActionExecutorTests {
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,
                 () -> new ExecutionResult.Attacking(null),
-                "Атака без врага бессмысленна: вариант обязан отказаться, а не тащить null в мир");
+                "Атака без врага бессмысленна: вариант обязан отказаться, а не тащить null в мир"
+                        + " Иначе тест attacking_NullEnemy_IsRejected перестанет ловить эту поломку. При смене attacking_NullEnemy_IsRejected проверь это утверждение.");
 
-        assertTrue(error.getMessage().contains("Цель"), "Сообщение называет цель; получили: " + error.getMessage());
+        assertTrue(
+                error.getMessage().contains("Цель"),
+                "Сообщение называет цель; получили: " + error.getMessage()
+                        + " Иначе тест attacking_NullEnemy_IsRejected перестанет ловить эту поломку. При смене attacking_NullEnemy_IsRejected проверь это утверждение.");
     }
 
     private record Row(String name, TacticalOutcome outcome, SituationContext context, ExecutionResult expected) {

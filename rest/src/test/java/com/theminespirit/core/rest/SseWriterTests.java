@@ -75,13 +75,26 @@ class SseWriterTests {
 
         SseWriter.Outcome outcome = SseWriter.pump(stream, out);
 
-        assertEquals(SseWriter.Outcome.FINISHED, outcome, "Поток, отдавший null, обязан завершаться штатно");
+        assertEquals(
+                SseWriter.Outcome.FINISHED,
+                outcome,
+                "Поток, отдавший null, обязан завершаться штатно"
+                        + " Иначе тест pump_FramesUntilNull_WritesEachFlushedInUtf8AndClosesOnce перестанет ловить эту поломку. При смене pump_FramesUntilNull_WritesEachFlushedInUtf8AndClosesOnce проверь это утверждение.");
         assertEquals(
                 "id: 1\nevent: state\ndata: {\"s\":\"запущена\"}\n\n: keepalive\n\n",
                 out.bytes.toString(StandardCharsets.UTF_8),
-                "Кадры обязаны уходить по порядку в UTF-8");
-        assertEquals(2, out.flushes, "Каждый кадр обязан сбрасываться сразу, иначе клиент увидит событие с задержкой");
-        assertEquals(1, stream.closes, "Поток обязан закрыться ровно один раз: закрытие освобождает слот SSE");
+                "Кадры обязаны уходить по порядку в UTF-8"
+                        + " Иначе тест pump_FramesUntilNull_WritesEachFlushedInUtf8AndClosesOnce перестанет ловить эту поломку. При смене pump_FramesUntilNull_WritesEachFlushedInUtf8AndClosesOnce проверь это утверждение.");
+        assertEquals(
+                2,
+                out.flushes,
+                "Каждый кадр обязан сбрасываться сразу, иначе клиент увидит событие с задержкой"
+                        + " При смене pump_FramesUntilNull_WritesEachFlushedInUtf8AndClosesOnce проверь это утверждение.");
+        assertEquals(
+                1,
+                stream.closes,
+                "Поток обязан закрыться ровно один раз: закрытие освобождает слот SSE"
+                        + " Иначе тест pump_FramesUntilNull_WritesEachFlushedInUtf8AndClosesOnce перестанет ловить эту поломку. При смене pump_FramesUntilNull_WritesEachFlushedInUtf8AndClosesOnce проверь это утверждение.");
     }
 
     @Test
@@ -91,12 +104,17 @@ class SseWriterTests {
 
         SseWriter.Outcome outcome = SseWriter.pump(stream, out);
 
-        assertEquals(SseWriter.Outcome.CLIENT_GONE, outcome, "Обрыв записи не ошибка моста: клиент ушёл");
+        assertEquals(
+                SseWriter.Outcome.CLIENT_GONE,
+                outcome,
+                "Обрыв записи не ошибка моста: клиент ушёл"
+                        + " Иначе тест pump_ClientDisconnectsOnWrite_ReturnsClientGoneAndStillClosesStream перестанет ловить эту поломку. При смене pump_ClientDisconnectsOnWrite_ReturnsClientGoneAndStillClosesStream проверь это утверждение.");
         assertEquals(
                 1,
                 stream.closes,
                 "При IOException поток обязан закрыться и освободить слот: иначе 4 оборванных клиента навсегда "
-                        + "заблокируют SSE");
+                        + "заблокируют SSE"
+                        + " При смене pump_ClientDisconnectsOnWrite_ReturnsClientGoneAndStillClosesStream проверь это утверждение.");
     }
 
     @Test
@@ -106,8 +124,19 @@ class SseWriterTests {
 
         SseWriter.Outcome outcome = SseWriter.pump(stream, out);
 
-        assertEquals(SseWriter.Outcome.INTERRUPTED, outcome, "Остановка сервера прерывает ожидание кадра");
-        assertTrue(Thread.interrupted(), "Флаг прерывания обязан сохраниться для пула потоков моста");
-        assertEquals(1, stream.closes, "Прерванный поток обязан освободить слот");
+        assertEquals(
+                SseWriter.Outcome.INTERRUPTED,
+                outcome,
+                "Остановка сервера прерывает ожидание кадра"
+                        + " Иначе тест pump_InterruptedWhileWaiting_ReturnsInterruptedKeepsFlagAndClosesStream перестанет ловить эту поломку. При смене pump_InterruptedWhileWaiting_ReturnsInterruptedKeepsFlagAndClosesStream проверь это утверждение.");
+        assertTrue(
+                Thread.interrupted(),
+                "Флаг прерывания обязан сохраниться для пула потоков моста"
+                        + " Иначе тест pump_InterruptedWhileWaiting_ReturnsInterruptedKeepsFlagAndClosesStream перестанет ловить эту поломку. При смене pump_InterruptedWhileWaiting_ReturnsInterruptedKeepsFlagAndClosesStream проверь это утверждение.");
+        assertEquals(
+                1,
+                stream.closes,
+                "Прерванный поток обязан освободить слот"
+                        + " Иначе тест pump_InterruptedWhileWaiting_ReturnsInterruptedKeepsFlagAndClosesStream перестанет ловить эту поломку. При смене pump_InterruptedWhileWaiting_ReturnsInterruptedKeepsFlagAndClosesStream проверь это утверждение.");
     }
 }

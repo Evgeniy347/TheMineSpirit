@@ -41,7 +41,8 @@ class SmallMechanicTableTests {
         assertFalse(
                 holder.current().enabled(),
                 "После /reload с enabled:false навык уклонения обязан выключиться: иначе defcases не могут "
-                        + "сравнить поведение духа с навыком и без него");
+                        + "сравнить поведение духа с навыком и без него"
+                        + " При смене dodge_ReloadChangedJson_HolderDisablesSkill проверь это утверждение.");
     }
 
     @Test
@@ -50,7 +51,8 @@ class SmallMechanicTableTests {
                 DataTables.INSTANCE.registry().holder("dodge").orElseThrow().current(),
                 ProjectileDodge.current(),
                 "Навык обязан читать версию из держателя DataTables, а не classpath: иначе /reload не выключит "
-                        + "уклонение без перезапуска");
+                        + "уклонение без перезапуска"
+                        + " При смене dodge_Current_ReadsLiveHolder проверь это утверждение.");
     }
 
     @Test
@@ -67,7 +69,8 @@ class SmallMechanicTableTests {
                 48,
                 holder.current().surfaceSpread(),
                 "После /reload с новым surfaceSpread держатель обязан нести новое число: иначе предел проверки "
-                        + "поверхности останется прежним до перезапуска, хотя walkout.json числится горячим");
+                        + "поверхности останется прежним до перезапуска, хотя walkout.json числится горячим"
+                        + " При смене walkout_ReloadChangedJson_HolderReturnsNewSpread проверь это утверждение.");
     }
 
     @Test
@@ -76,7 +79,8 @@ class SmallMechanicTableTests {
                 DataTables.INSTANCE.registry().holder("walkout").orElseThrow().current(),
                 WalkOutRules.current(),
                 "Выход из ямы обязан читать walkout.json из держателя DataTables, а не classpath: иначе "
-                        + "/reload не поменяет область проверки поверхности");
+                        + "/reload не поменяет область проверки поверхности"
+                        + " При смене walkout_Current_ReadsLiveHolder проверь это утверждение.");
     }
 
     @Test
@@ -93,7 +97,8 @@ class SmallMechanicTableTests {
                 40,
                 holder.current().regenIntervalTicks(),
                 "После /reload с изменённым json держатель обязан нести новое значение: иначе датапак мира "
-                        + "не поменяет интервал восстановления голода без перезапуска, а таблица числится горячей ложно");
+                        + "не поменяет интервал восстановления голода без перезапуска, а таблица числится горячей ложно"
+                        + " При смене hunger_ReloadChangedJson_HolderReturnsNewInterval проверь это утверждение.");
     }
 
     @Test
@@ -102,7 +107,8 @@ class SmallMechanicTableTests {
                 DataTables.INSTANCE.hunger().current(),
                 HungerRules.loadDefault(),
                 "Потребитель обязан брать версию из держателя, а не читать classpath/константу: иначе /reload "
-                        + "не поменяет ему числа, хотя таблица перечитана");
+                        + "не поменяет ему числа, хотя таблица перечитана"
+                        + " При смене hunger_LoadDefault_ReturnsLiveHolder проверь это утверждение.");
     }
 
     @Test
@@ -119,7 +125,8 @@ class SmallMechanicTableTests {
                 new RepairData(50),
                 holder.current(),
                 "После /reload с изменённым json держатель обязан нести новый порог: иначе датапак мира "
-                        + "не поменяет правило ремонта без перезапуска, а таблица числится горячей ложно");
+                        + "не поменяет правило ремонта без перезапуска, а таблица числится горячей ложно"
+                        + " При смене repair_ReloadChangedJson_HolderReturnsNewPercent проверь это утверждение.");
     }
 
     @Test
@@ -128,7 +135,8 @@ class SmallMechanicTableTests {
                 DataTables.INSTANCE.repair().current(),
                 RepairData.loadDefault(),
                 "Потребитель обязан брать версию из держателя, а не читать classpath/константу: иначе /reload "
-                        + "не поменяет ему порог, хотя таблица перечитана");
+                        + "не поменяет ему порог, хотя таблица перечитана"
+                        + " При смене repair_LoadDefault_ReturnsLiveHolder проверь это утверждение.");
     }
 
     @SuppressWarnings("unchecked")

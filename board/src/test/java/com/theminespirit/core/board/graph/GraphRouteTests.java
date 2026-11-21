@@ -22,10 +22,16 @@ class GraphRouteTests {
                 "route_desert",
                 "route_snow",
                 "route_dirt")) {
-            assertTrue(GRAPH.implemented(building), "Маршрут к ресурсу реализован: " + building);
+            assertTrue(
+                    GRAPH.implemented(building),
+                    "Маршрут к ресурсу реализован: " + building
+                            + " Иначе тест routeBuildingsAndWays_GraphData_AreImplemented перестанет ловить эту поломку. При смене routeBuildingsAndWays_GraphData_AreImplemented проверь это утверждение.");
         }
         for (String way : List.of("silk_ice", "dig_snowball", "dig_sand_route", "dig_dirt_route")) {
-            assertTrue(GRAPH.implemented(way), "Добыча с маршрута реализована: " + way);
+            assertTrue(
+                    GRAPH.implemented(way),
+                    "Добыча с маршрута реализована: " + way
+                            + " Иначе тест routeBuildingsAndWays_GraphData_AreImplemented перестанет ловить эту поломку. При смене routeBuildingsAndWays_GraphData_AreImplemented проверь это утверждение.");
         }
     }
 
@@ -34,19 +40,23 @@ class GraphRouteTests {
         assertEquals(
                 "route_desert",
                 GRAPH.way("dig_sand_route").orElseThrow().building(),
-                "Песок с маршрута требует постройки маршрута пустыни");
+                "Песок с маршрута требует постройки маршрута пустыни"
+                        + " Иначе тест routeWays_AfterBuild_RequireRouteBuilding перестанет ловить эту поломку. При смене routeWays_AfterBuild_RequireRouteBuilding проверь это утверждение.");
         assertEquals(
                 "route_dirt",
                 GRAPH.way("dig_dirt_route").orElseThrow().building(),
-                "Земля с маршрута требует постройки маршрута равнины");
+                "Земля с маршрута требует постройки маршрута равнины"
+                        + " Иначе тест routeWays_AfterBuild_RequireRouteBuilding перестанет ловить эту поломку. При смене routeWays_AfterBuild_RequireRouteBuilding проверь это утверждение.");
         assertEquals(
                 "route_snow",
                 GRAPH.way("dig_snowball").orElseThrow().building(),
-                "Снежки с маршрута требуют постройки снежного маршрута");
+                "Снежки с маршрута требуют постройки снежного маршрута"
+                        + " Иначе тест routeWays_AfterBuild_RequireRouteBuilding перестанет ловить эту поломку. При смене routeWays_AfterBuild_RequireRouteBuilding проверь это утверждение.");
         assertEquals(
                 "route_snow",
                 GRAPH.way("silk_ice").orElseThrow().building(),
-                "Лёд с маршрута требует постройки снежного маршрута");
+                "Лёд с маршрута требует постройки снежного маршрута"
+                        + " Иначе тест routeWays_AfterBuild_RequireRouteBuilding перестанет ловить эту поломку. При смене routeWays_AfterBuild_RequireRouteBuilding проверь это утверждение.");
     }
 
     @Test
@@ -59,7 +69,8 @@ class GraphRouteTests {
 
         assertTrue(
                 plan.task("dig_sand_route").map(GraphPlan.Task::feasible).orElse(false),
-                "Построенный маршрут к пустыне даёт песок с точки маршрута: " + plan.task("dig_sand_route"));
+                "Построенный маршрут к пустыне даёт песок с точки маршрута: " + plan.task("dig_sand_route")
+                        + " Иначе тест plan_BuiltDesertRoute_SandGatheredFromRoute перестанет ловить эту поломку. При смене plan_BuiltDesertRoute_SandGatheredFromRoute проверь это утверждение.");
     }
 
     @Test
@@ -73,7 +84,8 @@ class GraphRouteTests {
 
         assertTrue(
                 plan.task("dig_sand_route").map(task -> !task.feasible()).orElse(true),
-                "Без маршрута песок с точки не добывают: " + plan.task("dig_sand_route"));
+                "Без маршрута песок с точки не добывают: " + plan.task("dig_sand_route")
+                        + " Иначе тест plan_NoRoute_SandRouteTaskNotFeasible перестанет ловить эту поломку. При смене plan_NoRoute_SandRouteTaskNotFeasible проверь это утверждение.");
     }
 
     @Test
@@ -86,8 +98,16 @@ class GraphRouteTests {
         assertEquals(
                 BoardCase.REPAIR_BUILDING,
                 task.boardCase(),
-                "Старую тропу убирают восстановлением участка: clear_area по клеткам без стройки и без ям");
-        assertEquals(Map.of(), task.consumes(), "Снятию тропы не нужны материалы: оно только убирает проложенное");
-        assertTrue(task.feasible(), "Задание снятия выполнимо, когда мир сообщил о старой тропе: " + plan.tasks());
+                "Старую тропу убирают восстановлением участка: clear_area по клеткам без стройки и без ям"
+                        + " Иначе тест removeRoute_Event_PostsCleanupWithoutMaterials перестанет ловить эту поломку. При смене removeRoute_Event_PostsCleanupWithoutMaterials проверь это утверждение.");
+        assertEquals(
+                Map.of(),
+                task.consumes(),
+                "Снятию тропы не нужны материалы: оно только убирает проложенное"
+                        + " Иначе тест removeRoute_Event_PostsCleanupWithoutMaterials перестанет ловить эту поломку. При смене removeRoute_Event_PostsCleanupWithoutMaterials проверь это утверждение.");
+        assertTrue(
+                task.feasible(),
+                "Задание снятия выполнимо, когда мир сообщил о старой тропе: " + plan.tasks()
+                        + " Иначе тест removeRoute_Event_PostsCleanupWithoutMaterials перестанет ловить эту поломку. При смене removeRoute_Event_PostsCleanupWithoutMaterials проверь это утверждение.");
     }
 }

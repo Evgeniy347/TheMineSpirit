@@ -32,13 +32,19 @@ class LogdbSchemaGuardTests {
             JsonNode value = types.get(type.json());
             assertTrue(
                     value != null,
-                    "Тип '" + type.json() + "' есть в Java, но не описан в schema.json: загрузчик не найдёт таблицу");
+                    "Тип '" + type.json() + "' есть в Java, но не описан в schema.json: загрузчик не найдёт таблицу"
+                            + " При смене javaTypes_AgainstSchemaJson_Match проверь это утверждение.");
             assertEquals(
                     type.table(),
                     value.asText(),
-                    "Таблица типа '" + type.json() + "' расходится: Java и schema.json должны называть одно место");
+                    "Таблица типа '" + type.json() + "' расходится: Java и schema.json должны называть одно место"
+                            + " Иначе тест javaTypes_AgainstSchemaJson_Match перестанет ловить эту поломку. При смене javaTypes_AgainstSchemaJson_Match проверь это утверждение.");
         }
-        assertEquals(LogType.values().length, types.size(), "В schema.json есть тип, которого нет в Java");
+        assertEquals(
+                LogType.values().length,
+                types.size(),
+                "В schema.json есть тип, которого нет в Java"
+                        + " Иначе тест javaTypes_AgainstSchemaJson_Match перестанет ловить эту поломку. При смене javaTypes_AgainstSchemaJson_Match проверь это утверждение.");
     }
 
     @Test
@@ -49,7 +55,11 @@ class LogdbSchemaGuardTests {
         for (LogCause cause : LogCause.values()) {
             java.add(cause.code());
         }
-        assertEquals(json, java, "Закрытый набор причин расходится: code причины обязан быть в LogCause и schema.json");
+        assertEquals(
+                json,
+                java,
+                "Закрытый набор причин расходится: code причины обязан быть в LogCause и schema.json"
+                        + " Иначе тест javaCauses_AgainstSchemaJson_Match перестанет ловить эту поломку. При смене javaCauses_AgainstSchemaJson_Match проверь это утверждение.");
     }
 
     @Test
@@ -81,7 +91,8 @@ class LogdbSchemaGuardTests {
                 List.of(),
                 problems,
                 "Java-схема и schema.json разошлись: запись пройдёт проверку, а загрузчик её отвергнет. "
-                        + "Правьте оба места одной миграцией. Расхождения");
+                        + "Правьте оба места одной миграцией. Расхождения"
+                        + " Иначе тест requiredAndAllowedFields_AgainstSchemaJson_Match перестанет ловить эту поломку. При смене requiredAndAllowedFields_AgainstSchemaJson_Match проверь это утверждение.");
     }
 
     @Test
@@ -102,12 +113,16 @@ class LogdbSchemaGuardTests {
                 process.destroyForcibly();
             }
             String text = Files.readString(output, StandardCharsets.UTF_8);
-            assertTrue(finished, "Тесты загрузчика не уложились в 120 секунд: проверьте, не ждут ли они базу");
+            assertTrue(
+                    finished,
+                    "Тесты загрузчика не уложились в 120 секунд: проверьте, не ждут ли они базу"
+                            + " Иначе тест pythonScripts_LoaderAndImport_Pass перестанет ловить эту поломку. При смене pythonScripts_LoaderAndImport_Pass проверь это утверждение.");
             assertEquals(
                     0,
                     process.exitValue(),
                     "Тесты загрузчика и скриптов упали: база логов не должна ломаться на обрывках, ротации и старых "
-                            + "координатах. Вывод: " + text);
+                            + "координатах. Вывод: " + text
+                            + " Иначе тест pythonScripts_LoaderAndImport_Pass перестанет ловить эту поломку. При смене pythonScripts_LoaderAndImport_Pass проверь это утверждение.");
         } finally {
             Files.deleteIfExists(output);
         }

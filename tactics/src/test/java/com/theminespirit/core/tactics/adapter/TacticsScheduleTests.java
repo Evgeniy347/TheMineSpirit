@@ -51,7 +51,8 @@ class TacticsScheduleTests {
                 schedule.due(row.now(), row.hurt(), row.forced()),
                 "Расписание («" + row.name() + "»): оценка раз в " + INTERVAL
                         + " тиков, урон вызывает её сразу, но не чаще раза в " + TacticsSchedule.HURT_MIN_GAP_TICKS
-                        + " тиков; иначе тактика душит сервер или опаздывает");
+                        + " тиков; иначе тактика душит сервер или опаздывает"
+                        + " При смене due_State_GivesExpectedAnswer проверь это утверждение.");
     }
 
     @Test
@@ -59,6 +60,7 @@ class TacticsScheduleTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new TacticsSchedule(0),
-                "Интервал 0 означал бы оценку на каждом тике: настройки обязаны отвергнуть его заранее");
+                "Интервал 0 означал бы оценку на каждом тике: настройки обязаны отвергнуть его заранее"
+                        + " Иначе тест constructor_ZeroInterval_Rejected перестанет ловить эту поломку. При смене constructor_ZeroInterval_Rejected проверь это утверждение.");
     }
 }

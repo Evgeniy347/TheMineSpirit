@@ -74,7 +74,8 @@ class ForcedRetreatTests {
         assertEquals(
                 TacticalOption.RETREAT,
                 threat.decision(),
-                "Сцена должна начинаться с отхода: иначе журналу нечего менять");
+                "Сцена должна начинаться с отхода: иначе журналу нечего менять"
+                        + " При смене apply_GuardPostWithoutEnemies_KeepsIgnoreAndDoesNotTouchJournal проверь это утверждение.");
         journal.offer(observe(threat, creeper, 0));
 
         List<TacticalOption> decisions = new ArrayList<>();
@@ -90,18 +91,21 @@ class ForcedRetreatTests {
         assertTrue(
                 decisions.stream().allMatch(option -> option == TacticalOption.IGNORE),
                 "Пост охраны без врагов не приказывает отступать: решение остаётся IGNORE, получено "
-                        + decisions.stream().distinct().toList());
+                        + decisions.stream().distinct().toList()
+                        + " Иначе тест apply_GuardPostWithoutEnemies_KeepsIgnoreAndDoesNotTouchJournal перестанет ловить эту поломку. При смене apply_GuardPostWithoutEnemies_KeepsIgnoreAndDoesNotTouchJournal проверь это утверждение.");
         assertEquals(
                 1,
                 journal.last(10).size(),
-                "Смена RETREAT → IGNORE пишется один раз, дальше решение не меняется: журнал " + journal.last(10));
+                "Смена RETREAT → IGNORE пишется один раз, дальше решение не меняется: журнал " + journal.last(10)
+                        + " Иначе тест apply_GuardPostWithoutEnemies_KeepsIgnoreAndDoesNotTouchJournal перестанет ловить эту поломку. При смене apply_GuardPostWithoutEnemies_KeepsIgnoreAndDoesNotTouchJournal проверь это утверждение.");
         assertEquals(
                 List.of(DecisionSnapshot.DECISION, TacticalOption.RETREAT.name(), TacticalOption.IGNORE.name()),
                 List.of(
                         journal.last(1).get(0).changed(),
                         journal.last(1).get(0).before(),
                         journal.last(1).get(0).after()),
-                "Единственная запись журнала — прежний отход и стабильный игнор");
+                "Единственная запись журнала — прежний отход и стабильный игнор"
+                        + " Иначе тест apply_GuardPostWithoutEnemies_KeepsIgnoreAndDoesNotTouchJournal перестанет ловить эту поломку. При смене apply_GuardPostWithoutEnemies_KeepsIgnoreAndDoesNotTouchJournal проверь это утверждение.");
     }
 
     @Test
@@ -109,14 +113,19 @@ class ForcedRetreatTests {
         Situation creeper = creeperSituation();
         TacticalOutcome outcome = new TacticsEngine(TacticsConfig.loadDefault())
                 .step(creeper, TacticsMemory.initial(CombatMode.GUARD_AREA, 0, 1), 10);
-        assertEquals(TacticalOption.RETREAT, outcome.decision(), "Крипер в 3 блоках обязан отвести духа");
+        assertEquals(
+                TacticalOption.RETREAT,
+                outcome.decision(),
+                "Крипер в 3 блоках обязан отвести духа"
+                        + " Иначе тест apply_GuardPostWhenEngineAlreadyRetreats_KeepsPostRetreatMethod перестанет ловить эту поломку. При смене apply_GuardPostWhenEngineAlreadyRetreats_KeepsPostRetreatMethod проверь это утверждение.");
 
         TacticalOutcome effective = ForcedRetreat.apply(outcome, GUARD_POST, RetreatMethod.HOME);
 
         assertEquals(
                 RetreatMethod.HOME,
                 effective.retreatMethod(),
-                "Пост охраны задаёт способ отхода HOME, когда движок сам решил отступать");
+                "Пост охраны задаёт способ отхода HOME, когда движок сам решил отступать"
+                        + " Иначе тест apply_GuardPostWhenEngineAlreadyRetreats_KeepsPostRetreatMethod перестанет ловить эту поломку. При смене apply_GuardPostWhenEngineAlreadyRetreats_KeepsPostRetreatMethod проверь это утверждение.");
     }
 
     @Test
@@ -130,8 +139,13 @@ class ForcedRetreatTests {
         assertEquals(
                 List.of(TacticalOption.IGNORE, "outside_leash_ignore", TacticalOption.IGNORE),
                 List.of(outcome.decision(), outcome.trace().rule(), effective.decision()),
-                "Враг за поводком охраны не превращает пост в приказ отступать");
-        assertEquals(outcome.trace(), effective.trace(), "Решение не менялось, поэтому и обоснование остаётся прежним");
+                "Враг за поводком охраны не превращает пост в приказ отступать"
+                        + " Иначе тест apply_GuardPostWithEnemyOutsideLeash_KeepsRuleIgnore перестанет ловить эту поломку. При смене apply_GuardPostWithEnemyOutsideLeash_KeepsRuleIgnore проверь это утверждение.");
+        assertEquals(
+                outcome.trace(),
+                effective.trace(),
+                "Решение не менялось, поэтому и обоснование остаётся прежним"
+                        + " Иначе тест apply_GuardPostWithEnemyOutsideLeash_KeepsRuleIgnore перестанет ловить эту поломку. При смене apply_GuardPostWithEnemyOutsideLeash_KeepsRuleIgnore проверь это утверждение.");
     }
 
     @Test
@@ -140,14 +154,18 @@ class ForcedRetreatTests {
         TacticalOutcome outcome = new TacticsEngine(TacticsConfig.loadDefault())
                 .step(zombie, TacticsMemory.initial(CombatMode.AGGRESSIVE, 0, 1), 10);
         assertNotEquals(
-                TacticalOption.RETREAT, outcome.decision(), "Обычный бой не отход: иначе проверка ничего не значит");
+                TacticalOption.RETREAT,
+                outcome.decision(),
+                "Обычный бой не отход: иначе проверка ничего не значит"
+                        + " При смене apply_ExplicitFleeWithEnemies_StillForcesRetreat проверь это утверждение.");
 
         TacticalOutcome effective = forced(outcome, CombatDirective.flee());
 
         assertEquals(
                 List.of(TacticalOption.RETREAT, RetreatMethod.AWAY),
                 List.of(effective.decision(), effective.retreatMethod()),
-                "Явный приказ бежать при врагах по-прежнему отводит духа");
+                "Явный приказ бежать при врагах по-прежнему отводит духа"
+                        + " Иначе тест apply_ExplicitFleeWithEnemies_StillForcesRetreat перестанет ловить эту поломку. При смене apply_ExplicitFleeWithEnemies_StillForcesRetreat проверь это утверждение.");
     }
 
     @Test
@@ -161,6 +179,7 @@ class ForcedRetreatTests {
         assertEquals(
                 TacticalOption.RETREAT,
                 effective.decision(),
-                "Явный приказ бежать исполняется и без врагов: это команда, а не выбор тактики");
+                "Явный приказ бежать исполняется и без врагов: это команда, а не выбор тактики"
+                        + " Иначе тест apply_ExplicitFleeWithoutEnemies_StillForcesRetreat перестанет ловить эту поломку. При смене apply_ExplicitFleeWithoutEnemies_StillForcesRetreat проверь это утверждение.");
     }
 }

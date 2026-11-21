@@ -38,10 +38,14 @@ class OrchardPathLiveTests {
     void liveDirtPathTicket_Plan_TramplesGroundInsteadOfGatheringUnobtainableBlock() throws IOException {
         JsonNode ticket = read(TICKET);
         JsonNode board = read(BOARD);
-        assertTrue(find(board, ticket.get("id").asText()) != null, "На живой доске нет тикета " + ticket.get("id"));
+        assertTrue(
+                find(board, ticket.get("id").asText()) != null,
+                "На живой доске нет тикета " + ticket.get("id")
+                        + " Иначе тест liveDirtPathTicket_Plan_TramplesGroundInsteadOfGatheringUnobtainableBlock перестанет ловить эту поломку. При смене liveDirtPathTicket_Plan_TramplesGroundInsteadOfGatheringUnobtainableBlock проверь это утверждение.");
         assertTrue(
                 DIRT_PATH.equals(bare(ticket.get("supplyItem").asText())),
-                "Живой тикет обязан просить дорожку сада: " + ticket);
+                "Живой тикет обязан просить дорожку сада: " + ticket
+                        + " Иначе тест liveDirtPathTicket_Plan_TramplesGroundInsteadOfGatheringUnobtainableBlock перестанет ловить эту поломку. При смене liveDirtPathTicket_Plan_TramplesGroundInsteadOfGatheringUnobtainableBlock проверь это утверждение.");
 
         TaskNode plan = TicketPlans.plan(
                 BoardCase.valueOf(ticket.get("case").asText()),
@@ -55,17 +59,20 @@ class OrchardPathLiveTests {
                         .anyMatch(call -> "gather".equals(call.script())
                                 && DIRT_PATH.equals(bare(call.params().get("block")))),
                 "У дорожки нет задачи-производителя: план только «добыть блок dirt_path», которого в мире нет. "
-                        + "Дорожку топчут лопатой по земле/траве. План: " + plan);
+                        + "Дорожку топчут лопатой по земле/траве. План: " + plan
+                        + " Иначе тест liveDirtPathTicket_Plan_TramplesGroundInsteadOfGatheringUnobtainableBlock перестанет ловить эту поломку. При смене liveDirtPathTicket_Plan_TramplesGroundInsteadOfGatheringUnobtainableBlock проверь это утверждение.");
         assertFalse(
                 calls.stream()
                         .anyMatch(call -> "acquire".equals(call.script())
                                 && DIRT_PATH.equals(bare(call.params().get("item")))),
-                "Дорожка не добывается как предмет из мира: её делают лопатой. План: " + plan);
+                "Дорожка не добывается как предмет из мира: её делают лопатой. План: " + plan
+                        + " Иначе тест liveDirtPathTicket_Plan_TramplesGroundInsteadOfGatheringUnobtainableBlock перестанет ловить эту поломку. При смене liveDirtPathTicket_Plan_TramplesGroundInsteadOfGatheringUnobtainableBlock проверь это утверждение.");
         assertTrue(
                 calls.stream()
                         .anyMatch(call -> "withdraw".equals(call.script())
                                 && String.valueOf(call.params().get("item")).endsWith("_shovel")),
-                "Перед топтанием нужна лопата из сундука: " + plan);
+                "Перед топтанием нужна лопата из сундука: " + plan
+                        + " Иначе тест liveDirtPathTicket_Plan_TramplesGroundInsteadOfGatheringUnobtainableBlock перестанет ловить эту поломку. При смене liveDirtPathTicket_Plan_TramplesGroundInsteadOfGatheringUnobtainableBlock проверь это утверждение.");
     }
 
     @Test
@@ -79,15 +86,17 @@ class OrchardPathLiveTests {
                 calls.stream()
                         .anyMatch(call -> "acquire".equals(call.script())
                                 && DIRT_PATH.equals(bare(call.params().get("item")))),
-                "Сад не покупает dirt_path: тропинка топчется по схеме. План: " + plan);
+                "Сад не покупает dirt_path: тропинка топчется по схеме. План: " + plan
+                        + " Иначе тест orchardPlan_DirtPath_IsActionPlacedAndNotAStockMaterial перестанет ловить эту поломку. При смене orchardPlan_DirtPath_IsActionPlacedAndNotAStockMaterial проверь это утверждение.");
         assertTrue(
                 calls.stream().anyMatch(call -> "build_schematic".equals(call.script())),
-                "Сад ставится по схеме, где dirt_path — действие лопатой: " + plan);
+                "Сад ставится по схеме, где dirt_path — действие лопатой: " + plan
+                        + " Иначе тест orchardPlan_DirtPath_IsActionPlacedAndNotAStockMaterial перестанет ловить эту поломку. При смене orchardPlan_DirtPath_IsActionPlacedAndNotAStockMaterial проверь это утверждение.");
         Map<String, Integer> need = CaseMaterials.need(plan, materialSource());
         assertFalse(
                 need.containsKey("minecraft:" + DIRT_PATH) || need.containsKey(DIRT_PATH),
-                "Гейт материалов сада не должен ждать dirt_path: его производят действием, а не складом. Нужда: "
-                        + need);
+                "Гейт материалов сада не должен ждать dirt_path: его производят действием, а не складом. Нужда: " + need
+                        + " Иначе тест orchardPlan_DirtPath_IsActionPlacedAndNotAStockMaterial перестанет ловить эту поломку. При смене orchardPlan_DirtPath_IsActionPlacedAndNotAStockMaterial проверь это утверждение.");
     }
 
     private static MaterialSource materialSource() {

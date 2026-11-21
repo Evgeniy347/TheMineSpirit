@@ -26,7 +26,11 @@ class TownMarkerPngTests {
         double x = viewport.screenX(spirit.x() + 0.5);
         double y = viewport.screenY(spirit.z() + 0.5);
         Optional<MapMarker> hovered = MapMarkers.at(markers, viewport, font, x, y);
-        assertEquals(Optional.of(spirit), hovered, "Курсор на точке духа — подсказка именно этого духа");
+        assertEquals(
+                Optional.of(spirit),
+                hovered,
+                "Курсор на точке духа — подсказка именно этого духа"
+                        + " Иначе тест render_SpiritMarker_HoverShowsNameAndOccupation перестанет ловить эту поломку. При смене render_SpiritMarker_HoverShowsNameAndOccupation проверь это утверждение.");
         TownMapPng.draw(view, terrain, viewport, Optional.empty(), markers, hovered, "plan-markers.png");
         TownMapPng.assertMarkerLabelsApart(markers, viewport, font, TownMapPng.SEEDS[0]);
     }

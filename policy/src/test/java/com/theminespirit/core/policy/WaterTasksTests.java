@@ -37,7 +37,7 @@ class WaterTasksTests {
                 "Скрипт «" + script + "»: плавать разрешено только работам, которые сами ведут духа водой "
                         + "(swim/cross_water/fish/dig_out). Остальные работы в воде обязаны выходить на сушу, "
                         + "иначе дух кружит в озере (observe17 A2/N5); ожидалось " + allowed
-                        + ". При смене списка водных работ сверь точные имена swim/cross_water/fish/dig_out");
+                        + ". При смене списка водных работ проверь точные имена swim/cross_water/fish/dig_out");
     }
 
     @Test
@@ -61,7 +61,7 @@ class WaterTasksTests {
                         new FallbackNode(List.of(
                                 new SequenceNode(List.of(new ScriptCall("dig_out", Map.of()))),
                                 new ScriptCall("dig_out", Map.of())))),
-                "Запасной путь спасения тоже копает выход: пустой скрипт не должен прятать первый шаг плана. "
+                "Запасной путь спасения тоже копает выход: пустой скрипт не должен прятать первый шаг плана, иначе дух не спасётся. "
                         + "При смене разбора FallbackNode проверь вложенную SequenceNode с dig_out");
     }
 

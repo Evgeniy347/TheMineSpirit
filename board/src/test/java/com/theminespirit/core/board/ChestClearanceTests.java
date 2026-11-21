@@ -19,8 +19,15 @@ class ChestClearanceTests {
     void decide_EmptyExtraChest_CanBeBroken() {
         ChestClearance.Decision decision = ChestClearance.decide(snapshot(), false, List.of(empty()), List.of(), 0);
 
-        assertEquals(ChestClearance.Action.REMOVE, decision.action(), "Пустой сундук ломают без переноса");
-        assertTrue(decision.moves().isEmpty(), "Из пустого сундука нечего выносить");
+        assertEquals(
+                ChestClearance.Action.REMOVE,
+                decision.action(),
+                "Пустой сундук ломают без переноса"
+                        + " Иначе тест decide_EmptyExtraChest_CanBeBroken перестанет ловить эту поломку. При смене decide_EmptyExtraChest_CanBeBroken проверь это утверждение.");
+        assertTrue(
+                decision.moves().isEmpty(),
+                "Из пустого сундука нечего выносить"
+                        + " Иначе тест decide_EmptyExtraChest_CanBeBroken перестанет ловить эту поломку. При смене decide_EmptyExtraChest_CanBeBroken проверь это утверждение.");
     }
 
     @Test
@@ -28,9 +35,21 @@ class ChestClearanceTests {
         ChestClearance.Decision decision =
                 ChestClearance.decide(snapshot(dirt(5), log(3)), false, List.of(empty()), List.of(), 0);
 
-        assertEquals(ChestClearance.Action.DRAIN, decision.action(), "Непустой сундук сначала выносят в склад");
-        assertEquals(2, decision.neededSlots(), "Пачка грязи и пачка брёвен занимают по слоту — 2 слота");
-        assertEquals(2, decision.moves().size(), "В плане переноса оба предмета");
+        assertEquals(
+                ChestClearance.Action.DRAIN,
+                decision.action(),
+                "Непустой сундук сначала выносят в склад"
+                        + " Иначе тест decide_NonEmptyAndWarehouseHasRoom_DrainsBeforeBreak перестанет ловить эту поломку. При смене decide_NonEmptyAndWarehouseHasRoom_DrainsBeforeBreak проверь это утверждение.");
+        assertEquals(
+                2,
+                decision.neededSlots(),
+                "Пачка грязи и пачка брёвен занимают по слоту — 2 слота"
+                        + " Иначе тест decide_NonEmptyAndWarehouseHasRoom_DrainsBeforeBreak перестанет ловить эту поломку. При смене decide_NonEmptyAndWarehouseHasRoom_DrainsBeforeBreak проверь это утверждение.");
+        assertEquals(
+                2,
+                decision.moves().size(),
+                "В плане переноса оба предмета"
+                        + " Иначе тест decide_NonEmptyAndWarehouseHasRoom_DrainsBeforeBreak перестанет ловить эту поломку. При смене decide_NonEmptyAndWarehouseHasRoom_DrainsBeforeBreak проверь это утверждение.");
     }
 
     @Test
@@ -39,8 +58,14 @@ class ChestClearanceTests {
                 ChestClearance.decide(snapshot(dirt(5)), false, List.of(full()), List.of(), 0);
 
         assertEquals(
-                ChestClearance.Action.WAIT, decision.action(), "Полный склад и нет досок — ждём, сундук не ломаем");
-        assertFalse(decision.breaks(), "WAIT не даёт права ломать непустой сундук");
+                ChestClearance.Action.WAIT,
+                decision.action(),
+                "Полный склад и нет досок — ждём, сундук не ломаем"
+                        + " Иначе тест decide_NonEmptyAndWarehouseFull_WaitsInsteadOfBreaking перестанет ловить эту поломку. При смене decide_NonEmptyAndWarehouseFull_WaitsInsteadOfBreaking проверь это утверждение.");
+        assertFalse(
+                decision.breaks(),
+                "WAIT не даёт права ломать непустой сундук"
+                        + " Иначе тест decide_NonEmptyAndWarehouseFull_WaitsInsteadOfBreaking перестанет ловить эту поломку. При смене decide_NonEmptyAndWarehouseFull_WaitsInsteadOfBreaking проверь это утверждение.");
     }
 
     @Test
@@ -52,7 +77,8 @@ class ChestClearanceTests {
         assertEquals(
                 ChestClearance.Action.ADD_CHEST,
                 decision.action(),
-                "Склад полон: сначала ставим сундук в клетку склада, потом выносим вещи");
+                "Склад полон: сначала ставим сундук в клетку склада, потом выносим вещи"
+                        + " Иначе тест decide_NonEmptyFullWarehouseWithMaterials_AddsChestFirst перестанет ловить эту поломку. При смене decide_NonEmptyFullWarehouseWithMaterials_AddsChestFirst проверь это утверждение.");
     }
 
     @Test
@@ -60,7 +86,11 @@ class ChestClearanceTests {
         ChestClearance.Decision decision =
                 ChestClearance.decide(snapshot(dirt(5)), true, List.of(empty()), List.of(), 0);
 
-        assertEquals(ChestClearance.Action.KEEP, decision.action(), "Сундук в клетке плана склада не снос");
+        assertEquals(
+                ChestClearance.Action.KEEP,
+                decision.action(),
+                "Сундук в клетке плана склада не снос"
+                        + " Иначе тест decide_ChestInsideWarehousePlan_IsKept перестанет ловить эту поломку. При смене decide_ChestInsideWarehousePlan_IsKept проверь это утверждение.");
     }
 
     @Test
@@ -69,7 +99,11 @@ class ChestClearanceTests {
 
         int needed = ChestClearance.neededSlots(snapshot(dirt(64), dirt(64), dirt(1)), List.of(warehouse));
 
-        assertEquals(2, needed, "В складе 4 свободных места в стопке грязи, остальные 125 — два слота");
+        assertEquals(
+                2,
+                needed,
+                "В складе 4 свободных места в стопке грязи, остальные 125 — два слота"
+                        + " Иначе тест neededSlots_PartialStacksInWarehouse_CountsOnlyRemainder перестанет ловить эту поломку. При смене neededSlots_PartialStacksInWarehouse_CountsOnlyRemainder проверь это утверждение.");
     }
 
     @Test
@@ -78,7 +112,11 @@ class ChestClearanceTests {
 
         List<ChestClearance.Move> moves = ChestClearance.moves(chest);
 
-        assertEquals(2, moves.size(), "Две грязи складываются в один перенос, бревно — второй");
+        assertEquals(
+                2,
+                moves.size(),
+                "Две грязи складываются в один перенос, бревно — второй"
+                        + " Иначе тест moves_TotalCountsByItem_ArePreserved перестанет ловить эту поломку. При смене moves_TotalCountsByItem_ArePreserved проверь это утверждение.");
         assertEquals(
                 12,
                 moves.stream()
@@ -86,7 +124,8 @@ class ChestClearanceTests {
                         .findFirst()
                         .orElseThrow()
                         .count(),
-                "Число грязи при переносе сохраняется");
+                "Число грязи при переносе сохраняется"
+                        + " Иначе тест moves_TotalCountsByItem_ArePreserved перестанет ловить эту поломку. При смене moves_TotalCountsByItem_ArePreserved проверь это утверждение.");
         assertEquals(
                 3,
                 moves.stream()
@@ -94,7 +133,8 @@ class ChestClearanceTests {
                         .findFirst()
                         .orElseThrow()
                         .count(),
-                "Число брёвен при переносе сохраняется");
+                "Число брёвен при переносе сохраняется"
+                        + " Иначе тест moves_TotalCountsByItem_ArePreserved перестанет ловить эту поломку. При смене moves_TotalCountsByItem_ArePreserved проверь это утверждение.");
     }
 
     private static ContainerSnapshot empty() {

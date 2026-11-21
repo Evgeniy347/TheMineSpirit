@@ -24,7 +24,8 @@ class SchematicUpgradeTests {
                 List.of(new BlockCoord(10, 71, -5), new BlockCoord(10, 70, -4)),
                 extra,
                 "Старая схема N снимается только там, где новая схема N+1 ничего не ставит: иначе повышение дома "
-                        + "либо оставляет лишние блоки, либо ломает уже совпадающие со схемой");
+                        + "либо оставляет лишние блоки, либо ломает уже совпадающие со схемой"
+                        + " При смене extraPositions_BlocksMissingFromNextScheme_AreRemoved проверь это утверждение.");
     }
 
     @Test
@@ -35,7 +36,8 @@ class SchematicUpgradeTests {
                 List.of(),
                 SchematicUpgrade.extraPositions(List.of(ORIGIN), next, ORIGIN, BuildRotation.NONE),
                 "Клетка, которая есть и в новой схеме (пусть с другим блоком), не снимается: её заменяет ремонт, "
-                        + "а не снос");
+                        + "а не снос"
+                        + " Иначе тест extraPositions_SameCellDifferentBlock_StaysProtected перестанет ловить эту поломку. При смене extraPositions_SameCellDifferentBlock_StaysProtected проверь это утверждение.");
     }
 
     @Test
@@ -49,7 +51,8 @@ class SchematicUpgradeTests {
                 List.of(new BlockCoord(11, 71, -5)),
                 SchematicUpgrade.extraPositions(previous, next, ORIGIN, BuildRotation.NONE),
                 "Старая схема из задания даёт точные клетки: лишний блок уровня снимается по позиции, "
-                        + "а не эвристикой по меткам духа");
+                        + "а не эвристикой по меткам духа"
+                        + " Иначе тест extraPositions_PreviousScheme_CellsComparedExactly перестанет ловить эту поломку. При смене extraPositions_PreviousScheme_CellsComparedExactly проверь это утверждение.");
     }
 
     @Test
@@ -64,7 +67,8 @@ class SchematicUpgradeTests {
                 List.of(new BlockCoord(10, 70, -4)),
                 clear,
                 "Снятая клетка старой схемы уже воздух: снос не просит её снова, иначе дух ищет к воздуху стоянку "
-                        + "до провала «не очищено 1: воздух@…» (живой сервер 17.11: repair:build_streets)");
+                        + "до провала «не очищено 1: воздух@…» (живой сервер 17.11: repair:build_streets)"
+                        + " При смене extrasToClear_AlreadyAirCell_Skipped проверь это утверждение.");
     }
 
     private static Schematic schematic(Schematic.Entry... entries) {

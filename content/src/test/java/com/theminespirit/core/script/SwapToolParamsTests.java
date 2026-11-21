@@ -13,7 +13,10 @@ class SwapToolParamsTests {
         SwapToolParams params = SwapToolParams.from(Map.of("block", "minecraft:stone"));
 
         assertEquals(
-                "minecraft:stone", params.block(), "swap_tool обязан сохранить блок: по нему выбирается инструмент");
+                "minecraft:stone",
+                params.block(),
+                "swap_tool обязан сохранить блок: по нему выбирается инструмент"
+                        + " Иначе тест from_BlockPresent_KeepsIt перестанет ловить эту поломку. При смене from_BlockPresent_KeepsIt проверь это утверждение.");
     }
 
     @Test
@@ -23,7 +26,8 @@ class SwapToolParamsTests {
         assertEquals(
                 "stone",
                 params.block(),
-                "swap_tool обязан принимать короткий id блока: скрипт сам добавит пространство имён minecraft");
+                "swap_tool обязан принимать короткий id блока: скрипт сам добавит пространство имён minecraft"
+                        + " Иначе тест from_ShortBlockId_IsKept перестанет ловить эту поломку. При смене from_ShortBlockId_IsKept проверь это утверждение.");
     }
 
     @Test
@@ -31,11 +35,13 @@ class SwapToolParamsTests {
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,
                 () -> SwapToolParams.from(Map.of()),
-                "swap_tool без блока обязан отказывать: неизвестно, для чего выбирать инструмент");
+                "swap_tool без блока обязан отказывать: неизвестно, для чего выбирать инструмент"
+                        + " Иначе тест from_MissingBlock_IsRejected перестанет ловить эту поломку. При смене from_MissingBlock_IsRejected проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("block"),
-                "Отказ обязан называть параметр 'block'. Фактическое: " + error.getMessage());
+                "Отказ обязан называть параметр 'block'. Фактическое: " + error.getMessage()
+                        + " Иначе тест from_MissingBlock_IsRejected перестанет ловить эту поломку. При смене from_MissingBlock_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -43,7 +49,8 @@ class SwapToolParamsTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> SwapToolParams.from(Map.of("block", " ")),
-                "swap_tool с пустым блоком обязан отказывать: пустой id не сопоставить с блоком");
+                "swap_tool с пустым блоком обязан отказывать: пустой id не сопоставить с блоком"
+                        + " Иначе тест from_BlankBlock_IsRejected перестанет ловить эту поломку. При смене from_BlankBlock_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -51,6 +58,7 @@ class SwapToolParamsTests {
         assertThrows(
                 NullPointerException.class,
                 () -> SwapToolParams.from(null),
-                "SwapToolParams.from(null) обязан отказывать: без карты параметров скрипт не разобрать");
+                "SwapToolParams.from(null) обязан отказывать: без карты параметров скрипт не разобрать"
+                        + " Иначе тест from_NullParams_IsRejected перестанет ловить эту поломку. При смене from_NullParams_IsRejected проверь это утверждение.");
     }
 }

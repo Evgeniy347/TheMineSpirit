@@ -43,7 +43,8 @@ class FuelTableTests {
                 "Время горения обязано совпадать с ванилью 1.21.1 (уголь и древесный уголь 1600 тиков = 8 предметов, "
                         + "доски и брёвна всех пород 300 тиков = 1.5 предмета, палка 100): иначе резолвер спланирует "
                         + "мало топлива и печь встанет посреди плавки. "
-                        + "Если ваниль поменяла значения — обновите таблицу и этот тест");
+                        + "Если ваниль поменяла значения — обновите таблицу и этот тест"
+                        + " При смене burnTicks_VanillaFuel_MatchesVanillaBurnTime проверь это утверждение.");
     }
 
     @Test
@@ -52,7 +53,8 @@ class FuelTableTests {
                 0,
                 FuelTable.burnTicks("iron_ore"),
                 "Неизвестное топливо обязано давать 0 тиков: иначе резолвер попробует топить рудой и спланирует "
-                        + "провал вместо UnplannableGoalException");
+                        + "провал вместо UnplannableGoalException"
+                        + " При смене burnTicks_UnknownItem_ReturnsZero проверь это утверждение.");
     }
 
     @Test
@@ -82,7 +84,8 @@ class FuelTableTests {
                 FuelTable.preferenceOrder(),
                 "Порядок добычи нового топлива: сначала ёмкий уголь (8 предметов), затем доски (из бревна 4 доски "
                         + "по 300 тиков — в 4 раза больше горения, чем бревно), затем требующий плавки древесный уголь, "
-                        + "затем брёвна напрямую, последней палка (100 тиков): иначе дух таскает лишнее топливо");
+                        + "затем брёвна напрямую, последней палка (100 тиков): иначе дух таскает лишнее топливо"
+                        + " При смене preferenceOrder_FuelTable_CoalPlanksCharcoalLogsStick проверь это утверждение.");
     }
 
     @ParameterizedTest(name = "{0} предмета при горении {1} тиков требуют {2} топлива")
@@ -92,7 +95,8 @@ class FuelTableTests {
                 expected,
                 FuelTable.fuelNeeded(count, burn),
                 "Топлива берётся ровно столько, сколько нужно: ceil(count × 200 / burn). Недобор остановит печь, "
-                        + "перебор оставит духа без дерева. Числа — ваниль 1.21.1, при смене версии пересчитать");
+                        + "перебор оставит духа без дерева. Числа — ваниль 1.21.1, при смене версии пересчитать"
+                        + " Иначе тест fuelNeeded_Table_CeilsCookTicksOverBurnTicks перестанет ловить эту поломку. При смене fuelNeeded_Table_CeilsCookTicksOverBurnTicks проверь это утверждение.");
     }
 
     static Stream<Arguments> fuelNeeds() {
@@ -114,7 +118,8 @@ class FuelTableTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> FuelTable.fuelNeeded(0, 1600),
-                "Ноль предметов обязан отвергаться: иначе план получит шаг добычи нуля топлива");
+                "Ноль предметов обязан отвергаться: иначе план получит шаг добычи нуля топлива"
+                        + " При смене fuelNeeded_ZeroCount_ThrowsIllegalArgumentException проверь это утверждение.");
     }
 
     @Test
@@ -122,6 +127,7 @@ class FuelTableTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> FuelTable.fuelNeeded(3, 0),
-                "Нулевое горение обязано отвергаться: деление на ноль даст бесконечность вместо топлива");
+                "Нулевое горение обязано отвергаться: деление на ноль даст бесконечность вместо топлива"
+                        + " Иначе тест fuelNeeded_ZeroBurn_ThrowsIllegalArgumentException перестанет ловить эту поломку. При смене fuelNeeded_ZeroBurn_ThrowsIllegalArgumentException проверь это утверждение.");
     }
 }

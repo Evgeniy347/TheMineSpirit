@@ -27,7 +27,8 @@ class StandSpotsReachTests {
         assertTrue(
                 spots.contains(new BlockCoord(1, -4, 0)),
                 "Глубина стоянки — из досягаемости духа, а не из своего числа: с «вниз 4» верхушка столба "
-                        + "достаётся со стоянки на 4 ниже. Стоянки: " + spots);
+                        + "достаётся со стоянки на 4 ниже. Стоянки: " + spots
+                        + " Иначе тест of_ReachDownFour_FindsStandFourBelowTarget перестанет ловить эту поломку. При смене of_ReachDownFour_FindsStandFourBelowTarget проверь это утверждение.");
     }
 
     @Test
@@ -46,7 +47,8 @@ class StandSpotsReachTests {
         assertTrue(
                 !spots.contains(new BlockCoord(1, -3, 0)),
                 "С «вниз 2» стоянка на три ниже — вне досягаемости, её нельзя предлагать: иначе дух выбирает "
-                        + "клетку, с которой не достанет блок. Стоянки: " + spots);
+                        + "клетку, с которой не достанет блок. Стоянки: " + spots
+                        + " При смене of_ReachDownTwo_RejectsStandThreeBelowTarget проверь это утверждение.");
     }
 
     @Test
@@ -67,12 +69,14 @@ class StandSpotsReachTests {
                 2,
                 StandSpots.maxOffsetSquared(reach),
                 "При «вниз 0» предел смещения не ноль и не единица: стоянки сбоку-сверху дают 1² + 1² = 2. "
-                        + "Меньший предел заставит планировщик бросить ближнюю цель, до которой дух достаёт");
+                        + "Меньший предел заставит планировщик бросить ближнюю цель, до которой дух достаёт"
+                        + " Иначе тест maxOffsetSquared_ReachDownZero_CoversUpSideStands перестанет ловить эту поломку. При смене maxOffsetSquared_ReachDownZero_CoversUpSideStands проверь это утверждение.");
         assertEquals(
                 2,
                 maxOffset,
                 "Предел смещения обязан покрывать все стоянки, которые выдаёт поиск: иначе ранний выход "
-                        + "планировщика теряет достижимую цель. Стоянки: " + spots);
+                        + "планировщика теряет достижимую цель. Стоянки: " + spots
+                        + " При смене maxOffsetSquared_ReachDownZero_CoversUpSideStands проверь это утверждение.");
     }
 
     @Test
@@ -81,11 +85,13 @@ class StandSpotsReachTests {
                 10,
                 StandSpots.maxOffsetSquared(new SpiritReach(3, 15, 3)),
                 "Сбоку на глубину досягаемости: 3² + 1² = 10 — по этому числу планировщик решает, может ли "
-                        + "ближняя цель со стоянкой побить текущую");
+                        + "ближняя цель со стоянкой побить текущую"
+                        + " Иначе тест maxOffsetSquared_ReachDownThreeAndOne_MatchesSquaredBound перестанет ловить эту поломку. При смене maxOffsetSquared_ReachDownThreeAndOne_MatchesSquaredBound проверь это утверждение.");
         assertEquals(
                 2,
                 StandSpots.maxOffsetSquared(new SpiritReach(3, 15, 1)),
-                "На один ниже предел равен 1² + 1² = 2: своё число вместо досягаемости снова сузило бы окно");
+                "На один ниже предел равен 1² + 1² = 2: своё число вместо досягаемости снова сузило бы окно"
+                        + " Иначе тест maxOffsetSquared_ReachDownThreeAndOne_MatchesSquaredBound перестанет ловить эту поломку. При смене maxOffsetSquared_ReachDownThreeAndOne_MatchesSquaredBound проверь это утверждение.");
     }
 
     @Test
@@ -101,6 +107,7 @@ class StandSpotsReachTests {
                 StandSpots.of(target, world, from, SpiritReach.current()),
                 StandSpots.of(target, world, from),
                 "Поиск стоянки без явной досягаемости обязан брать её из SpiritReach (build.json): своя копия "
-                        + "глубины снова разойдётся с данными и оставит верхушку столба «без стоянки»");
+                        + "глубины снова разойдётся с данными и оставит верхушку столба «без стоянки»"
+                        + " Иначе тест of_WithoutExplicitReach_UsesCurrentSpiritReach перестанет ловить эту поломку. При смене of_WithoutExplicitReach_UsesCurrentSpiritReach проверь это утверждение.");
     }
 }

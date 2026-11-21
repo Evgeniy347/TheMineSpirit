@@ -43,7 +43,11 @@ class SchemeBuildGuardTests {
         for (Map.Entry<Path, String> file : SourceFiles.allMain().entrySet()) {
             found.addAll(violations(file.getKey().getFileName().toString(), file.getValue()));
         }
-        assertEquals(List.of(), found, HOW);
+        assertEquals(
+                List.of(),
+                found,
+                HOW
+                        + " Иначе тест plannedBlocks_ProductionSources_OnlyGroundAndSapling перестанет ловить эту поломку. При смене plannedBlocks_ProductionSources_OnlyGroundAndSapling проверь это утверждение.");
     }
 
     @Test
@@ -52,19 +56,23 @@ class SchemeBuildGuardTests {
                 1,
                 violations("Any.java", "x(new PlannedBlock(at, \"minecraft:oak_fence\"));")
                         .size(),
-                "сторож обязан поймать поблочный забор: иначе правило «только по схеме» не держится");
+                "сторож обязан поймать поблочный забор: иначе правило «только по схеме» не держится"
+                        + " При смене violations_FenceBlock_Reported проверь это утверждение.");
         assertEquals(
                 List.of(),
                 violations("Any.java", "x(new PlannedBlock(new BlockCoord(1, 2, 3), SUPPORT));"),
-                "земля ремонта ровности — названное исключение сторожа");
+                "земля ремонта ровности — названное исключение сторожа"
+                        + " Иначе тест violations_FenceBlock_Reported перестанет ловить эту поломку. При смене violations_FenceBlock_Reported проверь это утверждение.");
         assertEquals(
                 List.of(),
                 violations("PlanDemolition.java", "x(new PlannedBlock(cell, StagePlans.AIR));"),
-                "снос лишнего — не постройка: воздух сноса сторож не трогает");
+                "снос лишнего — не постройка: воздух сноса сторож не трогает"
+                        + " Иначе тест violations_FenceBlock_Reported перестанет ловить эту поломку. При смене violations_FenceBlock_Reported проверь это утверждение.");
         assertEquals(
                 List.of(),
                 violations("ChestDemolition.java", "x(new PlannedBlock(cell, \"minecraft:air\"));"),
-                "снос сундука — разбор, а не постройка: воздух сноса сторож не трогает");
+                "снос сундука — разбор, а не постройка: воздух сноса сторож не трогает"
+                        + " Иначе тест violations_FenceBlock_Reported перестанет ловить эту поломку. При смене violations_FenceBlock_Reported проверь это утверждение.");
     }
 
     @Test
@@ -90,14 +98,16 @@ class SchemeBuildGuardTests {
             collect(plan, calls);
             assertTrue(
                     calls.stream().anyMatch(call -> "build_schematic".equals(call.script())),
-                    step + " строится стройкой по схеме. " + HOW);
+                    step + " строится стройкой по схеме. " + HOW
+                            + " Иначе тест stagePlans_BuildCases_PlaceOnlyGroundBlocks перестанет ловить эту поломку. При смене stagePlans_BuildCases_PlaceOnlyGroundBlocks проверь это утверждение.");
             assertEquals(
                     List.of(),
                     calls.stream()
                             .filter(call -> "place_block".equals(call.script()))
                             .map(call -> call.params().get("block"))
                             .toList(),
-                    step + " не ставит блоков постройки поблочно. " + HOW);
+                    step + " не ставит блоков постройки поблочно. " + HOW
+                            + " Иначе тест stagePlans_BuildCases_PlaceOnlyGroundBlocks перестанет ловить эту поломку. При смене stagePlans_BuildCases_PlaceOnlyGroundBlocks проверь это утверждение.");
         });
     }
 

@@ -11,13 +11,23 @@ class ExpeditionRuleTests {
     void ready_MineNotBuilt_NoExpedition() {
         assertFalse(
                 ExpeditionRule.ready(GraphState.Built.PLANNED, true),
-                "поход копает в шахте: пока она не достроена, он только уводит духов со стройки этапа");
-        assertFalse(ExpeditionRule.ready(null, true), "шахта неизвестна: поход не начинается");
+                "поход копает в шахте: пока она не достроена, он только уводит духов со стройки этапа"
+                        + " Иначе тест ready_MineNotBuilt_NoExpedition перестанет ловить эту поломку. При смене ready_MineNotBuilt_NoExpedition проверь это утверждение.");
+        assertFalse(
+                ExpeditionRule.ready(null, true),
+                "шахта неизвестна: поход не начинается"
+                        + " Иначе тест ready_MineNotBuilt_NoExpedition перестанет ловить эту поломку. При смене ready_MineNotBuilt_NoExpedition проверь это утверждение.");
     }
 
     @Test
     void ready_MineBuiltAndOreLacking_Goes() {
-        assertTrue(ExpeditionRule.ready(GraphState.Built.BUILT, true), "шахта готова, руды мало: поход нужен");
-        assertFalse(ExpeditionRule.ready(GraphState.Built.BUILT, false), "руды хватает: поход не нужен");
+        assertTrue(
+                ExpeditionRule.ready(GraphState.Built.BUILT, true),
+                "шахта готова, руды мало: поход нужен"
+                        + " Иначе тест ready_MineBuiltAndOreLacking_Goes перестанет ловить эту поломку. При смене ready_MineBuiltAndOreLacking_Goes проверь это утверждение.");
+        assertFalse(
+                ExpeditionRule.ready(GraphState.Built.BUILT, false),
+                "руды хватает: поход не нужен"
+                        + " Иначе тест ready_MineBuiltAndOreLacking_Goes перестанет ловить эту поломку. При смене ready_MineBuiltAndOreLacking_Goes проверь это утверждение.");
     }
 }

@@ -63,12 +63,14 @@ class UndoDispatchTests {
                 2,
                 config.intervals().get("maxUndoSpirits"),
                 "На откатах одновременно не больше двух духов: остальные нужны работам этапа (приёмка 11.11 — "
-                        + "пять духов четыре часа висели на брошенных арендах)");
+                        + "пять духов четыре часа висели на брошенных арендах)"
+                        + " Иначе тест defaults_FromClasspath_UndoLimitsInTable перестанет ловить эту поломку. При смене defaults_FromClasspath_UndoLimitsInTable проверь это утверждение.");
         assertEquals(
                 1200,
                 config.intervals().get("undoNoProgressTicks"),
                 "Откат без продвижения минуту — провал с причиной и ключом: иначе дух стоит в одном скрипте, "
-                        + "пока аренда не сменит ключ");
+                        + "пока аренда не сменит ключ"
+                        + " При смене defaults_FromClasspath_UndoLimitsInTable проверь это утверждение.");
     }
 
     @Test
@@ -78,10 +80,12 @@ class UndoDispatchTests {
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,
                 () -> new DispatchRound(board, 0, 0),
-                "Предел духов на откатах ноль обязан падать сразу, а не молча запрещать откаты");
+                "Предел духов на откатах ноль обязан падать сразу, а не молча запрещать откаты"
+                        + " Иначе тест constructor_ZeroUndoSpirits_FailsNamingReason перестанет ловить эту поломку. При смене constructor_ZeroUndoSpirits_FailsNamingReason проверь это утверждение.");
         assertTrue(
                 error.getMessage().contains("хотя бы одному духу"),
-                "Предел ноль запретил бы откаты навсегда — брошенные аренды никто не уберёт: " + error.getMessage());
+                "Предел ноль запретил бы откаты навсегда — брошенные аренды никто не уберёт: " + error.getMessage()
+                        + " Иначе тест constructor_ZeroUndoSpirits_FailsNamingReason перестанет ловить эту поломку. При смене constructor_ZeroUndoSpirits_FailsNamingReason проверь это утверждение.");
     }
 
     @Test
@@ -120,16 +124,18 @@ class UndoDispatchTests {
                 2,
                 undoAssigned,
                 "На откатах одновременно не больше maxUndoSpirits (2) духов: иначе пять духов стоят без прогресса "
-                        + "на недостижимых арендах, а работы этапа ждут (приёмка 11.11)");
+                        + "на недостижимых арендах, а работы этапа ждут (приёмка 11.11)"
+                        + " При смене choose_FiveSpiritsAllUndoUnreachable_OnlyLimitOnUndoRestTakeStageWork проверь это утверждение.");
         assertEquals(
                 3,
                 workAssigned,
                 "Остальные духи заняты работами этапа, а не простаивают: пять духов, две аренды отката и три "
-                        + "работы — заняты все пять");
+                        + "работы — заняты все пять"
+                        + " Иначе тест choose_FiveSpiritsAllUndoUnreachable_OnlyLimitOnUndoRestTakeStageWork перестанет ловить эту поломку. При смене choose_FiveSpiritsAllUndoUnreachable_OnlyLimitOnUndoRestTakeStageWork проверь это утверждение.");
         assertTrue(
                 round.why(tickets.get(2), tooled).contains("откатов уже 2"),
-                "Причина ожидания третьего отката называет предел и работу этапа: "
-                        + round.why(tickets.get(2), tooled));
+                "Причина ожидания третьего отката называет предел и работу этапа: " + round.why(tickets.get(2), tooled)
+                        + " Иначе тест choose_FiveSpiritsAllUndoUnreachable_OnlyLimitOnUndoRestTakeStageWork перестанет ловить эту поломку. При смене choose_FiveSpiritsAllUndoUnreachable_OnlyLimitOnUndoRestTakeStageWork проверь это утверждение.");
     }
 
     private static BoardTicket undoTicket(String id) {

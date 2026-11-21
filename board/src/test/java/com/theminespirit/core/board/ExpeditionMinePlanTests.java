@@ -26,10 +26,12 @@ class ExpeditionMinePlanTests {
                 List.of("goto", "build_schematic", "mine_vein", "return_home"),
                 scripts(plan),
                 "Поход идёт к низу спуска, строит ход по схеме и только из хода берёт руду: иначе у склада "
-                        + "появляется яма от mine_vein на месте");
+                        + "появляется яма от mine_vein на месте"
+                        + " При смене plan_MineBottom_GoesDownFirstThenTunnel проверь это утверждение.");
         assertTrue(
                 !scripts(plan).isEmpty() && "goto".equals(scripts(plan).get(0)),
-                "Первый шаг похода — дойти до низа шахты, а не копать с текущего места");
+                "Первый шаг похода — дойти до низа шахты, а не копать с текущего места"
+                        + " Иначе тест plan_MineBottom_GoesDownFirstThenTunnel перестанет ловить эту поломку. При смене plan_MineBottom_GoesDownFirstThenTunnel проверь это утверждение.");
     }
 
     @Test
@@ -41,14 +43,31 @@ class ExpeditionMinePlanTests {
                 .orElseThrow();
 
         BlockCoord origin = ExpeditionMinePlan.tunnelOrigin(BOTTOM);
-        assertEquals(ExpeditionMinePlan.SCHEME, build.params().get("file"), "Строится именно mine_tunnel_v1");
-        assertEquals(origin.x(), build.params().get("x"), "Начало хода по x считается от низа спуска");
-        assertEquals(origin.y(), build.params().get("y"), "Начало хода по y — на уровне низа спуска");
-        assertEquals(origin.z(), build.params().get("z"), "Начало хода по z считается от низа спуска");
+        assertEquals(
+                ExpeditionMinePlan.SCHEME,
+                build.params().get("file"),
+                "Строится именно mine_tunnel_v1"
+                        + " Иначе тест plan_MineBottom_BuildsTunnelAtPlannedOrigin перестанет ловить эту поломку. При смене plan_MineBottom_BuildsTunnelAtPlannedOrigin проверь это утверждение.");
+        assertEquals(
+                origin.x(),
+                build.params().get("x"),
+                "Начало хода по x считается от низа спуска"
+                        + " Иначе тест plan_MineBottom_BuildsTunnelAtPlannedOrigin перестанет ловить эту поломку. При смене plan_MineBottom_BuildsTunnelAtPlannedOrigin проверь это утверждение.");
+        assertEquals(
+                origin.y(),
+                build.params().get("y"),
+                "Начало хода по y — на уровне низа спуска"
+                        + " Иначе тест plan_MineBottom_BuildsTunnelAtPlannedOrigin перестанет ловить эту поломку. При смене plan_MineBottom_BuildsTunnelAtPlannedOrigin проверь это утверждение.");
+        assertEquals(
+                origin.z(),
+                build.params().get("z"),
+                "Начало хода по z считается от низа спуска"
+                        + " Иначе тест plan_MineBottom_BuildsTunnelAtPlannedOrigin перестанет ловить эту поломку. При смене plan_MineBottom_BuildsTunnelAtPlannedOrigin проверь это утверждение.");
         assertEquals(
                 ExpeditionMinePlan.ROTATION,
                 build.params().get("rotation"),
-                "Ход повёрнут от спуска: продолжает выработку, а не идёт обратно в лестницу");
+                "Ход повёрнут от спуска: продолжает выработку, а не идёт обратно в лестницу"
+                        + " Иначе тест plan_MineBottom_BuildsTunnelAtPlannedOrigin перестанет ловить эту поломку. При смене plan_MineBottom_BuildsTunnelAtPlannedOrigin проверь это утверждение.");
     }
 
     @Test
@@ -57,11 +76,13 @@ class ExpeditionMinePlanTests {
 
         assertTrue(
                 origin.x() != BOTTOM.x() || origin.z() != BOTTOM.z(),
-                "Начало схемы смещено от входа: вход хода совпадает с низом спуска, а не с углом схемы");
+                "Начало схемы смещено от входа: вход хода совпадает с низом спуска, а не с углом схемы"
+                        + " Иначе тест plan_MineBottom_RotatedEntranceIsBottom перестанет ловить эту поломку. При смене plan_MineBottom_RotatedEntranceIsBottom проверь это утверждение.");
         assertEquals(
                 BOTTOM.y() - 1,
                 origin.y(),
-                "Низ спуска — клетка ног; схема ставится от пола, поэтому начало на блок ниже");
+                "Низ спуска — клетка ног; схема ставится от пола, поэтому начало на блок ниже"
+                        + " Иначе тест plan_MineBottom_RotatedEntranceIsBottom перестанет ловить эту поломку. При смене plan_MineBottom_RotatedEntranceIsBottom проверь это утверждение.");
     }
 
     @Test
@@ -72,7 +93,8 @@ class ExpeditionMinePlanTests {
         assertEquals(
                 4,
                 scripts(plan).size(),
-                "Поход собран из четырёх шагов каталога: спуск, ход, руда из хода, возврат домой");
+                "Поход собран из четырёх шагов каталога: спуск, ход, руда из хода, возврат домой"
+                        + " Иначе тест plan_MineBottom_PassesCatalog перестанет ловить эту поломку. При смене plan_MineBottom_PassesCatalog проверь это утверждение.");
     }
 
     private static List<String> scripts(TaskNode plan) {

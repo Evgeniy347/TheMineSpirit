@@ -52,13 +52,23 @@ class PortalHallGuardTests {
                 Optional.of(BuildingType.FORTIFIED),
                 document.header().type(),
                 "Зал портала — отдельная укреплённая постройка, а не жильё, склад или ограда: тип задаёт свои "
-                        + "сторожа и не должен попадать под правила окна, декора и забора");
-        assertEquals(Optional.of(3), document.header().stage(), "Портал строится на этапе 3");
-        assertEquals(1, document.header().level(), "Схема несут ступень 1: зажигание портала — отдельное событие");
+                        + "сторожа и не должен попадать под правила окна, декора и забора"
+                        + " Иначе тест portalHall_Header_IsFortifiedStageThree перестанет ловить эту поломку. При смене portalHall_Header_IsFortifiedStageThree проверь это утверждение.");
+        assertEquals(
+                Optional.of(3),
+                document.header().stage(),
+                "Портал строится на этапе 3"
+                        + " Иначе тест portalHall_Header_IsFortifiedStageThree перестанет ловить эту поломку. При смене portalHall_Header_IsFortifiedStageThree проверь это утверждение.");
+        assertEquals(
+                1,
+                document.header().level(),
+                "Схема несут ступень 1: зажигание портала — отдельное событие"
+                        + " Иначе тест portalHall_Header_IsFortifiedStageThree перестанет ловить эту поломку. При смене portalHall_Header_IsFortifiedStageThree проверь это утверждение.");
         assertEquals(
                 List.of(),
                 document.exemptions(),
-                "Схема обязана проходить всех сторожей без исключений: исключение ослабляет правило молча");
+                "Схема обязана проходить всех сторожей без исключений: исключение ослабляет правило молча"
+                        + " Иначе тест portalHall_Header_IsFortifiedStageThree перестанет ловить эту поломку. При смене portalHall_Header_IsFortifiedStageThree проверь это утверждение.");
     }
 
     @Test
@@ -77,14 +87,20 @@ class PortalHallGuardTests {
         assertEquals(
                 2,
                 doors.size(),
-                "Вход зала портала — ровно две двери подряд (шлюз), иначе из портала кто-то выйдет наружу мимо тамбура");
+                "Вход зала портала — ровно две двери подряд (шлюз), иначе из портала кто-то выйдет наружу мимо тамбура"
+                        + " При смене portalHall_Entrance_IsTwoDoorAirlock проверь это утверждение.");
         Schematic.Entry outer = doors.get(0);
         Schematic.Entry inner = doors.get(1);
-        assertEquals(outer.dy(), inner.dy(), "Двери шлюза стоят на одном уровне пола");
+        assertEquals(
+                outer.dy(),
+                inner.dy(),
+                "Двери шлюза стоят на одном уровне пола"
+                        + " Иначе тест portalHall_Entrance_IsTwoDoorAirlock перестанет ловить эту поломку. При смене portalHall_Entrance_IsTwoDoorAirlock проверь это утверждение.");
         int gap = Math.abs(outer.dx() - inner.dx()) + Math.abs(outer.dz() - inner.dz());
         assertTrue(
                 gap >= 2 && gap <= 4,
-                "Между дверями обязан быть тамбур, а не общая клетка и не длинный коридор: расстояние " + gap);
+                "Между дверями обязан быть тамбур, а не общая клетка и не длинный коридор: расстояние " + gap
+                        + " Иначе тест portalHall_Entrance_IsTwoDoorAirlock перестанет ловить эту поломку. При смене portalHall_Entrance_IsTwoDoorAirlock проверь это утверждение.");
 
         Cell outside = new Cell(outer.dx(), outer.dy(), outer.dz() - 1);
         Cell hall = new Cell(7, inner.dy(), 6);
@@ -93,10 +109,12 @@ class PortalHallGuardTests {
         closed.add(new Cell(inner.dx(), inner.dy(), inner.dz()));
         assertTrue(
                 reachable(grid, outside, hall, Set.of(), schematic.sizeX(), schematic.sizeZ()),
-                "Сквозь открытый шлюз вход в зал обязан быть проходим");
+                "Сквозь открытый шлюз вход в зал обязан быть проходим"
+                        + " Иначе тест portalHall_Entrance_IsTwoDoorAirlock перестанет ловить эту поломку. При смене portalHall_Entrance_IsTwoDoorAirlock проверь это утверждение.");
         assertFalse(
                 reachable(grid, outside, hall, closed, schematic.sizeX(), schematic.sizeZ()),
-                "Закрытый шлюз обязан отрезать зал от улицы: иначе есть путь в обход двух дверей");
+                "Закрытый шлюз обязан отрезать зал от улицы: иначе есть путь в обход двух дверей"
+                        + " При смене portalHall_Entrance_IsTwoDoorAirlock проверь это утверждение.");
     }
 
     @Test
@@ -108,7 +126,8 @@ class PortalHallGuardTests {
             String path = SchematicBlocks.path(entry.block());
             assertFalse(
                     path.endsWith("nether_portal"),
-                    "Рамка портала в схеме не зажжена: зажигание — отдельное событие доски");
+                    "Рамка портала в схеме не зажжена: зажигание — отдельное событие доски"
+                            + " Иначе тест portalHall_Frame_IsFourByFiveAndUnlit перестанет ловить эту поломку. При смене portalHall_Frame_IsFourByFiveAndUnlit проверь это утверждение.");
             if ("obsidian".equals(path)) {
                 obsidian.add(new Cell(entry.dx(), entry.dy(), entry.dz()));
             }
@@ -120,9 +139,21 @@ class PortalHallGuardTests {
         int minZ = obsidian.stream().mapToInt(Cell::z).min().orElseThrow();
         int maxZ = obsidian.stream().mapToInt(Cell::z).max().orElseThrow();
 
-        assertEquals(4, maxX - minX + 1, "Рамка портала — 4 блока в ширину: 2×3 проход, как у ванильного порога");
-        assertEquals(5, maxY - minY + 1, "Рамка портала — 5 блоков в высоту");
-        assertEquals(minZ, maxZ, "Рамка стоит в одной плоскости: иначе это не рамка, а разбросанный обсидиан");
+        assertEquals(
+                4,
+                maxX - minX + 1,
+                "Рамка портала — 4 блока в ширину: 2×3 проход, как у ванильного порога"
+                        + " Иначе тест portalHall_Frame_IsFourByFiveAndUnlit перестанет ловить эту поломку. При смене portalHall_Frame_IsFourByFiveAndUnlit проверь это утверждение.");
+        assertEquals(
+                5,
+                maxY - minY + 1,
+                "Рамка портала — 5 блоков в высоту"
+                        + " Иначе тест portalHall_Frame_IsFourByFiveAndUnlit перестанет ловить эту поломку. При смене portalHall_Frame_IsFourByFiveAndUnlit проверь это утверждение.");
+        assertEquals(
+                minZ,
+                maxZ,
+                "Рамка стоит в одной плоскости: иначе это не рамка, а разбросанный обсидиан"
+                        + " При смене portalHall_Frame_IsFourByFiveAndUnlit проверь это утверждение.");
         for (int x = minX; x <= maxX; x++) {
             for (int y = minY; y <= maxY; y++) {
                 boolean ring = x == minX || x == maxX || y == minY || y == maxY;
@@ -131,9 +162,13 @@ class PortalHallGuardTests {
                     assertEquals(
                             "obsidian",
                             SchematicBlocks.path(grid.get(cell)),
-                            "Рамка портала разомкнута в клетке [" + x + "," + y + "," + minZ + "]: проход не удержит");
+                            "Рамка портала разомкнута в клетке [" + x + "," + y + "," + minZ + "]: проход не удержит"
+                                    + " Иначе тест portalHall_Frame_IsFourByFiveAndUnlit перестанет ловить эту поломку. При смене portalHall_Frame_IsFourByFiveAndUnlit проверь это утверждение.");
                 } else {
-                    assertNull(grid.get(cell), "Внутри рамки обязан быть воздух: там станет портал");
+                    assertNull(
+                            grid.get(cell),
+                            "Внутри рамки обязан быть воздух: там станет портал"
+                                    + " Иначе тест portalHall_Frame_IsFourByFiveAndUnlit перестанет ловить эту поломку. При смене portalHall_Frame_IsFourByFiveAndUnlit проверь это утверждение.");
                 }
             }
         }
@@ -167,7 +202,8 @@ class PortalHallGuardTests {
                     assertNull(
                             grid.get(cell),
                             "У рамки портала нет двух свободных блоков вокруг клетки [" + x + "," + y + "," + z
-                                    + "]: духи держатся от портала на расстоянии ≥2");
+                                    + "]: духи держатся от портала на расстоянии ≥2"
+                                    + " Иначе тест portalHall_Frame_HasTwoFreeBlocksAround перестанет ловить эту поломку. При смене portalHall_Frame_HasTwoFreeBlocksAround проверь это утверждение.");
                 }
             }
         }
@@ -191,7 +227,8 @@ class PortalHallGuardTests {
                 List.of(),
                 wooden,
                 "Корпус зала портала — только камень, каменный кирпич, обсидиан и факелы: дерево горит, стекло — "
-                        + "окно наружу, а постройка обязана быть глухой и огнестойкой. Лишнее");
+                        + "окно наружу, а постройка обязана быть глухой и огнестойкой. Лишнее"
+                        + " Иначе тест portalHall_Shell_IsStoneOnlyWithoutWindows перестанет ловить эту поломку. При смене portalHall_Shell_IsStoneOnlyWithoutWindows проверь это утверждение.");
     }
 
     private static boolean reachable(

@@ -43,18 +43,32 @@ class LocateQueryTests {
                     IllegalArgumentException.class,
                     () -> new LocateQuery(type, IdFilter.of(patterns), species, new ScanRadius(radius)),
                     "поиск " + type + " с фильтром " + patterns + ", видом '" + species + "' и радиусом " + radius
-                            + " обязан отклоняться: иначе скрипт поиска получит параметр, который не применит");
+                            + " обязан отклоняться: иначе скрипт поиска получит параметр, который не применит"
+                            + " При смене constructor_TypeFilterSpeciesRadius_AcceptedOnlyWhenConsistent проверь это утверждение.");
             return;
         }
         LocateQuery query = new LocateQuery(type, IdFilter.of(patterns), species, new ScanRadius(radius));
 
-        assertEquals(type, query.type(), "тип поиска обязан сохраняться как задан: по нему скрипт выбирает поисковик");
-        assertEquals(species, query.species(), "вид дерева обязан сохраняться как задан");
-        assertEquals(radius, query.radius().value(), "радиус поиска обязан сохраняться как задан");
+        assertEquals(
+                type,
+                query.type(),
+                "тип поиска обязан сохраняться как задан: по нему скрипт выбирает поисковик"
+                        + " Иначе тест constructor_TypeFilterSpeciesRadius_AcceptedOnlyWhenConsistent перестанет ловить эту поломку. При смене constructor_TypeFilterSpeciesRadius_AcceptedOnlyWhenConsistent проверь это утверждение.");
+        assertEquals(
+                species,
+                query.species(),
+                "вид дерева обязан сохраняться как задан"
+                        + " Иначе тест constructor_TypeFilterSpeciesRadius_AcceptedOnlyWhenConsistent перестанет ловить эту поломку. При смене constructor_TypeFilterSpeciesRadius_AcceptedOnlyWhenConsistent проверь это утверждение.");
+        assertEquals(
+                radius,
+                query.radius().value(),
+                "радиус поиска обязан сохраняться как задан"
+                        + " Иначе тест constructor_TypeFilterSpeciesRadius_AcceptedOnlyWhenConsistent перестанет ловить эту поломку. При смене constructor_TypeFilterSpeciesRadius_AcceptedOnlyWhenConsistent проверь это утверждение.");
         assertEquals(
                 IdFilter.of(patterns).patterns(),
                 query.filter().patterns(),
-                "фильтр поиска обязан сохраняться как задан: иначе поиск вернёт не тот блок");
+                "фильтр поиска обязан сохраняться как задан: иначе поиск вернёт не тот блок"
+                        + " При смене constructor_TypeFilterSpeciesRadius_AcceptedOnlyWhenConsistent проверь это утверждение.");
     }
 
     @Test
@@ -62,14 +76,37 @@ class LocateQueryTests {
         ScanRadius radius = ScanRadius.of(5);
 
         LocateQuery block = LocateQuery.block(IdFilter.of(List.of("*_ore")), radius);
-        assertEquals(LocateType.BLOCK, block.type(), "фабрика block обязана строить поиск BLOCK");
-        assertEquals(LocateQuery.ANY_SPECIES, block.species(), "у поиска блока вид обязан быть any");
+        assertEquals(
+                LocateType.BLOCK,
+                block.type(),
+                "фабрика block обязана строить поиск BLOCK"
+                        + " Иначе тест factories_EachType_BuildQueryWithDefaultsForForeignFields перестанет ловить эту поломку. При смене factories_EachType_BuildQueryWithDefaultsForForeignFields проверь это утверждение.");
+        assertEquals(
+                LocateQuery.ANY_SPECIES,
+                block.species(),
+                "у поиска блока вид обязан быть any"
+                        + " Иначе тест factories_EachType_BuildQueryWithDefaultsForForeignFields перестанет ловить эту поломку. При смене factories_EachType_BuildQueryWithDefaultsForForeignFields проверь это утверждение.");
         LocateQuery tree = LocateQuery.tree("birch", radius);
-        assertEquals(LocateType.TREE, tree.type(), "фабрика tree обязана строить поиск TREE");
-        assertTrue(tree.filter().matchesAll(), "у поиска дерева фильтр обязан быть «всё»");
+        assertEquals(
+                LocateType.TREE,
+                tree.type(),
+                "фабрика tree обязана строить поиск TREE"
+                        + " Иначе тест factories_EachType_BuildQueryWithDefaultsForForeignFields перестанет ловить эту поломку. При смене factories_EachType_BuildQueryWithDefaultsForForeignFields проверь это утверждение.");
+        assertTrue(
+                tree.filter().matchesAll(),
+                "у поиска дерева фильтр обязан быть «всё»"
+                        + " Иначе тест factories_EachType_BuildQueryWithDefaultsForForeignFields перестанет ловить эту поломку. При смене factories_EachType_BuildQueryWithDefaultsForForeignFields проверь это утверждение.");
         LocateQuery container = LocateQuery.container(radius);
-        assertEquals(LocateType.CONTAINER, container.type(), "фабрика container обязана строить поиск CONTAINER");
-        assertEquals(LocateQuery.ANY_SPECIES, container.species(), "у поиска контейнера вид обязан быть any");
+        assertEquals(
+                LocateType.CONTAINER,
+                container.type(),
+                "фабрика container обязана строить поиск CONTAINER"
+                        + " Иначе тест factories_EachType_BuildQueryWithDefaultsForForeignFields перестанет ловить эту поломку. При смене factories_EachType_BuildQueryWithDefaultsForForeignFields проверь это утверждение.");
+        assertEquals(
+                LocateQuery.ANY_SPECIES,
+                container.species(),
+                "у поиска контейнера вид обязан быть any"
+                        + " Иначе тест factories_EachType_BuildQueryWithDefaultsForForeignFields перестанет ловить эту поломку. При смене factories_EachType_BuildQueryWithDefaultsForForeignFields проверь это утверждение.");
     }
 
     @Test
@@ -77,6 +114,7 @@ class LocateQueryTests {
         assertEquals(
                 "any",
                 LocateQuery.ANY_SPECIES,
-                "значение по умолчанию для вида дерева обязано быть any: так его называет каталог скриптов");
+                "значение по умолчанию для вида дерева обязано быть any: так его называет каталог скриптов"
+                        + " Иначе тест anySpecies_Constant_IsLowercaseAny перестанет ловить эту поломку. При смене anySpecies_Constant_IsLowercaseAny проверь это утверждение.");
     }
 }

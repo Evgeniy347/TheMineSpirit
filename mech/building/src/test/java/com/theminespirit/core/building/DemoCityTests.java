@@ -49,7 +49,8 @@ class DemoCityTests {
         assertEquals(
                 List.of("hut_1", "lamp_1"),
                 schemes(1),
-                "Витрина 1 обязана показать этап 0: уровни этапов выше и старые схемы без уровней в неё не входят");
+                "Витрина 1 обязана показать этап 0: уровни этапов выше и старые схемы без уровней в неё не входят"
+                        + " Иначе тест pick_CityOne_TakesOnlyStageZeroLeveledBuildings перестанет ловить эту поломку. При смене pick_CityOne_TakesOnlyStageZeroLeveledBuildings проверь это утверждение.");
     }
 
     @Test
@@ -57,11 +58,13 @@ class DemoCityTests {
         assertEquals(
                 List.of("hut_3", "lamp_1"),
                 schemes(3),
-                "Витрина 3 обязана показать каждую семью старшим уровнем этапа 2: младшие уровни там же не нужны");
+                "Витрина 3 обязана показать каждую семью старшим уровнем этапа 2: младшие уровни там же не нужны"
+                        + " Иначе тест pick_LaterCity_TakesHighestAvailableLevelOfEachFamily перестанет ловить эту поломку. При смене pick_LaterCity_TakesHighestAvailableLevelOfEachFamily проверь это утверждение.");
         assertEquals(
                 List.of("hut_3", "lamp_1", "hall_1"),
                 schemes(5),
-                "Витрина 5 обязана включить всё, что есть в каталоге с уровнями");
+                "Витрина 5 обязана включить всё, что есть в каталоге с уровнями"
+                        + " Иначе тест pick_LaterCity_TakesHighestAvailableLevelOfEachFamily перестанет ловить эту поломку. При смене pick_LaterCity_TakesHighestAvailableLevelOfEachFamily проверь это утверждение.");
     }
 
     @Test
@@ -69,11 +72,13 @@ class DemoCityTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> schemes(0),
-                "Витрина 0 не существует: уровни 1..5 — этапы 0..4, иначе игрок получит пустую улицу молча");
+                "Витрина 0 не существует: уровни 1..5 — этапы 0..4, иначе игрок получит пустую улицу молча"
+                        + " При смене pick_LevelOutOfRange_Refuses проверь это утверждение.");
         assertThrows(
                 IllegalArgumentException.class,
                 () -> schemes(DemoCity.MAX_LEVEL + 1),
-                "Витрина выше последнего этапа не существует: команда обязана назвать допустимый диапазон");
+                "Витрина выше последнего этапа не существует: команда обязана назвать допустимый диапазон"
+                        + " Иначе тест pick_LevelOutOfRange_Refuses перестанет ловить эту поломку. При смене pick_LevelOutOfRange_Refuses проверь это утверждение.");
     }
 
     private static List<DemoCity.Plot> plots() {
@@ -101,14 +106,16 @@ class DemoCityTests {
                                     placements.get(i).platform(),
                                     placements.get(j).platform()),
                             "Площадки " + i + " и " + j + " (взгляд " + look[0] + "," + look[1] + ") наложились: "
-                                    + "подготовка второй снесёт сундук или стройку первой");
+                                    + "подготовка второй снесёт сундук или стройку первой"
+                                    + " Иначе тест layout_EveryLook_PlatformsNeverOverlapAndStreetAxisStaysFree перестанет ловить эту поломку. При смене layout_EveryLook_PlatformsNeverOverlapAndStreetAxisStaysFree проверь это утверждение.");
                 }
                 for (int step = 0; step < 200; step++) {
                     int x = start.x() + step * look[0];
                     int z = start.z() + step * look[1];
                     assertFalse(
                             placements.get(i).platform().contains(new BlockCoord(x, start.y(), z)),
-                            "Ось улицы обязана оставаться свободной: площадка " + i + " заняла клетку " + x + "," + z);
+                            "Ось улицы обязана оставаться свободной: площадка " + i + " заняла клетку " + x + "," + z
+                                    + " Иначе тест layout_EveryLook_PlatformsNeverOverlapAndStreetAxisStaysFree перестанет ловить эту поломку. При смене layout_EveryLook_PlatformsNeverOverlapAndStreetAxisStaysFree проверь это утверждение.");
                 }
             }
         }
@@ -133,10 +140,12 @@ class DemoCityTests {
                 assertEquals(
                         BuildTuning.DEMO_PLATFORM_PADDING + 1 + door.porch(),
                         across,
-                        "Дверь постройки " + i + " обязана стоять у края улицы, в клетке за точкой подхода");
+                        "Дверь постройки " + i + " обязана стоять у края улицы, в клетке за точкой подхода"
+                                + " Иначе тест layout_EveryLook_DoorsFaceTheStreet перестанет ловить эту поломку. При смене layout_EveryLook_DoorsFaceTheStreet проверь это утверждение.");
                 assertTrue(
                         centreAcross >= across,
-                        "Постройка " + i + " обязана уходить от улицы вглубь: иначе дверь смотрит не на улицу");
+                        "Постройка " + i + " обязана уходить от улицы вглубь: иначе дверь смотрит не на улицу"
+                                + " При смене layout_EveryLook_DoorsFaceTheStreet проверь это утверждение.");
             }
         }
     }

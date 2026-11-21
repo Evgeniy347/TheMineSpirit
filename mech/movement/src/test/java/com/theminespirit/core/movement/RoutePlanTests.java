@@ -52,7 +52,8 @@ class RoutePlanTests {
                 plan.next(row.current(), row.skipped()),
                 "Маршрут " + row.mode() + " из точки " + row.current() + " мимо " + row.skipped()
                         + " обязан вести в " + row.next() + ": неверный порядок обегает точки дважды "
-                        + "или виснет на недостижимой");
+                        + "или виснет на недостижимой"
+                        + " Иначе тест next_TableRow_NextPointMatches перестанет ловить эту поломку. При смене next_TableRow_NextPointMatches проверь это утверждение.");
     }
 
     @Test
@@ -68,7 +69,8 @@ class RoutePlanTests {
         assertEquals(
                 List.of(1, 2, 3, 0),
                 visited,
-                "Круг из 4 точек обязан возвращаться к первой: иначе патруль ходит только по части маршрута");
+                "Круг из 4 точек обязан возвращаться к первой: иначе патруль ходит только по части маршрута"
+                        + " При смене next_LoopFullCircle_VisitsAllInOrder проверь это утверждение.");
     }
 
     @Test
@@ -85,7 +87,8 @@ class RoutePlanTests {
         assertEquals(
                 List.of(1, 2, 3, 2, 1, 0),
                 visited,
-                "Пинг-понг обязан разворачиваться на концах 0 и 3: иначе патруль ходит кругом вместо туда-обратно");
+                "Пинг-понг обязан разворачиваться на концах 0 и 3: иначе патруль ходит кругом вместо туда-обратно"
+                        + " При смене next_PingPongFullCycle_TurnsAtEnds проверь это утверждение.");
     }
 
     @Test
@@ -93,11 +96,13 @@ class RoutePlanTests {
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,
                 () -> new RoutePlan(List.of(), RoutePlan.Mode.LOOP),
-                "Пустой маршрут обязан отвергаться: патрулю без точек некуда идти, а стратег не узнает почему");
+                "Пустой маршрут обязан отвергаться: патрулю без точек некуда идти, а стратег не узнает почему"
+                        + " Иначе тест constructor_EmptyRoute_Throws перестанет ловить эту поломку. При смене constructor_EmptyRoute_Throws проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("без точек"),
-                "Отказ обязан объяснять, что в маршруте нет точек. Фактическое: " + error.getMessage());
+                "Отказ обязан объяснять, что в маршруте нет точек. Фактическое: " + error.getMessage()
+                        + " Иначе тест constructor_EmptyRoute_Throws перестанет ловить эту поломку. При смене constructor_EmptyRoute_Throws проверь это утверждение.");
     }
 
     @Test
@@ -108,7 +113,8 @@ class RoutePlanTests {
                 IndexOutOfBoundsException.class,
                 () -> plan.next(3, Set.of()),
                 "Текущая точка вне маршрута обязана отвергаться: счётчик маршрута сбился и патруль "
-                        + "стоит не на своей точке");
+                        + "стоит не на своей точке"
+                        + " Иначе тест next_CurrentOutsideRoute_Throws перестанет ловить эту поломку. При смене next_CurrentOutsideRoute_Throws проверь это утверждение.");
     }
 
     private static RoutePlan plan(int size, RoutePlan.Mode mode) {

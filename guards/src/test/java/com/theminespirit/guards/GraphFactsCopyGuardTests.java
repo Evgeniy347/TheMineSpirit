@@ -44,7 +44,8 @@ class GraphFactsCopyGuardTests {
                 Arrays.stream(copies).map(Method::getName).sorted().toList(),
                 "Появился новый with* у GraphFacts, который не проверен сторожем: копия может молча потерять поле "
                         + "(так уже терялась обратная связь мира, и память неудач не доходила до графа). "
-                        + "Добавь with* в REPLACEMENTS, чтобы сторож вызвал его с тем же значением и сверил запись.");
+                        + "Добавь with* в REPLACEMENTS, чтобы сторож вызвал его с тем же значением и сверил запись."
+                        + " Иначе тест graphFactsCopies_ReplacedWithSameValue_KeepEveryComponent перестанет ловить эту поломку. При смене graphFactsCopies_ReplacedWithSameValue_KeepEveryComponent проверь это утверждение.");
         for (Method copy : copies) {
             GraphFacts next = (GraphFacts)
                     copy.invoke(base, REPLACEMENTS.get(copy.getName()).apply(base));
@@ -53,7 +54,8 @@ class GraphFactsCopyGuardTests {
                     next,
                     "Копия " + copy.getName() + " потеряла компонент GraphFacts: замена тем же значением обязана "
                             + "вернуть ту же запись. Потерянный компонент — это скрытая пустота во входе графа: "
-                            + "решение принимается по неполным фактам, и виноват не вес, а копия.");
+                            + "решение принимается по неполным фактам, и виноват не вес, а копия."
+                            + " Иначе тест graphFactsCopies_ReplacedWithSameValue_KeepEveryComponent перестанет ловить эту поломку. При смене graphFactsCopies_ReplacedWithSameValue_KeepEveryComponent проверь это утверждение.");
         }
     }
 
@@ -69,7 +71,8 @@ class GraphFactsCopyGuardTests {
                 copies.stream().map(Method::getName).sorted().toList(),
                 "Появился новый копирующий helper в GraphFactsUpdates, который не проверен сторожем: он собирает "
                         + "GraphFacts вручную и может потерять поле (так уже терялась обратная связь мира). "
-                        + "Добавь его в REPLACEMENTS и проверь равенством записи.");
+                        + "Добавь его в REPLACEMENTS и проверь равенством записи."
+                        + " Иначе тест graphFactsUpdates_ReplacedWithSameValue_KeepEveryComponent перестанет ловить эту поломку. При смене graphFactsUpdates_ReplacedWithSameValue_KeepEveryComponent проверь это утверждение.");
         for (Method copy : copies) {
             GraphFacts next = (GraphFacts)
                     copy.invoke(null, base, REPLACEMENTS.get(copy.getName()).apply(base));
@@ -77,7 +80,8 @@ class GraphFactsCopyGuardTests {
                     base,
                     next,
                     "Копия " + copy.getName() + " потеряла компонент GraphFacts: замена тем же значением обязана "
-                            + "вернуть ту же запись. Потерянный компонент — это скрытая пустота во входе графа.");
+                            + "вернуть ту же запись. Потерянный компонент — это скрытая пустота во входе графа."
+                            + " Иначе тест graphFactsUpdates_ReplacedWithSameValue_KeepEveryComponent перестанет ловить эту поломку. При смене graphFactsUpdates_ReplacedWithSameValue_KeepEveryComponent проверь это утверждение.");
         }
     }
 
@@ -90,11 +94,13 @@ class GraphFactsCopyGuardTests {
                 constructors.stream().map(Constructor::getParameterCount).toList(),
                 "У GraphFacts есть конструктор не на все компоненты: короткий конструктор подставляет пустые "
                         + "игроки/проломы/аренды, и факты мира молча не доходят до графа. Компоненты задают все "
-                        + "тринадцать, явно.");
+                        + "тринадцать, явно."
+                        + " Иначе тест graphFacts_ShortConstructor_IsAbsent перестанет ловить эту поломку. При смене graphFacts_ShortConstructor_IsAbsent проверь это утверждение.");
         assertEquals(
                 13,
                 GraphFacts.class.getRecordComponents().length,
-                "Компоненты GraphFacts читаются рефлексией: сторож перечисляет их и сверяет каждую копию");
+                "Компоненты GraphFacts читаются рефлексией: сторож перечисляет их и сверяет каждую копию"
+                        + " Иначе тест graphFacts_ShortConstructor_IsAbsent перестанет ловить эту поломку. При смене graphFacts_ShortConstructor_IsAbsent проверь это утверждение.");
     }
 
     private static GraphWorldFacts world(GraphFacts base) {

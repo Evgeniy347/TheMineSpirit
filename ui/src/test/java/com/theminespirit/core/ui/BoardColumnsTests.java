@@ -26,11 +26,13 @@ class BoardColumnsTests {
         assertEquals(
                 List.of(BoardTileGroup.DONE, BoardTileGroup.ACTIVE, BoardTileGroup.WAITING, BoardTileGroup.AVAILABLE),
                 columns.stream().map(BoardColumns.BoardColumn::group).toList(),
-                "Колонки обязаны идти в порядке показа: завершённые, активные, ждущие, доступные");
+                "Колонки обязаны идти в порядке показа: завершённые, активные, ждущие, доступные"
+                        + " Иначе тест split_FourGroups_ReturnsColumnsInShowOrderAndKeepsTiles перестанет ловить эту поломку. При смене split_FourGroups_ReturnsColumnsInShowOrderAndKeepsTiles проверь это утверждение.");
         assertEquals(
                 List.of("free-1", "free-2"),
                 columns.get(3).tiles().stream().map(BoardTile::id).toList(),
-                "Раскладка по колонкам обязана сохранить порядок плиток внутри группы");
+                "Раскладка по колонкам обязана сохранить порядок плиток внутри группы"
+                        + " Иначе тест split_FourGroups_ReturnsColumnsInShowOrderAndKeepsTiles перестанет ловить эту поломку. При смене split_FourGroups_ReturnsColumnsInShowOrderAndKeepsTiles проверь это утверждение.");
     }
 
     @Test
@@ -40,10 +42,12 @@ class BoardColumnsTests {
         assertEquals(
                 BoardTileGroup.values().length,
                 columns.size(),
-                "Пустая доска всё равно показывает по колонке на каждую группу");
+                "Пустая доска всё равно показывает по колонке на каждую группу"
+                        + " Иначе тест split_EmptyBoard_ReturnsOneEmptyColumnPerGroup перестанет ловить эту поломку. При смене split_EmptyBoard_ReturnsOneEmptyColumnPerGroup проверь это утверждение.");
         assertEquals(
                 0,
                 columns.stream().mapToInt(column -> column.tiles().size()).sum(),
-                "У пустой доски ни в одной колонке нет плиток");
+                "У пустой доски ни в одной колонке нет плиток"
+                        + " Иначе тест split_EmptyBoard_ReturnsOneEmptyColumnPerGroup перестанет ловить эту поломку. При смене split_EmptyBoard_ReturnsOneEmptyColumnPerGroup проверь это утверждение.");
     }
 }

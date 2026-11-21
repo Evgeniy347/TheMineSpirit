@@ -27,7 +27,7 @@ class MineCellStandsDigInTests {
 
         assertTrue(
                 !stands.isEmpty(),
-                "Цель в закрытой породе — стоянка берётся из уже доступной выработки рядом, и дух врезается: "
-                        + stands);
+                "Цель в закрытой породе — стоянка берётся из уже доступной выработки рядом, и дух врезается: " + stands
+                        + " Иначе тест of_TargetEnclosedInRock_NearReachableStandOfferedForDigIn перестанет ловить эту поломку. При смене of_TargetEnclosedInRock_NearReachableStandOfferedForDigIn проверь это утверждение.");
     }
 }

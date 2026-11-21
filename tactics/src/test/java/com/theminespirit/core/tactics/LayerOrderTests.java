@@ -16,7 +16,8 @@ class LayerOrderTests {
                 LayerOrder.PRIORITY,
                 "Порядок слоёв POLICY > TACTICS > STRATEGY > IDLE зафиксирован: политики безопасности выше тактики, "
                         + "тактика выше стратегии. Переставить слои можно только осознанно, вместе с чеклистом "
-                        + "политик и адаптером арбитража тика");
+                        + "политик и адаптером арбитража тика"
+                        + " Иначе тест priority_DeclaredOrder_IsPolicyTacticsStrategyIdle перестанет ловить эту поломку. При смене priority_DeclaredOrder_IsPolicyTacticsStrategyIdle проверь это утверждение.");
     }
 
     @Test
@@ -25,7 +26,8 @@ class LayerOrderTests {
                 List.of(Layer.values()),
                 LayerOrder.PRIORITY,
                 "Каждый слой назван в приоритете ровно один раз и в порядке объявления enum: новый слой без места в "
-                        + "порядке остался бы без приоритета");
+                        + "порядке остался бы без приоритета"
+                        + " Иначе тест priority_EveryLayer_AppearsExactlyOnce перестанет ловить эту поломку. При смене priority_EveryLayer_AppearsExactlyOnce проверь это утверждение.");
     }
 
     @Test
@@ -39,7 +41,8 @@ class LayerOrderTests {
                         LayerOrder.outranks(Layer.STRATEGY, Layer.TACTICS),
                         LayerOrder.outranks(Layer.STRATEGY, Layer.IDLE),
                         LayerOrder.outranks(Layer.IDLE, Layer.STRATEGY)),
-                "Слой выше перебивает слой ниже и никогда наоборот: иначе стратегия могла бы заглушить реакцию на угрозу");
+                "Слой выше перебивает слой ниже и никогда наоборот: иначе стратегия могла бы заглушить реакцию на угрозу"
+                        + " При смене outranks_AdjacentLayers_HigherWinsOnlyOneWay проверь это утверждение.");
     }
 
     @Test
@@ -47,7 +50,8 @@ class LayerOrderTests {
         for (Layer layer : Layer.values()) {
             assertTrue(
                     !LayerOrder.outranks(layer, layer),
-                    "Слой не перебивает сам себя: " + layer + ", иначе арбитраж зациклился бы на одном слое");
+                    "Слой не перебивает сам себя: " + layer + ", иначе арбитраж зациклился бы на одном слое"
+                            + " При смене outranks_SameLayer_IsFalse проверь это утверждение.");
         }
     }
 }

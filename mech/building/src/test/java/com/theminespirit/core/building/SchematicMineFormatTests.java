@@ -61,18 +61,25 @@ class SchematicMineFormatTests {
                 "@floor",
                 document.schematic().blocks().get(0).block(),
                 "легенда '#': @floor обязана сохранить класс пола, а не подставить один точный блок: "
-                        + "иначе аудит отвергнет камень и землю под воздухом");
+                        + "иначе аудит отвергнет камень и землю под воздухом"
+                        + " При смене parse_FloorLegend_KeepsClassMarker проверь это утверждение.");
         assertTrue(
                 SchematicBlocks.isFloorClass("minecraft:deepslate"),
-                "глубинный сланец — пол: класс принимает любой дешёвый твёрдый блок");
-        assertTrue(SchematicBlocks.isFloorClass("minecraft:cobblestone"), "булыжник — пол");
+                "глубинный сланец — пол: класс принимает любой дешёвый твёрдый блок"
+                        + " Иначе тест parse_FloorLegend_KeepsClassMarker перестанет ловить эту поломку. При смене parse_FloorLegend_KeepsClassMarker проверь это утверждение.");
+        assertTrue(
+                SchematicBlocks.isFloorClass("minecraft:cobblestone"),
+                "булыжник — пол"
+                        + " Иначе тест parse_FloorLegend_KeepsClassMarker перестанет ловить эту поломку. При смене parse_FloorLegend_KeepsClassMarker проверь это утверждение.");
         assertTrue(
                 SchematicBlocks.isFloorClass("minecraft:grass_block"),
                 "трава — пол: строитель шахты оставляет её у входа, а аудит без неё считал спуск недостроенным и "
-                        + "шахта переоткрывалась по кругу (сцена 56)");
+                        + "шахта переоткрывалась по кругу (сцена 56)"
+                        + " При смене parse_FloorLegend_KeepsClassMarker проверь это утверждение.");
         assertFalse(
                 SchematicBlocks.isFloorClass("minecraft:oak_planks"),
-                "доски не пол шахты: класс не должен прощать дорогой блок");
+                "доски не пол шахты: класс не должен прощать дорогой блок"
+                        + " Иначе тест parse_FloorLegend_KeepsClassMarker перестанет ловить эту поломку. При смене parse_FloorLegend_KeepsClassMarker проверь это утверждение.");
     }
 
     @Test
@@ -87,9 +94,13 @@ class SchematicMineFormatTests {
                           - y0: |
                               #
                         """),
-                "@floor не блок с состоянием: свойства у класса пола не задаются");
+                "@floor не блок с состоянием: свойства у класса пола не задаются"
+                        + " Иначе тест parse_FloorLegendWithState_IsRejected перестанет ловить эту поломку. При смене parse_FloorLegendWithState_IsRejected проверь это утверждение.");
 
-        assertTrue(error.getMessage().contains("@floor"), "ошибка называет класс пола: " + error.getMessage());
+        assertTrue(
+                error.getMessage().contains("@floor"),
+                "ошибка называет класс пола: " + error.getMessage()
+                        + " Иначе тест parse_FloorLegendWithState_IsRejected перестанет ловить эту поломку. При смене parse_FloorLegendWithState_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -101,19 +112,23 @@ class SchematicMineFormatTests {
         assertEquals(
                 15,
                 expanded.schematic().blocks().size(),
-                "от y=64 до y=50 шагом -1 получается 15 ступеней: каждая обязана иметь пол");
+                "от y=64 до y=50 шагом -1 получается 15 ступеней: каждая обязана иметь пол"
+                        + " Иначе тест expand_RepeatUntilY_RepeatsSegmentToTarget перестанет ловить эту поломку. При смене expand_RepeatUntilY_RepeatsSegmentToTarget проверь это утверждение.");
         assertEquals(
                 45,
                 expanded.schematic().air().size(),
-                "у каждой из 15 ступеней три клетки прохода: воздух тоже разворачивается");
+                "у каждой из 15 ступеней три клетки прохода: воздух тоже разворачивается"
+                        + " Иначе тест expand_RepeatUntilY_RepeatsSegmentToTarget перестанет ловить эту поломку. При смене expand_RepeatUntilY_RepeatsSegmentToTarget проверь это утверждение.");
         assertEquals(
                 new BlockCoord(0, 14, 0),
                 expanded.offset(),
-                "развёрнутая схема сдвигается вверх, чтобы низ стал y=0: сдвиг нужен для входа");
+                "развёрнутая схема сдвигается вверх, чтобы низ стал y=0: сдвиг нужен для входа"
+                        + " Иначе тест expand_RepeatUntilY_RepeatsSegmentToTarget перестанет ловить эту поломку. При смене expand_RepeatUntilY_RepeatsSegmentToTarget проверь это утверждение.");
         assertEquals(
                 new BlockCoord(0, 17, 0),
                 document.expanded(64).header().entrance().orElseThrow(),
-                "вход переезжает вместе со схемой: он остаётся верхней клеткой спуска");
+                "вход переезжает вместе со схемой: он остаётся верхней клеткой спуска"
+                        + " Иначе тест expand_RepeatUntilY_RepeatsSegmentToTarget перестанет ловить эту поломку. При смене expand_RepeatUntilY_RepeatsSegmentToTarget проверь это утверждение.");
     }
 
     @Test
@@ -135,8 +150,13 @@ class SchematicMineFormatTests {
         assertEquals(
                 6,
                 expanded.schematic().blocks().size(),
-                "три копии сегмента по два блока дают шесть блоков: times разворачивает ровно столько копий");
-        assertEquals(6, expanded.schematic().sizeX(), "шаг по x удлиняет схему на 2 за копию");
+                "три копии сегмента по два блока дают шесть блоков: times разворачивает ровно столько копий"
+                        + " Иначе тест expand_RepeatTimes_RepeatsAlongStep перестанет ловить эту поломку. При смене expand_RepeatTimes_RepeatsAlongStep проверь это утверждение.");
+        assertEquals(
+                6,
+                expanded.schematic().sizeX(),
+                "шаг по x удлиняет схему на 2 за копию"
+                        + " Иначе тест expand_RepeatTimes_RepeatsAlongStep перестанет ловить эту поломку. При смене expand_RepeatTimes_RepeatsAlongStep проверь это утверждение.");
     }
 
     @Test
@@ -145,7 +165,8 @@ class SchematicMineFormatTests {
 
         assertTrue(
                 document.schematic().blocks().stream().anyMatch(Schematic.Entry::optional),
-                "суффикс ~ в легенде делает клетку необязательной: без неё аудит не валит постройку");
+                "суффикс ~ в легенде делает клетку необязательной: без неё аудит не валит постройку"
+                        + " Иначе тест parse_OptionalLegend_MarksSoftCell перестанет ловить эту поломку. При смене parse_OptionalLegend_MarksSoftCell проверь это утверждение.");
     }
 
     @Test
@@ -172,7 +193,8 @@ class SchematicMineFormatTests {
 
         assertTrue(
                 report.problems().stream().anyMatch(problem -> problem.contains("probe|floor")),
-                "под воздушной колонкой обязан быть пол класса @floor: " + report.problems());
+                "под воздушной колонкой обязан быть пол класса @floor: " + report.problems()
+                        + " Иначе тест check_UndergroundWithoutFloor_IsRejected перестанет ловить эту поломку. При смене check_UndergroundWithoutFloor_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -196,7 +218,8 @@ class SchematicMineFormatTests {
 
         assertTrue(
                 report.problems().stream().anyMatch(problem -> problem.contains("probe|passage_height")),
-                "проход ниже 3 блоков не проходит: дух не выйдет наверх; " + report.problems());
+                "проход ниже 3 блоков не проходит: дух не выйдет наверх; " + report.problems()
+                        + " Иначе тест check_UndergroundPassageLowerThanThree_IsRejected перестанет ловить эту поломку. При смене check_UndergroundPassageLowerThanThree_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -227,7 +250,8 @@ class SchematicMineFormatTests {
 
         assertTrue(
                 report.problems().stream().anyMatch(problem -> problem.contains("probe|passage_step")),
-                "ступень выше 1 блока не проходится пешком: " + report.problems());
+                "ступень выше 1 блока не проходится пешком: " + report.problems()
+                        + " Иначе тест check_UndergroundStepHigherThanOne_IsRejected перестанет ловить эту поломку. При смене check_UndergroundStepHigherThanOne_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -248,7 +272,8 @@ class SchematicMineFormatTests {
 
         assertTrue(
                 report.problems().stream().anyMatch(problem -> problem.contains("probe|entrance")),
-                "вход спуска — верхняя клетка, иначе дух начнёт с середины; " + report.problems());
+                "вход спуска — верхняя клетка, иначе дух начнёт с середины; " + report.problems()
+                        + " При смене check_UndergroundDescentEntranceNotTop_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -259,6 +284,7 @@ class SchematicMineFormatTests {
 
         assertTrue(
                 report.ok(),
-                "без факела подземная постройка проходит: свет не обязателен, пока нет угля; " + report.problems());
+                "без факела подземная постройка проходит: свет не обязателен, пока нет угля; " + report.problems()
+                        + " Иначе тест check_UndergroundWithoutOptionalTorch_Passes перестанет ловить эту поломку. При смене check_UndergroundWithoutOptionalTorch_Passes проверь это утверждение.");
     }
 }

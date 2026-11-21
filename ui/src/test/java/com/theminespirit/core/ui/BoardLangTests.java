@@ -63,7 +63,8 @@ class BoardLangTests {
                     missing,
                     "Новый кейс, статус, группа, этап поселения или причина ожидания доски без перевода в " + lang
                             + ": игрок увидит на экране доски имя константы. Добавьте ключ в "
-                            + "src/main/resources/assets/theminespirit/lang/" + lang + ".json");
+                            + "src/main/resources/assets/theminespirit/lang/" + lang + ".json"
+                            + " Иначе тест langFiles_EveryCaseStatusAndGroup_HaveTranslation перестанет ловить эту поломку. При смене langFiles_EveryCaseStatusAndGroup_HaveTranslation проверь это утверждение.");
         }
     }
 
@@ -83,7 +84,8 @@ class BoardLangTests {
                     missing,
                     "Текст времени задания доски без перевода в " + lang
                             + ": игрок увидит на плитке сырой ключ. Добавьте ключ в "
-                            + "src/main/resources/assets/theminespirit/lang/" + lang + ".json");
+                            + "src/main/resources/assets/theminespirit/lang/" + lang + ".json"
+                            + " Иначе тест langFiles_TimeTexts_HaveTranslation перестанет ловить эту поломку. При смене langFiles_TimeTexts_HaveTranslation проверь это утверждение.");
         }
     }
 
@@ -92,6 +94,7 @@ class BoardLangTests {
         assertEquals(
                 keys("ru_ru"),
                 keys("en_us"),
-                "Ключи ru_ru и en_us разошлись: игрок с другим языком увидит сырой ключ вместо текста");
+                "Ключи ru_ru и en_us разошлись: игрок с другим языком увидит сырой ключ вместо текста"
+                        + " Иначе тест langFiles_RuAndEn_HaveSameKeys перестанет ловить эту поломку. При смене langFiles_RuAndEn_HaveSameKeys проверь это утверждение.");
     }
 }

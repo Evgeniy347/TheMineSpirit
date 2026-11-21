@@ -14,7 +14,8 @@ class PathRefreshPolicyTests {
 
         assertTrue(
                 policy.shouldRefresh(10, 64, 10, false),
-                "первый путь обязан строиться: без него дух не начнёт движение к цели");
+                "первый путь обязан строиться: без него дух не начнёт движение к цели"
+                        + " Иначе тест shouldRefresh_FirstTarget_IsTrue перестанет ловить эту поломку. При смене shouldRefresh_FirstTarget_IsTrue проверь это утверждение.");
     }
 
     @Test
@@ -25,7 +26,8 @@ class PathRefreshPolicyTests {
         assertFalse(
                 policy.shouldRefresh(10.5, 64, 10, false),
                 "цель, сместившаяся меньше чем на блок, не требует нового поиска пути: иначе дух ищет путь "
-                        + "каждый тик и кладёт серверный тик");
+                        + "каждый тик и кладёт серверный тик"
+                        + " При смене shouldRefresh_TargetStayedWithinTolerance_IsFalse проверь это утверждение.");
     }
 
     @Test
@@ -36,7 +38,8 @@ class PathRefreshPolicyTests {
         assertTrue(
                 policy.shouldRefresh(12, 64, 10, false),
                 "цель, ушедшая больше чем на блок, требует нового пути: иначе дух идёт к устаревшей точке "
-                        + "и теряет игрока");
+                        + "и теряет игрока"
+                        + " При смене shouldRefresh_TargetMovedBeyondTolerance_IsTrue проверь это утверждение.");
     }
 
     @Test
@@ -48,7 +51,8 @@ class PathRefreshPolicyTests {
         assertTrue(
                 policy.shouldRefresh(10, 64, 10, true),
                 "закончившаяся навигация требует нового пути, даже если цель не двигалась: иначе дух застынет "
-                        + "в стороне от неподвижной цели");
+                        + "в стороне от неподвижной цели"
+                        + " При смене shouldRefresh_PathFinishedAfterActivePath_IsTrue проверь это утверждение.");
     }
 
     @Test
@@ -58,14 +62,17 @@ class PathRefreshPolicyTests {
 
         assertTrue(
                 policy.shouldRefresh(10, 64, 10, true),
-                "первая неудачная попытка ещё допустима: у moveTo не было шанса дать путь (чанк мог быть не загружен)");
+                "первая неудачная попытка ещё допустима: у moveTo не было шанса дать путь (чанк мог быть не загружен)"
+                        + " Иначе тест shouldRefresh_NavigationAlwaysDoneWithoutActivePath_RetriesOnlyOnce перестанет ловить эту поломку. При смене shouldRefresh_NavigationAlwaysDoneWithoutActivePath_RetriesOnlyOnce проверь это утверждение.");
         assertFalse(
                 policy.shouldRefresh(10, 64, 10, true),
                 "повторная неудачная навигация не обязана строить путь каждый тик: иначе застрявший дух кладёт "
-                        + "серверный тик, не имея ни одного шанса построить путь");
+                        + "серверный тик, не имея ни одного шанса построить путь"
+                        + " При смене shouldRefresh_NavigationAlwaysDoneWithoutActivePath_RetriesOnlyOnce проверь это утверждение.");
         assertFalse(
                 policy.shouldRefresh(10, 64, 10, true),
-                "кулдаун не успел пройти, дух обязан продолжать ждать, а не строить путь впустую");
+                "кулдаун не успел пройти, дух обязан продолжать ждать, а не строить путь впустую"
+                        + " Иначе тест shouldRefresh_NavigationAlwaysDoneWithoutActivePath_RetriesOnlyOnce перестанет ловить эту поломку. При смене shouldRefresh_NavigationAlwaysDoneWithoutActivePath_RetriesOnlyOnce проверь это утверждение.");
     }
 
     @Test
@@ -77,12 +84,14 @@ class PathRefreshPolicyTests {
         for (int call = 0; call < PathRefreshPolicy.RETRY_COOLDOWN_CALLS; call++) {
             assertFalse(
                     policy.shouldRefresh(10, 64, 10, true),
-                    "До исхода кулдауна рекомендация обязана быть отрицательной на вызове " + call);
+                    "До исхода кулдауна рекомендация обязана быть отрицательной на вызове " + call
+                            + " Иначе тест shouldRefresh_FailedAttempt_RetriesAfterCooldown перестанет ловить эту поломку. При смене shouldRefresh_FailedAttempt_RetriesAfterCooldown проверь это утверждение.");
         }
         assertTrue(
                 policy.shouldRefresh(10, 64, 10, true),
                 "после кулдауна дух обязан снова попробовать путь: чанк цели мог загрузиться, и без повторной "
-                        + "попытки дух застрял бы навсегда");
+                        + "попытки дух застрял бы навсегда"
+                        + " Иначе тест shouldRefresh_FailedAttempt_RetriesAfterCooldown перестанет ловить эту поломку. При смене shouldRefresh_FailedAttempt_RetriesAfterCooldown проверь это утверждение.");
     }
 
     @Test
@@ -90,11 +99,13 @@ class PathRefreshPolicyTests {
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,
                 () -> new PathRefreshPolicy(-1),
-                "Отрицательный допуск смещения обязан отклоняться: с ним ни один путь не строится");
+                "Отрицательный допуск смещения обязан отклоняться: с ним ни один путь не строится"
+                        + " Иначе тест shouldRefresh_NegativeTolerance_IsRejected перестанет ловить эту поломку. При смене shouldRefresh_NegativeTolerance_IsRejected проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("-1"),
                 "Отказ обязан называть допуск '-1', чтобы видеть, какое значение перепроверить. Фактическое: "
-                        + error.getMessage());
+                        + error.getMessage()
+                        + " Иначе тест shouldRefresh_NegativeTolerance_IsRejected перестанет ловить эту поломку. При смене shouldRefresh_NegativeTolerance_IsRejected проверь это утверждение.");
     }
 }

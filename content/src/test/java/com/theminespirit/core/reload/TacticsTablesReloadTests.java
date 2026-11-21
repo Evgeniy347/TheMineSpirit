@@ -38,12 +38,14 @@ class TacticsTablesReloadTests {
             assertTrue(
                     report.failed(),
                     id + ": битый json обязан попасть в отчёт с ошибкой — иначе /reload молча оставит игрока "
-                            + "без объяснения, почему число не поменялось");
+                            + "без объяснения, почему число не поменялось"
+                            + " При смене brokenReload_KeepsPreviousVersion_ForEveryTacticsTable проверь это утверждение.");
             assertSame(
                     before,
                     holder.current(),
                     id + ": битый json не подменяет таблицу пустотой — прежняя версия остаётся в силе, иначе дух "
-                            + "начнёт работать по умолчанию вместо последней удачной загрузки");
+                            + "начнёт работать по умолчанию вместо последней удачной загрузки"
+                            + " При смене brokenReload_KeepsPreviousVersion_ForEveryTacticsTable проверь это утверждение.");
         }
     }
 
@@ -67,7 +69,8 @@ class TacticsTablesReloadTests {
                     TargetClass.MELEE,
                     DefenseProfile.loadDefault().classify("minecraft:creeper"),
                     "После /reload потребитель обязан видеть новую карту целей: иначе датапак мира не поменяет "
-                            + "классификацию врагов без перезапуска");
+                            + "классификацию врагов без перезапуска"
+                            + " При смене priorities_ReloadedJson_ConsumerReadsNewClassMapping проверь это утверждение.");
         } finally {
             DefenseProfile.useSource(original);
         }
@@ -92,7 +95,8 @@ class TacticsTablesReloadTests {
                     20,
                     ProcessingRules.loadDefault().charcoalTarget(),
                     "После /reload потребитель обязан видеть новую цель угля: иначе датапак мира не поменяет "
-                            + "переработку без перезапуска, а таблица числится горячей ложно");
+                            + "переработку без перезапуска, а таблица числится горячей ложно"
+                            + " При смене processing_ReloadedJson_ConsumerReadsNewValue проверь это утверждение.");
         } finally {
             ProcessingRules.useSource(original);
         }

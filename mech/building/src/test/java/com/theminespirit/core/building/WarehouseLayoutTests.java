@@ -29,12 +29,14 @@ class WarehouseLayoutTests {
                     layout.doubleChests(),
                     "Склад уровня " + level + " обязан вмещать " + expected.get(level - 1)
                             + " двойных сундуков по чеклисту: другое число разошлось бы с раскладкой "
-                            + "категорий и вместимостью склада");
+                            + "категорий и вместимостью склада"
+                            + " Иначе тест levels_DoubleChests_MatchChecklist перестанет ловить эту поломку. При смене levels_DoubleChests_MatchChecklist проверь это утверждение.");
             assertEquals(
                     expected.get(level - 1) / 3,
                     layout.stacks().size(),
                     "Каждая стопка уровня " + level + " — три двойных сундука: число стопок обязано "
-                            + "быть втрое меньше числа двойных сундуков");
+                            + "быть втрое меньше числа двойных сундуков"
+                            + " Иначе тест levels_DoubleChests_MatchChecklist перестанет ловить эту поломку. При смене levels_DoubleChests_MatchChecklist проверь это утверждение.");
         }
     }
 
@@ -45,7 +47,8 @@ class WarehouseLayoutTests {
                     4,
                     layout(level).interiorHeight(),
                     "Внутренняя высота склада уровня " + level + " — 4 блока: над верхним сундуком "
-                            + "обязан остаться воздух, иначе он не открывается");
+                            + "обязан остаться воздух, иначе он не открывается"
+                            + " При смене levels_InteriorHeight_IsFour проверь это утверждение.");
         }
     }
 
@@ -58,18 +61,24 @@ class WarehouseLayoutTests {
                     layout.stacks().size(),
                     layout.signs().size(),
                     "У склада уровня " + level + " на каждую стопку сундуков обязана быть табличка: "
-                            + "без неё дух не знает, куда класть предмет");
+                            + "без неё дух не знает, куда класть предмет"
+                            + " Иначе тест levelsTwoAndUp_EveryStack_HasCategorySign перестанет ловить эту поломку. При смене levelsTwoAndUp_EveryStack_HasCategorySign проверь это утверждение.");
             assertEquals(
                     List.of(),
                     layout.stacksWithoutSign(),
                     "У каждой стопки склада уровня " + level + " обязана быть табличка справа: "
-                            + "пустые стопки без подписи не получат категорию");
+                            + "пустые стопки без подписи не получат категорию"
+                            + " Иначе тест levelsTwoAndUp_EveryStack_HasCategorySign перестанет ловить эту поломку. При смене levelsTwoAndUp_EveryStack_HasCategorySign проверь это утверждение.");
             for (WarehouseLayout.Sign sign : layout.signs()) {
                 assertTrue(
                         categories.known(sign.text()),
                         "Табличка склада называет категорию из таблицы данных, фактически '" + sign.text()
-                                + "': неизвестная надпись не даст раскладке выбрать сундук");
-                assertFalse(sign.text().isBlank(), "Надпись на табличке не может быть пустой");
+                                + "': неизвестная надпись не даст раскладке выбрать сундук"
+                                + " Иначе тест levelsTwoAndUp_EveryStack_HasCategorySign перестанет ловить эту поломку. При смене levelsTwoAndUp_EveryStack_HasCategorySign проверь это утверждение.");
+                assertFalse(
+                        sign.text().isBlank(),
+                        "Надпись на табличке не может быть пустой"
+                                + " Иначе тест levelsTwoAndUp_EveryStack_HasCategorySign перестанет ловить эту поломку. При смене levelsTwoAndUp_EveryStack_HasCategorySign проверь это утверждение.");
             }
         }
     }
@@ -81,6 +90,7 @@ class WarehouseLayoutTests {
         assertEquals(
                 List.of(),
                 layout.signs(),
-                "Уровень 1 — три стопки без колонн и табличек: подпись появилась бы раньше категорий");
+                "Уровень 1 — три стопки без колонн и табличек: подпись появилась бы раньше категорий"
+                        + " Иначе тест levelOne_WithoutChests_HasNoCategorySigns перестанет ловить эту поломку. При смене levelOne_WithoutChests_HasNoCategorySigns проверь это утверждение.");
     }
 }

@@ -36,26 +36,33 @@ class CoordinatorPlanProperties {
         assertEquals(
                 new Coordinator().plan(state, reservations, 100),
                 new Coordinator().plan(state, reservations, 100),
-                "Тот же вход даёт тот же план: решения стабильны между пересборками");
+                "Тот же вход даёт тот же план: решения стабильны между пересборками"
+                        + " Иначе тест plan_AnyState_Deterministic перестанет ловить эту поломку. При смене plan_AnyState_Deterministic проверь это утверждение.");
     }
 
     @Property
     void plan_AnyState_DefendersWithinRadius(@ForAll("states") CoordinatorState state) {
         CoordinatorPlan plan = new Coordinator().plan(state, new WorkReservations(), 100);
 
-        assertEquals(16, state.defendedRadius(), "Радиус состояния переносится в план как есть");
+        assertEquals(
+                16,
+                state.defendedRadius(),
+                "Радиус состояния переносится в план как есть"
+                        + " Иначе тест plan_AnyState_DefendersWithinRadius перестанет ловить эту поломку. При смене plan_AnyState_DefendersWithinRadius проверь это утверждение.");
         for (DefenseAssignment assignment : plan.defense()) {
             assertEquals(
                     16,
                     assignment.post().distanceTo(BASE),
                     1e-6,
-                    "Каждый пост в радиусе обороны: защитник не уходит за её пределы");
+                    "Каждый пост в радиусе обороны: защитник не уходит за её пределы"
+                            + " Иначе тест plan_AnyState_DefendersWithinRadius перестанет ловить эту поломку. При смене plan_AnyState_DefendersWithinRadius проверь это утверждение.");
         }
         for (DefenseAssignment assignment : plan.defense()) {
             assertTrue(
                     state.defenders().stream()
                             .anyMatch(defender -> defender.id().equals(assignment.defender())),
-                    "Пост получает защитник состояния: чужой в оборону не попадает");
+                    "Пост получает защитник состояния: чужой в оборону не попадает"
+                            + " Иначе тест plan_AnyState_DefendersWithinRadius перестанет ловить эту поломку. При смене plan_AnyState_DefendersWithinRadius проверь это утверждение.");
         }
     }
 
@@ -73,23 +80,31 @@ class CoordinatorPlanProperties {
         assertEquals(
                 new Coordinator().plan(afterState, new WorkReservations(), 100),
                 after,
-                "После выбытия духа оставшиеся решения снова детерминированы");
+                "После выбытия духа оставшиеся решения снова детерминированы"
+                        + " Иначе тест plan_AnyState_ValidAfterSpiritLoss перестанет ловить эту поломку. При смене plan_AnyState_ValidAfterSpiritLoss проверь это утверждение.");
         for (DefenseAssignment assignment : after.defense()) {
             assertEquals(
                     16,
                     assignment.post().distanceTo(BASE),
                     1e-6,
-                    "После выбытия оставшиеся посты в радиусе: перераспределение не выгоняет защитников");
+                    "После выбытия оставшиеся посты в радиусе: перераспределение не выгоняет защитников"
+                            + " Иначе тест plan_AnyState_ValidAfterSpiritLoss перестанет ловить эту поломку. При смене plan_AnyState_ValidAfterSpiritLoss проверь это утверждение.");
         }
         for (AssistOrder order : after.assists()) {
             assertTrue(
                     afterState.spirits().stream().anyMatch(spirit -> spirit.id().equals(order.helper())),
-                    "После выбытия помощник — из оставшихся духов");
+                    "После выбытия помощник — из оставшихся духов"
+                            + " Иначе тест plan_AnyState_ValidAfterSpiritLoss перестанет ловить эту поломку. При смене plan_AnyState_ValidAfterSpiritLoss проверь это утверждение.");
             assertTrue(
                     afterState.spirits().stream().anyMatch(spirit -> spirit.id().equals(order.ward())),
-                    "После выбытия подопечный — из оставшихся духов");
+                    "После выбытия подопечный — из оставшихся духов"
+                            + " Иначе тест plan_AnyState_ValidAfterSpiritLoss перестанет ловить эту поломку. При смене plan_AnyState_ValidAfterSpiritLoss проверь это утверждение.");
         }
-        assertEquals(before.defendedPoint(), after.defendedPoint(), "Точка обороны не меняется от выбытия духа");
+        assertEquals(
+                before.defendedPoint(),
+                after.defendedPoint(),
+                "Точка обороны не меняется от выбытия духа"
+                        + " Иначе тест plan_AnyState_ValidAfterSpiritLoss перестанет ловить эту поломку. При смене plan_AnyState_ValidAfterSpiritLoss проверь это утверждение.");
     }
 
     private Arbitrary<SpiritSnapshot> spirit() {

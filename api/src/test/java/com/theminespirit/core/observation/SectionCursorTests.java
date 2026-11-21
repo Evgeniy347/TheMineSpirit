@@ -18,12 +18,17 @@ class SectionCursorTests {
         assertEquals(
                 1,
                 slices.size(),
-                "Куб внутри одной секции 16×16×16 обязан резаться на один срез: лишние срезы удваивают чтение блоков");
+                "Куб внутри одной секции 16×16×16 обязан резаться на один срез: лишние срезы удваивают чтение блоков"
+                        + " Иначе тест next_CubeInsideOneSection_ReturnsOneSlice перестанет ловить эту поломку. При смене next_CubeInsideOneSection_ReturnsOneSlice проверь это утверждение.");
         assertEquals(
                 box,
                 slices.get(0).bounds(),
-                "Срез единственной секции обязан совпадать с кубом: иначе часть куба не будет просмотрена");
-        assertTrue(cursor.isDone(), "После выдачи единственного среза курсор обязан быть пуст");
+                "Срез единственной секции обязан совпадать с кубом: иначе часть куба не будет просмотрена"
+                        + " При смене next_CubeInsideOneSection_ReturnsOneSlice проверь это утверждение.");
+        assertTrue(
+                cursor.isDone(),
+                "После выдачи единственного среза курсор обязан быть пуст"
+                        + " Иначе тест next_CubeInsideOneSection_ReturnsOneSlice перестанет ловить эту поломку. При смене next_CubeInsideOneSection_ReturnsOneSlice проверь это утверждение.");
     }
 
     @Test
@@ -33,15 +38,21 @@ class SectionCursorTests {
 
         List<SectionSlice> slices = cursor.next(10);
 
-        assertEquals(2, slices.size(), "Куб через границу секций по X обязан резаться на два среза");
+        assertEquals(
+                2,
+                slices.size(),
+                "Куб через границу секций по X обязан резаться на два среза"
+                        + " Иначе тест next_CubeAcrossSectionBorder_ReturnsTwoSlicesCoveringCube перестанет ловить эту поломку. При смене next_CubeAcrossSectionBorder_ReturnsTwoSlicesCoveringCube проверь это утверждение.");
         assertEquals(
                 new BlockBox(new BlockCoord(12, 0, 0), new BlockCoord(15, 3, 3)),
                 slices.get(0).bounds(),
-                "Первым идёт срез с центром: его границы обрезаются по границе секции x=15");
+                "Первым идёт срез с центром: его границы обрезаются по границе секции x=15"
+                        + " Иначе тест next_CubeAcrossSectionBorder_ReturnsTwoSlicesCoveringCube перестанет ловить эту поломку. При смене next_CubeAcrossSectionBorder_ReturnsTwoSlicesCoveringCube проверь это утверждение.");
         assertEquals(
                 new BlockBox(new BlockCoord(16, 0, 0), new BlockCoord(19, 3, 3)),
                 slices.get(1).bounds(),
-                "Второй срез начинается ровно с x=16: щель или нахлёст дают пропуск или двойной подсчёт блоков");
+                "Второй срез начинается ровно с x=16: щель или нахлёст дают пропуск или двойной подсчёт блоков"
+                        + " Иначе тест next_CubeAcrossSectionBorder_ReturnsTwoSlicesCoveringCube перестанет ловить эту поломку. При смене next_CubeAcrossSectionBorder_ReturnsTwoSlicesCoveringCube проверь это утверждение.");
     }
 
     @Test
@@ -54,7 +65,8 @@ class SectionCursorTests {
         assertEquals(
                 List.of(-1, 0),
                 slices.stream().map(SectionSlice::sectionX).toList(),
-                "Блоки x=-2 и x=1 лежат в секциях -1 и 0: деление к нулю вместо floor склеило бы их в одну секцию");
+                "Блоки x=-2 и x=1 лежат в секциях -1 и 0: деление к нулю вместо floor склеило бы их в одну секцию"
+                        + " Иначе тест next_NegativeCoordinates_UseFloorSections перестанет ловить эту поломку. При смене next_NegativeCoordinates_UseFloorSections проверь это утверждение.");
     }
 
     @Test
@@ -67,15 +79,18 @@ class SectionCursorTests {
         assertEquals(
                 List.of(0, 0, 1, 1),
                 slices.stream().map(SectionSlice::sectionX).toList(),
-                "Центр у угла четырёх секций: расстояния 0, 1, 1, 2, ничья двух средних решается по x");
+                "Центр у угла четырёх секций: расстояния 0, 1, 1, 2, ничья двух средних решается по x"
+                        + " Иначе тест next_CenterSliceTiesAndDistances_AreOrderedByDistanceThenXyz перестанет ловить эту поломку. При смене next_CenterSliceTiesAndDistances_AreOrderedByDistanceThenXyz проверь это утверждение.");
         assertEquals(
                 List.of(0, 1, 0, 1),
                 slices.stream().map(SectionSlice::sectionZ).toList(),
-                "При равном x ничья решается по z: порядок обязан быть стабильным между запусками");
+                "При равном x ничья решается по z: порядок обязан быть стабильным между запусками"
+                        + " Иначе тест next_CenterSliceTiesAndDistances_AreOrderedByDistanceThenXyz перестанет ловить эту поломку. При смене next_CenterSliceTiesAndDistances_AreOrderedByDistanceThenXyz проверь это утверждение.");
         assertEquals(
                 0L,
                 slices.get(0).distanceSquared(new BlockCoord(15, 0, 15)),
-                "Срез, содержащий центр, обязан идти первым с расстоянием 0");
+                "Срез, содержащий центр, обязан идти первым с расстоянием 0"
+                        + " Иначе тест next_CenterSliceTiesAndDistances_AreOrderedByDistanceThenXyz перестанет ловить эту поломку. При смене next_CenterSliceTiesAndDistances_AreOrderedByDistanceThenXyz проверь это утверждение.");
     }
 
     @Test
@@ -83,10 +98,26 @@ class SectionCursorTests {
         BlockBox box = new BlockBox(new BlockCoord(0, 0, 0), new BlockCoord(47, 0, 15));
         SectionCursor cursor = SectionCursor.of(box, new BlockCoord(0, 0, 0));
 
-        assertEquals(2, cursor.next(2).size(), "Первая порция обязана отдать maxSlices срезов");
-        assertEquals(1, cursor.remaining(), "После порции из двух в курсоре из трёх срезов остаётся один");
-        assertEquals(1, cursor.next(2).size(), "Последняя порция обязана отдать остаток, а не пустое место");
-        assertEquals(0, cursor.next(2).size(), "Пустой курсор обязан отдавать пустую порцию, а не падать");
+        assertEquals(
+                2,
+                cursor.next(2).size(),
+                "Первая порция обязана отдать maxSlices срезов"
+                        + " Иначе тест next_PortionLimit_SplitsSlicesIntoPortions перестанет ловить эту поломку. При смене next_PortionLimit_SplitsSlicesIntoPortions проверь это утверждение.");
+        assertEquals(
+                1,
+                cursor.remaining(),
+                "После порции из двух в курсоре из трёх срезов остаётся один"
+                        + " Иначе тест next_PortionLimit_SplitsSlicesIntoPortions перестанет ловить эту поломку. При смене next_PortionLimit_SplitsSlicesIntoPortions проверь это утверждение.");
+        assertEquals(
+                1,
+                cursor.next(2).size(),
+                "Последняя порция обязана отдать остаток, а не пустое место"
+                        + " Иначе тест next_PortionLimit_SplitsSlicesIntoPortions перестанет ловить эту поломку. При смене next_PortionLimit_SplitsSlicesIntoPortions проверь это утверждение.");
+        assertEquals(
+                0,
+                cursor.next(2).size(),
+                "Пустой курсор обязан отдавать пустую порцию, а не падать"
+                        + " Иначе тест next_PortionLimit_SplitsSlicesIntoPortions перестанет ловить эту поломку. При смене next_PortionLimit_SplitsSlicesIntoPortions проверь это утверждение.");
     }
 
     @Test
@@ -99,7 +130,8 @@ class SectionCursorTests {
                 2,
                 cursor.next(Integer.MAX_VALUE).size(),
                 "Порция Integer.MAX_VALUE после частичного чтения обязана отдать остаток: переполнение int "
-                        + "сломало бы WorldScanner.observe, который шагает до конца одной порцией");
+                        + "сломало бы WorldScanner.observe, который шагает до конца одной порцией"
+                        + " Иначе тест next_HugePortionAfterPartialRead_ReturnsRemainderWithoutOverflow перестанет ловить эту поломку. При смене next_HugePortionAfterPartialRead_ReturnsRemainderWithoutOverflow проверь это утверждение.");
     }
 
     @Test
@@ -110,7 +142,8 @@ class SectionCursorTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> cursor.next(0),
-                "Порция в 0 срезов обязана отвергаться: цикл скана с ней не закончился бы никогда");
+                "Порция в 0 срезов обязана отвергаться: цикл скана с ней не закончился бы никогда"
+                        + " Иначе тест next_ZeroPortionSize_IsRejected перестанет ловить эту поломку. При смене next_ZeroPortionSize_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -119,7 +152,8 @@ class SectionCursorTests {
 
         assertTrue(
                 cursor.isDone() && cursor.next(4).isEmpty() && cursor.total() == 0,
-                "Пустой курсор нужен для центра вне высоты мира: скан обязан закончиться сразу, а не упасть");
+                "Пустой курсор нужен для центра вне высоты мира: скан обязан закончиться сразу, а не упасть"
+                        + " Иначе тест empty_Cursor_IsDoneAndReturnsNoSlices перестанет ловить эту поломку. При смене empty_Cursor_IsDoneAndReturnsNoSlices проверь это утверждение.");
     }
 
     @Test
@@ -127,7 +161,8 @@ class SectionCursorTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new BlockBox(new BlockCoord(5, 0, 0), new BlockCoord(4, 0, 0)),
-                "Куб с min правее max обязан отвергаться: его объём отрицателен и скан просмотрел бы ничего");
+                "Куб с min правее max обязан отвергаться: его объём отрицателен и скан просмотрел бы ничего"
+                        + " Иначе тест blockBox_MinBeyondMax_IsRejected перестанет ловить эту поломку. При смене blockBox_MinBeyondMax_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -137,10 +172,12 @@ class SectionCursorTests {
         assertEquals(
                 true,
                 box.clampY(-64, 50).isEmpty(),
-                "Куб целиком выше высоты мира обязан давать пустой результат: иначе курсор получит куб с min > max");
+                "Куб целиком выше высоты мира обязан давать пустой результат: иначе курсор получит куб с min > max"
+                        + " При смене clampY_RangeOutsideCube_ReturnsEmpty проверь это утверждение.");
         assertEquals(
                 new BlockBox(new BlockCoord(0, 100, 0), new BlockCoord(3, 105, 3)),
                 box.clampY(-64, 105).orElseThrow(),
-                "Куб, выступающий над высотой мира, обязан обрезаться по ней");
+                "Куб, выступающий над высотой мира, обязан обрезаться по ней"
+                        + " Иначе тест clampY_RangeOutsideCube_ReturnsEmpty перестанет ловить эту поломку. При смене clampY_RangeOutsideCube_ReturnsEmpty проверь это утверждение.");
     }
 }

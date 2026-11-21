@@ -32,7 +32,8 @@ class LimitAssertionGuardTests {
                 "Проверка предела, где ожидание и факт — оба литерала, зеленеет даже если production "
                         + "нарушил правило: она не читает код, который защищает. Ожидание — число в тесте, "
                         + "факт — из production (константа или вызов). Правило: docs/TESTING.md → «Имя теста "
-                        + "и сообщение assertion». Нарушители");
+                        + "и сообщение assertion». Нарушители"
+                        + " Иначе тест testSources_CurrentTests_HaveNoLiteralVersusLiteralAssertions перестанет ловить эту поломку. При смене testSources_CurrentTests_HaveNoLiteralVersusLiteralAssertions проверь это утверждение.");
     }
 
     @Test
@@ -41,7 +42,8 @@ class LimitAssertionGuardTests {
 
         assertTrue(
                 !findings(sample).isEmpty(),
-                "Сторож ослеп: литерал с обеих сторон не читает production и должен попадать в нарушители");
+                "Сторож ослеп: литерал с обеих сторон не читает production и должен попадать в нарушители"
+                        + " Иначе тест assertionScanner_LiteralVersusLiteral_IsReported перестанет ловить эту поломку. При смене assertionScanner_LiteralVersusLiteral_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -50,7 +52,8 @@ class LimitAssertionGuardTests {
 
         assertTrue(
                 !findings(sample).isEmpty(),
-                "Сторож ослеп: две строки-литерала — та же проверка литерала литералом, но нарушение " + "не найдено");
+                "Сторож ослеп: две строки-литерала — та же проверка литерала литералом, но нарушение " + "не найдено"
+                        + " Иначе тест assertionScanner_ConstantExpressions_IsReported перестанет ловить эту поломку. При смене assertionScanner_ConstantExpressions_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -60,7 +63,8 @@ class LimitAssertionGuardTests {
         assertEquals(
                 List.of(),
                 findings(sample),
-                "Сторож ложно срабатывает: число в тесте плюс факт из production — законная проверка предела");
+                "Сторож ложно срабатывает: число в тесте плюс факт из production — законная проверка предела"
+                        + " Иначе тест assertionScanner_ProductionFact_IsAccepted перестанет ловить эту поломку. При смене assertionScanner_ProductionFact_IsAccepted проверь это утверждение.");
     }
 
     @Test
@@ -68,7 +72,11 @@ class LimitAssertionGuardTests {
         String sample = "        assert" + "Equals(24, BlockerProbe.BLOCK_BUDGET,\n"
                 + "                \"пример в тексте не проверка\");\n";
 
-        assertEquals(List.of(), findings(sample), "Сторож ложно срабатывает: текст сообщения не является проверкой");
+        assertEquals(
+                List.of(),
+                findings(sample),
+                "Сторож ложно срабатывает: текст сообщения не является проверкой"
+                        + " Иначе тест assertionScanner_LiteralInsideMessage_IsAccepted перестанет ловить эту поломку. При смене assertionScanner_LiteralInsideMessage_IsAccepted проверь это утверждение.");
     }
 
     private static List<Finding> findings(String text) {

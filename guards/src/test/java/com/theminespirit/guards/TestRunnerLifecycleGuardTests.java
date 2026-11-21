@@ -23,19 +23,22 @@ class TestRunnerLifecycleGuardTests {
                 script.contains("read -r -t \"$seconds\" -u 9"),
                 "Ожидание test.sh должно быть встроенным (read -t на fifo), иначе на Windows Git Bash "
                         + "pause-процесс может не запуститься и цикл надзора выродится в busy-loop на 100 % "
-                        + "ядра. Правило: scripts/test.sh → pause_tick, без «sleep N & wait» в надзоре");
+                        + "ядра. Правило: scripts/test.sh → pause_tick, без «sleep N & wait» в надзоре"
+                        + " При смене testScript_Supervision_DoesNotForkPauseProcesses проверь это утверждение.");
         for (String forked : new String[] {"sleep 1 &", "sleep 20 &", "sleep \"$GAMETEST_BEAT_INTERVAL\" &"}) {
             assertFalse(
                     script.contains(forked),
                     "В test.sh вернулся fork-пауза «" + forked + "»: под нагрузкой пауза теряется, "
                             + "надзор крутит ядро. Цена: сироты test.sh съедают машину у пяти исполнителей. "
-                            + "Как надо: pause_tick (docs/LEAD-AGENT.md → «Сироты»)");
+                            + "Как надо: pause_tick (docs/LEAD-AGENT.md → «Сироты»)"
+                            + " При смене testScript_Supervision_DoesNotForkPauseProcesses проверь это утверждение.");
         }
         int pauses = script.split("pause_tick", -1).length - 1;
         assertTrue(
                 pauses >= 6,
                 "Надзор test.sh (монитор, пульс, родитель, замок, ожидание смерти) обязан ждать через "
-                        + "pause_tick; найдено вызовов: " + pauses);
+                        + "pause_tick; найдено вызовов: " + pauses
+                        + " Иначе тест testScript_Supervision_DoesNotForkPauseProcesses перестанет ловить эту поломку. При смене testScript_Supervision_DoesNotForkPauseProcesses проверь это утверждение.");
     }
 
     @Test
@@ -45,7 +48,8 @@ class TestRunnerLifecycleGuardTests {
                 script.contains("start_parent_watch") && script.contains("THEMINESPIRIT_TEST_DETACHED"),
                 "test.sh обязан замечать смерть родителя (обёртки исполнителя) и гасить прогон, иначе "
                         + "осиротевший прогон живёт часами; осознанно отвязанный запуск — "
-                        + "THEMINESPIRIT_TEST_DETACHED=1 (docs/LEAD-AGENT.md → «Сироты»)");
+                        + "THEMINESPIRIT_TEST_DETACHED=1 (docs/LEAD-AGENT.md → «Сироты»)"
+                        + " При смене testScript_LosesParent_RunStops проверь это утверждение.");
     }
 
     @Test
@@ -54,20 +58,24 @@ class TestRunnerLifecycleGuardTests {
         assertFalse(
                 detector.contains("taskkill") || detector.contains("Stop-Process") || detector.contains("kill -"),
                 "Детектор сирот scripts/lead/orphans-win.sh обязан только показывать: слепой kill по шаблону "
-                        + "гасит чужие прогоны параллельных исполнителей. Решение и kill — по PID и вручную");
+                        + "гасит чужие прогоны параллельных исполнителей. Решение и kill — по PID и вручную"
+                        + " Иначе тест orphansDetector_OnlyShows_AndChecksAreInPlace перестанет ловить эту поломку. При смене orphansDetector_OnlyShows_AndChecksAreInPlace проверь это утверждение.");
         assertTrue(
                 detector.contains("opencode") && detector.contains("test.sh"),
-                "Детектор должен узнавать сироту по цепочке родителей до живого opencode и по test.sh/gradlew/java");
+                "Детектор должен узнавать сироту по цепочке родителей до живого opencode и по test.sh/gradlew/java"
+                        + " Иначе тест orphansDetector_OnlyShows_AndChecksAreInPlace перестанет ловить эту поломку. При смене orphansDetector_OnlyShows_AndChecksAreInPlace проверь это утверждение.");
         String check = read(CHECK);
         assertTrue(
                 check.contains("wait-cpu") && check.contains("parent-death") && check.contains("orphans-detector"),
                 "Проверка scripts/testing/check-test-runner.sh обязана держать три опыта: ожидание без fork, "
-                        + "смерть родителя гасит прогон, детектор показывает сирот и никого не убивает");
+                        + "смерть родителя гасит прогон, детектор показывает сирот и никого не убивает"
+                        + " Иначе тест orphansDetector_OnlyShows_AndChecksAreInPlace перестанет ловить эту поломку. При смене orphansDetector_OnlyShows_AndChecksAreInPlace проверь это утверждение.");
         String lead = read(LEAD);
         assertTrue(
                 lead.contains("orphans-win.sh") && lead.contains("сирот"),
                 "docs/LEAD-AGENT.md → «Сироты»: главный агент обязан знать, как увидеть сирот test.sh/gradlew/java "
-                        + "с CPU и worktree, прежде чем гасить их по PID");
+                        + "с CPU и worktree, прежде чем гасить их по PID"
+                        + " Иначе тест orphansDetector_OnlyShows_AndChecksAreInPlace перестанет ловить эту поломку. При смене orphansDetector_OnlyShows_AndChecksAreInPlace проверь это утверждение.");
     }
 
     @Test
@@ -77,14 +85,16 @@ class TestRunnerLifecycleGuardTests {
                 script.contains("owner=\"${BASHPID:-$$}\""),
                 "fd паузы test.sh должен быть личным для процесса, который ждёт (имя fifo по BASHPID). "
                         + "Общий fifo с несколькими читателями на Cygwin вырождается в опрос: лидер жжёт ~50 % "
-                        + "ядра, каждый читатель 8–14 %. Правило: каждый ожидающий — свой init_pause_tick");
+                        + "ядра, каждый читатель 8–14 %. Правило: каждый ожидающий — свой init_pause_tick"
+                        + " Иначе тест testScript_PauseFd_IsPrivatePerWaiter перестанет ловить эту поломку. При смене testScript_PauseFd_IsPrivatePerWaiter проверь это утверждение.");
         for (String waiter :
                 new String[] {"monitor_loop", "start_lock_beat", "start_heartbeat", "start_parent_watch"}) {
             assertTrue(
                     body(script, waiter).contains("init_pause_tick"),
                     "Ожидающий процесс «" + waiter + "» обязан завести собственный fd паузы через "
                             + "init_pause_tick: унаследованный общий fifo жжёт ядро у всех исполнителей. "
-                            + "Правило: один ждущий — один fifo (scripts/test.sh → pause_tick)");
+                            + "Правило: один ждущий — один fifo (scripts/test.sh → pause_tick)"
+                            + " Иначе тест testScript_PauseFd_IsPrivatePerWaiter перестанет ловить эту поломку. При смене testScript_PauseFd_IsPrivatePerWaiter проверь это утверждение.");
         }
     }
 
@@ -96,17 +106,20 @@ class TestRunnerLifecycleGuardTests {
                 scene.contains("grep"),
                 "Ожидание старта сцен не должно опрашивать лог через grep: на Windows grep читает весь лог "
                         + "заново раз в секунду и жжёт до ~75 % ядра, пока грузится мир. "
-                        + "Как надо: дочитывать только новые байты по сохранённому смещению fd");
+                        + "Как надо: дочитывать только новые байты по сохранённому смещению fd"
+                        + " Иначе тест testScript_SceneWait_ReadsLogInBoundedChunks перестанет ловить эту поломку. При смене testScript_SceneWait_ReadsLogInBoundedChunks проверь это утверждение.");
         assertTrue(
                 scene.contains("dd bs=1048576 count=1"),
                 "Ожидание маркера сцен читает лог порцией по 1 МиБ с сохранённым смещением fd (dd count=1): "
                         + "без порции одно чтение поднимает в память весь накопленный лог (мегабайты), "
-                        + "а встроенный read читает его побайтно и тормозит старт сцен");
+                        + "а встроенный read читает его побайтно и тормозит старт сцен"
+                        + " Иначе тест testScript_SceneWait_ReadsLogInBoundedChunks перестанет ловить эту поломку. При смене testScript_SceneWait_ReadsLogInBoundedChunks проверь это утверждение.");
         assertFalse(
                 scene.contains("read -r -d ''"),
                 "В ожидании сцен вернулось чтение всего лога разом (read -d ''): на выросшем логе оно "
                         + "поднимает мегабайты в переменную. Правило: scripts/test.sh → gametest_scene_started, "
-                        + "порция по 1 МиБ через dd");
+                        + "порция по 1 МиБ через dd"
+                        + " Иначе тест testScript_SceneWait_ReadsLogInBoundedChunks перестанет ловить эту поломку. При смене testScript_SceneWait_ReadsLogInBoundedChunks проверь это утверждение.");
     }
 
     private static String body(String script, String name) {

@@ -22,7 +22,8 @@ class BlockSightTests {
         assertEquals(
                 Visibility.CLEAR,
                 BlockSight.visible(EYE, TARGET, new Air(), cell -> false),
-                "Блок в прямой видимости виден: иначе дух откажется ломать то, что перед глазами");
+                "Блок в прямой видимости виден: иначе дух откажется ломать то, что перед глазами"
+                        + " При смене visible_DirectLine_Clear проверь это утверждение.");
     }
 
     @Test
@@ -33,7 +34,8 @@ class BlockSightTests {
         assertEquals(
                 Visibility.BLOCKED,
                 BlockSight.visible(EYE, TARGET, world, cell -> false),
-                "Блок за стеной не виден: дух не ломает сквозь стену, как игрок");
+                "Блок за стеной не виден: дух не ломает сквозь стену, как игрок"
+                        + " При смене visible_BlockBehindWall_Blocked проверь это утверждение.");
     }
 
     @Test
@@ -46,7 +48,8 @@ class BlockSightTests {
         assertEquals(
                 Visibility.CLEAR,
                 BlockSight.visible(EYE, TARGET, world, passable),
-                "Бревно за листвой при рубке видно: листва не считается стеной, иначе дерево не срубить");
+                "Бревно за листвой при рубке видно: листва не считается стеной, иначе дерево не срубить"
+                        + " При смене visible_LogBehindLeaves_Clear проверь это утверждение.");
     }
 
     @Test
@@ -57,7 +60,8 @@ class BlockSightTests {
         assertEquals(
                 Visibility.BLOCKED,
                 BlockSight.visible(EYE, TARGET, world, cell -> false),
-                "Бревно за камнем не видно даже при рубке: сквозь твёрдый блок рубить нельзя");
+                "Бревно за камнем не видно даже при рубке: сквозь твёрдый блок рубить нельзя"
+                        + " Иначе тест visible_LogBehindStone_Blocked перестанет ловить эту поломку. При смене visible_LogBehindStone_Blocked проверь это утверждение.");
     }
 
     @Test
@@ -68,7 +72,8 @@ class BlockSightTests {
         assertEquals(
                 Visibility.UNKNOWN,
                 BlockSight.visible(EYE, TARGET, world, cell -> false),
-                "Незагруженная клетка на луче — не догадка: видимость неизвестна, ломать нельзя");
+                "Незагруженная клетка на луче — не догадка: видимость неизвестна, ломать нельзя"
+                        + " Иначе тест visible_UnloadedCell_Unknown перестанет ловить эту поломку. При смене visible_UnloadedCell_Unknown проверь это утверждение.");
     }
 
     private static final class Air implements TerrainView {

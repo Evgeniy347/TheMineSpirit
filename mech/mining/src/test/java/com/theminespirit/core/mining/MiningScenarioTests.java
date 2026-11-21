@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.mining.api.BreakSafety;
 import com.theminespirit.core.mining.api.Cell;
-import com.theminespirit.core.mining.api.ClearScaffold;
 import com.theminespirit.core.mining.api.MiningSafety;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
@@ -18,10 +17,10 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class MiningScenarioTests {
-    private static final int FLOOR_Y = -1;
-    private static final int FEET_Y = 0;
-    private static final int ENTRANCE_X = 0;
-    private static final int END_X = 14;
+    static final int FLOOR_Y = -1;
+    static final int FEET_Y = 0;
+    static final int ENTRANCE_X = 0;
+    static final int END_X = 14;
 
     @Test
     void mine_ThreeSpiritsHikeToVein_AllSafeOreDugAndHazardsLeftAlone() {
@@ -51,32 +50,40 @@ class MiningScenarioTests {
         assertEquals(
                 new HashSet<>(safe),
                 dug,
-                "Добыты не все безопасные цели: поход трёх духов не разобрал жилу " + remaining);
+                "Добыты не все безопасные цели: поход трёх духов не разобрал жилу " + remaining
+                        + " Иначе тест mine_ThreeSpiritsHikeToVein_AllSafeOreDugAndHazardsLeftAlone перестанет ловить эту поломку. При смене mine_ThreeSpiritsHikeToVein_AllSafeOreDugAndHazardsLeftAlone проверь это утверждение.");
         for (BlockCoord cell : safe) {
             assertEquals(
                     Cell.PASSABLE,
                     world.peek(cell),
-                    "Безопасная руда " + cell + " не добыта: поход трёх духов не дошёл до жилы");
+                    "Безопасная руда " + cell + " не добыта: поход трёх духов не дошёл до жилы"
+                            + " Иначе тест mine_ThreeSpiritsHikeToVein_AllSafeOreDugAndHazardsLeftAlone перестанет ловить эту поломку. При смене mine_ThreeSpiritsHikeToVein_AllSafeOreDugAndHazardsLeftAlone проверь это утверждение.");
         }
         assertEquals(
-                Cell.SOLID, world.peek(ore(12, 1)), "Руда у воды цела: ломка открыла бы воду в выработку и на духа");
+                Cell.SOLID,
+                world.peek(ore(12, 1)),
+                "Руда у воды цела: ломка открыла бы воду в выработку и на духа"
+                        + " Иначе тест mine_ThreeSpiritsHikeToVein_AllSafeOreDugAndHazardsLeftAlone перестанет ловить эту поломку. При смене mine_ThreeSpiritsHikeToVein_AllSafeOreDugAndHazardsLeftAlone проверь это утверждение.");
         assertEquals(
                 Cell.SOLID,
                 world.peek(sealed(12, -1)),
-                "Замурованная руда цела: к ней нет стоянки, дух не бьётся в блок без подхода");
+                "Замурованная руда цела: к ней нет стоянки, дух не бьётся в блок без подхода"
+                        + " Иначе тест mine_ThreeSpiritsHikeToVein_AllSafeOreDugAndHazardsLeftAlone перестанет ловить эту поломку. При смене mine_ThreeSpiritsHikeToVein_AllSafeOreDugAndHazardsLeftAlone проверь это утверждение.");
         assertEquals(
                 3,
                 minedBy.size(),
-                "Руду разобрали три духа, а не один: распределение " + minedBy + " оставило двух без работы");
+                "Руду разобрали три духа, а не один: распределение " + minedBy + " оставило двух без работы"
+                        + " Иначе тест mine_ThreeSpiritsHikeToVein_AllSafeOreDugAndHazardsLeftAlone перестанет ловить эту поломку. При смене mine_ThreeSpiritsHikeToVein_AllSafeOreDugAndHazardsLeftAlone проверь это утверждение.");
         for (BlockCoord stand : stands) {
             assertEquals(
                     Cell.SOLID,
                     world.peek(new BlockCoord(stand.x(), FLOOR_Y, stand.z())),
-                    "Стоянка " + stand + " без пола: дух упадёт или зависнет");
+                    "Стоянка " + stand + " без пола: дух упадёт или зависнет"
+                            + " Иначе тест mine_ThreeSpiritsHikeToVein_AllSafeOreDugAndHazardsLeftAlone перестанет ловить эту поломку. При смене mine_ThreeSpiritsHikeToVein_AllSafeOreDugAndHazardsLeftAlone проверь это утверждение.");
         }
     }
 
-    private static List<Choice> chooseRound(List<BlockCoord> spirits, List<BlockCoord> remaining, CellWorld world) {
+    static List<Choice> chooseRound(List<BlockCoord> spirits, List<BlockCoord> remaining, CellWorld world) {
         List<Choice> chosen = new ArrayList<>();
         Set<BlockCoord> takenTargets = new HashSet<>();
         Set<BlockCoord> excluded = new HashSet<>();
@@ -91,10 +98,12 @@ class MiningScenarioTests {
             }
             assertTrue(
                     MiningSafety.canBreak(next.target(), world) instanceof BreakSafety.Safe,
-                    "Планировщик выбрал небезопасную цель " + next.target() + ": дух затопит выработку");
+                    "Планировщик выбрал небезопасную цель " + next.target() + ": дух затопит выработку"
+                            + " Иначе тест mine_ThreeSpiritsHikeToVein_AllSafeOreDugAndHazardsLeftAlone перестанет ловить эту поломку. При смене mine_ThreeSpiritsHikeToVein_AllSafeOreDugAndHazardsLeftAlone проверь это утверждение.");
             assertFalse(
                     excluded.contains(next.stand()),
-                    "Два духа встали на одну стоянку " + next.stand() + ": второй не сможет копать");
+                    "Два духа встали на одну стоянку " + next.stand() + ": второй не сможет копать"
+                            + " При смене mine_ThreeSpiritsHikeToVein_AllSafeOreDugAndHazardsLeftAlone проверь это утверждение.");
             takenTargets.add(next.target());
             excluded.add(next.stand());
             chosen.add(new Choice(index, next));
@@ -102,7 +111,7 @@ class MiningScenarioTests {
         return chosen;
     }
 
-    private static void applyRound(
+    static void applyRound(
             List<Choice> chosen,
             List<BlockCoord> spirits,
             List<BlockCoord> remaining,
@@ -114,13 +123,18 @@ class MiningScenarioTests {
             MiningPlanner.Next next = choice.next();
             assertTrue(
                     MiningSafety.canStand(next.stand(), world),
-                    "Дух " + choice.spirit() + " выбрал стоянку " + next.stand() + " без пола или у опасности");
+                    "Дух " + choice.spirit() + " выбрал стоянку " + next.stand() + " без пола или у опасности"
+                            + " Иначе тест applyRound перестанет ловить эту поломку. При смене applyRound проверь это утверждение.");
             assertTrue(
                     next.stand().y() - spirits.get(choice.spirit()).y() <= MiningTuning.MAX_STAND_RISE,
-                    "Стоянка " + next.stand() + " выше духа больше предела: он туда не поднимется");
+                    "Стоянка " + next.stand() + " выше духа больше предела: он туда не поднимется"
+                            + " Иначе тест applyRound перестанет ловить эту поломку. При смене applyRound проверь это утверждение.");
             spirits.set(choice.spirit(), next.stand());
             stands.add(next.stand());
-            assertTrue(remaining.remove(next.target()), "Цель " + next.target() + " добыта дважды");
+            assertTrue(
+                    remaining.remove(next.target()),
+                    "Цель " + next.target() + " добыта дважды"
+                            + " Иначе тест applyRound перестанет ловить эту поломку. При смене applyRound проверь это утверждение. Иначе поломка пройдёт незамеченной в прогоне.");
             world.set(next.target().x(), next.target().y(), next.target().z(), Cell.PASSABLE);
             minedBy.merge(choice.spirit(), 1, Integer::sum);
             dug.add(next.target());
@@ -134,26 +148,36 @@ class MiningScenarioTests {
         world.set(target.x(), target.y(), target.z(), Cell.SOLID);
 
         ToolChoice.Choice hand = ToolChoice.best(List.of());
-        assertFalse(hand.dropsAllowed(), "Без инструмента выбор обязан быть «руками, без добычи»");
+        assertFalse(
+                hand.dropsAllowed(),
+                "Без инструмента выбор обязан быть «руками, без добычи»"
+                        + " Иначе тест hike_SpiritWithoutPickaxe_RefusesHandDigAndDoesNotBreakStone перестанет ловить эту поломку. При смене hike_SpiritWithoutPickaxe_RefusesHandDigAndDoesNotBreakStone проверь это утверждение.");
         assertTrue(
                 ToolChoice.refusesHandDig(hand, List.of(), true, false),
-                "Дух без кирки отказывается копать камень руками: иначе поход без кирки портит руду и тратит время");
+                "Дух без кирки отказывается копать камень руками: иначе поход без кирки портит руду и тратит время"
+                        + " При смене hike_SpiritWithoutPickaxe_RefusesHandDigAndDoesNotBreakStone проверь это утверждение.");
         assertFalse(
                 ToolChoice.refusesHandDig(hand, List.of(), true, true),
-                "Из запертой ямы дух камень руками всё-таки копает: выход важнее сохранности руды");
+                "Из запертой ямы дух камень руками всё-таки копает: выход важнее сохранности руды"
+                        + " Иначе тест hike_SpiritWithoutPickaxe_RefusesHandDigAndDoesNotBreakStone перестанет ловить эту поломку. При смене hike_SpiritWithoutPickaxe_RefusesHandDigAndDoesNotBreakStone проверь это утверждение.");
 
         ToolChoice.ToolOption pickaxe =
                 new ToolChoice.ToolOption(0, 4.0, true, 100, 131, false, "minecraft:stone_pickaxe");
         ToolChoice.Choice withPickaxe = ToolChoice.best(List.of(pickaxe));
-        assertTrue(withPickaxe.dropsAllowed(), "С киркой дух добывает руду с дропом");
+        assertTrue(
+                withPickaxe.dropsAllowed(),
+                "С киркой дух добывает руду с дропом"
+                        + " Иначе тест hike_SpiritWithoutPickaxe_RefusesHandDigAndDoesNotBreakStone перестанет ловить эту поломку. При смене hike_SpiritWithoutPickaxe_RefusesHandDigAndDoesNotBreakStone проверь это утверждение.");
         assertFalse(
                 ToolChoice.refusesHandDig(withPickaxe, List.of(pickaxe), true, false),
-                "С киркой в руке отказ от ломки камня — ошибка: поход обязан копать");
+                "С киркой в руке отказ от ломки камня — ошибка: поход обязан копать"
+                        + " Иначе тест hike_SpiritWithoutPickaxe_RefusesHandDigAndDoesNotBreakStone перестанет ловить эту поломку. При смене hike_SpiritWithoutPickaxe_RefusesHandDigAndDoesNotBreakStone проверь это утверждение.");
 
         assertEquals(
                 Cell.SOLID,
                 world.peek(target),
-                "Отказ «без кирки» не трогает мир: блок остаётся на месте до прихода духа с инструментом");
+                "Отказ «без кирки» не трогает мир: блок остаётся на месте до прихода духа с инструментом"
+                        + " Иначе тест hike_SpiritWithoutPickaxe_RefusesHandDigAndDoesNotBreakStone перестанет ловить эту поломку. При смене hike_SpiritWithoutPickaxe_RefusesHandDigAndDoesNotBreakStone проверь это утверждение.");
     }
 
     @Test
@@ -180,78 +204,38 @@ class MiningScenarioTests {
                     clearing.pillar.rise() > 3 ? 1 : 0,
                     clearing.climbs,
                     "Подъёмов на столб высотой " + clearing.pillar.rise() + ": лишний — новая башня; "
-                            + ClearScaffoldWorld.summary(spirits));
+                            + ClearScaffoldWorld.summary(spirits)
+                            + " Иначе тест clearScaffold_ManyPillarsManySpirits_OneClimbEachAndNoScaffoldLeft перестанет ловить эту поломку. При смене clearScaffold_ManyPillarsManySpirits_OneClimbEachAndNoScaffoldLeft проверь это утверждение.");
             assertEquals(
                     clearing.pillar.height(),
                     clearing.works,
-                    "Клетки столба сломаны, а не объявлены недостижимыми: " + ClearScaffoldWorld.summary(spirits));
-            assertEquals(FEET_Y, clearing.feet.y(), "Дух спустился на землю: " + clearing.feet);
-            assertTrue(clearing.scaffold.isEmpty(), "Свои подмости разобраны: " + clearing.scaffold);
-        }
-        assertTrue(world.isEmpty(), "После уборки в зоне нет подмостей-столбов: " + world);
-    }
-
-    @Test
-    void clearScaffold_NeighbourPillars_EachSpiritClimbsOnceInOwnColumn() {
-        List<ClearScaffoldWorld.Spirit> spirits = List.of(
-                        new ClearScaffoldWorld.Pillar(10, 10, 15),
-                        new ClearScaffoldWorld.Pillar(12, 10, 15),
-                        new ClearScaffoldWorld.Pillar(14, 10, 15))
-                .stream()
-                .map(ClearScaffoldWorld.Spirit::new)
-                .toList();
-        Set<BlockCoord> world = new HashSet<>();
-        int guard = 0;
-        while (spirits.stream().anyMatch(clearing -> !clearing.done()) && guard++ < 400) {
-            for (ClearScaffoldWorld.Spirit clearing : spirits) {
-                if (!clearing.done()) {
-                    clearing.act(world);
-                }
-            }
-        }
-        for (ClearScaffoldWorld.Spirit clearing : spirits) {
+                    "Клетки столба сломаны, а не объявлены недостижимыми: " + ClearScaffoldWorld.summary(spirits)
+                            + " Иначе тест clearScaffold_ManyPillarsManySpirits_OneClimbEachAndNoScaffoldLeft перестанет ловить эту поломку. При смене clearScaffold_ManyPillarsManySpirits_OneClimbEachAndNoScaffoldLeft проверь это утверждение.");
             assertEquals(
-                    1,
-                    clearing.climbs,
-                    "Соседний столб разбирается одним подъёмом: " + ClearScaffoldWorld.summary(spirits));
-            assertEquals(1, clearing.columns.size(), "Один подъём — одна колонка подмостей: " + clearing.columns);
-            assertEquals(
-                    clearing.feet.x() * 100_000 + clearing.feet.z(),
-                    clearing.columns.iterator().next(),
-                    "Подмости стоят в колонке духа: " + clearing.feet);
+                    FEET_Y,
+                    clearing.feet.y(),
+                    "Дух спустился на землю: " + clearing.feet
+                            + " Иначе тест clearScaffold_ManyPillarsManySpirits_OneClimbEachAndNoScaffoldLeft перестанет ловить эту поломку. При смене clearScaffold_ManyPillarsManySpirits_OneClimbEachAndNoScaffoldLeft проверь это утверждение.");
+            assertTrue(
+                    clearing.scaffold.isEmpty(),
+                    "Свои подмости разобраны: " + clearing.scaffold
+                            + " Иначе тест clearScaffold_ManyPillarsManySpirits_OneClimbEachAndNoScaffoldLeft перестанет ловить эту поломку. При смене clearScaffold_ManyPillarsManySpirits_OneClimbEachAndNoScaffoldLeft проверь это утверждение.");
         }
-        assertTrue(world.isEmpty(), "Соседние столбы не оставили башен: " + world);
+        assertTrue(
+                world.isEmpty(),
+                "После уборки в зоне нет подмостей-столбов: " + world
+                        + " Иначе тест clearScaffold_ManyPillarsManySpirits_OneClimbEachAndNoScaffoldLeft перестанет ловить эту поломку. При смене clearScaffold_ManyPillarsManySpirits_OneClimbEachAndNoScaffoldLeft проверь это утверждение.");
     }
 
-    @Test
-    void clearScaffold_LeasedCells_OwnerKeepsThemForCleanup() {
-        List<BlockCoord> column = new ClearScaffoldWorld.Pillar(10, 10, 8).cells();
-        Set<BlockCoord> leased = Set.of(column.get(column.size() - 1), column.get(column.size() - 2));
-
-        List<BlockCoord> forOwner = ClearScaffold.withoutLeased(column, leased::contains);
-        List<BlockCoord> forOther = ClearScaffold.withoutLeased(column, cell -> false);
-
-        assertEquals(
-                column.size() - leased.size(),
-                forOwner.size(),
-                "Клетки своей аренды не цель: иначе дух ломает свои же подмости и строит новый столб");
-        assertFalse(forOwner.containsAll(leased), "Свои клетки исключены из целей: " + forOwner);
-        assertEquals(column.size(), forOther.size(), "Чужая аренда не отнимает у владельца его клетки");
-        assertEquals(
-                column.size() - leased.size(),
-                ClearScaffold.withoutLeased(forOther, leased::contains).size(),
-                "Второй дух видит только незанятые клетки: чужие подмости не его работа");
-    }
-
-    private static BlockCoord ore(int x, int zSide) {
+    static BlockCoord ore(int x, int zSide) {
         return new BlockCoord(x, FEET_Y, zSide);
     }
 
-    private static BlockCoord sealed(int x, int z) {
+    static BlockCoord sealed(int x, int z) {
         return new BlockCoord(x, FEET_Y, z);
     }
 
-    private static CellWorld tunnel() {
+    static CellWorld tunnel() {
         CellWorld world = new CellWorld();
         for (int x = ENTRANCE_X - 1; x <= END_X + 1; x++) {
             world.set(x, FLOOR_Y, 0, Cell.SOLID);

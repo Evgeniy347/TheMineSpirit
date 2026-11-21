@@ -87,10 +87,12 @@ class V1RoutesTests {
                 status,
                 response.status(),
                 "Обработчик v1 для " + method + " " + path + " обязан дать статус " + status + ": тело "
-                        + response.body());
+                        + response.body()
+                        + " Иначе тест route_TableCase_ReturnsExpectedStatusAndBodyFragment перестанет ловить эту поломку. При смене route_TableCase_ReturnsExpectedStatusAndBodyFragment проверь это утверждение.");
         assertTrue(
                 response.body().contains(fragment),
-                "Тело ответа на " + method + " " + path + " обязано содержать '" + fragment + "': " + response.body());
+                "Тело ответа на " + method + " " + path + " обязано содержать '" + fragment + "': " + response.body()
+                        + " Иначе тест route_TableCase_ReturnsExpectedStatusAndBodyFragment перестанет ловить эту поломку. При смене route_TableCase_ReturnsExpectedStatusAndBodyFragment проверь это утверждение.");
     }
 
     @Test
@@ -114,7 +116,8 @@ class V1RoutesTests {
                 response.body(),
                 "Список духов — контракт REST: id, name, state, position [x,y,z], dimension, current_task "
                         + "(null до чеклиста 15), board_task/id-кейс-статус доски, tick, position_tick и food "
-                        + "в этом порядке");
+                        + "в этом порядке"
+                        + " Иначе тест bots_ThreeSpirits_ListEqualsReferenceJson перестанет ловить эту поломку. При смене bots_ThreeSpirits_ListEqualsReferenceJson проверь это утверждение.");
     }
 
     @Test
@@ -145,14 +148,19 @@ class V1RoutesTests {
                         + "\"state_since_tick\":1350,\"food\":1.0,\"inventory\":{}}",
                 response.body(),
                 "Занятый дух обязан показывать задание доски в GET /v1/bots: без него наблюдение за работой "
-                        + "слепо, а отдельный observe недоступен в списке");
+                        + "слепо, а отдельный observe недоступен в списке"
+                        + " Иначе тест bots_BusyWithBoardTask_ShowsTaskCaseStatusAndPositionTime перестанет ловить эту поломку. При смене bots_BusyWithBoardTask_ShowsTaskCaseStatusAndPositionTime проверь это утверждение.");
     }
 
     @Test
     void bots_NoSpirits_ReturnsEmptyList() {
         RestResponse response = send(new FakeBotGateway(List.of()), "GET", "/v1/bots", "");
 
-        assertEquals("{\"bots\":[]}", response.body(), "Без духов список пуст, а не 404: коллекция существует всегда");
+        assertEquals(
+                "{\"bots\":[]}",
+                response.body(),
+                "Без духов список пуст, а не 404: коллекция существует всегда"
+                        + " Иначе тест bots_NoSpirits_ReturnsEmptyList перестанет ловить эту поломку. При смене bots_NoSpirits_ReturnsEmptyList проверь это утверждение.");
     }
 
     @Test
@@ -168,7 +176,8 @@ class V1RoutesTests {
         assertEquals(
                 List.of(new ObserveRequest(ScanRadius.of(16), List.of("*_ore"), false)),
                 gateway.observeRequests(),
-                "Шлюз обязан получить разобранный запрос целиком: радиус, фильтр и include_entities");
+                "Шлюз обязан получить разобранный запрос целиком: радиус, фильтр и include_entities"
+                        + " Иначе тест observe_FullBody_PassesParsedRequestToGateway перестанет ловить эту поломку. При смене observe_FullBody_PassesParsedRequestToGateway проверь это утверждение.");
     }
 
     @Test
@@ -178,7 +187,8 @@ class V1RoutesTests {
         assertEquals(
                 OBSERVATION.toJson(),
                 response.body(),
-                "Ответ observe — наблюдение в формате docs/api/README.md без обёрток: так его читает ИИ-планировщик");
+                "Ответ observe — наблюдение в формате docs/api/README.md без обёрток: так его читает ИИ-планировщик"
+                        + " Иначе тест observe_ValidRequest_ResponseIsObservationJson перестанет ловить эту поломку. При смене observe_ValidRequest_ResponseIsObservationJson проверь это утверждение.");
     }
 
     @Test
@@ -190,7 +200,8 @@ class V1RoutesTests {
         assertEquals(
                 List.of(),
                 gateway.observeRequests(),
-                "Неверный запрос отклоняется до обращения к серверному потоку: ошибка клиента не должна нагружать тик");
+                "Неверный запрос отклоняется до обращения к серверному потоку: ошибка клиента не должна нагружать тик"
+                        + " Иначе тест observe_InvalidRequest_NeverReachesGateway перестанет ловить эту поломку. При смене observe_InvalidRequest_NeverReachesGateway проверь это утверждение.");
     }
 
     @Test
@@ -204,10 +215,26 @@ class V1RoutesTests {
 
         String expected = "{\"error\":{\"code\":\"internal\",\"message\":\"Сервер не ответил за 5 с\","
                 + "\"details\":{\"timeout_ms\":5000}}}";
-        assertEquals(500, bots.status(), "internal обязан быть 500 в списке духов");
-        assertEquals(expected, bots.body(), "Ошибка шлюза уходит клиенту тем же объектом в списке духов");
-        assertEquals(500, observe.status(), "internal обязан быть 500 в observe");
-        assertEquals(expected, observe.body(), "Ошибка шлюза уходит клиенту тем же объектом в observe");
+        assertEquals(
+                500,
+                bots.status(),
+                "internal обязан быть 500 в списке духов"
+                        + " Иначе тест route_GatewayThrowsInternal_Returns500WithSameErrorObject перестанет ловить эту поломку. При смене route_GatewayThrowsInternal_Returns500WithSameErrorObject проверь это утверждение.");
+        assertEquals(
+                expected,
+                bots.body(),
+                "Ошибка шлюза уходит клиенту тем же объектом в списке духов"
+                        + " Иначе тест route_GatewayThrowsInternal_Returns500WithSameErrorObject перестанет ловить эту поломку. При смене route_GatewayThrowsInternal_Returns500WithSameErrorObject проверь это утверждение.");
+        assertEquals(
+                500,
+                observe.status(),
+                "internal обязан быть 500 в observe"
+                        + " Иначе тест route_GatewayThrowsInternal_Returns500WithSameErrorObject перестанет ловить эту поломку. При смене route_GatewayThrowsInternal_Returns500WithSameErrorObject проверь это утверждение.");
+        assertEquals(
+                expected,
+                observe.body(),
+                "Ошибка шлюза уходит клиенту тем же объектом в observe"
+                        + " Иначе тест route_GatewayThrowsInternal_Returns500WithSameErrorObject перестанет ловить эту поломку. При смене route_GatewayThrowsInternal_Returns500WithSameErrorObject проверь это утверждение.");
     }
 
     @Test
@@ -222,6 +249,7 @@ class V1RoutesTests {
         assertEquals(
                 "{\"task\":true}",
                 response.body(),
-                "Чеклист 15 обязан добавлять маршруты списком к V1Routes без правки существующих классов");
+                "Чеклист 15 обязан добавлять маршруты списком к V1Routes без правки существующих классов"
+                        + " Иначе тест routes_V1_AreAddableWithoutChangingExistingOnes перестанет ловить эту поломку. При смене routes_V1_AreAddableWithoutChangingExistingOnes проверь это утверждение.");
     }
 }

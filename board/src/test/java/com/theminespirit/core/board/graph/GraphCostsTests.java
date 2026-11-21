@@ -15,17 +15,38 @@ class GraphCostsTests {
     @Test
     void life_Formula_ReadFromGraphDataNotDefaults() throws IOException {
         GraphLife shipped = SupplyGraph.loadDefault().costs().life();
-        assertEquals(1.5, shipped.fullPressureMobs(), "Множитель мобов формулы жизни берётся из graph.json");
-        assertEquals(0.4, shipped.pressureBase(), "Базовое давление формулы жизни берётся из graph.json");
-        assertEquals(0.7, shipped.pressureWound(), "Ранение формулы жизни берётся из graph.json");
-        assertEquals(0.2, shipped.hurtShare(), "Свежий урон формулы жизни берётся из graph.json");
+        assertEquals(
+                1.5,
+                shipped.fullPressureMobs(),
+                "Множитель мобов формулы жизни берётся из graph.json"
+                        + " Иначе тест life_Formula_ReadFromGraphDataNotDefaults перестанет ловить эту поломку. При смене life_Formula_ReadFromGraphDataNotDefaults проверь это утверждение.");
+        assertEquals(
+                0.4,
+                shipped.pressureBase(),
+                "Базовое давление формулы жизни берётся из graph.json"
+                        + " Иначе тест life_Formula_ReadFromGraphDataNotDefaults перестанет ловить эту поломку. При смене life_Formula_ReadFromGraphDataNotDefaults проверь это утверждение.");
+        assertEquals(
+                0.7,
+                shipped.pressureWound(),
+                "Ранение формулы жизни берётся из graph.json"
+                        + " Иначе тест life_Formula_ReadFromGraphDataNotDefaults перестанет ловить эту поломку. При смене life_Formula_ReadFromGraphDataNotDefaults проверь это утверждение.");
+        assertEquals(
+                0.2,
+                shipped.hurtShare(),
+                "Свежий урон формулы жизни берётся из graph.json"
+                        + " Иначе тест life_Formula_ReadFromGraphDataNotDefaults перестанет ловить эту поломку. При смене life_Formula_ReadFromGraphDataNotDefaults проверь это утверждение.");
 
         GraphLife tuned = GraphLife.parse(new ObjectMapper().readTree("{\"pressureBase\":0.9}"));
-        assertEquals(0.9, tuned.pressureBase(), "Значение из данных графа важнее встроенной константы");
+        assertEquals(
+                0.9,
+                tuned.pressureBase(),
+                "Значение из данных графа важнее встроенной константы"
+                        + " Иначе тест life_Formula_ReadFromGraphDataNotDefaults перестанет ловить эту поломку. При смене life_Formula_ReadFromGraphDataNotDefaults проверь это утверждение.");
         assertEquals(
                 GraphLife.DEFAULTS.pressureWound(),
                 tuned.pressureWound(),
-                "Недостающее поле формулы жизни остаётся значением по умолчанию");
+                "Недостающее поле формулы жизни остаётся значением по умолчанию"
+                        + " Иначе тест life_Formula_ReadFromGraphDataNotDefaults перестанет ловить эту поломку. При смене life_Formula_ReadFromGraphDataNotDefaults проверь это утверждение.");
     }
 
     @Test
@@ -47,7 +68,8 @@ class GraphCostsTests {
             assertTrue(
                     life.path(name).isNumber(),
                     "graph.json → life объявляет коэффициент " + name
-                            + ": без него значение молча берётся из Java, а не из данных графа");
+                            + ": без него значение молча берётся из Java, а не из данных графа"
+                            + " Иначе тест life_ShippedGraph_DeclaresEveryCoefficient перестанет ловить эту поломку. При смене life_ShippedGraph_DeclaresEveryCoefficient проверь это утверждение.");
         }
     }
 
@@ -58,23 +80,64 @@ class GraphCostsTests {
         assertEquals(
                 0.9,
                 costs.life().pressureBase(),
-                "Формула жизни читается из данных графа и без блока costs: иначе коэффициенты молча берутся из Java");
+                "Формула жизни читается из данных графа и без блока costs: иначе коэффициенты молча берутся из Java"
+                        + " При смене life_NoCostsBlock_CoefficientsReadFromData проверь это утверждение.");
     }
 
     @Test
     void life_DefaultGraph_ReadsCoefficientsFromData() {
         GraphLife life = GraphWorld.GRAPH.costs().life();
 
-        assertEquals(1.5, life.fullPressureMobs(), "Полное давление мобов лежит в graph.json → life");
-        assertEquals(0.4, life.pressureBase(), "Базовое давление раны лежит в данных графа");
-        assertEquals(0.7, life.pressureWound(), "Вклад раны в давление лежит в данных графа");
-        assertEquals(0.2, life.hurtShare(), "Доля свежего урона лежит в данных графа");
-        assertEquals(0.8, life.injuryWound(), "Вес жизни раненого духа лежит в данных графа");
-        assertEquals(0.4, life.injuryHurt(), "Вес свежего урона духа лежит в данных графа");
-        assertEquals(16.0, life.threatRadius(), "Радиус угрозы жизни лежит в graph.json → life");
-        assertEquals(200, life.damageWindowTicks(), "Окно урона жизни лежит в graph.json → life");
-        assertEquals(0.35, life.weakHealth(), "Порог слабого здоровья игрока лежит в данных графа");
-        assertEquals(6, life.weakFood(), "Порог слабой еды игрока лежит в данных графа");
+        assertEquals(
+                1.5,
+                life.fullPressureMobs(),
+                "Полное давление мобов лежит в graph.json → life"
+                        + " Иначе тест life_DefaultGraph_ReadsCoefficientsFromData перестанет ловить эту поломку. При смене life_DefaultGraph_ReadsCoefficientsFromData проверь это утверждение.");
+        assertEquals(
+                0.4,
+                life.pressureBase(),
+                "Базовое давление раны лежит в данных графа"
+                        + " Иначе тест life_DefaultGraph_ReadsCoefficientsFromData перестанет ловить эту поломку. При смене life_DefaultGraph_ReadsCoefficientsFromData проверь это утверждение.");
+        assertEquals(
+                0.7,
+                life.pressureWound(),
+                "Вклад раны в давление лежит в данных графа"
+                        + " Иначе тест life_DefaultGraph_ReadsCoefficientsFromData перестанет ловить эту поломку. При смене life_DefaultGraph_ReadsCoefficientsFromData проверь это утверждение.");
+        assertEquals(
+                0.2,
+                life.hurtShare(),
+                "Доля свежего урона лежит в данных графа"
+                        + " Иначе тест life_DefaultGraph_ReadsCoefficientsFromData перестанет ловить эту поломку. При смене life_DefaultGraph_ReadsCoefficientsFromData проверь это утверждение.");
+        assertEquals(
+                0.8,
+                life.injuryWound(),
+                "Вес жизни раненого духа лежит в данных графа"
+                        + " Иначе тест life_DefaultGraph_ReadsCoefficientsFromData перестанет ловить эту поломку. При смене life_DefaultGraph_ReadsCoefficientsFromData проверь это утверждение.");
+        assertEquals(
+                0.4,
+                life.injuryHurt(),
+                "Вес свежего урона духа лежит в данных графа"
+                        + " Иначе тест life_DefaultGraph_ReadsCoefficientsFromData перестанет ловить эту поломку. При смене life_DefaultGraph_ReadsCoefficientsFromData проверь это утверждение.");
+        assertEquals(
+                16.0,
+                life.threatRadius(),
+                "Радиус угрозы жизни лежит в graph.json → life"
+                        + " Иначе тест life_DefaultGraph_ReadsCoefficientsFromData перестанет ловить эту поломку. При смене life_DefaultGraph_ReadsCoefficientsFromData проверь это утверждение.");
+        assertEquals(
+                200,
+                life.damageWindowTicks(),
+                "Окно урона жизни лежит в graph.json → life"
+                        + " Иначе тест life_DefaultGraph_ReadsCoefficientsFromData перестанет ловить эту поломку. При смене life_DefaultGraph_ReadsCoefficientsFromData проверь это утверждение.");
+        assertEquals(
+                0.35,
+                life.weakHealth(),
+                "Порог слабого здоровья игрока лежит в данных графа"
+                        + " Иначе тест life_DefaultGraph_ReadsCoefficientsFromData перестанет ловить эту поломку. При смене life_DefaultGraph_ReadsCoefficientsFromData проверь это утверждение.");
+        assertEquals(
+                6,
+                life.weakFood(),
+                "Порог слабой еды игрока лежит в данных графа"
+                        + " Иначе тест life_DefaultGraph_ReadsCoefficientsFromData перестанет ловить эту поломку. При смене life_DefaultGraph_ReadsCoefficientsFromData проверь это утверждение.");
     }
 
     @Test
@@ -82,15 +145,18 @@ class GraphCostsTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new GraphLife(1.5, 0.4, 0.7, 0.2, 0.8, 0.4, 16.0, 200, 1.2F, 6),
-                "Доля здоровья больше 1 не бывает: порог живёт в [0, 1]");
+                "Доля здоровья больше 1 не бывает: порог живёт в [0, 1]"
+                        + " Иначе тест life_InvalidCoefficients_Rejected перестанет ловить эту поломку. При смене life_InvalidCoefficients_Rejected проверь это утверждение.");
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new GraphLife(1.5, 0.4, 0.7, 0.2, 0.8, 0.4, 16.0, 0, 0.35F, 6),
-                "Нулевое окно урона ломает деление: оно положительно");
+                "Нулевое окно урона ломает деление: оно положительно"
+                        + " При смене life_InvalidCoefficients_Rejected проверь это утверждение.");
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new GraphLife(1.5, 0.4, 0.7, 0.2, 0.8, 0.4, 16.0, 200, 0.35F, -1),
-                "Отрицательный порог еды отвергается: голод начинается с нуля");
+                "Отрицательный порог еды отвергается: голод начинается с нуля"
+                        + " Иначе тест life_InvalidCoefficients_Rejected перестанет ловить эту поломку. При смене life_InvalidCoefficients_Rejected проверь это утверждение.");
     }
 
     @Test
@@ -104,7 +170,8 @@ class GraphCostsTests {
                         && plan.task("chop_jungle_log").orElseThrow().ticks()
                                 > plan.task("chop_oak_log").orElseThrow().ticks(),
                 "Тропический лес в 120 блоках — рубка дольше и ниже ближнего дуба: " + plan.task("chop_jungle_log")
-                        + " / " + plan.task("chop_oak_log"));
+                        + " / " + plan.task("chop_oak_log")
+                        + " Иначе тест plan_FarJungle_RanksBelowNearOak перестанет ловить эту поломку. При смене plan_FarJungle_RanksBelowNearOak проверь это утверждение.");
     }
 
     @Test
@@ -127,7 +194,8 @@ class GraphCostsTests {
                                 .filter(task ->
                                         task.feasible() && task.consumes().containsKey("#coals"))
                                 .map(GraphPlan.Task::id)
-                                .toList());
+                                .toList()
+                        + " Иначе тест plan_FurnaceOverloaded_SecondFurnaceTask перестанет ловить эту поломку. При смене plan_FurnaceOverloaded_SecondFurnaceTask проверь это утверждение.");
     }
 
     @Test
@@ -137,6 +205,7 @@ class GraphCostsTests {
         assertTrue(
                 plan.task("building:hut").orElseThrow().ticks()
                         > plan.task("craft_oak_planks").orElseThrow().ticks(),
-                "Хижина строится дольше, чем крафтятся доски: длительность задания из costs");
+                "Хижина строится дольше, чем крафтятся доски: длительность задания из costs"
+                        + " Иначе тест plan_HutAndPlanks_HutTakesLonger перестанет ловить эту поломку. При смене plan_HutAndPlanks_HutTakesLonger проверь это утверждение.");
     }
 }

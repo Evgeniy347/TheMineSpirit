@@ -43,19 +43,23 @@ class TeamDefenseMobScenarioTests {
         assertEquals(
                 CombatStance.RUSH_RANGED,
                 orderOf(plan, "S4").stance(),
-                "Восточный пост против скелетов сближается: иначе стоит под стрелами");
+                "Восточный пост против скелетов сближается: иначе стоит под стрелами"
+                        + " При смене mob_MixedSides_EachPostUsesItsOwnStance проверь это утверждение.");
         assertEquals(
                 CombatStance.STRIKE_AND_RETREAT,
                 orderOf(plan, "S3").stance(),
-                "Южный пост против криперов бьёт наскоком: иначе встречает взрыв вплотную");
+                "Южный пост против криперов бьёт наскоком: иначе встречает взрыв вплотную"
+                        + " При смене mob_MixedSides_EachPostUsesItsOwnStance проверь это утверждение.");
         assertEquals(
                 CombatStance.ENGAGE,
                 orderOf(plan, "S1").stance(),
-                "Западный пост против пауков дерётся обычным боем: пауки не требуют особой стойки");
+                "Западный пост против пауков дерётся обычным боем: пауки не требуют особой стойки"
+                        + " Иначе тест mob_MixedSides_EachPostUsesItsOwnStance перестанет ловить эту поломку. При смене mob_MixedSides_EachPostUsesItsOwnStance проверь это утверждение.");
         assertEquals(
                 CombatStance.ENGAGE,
                 orderOf(plan, "S2").stance(),
-                "Северный пост против зомби дерётся обычным боем: зомби — базовая угроза");
+                "Северный пост против зомби дерётся обычным боем: зомби — базовая угроза"
+                        + " Иначе тест mob_MixedSides_EachPostUsesItsOwnStance перестанет ловить эту поломку. При смене mob_MixedSides_EachPostUsesItsOwnStance проверь это утверждение.");
     }
 
     @Test
@@ -94,11 +98,13 @@ class TeamDefenseMobScenarioTests {
         assertEquals(
                 SquadDecision.REINFORCE,
                 orderOf(first, "S2").decision(),
-                "До переключения помощи идёт к левому краю: иначе отряд стоит не там, где угроза");
+                "До переключения помощи идёт к левому краю: иначе отряд стоит не там, где угроза"
+                        + " При смене mob_ThreatMovesToOtherEdge_HelpersFollowNewThreat проверь это утверждение.");
         assertEquals(
                 SquadDecision.STAY,
                 orderOf(second, "S2").decision(),
-                "После переключения левая пара больше не идёт в бой: иначе отряд бегает за прошлой угрозой");
+                "После переключения левая пара больше не идёт в бой: иначе отряд бегает за прошлой угрозой"
+                        + " При смене mob_ThreatMovesToOtherEdge_HelpersFollowNewThreat проверь это утверждение.");
     }
 
     @Test
@@ -125,13 +131,16 @@ class TeamDefenseMobScenarioTests {
         assertEquals(
                 SquadDecision.STAY,
                 orderOf(alive, "S2").decision(),
-                "Пока пара жива, сосед не уходит: иначе резерв тратится без нужды");
+                "Пока пара жива, сосед не уходит: иначе резерв тратится без нужды"
+                        + " При смене mob_DefenderDies_LowerCapacityCallsHelp проверь это утверждение.");
         assertEquals(
                 SquadDecision.REINFORCE,
                 orderOf(lonely, "S2").decision(),
-                "После гибели духа сосед закрывает нехватку: иначе оставшийся гибнет в одиночку");
+                "После гибели духа сосед закрывает нехватку: иначе оставшийся гибнет в одиночку"
+                        + " При смене mob_DefenderDies_LowerCapacityCallsHelp проверь это утверждение.");
         assertTrue(
                 orderOf(lonely, "S1").members() == 1,
-                "В отряде остался один дух: план пересчитан по новому снимку, а не по старому");
+                "В отряде остался один дух: план пересчитан по новому снимку, а не по старому"
+                        + " Иначе тест mob_DefenderDies_LowerCapacityCallsHelp перестанет ловить эту поломку. При смене mob_DefenderDies_LowerCapacityCallsHelp проверь это утверждение.");
     }
 }

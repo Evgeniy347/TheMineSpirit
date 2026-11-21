@@ -39,9 +39,25 @@ class PerceptionResultProperties {
             @ForAll @IntRange(min = ScanRadius.MIN, max = ScanRadius.MAX) int radius) {
         PerceptionResult result = PerceptionResult.hazards(ScanRadius.of(radius), hazards);
 
-        assertEquals(hazards, result.hazards(), "опасности результата обязаны идти в том порядке, в каком даны");
-        assertEquals(PerceptionType.HAZARDS, result.type(), "фабрика hazards обязана выдавать результат типа HAZARDS");
-        assertEquals(List.of(), result.blocks(), "в результате опасностей список блоков обязан быть пустым");
-        assertEquals(List.of(), result.entities(), "в результате опасностей список сущностей обязан быть пустым");
+        assertEquals(
+                hazards,
+                result.hazards(),
+                "опасности результата обязаны идти в том порядке, в каком даны"
+                        + " Иначе тест hazardsResult_AnyHazards_KeepsThemInOrder перестанет ловить эту поломку. При смене hazardsResult_AnyHazards_KeepsThemInOrder проверь это утверждение.");
+        assertEquals(
+                PerceptionType.HAZARDS,
+                result.type(),
+                "фабрика hazards обязана выдавать результат типа HAZARDS"
+                        + " Иначе тест hazardsResult_AnyHazards_KeepsThemInOrder перестанет ловить эту поломку. При смене hazardsResult_AnyHazards_KeepsThemInOrder проверь это утверждение.");
+        assertEquals(
+                List.of(),
+                result.blocks(),
+                "в результате опасностей список блоков обязан быть пустым"
+                        + " Иначе тест hazardsResult_AnyHazards_KeepsThemInOrder перестанет ловить эту поломку. При смене hazardsResult_AnyHazards_KeepsThemInOrder проверь это утверждение.");
+        assertEquals(
+                List.of(),
+                result.entities(),
+                "в результате опасностей список сущностей обязан быть пустым"
+                        + " Иначе тест hazardsResult_AnyHazards_KeepsThemInOrder перестанет ловить эту поломку. При смене hazardsResult_AnyHazards_KeepsThemInOrder проверь это утверждение.");
     }
 }

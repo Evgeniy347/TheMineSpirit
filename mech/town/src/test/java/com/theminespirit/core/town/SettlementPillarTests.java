@@ -28,11 +28,13 @@ class SettlementPillarTests {
         assertEquals(
                 List.of(new BlockCoord(2, LEVEL + PlotCells.FREE_HEIGHT + 5, 2)),
                 found.pillars(),
-                "Столб выше слоя свободной высоты обязан попасть в дефекты: иначе участок остаётся неровным");
+                "Столб выше слоя свободной высоты обязан попасть в дефекты: иначе участок остаётся неровным"
+                        + " При смене scan_PillarAboveFreeHeight_IsPillarAnyHeight проверь это утверждение.");
         assertEquals(
                 List.of(),
                 found.mounds(),
-                "Столб не дублируется бугром: одна колонка — один вид дефекта, иначе числа на вкладке врут");
+                "Столб не дублируется бугром: одна колонка — один вид дефекта, иначе числа на вкладке врут"
+                        + " При смене scan_PillarAboveFreeHeight_IsPillarAnyHeight проверь это утверждение.");
     }
 
     @Test
@@ -46,7 +48,8 @@ class SettlementPillarTests {
         assertEquals(
                 1,
                 found.pillars().size(),
-                "Посторонний блок выше свободного слоя — столб, а не лишний блок на земле: " + found.pillars());
+                "Посторонний блок выше свободного слоя — столб, а не лишний блок на земле: " + found.pillars()
+                        + " Иначе тест scan_ForeignPillarAboveFreeHeight_IsPillar перестанет ловить эту поломку. При смене scan_ForeignPillarAboveFreeHeight_IsPillar проверь это утверждение.");
     }
 
     private static SettlementScan.Strays scan(Fake world) {

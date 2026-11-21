@@ -20,7 +20,8 @@ class GraphMiningPathsTests {
                         .map(task -> task.implemented() && task.feasible())
                         .orElse(false),
                 "Заказ меди — путь mine_copper реализован и выполним со второго уровня шахты каменной киркой: "
-                        + plan.task("mine_copper"));
+                        + plan.task("mine_copper")
+                        + " Иначе тест plan_CopperOrder_MineCopperImplemented перестанет ловить эту поломку. При смене plan_CopperOrder_MineCopperImplemented проверь это утверждение.");
     }
 
     @Test
@@ -36,7 +37,8 @@ class GraphMiningPathsTests {
                         .map(task -> task.implemented() && task.feasible())
                         .orElse(false),
                 "Заказ изумруда — путь mine_emerald реализован и выполним у изумрудной руды алмазной киркой: "
-                        + plan.task("mine_emerald"));
+                        + plan.task("mine_emerald")
+                        + " Иначе тест plan_EmeraldOrder_MineEmeraldImplemented перестанет ловить эту поломку. При смене plan_EmeraldOrder_MineEmeraldImplemented проверь это утверждение.");
     }
 
     @Test
@@ -48,6 +50,7 @@ class GraphMiningPathsTests {
 
         assertFalse(
                 plan.task("mine_emerald").map(GraphPlan.Task::feasible).orElse(false),
-                "Изумрудной руды в округе нет — добыча ждёт разведки, а не идёт вслепую: " + plan.task("mine_emerald"));
+                "Изумрудной руды в округе нет — добыча ждёт разведки, а не идёт вслепую: " + plan.task("mine_emerald")
+                        + " Иначе тест plan_EmeraldOrderNoOre_NotFeasible перестанет ловить эту поломку. При смене plan_EmeraldOrderNoOre_NotFeasible проверь это утверждение.");
     }
 }

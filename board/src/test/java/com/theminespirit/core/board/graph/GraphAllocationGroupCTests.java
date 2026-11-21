@@ -41,12 +41,17 @@ class GraphAllocationGroupCTests {
 
         assertTrue(
                 only(result, "mine_cobble").isEmpty(),
-                "Булыжник есть на складе — добыча камня не ставится: " + result.post());
+                "Булыжник есть на складе — добыча камня не ставится: " + result.post()
+                        + " Иначе тест case17_MaterialInChest_SupplyNotGather перестанет ловить эту поломку. При смене case17_MaterialInChest_SupplyNotGather проверь это утверждение.");
         assertEquals(
                 List.of(new SupplyGate.Request("cobblestone", 100)),
                 decision.supply(),
-                "Материал со склада несут на участок, а не добывают заново: " + decision);
-        assertTrue(decision.gather().isEmpty(), "Добыча не ставится, пока склад отдаёт материал");
+                "Материал со склада несут на участок, а не добывают заново: " + decision
+                        + " Иначе тест case17_MaterialInChest_SupplyNotGather перестанет ловить эту поломку. При смене case17_MaterialInChest_SupplyNotGather проверь это утверждение.");
+        assertTrue(
+                decision.gather().isEmpty(),
+                "Добыча не ставится, пока склад отдаёт материал"
+                        + " Иначе тест case17_MaterialInChest_SupplyNotGather перестанет ловить эту поломку. При смене case17_MaterialInChest_SupplyNotGather проверь это утверждение.");
     }
 
     @Test
@@ -59,7 +64,8 @@ class GraphAllocationGroupCTests {
         assertTrue(
                 only(result, "dig_dirt").isEmpty(),
                 "Земли в сундуках хватает — добыча земли не ставится (живой случай: сундуки полны земли): "
-                        + result.post());
+                        + result.post()
+                        + " Иначе тест case18_EnoughDirtInChests_NoDigging перестанет ловить эту поломку. При смене case18_EnoughDirtInChests_NoDigging проверь это утверждение.");
     }
 
     @Test
@@ -78,7 +84,8 @@ class GraphAllocationGroupCTests {
                 expected,
                 dig.count(),
                 "Нехватка земли закрывается недостающим (порог " + threshold + " − 20), а не всем порогом: "
-                        + result.post());
+                        + result.post()
+                        + " Иначе тест case19_Shortage_DigExactlyMissing перестанет ловить эту поломку. При смене case19_Shortage_DigExactlyMissing проверь это утверждение.");
     }
 
     @Test
@@ -89,17 +96,26 @@ class GraphAllocationGroupCTests {
         board.submit(boardTicket(dig));
         board.claim(dig.id(), id("spirit-1"), 0);
         board.complete(dig.id());
-        assertEquals(BoardStatus.DONE, board.statusOf(dig.id()).orElseThrow(), "Добыча закрыта первым прогоном");
+        assertEquals(
+                BoardStatus.DONE,
+                board.statusOf(dig.id()).orElseThrow(),
+                "Добыча закрыта первым прогоном"
+                        + " Иначе тест case20_DigClosedShortageReturns_Reopens перестанет ловить эту поломку. При смене case20_DigClosedShortageReturns_Reopens проверь это утверждение.");
 
-        assertTrue(board.reopen(dig.id()), "Нехватка вернулась — закрытая добыча открывается заново");
+        assertTrue(
+                board.reopen(dig.id()),
+                "Нехватка вернулась — закрытая добыча открывается заново"
+                        + " Иначе тест case20_DigClosedShortageReturns_Reopens перестанет ловить эту поломку. При смене case20_DigClosedShortageReturns_Reopens проверь это утверждение.");
         assertEquals(
                 BoardOutcome.ACCEPTED,
                 board.submit(boardTicket(dig)),
-                "После переоткрытия граф ставит новую добычу, а не получает дубликат");
+                "После переоткрытия граф ставит новую добычу, а не получает дубликат"
+                        + " Иначе тест case20_DigClosedShortageReturns_Reopens перестанет ловить эту поломку. При смене case20_DigClosedShortageReturns_Reopens проверь это утверждение.");
         assertEquals(
                 List.of(new Pair("spirit-1", dig.id())),
                 dispatch(board, world),
-                "Переоткрытую добычу снова получает дух: " + board.statusOf(dig.id()));
+                "Переоткрытую добычу снова получает дух: " + board.statusOf(dig.id())
+                        + " Иначе тест case20_DigClosedShortageReturns_Reopens перестанет ловить эту поломку. При смене case20_DigClosedShortageReturns_Reopens проверь это утверждение.");
     }
 
     @Test
@@ -112,11 +128,13 @@ class GraphAllocationGroupCTests {
 
         assertTrue(
                 result.post().stream().anyMatch(ticket -> "graph:store_space".equals(ticket.id())),
-                "Сундуки полны — на доске новая пара сундуков: " + result.post());
+                "Сундуки полны — на доске новая пара сундуков: " + result.post()
+                        + " Иначе тест case21_ChestsFull_NewChestBeforeMoreDigging перестанет ловить эту поломку. При смене case21_ChestsFull_NewChestBeforeMoreDigging проверь это утверждение.");
         assertTrue(
                 result.post().stream()
                         .anyMatch(ticket -> "store:chests".equals(ticket.task().makes())),
-                "Заявка новой пары сундуков доходит до доски как работа: " + result.post());
+                "Заявка новой пары сундуков доходит до доски как работа: " + result.post()
+                        + " Иначе тест case21_ChestsFull_NewChestBeforeMoreDigging перестанет ловить эту поломку. При смене case21_ChestsFull_NewChestBeforeMoreDigging проверь это утверждение.");
     }
 
     @Test
@@ -144,7 +162,8 @@ class GraphAllocationGroupCTests {
 
         assertTrue(
                 result.post().stream().anyMatch(ticket -> ticket.id().contains("store_carry_deliver")),
-                "Дух несёт добытое — на доске сдача на склад, а не «оставить в инвентаре»: " + result.post());
+                "Дух несёт добытое — на доске сдача на склад, а не «оставить в инвентаре»: " + result.post()
+                        + " Иначе тест case22_CarriedGatheredGoods_DeliveredToChest перестанет ловить эту поломку. При смене case22_CarriedGatheredGoods_DeliveredToChest проверь это утверждение.");
     }
 
     @Test
@@ -161,11 +180,15 @@ class GraphAllocationGroupCTests {
                 .findFirst()
                 .orElseThrow();
 
-        assertTrue(dig.count() <= GraphTickets.COUNT_MAX, "Одна заявка добычи не больше стака: " + dig);
+        assertTrue(
+                dig.count() <= GraphTickets.COUNT_MAX,
+                "Одна заявка добычи не больше стака: " + dig
+                        + " Иначе тест case27_HugeShortage_DigCountCapped перестанет ловить эту поломку. При смене case27_HugeShortage_DigCountCapped проверь это утверждение.");
         assertEquals(
                 GraphTickets.COUNT_MAX,
                 dig.count(),
-                "Нехватка 400 земли закрывается заявкой на стак, остальное — следующими: " + dig);
+                "Нехватка 400 земли закрывается заявкой на стак, остальное — следующими: " + dig
+                        + " Иначе тест case27_HugeShortage_DigCountCapped перестанет ловить эту поломку. При смене case27_HugeShortage_DigCountCapped проверь это утверждение.");
     }
 
     @Test
@@ -177,7 +200,8 @@ class GraphAllocationGroupCTests {
 
         assertTrue(
                 result.post().stream().anyMatch(ticket -> "graph:store_sort".equals(ticket.id())),
-                "В сундуке дерево и камень вместе — сортировка стоит до новых запасов: " + result.post());
+                "В сундуке дерево и камень вместе — сортировка стоит до новых запасов: " + result.post()
+                        + " Иначе тест case28_MixedChest_SortingRaised перестанет ловить эту поломку. При смене case28_MixedChest_SortingRaised проверь это утверждение.");
     }
 
     @Test
@@ -203,6 +227,7 @@ class GraphAllocationGroupCTests {
 
         assertFalse(
                 result.post().stream().anyMatch(ticket -> ticket.id().contains("store_carry_deliver")),
-                "Сдавать некуда — заявка сдачи не ставится: " + result.post());
+                "Сдавать некуда — заявка сдачи не ставится: " + result.post()
+                        + " Иначе тест case29_CarriedButNoFreeChest_NoDeliverTask перестанет ловить эту поломку. При смене case29_CarriedButNoFreeChest_NoDeliverTask проверь это утверждение.");
     }
 }

@@ -22,7 +22,8 @@ class ApproachFailureTrackerTests {
                     tracker.recordFailure(STAND, TARGET),
                     "Попытка " + attempt + " из " + MiningTuning.MAX_APPROACH_FAILURES
                             + " обязана просить повтор: один-два срыва под нагрузкой — шум навигации, "
-                            + "а не недостижимость. ИначеTransient-сбои будут терять достижимые цели");
+                            + "а не недостижимость. ИначеTransient-сбои будут терять достижимые цели"
+                            + " При смене recordFailure_BelowLimit_RetriesTarget проверь это утверждение.");
         }
     }
 
@@ -39,7 +40,8 @@ class ApproachFailureTrackerTests {
                 dropped,
                 "После " + MiningTuning.MAX_APPROACH_FAILURES
                         + " неудачных подходов цель обязана бросаться: иначе дух сотнями тиков идёт "
-                        + "в заведомо глухое место");
+                        + "в заведомо глухое место"
+                        + " При смене recordFailure_AtLimit_DropsTarget проверь это утверждение.");
     }
 
     @Test
@@ -55,7 +57,8 @@ class ApproachFailureTrackerTests {
                 tracker.excludedStands(),
                 "Стоянка с " + MiningTuning.MAX_APPROACH_FAILURES
                         + " неудачными подходами обязана исключаться: планировщик иначе снова выберет "
-                        + "то же глухое место для следующей цели");
+                        + "то же глухое место для следующей цели"
+                        + " При смене recordFailure_AtLimit_ExcludesStand проверь это утверждение.");
     }
 
     @Test
@@ -70,7 +73,8 @@ class ApproachFailureTrackerTests {
                 tracker.excludedStands().isEmpty(),
                 "По одному срыву на разных стоянках — шум, а не глухое место: исключение обязано требовать "
                         + MiningTuning.MAX_APPROACH_FAILURES
-                        + " неудач на одной стоянке, иначе потеряются хорошие места");
+                        + " неудач на одной стоянке, иначе потеряются хорошие места"
+                        + " При смене recordFailure_FailuresOnDifferentStands_KeepsStandsIncluded проверь это утверждение.");
     }
 
     @Test
@@ -85,11 +89,13 @@ class ApproachFailureTrackerTests {
         assertTrue(
                 tracker.excludedStands().contains(STAND),
                 "Общая глухая стоянка обязана остаться исключённой и для соседней цели: иначе каждая цель "
-                        + "потратит полный предел попыток на то же место");
+                        + "потратит полный предел попыток на то же место"
+                        + " При смене recordFailure_SharedStandExcluded_DropsOtherTargetsFaster проверь это утверждение.");
         assertFalse(
                 tracker.recordFailure(new BlockCoord(6, 1, 4), neighbour),
                 "Соседняя цель с первой попытки обязана просить повтор: её собственный счётчик независим "
-                        + "от чужой брошенной цели");
+                        + "от чужой брошенной цели"
+                        + " Иначе тест recordFailure_SharedStandExcluded_DropsOtherTargetsFaster перестанет ловить эту поломку. При смене recordFailure_SharedStandExcluded_DropsOtherTargetsFaster проверь это утверждение.");
     }
 
     @Test
@@ -99,7 +105,8 @@ class ApproachFailureTrackerTests {
         assertThrows(
                 NullPointerException.class,
                 () -> tracker.recordFailure(null, TARGET),
-                "Null-стоянка обязана ронять вызов сразу: молчаливое ведение счёта без места исключит не то");
+                "Null-стоянка обязана ронять вызов сразу: молчаливое ведение счёта без места исключит не то"
+                        + " Иначе тест recordFailure_NullStand_Throws перестанет ловить эту поломку. При смене recordFailure_NullStand_Throws проверь это утверждение.");
     }
 
     @Test
@@ -109,6 +116,7 @@ class ApproachFailureTrackerTests {
         assertThrows(
                 NullPointerException.class,
                 () -> tracker.recordFailure(STAND, null),
-                "Null-цель обязана ронять вызов сразу: молчаливый счёт попыток в никуда скроет зацикливание");
+                "Null-цель обязана ронять вызов сразу: молчаливый счёт попыток в никуда скроет зацикливание"
+                        + " Иначе тест recordFailure_NullTarget_Throws перестанет ловить эту поломку. При смене recordFailure_NullTarget_Throws проверь это утверждение.");
     }
 }

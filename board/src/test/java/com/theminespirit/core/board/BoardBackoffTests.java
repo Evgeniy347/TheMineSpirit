@@ -32,8 +32,15 @@ class BoardBackoffTests {
         long[] now = {0};
         Board board = new Board(() -> now[0]);
         board.submit(supply(0));
-        assertEquals(BoardOutcome.CLAIMED, board.claim("supply:dirt", SPIRIT_ONE, 0), "Добыча выдана духу");
-        assertTrue(board.fail("supply:dirt"), "Дух провалил добычу");
+        assertEquals(
+                BoardOutcome.CLAIMED,
+                board.claim("supply:dirt", SPIRIT_ONE, 0),
+                "Добыча выдана духу"
+                        + " Иначе тест submit_RecentlyFailedId_Backoff перестанет ловить эту поломку. При смене submit_RecentlyFailedId_Backoff проверь это утверждение.");
+        assertTrue(
+                board.fail("supply:dirt"),
+                "Дух провалил добычу"
+                        + " Иначе тест submit_RecentlyFailedId_Backoff перестанет ловить эту поломку. При смене submit_RecentlyFailedId_Backoff проверь это утверждение.");
         board.prune(0);
 
         BoardOutcome again = board.submit(supply(0));
@@ -42,7 +49,8 @@ class BoardBackoffTests {
                 again != BoardOutcome.ACCEPTED && board.find("supply:dirt").isEmpty(),
                 "Проваленное задание не переиздаётся сразу: без отката доска ставила бы добычу "
                         + "каждую пересборку, а дух брал бы её в пустой склад снова и снова "
-                        + "(исход " + again + ")");
+                        + "(исход " + again + ")"
+                        + " Иначе тест submit_RecentlyFailedId_Backoff перестанет ловить эту поломку. При смене submit_RecentlyFailedId_Backoff проверь это утверждение.");
     }
 
     @Test
@@ -61,6 +69,7 @@ class BoardBackoffTests {
                 BoardOutcome.ACCEPTED,
                 again,
                 "После отката задание снова ставится: доска не отказывается от добычи "
-                        + "навсегда, а лишь даёт складу время наполниться");
+                        + "навсегда, а лишь даёт складу время наполниться"
+                        + " Иначе тест submit_AfterBackoff_Accepted перестанет ловить эту поломку. При смене submit_AfterBackoff_Accepted проверь это утверждение.");
     }
 }

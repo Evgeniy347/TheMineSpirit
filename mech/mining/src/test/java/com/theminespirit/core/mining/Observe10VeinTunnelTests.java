@@ -23,15 +23,23 @@ class Observe10VeinTunnelTests {
         assertFalse(
                 MineDigOrder.visible(feet, coal, List.of(), view),
                 "Живой отказ observe10: уголь " + coal + " из " + feet + " не виден — тест обязан взять именно "
-                        + "закрытую руду, иначе он проверяет другой случай");
+                        + "закрытую руду, иначе он проверяет другой случай"
+                        + " При смене tunnel_Observe10CoalSealedByRock_PlansStaircasePassToVisibleStand проверь это утверждение.");
         assertTrue(
                 MineVeinStands.next(List.of(coal), feet, view, Set.of(), Set.of())
                         .isEmpty(),
-                "Стоянки с прямой видимостью у закрытого угля нет: без прохода mine_vein снова простоит 3600 тиков");
+                "Стоянки с прямой видимостью у закрытого угля нет: без прохода mine_vein снова простоит 3600 тиков"
+                        + " Иначе тест tunnel_Observe10CoalSealedByRock_PlansStaircasePassToVisibleStand перестанет ловить эту поломку. При смене tunnel_Observe10CoalSealedByRock_PlansStaircasePassToVisibleStand проверь это утверждение.");
 
         MineTunnel.Plan plan = MineTunnel.plan(coal, feet, view, MineTunnel.MAX_STEPS);
-        assertTrue(plan.found(), "Закрытый уголь " + coal + " обязан получать проход, а не отказ: " + plan.refusal());
-        assertFalse(plan.steps().isEmpty(), "Проход к закрытому углю не может быть пустым: копать нечего");
+        assertTrue(
+                plan.found(),
+                "Закрытый уголь " + coal + " обязан получать проход, а не отказ: " + plan.refusal()
+                        + " Иначе тест tunnel_Observe10CoalSealedByRock_PlansStaircasePassToVisibleStand перестанет ловить эту поломку. При смене tunnel_Observe10CoalSealedByRock_PlansStaircasePassToVisibleStand проверь это утверждение.");
+        assertFalse(
+                plan.steps().isEmpty(),
+                "Проход к закрытому углю не может быть пустым: копать нечего"
+                        + " Иначе тест tunnel_Observe10CoalSealedByRock_PlansStaircasePassToVisibleStand перестанет ловить эту поломку. При смене tunnel_Observe10CoalSealedByRock_PlansStaircasePassToVisibleStand проверь это утверждение.");
 
         BlockCoord current = feet;
         List<BlockCoord> opened = new ArrayList<>();
@@ -39,25 +47,40 @@ class Observe10VeinTunnelTests {
             int dx = Math.abs(step.stand().x() - current.x());
             int dz = Math.abs(step.stand().z() - current.z());
             int dy = step.stand().y() - current.y();
-            assertEquals(1, dx + dz, "Шаг прохода " + step.stand() + " из " + current + " идёт не в соседнюю клетку");
+            assertEquals(
+                    1,
+                    dx + dz,
+                    "Шаг прохода " + step.stand() + " из " + current + " идёт не в соседнюю клетку"
+                            + " Иначе тест tunnel_Observe10CoalSealedByRock_PlansStaircasePassToVisibleStand перестанет ловить эту поломку. При смене tunnel_Observe10CoalSealedByRock_PlansStaircasePassToVisibleStand проверь это утверждение.");
             assertTrue(
                     Math.abs(dy) <= 1,
                     "Шаг прохода " + step.stand() + " из " + current + " прыгает по высоте на " + dy
-                            + ": лестница меняет высоту на один блок");
-            assertNotEquals(coal, step.stand(), "Дух не встаёт в саму руду " + coal + ": руду добывают, а не топчут");
+                            + ": лестница меняет высоту на один блок"
+                            + " Иначе тест tunnel_Observe10CoalSealedByRock_PlansStaircasePassToVisibleStand перестанет ловить эту поломку. При смене tunnel_Observe10CoalSealedByRock_PlansStaircasePassToVisibleStand проверь это утверждение.");
+            assertNotEquals(
+                    coal,
+                    step.stand(),
+                    "Дух не встаёт в саму руду " + coal + ": руду добывают, а не топчут"
+                            + " Иначе тест tunnel_Observe10CoalSealedByRock_PlansStaircasePassToVisibleStand перестанет ловить эту поломку. При смене tunnel_Observe10CoalSealedByRock_PlansStaircasePassToVisibleStand проверь это утверждение.");
             for (BlockCoord cell : step.dig()) {
-                assertNotEquals(coal, cell, "Проход не должен выламывать цель " + coal + " раньше добычи");
+                assertNotEquals(
+                        coal,
+                        cell,
+                        "Проход не должен выламывать цель " + coal + " раньше добычи"
+                                + " Иначе тест tunnel_Observe10CoalSealedByRock_PlansStaircasePassToVisibleStand перестанет ловить эту поломку. При смене tunnel_Observe10CoalSealedByRock_PlansStaircasePassToVisibleStand проверь это утверждение.");
                 assertTrue(
                         cell.equals(step.stand())
                                 || cell.equals(new BlockCoord(
                                         step.stand().x(),
                                         step.stand().y() + 1,
                                         step.stand().z())),
-                        "Шаг прохода ломает " + cell + " вне клеток ног/головы стоянки " + step.stand());
+                        "Шаг прохода ломает " + cell + " вне клеток ног/головы стоянки " + step.stand()
+                                + " При смене tunnel_Observe10CoalSealedByRock_PlansStaircasePassToVisibleStand проверь это утверждение.");
                 assertTrue(
                         view.cellAt(cell) == Cell.SOLID || view.cellAt(cell) == Cell.FALLING,
                         "Проход ломает " + cell + ", но там " + view.cellAt(cell) + ": породу не прокапывают сквозь "
-                                + "воздух и не ломают опасные клетки");
+                                + "воздух и не ломают опасные клетки"
+                                + " При смене tunnel_Observe10CoalSealedByRock_PlansStaircasePassToVisibleStand проверь это утверждение.");
             }
             opened.addAll(step.dig());
             current = step.stand();
@@ -66,17 +89,20 @@ class Observe10VeinTunnelTests {
         assertTrue(
                 current.y() < feet.y(),
                 "Уголь " + coal + " лежит ниже духа " + feet + ": проход обязан быть лестницей вниз, а не туннелем "
-                        + "на месте");
+                        + "на месте"
+                        + " Иначе тест tunnel_Observe10CoalSealedByRock_PlansStaircasePassToVisibleStand перестанет ловить эту поломку. При смене tunnel_Observe10CoalSealedByRock_PlansStaircasePassToVisibleStand проверь это утверждение.");
         assertTrue(
                 MineDigOrder.visible(current, coal, opened, view),
                 "Дойдя до стоянки " + current + " по выкопанному проходу, дух обязан видеть уголь " + coal
-                        + ": иначе mine_vein снова не начнёт добычу");
+                        + ": иначе mine_vein снова не начнёт добычу"
+                        + " При смене tunnel_Observe10CoalSealedByRock_PlansStaircasePassToVisibleStand проверь это утверждение.");
         assertTrue(
                 Math.abs(coal.x() - current.x()) <= 3
                         && Math.abs(coal.z() - current.z()) <= 3
                         && coal.y() - current.y() <= 15
                         && coal.y() - current.y() >= -3,
-                "Стоянка " + current + " слишком далеко от угля " + coal + ": рукой не достать, добыча не начнётся");
+                "Стоянка " + current + " слишком далеко от угля " + coal + ": рукой не достать, добыча не начнётся"
+                        + " Иначе тест tunnel_Observe10CoalSealedByRock_PlansStaircasePassToVisibleStand перестанет ловить эту поломку. При смене tunnel_Observe10CoalSealedByRock_PlansStaircasePassToVisibleStand проверь это утверждение.");
     }
 
     @Test
@@ -85,7 +111,10 @@ class Observe10VeinTunnelTests {
         BlockCoord feet = view.spirit();
         BlockCoord coal = view.target();
         MineTunnel.Plan direct = MineTunnel.plan(coal, feet, view, MineTunnel.MAX_STEPS);
-        assertTrue(direct.found(), "Живой уголь обязан иметь прямой проход: иначе тест не проверяет обход");
+        assertTrue(
+                direct.found(),
+                "Живой уголь обязан иметь прямой проход: иначе тест не проверяет обход"
+                        + " При смене tunnel_ProtectedCellOnDirectPath_RouteBypassesItOrRefuses проверь это утверждение.");
         BlockCoord blocked = direct.steps().get(0).stand();
 
         MineTunnel.Plan rerouted = MineTunnel.plan(coal, feet, view, MineTunnel.MAX_STEPS, blocked::equals);
@@ -94,12 +123,14 @@ class Observe10VeinTunnelTests {
             for (MineTunnel.Step step : rerouted.steps()) {
                 assertFalse(
                         blocked.equals(step.stand()) || step.dig().contains(blocked),
-                        "Проход к руде обязан обходить защищённую клетку " + blocked + ", а не ломать её");
+                        "Проход к руде обязан обходить защищённую клетку " + blocked + ", а не ломать её"
+                                + " Иначе тест tunnel_ProtectedCellOnDirectPath_RouteBypassesItOrRefuses перестанет ловить эту поломку. При смене tunnel_ProtectedCellOnDirectPath_RouteBypassesItOrRefuses проверь это утверждение.");
             }
         } else {
             assertTrue(
                     rerouted.refusal().contains("постройки"),
-                    "Если обойти защищённую клетку нельзя, отказ обязан называть постройку: " + rerouted.refusal());
+                    "Если обойти защищённую клетку нельзя, отказ обязан называть постройку: " + rerouted.refusal()
+                            + " Иначе тест tunnel_ProtectedCellOnDirectPath_RouteBypassesItOrRefuses перестанет ловить эту поломку. При смене tunnel_ProtectedCellOnDirectPath_RouteBypassesItOrRefuses проверь это утверждение.");
         }
     }
 }

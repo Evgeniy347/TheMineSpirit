@@ -47,11 +47,13 @@ class GraphWoodDemandTests {
                 1,
                 logs.size(),
                 "Порог (40), счёт забора (64) и заказ игрока (64) на одно бревно — одна заявка: иначе рубку "
-                        + "берут несколько духов сразу: " + demands(world()).post());
+                        + "берут несколько духов сразу: " + demands(world()).post()
+                        + " При смене case01_ThreeCausesSixtyFourLogs_OneRequestWithTotal проверь это утверждение.");
         assertEquals(
                 NEED,
                 logs.get(0).count(),
-                "Общая заявка несёт количество от всех причин (64), а не остаток одной из них: " + logs.get(0));
+                "Общая заявка несёт количество от всех причин (64), а не остаток одной из них: " + logs.get(0)
+                        + " Иначе тест case01_ThreeCausesSixtyFourLogs_OneRequestWithTotal перестанет ловить эту поломку. При смене case01_ThreeCausesSixtyFourLogs_OneRequestWithTotal проверь это утверждение.");
     }
 
     @Test
@@ -64,7 +66,8 @@ class GraphWoodDemandTests {
                 result.post().stream()
                         .filter(ticket -> "jungle_log".equals(ticket.task().makes()))
                         .count(),
-                "Сквозь доску на 64 бревна идёт одна заявка: иначе рубку берут четверо из пяти: " + result.post());
+                "Сквозь доску на 64 бревна идёт одна заявка: иначе рубку берут четверо из пяти: " + result.post()
+                        + " При смене case02_FiveSpiritsSixtyFourLogs_AtMostTwoLoggersOthersWork проверь это утверждение.");
         Board board = new Board(() -> 0);
         Set<String> wood = new HashSet<>();
         for (GraphTickets.Ticket ticket : result.post()) {
@@ -85,12 +88,19 @@ class GraphWoodDemandTests {
                 pairs.stream().filter(pair -> wood.contains(pair.ticket())).count();
         long others = pairs.size() - loggers;
 
-        assertTrue(loggers >= 1 && loggers <= 2, "На 64 бревна хватает 1–2 рубщиков: " + pairs);
-        assertTrue(others >= 3, "Остальные духи заняты другой работой, а не дублируют рубку: " + pairs);
+        assertTrue(
+                loggers >= 1 && loggers <= 2,
+                "На 64 бревна хватает 1–2 рубщиков: " + pairs
+                        + " Иначе тест case02_FiveSpiritsSixtyFourLogs_AtMostTwoLoggersOthersWork перестанет ловить эту поломку. При смене case02_FiveSpiritsSixtyFourLogs_AtMostTwoLoggersOthersWork проверь это утверждение.");
+        assertTrue(
+                others >= 3,
+                "Остальные духи заняты другой работой, а не дублируют рубку: " + pairs
+                        + " Иначе тест case02_FiveSpiritsSixtyFourLogs_AtMostTwoLoggersOthersWork перестанет ловить эту поломку. При смене case02_FiveSpiritsSixtyFourLogs_AtMostTwoLoggersOthersWork проверь это утверждение.");
         assertEquals(
                 pairs.size(),
                 pairs.stream().map(Pair::spirit).distinct().count(),
-                "Один дух за раунд берёт не больше одной работы: " + pairs);
+                "Один дух за раунд берёт не больше одной работы: " + pairs
+                        + " Иначе тест case02_FiveSpiritsSixtyFourLogs_AtMostTwoLoggersOthersWork перестанет ловить эту поломку. При смене case02_FiveSpiritsSixtyFourLogs_AtMostTwoLoggersOthersWork проверь это утверждение.");
     }
 
     private static BoardTicket part(GraphTickets.Ticket ticket, String id) {
@@ -132,10 +142,12 @@ class GraphWoodDemandTests {
         assertEquals(
                 Set.copyOf(items).size(),
                 items.size(),
-                "Один предмет — одна заявка: разные пути одного бревна не ставят по заявке на духа: " + items);
+                "Один предмет — одна заявка: разные пути одного бревна не ставят по заявке на духа: " + items
+                        + " Иначе тест case03_OneRequestPerWoodSpecies_StaysSingle перестанет ловить эту поломку. При смене case03_OneRequestPerWoodSpecies_StaysSingle проверь это утверждение.");
         assertEquals(
                 Set.copyOf(species).size(),
                 species.size(),
-                "На породу дерева живёт одна заявка, дуб и джунгль не мешают друг другу: " + species);
+                "На породу дерева живёт одна заявка, дуб и джунгль не мешают друг другу: " + species
+                        + " Иначе тест case03_OneRequestPerWoodSpecies_StaysSingle перестанет ловить эту поломку. При смене case03_OneRequestPerWoodSpecies_StaysSingle проверь это утверждение.");
     }
 }

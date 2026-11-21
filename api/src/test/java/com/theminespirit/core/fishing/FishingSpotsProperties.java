@@ -32,18 +32,21 @@ class FishingSpotsProperties {
                 first,
                 second,
                 "Выбор рабочей точки обязан быть детерминирован: два одинаковых запроса дают одно место, "
-                        + "иначе дух мечется между берегами");
+                        + "иначе дух мечется между берегами"
+                        + " При смене findWorkPoint_AnyOriginNearPond_IsDeterministicAndOnThePond проверь это утверждение.");
         assertTrue(
                 first.water().x() >= POND_X
                         && first.water().x() < POND_X + SIDE
                         && first.water().z() >= POND_Z
                         && first.water().z() < POND_Z + SIDE,
                 "Цель заброса обязана лежать в пятне воды, а не в воздухе: иначе удочка летит мимо, "
-                        + "фактическая клетка " + first.water());
+                        + "фактическая клетка " + first.water()
+                        + " При смене findWorkPoint_AnyOriginNearPond_IsDeterministicAndOnThePond проверь это утверждение.");
         assertTrue(
                 first.stand().y() == 64 || first.stand().y() == 65,
                 "Рабочая стоянка обязана быть на уровне воды или на блок выше: с обрыва дух не забросит, "
-                        + "фактическая высота " + first.stand().y());
+                        + "фактическая высота " + first.stand().y()
+                        + " Иначе тест findWorkPoint_AnyOriginNearPond_IsDeterministicAndOnThePond перестанет ловить эту поломку. При смене findWorkPoint_AnyOriginNearPond_IsDeterministicAndOnThePond проверь это утверждение.");
     }
 
     @Property
@@ -55,7 +58,8 @@ class FishingSpotsProperties {
                 FishingSpots.findWorkPoint(new BlockCoord(originX, 64, originZ), view, DATA, (stand, cell) -> false)
                         .isEmpty(),
                 "Фильтр, отвергающий весь берег, обязан оставить рабочую точку ненайденной: "
-                        + "запрет построек не обходится подстановкой места по умолчанию");
+                        + "запрет построек не обходится подстановкой места по умолчанию"
+                        + " Иначе тест findWorkPoint_AnyOriginWithRejectingFilter_Refuses перестанет ловить эту поломку. При смене findWorkPoint_AnyOriginWithRejectingFilter_Refuses проверь это утверждение.");
     }
 
     private static WaterView openShore() {

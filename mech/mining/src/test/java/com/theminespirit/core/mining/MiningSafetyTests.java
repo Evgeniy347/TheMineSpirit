@@ -35,7 +35,8 @@ class MiningSafetyTests {
         assertTrue(
                 safety instanceof BreakSafety.Unsafe,
                 "Жидкость на грани " + fluid + " (" + dx + "," + dy + "," + dz + ") обязана запрещать ломку: "
-                        + "затекшая в полость жидкость смывает духа или убивает его лавой");
+                        + "затекшая в полость жидкость смывает духа или убивает его лавой"
+                        + " Иначе тест canBreak_FluidOnAnyFace_IsUnsafe перестанет ловить эту поломку. При смене canBreak_FluidOnAnyFace_IsUnsafe проверь это утверждение.");
     }
 
     @Test
@@ -47,7 +48,8 @@ class MiningSafetyTests {
         assertTrue(
                 safety instanceof BreakSafety.Safe,
                 "Жидкость по диагонали не касается грани блока: запрещать ломку нельзя, иначе безопасные "
-                        + "блоки рядом с водой остаются недобытыми");
+                        + "блоки рядом с водой остаются недобытыми"
+                        + " При смене canBreak_LavaOnDiagonalNeighbor_IsSafe проверь это утверждение.");
     }
 
     @Test
@@ -56,7 +58,8 @@ class MiningSafetyTests {
 
         assertTrue(
                 MiningSafety.canBreak(new BlockCoord(0, 0, 0), world) instanceof BreakSafety.Safe,
-                "Блок без жидкости вокруг безопасен: обычная руда обязана добываться");
+                "Блок без жидкости вокруг безопасен: обычная руда обязана добываться"
+                        + " Иначе тест canBreak_NoFluidAround_IsSafe перестанет ловить эту поломку. При смене canBreak_NoFluidAround_IsSafe проверь это утверждение.");
     }
 
     @Test
@@ -68,7 +71,8 @@ class MiningSafetyTests {
         assertEquals(
                 6,
                 world.reads(),
-                "Ломка читает ровно 6 граней (без диагоналей): каждое лишнее чтение — нагрузка на серверный тик");
+                "Ломка читает ровно 6 граней (без диагоналей): каждое лишнее чтение — нагрузка на серверный тик"
+                        + " Иначе тест canBreak_AnyTarget_ChecksOnlySixFaces перестанет ловить эту поломку. При смене canBreak_AnyTarget_ChecksOnlySixFaces проверь это утверждение.");
     }
 
     @Test
@@ -77,7 +81,8 @@ class MiningSafetyTests {
 
         assertTrue(
                 MiningSafety.canStand(new BlockCoord(0, 0, 0), world),
-                "Твёрдый пол и свободные ноги с головой — годная стоянка: без неё дух не может подойти к цели");
+                "Твёрдый пол и свободные ноги с головой — годная стоянка: без неё дух не может подойти к цели"
+                        + " Иначе тест canStand_SolidFloorAndClearColumn_IsAccepted перестанет ловить эту поломку. При смене canStand_SolidFloorAndClearColumn_IsAccepted проверь это утверждение.");
     }
 
     @Test
@@ -87,7 +92,8 @@ class MiningSafetyTests {
         assertTrue(
                 MiningSafety.canStand(new BlockCoord(0, 0, 0), world),
                 "Сыпучий пол (гравий, песок) — обычная опора, как в игре: сыпучее опасно только над головой. "
-                        + "Иначе стоянки плана на гравии площади недостижимы и подходов вдвое больше плана");
+                        + "Иначе стоянки плана на гравии площади недостижимы и подходов вдвое больше плана"
+                        + " При смене canStand_FallingFloor_IsAccepted проверь это утверждение.");
     }
 
     @Test
@@ -97,7 +103,8 @@ class MiningSafetyTests {
         assertFalse(
                 MiningSafety.canStandOnGround(new BlockCoord(0, 0, 0), world, 2),
                 "Стоянка на висящей плите над пустотой (перенос к стоянке y=80 30.10) обязана отвергаться: "
-                        + "дух сходит с неё вниз и разбивается, а перенос — аварийный выход, не приговор");
+                        + "дух сходит с неё вниз и разбивается, а перенос — аварийный выход, не приговор"
+                        + " Иначе тест canStandOnGround_FloatingFloorOverChasm_IsRejected перестанет ловить эту поломку. При смене canStandOnGround_FloatingFloorOverChasm_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -106,7 +113,8 @@ class MiningSafetyTests {
 
         assertTrue(
                 MiningSafety.canStandOnGround(new BlockCoord(0, 0, 0), world, 2),
-                "Стоянка с твёрдым полом и опорой под ним — годная: иначе дух не может выбраться из застревания");
+                "Стоянка с твёрдым полом и опорой под ним — годная: иначе дух не может выбраться из застревания"
+                        + " При смене canStandOnGround_SolidGroundBelowFloor_IsAccepted проверь это утверждение.");
     }
 
     @Test
@@ -115,7 +123,8 @@ class MiningSafetyTests {
 
         assertFalse(
                 MiningSafety.canStand(new BlockCoord(0, 0, 0), world),
-                "Стоянка без твёрдого пола (под ногами воздух) обязана отвергаться: дух упадёт в полость");
+                "Стоянка без твёрдого пола (под ногами воздух) обязана отвергаться: дух упадёт в полость"
+                        + " Иначе тест canStand_FloorIsPassable_IsRejected перестанет ловить эту поломку. При смене canStand_FloorIsPassable_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -124,7 +133,8 @@ class MiningSafetyTests {
 
         assertFalse(
                 MiningSafety.canStand(new BlockCoord(0, 0, 0), world),
-                "Стоянка с занятой головой обязана отвергаться: дух не помещается в клетку");
+                "Стоянка с занятой головой обязана отвергаться: дух не помещается в клетку"
+                        + " Иначе тест canStand_HeadBlocked_IsRejected перестанет ловить эту поломку. При смене canStand_HeadBlocked_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -133,7 +143,8 @@ class MiningSafetyTests {
 
         assertFalse(
                 MiningSafety.canStand(new BlockCoord(0, 0, 0), world),
-                "Кактус или паутина в клетке ног обязана отвергаться: дух получает урон, стоя на месте");
+                "Кактус или паутина в клетке ног обязана отвергаться: дух получает урон, стоя на месте"
+                        + " Иначе тест canStand_FeetIsHazard_IsRejected перестанет ловить эту поломку. При смене canStand_FeetIsHazard_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -142,7 +153,8 @@ class MiningSafetyTests {
 
         assertFalse(
                 MiningSafety.canStand(new BlockCoord(0, 0, 0), world),
-                "Магма под ногами обязана отвергаться: дух горит, стоя на такой стоянке");
+                "Магма под ногами обязана отвергаться: дух горит, стоя на такой стоянке"
+                        + " Иначе тест canStand_FloorIsHazard_IsRejected перестанет ловить эту поломку. При смене canStand_FloorIsHazard_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -151,7 +163,8 @@ class MiningSafetyTests {
 
         assertFalse(
                 MiningSafety.canStand(new BlockCoord(0, 0, 0), world),
-                "Вода рядом с ногами обязана отвергаться: течение уносит духа и он теряет цель");
+                "Вода рядом с ногами обязана отвергаться: течение уносит духа и он теряет цель"
+                        + " Иначе тест canStand_FluidBesideFeet_IsRejected перестанет ловить эту поломку. При смене canStand_FluidBesideFeet_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -160,7 +173,8 @@ class MiningSafetyTests {
 
         assertFalse(
                 MiningSafety.canStand(new BlockCoord(0, 0, 0), world),
-                "Лава у уровня пола соседней клетки обязана отвергаться: затечёт под ноги духа");
+                "Лава у уровня пола соседней клетки обязана отвергаться: затечёт под ноги духа"
+                        + " Иначе тест canStand_FluidBesideFloor_IsRejected перестанет ловить эту поломку. При смене canStand_FluidBesideFloor_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -170,7 +184,8 @@ class MiningSafetyTests {
         assertFalse(
                 MiningSafety.canStepFrom(new BlockCoord(0, 0, 0), new BlockCoord(1, 0, 0), world),
                 "Соседняя клетка того же уровня, не проходящая canStand (рядом лава), обязана запрещать шаг: "
-                        + "иначе дух шагает в опасную клетку мимо навигации");
+                        + "иначе дух шагает в опасную клетку мимо навигации"
+                        + " При смене canStepFrom_NeighborSameLevelBesideLava_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -179,7 +194,8 @@ class MiningSafetyTests {
 
         assertFalse(
                 MiningSafety.canStepFrom(new BlockCoord(0, 0, 0), new BlockCoord(1, 0, 0), world),
-                "Соседняя клетка без пола обязана запрещать шаг: без проверки пола дух падает в полость");
+                "Соседняя клетка без пола обязана запрещать шаг: без проверки пола дух падает в полость"
+                        + " Иначе тест canStepFrom_NeighborSameLevelWithoutFloor_IsRejected перестанет ловить эту поломку. При смене canStepFrom_NeighborSameLevelWithoutFloor_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -188,7 +204,8 @@ class MiningSafetyTests {
 
         assertTrue(
                 MiningSafety.canStepFrom(new BlockCoord(0, 0, 0), new BlockCoord(1, 0, 0), world),
-                "Безопасная соседняя клетка того же уровня обязана разрешать шаг: иначе предмет не подобрать");
+                "Безопасная соседняя клетка того же уровня обязана разрешать шаг: иначе предмет не подобрать"
+                        + " При смене canStepFrom_SafeNeighborSameLevel_IsAccepted проверь это утверждение.");
     }
 
     @Test
@@ -197,6 +214,7 @@ class MiningSafetyTests {
 
         assertFalse(
                 MiningSafety.canStepFrom(new BlockCoord(0, 0, 0), new BlockCoord(1, -1, 0), world),
-                "Соседняя клетка другого уровня обязана запрещать прямой шаг: предмет на дне ямы недосягаем пешком");
+                "Соседняя клетка другого уровня обязана запрещать прямой шаг: предмет на дне ямы недосягаем пешком"
+                        + " Иначе тест canStepFrom_NeighborOtherLevel_IsRejected перестанет ловить эту поломку. При смене canStepFrom_NeighborOtherLevel_IsRejected проверь это утверждение.");
     }
 }

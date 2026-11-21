@@ -24,9 +24,18 @@ class More3StoreTests {
                 new BlockCoord(321, 70, -654),
                 danger.position(),
                 "Старая запись хранила ноги духа (крыша склада y=80); основание опасности — низ колонки "
-                        + "(уровень ограды y=70). Иначе avoidDanger и будущие потребители видят произвольную y");
-        assertEquals("mob", danger.kind(), "Миграция не трогает вид опасности");
-        assertEquals(1, danger.hits(), "Миграция не сбрасывает счётчик ударов");
+                        + "(уровень ограды y=70). Иначе avoidDanger и будущие потребители видят произвольную y"
+                        + " При смене migrateColumns_OldDangerAtFeet_MovesToBaseKeepingColumnAndCounters проверь это утверждение.");
+        assertEquals(
+                "mob",
+                danger.kind(),
+                "Миграция не трогает вид опасности"
+                        + " Иначе тест migrateColumns_OldDangerAtFeet_MovesToBaseKeepingColumnAndCounters перестанет ловить эту поломку. При смене migrateColumns_OldDangerAtFeet_MovesToBaseKeepingColumnAndCounters проверь это утверждение.");
+        assertEquals(
+                1,
+                danger.hits(),
+                "Миграция не сбрасывает счётчик ударов"
+                        + " Иначе тест migrateColumns_OldDangerAtFeet_MovesToBaseKeepingColumnAndCounters перестанет ловить эту поломку. При смене migrateColumns_OldDangerAtFeet_MovesToBaseKeepingColumnAndCounters проверь это утверждение.");
     }
 
     @Test
@@ -45,7 +54,8 @@ class More3StoreTests {
                 List.of(new BlockCoord(1, 70, 2), new BlockCoord(3, 80, 4)),
                 positions,
                 "Признак миграции один на хранилище: уже выправленные записи не переезжают повторно на новую "
-                        + "высоту, а свежая запись живёт со своим основанием");
+                        + "высоту, а свежая запись живёт со своим основанием"
+                        + " Иначе тест migrateColumns_RunsOnce_MigratedRecordIsNotRewrittenLater перестанет ловить эту поломку. При смене migrateColumns_RunsOnce_MigratedRecordIsNotRewrittenLater проверь это утверждение.");
     }
 
     @Test
@@ -72,7 +82,8 @@ class More3StoreTests {
                 new BlockCoord(10, 70, -20),
                 loaded.recentDangers(100).get(0).position(),
                 "Записи из старого сейва до правки обязаны мигрировать при первой загрузке: иначе после "
-                        + "перезапуска они снова дают крышу/столб вместо основания колонки");
+                        + "перезапуска они снова дают крышу/столб вместо основания колонки"
+                        + " При смене load_OldSavedRecordWithoutBase_MigratesAfterLoad проверь это утверждение.");
     }
 
     @Test
@@ -86,11 +97,13 @@ class More3StoreTests {
         assertEquals(
                 new BlockCoord(4, 70, 5),
                 loaded.recentDangers(100).get(0).position(),
-                "Основание опасности обязано пережить перезапуск: иначе миграция повторится и снова сдвинет y");
+                "Основание опасности обязано пережить перезапуск: иначе миграция повторится и снова сдвинет y"
+                        + " При смене saveLoad_DangerBase_SurvivesRestart проверь это утверждение.");
         assertEquals(
                 Tag.TAG_COMPOUND,
                 ((ListTag) saved.get("Dangers")).getElementType(),
-                "Опасности сохраняются списком compound: формат старого сейва остаётся читаемым");
+                "Опасности сохраняются списком compound: формат старого сейва остаётся читаемым"
+                        + " Иначе тест saveLoad_DangerBase_SurvivesRestart перестанет ловить эту поломку. При смене saveLoad_DangerBase_SurvivesRestart проверь это утверждение.");
     }
 
     @Test
@@ -102,12 +115,18 @@ class More3StoreTests {
         assertEquals(
                 new BlockCoord(7, 70, 8),
                 store.recentDangers(100).get(0).position(),
-                "Опасность от смерти — основание колонки, а не крыша, где дух умер");
+                "Опасность от смерти — основание колонки, а не крыша, где дух умер"
+                        + " Иначе тест noteDeath_DropStaysAtFeet_DangerGetsColumnBase перестанет ловить эту поломку. При смене noteDeath_DropStaysAtFeet_DangerGetsColumnBase проверь это утверждение.");
         assertEquals(
                 new BlockCoord(7, 80, 8),
                 store.activeDrops(100).get(0).position(),
                 "Дроп после смерти остаётся там, где дух умер: подбирать его идут к фактической клетке, а не к "
-                        + "уровню ограды");
-        assertNotEquals(store.recentDangers(100).get(0).hits(), 0, "Смерть учитывается в счётчике опасного места");
+                        + "уровню ограды"
+                        + " Иначе тест noteDeath_DropStaysAtFeet_DangerGetsColumnBase перестанет ловить эту поломку. При смене noteDeath_DropStaysAtFeet_DangerGetsColumnBase проверь это утверждение.");
+        assertNotEquals(
+                store.recentDangers(100).get(0).hits(),
+                0,
+                "Смерть учитывается в счётчике опасного места"
+                        + " Иначе тест noteDeath_DropStaysAtFeet_DangerGetsColumnBase перестанет ловить эту поломку. При смене noteDeath_DropStaysAtFeet_DangerGetsColumnBase проверь это утверждение.");
     }
 }

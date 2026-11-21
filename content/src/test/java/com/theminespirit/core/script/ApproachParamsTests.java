@@ -14,7 +14,8 @@ class ApproachParamsTests {
         assertEquals(
                 new ApproachParams(4, 64, 7),
                 params,
-                "approach обязан сохранить клетку цели: по ней выбирается стоянка в досягаемости");
+                "approach обязан сохранить клетку цели: по ней выбирается стоянка в досягаемости"
+                        + " Иначе тест from_AllParamsPresent_ReturnsParams перестанет ловить эту поломку. При смене from_AllParamsPresent_ReturnsParams проверь это утверждение.");
     }
 
     @Test
@@ -22,7 +23,8 @@ class ApproachParamsTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> ApproachParams.from(Map.of("x", 4, "y", 64)),
-                "approach без координаты обязан отказывать: без клетки цели стоянку не выбрать");
+                "approach без координаты обязан отказывать: без клетки цели стоянку не выбрать"
+                        + " Иначе тест from_MissingCoordinate_IsRejected перестанет ловить эту поломку. При смене from_MissingCoordinate_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -30,7 +32,8 @@ class ApproachParamsTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> ApproachParams.from(Map.of("x", 30_000_001, "y", 64, "z", 7)),
-                "Цель за границей мира обязана отвергаться: подойти туда нельзя");
+                "Цель за границей мира обязана отвергаться: подойти туда нельзя"
+                        + " Иначе тест from_XOutsideWorld_IsRejected перестанет ловить эту поломку. При смене from_XOutsideWorld_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -38,6 +41,7 @@ class ApproachParamsTests {
         assertThrows(
                 NullPointerException.class,
                 () -> ApproachParams.from(null),
-                "ApproachParams.from(null) обязан отказывать: без карты параметров маппинг только читает состояние мира");
+                "ApproachParams.from(null) обязан отказывать: без карты параметров маппинг только читает состояние мира"
+                        + " Иначе тест from_NullParams_IsRejected перестанет ловить эту поломку. При смене from_NullParams_IsRejected проверь это утверждение.");
     }
 }

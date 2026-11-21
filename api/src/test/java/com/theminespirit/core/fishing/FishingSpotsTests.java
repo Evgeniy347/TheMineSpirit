@@ -22,15 +22,18 @@ class FishingSpotsTests {
 
         assertTrue(
                 found.isPresent(),
-                "Рядом пруд 2x2 глубиной 1 — место для ловли обязано найтись: без этого дух не рыбачит");
+                "Рядом пруд 2x2 глубиной 1 — место для ловли обязано найтись: без этого дух не рыбачит"
+                        + " При смене find_TwoByTwoOpenWater_ChoosesShoreStandAndWaterCell проверь это утверждение.");
         assertEquals(
                 new BlockCoord(1, 64, 2),
                 found.orElseThrow().stand(),
-                "Из равноблизких стоянок берётся младшая по порядку координат: выбор обязан быть детерминирован");
+                "Из равноблизких стоянок берётся младшая по порядку координат: выбор обязан быть детерминирован"
+                        + " Иначе тест find_TwoByTwoOpenWater_ChoosesShoreStandAndWaterCell перестанет ловить эту поломку. При смене find_TwoByTwoOpenWater_ChoosesShoreStandAndWaterCell проверь это утверждение.");
         assertEquals(
                 new BlockCoord(2, 64, 2),
                 found.orElseThrow().water(),
-                "Цель заброса — ближайшая к стоянке клетка воды: удочка летит в пруд, а не мимо");
+                "Цель заброса — ближайшая к стоянке клетка воды: удочка летит в пруд, а не мимо"
+                        + " Иначе тест find_TwoByTwoOpenWater_ChoosesShoreStandAndWaterCell перестанет ловить эту поломку. При смене find_TwoByTwoOpenWater_ChoosesShoreStandAndWaterCell проверь это утверждение.");
     }
 
     @Test
@@ -43,7 +46,8 @@ class FishingSpotsTests {
 
         assertTrue(
                 FishingSpots.find(new BlockCoord(0, 64, 0), view, DATA).isEmpty(),
-                "Полоса воды шириной в один блок — не 2x2: забрасывать некуда, находка обязана отказать");
+                "Полоса воды шириной в один блок — не 2x2: забрасывать некуда, находка обязана отказать"
+                        + " Иначе тест find_SingleRowOfWater_Refuses перестанет ловить эту поломку. При смене find_SingleRowOfWater_Refuses проверь это утверждение.");
     }
 
     @Test
@@ -53,7 +57,8 @@ class FishingSpotsTests {
         assertTrue(
                 FishingSpots.find(new BlockCoord(0, 64, 0), view, new FishingData(2, 2))
                         .isEmpty(),
-                "Вода глубиной 1 при требовании 2 обязана быть отвергнута: порог глубины приходит из данных");
+                "Вода глубиной 1 при требовании 2 обязана быть отвергнута: порог глубины приходит из данных"
+                        + " Иначе тест find_DepthBelowData_Refuses перестанет ловить эту поломку. При смене find_DepthBelowData_Refuses проверь это утверждение.");
     }
 
     @Test
@@ -63,7 +68,8 @@ class FishingSpotsTests {
         assertTrue(
                 FishingSpots.find(new BlockCoord(0, 64, 0), view, new FishingData(3, 1))
                         .isEmpty(),
-                "Пятно 2x2 при требовании 3x3 обязано быть отвергнуто: порог площади приходит из данных");
+                "Пятно 2x2 при требовании 3x3 обязано быть отвергнуто: порог площади приходит из данных"
+                        + " Иначе тест find_WidthBelowData_Refuses перестанет ловить эту поломку. При смене find_WidthBelowData_Refuses проверь это утверждение.");
     }
 
     @Test
@@ -75,7 +81,8 @@ class FishingSpotsTests {
 
         assertTrue(
                 FishingSpots.find(new BlockCoord(0, 64, 0), view, DATA).isEmpty(),
-                "Ступенька в поверхности воды ломает ровное пятно 2x2: иначе удочка забрасывается в перепад");
+                "Ступенька в поверхности воды ломает ровное пятно 2x2: иначе удочка забрасывается в перепад"
+                        + " При смене find_SurfaceStep_Refuses проверь это утверждение.");
     }
 
     @Test
@@ -90,11 +97,13 @@ class FishingSpotsTests {
         assertEquals(
                 new BlockCoord(1, 64, 2),
                 spot.stand(),
-                "Из двух прудов берётся ближний берег: дух не идёт через полкарты за той же рыбой");
+                "Из двух прудов берётся ближний берег: дух не идёт через полкарты за той же рыбой"
+                        + " Иначе тест find_TwoPonds_ChoosesNearerShore перестанет ловить эту поломку. При смене find_TwoPonds_ChoosesNearerShore проверь это утверждение.");
         assertEquals(
                 new BlockCoord(2, 64, 2),
                 spot.water(),
-                "Заброс идёт в ближний пруд, а не в дальний: цель обязана лежать у выбранной стоянки");
+                "Заброс идёт в ближний пруд, а не в дальний: цель обязана лежать у выбранной стоянки"
+                        + " Иначе тест find_TwoPonds_ChoosesNearerShore перестанет ловить эту поломку. При смене find_TwoPonds_ChoosesNearerShore проверь это утверждение.");
     }
 
     @Test
@@ -103,7 +112,8 @@ class FishingSpotsTests {
 
         assertTrue(
                 FishingSpots.find(new BlockCoord(0, 64, 0), view, DATA).isEmpty(),
-                "Пруд без пригодного берега не годится: стоять духу негде, находка обязана отказать");
+                "Пруд без пригодного берега не годится: стоять духу негде, находка обязана отказать"
+                        + " Иначе тест find_NoStandableShore_Refuses перестанет ловить эту поломку. При смене find_NoStandableShore_Refuses проверь это утверждение.");
     }
 
     @Test
@@ -112,7 +122,8 @@ class FishingSpotsTests {
 
         assertTrue(
                 FishingSpots.find(new BlockCoord(0, 64, 0), view, DATA).isPresent(),
-                "Пруд 3x3 содержит пятно 2x2 — требование «минимум 2x2» выполнено, находка обязана сработать");
+                "Пруд 3x3 содержит пятно 2x2 — требование «минимум 2x2» выполнено, находка обязана сработать"
+                        + " Иначе тест find_ThreeByThreeWater_QualifiesAsMinimumTwoByTwo перестанет ловить эту поломку. При смене find_ThreeByThreeWater_QualifiesAsMinimumTwoByTwo проверь это утверждение.");
     }
 
     @Test
@@ -121,7 +132,8 @@ class FishingSpotsTests {
 
         assertTrue(
                 FishingSpots.find(new BlockCoord(0, 64, 0), view, DATA).isEmpty(),
-                "Без открытой воды находка обязана отказать: дух не рыбачит в воздухе");
+                "Без открытой воды находка обязана отказать: дух не рыбачит в воздухе"
+                        + " Иначе тест find_NoWater_Refuses перестанет ловить эту поломку. При смене find_NoWater_Refuses проверь это утверждение.");
     }
 
     @Test
@@ -131,11 +143,15 @@ class FishingSpotsTests {
         Optional<FishingSpots.Spot> found =
                 FishingSpots.findWorkPoint(new BlockCoord(0, 64, 0), view, DATA, FishingSpots.SpotFilter.ALL);
 
-        assertTrue(found.isPresent(), "Пятно 5x5 глубиной 2 — рабочая точка у воды: здесь дух рыбачит постоянно");
+        assertTrue(
+                found.isPresent(),
+                "Пятно 5x5 глубиной 2 — рабочая точка у воды: здесь дух рыбачит постоянно"
+                        + " Иначе тест findWorkPoint_FiveByFiveDepthTwo_ChoosesShoreStand перестанет ловить эту поломку. При смене findWorkPoint_FiveByFiveDepthTwo_ChoosesShoreStand проверь это утверждение.");
         assertEquals(
                 new BlockCoord(1, 64, 2),
                 found.orElseThrow().stand(),
-                "Рабочая стоянка выбирается у берега ближайшего пятна воды");
+                "Рабочая стоянка выбирается у берега ближайшего пятна воды"
+                        + " Иначе тест findWorkPoint_FiveByFiveDepthTwo_ChoosesShoreStand перестанет ловить эту поломку. При смене findWorkPoint_FiveByFiveDepthTwo_ChoosesShoreStand проверь это утверждение.");
     }
 
     @Test
@@ -145,7 +161,8 @@ class FishingSpotsTests {
         assertTrue(
                 FishingSpots.findWorkPoint(new BlockCoord(0, 64, 0), view, DATA, FishingSpots.SpotFilter.ALL)
                         .isEmpty(),
-                "Пятно 5x5 глубиной 1 не годится под рабочую точку: работа у воды требует глубины 2 из данных");
+                "Пятно 5x5 глубиной 1 не годится под рабочую точку: работа у воды требует глубины 2 из данных"
+                        + " Иначе тест findWorkPoint_ShallowFiveByFive_Refuses перестанет ловить эту поломку. При смене findWorkPoint_ShallowFiveByFive_Refuses проверь это утверждение.");
     }
 
     @Test
@@ -161,7 +178,8 @@ class FishingSpotsTests {
         assertEquals(
                 new BlockCoord(29, 64, 30),
                 spot.stand(),
-                "Отвергнутая фильтром ближняя стоянка не выбирается: рабочая точка идёт от построек подальше");
+                "Отвергнутая фильтром ближняя стоянка не выбирается: рабочая точка идёт от построек подальше"
+                        + " Иначе тест findWorkPoint_FilterRejectsNearShore_PicksFarOne перестанет ловить эту поломку. При смене findWorkPoint_FilterRejectsNearShore_PicksFarOne проверь это утверждение.");
     }
 
     @Test
@@ -171,7 +189,8 @@ class FishingSpotsTests {
         assertTrue(
                 FishingSpots.findWorkPoint(new BlockCoord(0, 64, 0), view, DATA, (stand, cell) -> false)
                         .isEmpty(),
-                "Если вся вода занята постройками, рабочая точка не находится: дух не рыбачит у чужого дома");
+                "Если вся вода занята постройками, рабочая точка не находится: дух не рыбачит у чужого дома"
+                        + " Иначе тест findWorkPoint_AllShoreRejected_Refuses перестанет ловить эту поломку. При смене findWorkPoint_AllShoreRejected_Refuses проверь это утверждение.");
     }
 
     private static WaterView view(List<WaterView.Column> columns, Set<BlockCoord> stands) {

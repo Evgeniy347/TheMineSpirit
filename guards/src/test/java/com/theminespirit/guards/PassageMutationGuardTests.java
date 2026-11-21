@@ -39,7 +39,8 @@ class PassageMutationGuardTests {
                 offenders,
                 "Проход сквозь мир решает граф (узлы dig_out, bridge, pillar, restore_trace), а код доски и "
                         + "навигации только читает мир и отдаёт факты. Цена нарушения: дух роет или строит мимо "
-                        + "плана. Ломать и ставить блоки можно только в исполнителе действия. Нарушители");
+                        + "плана. Ломать и ставить блоки можно только в исполнителе действия. Нарушители"
+                        + " При смене decisionLayers_WorldMutationApis_AreAbsent проверь это утверждение.");
     }
 
     @Test
@@ -47,7 +48,8 @@ class PassageMutationGuardTests {
         assertEquals(
                 1,
                 scan("class Sample { void run() { level.setBlock(pos, state, 3); } }"),
-                "Сторож ослеп: вызов setBlock обязан находиться");
+                "Сторож ослеп: вызов setBlock обязан находиться"
+                        + " Иначе тест guard_SetBlockCall_IsFound перестанет ловить эту поломку. При смене guard_SetBlockCall_IsFound проверь это утверждение.");
     }
 
     private static int scan(String text) {
@@ -63,7 +65,10 @@ class PassageMutationGuardTests {
     @Test
     void decisionLayers_RootDirectories_Exist() {
         for (Path root : DECISION_LAYERS) {
-            assertTrue(Files.isDirectory(root), "Сторож не нашёл слой решений " + root + ": запуск из корня проекта");
+            assertTrue(
+                    Files.isDirectory(root),
+                    "Сторож не нашёл слой решений " + root + ": запуск из корня проекта"
+                            + " Иначе тест decisionLayers_RootDirectories_Exist перестанет ловить эту поломку. При смене decisionLayers_RootDirectories_Exist проверь это утверждение.");
         }
     }
 }

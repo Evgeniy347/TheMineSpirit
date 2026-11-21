@@ -26,7 +26,8 @@ class CoreApiPurityGuardTests {
                 List.of("core/board/ToolsConfig.java: public static ToolsConfig fromJson(JsonNode"),
                 problems(Map.of(
                         "core/board/ToolsConfig.java", "    public static ToolsConfig fromJson(JsonNode node) {\n")),
-                "Сторож ослеп: JsonNode в public-сигнатуре ядра обязан попасть в нарушители");
+                "Сторож ослеп: JsonNode в public-сигнатуре ядра обязан попасть в нарушители"
+                        + " Иначе тест publicMethod_InCoreWithJsonNode_IsReported перестанет ловить эту поломку. При смене publicMethod_InCoreWithJsonNode_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -34,7 +35,8 @@ class CoreApiPurityGuardTests {
         assertEquals(
                 List.of(),
                 problems(Map.of("core/board/PlanTuning.java", "    static PlanTuning fromJson(JsonNode node) {\n")),
-                "Сторож ложно срабатывает: package-private разбор файла — внутренняя деталь, а не API");
+                "Сторож ложно срабатывает: package-private разбор файла — внутренняя деталь, а не API"
+                        + " Иначе тест packagePrivate_Parser_IsAccepted перестанет ловить эту поломку. При смене packagePrivate_Parser_IsAccepted проверь это утверждение.");
     }
 
     @Test
@@ -44,14 +46,19 @@ class CoreApiPurityGuardTests {
                 problems(Map.of(
                         "core/inventory/api/JsonResource.java",
                         "    public static JsonNode parse(String json, String origin) {\n")),
-                "Сторож ложно срабатывает: JsonResource — владелец типа дерева, его сигнатуры осознанно работают с JsonNode");
+                "Сторож ложно срабатывает: JsonResource — владелец типа дерева, его сигнатуры осознанно работают с JsonNode"
+                        + " Иначе тест jsonResource_ExemptType_IsAccepted перестанет ловить эту поломку. При смене jsonResource_ExemptType_IsAccepted проверь это утверждение.");
     }
 
     @Test
     void core_RealSignatures_HaveNoPublicJackson() {
         Map<String, String> sources = new TreeMap<>();
         SourceFiles.allMain().forEach((file, text) -> sources.put(SourceFiles.logical(file), text));
-        assertEquals(List.of(), problems(sources), RULE + System.lineSeparator() + "Нарушители (файл: строка):");
+        assertEquals(
+                List.of(),
+                problems(sources),
+                RULE + System.lineSeparator() + "Нарушители (файл: строка):"
+                        + " Иначе тест core_RealSignatures_HaveNoPublicJackson перестанет ловить эту поломку. При смене core_RealSignatures_HaveNoPublicJackson проверь это утверждение.");
     }
 
     private static List<String> problems(Map<String, String> sources) {

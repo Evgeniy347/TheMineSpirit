@@ -61,11 +61,13 @@ class TaskRunnerProperties {
         assertTrue(
                 ticks <= TICK_LIMIT,
                 "исполнение обязано завершаться за ограниченное число тиков: бесконечный прогон съест серверный тик. "
-                        + "seed=" + seed + ", тиков=" + ticks + ", план=" + plan);
+                        + "seed=" + seed + ", тиков=" + ticks + ", план=" + plan
+                        + " Иначе тест run_RandomTree_TerminatesWithoutLeakingAndEndsInTerminalStatus перестанет ловить эту поломку. При смене run_RandomTree_TerminatesWithoutLeakingAndEndsInTerminalStatus проверь это утверждение.");
         assertTrue(
                 status == RunStatus.SUCCEEDED || status == RunStatus.FAILED,
                 "после завершения статус обязан быть терминальным из RunStatus: получили " + status + ". seed=" + seed
-                        + ", план=" + plan);
+                        + ", план=" + plan
+                        + " Иначе тест run_RandomTree_TerminatesWithoutLeakingAndEndsInTerminalStatus перестанет ловить эту поломку. При смене run_RandomTree_TerminatesWithoutLeakingAndEndsInTerminalStatus проверь это утверждение.");
     }
 
     private static TaskNode randomTree(Random random, int depth) {

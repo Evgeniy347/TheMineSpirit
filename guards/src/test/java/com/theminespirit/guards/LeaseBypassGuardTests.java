@@ -34,7 +34,8 @@ class LeaseBypassGuardTests {
                         + "клетки не попадут в аренду, скан не увидит уборку, а действующие подмости чужого духа "
                         + "будут снесены. Как надо: правка через LeaseBook.open/record либо строка в "
                         + "guards/src/test/resources/lease-bypass.txt с причиной «перевод на этапе 2». "
-                        + "Правило: docs/ARCHITECTURE.md → «Аренда временной правки». Нарушения");
+                        + "Правило: docs/ARCHITECTURE.md → «Аренда временной правки». Нарушения"
+                        + " Иначе тест markTemporary_EveryCurrentCaller_DeclaredForStageTwo перестанет ловить эту поломку. При смене markTemporary_EveryCurrentCaller_DeclaredForStageTwo проверь это утверждение.");
     }
 
     @Test
@@ -50,7 +51,8 @@ class LeaseBypassGuardTests {
         assertTrue(
                 issues(sources, declared).stream()
                         .anyMatch(issue -> issue.contains("NewScript.java") && issue.contains("мимо LeaseBook")),
-                "Сторож ослеп: новый вызов markTemporary без строки реестра обязан попасть в нарушения");
+                "Сторож ослеп: новый вызов markTemporary без строки реестра обязан попасть в нарушения"
+                        + " Иначе тест place перестанет ловить эту поломку. При смене place проверь это утверждение.");
     }
 
     @Test
@@ -62,7 +64,8 @@ class LeaseBypassGuardTests {
         assertEquals(
                 List.of(),
                 issues(sources, Map.of("com/theminespirit/neoforge/PillarColumn.java", "столб: перевод на этапе 2")),
-                "Сторож ложно срабатывает: текущее место с причиной «перевод на этапе 2» обязано приниматься");
+                "Сторож ложно срабатывает: текущее место с причиной «перевод на этапе 2» обязано приниматься"
+                        + " Иначе тест place перестанет ловить эту поломку. При смене place проверь это утверждение.");
     }
 
     @Test
@@ -74,7 +77,8 @@ class LeaseBypassGuardTests {
         assertTrue(
                 issues(sources, Map.of("com/theminespirit/neoforge/PillarColumn.java", "пока так")).stream()
                         .anyMatch(issue -> issue.contains("перевод на этапе 2")),
-                "Сторож ослеп: исключение без пометки о переводе на этап 2 прячет долг и обязано попасть в нарушения");
+                "Сторож ослеп: исключение без пометки о переводе на этап 2 прячет долг и обязано попасть в нарушения"
+                        + " Иначе тест place перестанет ловить эту поломку. При смене place проверь это утверждение.");
     }
 
     @Test
@@ -91,7 +95,8 @@ class LeaseBypassGuardTests {
                                         "com/theminespirit/neoforge/Gone.java", "удалён: перевод на этапе 2"))
                         .stream()
                         .anyMatch(issue -> issue.contains("Gone.java") && issue.contains("не является")),
-                "Сторож ослеп: строка реестра без живого вызова прячет фальшивое исключение");
+                "Сторож ослеп: строка реестра без живого вызова прячет фальшивое исключение"
+                        + " Иначе тест place перестанет ловить эту поломку. При смене place проверь это утверждение.");
     }
 
     static List<String> issues(Map<String, String> sources, Map<String, String> declared) {

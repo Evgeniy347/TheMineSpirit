@@ -16,7 +16,8 @@ class NavReversibilityTests {
         assertFalse(
                 NavReversibility.canReturn(world, 3, -8, 0, 1),
                 "Со дна ямы 10 блоков не выйти шагом: спуск туда необратим, навигация обязана его запретить "
-                        + "(observe24 B1)");
+                        + "(observe24 B1)"
+                        + " Иначе тест pit_TenDeep_NoWalkingReturn перестанет ловить эту поломку. При смене pit_TenDeep_NoWalkingReturn проверь это утверждение.");
     }
 
     @Test
@@ -25,7 +26,8 @@ class NavReversibilityTests {
 
         assertTrue(
                 NavReversibility.canReturn(world, 3, 0, 0, 1),
-                "Ступенька вниз на блок обратима: обычный рельеф навигация не запрещает");
+                "Ступенька вниз на блок обратима: обычный рельеф навигация не запрещает"
+                        + " Иначе тест pit_OneStepDown_ReturnAllowed перестанет ловить эту поломку. При смене pit_OneStepDown_ReturnAllowed проверь это утверждение.");
     }
 
     @Test
@@ -43,7 +45,8 @@ class NavReversibilityTests {
 
         assertFalse(
                 NavReversibility.canReturn(world, 5, -1, 0, 1),
-                "Вода в пещере без выхода не считается путём наверх: из пула нет шага на поверхность");
+                "Вода в пещере без выхода не считается путём наверх: из пула нет шага на поверхность"
+                        + " Иначе тест cave_WaterPoolWithoutShores_NoReturn перестанет ловить эту поломку. При смене cave_WaterPoolWithoutShores_NoReturn проверь это утверждение.");
     }
 
     @Test
@@ -52,6 +55,7 @@ class NavReversibilityTests {
 
         assertTrue(
                 NavReversibility.canReturn(world, 3, -1, 0, 1),
-                "Спуск по ступеням обратим: из ямы со ступенями выход есть");
+                "Спуск по ступеням обратим: из ямы со ступенями выход есть"
+                        + " Иначе тест stairs_BackUp_ReturnAllowed перестанет ловить эту поломку. При смене stairs_BackUp_ReturnAllowed проверь это утверждение.");
     }
 }

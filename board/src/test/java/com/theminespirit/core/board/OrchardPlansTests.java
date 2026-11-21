@@ -29,12 +29,14 @@ class OrchardPlansTests {
         assertEquals(
                 "chop_target",
                 call.script(),
-                "Зрелое дерево сада рубится целиком по координате ствола: поиск по виду унёс бы другое дерево");
+                "Зрелое дерево сада рубится целиком по координате ствола: поиск по виду унёс бы другое дерево"
+                        + " Иначе тест plan_HarvestOrchard_ChopsTrunkAndReplantsSameSpot перестанет ловить эту поломку. При смене plan_HarvestOrchard_ChopsTrunkAndReplantsSameSpot проверь это утверждение.");
         assertEquals(
                 Map.of("x", -170, "y", 70, "z", -501, "replant", true, "orchard", true),
                 call.params(),
                 "Рубка сада сажает саженец на то же место и идёт с пропуском сада: без orchard защита сада "
-                        + "откажет, без replant сад пустеет");
+                        + "откажет, без replant сад пустеет"
+                        + " Иначе тест plan_HarvestOrchard_ChopsTrunkAndReplantsSameSpot перестанет ловить эту поломку. При смене plan_HarvestOrchard_ChopsTrunkAndReplantsSameSpot проверь это утверждение.");
     }
 
     @Test
@@ -43,7 +45,8 @@ class OrchardPlansTests {
                 OrchardPlans.id(new BlockCoord(3, 64, 7)),
                 OrchardPlans.id(new BlockCoord(3, 66, 7)),
                 "Задание сада — на место из плана, а не на высоту ствола: два задания на одно дерево "
-                        + "дали бы двух рубщиков на один ствол");
+                        + "дали бы двух рубщиков на один ствол"
+                        + " Иначе тест id_SameSpotDifferentHeight_SameTicket перестанет ловить эту поломку. При смене id_SameSpotDifferentHeight_SameTicket проверь это утверждение.");
     }
 
     @Test
@@ -64,7 +67,8 @@ class OrchardPlansTests {
                         (Integer) build.params().get("x"),
                         (Integer) build.params().get("y"),
                         (Integer) build.params().get("z")),
-                "Сад строится и чинится на одном origin из плана: точка задания (двор) не переносит постройку");
+                "Сад строится и чинится на одном origin из плана: точка задания (двор) не переносит постройку"
+                        + " Иначе тест plan_MainOrchard_KeepsOriginFromPlanNotTicketPoint перестанет ловить эту поломку. При смене plan_MainOrchard_KeepsOriginFromPlanNotTicketPoint проверь это утверждение.");
     }
 
     @Test
@@ -85,16 +89,26 @@ class OrchardPlansTests {
                 .filter(call -> "build_schematic".equals(call.script()))
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("В задании сада нет постройки по схеме: " + plan));
-        assertEquals(origin.x(), build.params().get("x"), "Схема сада ставится на место своей породы");
-        assertEquals(origin.z(), build.params().get("z"), "Схема сада ставится на место своей породы");
+        assertEquals(
+                origin.x(),
+                build.params().get("x"),
+                "Схема сада ставится на место своей породы"
+                        + " Иначе тест plan_ExtraOrchardBuilding_BuildsOnItsPlotWithItsSpecies перестанет ловить эту поломку. При смене plan_ExtraOrchardBuilding_BuildsOnItsPlotWithItsSpecies проверь это утверждение.");
+        assertEquals(
+                origin.z(),
+                build.params().get("z"),
+                "Схема сада ставится на место своей породы"
+                        + " Иначе тест plan_ExtraOrchardBuilding_BuildsOnItsPlotWithItsSpecies перестанет ловить эту поломку. При смене plan_ExtraOrchardBuilding_BuildsOnItsPlotWithItsSpecies проверь это утверждение.");
         assertEquals(
                 WoodSpecies.OAK.equals(plot.wood()) ? "oak" : plot.wood(),
                 build.params().get("wood"),
-                "Порода схемы — порода постройки графа, а не порода поселения");
+                "Порода схемы — порода постройки графа, а не порода поселения"
+                        + " Иначе тест plan_ExtraOrchardBuilding_BuildsOnItsPlotWithItsSpecies перестанет ловить эту поломку. При смене plan_ExtraOrchardBuilding_BuildsOnItsPlotWithItsSpecies проверь это утверждение.");
         assertFalse(
                 calls(plan).stream().anyMatch(call -> "chop_tree".equals(call.script())),
                 "Дополнительный сад не блокируется рубкой ради необязательных саженцев: сначала стройка "
-                        + "дорожек и факелов. План: " + calls(plan));
+                        + "дорожек и факелов. План: " + calls(plan)
+                        + " Иначе тест plan_ExtraOrchardBuilding_BuildsOnItsPlotWithItsSpecies перестанет ловить эту поломку. При смене plan_ExtraOrchardBuilding_BuildsOnItsPlotWithItsSpecies проверь это утверждение.");
     }
 
     @Test
@@ -109,16 +123,19 @@ class OrchardPlansTests {
                         .anyMatch(call -> "acquire".equals(call.script())
                                 && "minecraft:torch".equals(call.params().get("item"))),
                 "Факелы сада не добываются из мира: acquire уходил в сбор и падал «без стоянки: 118», "
-                        + "а факелы надо крафтить из угля и палки");
+                        + "а факелы надо крафтить из угля и палки"
+                        + " Иначе тест plan_OrchardTorches_CraftedNotGatheredFromWorld перестанет ловить эту поломку. При смене plan_OrchardTorches_CraftedNotGatheredFromWorld проверь это утверждение.");
         assertTrue(
                 calls.stream()
                         .anyMatch(call -> "craft".equals(call.script())
                                 && "minecraft:torch".equals(call.params().get("item"))),
-                "Сад обязан планировать крафт факелов: без этого стройка открывается без ресурсов");
+                "Сад обязан планировать крафт факелов: без этого стройка открывается без ресурсов"
+                        + " При смене plan_OrchardTorches_CraftedNotGatheredFromWorld проверь это утверждение.");
         assertTrue(
                 torchFallback(TicketPlans.plan(BoardCase.BUILD_ORCHARD, 1, target)),
                 "Крафт факелов не должен валить всю стройку, если факелы уже стоят, а угля нет: запасной шаг "
-                        + "пропускает его и строит дорожки");
+                        + "пропускает его и строит дорожки"
+                        + " Иначе тест plan_OrchardTorches_CraftedNotGatheredFromWorld перестанет ловить эту поломку. При смене plan_OrchardTorches_CraftedNotGatheredFromWorld проверь это утверждение.");
     }
 
     private static boolean torchFallback(TaskNode node) {
@@ -153,6 +170,7 @@ class OrchardPlansTests {
         WoodRules shipped = WoodRules.load();
         assertTrue(
                 shipped.stockPlanks() >= 1,
-                "Порог запаса берётся из board/wood.json (горячая перезагрузка): " + shipped);
+                "Порог запаса берётся из board/wood.json (горячая перезагрузка): " + shipped
+                        + " Иначе тест parse_ShippedWoodTable_KeepsStockPlanksInData перестанет ловить эту поломку. При смене parse_ShippedWoodTable_KeepsStockPlanksInData проверь это утверждение.");
     }
 }

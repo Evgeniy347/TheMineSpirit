@@ -24,9 +24,18 @@ class PlotProtectionTests {
         assertTrue(
                 SITE.protectionCell(x, y, z),
                 "Клетка поля — постройка плана: без этого пахота и сбор урожая выкапывают грядку, "
-                        + "а защита видит поле только там, где случайно попала улица или площадка");
-        assertEquals(PlanBuilding.FIELD, SITE.protectionBuilding(x, y, z), "Защита обязана называть поле полем");
-        assertEquals("поле", SITE.protectionArea(x, y, z), "Журнал отказа называет участок «поле»");
+                        + "а защита видит поле только там, где случайно попала улица или площадка"
+                        + " При смене protectionCell_FieldCell_True проверь это утверждение.");
+        assertEquals(
+                PlanBuilding.FIELD,
+                SITE.protectionBuilding(x, y, z),
+                "Защита обязана называть поле полем"
+                        + " Иначе тест protectionCell_FieldCell_True перестанет ловить эту поломку. При смене protectionCell_FieldCell_True проверь это утверждение.");
+        assertEquals(
+                "поле",
+                SITE.protectionArea(x, y, z),
+                "Журнал отказа называет участок «поле»"
+                        + " Иначе тест protectionCell_FieldCell_True перестанет ловить эту поломку. При смене protectionCell_FieldCell_True проверь это утверждение.");
     }
 
     @Test
@@ -34,8 +43,14 @@ class PlotProtectionTests {
         StageSite second = StageSites.of(TownFixtures.flatPlan(), 2, TownFixtures.LEVEL, TownRules.load());
         List<String> ids = second.fields().stream().map(Placement::id).toList();
 
-        assertTrue(ids.contains("wheat_field"), "Грядка этапа 1 остаётся постоянной площадкой на этапе 2: " + ids);
-        assertTrue(ids.contains("field_a") && ids.contains("field_b"), "Пашни этапа 2 входят в поля: " + ids);
+        assertTrue(
+                ids.contains("wheat_field"),
+                "Грядка этапа 1 остаётся постоянной площадкой на этапе 2: " + ids
+                        + " Иначе тест fields_LaterStage_KeepEarlierFieldsAndAddOwn перестанет ловить эту поломку. При смене fields_LaterStage_KeepEarlierFieldsAndAddOwn проверь это утверждение.");
+        assertTrue(
+                ids.contains("field_a") && ids.contains("field_b"),
+                "Пашни этапа 2 входят в поля: " + ids
+                        + " Иначе тест fields_LaterStage_KeepEarlierFieldsAndAddOwn перестанет ловить эту поломку. При смене fields_LaterStage_KeepEarlierFieldsAndAddOwn проверь это утверждение.");
     }
 
     @Test
@@ -48,8 +63,13 @@ class PlotProtectionTests {
                 PlotProtection.Refused.class,
                 decision,
                 "Блок облицовки шахты на глубине обязан быть защищён: сейчас защита видит только высоты у якоря, "
-                        + "и дух добывает поставленную им же клетку шахты");
-        assertEquals(PlanBuilding.MINE, refused.building(), "Отказ обязан называть шахту: по нему видно, чей блок");
+                        + "и дух добывает поставленную им же клетку шахты"
+                        + " Иначе тест check_DeepMineCell_OrdinaryBreakRefused перестанет ловить эту поломку. При смене check_DeepMineCell_OrdinaryBreakRefused проверь это утверждение.");
+        assertEquals(
+                PlanBuilding.MINE,
+                refused.building(),
+                "Отказ обязан называть шахту: по нему видно, чей блок"
+                        + " Иначе тест check_DeepMineCell_OrdinaryBreakRefused перестанет ловить эту поломку. При смене check_DeepMineCell_OrdinaryBreakRefused проверь это утверждение.");
     }
 
     @Test
@@ -60,8 +80,13 @@ class PlotProtectionTests {
         PlotProtection.Refused refused = assertInstanceOf(
                 PlotProtection.Refused.class,
                 decide(cell, PlotProtection.Action.DIG, PlotProtection.Ground.NONE),
-                "Тропа плана — такая же постройка, как дом: копать её без основания нельзя");
-        assertEquals(PlanBuilding.STREET, refused.building(), "Отказ обязан называть улицу, а не безымянный план");
+                "Тропа плана — такая же постройка, как дом: копать её без основания нельзя"
+                        + " Иначе тест check_StreetCell_OrdinaryBreakRefused перестанет ловить эту поломку. При смене check_StreetCell_OrdinaryBreakRefused проверь это утверждение.");
+        assertEquals(
+                PlanBuilding.STREET,
+                refused.building(),
+                "Отказ обязан называть улицу, а не безымянный план"
+                        + " Иначе тест check_StreetCell_OrdinaryBreakRefused перестанет ловить эту поломку. При смене check_StreetCell_OrdinaryBreakRefused проверь это утверждение.");
     }
 
     @Test
@@ -76,11 +101,13 @@ class PlotProtectionTests {
                 "Колонна улицы ниже полотна дороги (" + StageSite.STREET_DEPTH + " блоков от уровня) — обычный "
                         + "камень: шахта по плану копает под улицей, иначе спуск «Спуск в шахту» получает отказ "
                         + "«STREET» на глубине и стоит (живой сервер 14.11: 81 отказ на z=-527, y62-66 у "
-                        + "входа шахты)");
+                        + "входа шахты)"
+                        + " При смене check_StreetColumnBelowRoad_DeepCellsNotStreet проверь это утверждение.");
         assertTrue(
                 SITE.protectionCell(street.x(), SITE.anchor().y(), street.z()),
                 "Полотно дороги сверху защищено как раньше: улицу не раскапывают, правило копаем-только-в-шахте "
-                        + "на поверхности действует");
+                        + "на поверхности действует"
+                        + " Иначе тест check_StreetColumnBelowRoad_DeepCellsNotStreet перестанет ловить эту поломку. При смене check_StreetColumnBelowRoad_DeepCellsNotStreet проверь это утверждение.");
     }
 
     @Test
@@ -91,8 +118,13 @@ class PlotProtectionTests {
         PlotProtection.Refused refused = assertInstanceOf(
                 PlotProtection.Refused.class,
                 decide(cell, PlotProtection.Action.BREAK, PlotProtection.Ground.NONE),
-                "Столб ограды защищён на любой высоте: иначе уборка принимает его за лишний столб");
-        assertEquals(PlanBuilding.FENCE, refused.building(), "Отказ обязан называть ограду");
+                "Столб ограды защищён на любой высоте: иначе уборка принимает его за лишний столб"
+                        + " При смене check_FencePost_OrdinaryBreakRefused проверь это утверждение.");
+        assertEquals(
+                PlanBuilding.FENCE,
+                refused.building(),
+                "Отказ обязан называть ограду"
+                        + " Иначе тест check_FencePost_OrdinaryBreakRefused перестанет ловить эту поломку. При смене check_FencePost_OrdinaryBreakRefused проверь это утверждение.");
     }
 
     @Test
@@ -103,7 +135,8 @@ class PlotProtectionTests {
         assertInstanceOf(
                 PlotProtection.Refused.class,
                 decide(crown, PlotProtection.Action.CHOP, PlotProtection.Ground.NONE),
-                "Крона сада выше семи блоков тоже план: иначе рубка снимает верх дерева и сад теряет форму");
+                "Крона сада выше семи блоков тоже план: иначе рубка снимает верх дерева и сад теряет форму"
+                        + " При смене check_OrchardCrownAboveBuildingHeight_Refused проверь это утверждение.");
     }
 
     @Test
@@ -114,8 +147,13 @@ class PlotProtectionTests {
         PlotProtection.Allowed allowed = assertInstanceOf(
                 PlotProtection.Allowed.class,
                 decide(cell, PlotProtection.Action.BREAK, PlotProtection.Ground.NONE),
-                "Природный блок вне участка ломается штатно: защита не должна запрещать всю добычу");
-        assertEquals(PlotProtection.Ground.NONE, allowed.basis(), "Вне плана основание не нужно");
+                "Природный блок вне участка ломается штатно: защита не должна запрещать всю добычу"
+                        + " При смене check_OutsidePlan_AllowedWithoutBasis проверь это утверждение.");
+        assertEquals(
+                PlotProtection.Ground.NONE,
+                allowed.basis(),
+                "Вне плана основание не нужно"
+                        + " Иначе тест check_OutsidePlan_AllowedWithoutBasis перестанет ловить эту поломку. При смене check_OutsidePlan_AllowedWithoutBasis проверь это утверждение.");
     }
 
     @Test
@@ -132,7 +170,8 @@ class PlotProtectionTests {
                         PlotProtection.Ground.NONE,
                         PlanBuilding.NONE,
                         false),
-                "Выравнивание площадки снимает природный грунт в клетке плана: иначе участок не расчистить");
+                "Выравнивание площадки снимает природный грунт в клетке плана: иначе участок не расчистить"
+                        + " При смене check_NaturalGroundInPlan_LevelingBreakAllowedButHarvestRefused проверь это утверждение.");
         assertInstanceOf(
                 PlotProtection.Refused.class,
                 PlotProtection.check(
@@ -142,12 +181,14 @@ class PlotProtectionTests {
                         PlotProtection.Ground.NONE,
                         PlanBuilding.NONE,
                         false),
-                "Сбор грунта не имеет права брать даже природную клетку плана: под домом появляется яма");
+                "Сбор грунта не имеет права брать даже природную клетку плана: под домом появляется яма"
+                        + " Иначе тест check_NaturalGroundInPlan_LevelingBreakAllowedButHarvestRefused перестанет ловить эту поломку. При смене check_NaturalGroundInPlan_LevelingBreakAllowedButHarvestRefused проверь это утверждение.");
         assertInstanceOf(
                 PlotProtection.Refused.class,
                 PlotProtection.check(
                         SITE, ground, PlotProtection.Action.BREAK, PlotProtection.Ground.NONE, PlanBuilding.NONE, true),
-                "Поставленный блок постройки выравнивание не снимает: это уже стена, а не грунт");
+                "Поставленный блок постройки выравнивание не снимает: это уже стена, а не грунт"
+                        + " Иначе тест check_NaturalGroundInPlan_LevelingBreakAllowedButHarvestRefused перестанет ловить эту поломку. При смене check_NaturalGroundInPlan_LevelingBreakAllowedButHarvestRefused проверь это утверждение.");
     }
 
     @Test
@@ -160,7 +201,8 @@ class PlotProtectionTests {
                         PlotProtection.Action.PLACE,
                         PlotProtection.Ground.PLAN_BUILD,
                         PlanBuilding.NONE),
-                "Стройка по плану ставит блоки в клетки плана: без этого основания дом не собрать");
+                "Стройка по плану ставит блоки в клетки плана: без этого основания дом не собрать"
+                        + " При смене check_PlanBuildPlacement_Allowed проверь это утверждение.");
     }
 
     @Test
@@ -170,11 +212,13 @@ class PlotProtectionTests {
         assertInstanceOf(
                 PlotProtection.Allowed.class,
                 decide(deep, PlotProtection.Action.BREAK, PlotProtection.Ground.SELF_RESCUE, PlanBuilding.NONE),
-                "Замурованный дух обязан выбраться из блока постройки: жизнь сильнее сохранности клетки");
+                "Замурованный дух обязан выбраться из блока постройки: жизнь сильнее сохранности клетки"
+                        + " Иначе тест check_SelfRescueAndPlayerCommand_Allowed перестанет ловить эту поломку. При смене check_SelfRescueAndPlayerCommand_Allowed проверь это утверждение.");
         assertInstanceOf(
                 PlotProtection.Allowed.class,
                 decide(deep, PlotProtection.Action.BREAK, PlotProtection.Ground.PLAYER_COMMAND, PlanBuilding.NONE),
-                "Команда игрока снимает защиту явно: это решение владельца, а не самовольная ломка");
+                "Команда игрока снимает защиту явно: это решение владельца, а не самовольная ломка"
+                        + " Иначе тест check_SelfRescueAndPlayerCommand_Allowed перестанет ловить эту поломку. При смене check_SelfRescueAndPlayerCommand_Allowed проверь это утверждение.");
     }
 
     @Test
@@ -185,11 +229,13 @@ class PlotProtectionTests {
         assertInstanceOf(
                 PlotProtection.Allowed.class,
                 decide(mine, PlotProtection.Action.DIG, PlotProtection.Ground.PLAN_EXCAVATE, PlanBuilding.MINE),
-                "Прокоп шахты по плану — законная работа: иначе шахту не выкопать");
+                "Прокоп шахты по плану — законная работа: иначе шахту не выкопать"
+                        + " При смене check_MineExcavationOnlyInMine_Allowed проверь это утверждение.");
         assertInstanceOf(
                 PlotProtection.Refused.class,
                 decide(house, PlotProtection.Action.DIG, PlotProtection.Ground.PLAN_EXCAVATE, PlanBuilding.MINE),
-                "Прокоп не имеет права лезть в дом под видом шахты");
+                "Прокоп не имеет права лезть в дом под видом шахты"
+                        + " Иначе тест check_MineExcavationOnlyInMine_Allowed перестанет ловить эту поломку. При смене check_MineExcavationOnlyInMine_Allowed проверь это утверждение.");
     }
 
     @Test
@@ -200,7 +246,8 @@ class PlotProtectionTests {
                 PlotProtection.Allowed.class,
                 decide(cell, PlotProtection.Action.PLACE, PlotProtection.Ground.TEMPORARY_MOVEMENT, PlanBuilding.NONE),
                 "Временный проход (столб, мост, пол ступени) обязан ставить опору и на клетке плана: "
-                        + "иначе дух не выберется с крыши и уборка застревает на улице");
+                        + "иначе дух не выберется с крыши и уборка застревает на улице"
+                        + " При смене check_TemporaryMovement_AllowedOnPlanCell проверь это утверждение.");
     }
 
     @Test
@@ -210,7 +257,8 @@ class PlotProtectionTests {
             assertEquals(
                     ground == PlotProtection.Ground.NONE,
                     "без основания".equals(text),
-                    "Текст основания обязан отличать отсутствие основания от законной причины: " + ground);
+                    "Текст основания обязан отличать отсутствие основания от законной причины: " + ground
+                            + " Иначе тест basisText_EveryGround_IsNamed перестанет ловить эту поломку. При смене basisText_EveryGround_IsNamed проверь это утверждение.");
         }
     }
 

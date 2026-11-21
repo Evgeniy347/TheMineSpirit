@@ -33,8 +33,13 @@ class DepositSpreadLiveTests {
                 planned,
                 "живой [deposit] 14:44:33 положил 8 из 64 в полный -181,69,-517 и упал, хотя рядом "
                         + "-178,69,-517 свободен (54 из 54): план обязан разложить все 64 по сундукам, "
-                        + "а не остановиться на первом. Шаги: " + plan.steps());
-        assertEquals(0, plan.left(), "после свободного сундука у духа не остаётся 'dirt': " + plan.left());
+                        + "а не остановиться на первом, иначе перенос обрывается. Шаги: " + plan.steps()
+                        + ". При смене plan проверь раскладку по двум сундукам");
+        assertEquals(
+                0,
+                plan.left(),
+                "после свободного сундука у духа не остаётся 'dirt', иначе перенос недобрал и задание " + "провалено: "
+                        + plan.left() + ". При смене plan проверь остаток после двух сундуков");
         List<Integer> usedX = plan.steps().stream()
                 .map(step -> containers.get(step.index()).pos().x())
                 .toList();
@@ -42,7 +47,8 @@ class DepositSpreadLiveTests {
                 List.of(-181, -178),
                 usedX,
                 "первым идёт ближайший полный сундук с неполной стопкой dirt (8 штук), вторым — свободный "
-                        + "-178,69,-517; фактические шаги: " + plan.steps());
+                        + "-178,69,-517, иначе план обходит полный сундук; фактические шаги: " + plan.steps()
+                        + ". При смене plan проверь порядок сундуков");
     }
 
     @Test
@@ -55,13 +61,22 @@ class DepositSpreadLiveTests {
         DepositSpread.Plan plan =
                 DepositSpread.plan(containers, coord(live.get("origin")), new Stack("minecraft:dirt", 0, 64, 64), 64);
 
-        assertEquals(0, plan.left(), "в свободный сундук помещается весь dirt: " + plan);
+        assertEquals(
+                0,
+                plan.left(),
+                "в свободный сундук помещается весь dirt, иначе перенос недобрал и остаток висит у духа: " + plan
+                        + ". При смене plan проверь полную раскладку в свободный сундук");
         assertEquals(
                 List.of(1),
                 plan.steps().stream().map(DepositSpread.Step::index).toList(),
                 "сундук без неполной стопки dirt пропускается: 8 предметов туда не влезли бы, а план "
-                        + "обязан сразу идти в свободный");
-        assertEquals(64, plan.steps().get(0).count(), "весь запрос уходит в свободный сундук");
+                        + "обязан сразу идти в свободный, иначе план зря идёт в полный и теряет тик. "
+                        + "При смене plan проверь пропуск полного сундука");
+        assertEquals(
+                64,
+                plan.steps().get(0).count(),
+                "весь запрос уходит в свободный сундук, иначе часть груза зависнет у духа. "
+                        + "При смене plan проверь размер первого шага при свободном сундуке");
     }
 
     @Test
@@ -73,11 +88,20 @@ class DepositSpreadLiveTests {
         DepositSpread.Plan plan =
                 DepositSpread.plan(containers, coord(live.get("origin")), new Stack("minecraft:dirt", 0, 64, 64), 64);
 
-        assertEquals(0, plan.steps().size(), "в полный сундук без неполной стопки dirt класть нечего");
-        assertEquals(64, plan.left(), "остаток виден вызывающему коду: он решает заказать сундук");
+        assertEquals(
+                0,
+                plan.steps().size(),
+                "в полный сундук без неполной стопки dirt класть нечего, иначе план обещает невозможный "
+                        + "перенос и задание зависает. При смене plan проверь отказ при полном сундуке");
+        assertEquals(
+                64,
+                plan.left(),
+                "остаток виден вызывающему коду: он решает заказать сундук, иначе нехватку не увидеть "
+                        + "и задание молча провалится. При смене plan проверь остаток 64");
         assertTrue(
                 plan.refusal() != null && plan.refusal().contains("-181,69,-517"),
-                "отказ называет сундук: " + plan.refusal());
+                "отказ называет сундук, иначе причину не найти и второй контейнер не поставить: " + plan.refusal()
+                        + ". При смене plan проверь текст отказа и координату сундука");
     }
 
     @Test
@@ -86,12 +110,25 @@ class DepositSpreadLiveTests {
         List<Slice> surplus =
                 DepositSelection.surplus(inventory, KitFor.kitFor("mining", false), ValueTable.load(), -1);
 
-        assertEquals(448, surplusCount(inventory, surplus, "minecraft:dirt"), "вся земля — мусор, её сдают");
-        assertEquals(15, surplusCount(inventory, surplus, "minecraft:chest"), "лишние сундуки сдаются");
-        assertEquals(55, surplusCount(inventory, surplus, "minecraft:oak_fence"), "частокол вне набора сдаётся");
+        assertEquals(
+                448,
+                surplusCount(inventory, surplus, "minecraft:dirt"),
+                "вся земля — мусор, её сдают, иначе мусор останется у духа и забьёт инвентарь. "
+                        + "При смене surplus проверь сдачу dirt по всем слотам инвентаря");
+        assertEquals(
+                15,
+                surplusCount(inventory, surplus, "minecraft:chest"),
+                "лишние сундуки сдаются, иначе они висят в инвентаре и отнимают место у руды. "
+                        + "При смене surplus проверь сдачу minecraft:chest целиком");
+        assertEquals(
+                55,
+                surplusCount(inventory, surplus, "minecraft:oak_fence"),
+                "частокол вне набора сдаётся, иначе забор лежит у духа и отнимает слоты. "
+                        + "При смене surplus проверь сдачу minecraft:oak_fence целиком");
         assertTrue(
                 surplusCount(inventory, surplus, "minecraft:stone_axe") >= 1,
-                "у духа 4 stone_axe при наборе без топора: лишние инструменты обязаны уходить на склад");
+                "у духа 4 stone_axe при наборе без топора: лишние инструменты обязаны уходить на склад, "
+                        + "иначе инвентарь переполнится и руда не влезет. При смене surplus проверь stone_axe");
     }
 
     private static int surplusCount(List<Stack> inventory, List<Slice> surplus, String item) {

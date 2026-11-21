@@ -121,7 +121,7 @@ class ExplosionAvoidanceTests {
         assertTrue(
                 ExplosionAvoidance.CHARGED_CREEPER_HOLD >= damageRadius + 1.0,
                 "Заряженный крипер бьёт на 2 × 6 = 12 блоков; держание " + ExplosionAvoidance.CHARGED_CREEPER_HOLD
-                        + " меньше радиуса с запасом в 1 блок, дух простоял бы в зоне урона и не побежал. "
+                        + " меньше радиуса с запасом в 1 блок, иначе дух простоял бы в зоне урона и не побежал. "
                         + "При смене константы проверь радиус взрыва в игре");
     }
 
@@ -132,7 +132,7 @@ class ExplosionAvoidanceTests {
         assertTrue(
                 ExplosionAvoidance.SCAN_RADIUS >= largestHold,
                 "Радиус опроса угроз " + ExplosionAvoidance.SCAN_RADIUS + " меньше наибольшего держания " + largestHold
-                        + ": набухающий заряженный крипер не попал бы в список, и рефлекс не сработал бы. "
+                        + ": иначе набухающий заряженный крипер не попал бы в список и рефлекс не сработал бы. "
                         + "При смене константы проверь ThreatScanner.RADIUS");
     }
 
@@ -151,11 +151,12 @@ class ExplosionAvoidanceTests {
         ReflexAction.Flee flee = assertInstanceOf(
                 ReflexAction.Flee.class,
                 reflex.action(),
-                "Выход вбок есть, иначе бегство невозможно. Причина: " + reflex.reason()
+                "Выход вбок есть, иначе бегство невозможно и дух погибнет. Причина: " + reflex.reason()
                         + ". При смене плана проверь перпендикулярное направление");
         assertTrue(
                 distance(flee.cell(), west.pos()) >= 7.0 && distance(flee.cell(), east.pos()) >= 7.0,
-                "Бежать нужно так, чтобы выдержать 7 блоков до обоих, а не убежать от одного в лапы другого. Цель: "
+                "Бежать нужно так, чтобы выдержать 7 блоков до обоих, а не убежать от одного в лапы другого, "
+                        + "иначе дух погибнет. Цель: "
                         + flee.cell() + ". При смене выбора клетки проверь запас до каждой угрозы");
     }
 
@@ -173,7 +174,7 @@ class ExplosionAvoidanceTests {
                         + "одну ближе держания, другую дальше");
         assertTrue(
                 distance(flee.cell(), near.pos()) >= 7.0 && distance(flee.cell(), far.pos()) >= 7.0,
-                "Дальний крипер тоже держится на 7: бегство от ближнего не должно вести к нему. Цель: " + flee.cell()
+                "Дальний крипер тоже держится на 7: иначе бегство от ближнего поведёт к нему. Цель: " + flee.cell()
                         + ". При смене плана проверь учёт всех угроз, а не только нарушенной");
     }
 
@@ -216,7 +217,7 @@ class ExplosionAvoidanceTests {
         ReflexAction.Flee flee = assertInstanceOf(
                 ReflexAction.Flee.class,
                 reflex.action(),
-                "Вдоль стены бежать можно, иначе дух остаётся у стены. Причина: " + reflex.reason()
+                "Вдоль стены бежать можно, иначе дух остаётся у стены и взрыв настигает. Причина: " + reflex.reason()
                         + ". При смене плана проверь обход препятствия");
         assertEquals(
                 new BlockCoord(11, 1, 0),
@@ -233,7 +234,7 @@ class ExplosionAvoidanceTests {
         PolicyVerdict.Reflex reflex = assertInstanceOf(
                 PolicyVerdict.Reflex.class,
                 verdict,
-                "Набухающий крипер в двух блоках — рефлекс обязателен, иначе дух ждёт взрыва. "
+                "Набухающий крипер в двух блоках — рефлекс обязателен, иначе дух ждёт взрыва и тест слеп. "
                         + "При смене evaluate проверь флаг набухания");
         assertTrue(
                 reflex.reason().startsWith("срочно, угроза набухает: CREEPER"),

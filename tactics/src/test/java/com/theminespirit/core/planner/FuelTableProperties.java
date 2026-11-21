@@ -19,10 +19,12 @@ class FuelTableProperties {
         assertTrue(
                 (long) needed * burn >= demand,
                 "Топлива обязано хватать: " + needed + " × " + burn + " тиков горения < " + demand
-                        + " тиков плавки, печь встанет посреди работы");
+                        + " тиков плавки, печь встанет посреди работы"
+                        + " Иначе тест fuelNeeded_AnyCountAndTimes_CoversCookTimeWithMinimalFuel перестанет ловить эту поломку. При смене fuelNeeded_AnyCountAndTimes_CoversCookTimeWithMinimalFuel проверь это утверждение.");
         assertTrue(
                 (long) (needed - 1) * burn < demand,
                 "Топлива должно быть минимально: на единицу меньше всё ещё хватало бы (" + needed + " × " + burn + " ≥ "
-                        + demand + "), значит дух сжигает лишнее");
+                        + demand + "), значит дух сжигает лишнее"
+                        + " Иначе тест fuelNeeded_AnyCountAndTimes_CoversCookTimeWithMinimalFuel перестанет ловить эту поломку. При смене fuelNeeded_AnyCountAndTimes_CoversCookTimeWithMinimalFuel проверь это утверждение.");
     }
 }

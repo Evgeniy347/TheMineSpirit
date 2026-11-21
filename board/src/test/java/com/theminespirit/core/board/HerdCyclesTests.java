@@ -45,11 +45,13 @@ class HerdCyclesTests {
 
         assertTrue(
                 active(board, "cow_pen") && active(board, "pig_pen"),
-                "У каждого вида свой загон: два вида — два независимых цикла, а не одна машина");
+                "У каждого вида свой загон: два вида — два независимых цикла, а не одна машина"
+                        + " Иначе тест cycle_TwoSpecies_TwoCyclesDoNotInterfere перестанет ловить эту поломку. При смене cycle_TwoSpecies_TwoCyclesDoNotInterfere проверь это утверждение.");
         assertEquals(
                 List.of("cow_pen", "pig_pen"),
                 board.all().stream().map(ticket -> ticket.id()).sorted().toList(),
-                "id заданий видов различаются префиксом: иначе второй вид затирал бы задания первого");
+                "id заданий видов различаются префиксом: иначе второй вид затирал бы задания первого"
+                        + " При смене cycle_TwoSpecies_TwoCyclesDoNotInterfere проверь это утверждение.");
     }
 
     @Test
@@ -60,11 +62,13 @@ class HerdCyclesTests {
         assertSame(
                 cycles.cycle(Species.COW),
                 cycles.cycle(Species.COW),
-                "Один вид — один цикл: два цикла на вид плодили бы вторую очередь заданий");
+                "Один вид — один цикл: два цикла на вид плодили бы вторую очередь заданий"
+                        + " Иначе тест cycle_TwiceSameSpecies_ReturnsSameCycle перестанет ловить эту поломку. При смене cycle_TwiceSameSpecies_ReturnsSameCycle проверь это утверждение.");
         assertEquals(
                 1,
                 cycles.species().size(),
-                "Реестр помнит виды, которые открывали: новый вид добавляется, повторный — нет");
+                "Реестр помнит виды, которые открывали: новый вид добавляется, повторный — нет"
+                        + " Иначе тест cycle_TwiceSameSpecies_ReturnsSameCycle перестанет ловить эту поломку. При смене cycle_TwiceSameSpecies_ReturnsSameCycle проверь это утверждение.");
     }
 
     @Test
@@ -78,7 +82,8 @@ class HerdCyclesTests {
 
         assertTrue(
                 active(board, "cow_lure") && active(board, "pig_lure"),
-                "Оба вида приманены параллельно: цикл одного вида не снимает задания другого");
+                "Оба вида приманены параллельно: цикл одного вида не снимает задания другого"
+                        + " Иначе тест cycle_ParallelSpecies_BothLuresActive перестанет ловить эту поломку. При смене cycle_ParallelSpecies_BothLuresActive проверь это утверждение.");
     }
 
     @Test
@@ -95,8 +100,12 @@ class HerdCyclesTests {
         assertEquals(
                 Optional.of(BoardStatus.CANCELLED),
                 board.statusOf("cow_lure"),
-                "Гибель коровы снимает «приманить» коровы: приманка коровы больше не нужна");
-        assertTrue(active(board, "pig_lure"), "Гибель коровы не трогает свинью: циклы видов независимы");
+                "Гибель коровы снимает «приманить» коровы: приманка коровы больше не нужна"
+                        + " Иначе тест cycle_Death_RemovesOnlyOwnSpeciesLure перестанет ловить эту поломку. При смене cycle_Death_RemovesOnlyOwnSpeciesLure проверь это утверждение.");
+        assertTrue(
+                active(board, "pig_lure"),
+                "Гибель коровы не трогает свинью: циклы видов независимы"
+                        + " Иначе тест cycle_Death_RemovesOnlyOwnSpeciesLure перестанет ловить эту поломку. При смене cycle_Death_RemovesOnlyOwnSpeciesLure проверь это утверждение.");
     }
 
     @Test
@@ -107,7 +116,9 @@ class HerdCyclesTests {
         cycles.cycle(Species.COW).penBuilt("cow_1");
 
         assertTrue(
-                board.all().isEmpty(), "«Приманить» без отлова и загона не ставится: зависимость цикла держит порядок");
+                board.all().isEmpty(),
+                "«Приманить» без отлова и загона не ставится: зависимость цикла держит порядок"
+                        + " Иначе тест cycle_NoPen_NoLure перестанет ловить эту поломку. При смене cycle_NoPen_NoLure проверь это утверждение.");
     }
 
     @Test
@@ -118,7 +129,8 @@ class HerdCyclesTests {
         assertThrows(
                 NullPointerException.class,
                 () -> cycles.cycle(null),
-                "Вид null обязан отвергаться: без него непонятно, чей цикл открывать");
+                "Вид null обязан отвергаться: без него непонятно, чей цикл открывать"
+                        + " Иначе тест cycle_NullSpecies_Rejected перестанет ловить эту поломку. При смене cycle_NullSpecies_Rejected проверь это утверждение.");
     }
 
     @Test
@@ -126,7 +138,8 @@ class HerdCyclesTests {
         assertThrows(
                 NullPointerException.class,
                 () -> new HerdCycles(null),
-                "Доска обязана быть задана: без неё циклы не могут ставить задания");
+                "Доска обязана быть задана: без неё циклы не могут ставить задания"
+                        + " Иначе тест cycle_NullBoard_Rejected перестанет ловить эту поломку. При смене cycle_NullBoard_Rejected проверь это утверждение.");
     }
 
     @Property
@@ -151,7 +164,8 @@ class HerdCyclesTests {
                         active <= 1,
                         "У вида " + prefix + " не больше одного активного задания " + boardCase
                                 + ": получено " + active + " — два загона или две приманки на вид "
-                                + "разошлись бы по доске");
+                                + "разошлись бы по доске"
+                                + " Иначе тест anyEvents_ParallelSpecies_AtMostOneActivePerCase перестанет ловить эту поломку. При смене anyEvents_ParallelSpecies_AtMostOneActivePerCase проверь это утверждение.");
             }
         }
     }

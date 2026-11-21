@@ -18,20 +18,23 @@ class RouteTrailCodecTests {
         assertEquals(
                 Optional.of(trail),
                 restored,
-                "Клетки и материал тропы переживают сохранение мира без изменений: иначе старый след не убрать");
+                "Клетки и материал тропы переживают сохранение мира без изменений: иначе старый след не убрать"
+                        + " При смене encodeThenDecode_RoundTrip_RestoresCellsAndBlock проверь это утверждение.");
     }
 
     @Test
     void decode_BrokenCellCount_IsEmpty() {
         assertTrue(
                 RouteTrailCodec.decode(new int[] {1, 64}, "dirt").isEmpty(),
-                "Битые клетки не превращаются в тропу: снятие по половине координаты сломало бы чужой блок");
+                "Битые клетки не превращаются в тропу: снятие по половине координаты сломало бы чужой блок"
+                        + " Иначе тест decode_BrokenCellCount_IsEmpty перестанет ловить эту поломку. При смене decode_BrokenCellCount_IsEmpty проверь это утверждение.");
     }
 
     @Test
     void decode_NoCells_IsEmpty() {
         assertTrue(
                 RouteTrailCodec.decode(new int[0], "dirt").isEmpty(),
-                "Пустой список не выдаётся за тропу: снимать нечего");
+                "Пустой список не выдаётся за тропу: снимать нечего"
+                        + " Иначе тест decode_NoCells_IsEmpty перестанет ловить эту поломку. При смене decode_NoCells_IsEmpty проверь это утверждение.");
     }
 }

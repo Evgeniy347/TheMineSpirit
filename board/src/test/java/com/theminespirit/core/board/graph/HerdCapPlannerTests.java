@@ -27,7 +27,8 @@ class HerdCapPlannerTests {
         assertTrue(
                 low.raised("capture_cow") && !full.raised("capture_cow") && !full.raised("breed_cow"),
                 "Лимит «половина духов»: три духа держат одну корову — без коровы ловим, с одной больше не ловим "
-                        + "и не разводим: " + CrossScene.ranked(low) + " / " + CrossScene.ranked(full));
+                        + "и не разводим: " + CrossScene.ranked(low) + " / " + CrossScene.ranked(full)
+                        + " Иначе тест plan_PerSpiritHerdCap_CaptureStopsAtSpiritShare перестанет ловить эту поломку. При смене plan_PerSpiritHerdCap_CaptureStopsAtSpiritShare проверь это утверждение.");
     }
 
     private static SupplyGraph perSpiritCows(double share) {

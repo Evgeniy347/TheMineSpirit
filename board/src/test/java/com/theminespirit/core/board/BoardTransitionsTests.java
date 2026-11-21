@@ -40,12 +40,22 @@ class BoardTransitionsTests {
         String line = BoardTransitions.line(BoardLog.Event.DONE, ticket("first:build_mine"), 4, "spirit-2")
                 .orElseThrow();
 
-        assertTrue(line.contains("DONE"), "latest.log обязан писать переход DONE: без него видно только выдачу");
+        assertTrue(
+                line.contains("DONE"),
+                "latest.log обязан писать переход DONE: без него видно только выдачу"
+                        + " Иначе тест line_Done_NamesTicketAttemptsAndCause перестанет ловить эту поломку. При смене line_Done_NamesTicketAttemptsAndCause проверь это утверждение.");
         assertTrue(
                 line.contains("first:build_mine"),
-                "Строка перехода называет id задания: по нему сверяют счётчик DONE с доской");
-        assertTrue(line.contains("попыток=4"), "Строка перехода называет попытки: по ним видно историю задания");
-        assertTrue(line.contains("причина="), "Строка перехода называет причину: без неё переход не объяснён");
+                "Строка перехода называет id задания: по нему сверяют счётчик DONE с доской"
+                        + " Иначе тест line_Done_NamesTicketAttemptsAndCause перестанет ловить эту поломку. При смене line_Done_NamesTicketAttemptsAndCause проверь это утверждение.");
+        assertTrue(
+                line.contains("попыток=4"),
+                "Строка перехода называет попытки: по ним видно историю задания"
+                        + " Иначе тест line_Done_NamesTicketAttemptsAndCause перестанет ловить эту поломку. При смене line_Done_NamesTicketAttemptsAndCause проверь это утверждение.");
+        assertTrue(
+                line.contains("причина="),
+                "Строка перехода называет причину: без неё переход не объяснён"
+                        + " Иначе тест line_Done_NamesTicketAttemptsAndCause перестанет ловить эту поломку. При смене line_Done_NamesTicketAttemptsAndCause проверь это утверждение.");
     }
 
     @Test
@@ -58,7 +68,8 @@ class BoardTransitionsTests {
                                 "spirit-3")
                         .isEmpty(),
                 "FAILED уже пишет [incident] с причиной, снимком и инвентарём: вторая строка на тот же провал "
-                        + "делит лог на три части и прячет причину (observe18 B10)");
+                        + "делит лог на три части и прячет причину (observe18 B10)"
+                        + " Иначе тест line_Failed_IsNotDuplicatedByTransition перестанет ловить эту поломку. При смене line_Failed_IsNotDuplicatedByTransition проверь это утверждение.");
     }
 
     @Test
@@ -67,7 +78,8 @@ class BoardTransitionsTests {
                 BoardTransitions.line(BoardLog.Event.CANCELLED, activity("graph:event:night:guard"), 0, "spirit-1")
                         .isPresent(),
                 "Отмена занятия — такая же отмена задания доски: владелец обязан видеть, почему охрана или поход "
-                        + "исчезли с доски");
+                        + "исчезли с доски"
+                        + " Иначе тест line_CancelledActivity_IsLogged перестанет ловить эту поломку. При смене line_CancelledActivity_IsLogged проверь это утверждение.");
     }
 
     @Test
@@ -75,7 +87,8 @@ class BoardTransitionsTests {
         assertTrue(
                 BoardTransitions.line(BoardLog.Event.CANCELLED, ticket("supply_gather:oak_planks"), 0, null)
                         .isPresent(),
-                "Настоящая отмена задания доски остаётся в логе: иначе пропадёт ответ, почему задача исчезла");
+                "Настоящая отмена задания доски остаётся в логе: иначе пропадёт ответ, почему задача исчезла"
+                        + " При смене line_CancelledBoardTask_IsLogged проверь это утверждение.");
     }
 
     @Test
@@ -85,11 +98,16 @@ class BoardTransitionsTests {
 
         assertTrue(
                 line.contains("REOPENED"),
-                "latest.log обязан писать переход REOPENED: откат DONE не должен быть немым");
+                "latest.log обязан писать переход REOPENED: откат DONE не должен быть немым"
+                        + " Иначе тест line_Reopened_NamesTicketAndCause перестанет ловить эту поломку. При смене line_Reopened_NamesTicketAndCause проверь это утверждение.");
         assertTrue(
                 line.contains("repair:build_house"),
-                "Строка REOPENED называет id: по нему находят законный ремонт, снявший DONE");
-        assertTrue(line.contains("причина="), "Строка REOPENED называет причину: без неё откат DONE не объяснён");
+                "Строка REOPENED называет id: по нему находят законный ремонт, снявший DONE"
+                        + " Иначе тест line_Reopened_NamesTicketAndCause перестанет ловить эту поломку. При смене line_Reopened_NamesTicketAndCause проверь это утверждение.");
+        assertTrue(
+                line.contains("причина="),
+                "Строка REOPENED называет причину: без неё откат DONE не объяснён"
+                        + " Иначе тест line_Reopened_NamesTicketAndCause перестанет ловить эту поломку. При смене line_Reopened_NamesTicketAndCause проверь это утверждение.");
     }
 
     @Test
@@ -97,11 +115,13 @@ class BoardTransitionsTests {
         assertTrue(
                 BoardTransitions.line(BoardLog.Event.ASSIGNED, ticket("first:build_mine"), 0, "spirit-1")
                         .isEmpty(),
-                "ASSIGNED уже пишет отдельная строка выбора духа: вторая строка на тот же переход раздваивает лог");
+                "ASSIGNED уже пишет отдельная строка выбора духа: вторая строка на тот же переход раздваивает лог"
+                        + " Иначе тест line_AssignedAndBlocked_NotDuplicated перестанет ловить эту поломку. При смене line_AssignedAndBlocked_NotDuplicated проверь это утверждение.");
         assertTrue(
                 BoardTransitions.line(BoardLog.Event.BLOCKED, ticket("first:build_mine"), 5, null)
                         .isEmpty(),
                 "BLOCKED уже пишет отдельная строка с историей попыток: вторая строка на тот же переход "
-                        + "раздувает latest.log");
+                        + "раздувает latest.log"
+                        + " Иначе тест line_AssignedAndBlocked_NotDuplicated перестанет ловить эту поломку. При смене line_AssignedAndBlocked_NotDuplicated проверь это утверждение.");
     }
 }

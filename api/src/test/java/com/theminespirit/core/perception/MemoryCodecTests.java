@@ -32,11 +32,16 @@ class MemoryCodecTests {
     void encode_AnyStore_WritesVersionOne() throws IOException {
         JsonNode root = new ObjectMapper().readTree(MemoryCodec.encode(MemoryStore.empty()));
 
-        assertEquals(1, MemoryCodec.VERSION, "версия формата памяти согласована: 1");
+        assertEquals(
+                1,
+                MemoryCodec.VERSION,
+                "версия формата памяти согласована: 1"
+                        + " Иначе тест encode_AnyStore_WritesVersionOne перестанет ловить эту поломку. При смене encode_AnyStore_WritesVersionOne проверь это утверждение.");
         assertEquals(
                 1,
                 root.get("version").asInt(),
-                "в записи обязана лежать версия 1: по ней будущий читатель выберет разбор формата");
+                "в записи обязана лежать версия 1: по ней будущий читатель выберет разбор формата"
+                        + " Иначе тест encode_AnyStore_WritesVersionOne перестанет ловить эту поломку. При смене encode_AnyStore_WritesVersionOne проверь это утверждение.");
     }
 
     @Test
@@ -49,11 +54,13 @@ class MemoryCodecTests {
                 expected,
                 MemoryCodec.decode(GOLDEN_V1),
                 "запись формата v1 обязана читаться и впредь: сохранённая память духов не пропадает при обновлении "
-                        + "мода; сменишь формат — подними version и добавь читателя старой");
+                        + "мода; сменишь формат — подними version и добавь читателя старой"
+                        + " Иначе тест decode_GoldenV1_ReadsKnownStore перестанет ловить эту поломку. При смене decode_GoldenV1_ReadsKnownStore проверь это утверждение.");
         assertEquals(
                 GOLDEN_V1,
                 MemoryCodec.encode(expected),
-                "кодирование обязано давать ту же запись v1: порядок точек и поля части контракта хранения");
+                "кодирование обязано давать ту же запись v1: порядок точек и поля части контракта хранения"
+                        + " Иначе тест decode_GoldenV1_ReadsKnownStore перестанет ловить эту поломку. При смене decode_GoldenV1_ReadsKnownStore проверь это утверждение.");
     }
 
     @Test
@@ -71,7 +78,8 @@ class MemoryCodecTests {
                 store,
                 MemoryCodec.decode(MemoryCodec.encode(store)),
                 "память обязана переживать encode→decode без потерь: типы, измерения, юникод, экранирование, "
-                        + "крайние координаты");
+                        + "крайние координаты"
+                        + " Иначе тест roundTrip_StoreWithAllTypesAndDimensions_IsEqual перестанет ловить эту поломку. При смене roundTrip_StoreWithAllTypesAndDimensions_IsEqual проверь это утверждение.");
     }
 
     @Test
@@ -83,11 +91,16 @@ class MemoryCodecTests {
             }
         }
 
-        assertEquals(48, store.all().size(), "подготовка: заполненная память — 48 точек");
+        assertEquals(
+                48,
+                store.all().size(),
+                "подготовка: заполненная память — 48 точек"
+                        + " Иначе тест roundTrip_FullMemory_IsEqual перестанет ловить эту поломку. При смене roundTrip_FullMemory_IsEqual проверь это утверждение.");
         assertEquals(
                 store,
                 MemoryCodec.decode(MemoryCodec.encode(store)),
-                "заполненная память (48 точек) обязана переживать encode→decode");
+                "заполненная память (48 точек) обязана переживать encode→decode"
+                        + " Иначе тест roundTrip_FullMemory_IsEqual перестанет ловить эту поломку. При смене roundTrip_FullMemory_IsEqual проверь это утверждение.");
     }
 
     static Stream<Arguments> corrupted() {
@@ -136,12 +149,14 @@ class MemoryCodecTests {
                 MemoryFormatException.class,
                 () -> MemoryCodec.decode(json),
                 "повреждённая память («" + label + "») обязана давать ошибку, а не пустую память: тихий fallback "
-                        + "стирал бы память духа без следа; ловит и логирует адаптер");
+                        + "стирал бы память духа без следа; ловит и логирует адаптер"
+                        + " Иначе тест decode_CorruptedData_ThrowsFormatExceptionNamingProblem перестанет ловить эту поломку. При смене decode_CorruptedData_ThrowsFormatExceptionNamingProblem проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains(fragment),
                 "сообщение для «" + label + "» обязано называть проблему («" + fragment + "»). Фактическое: "
-                        + error.getMessage());
+                        + error.getMessage()
+                        + " Иначе тест decode_CorruptedData_ThrowsFormatExceptionNamingProblem перестанет ловить эту поломку. При смене decode_CorruptedData_ThrowsFormatExceptionNamingProblem проверь это утверждение.");
     }
 
     @Test
@@ -149,6 +164,7 @@ class MemoryCodecTests {
         assertThrows(
                 NullPointerException.class,
                 () -> MemoryCodec.decode(null),
-                "null вместо текста обязан отклоняться: адаптер сам решает, что делать с отсутствующим ключом");
+                "null вместо текста обязан отклоняться: адаптер сам решает, что делать с отсутствующим ключом"
+                        + " Иначе тест decode_NullText_IsRejected перестанет ловить эту поломку. При смене decode_NullText_IsRejected проверь это утверждение.");
     }
 }

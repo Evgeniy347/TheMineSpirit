@@ -50,7 +50,8 @@ class DefenseAllocatorTests {
                         List.of(),
                         List.of(zombie("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", 10, 0)),
                         PROFILES),
-                "Без защитников постов нет: иначе приказ уйдёт несуществующему духу");
+                "Без защитников постов нет: иначе приказ уйдёт несуществующему духу"
+                        + " При смене allocate_NoDefenders_ReturnsEmpty проверь это утверждение.");
     }
 
     @Test
@@ -63,14 +64,19 @@ class DefenseAllocatorTests {
                 PROFILES);
 
         assertEquals(
-                1, posts.size(), "Один защитник получает ровно один пост: иначе дух либо без поста, либо раздвоен");
+                1,
+                posts.size(),
+                "Один защитник получает ровно один пост: иначе дух либо без поста, либо раздвоен"
+                        + " При смене allocate_SingleDefenderEast_PostOnEastBearing проверь это утверждение.");
         assertEquals(
                 EAST_BEARING,
                 posts.get(0).bearing(),
-                "Пост стоит на азимуте угрожаемого сектора: иначе защитник смотрит не на угрозу");
+                "Пост стоит на азимуте угрожаемого сектора: иначе защитник смотрит не на угрозу"
+                        + " При смене allocate_SingleDefenderEast_PostOnEastBearing проверь это утверждение.");
         assertTrue(
                 Math.abs(posts.get(0).post().distanceTo(CENTER) - DefenseTuning.FRONT_RADIUS) < 1e-9,
-                "Пост внутри радиуса на дистанции FRONT_RADIUS: иначе дух встанет либо у дома, либо за периметром");
+                "Пост внутри радиуса на дистанции FRONT_RADIUS: иначе дух встанет либо у дома, либо за периметром"
+                        + " При смене allocate_SingleDefenderEast_PostOnEastBearing проверь это утверждение.");
     }
 
     @Test
@@ -93,18 +99,24 @@ class DefenseAllocatorTests {
 
         List<DefenseAssignment> posts = DefenseAllocator.allocate(CENTER, RADIUS, defenders, enemies, PROFILES);
 
-        assertEquals(3, posts.size(), "Каждый защитник ровно один раз: иначе дух либо без поста, либо раздвоен");
+        assertEquals(
+                3,
+                posts.size(),
+                "Каждый защитник ровно один раз: иначе дух либо без поста, либо раздвоен"
+                        + " При смене allocate_EastStrongerThanNorth_EastGetsMoreDefenders проверь это утверждение.");
         assertEquals(
                 2,
                 postsOnBearing(posts, EAST_BEARING),
-                "Сильнейшее восточное направление получает два из трёх: иначе вес сектора не влияет на число постов");
+                "Сильнейшее восточное направление получает два из трёх: иначе вес сектора не влияет на число постов"
+                        + " При смене allocate_EastStrongerThanNorth_EastGetsMoreDefenders проверь это утверждение.");
         assertEquals(
                 3,
                 posts.stream()
                         .mapToDouble(post -> post.post().distanceTo(CENTER))
                         .filter(distance -> distance <= RADIUS + 1e-9)
                         .count(),
-                "Все посты внутри радиуса: иначе дух встанет за периметром обороны");
+                "Все посты внутри радиуса: иначе дух встанет за периметром обороны"
+                        + " При смене allocate_EastStrongerThanNorth_EastGetsMoreDefenders проверь это утверждение.");
     }
 
     @Test
@@ -133,7 +145,8 @@ class DefenseAllocatorTests {
         assertEquals(
                 EAST_BEARING,
                 strongPost.bearing(),
-                "Дух с лучшей бронёй встаёт на сильнейшее направление: иначе слабый доспех встретит главную угрозу");
+                "Дух с лучшей бронёй встаёт на сильнейшее направление: иначе слабый доспех встретит главную угрозу"
+                        + " При смене allocate_StrongestFront_GoesToStrongestSector проверь это утверждение.");
     }
 
     @Test
@@ -153,11 +166,15 @@ class DefenseAllocatorTests {
                 CENTER, RADIUS, List.of(defender("11111111-1111-1111-1111-111111111111", 10, 1.0)), enemies, PROFILES);
 
         assertEquals(
-                1, posts.size(), "Единственный защитник получает один пост: иначе дух раздвоится между направлениями");
+                1,
+                posts.size(),
+                "Единственный защитник получает один пост: иначе дух раздвоится между направлениями"
+                        + " При смене allocate_FewerDefendersThanSectors_StrongestCovered проверь это утверждение.");
         assertEquals(
                 EAST_BEARING,
                 posts.get(0).bearing(),
-                "При нехватке духов накрывается сильнейший сектор: иначе главная угроза останется без присмотра");
+                "При нехватке духов накрывается сильнейший сектор: иначе главная угроза останется без присмотра"
+                        + " При смене allocate_FewerDefendersThanSectors_StrongestCovered проверь это утверждение.");
     }
 
     @Test
@@ -174,11 +191,13 @@ class DefenseAllocatorTests {
         assertEquals(
                 2,
                 posts.size(),
-                "Без врагов каждый защитник всё равно на посту: иначе мирное время оставит периметр пустым");
+                "Без врагов каждый защитник всё равно на посту: иначе мирное время оставит периметр пустым"
+                        + " При смене allocate_NoEnemies_EqualSectorAssignerPosts проверь это утверждение.");
         for (DefenseAssignment post : posts) {
             assertTrue(
                     Math.abs(post.post().distanceTo(CENTER) - RADIUS) < 1e-9,
-                    "Без угроз посты делит SectorAssigner поровну по кругу: иначе тихое распределение врёт");
+                    "Без угроз посты делит SectorAssigner поровну по кругу: иначе тихое распределение врёт"
+                            + " При смене allocate_NoEnemies_EqualSectorAssignerPosts проверь это утверждение.");
         }
     }
 
@@ -192,7 +211,8 @@ class DefenseAllocatorTests {
                         List.of(defender("11111111-1111-1111-1111-111111111111", 10, 1.0)),
                         List.of(zombie("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", 10, 0)),
                         PROFILES),
-                "Круг без центра обязан падать: иначе сектора посчитаются из ничего");
+                "Круг без центра обязан падать: иначе сектора посчитаются из ничего"
+                        + " При смене allocate_NullCenter_Throws проверь это утверждение.");
     }
 
     @Test
@@ -205,7 +225,8 @@ class DefenseAllocatorTests {
                         List.of(defender("11111111-1111-1111-1111-111111111111", 10, 1.0)),
                         List.of(zombie("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", 10, 0)),
                         PROFILES),
-                "Нулевой радиус обязан падать: иначе сектора вырождены в точку");
+                "Нулевой радиус обязан падать: иначе сектора вырождены в точку"
+                        + " При смене allocate_ZeroRadius_Throws проверь это утверждение.");
     }
 
     @Test
@@ -220,6 +241,7 @@ class DefenseAllocatorTests {
                         List.of(defender, defender),
                         List.of(zombie("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", 10, 0)),
                         PROFILES),
-                "Дух дважды в списке обязан падать: один дух — один пост, иначе раздвоение приказа");
+                "Дух дважды в списке обязан падать: один дух — один пост, иначе раздвоение приказа"
+                        + " При смене allocate_DuplicateDefender_Throws проверь это утверждение.");
     }
 }

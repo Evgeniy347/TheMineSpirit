@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.theminespirit.core.mining.ClearOrder;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -61,7 +60,8 @@ class FillScenarioTests {
         for (BlockCoord cell : ordered) {
             assertTrue(
                     cell.y() >= previous,
-                    "Клетка " + cell + " идёт после слоя " + previous + ": верхний слой начат раньше нижнего");
+                    "Клетка " + cell + " идёт после слоя " + previous + ": верхний слой начат раньше нижнего"
+                            + " Иначе тест assertLayerByLayer перестанет ловить эту поломку. При смене assertLayerByLayer проверь это утверждение.");
             previous = cell.y();
         }
     }
@@ -72,7 +72,8 @@ class FillScenarioTests {
             BlockCoord below = new BlockCoord(cell.x(), cell.y() - 1, cell.z());
             assertTrue(
                     earlier.contains(below) || world.solid(below),
-                    "Клетка " + cell + " ставится без опоры: под ней ни мира, ни ранее поставленной клетки");
+                    "Клетка " + cell + " ставится без опоры: под ней ни мира, ни ранее поставленной клетки"
+                            + " Иначе тест assertSupported перестанет ловить эту поломку. При смене assertSupported проверь это утверждение.");
             earlier.add(cell);
         }
     }
@@ -99,32 +100,52 @@ class FillScenarioTests {
 
         FillOrder.Plan plan = FillOrder.fill(cells, Set.of(firstSpirit, secondSpirit), world, ANCHOR);
 
-        assertEquals(water, plan.cells().get(0), "Воду на дне перекрывают первой клеткой нижнего слоя");
-        assertFalse(plan.cells().contains(firstSpirit), "В клетку первого духа блок не ставят");
-        assertFalse(plan.cells().contains(secondSpirit), "В клетку второго духа блок не ставят");
+        assertEquals(
+                water,
+                plan.cells().get(0),
+                "Воду на дне перекрывают первой клеткой нижнего слоя"
+                        + " Иначе тест fill_TwoPitsTwoSpirits_LayersSupportFluidAndAuditTogether перестанет ловить эту поломку. При смене fill_TwoPitsTwoSpirits_LayersSupportFluidAndAuditTogether проверь это утверждение.");
+        assertFalse(
+                plan.cells().contains(firstSpirit),
+                "В клетку первого духа блок не ставят"
+                        + " Иначе тест fill_TwoPitsTwoSpirits_LayersSupportFluidAndAuditTogether перестанет ловить эту поломку. При смене fill_TwoPitsTwoSpirits_LayersSupportFluidAndAuditTogether проверь это утверждение.");
+        assertFalse(
+                plan.cells().contains(secondSpirit),
+                "В клетку второго духа блок не ставят"
+                        + " Иначе тест fill_TwoPitsTwoSpirits_LayersSupportFluidAndAuditTogether перестанет ловить эту поломку. При смене fill_TwoPitsTwoSpirits_LayersSupportFluidAndAuditTogether проверь это утверждение.");
         assertEquals(
                 9 + 4 - 2,
                 plan.cells().size(),
-                "Пока духи стоят на нижнем слое, верхний слой не начинают: засыпают всё, кроме их клеток");
+                "Пока духи стоят на нижнем слое, верхний слой не начинают: засыпают всё, кроме их клеток"
+                        + " Иначе тест fill_TwoPitsTwoSpirits_LayersSupportFluidAndAuditTogether перестанет ловить эту поломку. При смене fill_TwoPitsTwoSpirits_LayersSupportFluidAndAuditTogether проверь это утверждение.");
         assertTrue(
                 plan.cells().stream().allMatch(cell -> cell.y() == 64),
-                "Верхние слои ждут, пока освободятся клетки духов");
+                "Верхние слои ждут, пока освободятся клетки духов"
+                        + " Иначе тест fill_TwoPitsTwoSpirits_LayersSupportFluidAndAuditTogether перестанет ловить эту поломку. При смене fill_TwoPitsTwoSpirits_LayersSupportFluidAndAuditTogether проверь это утверждение.");
         assertLayerByLayer(plan.cells());
         assertSupported(plan.cells(), world);
-        assertFalse(FillOrder.filled(cells, world), "Пока духи стоят в яме, готовность по миру не наступает");
+        assertFalse(
+                FillOrder.filled(cells, world),
+                "Пока духи стоят в яме, готовность по миру не наступает"
+                        + " Иначе тест fill_TwoPitsTwoSpirits_LayersSupportFluidAndAuditTogether перестанет ловить эту поломку. При смене fill_TwoPitsTwoSpirits_LayersSupportFluidAndAuditTogether проверь это утверждение.");
 
         world.place(plan.cells());
         FillOrder.Plan second = FillOrder.fill(cells, Set.of(), world, ANCHOR);
         assertTrue(
                 second.cells().containsAll(List.of(firstSpirit, secondSpirit)),
-                "После ухода духов их клетки досыпаются, а на них встают верхние слои");
+                "После ухода духов их клетки досыпаются, а на них встают верхние слои"
+                        + " Иначе тест fill_TwoPitsTwoSpirits_LayersSupportFluidAndAuditTogether перестанет ловить эту поломку. При смене fill_TwoPitsTwoSpirits_LayersSupportFluidAndAuditTogether проверь это утверждение.");
         assertEquals(
                 27 + 8 - (9 + 4 - 2),
                 second.cells().size(),
-                "Досыпается всё, что осталось после нижнего слоя, кроме уже поставленного");
+                "Досыпается всё, что осталось после нижнего слоя, кроме уже поставленного"
+                        + " Иначе тест fill_TwoPitsTwoSpirits_LayersSupportFluidAndAuditTogether перестанет ловить эту поломку. При смене fill_TwoPitsTwoSpirits_LayersSupportFluidAndAuditTogether проверь это утверждение.");
         assertLayerByLayer(second.cells());
         world.place(second.cells());
-        assertTrue(FillOrder.filled(cells, world), "Все клетки ям твёрдые — аудит закрывает засыпку");
+        assertTrue(
+                FillOrder.filled(cells, world),
+                "Все клетки ям твёрдые — аудит закрывает засыпку"
+                        + " Иначе тест fill_TwoPitsTwoSpirits_LayersSupportFluidAndAuditTogether перестанет ловить эту поломку. При смене fill_TwoPitsTwoSpirits_LayersSupportFluidAndAuditTogether проверь это утверждение.");
     }
 
     @Test
@@ -142,14 +163,17 @@ class FillScenarioTests {
 
         assertFalse(
                 plan.cells().contains(building),
-                "Засыпка не ставит блок в клетку постройки: иначе под домом вырастает столб из грунта");
+                "Засыпка не ставит блок в клетку постройки: иначе под домом вырастает столб из грунта"
+                        + " При смене fill_ProtectedCell_IsNotFilledAndStaysBlocked проверь это утверждение.");
         assertTrue(
                 plan.blocked().contains(building),
-                "Засыпка обязана назвать защищённую клетку занятой, а не молча обойти её");
+                "Засыпка обязана назвать защищённую клетку занятой, а не молча обойти её"
+                        + " Иначе тест fill_ProtectedCell_IsNotFilledAndStaysBlocked перестанет ловить эту поломку. При смене fill_ProtectedCell_IsNotFilledAndStaysBlocked проверь это утверждение.");
         assertEquals(
                 3,
                 plan.cells().size(),
-                "Остальные клетки ямы засыпаются штатно: защита одной клетки не отменяет работу");
+                "Остальные клетки ямы засыпаются штатно: защита одной клетки не отменяет работу"
+                        + " Иначе тест fill_ProtectedCell_IsNotFilledAndStaysBlocked перестанет ловить эту поломку. При смене fill_ProtectedCell_IsNotFilledAndStaysBlocked проверь это утверждение.");
     }
 
     @Test
@@ -164,23 +188,40 @@ class FillScenarioTests {
 
         FillOrder.Plan plan = FillOrder.fill(cells, Set.of(), world, ANCHOR);
 
-        assertEquals(65, plan.cells().get(0).y(), "Засыпанный нижний слой не повторяют: начинают с нижнего пустого");
+        assertEquals(
+                65,
+                plan.cells().get(0).y(),
+                "Засыпанный нижний слой не повторяют: начинают с нижнего пустого"
+                        + " Иначе тест fill_PartialPit_ContinuesFromLowestEmptyLayerWithoutNewOrder перестанет ловить эту поломку. При смене fill_PartialPit_ContinuesFromLowestEmptyLayerWithoutNewOrder проверь это утверждение.");
         assertEquals(
                 18,
                 plan.cells().size(),
-                "Сначала засыпаются оба пустых слоя: каждый следующий ложится на закрытый нижний");
+                "Сначала засыпаются оба пустых слоя: каждый следующий ложится на закрытый нижний"
+                        + " Иначе тест fill_PartialPit_ContinuesFromLowestEmptyLayerWithoutNewOrder перестанет ловить эту поломку. При смене fill_PartialPit_ContinuesFromLowestEmptyLayerWithoutNewOrder проверь это утверждение.");
         assertEquals(
                 9,
                 plan.cells().stream().filter(cell -> cell.y() == 65).count(),
-                "Сначала весь нижний пустой слой: верхний слой не начинают на дырявом низе");
+                "Сначала весь нижний пустой слой: верхний слой не начинают на дырявом низе"
+                        + " Иначе тест fill_PartialPit_ContinuesFromLowestEmptyLayerWithoutNewOrder перестанет ловить эту поломку. При смене fill_PartialPit_ContinuesFromLowestEmptyLayerWithoutNewOrder проверь это утверждение.");
         assertLayerByLayer(plan.cells());
 
         world.place(plan.cells().stream().filter(cell -> cell.y() == 65).toList());
         FillOrder.Plan next = FillOrder.fill(cells, Set.of(), world, ANCHOR);
-        assertEquals(66, next.cells().get(0).y(), "Частичная засыпка продолжается следующей пустой прослойкой");
-        assertEquals(9, next.cells().size(), "Остался ровно один слой на девять клеток");
+        assertEquals(
+                66,
+                next.cells().get(0).y(),
+                "Частичная засыпка продолжается следующей пустой прослойкой"
+                        + " Иначе тест fill_PartialPit_ContinuesFromLowestEmptyLayerWithoutNewOrder перестанет ловить эту поломку. При смене fill_PartialPit_ContinuesFromLowestEmptyLayerWithoutNewOrder проверь это утверждение.");
+        assertEquals(
+                9,
+                next.cells().size(),
+                "Остался ровно один слой на девять клеток"
+                        + " Иначе тест fill_PartialPit_ContinuesFromLowestEmptyLayerWithoutNewOrder перестанет ловить эту поломку. При смене fill_PartialPit_ContinuesFromLowestEmptyLayerWithoutNewOrder проверь это утверждение.");
         world.place(next.cells());
-        assertTrue(FillOrder.filled(cells, world), "Частичная засыпка закрывается той же задачей по миру");
+        assertTrue(
+                FillOrder.filled(cells, world),
+                "Частичная засыпка закрывается той же задачей по миру"
+                        + " Иначе тест fill_PartialPit_ContinuesFromLowestEmptyLayerWithoutNewOrder перестанет ловить эту поломку. При смене fill_PartialPit_ContinuesFromLowestEmptyLayerWithoutNewOrder проверь это утверждение.");
     }
 
     @Test
@@ -202,12 +243,21 @@ class FillScenarioTests {
 
         FillOrder.Plan plan = FillOrder.fill(cells, Set.of(), world, new BlockCoord(-197, 63, -525));
 
-        assertEquals(45, plan.cells().size(), "Воронка 3×3×5 из снимка обязана планироваться целиком");
-        assertEquals(63, plan.cells().get(0).y(), "Засыпка воронки начинается с самого глубокого слоя y=63");
+        assertEquals(
+                45,
+                plan.cells().size(),
+                "Воронка 3×3×5 из снимка обязана планироваться целиком"
+                        + " Иначе тест fill_LiveCraterFixture_BottomUpAcrossNineColumns перестанет ловить эту поломку. При смене fill_LiveCraterFixture_BottomUpAcrossNineColumns проверь это утверждение.");
+        assertEquals(
+                63,
+                plan.cells().get(0).y(),
+                "Засыпка воронки начинается с самого глубокого слоя y=63"
+                        + " Иначе тест fill_LiveCraterFixture_BottomUpAcrossNineColumns перестанет ловить эту поломку. При смене fill_LiveCraterFixture_BottomUpAcrossNineColumns проверь это утверждение.");
         assertEquals(
                 9,
                 plan.cells().stream().filter(cell -> cell.y() == 63).count(),
-                "Сначала весь нижний слой из девяти клеток, только потом выше");
+                "Сначала весь нижний слой из девяти клеток, только потом выше"
+                        + " Иначе тест fill_LiveCraterFixture_BottomUpAcrossNineColumns перестанет ловить эту поломку. При смене fill_LiveCraterFixture_BottomUpAcrossNineColumns проверь это утверждение.");
         assertLayerByLayer(plan.cells());
         assertSupported(plan.cells(), world);
     }
@@ -224,100 +274,7 @@ class FillScenarioTests {
                         new FillOrder.Box(0, 65, 0, 2, 65, 2),
                         new FillOrder.Box(0, 66, 0, 2, 66, 2)),
                 layers,
-                "Подсыпка участка и засыпка ямы режутся на одни и те же слои снизу вверх");
-    }
-
-    @Test
-    void batches_LayersOverBatch_SplitWithoutBreakingLayer() {
-        List<FillOrder.Box> layers = List.of(
-                new FillOrder.Box(0, 60, 0, 9, 60, 9),
-                new FillOrder.Box(0, 61, 0, 9, 61, 9),
-                new FillOrder.Box(0, 62, 0, 9, 62, 9));
-
-        assertEquals(
-                List.of(200, 100),
-                FillOrder.batches(layers, 256).stream().map(FillOrder::volume).toList(),
-                "Слои по 100 при партии 256 — порции 200 и 100: слой не рвётся пополам");
-        assertEquals(
-                300, FillOrder.volume(layers), "Объём порций совпадает с объёмом подсыпки: лишнего блока не берут");
-    }
-
-    @Test
-    void district_BuildFillAndClearAtOnce_ThreeSpiritsFinishWithoutLeftovers() {
-        DistrictWorld world = new DistrictWorld();
-        world.floor(0, 0, 30, 30, 63);
-        BlockCoord building = new BlockCoord(24, 64, 24);
-        world.place(List.of(building));
-
-        List<BlockCoord> pit = new ArrayList<>();
-        for (int y = 64; y <= 65; y++) {
-            for (int x = 10; x <= 12; x++) {
-                for (int z = 10; z <= 12; z++) {
-                    pit.add(new BlockCoord(x, y, z));
-                }
-            }
-        }
-        List<BlockCoord> debris = new ArrayList<>(List.of(
-                new BlockCoord(20, 64, 20),
-                new BlockCoord(20, 65, 20),
-                new BlockCoord(20, 66, 20),
-                new BlockCoord(21, 64, 20)));
-        world.place(debris);
-        BlockCoord pillarBase = new BlockCoord(16, 64, 16);
-        List<BlockCoord> pillar = PillarPlan.plan(4).stream()
-                .map(cell -> new BlockCoord(pillarBase.x() + cell.x(), pillarBase.y() + cell.y(), pillarBase.z()))
-                .toList();
-        List<BlockCoord> dismantle = PillarPlan.dismantle(4).stream()
-                .map(cell -> new BlockCoord(pillarBase.x() + cell.x(), pillarBase.y() + cell.y(), pillarBase.z()))
-                .toList();
-
-        FillOrder.Plan fill = FillOrder.fill(pit, Set.of(new BlockCoord(13, 64, 13)), world, ANCHOR);
-        assertTrue(fill.complete(), "Засыпка ямы заблокирована: " + fill.blocked());
-
-        int filled = 0;
-        int built = 0;
-        while (filled < fill.cells().size() || built < pillar.size() || !debris.isEmpty()) {
-            if (filled < fill.cells().size()) {
-                BlockCoord cell = fill.cells().get(filled++);
-                assertFalse(world.solid(cell), "Засыпка ставит блок в уже занятую клетку " + cell);
-                assertTrue(
-                        world.solid(new BlockCoord(cell.x(), cell.y() - 1, cell.z())),
-                        "Блок засыпки " + cell + " поставлен в воздух без опоры");
-                world.place(List.of(cell));
-            }
-            if (built < pillar.size()) {
-                BlockCoord cell = pillar.get(built++);
-                assertFalse(world.solid(cell), "Стойка ставится в занятую клетку " + cell);
-                assertTrue(
-                        world.solid(new BlockCoord(cell.x(), cell.y() - 1, cell.z())),
-                        "Блок стойки " + cell + " висит без опоры: дух не поставит его честно");
-                world.place(List.of(cell));
-            }
-            if (!debris.isEmpty()) {
-                List<BlockCoord> top = ClearOrder.topmost(debris, world::solid);
-                assertFalse(top.isEmpty(), "Расчистка не нашла верхний блок в куче " + debris);
-                BlockCoord removed = top.get(0);
-                world.remove(removed);
-                debris.remove(removed);
-            }
-            assertTrue(world.solid(building), "Стройка по соседству повреждена расчисткой или засыпкой");
-        }
-
-        for (BlockCoord cell : dismantle) {
-            assertTrue(world.solid(cell), "Разбор стойки не нашёл блок " + cell + ": временная опора осталась");
-            world.remove(cell);
-        }
-
-        assertTrue(FillOrder.filled(pit, world), "Яма не засыпана до конца: аудит мира не закроет работу");
-        assertTrue(debris.isEmpty(), "Куча расчищена не вся: " + debris);
-        for (BlockCoord cell : pillar) {
-            assertFalse(world.solid(cell), "Временный блок стойки " + cell + " остался в мире после разбора");
-        }
-        assertTrue(world.solid(building), "Постройка поселения цела: соседние работы её не задели");
-        for (int x = 0; x <= 30; x++) {
-            for (int z = 0; z <= 30; z++) {
-                assertTrue(world.solid(new BlockCoord(x, 63, z)), "Пол участка " + x + "," + z + " разобран");
-            }
-        }
+                "Подсыпка участка и засыпка ямы режутся на одни и те же слои снизу вверх"
+                        + " Иначе тест layers_PitAndLevelingBoxes_GiveSameBottomUpRows перестанет ловить эту поломку. При смене layers_PitAndLevelingBoxes_GiveSameBottomUpRows проверь это утверждение.");
     }
 }

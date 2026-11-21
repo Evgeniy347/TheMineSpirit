@@ -39,7 +39,8 @@ class GraphCauseGuardTests {
                 found,
                 "Граф снова угадывает причину по тексту сообщения: причина создаётся там, где сбой обнаружен, "
                         + "и едет GraphBlock.Need. Цена: русская фраза меняется — блокировка ломается молча. "
-                        + "Как надо: типизированная нужда в GraphState.blocks. Нарушители");
+                        + "Как надо: типизированная нужда в GraphState.blocks. Нарушители"
+                        + " При смене graphSources_ReasonText_IsNotParsed проверь это утверждение.");
     }
 
     @Test
@@ -48,9 +49,11 @@ class GraphCauseGuardTests {
 
         assertTrue(
                 source.contains("@Nullable Need"),
-                "Память неудач обязана хранить типизированную нужду, а не строку причины");
+                "Память неудач обязана хранить типизированную нужду, а не строку причины"
+                        + " Иначе тест failureMemory_Loaded_StoresTypedNeed перестанет ловить эту поломку. При смене failureMemory_Loaded_StoresTypedNeed проверь это утверждение.");
         assertFalse(
                 source.contains("String reason"),
-                "Строка причины не должна попадать в память неудач: иначе граф снова начнёт её разбирать");
+                "Строка причины не должна попадать в память неудач: иначе граф снова начнёт её разбирать"
+                        + " При смене failureMemory_Loaded_StoresTypedNeed проверь это утверждение.");
     }
 }

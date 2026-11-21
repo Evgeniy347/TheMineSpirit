@@ -36,10 +36,12 @@ class MiningPlannerProperties {
         if (outcome instanceof MiningPlanner.Next next) {
             assertTrue(
                     MiningSafety.canBreak(next.target(), world) instanceof BreakSafety.Safe,
-                    "Выбранная цель обязана быть безопасной: иначе дух пробивает блок с жидкостью за гранью");
+                    "Выбранная цель обязана быть безопасной: иначе дух пробивает блок с жидкостью за гранью"
+                            + " При смене next_RandomInput_ReturnedTargetIsSafeWithStand проверь это утверждение.");
             assertTrue(
                     StandSpots.of(next.target(), world, FROM).contains(next.stand()),
-                    "Выбранная стоянка обязана входить в набор допустимых для цели: иначе дух встанет в опасное место");
+                    "Выбранная стоянка обязана входить в набор допустимых для цели: иначе дух встанет в опасное место"
+                            + " При смене next_RandomInput_ReturnedTargetIsSafeWithStand проверь это утверждение.");
         }
     }
 
@@ -58,7 +60,8 @@ class MiningPlannerProperties {
                 ordered,
                 reordered,
                 "Результат не должен зависеть от порядка целей: ничья разрешается координатами, иначе "
-                        + "добыча непредсказуемо выбирает разные блоки");
+                        + "добыча непредсказуемо выбирает разные блоки"
+                        + " При смене next_RandomInput_IndependentOfTargetOrder проверь это утверждение.");
     }
 
     @Property
@@ -80,7 +83,8 @@ class MiningPlannerProperties {
             assertTrue(
                     !excluded.contains(next.stand()),
                     "Возвращённая стоянка обязана быть вне исключённых: иначе исключение глухих стоянок "
-                            + "не работает и дух идёт в стену");
+                            + "не работает и дух идёт в стену"
+                            + " При смене next_ExcludedFirstStands_NeverReturnsExcludedStand проверь это утверждение.");
         }
     }
 
@@ -98,7 +102,8 @@ class MiningPlannerProperties {
                 expected,
                 actual,
                 "Ранний выход обязан возвращать то же, что полный перебор: иначе остановка пропускает ближнюю цель "
-                        + "со стоянкой на смещении до 3. Цели: " + remaining);
+                        + "со стоянкой на смещении до 3. Цели: " + remaining
+                        + " При смене next_DenseWorld_MatchesFullScanWithoutEarlyExit проверь это утверждение.");
     }
 
     private static CellWorld denseWorld(Random random, List<BlockCoord> targets) {
@@ -185,7 +190,8 @@ class MiningPlannerProperties {
                 world.reads() <= 446 * remaining.size(),
                 "Планирование читает не более " + 446 + " клеток на цель: "
                         + "иначе перебор целей кладёт серверный тик. Чтений: " + world.reads()
-                        + ", целей: " + remaining.size());
+                        + ", целей: " + remaining.size()
+                        + " При смене next_RandomInput_ReadsBoundedByTargetCount проверь это утверждение.");
     }
 
     private static CellWorld randomWorld(Random random) {

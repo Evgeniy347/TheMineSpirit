@@ -60,7 +60,8 @@ class PlotBreakPathGuardTests {
                         + "поломки, и постройка тихо теряет блоки (observe23: дом 100→94). Прямые destroyBlock/"
                         + "removeBlock/воздух разрешены только BlockBreaker (его BreakDestroy), демо-сцене и известным "
                         + "временным путям, и каждый "
-                        + "такой путь обязан писать в BreakNotice. Нарушители");
+                        + "такой путь обязан писать в BreakNotice. Нарушители"
+                        + " При смене productionSources_DirectBlockRemoval_OnlyKnownSites проверь это утверждение.");
     }
 
     @Test
@@ -68,7 +69,8 @@ class PlotBreakPathGuardTests {
         assertEquals(
                 Set.of("destroyBlock("),
                 removals("class Sample { void run() { level.destroyBlock(pos, false, spirit); } }"),
-                "Сторож ослеп: прямой вызов destroyBlock обязан попасть в нарушители");
+                "Сторож ослеп: прямой вызов destroyBlock обязан попасть в нарушители"
+                        + " Иначе тест scan_UnknownDirectRemoval_IsReported перестанет ловить эту поломку. При смене scan_UnknownDirectRemoval_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -81,7 +83,8 @@ class PlotBreakPathGuardTests {
                 List.of("neoforge/PillarDismantler.java: [Blocks.AIR.defaultBlockState()] без BreakNotice.broken — "
                         + "поломка мимо журнала"),
                 offenders,
-                "Сторож ослеп: разрешённый путь без записи в журнал обязан попасть в нарушители");
+                "Сторож ослеп: разрешённый путь без записи в журнал обязан попасть в нарушители"
+                        + " Иначе тест run перестанет ловить эту поломку. При смене run проверь это утверждение.");
     }
 
     @Test
@@ -92,7 +95,8 @@ class PlotBreakPathGuardTests {
                         "neoforge/PillarDismantler.java",
                         "class Sample { void run() { BreakNotice.broken(server, pos, state, spirit, \"X\", basis); "
                                 + "level.setBlock(pos, Blocks.AIR.defaultBlockState(), 3); } }"),
-                "Сторож ложно срабатывает: путь с записью в журнал законен");
+                "Сторож ложно срабатывает: путь с записью в журнал законен"
+                        + " Иначе тест scan_AllowedRemovalWithJournal_IsAccepted перестанет ловить эту поломку. При смене scan_AllowedRemovalWithJournal_IsAccepted проверь это утверждение.");
     }
 
     private static List<String> scan(String file, String text) {

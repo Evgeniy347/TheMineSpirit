@@ -10,11 +10,13 @@ class StageSchemesTests {
         assertEquals(
                 "fence_post",
                 StageSchemes.fenceStub(1),
-                "Заглушка ограды этапа 1 — один столб: событие отмечает опасную колонку, а не строит кольцо 23×23");
+                "Заглушка ограды этапа 1 — один столб: событие отмечает опасную колонку, а не строит кольцо 23×23"
+                        + " Иначе тест fenceStub_FirstStage_IsSingleFencePost перестанет ловить эту поломку. При смене fenceStub_FirstStage_IsSingleFencePost проверь это утверждение.");
         assertEquals(
                 "fence_post",
                 StageSchemes.fenceStub(0),
-                "До первого этапа действует та же заглушка этапа 1: иначе событие до старта этапа не построить");
+                "До первого этапа действует та же заглушка этапа 1: иначе событие до старта этапа не построить"
+                        + " При смене fenceStub_FirstStage_IsSingleFencePost проверь это утверждение.");
     }
 
     @Test
@@ -23,6 +25,7 @@ class StageSchemesTests {
                 "wall_3_post",
                 StageSchemes.fenceStub(2),
                 "Со второго этапа ограда — стена: заглушка обязана быть стенным столбом той же схемы, а не "
-                        + "деревянным забором из прошлого этапа");
+                        + "деревянным забором из прошлого этапа"
+                        + " Иначе тест fenceStub_SecondStage_IsSingleWallPost перестанет ловить эту поломку. При смене fenceStub_SecondStage_IsSingleWallPost проверь это утверждение.");
     }
 }

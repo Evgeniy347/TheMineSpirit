@@ -25,7 +25,8 @@ class PitWalkOutTests {
         assertTrue(
                 PitWalkOut.exists(hill, RULES, 0, 0, START),
                 "спуск на блок с открытого холма — выход: иначе дух на ровной земле считается запертым и "
-                        + "простаивает с меткой «не двигается» (spirit-3, spirit-4, -173,71,-489)");
+                        + "простаивает с меткой «не двигается» (spirit-3, spirit-4, -173,71,-489)"
+                        + " При смене walkOut_StepDownOnOpenHill_IsAnExit проверь это утверждение.");
     }
 
     @Test
@@ -34,7 +35,9 @@ class PitWalkOutTests {
         buried.floorAt(1, 0, START - 2).ceilingAt(1, 0, START - 1);
 
         assertFalse(
-                PitWalkOut.exists(buried, RULES, 0, 0, START), "сквозь сплошной блок на нижнюю клетку не спуститься");
+                PitWalkOut.exists(buried, RULES, 0, 0, START),
+                "сквозь сплошной блок на нижнюю клетку не спуститься"
+                        + " Иначе тест walkOut_DropThroughSolidGround_IsNotAStep перестанет ловить эту поломку. При смене walkOut_DropThroughSolidGround_IsNotAStep проверь это утверждение.");
     }
 
     @Test
@@ -45,7 +48,8 @@ class PitWalkOutTests {
         assertFalse(
                 PitWalkOut.exists(ramp, RULES, 0, 0, START),
                 "из-под низкого потолка на ступень не подпрыгнуть: иначе метка «не двигается» снимается "
-                        + "как выход, а дух стоит на месте (spirit-1, -187,65,-514)");
+                        + "как выход, а дух стоит на месте (spirit-1, -187,65,-514)"
+                        + " При смене walkOut_StepUpUnderCeilingAboveHead_IsNotAnExit проверь это утверждение.");
     }
 
     @Test
@@ -54,7 +58,8 @@ class PitWalkOutTests {
 
         assertFalse(
                 PitWalkOut.exists(cell, RULES, 0, 0, START),
-                "пробитая крыша клетки — не выход: иначе дух возвращает крышу и снова сидит замурованным");
+                "пробитая крыша клетки — не выход: иначе дух возвращает крышу и снова сидит замурованным"
+                        + " При смене walkOut_WalledCellOpenToSky_IsNotAnExit проверь это утверждение.");
     }
 
     @Test
@@ -65,7 +70,8 @@ class PitWalkOutTests {
         assertFalse(
                 PitWalkOut.exists(cave, RULES, 0, 0, START),
                 "проём в потолке большой пещеры — не выход: дух по-прежнему под землёй, и метка «пути нет» "
-                        + "сниматься не должна (debtnav2, п.3)");
+                        + "сниматься не должна (debtnav2, п.3)"
+                        + " Иначе тест walkOut_CaveWithNarrowCeilingHole_IsNotAnExit перестанет ловить эту поломку. При смене walkOut_CaveWithNarrowCeilingHole_IsNotAnExit проверь это утверждение.");
     }
 
     @Test
@@ -76,7 +82,8 @@ class PitWalkOutTests {
         assertFalse(
                 PitWalkOut.exists(cave, RULES, 0, 0, START),
                 "широкий проём в потолке тоже не край пещеры: за ним снова потолок, а не местность на уровне "
-                        + "клетки выхода (debtnav2, п.3)");
+                        + "клетки выхода (debtnav2, п.3)"
+                        + " Иначе тест walkOut_CaveWithWideCeilingHole_IsNotAnExit перестанет ловить эту поломку. При смене walkOut_CaveWithWideCeilingHole_IsNotAnExit проверь это утверждение.");
     }
 
     @Test
@@ -89,7 +96,8 @@ class PitWalkOutTests {
         assertFalse(
                 PitWalkOut.exists(cave, RULES, 0, 0, START),
                 "проём в потолке шире трёх клеток не выход: проверка поверхности на одной точке в трёх шагах "
-                        + "попадала внутрь проёма и объявляла выход там, где кругом потолок пещеры (debtnav3, п.3)");
+                        + "попадала внутрь проёма и объявляла выход там, где кругом потолок пещеры (debtnav3, п.3)"
+                        + " Иначе тест walkOut_CaveHoleWiderThanThree_IsNotAnExit перестанет ловить эту поломку. При смене walkOut_CaveHoleWiderThanThree_IsNotAnExit проверь это утверждение.");
     }
 
     @Test
@@ -102,7 +110,8 @@ class PitWalkOutTests {
         assertFalse(
                 PitWalkOut.exists(cave, RULES, 0, 0, START),
                 "проём в потолке в шесть клеток не выход: поверхность вокруг клетки выхода обязана быть местностью, "
-                        + "а не дном той же дыры (debtnav3, п.3)");
+                        + "а не дном той же дыры (debtnav3, п.3)"
+                        + " Иначе тест walkOut_CaveHoleSixWide_IsNotAnExit перестанет ловить эту поломку. При смене walkOut_CaveHoleSixWide_IsNotAnExit проверь это утверждение.");
     }
 
     @Test
@@ -115,7 +124,8 @@ class PitWalkOutTests {
         assertFalse(
                 PitWalkOut.exists(cave, RULES, 0, 0, START),
                 "проём в потолке шире области проверки поверхности не выход: дыра в потолке пещеры любого размера "
-                        + "не делает дно пещеры местностью, иначе дух перестаёт искать выход (debtnav3, п.1)");
+                        + "не делает дно пещеры местностью, иначе дух перестаёт искать выход (debtnav3, п.1)"
+                        + " При смене walkOut_CaveHoleWiderThanSurfaceSpread_IsNotAnExit проверь это утверждение.");
     }
 
     @Test
@@ -129,7 +139,8 @@ class PitWalkOutTests {
 
         assertTrue(
                 PitWalkOut.exists(cave, RULES, 0, 0, START),
-                "устье пещеры выводит на открытую местность: за краем нет потолка, и метка снимается по делу");
+                "устье пещеры выводит на открытую местность: за краем нет потолка, и метка снимается по делу"
+                        + " Иначе тест walkOut_CaveMouthToOpenSlope_IsAnExit перестанет ловить эту поломку. При смене walkOut_CaveMouthToOpenSlope_IsAnExit проверь это утверждение.");
     }
 
     @Test
@@ -138,7 +149,8 @@ class PitWalkOutTests {
 
         assertTrue(
                 PitWalkOut.exists(pit, RULES, 0, 0, START),
-                "настоящий перепад высот — подъём по склону к краю ямы — выход: дух выбирается пешком");
+                "настоящий перепад высот — подъём по склону к краю ямы — выход: дух выбирается пешком"
+                        + " Иначе тест walkOut_RampFromPitToSurface_IsAnExit перестанет ловить эту поломку. При смене walkOut_RampFromPitToSurface_IsAnExit проверь это утверждение.");
     }
 
     @Test
@@ -148,7 +160,8 @@ class PitWalkOutTests {
         assertTrue(
                 PitWalkOut.exists(pit, new WalkOutRules(PitWalkOut.EXIT_RADIUS), 0, 0, START),
                 "область проверки не меньше радиуса выхода: склон к краю ямы — выход и при минимальной области, "
-                        + "а общий буфер обязан вмещать её край без выхода за границы");
+                        + "а общий буфер обязан вмещать её край без выхода за границы"
+                        + " Иначе тест walkOut_MinimumSpreadOnRamp_IsAnExit перестанет ловить эту поломку. При смене walkOut_MinimumSpreadOnRamp_IsAnExit проверь это утверждение.");
     }
 
     @Test
@@ -164,11 +177,13 @@ class PitWalkOutTests {
                 PitWalkOut.exists(cave, new WalkOutRules(32), 0, 0, START),
                 "Предел 32 — данные walkout.json: склеп шире области проверки пока неотличим от открытой "
                         + "местности, и это известный предел, а не случайное число в коде. Если предел убирают "
-                        + "семантическим сравнением с рельефом, тест обязан измениться вместе с поведением");
+                        + "семантическим сравнением с рельефом, тест обязан измениться вместе с поведением"
+                        + " Иначе тест walkOut_WideSkylight_OutcomeFollowsConfiguredSpread перестанет ловить эту поломку. При смене walkOut_WideSkylight_OutcomeFollowsConfiguredSpread проверь это утверждение.");
         assertFalse(
                 PitWalkOut.exists(cave, new WalkOutRules(64), 0, 0, START),
                 "При области 64 поиск видит потолок за проёмом и не выдаёт дно склепа за поверхность: "
-                        + "значит число области читается из правил, а не зашито в PitWalkOut");
+                        + "значит число области читается из правил, а не зашито в PitWalkOut"
+                        + " Иначе тест walkOut_WideSkylight_OutcomeFollowsConfiguredSpread перестанет ловить эту поломку. При смене walkOut_WideSkylight_OutcomeFollowsConfiguredSpread проверь это утверждение.");
     }
 
     @Test
@@ -183,14 +198,16 @@ class PitWalkOutTests {
 
         assertFalse(
                 PitWalkOut.exists(counting, new WalkOutRules(32), 0, 0, START),
-                "арена 41×41 внутри области проверки 32 — не поверхность: за краем снова потолок пещеры");
+                "арена 41×41 внутри области проверки 32 — не поверхность: за краем снова потолок пещеры"
+                        + " Иначе тест walkOut_ManyExitNodesInClosedArena_AskSurfaceOncePerCell перестанет ловить эту поломку. При смене walkOut_ManyExitNodesInClosedArena_AskSurfaceOncePerCell проверь это утверждение.");
 
         assertEquals(
                 counting.surfaceCalls(),
                 counting.distinctSurfaceCells(),
                 "высота поверхности — факт мира, неизменный за один вызов: каждый выходной узел обязан брать её "
                         + "из общей области ямы, а не заново у мира. Повторные запросы на spread=64 (16 641 клетка "
-                        + "на узел) греют поиск и грузят сервер");
+                        + "на узел) греют поиск и грузят сервер"
+                        + " Иначе тест walkOut_ManyExitNodesInClosedArena_AskSurfaceOncePerCell перестанет ловить эту поломку. При смене walkOut_ManyExitNodesInClosedArena_AskSurfaceOncePerCell проверь это утверждение.");
     }
 
     @Test
@@ -199,12 +216,14 @@ class PitWalkOutTests {
                 IllegalStateException.class,
                 () -> WalkOutRules.parse("{\"surfaceSpread\": 3}", "walkout.json"),
                 "Битый датапак обязан падать при загрузке: иначе область проверки уже радиуса выхода "
-                        + "молча объявит любую соседнюю клетку поверхностью");
+                        + "молча объявит любую соседнюю клетку поверхностью"
+                        + " При смене parse_SpreadBelowExitRadius_RejectedWithBounds проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("Область проверки"),
                 "Ошибка обязана называть предел области и допустимый диапазон, иначе датапак не починить; "
-                        + "получено: " + error.getMessage());
+                        + "получено: " + error.getMessage()
+                        + " При смене parse_SpreadBelowExitRadius_RejectedWithBounds проверь это утверждение.");
     }
 
     private static final class Grid implements PitWalkOut.World {

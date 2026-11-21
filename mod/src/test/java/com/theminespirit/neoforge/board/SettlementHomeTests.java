@@ -14,7 +14,8 @@ class SettlementHomeTests {
         assertTrue(
                 SettlementHome.center(List.of()).isEmpty(),
                 "Поселение без домов не имеет центра: подставлять (0,64,0) нельзя, иначе dig_out и снабжение "
-                        + "идут в пустой угол мира. Как надо: отсутствие видно в Optional");
+                        + "идут в пустой угол мира. Как надо: отсутствие видно в Optional"
+                        + " При смене center_NoHomes_IsAbsent проверь это утверждение.");
     }
 
     @Test
@@ -27,10 +28,12 @@ class SettlementHomeTests {
                 Optional.of(new BlockCoord(-168, 72, -494)),
                 SettlementHome.center(List.of(first, second, third)),
                 "Центр домов — середина по каждой оси и не зависит от порядка духов: иначе цель выхода и "
-                        + "сцена меняются от порядка сущностей в мире");
+                        + "сцена меняются от порядка сущностей в мире"
+                        + " При смене center_SpiritOrder_KeepsMedianPoint проверь это утверждение.");
         assertEquals(
                 SettlementHome.center(List.of(first, second, third)),
                 SettlementHome.center(List.of(third, first, second)),
-                "Перестановка домов не двигает центр поселения: иначе дом духа и цель dig_out расходятся");
+                "Перестановка домов не двигает центр поселения: иначе дом духа и цель dig_out расходятся"
+                        + " При смене center_SpiritOrder_KeepsMedianPoint проверь это утверждение.");
     }
 }

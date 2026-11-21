@@ -74,7 +74,8 @@ class InstinctRulesProperties {
         assertEquals(
                 InstinctRules.decide(self, target, enemies, allies, Set.of(), DefenseProfileTests.PROFILE),
                 InstinctRules.decide(self, target, enemies, allies, Set.of(), DefenseProfileTests.PROFILE),
-                "Стойка детерминирована: иначе боец мечется между стойками на одной обстановке");
+                "Стойка детерминирована: иначе боец мечется между стойками на одной обстановке"
+                        + " При смене decide_AnyInput_Deterministic проверь это утверждение.");
     }
 
     @Property
@@ -87,8 +88,11 @@ class InstinctRulesProperties {
                 InstinctRules.decide(self, target, enemies, allies, Set.of(), DefenseProfileTests.PROFILE);
 
         decision.holdDistance()
-                .ifPresent(distance ->
-                        assertTrue(distance > 0, "Держание положительно: иначе отскок ведёт внутрь радиуса взрыва"));
+                .ifPresent(
+                        distance -> assertTrue(
+                                distance > 0,
+                                "Держание положительно: иначе отскок ведёт внутрь радиуса взрыва"
+                                        + " При смене decide_AnyInput_HoldDistancePositiveWhenPresent проверь это утверждение."));
     }
 
     @Property
@@ -102,7 +106,9 @@ class InstinctRulesProperties {
 
         decision.handOff()
                 .ifPresent(next -> assertTrue(
-                        !next.equals(self.id()), "Приёмник — не уходящий: иначе передача цели замкнётся на раненого"));
+                        !next.equals(self.id()),
+                        "Приёмник — не уходящий: иначе передача цели замкнётся на раненого"
+                                + " При смене decide_AnyInput_HandOffNeverSelf проверь это утверждение."));
     }
 
     @Property
@@ -114,7 +120,10 @@ class InstinctRulesProperties {
         InstinctDecision decision =
                 InstinctRules.decide(self, target, enemies, allies, Set.of(), DefenseProfileTests.PROFILE);
 
-        assertTrue(!decision.reason().isBlank(), "Причина решения непуста: иначе trace стойки не объяснит приказ");
+        assertTrue(
+                !decision.reason().isBlank(),
+                "Причина решения непуста: иначе trace стойки не объяснит приказ"
+                        + " При смене decide_AnyInput_ReasonNonBlank проверь это утверждение.");
     }
 
     @Property
@@ -132,7 +141,8 @@ class InstinctRulesProperties {
         assertEquals(
                 CombatStance.STRIKE_AND_RETREAT,
                 decision.stance(),
-                "Здоровый мечник против крипера идёт наскоком: иначе либо стоит впритык, либо не бьёт вовсе");
+                "Здоровый мечник против крипера идёт наскоком: иначе либо стоит впритык, либо не бьёт вовсе"
+                        + " При смене decide_HealthyMeleeVsCreeper_StrikeAndRetreat проверь это утверждение.");
     }
 
     private static List<DefenderCapability> distinctIds(List<DefenderCapability> allies) {

@@ -39,11 +39,13 @@ class TransferStuckLiveTests {
         assertTrue(
                 restored.stuck().of(spirit, restart).isEmpty(),
                 "Метка прошлой сессии старше срока снимается при загрузке, а не переносится на тик "
-                        + "перезапуска: иначе она живёт вечно, и дух не получает работы (observe25 B1)");
+                        + "перезапуска: иначе она живёт вечно, и дух не получает работы (observe25 B1)"
+                        + " При смене restore_StuckMarkOldSession_DroppedInsteadOfRebased проверь это утверждение.");
         assertTrue(
                 restored.stuck().drainChanges().stream()
                         .anyMatch(change -> !change.marked() && change.reason().contains("до загрузки")),
-                "Снятие устаревшей метки при загрузке объяснено в журнале");
+                "Снятие устаревшей метки при загрузке объяснено в журнале"
+                        + " Иначе тест restore_StuckMarkOldSession_DroppedInsteadOfRebased перестанет ловить эту поломку. При смене restore_StuckMarkOldSession_DroppedInsteadOfRebased проверь это утверждение.");
     }
 
     @Test
@@ -64,7 +66,11 @@ class TransferStuckLiveTests {
                 List.of(),
                 Map.of(),
                 TransferTicket.modifiers(free, "minecraft:stick", 1, null));
-        assertEquals(BoardOutcome.ACCEPTED, board.submit(transfer), "Живой перенос со склада принимается доской");
+        assertEquals(
+                BoardOutcome.ACCEPTED,
+                board.submit(transfer),
+                "Живой перенос со склада принимается доской"
+                        + " Иначе тест transfer_StuckAssignee_FreeSpiritCarries перестанет ловить эту поломку. При смене transfer_StuckAssignee_FreeSpiritCarries проверь это утверждение.");
         board.stuck().mark(stuck, now);
         List<DispatchRound.Candidate> candidates = List.of(candidate(stuck, "spirit-3"), candidate(free, "spirit-2"));
 
@@ -72,16 +78,23 @@ class TransferStuckLiveTests {
 
         assertTrue(
                 chosen.isPresent(),
-                "Перенос, чей держатель застрял, передаётся свободному духу, а не стоит вечно " + "(observe16 N9)");
-        assertEquals(free, chosen.get().id(), "Свободный дух spirit-2 несёт перенос вместо застрявшего spirit-3");
+                "Перенос, чей держатель застрял, передаётся свободному духу, а не стоит вечно " + "(observe16 N9)"
+                        + " Иначе тест transfer_StuckAssignee_FreeSpiritCarries перестанет ловить эту поломку. При смене transfer_StuckAssignee_FreeSpiritCarries проверь это утверждение.");
+        assertEquals(
+                free,
+                chosen.get().id(),
+                "Свободный дух spirit-2 несёт перенос вместо застрявшего spirit-3"
+                        + " Иначе тест transfer_StuckAssignee_FreeSpiritCarries перестанет ловить эту поломку. При смене transfer_StuckAssignee_FreeSpiritCarries проверь это утверждение.");
         assertEquals(
                 BoardOutcome.CLAIMED,
                 board.claim(transfer.id(), free, now),
-                "Claim переноса свободным духом проходит через путь доски");
+                "Claim переноса свободным духом проходит через путь доски"
+                        + " Иначе тест transfer_StuckAssignee_FreeSpiritCarries перестанет ловить эту поломку. При смене transfer_StuckAssignee_FreeSpiritCarries проверь это утверждение.");
         assertEquals(
                 Optional.of(free),
                 board.holderOf(transfer.id()),
-                "Держателем переноса становится фактический носитель, а не старый застрявший дух");
+                "Держателем переноса становится фактический носитель, а не старый застрявший дух"
+                        + " Иначе тест transfer_StuckAssignee_FreeSpiritCarries перестанет ловить эту поломку. При смене transfer_StuckAssignee_FreeSpiritCarries проверь это утверждение.");
     }
 
     private static DispatchRound.Candidate candidate(UUID id, String name) {

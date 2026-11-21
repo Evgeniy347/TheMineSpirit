@@ -27,25 +27,33 @@ class TownPlannerLiveTests {
         assertFalse(
                 partial.loaded(),
                 "Колонка без загруженного чанка делает рельеф неготовым: план по недогруженному рельефу "
-                        + "разметил бы один столб");
+                        + "разметил бы один столб"
+                        + " Иначе тест terrain_UnloadedColumn_IsNotReadyForPlan перестанет ловить эту поломку. При смене terrain_UnloadedColumn_IsNotReadyForPlan проверь это утверждение.");
         assertTrue(
                 grid(ANCHOR, RULES.ground().probeRadius(), 70).loaded(),
-                "Рельеф без пустых колонок готов: ожидание загрузки не задерживает первый план");
+                "Рельеф без пустых колонок готов: ожидание загрузки не задерживает первый план"
+                        + " Иначе тест terrain_UnloadedColumn_IsNotReadyForPlan перестанет ловить эту поломку. При смене terrain_UnloadedColumn_IsNotReadyForPlan проверь это утверждение.");
     }
 
     @Test
     void laidWith_OldProbeRadius_RejectsSavedPlan() {
         TownPlan old = TownPlanner.plan(grid(ANCHOR, 64, 70), ANCHOR, RULES, STAGES);
 
-        assertEquals(129, old.region().width(), "Снимок плана со старым обмером 64 — 129 колонок по стороне");
+        assertEquals(
+                129,
+                old.region().width(),
+                "Снимок плана со старым обмером 64 — 129 колонок по стороне"
+                        + " Иначе тест laidWith_OldProbeRadius_RejectsSavedPlan перестанет ловить эту поломку. При смене laidWith_OldProbeRadius_RejectsSavedPlan проверь это утверждение.");
         assertFalse(
                 TownPlanner.laidWith(old, RULES),
                 "План, размеченный обмером 64, не принимается при обмере "
-                        + RULES.ground().probeRadius() + ": иначе склад и вся этапная стройка остались бы без места");
+                        + RULES.ground().probeRadius() + ": иначе склад и вся этапная стройка остались бы без места"
+                        + " При смене laidWith_OldProbeRadius_RejectsSavedPlan проверь это утверждение.");
         TownPlan fresh = TownPlanner.plan(grid(ANCHOR, RULES.ground().probeRadius(), 70), ANCHOR, RULES, STAGES);
         assertTrue(
                 TownPlanner.laidWith(fresh, RULES),
-                "План по текущим правилам обмера считается своим: пересборка на каждом тике не нужна");
+                "План по текущим правилам обмера считается своим: пересборка на каждом тике не нужна"
+                        + " Иначе тест laidWith_OldProbeRadius_RejectsSavedPlan перестанет ловить эту поломку. При смене laidWith_OldProbeRadius_RejectsSavedPlan проверь это утверждение.");
     }
 
     @Test
@@ -54,13 +62,17 @@ class TownPlannerLiveTests {
 
         assertTrue(
                 live.placement("storage").isEmpty(),
-                "Живой план observe18 без лота storage: именно поэтому этап 2 просил склад у стратега");
+                "Живой план observe18 без лота storage: именно поэтому этап 2 просил склад у стратега"
+                        + " Иначе тест savedLivePlan_StorageUnplaced_IsStaleForCurrentRules перестанет ловить эту поломку. При смене savedLivePlan_StorageUnplaced_IsStaleForCurrentRules проверь это утверждение.");
         assertTrue(
-                live.unplaced().contains("storage"), "Живой план держит storage в непоместившихся: " + live.unplaced());
+                live.unplaced().contains("storage"),
+                "Живой план держит storage в непоместившихся: " + live.unplaced()
+                        + " Иначе тест savedLivePlan_StorageUnplaced_IsStaleForCurrentRules перестанет ловить эту поломку. При смене savedLivePlan_StorageUnplaced_IsStaleForCurrentRules проверь это утверждение.");
         assertFalse(
                 TownPlanner.laidWith(live, RULES),
                 "Живой план размечен обмером 64 (129 колонок), а правила требуют "
-                        + (2 * RULES.ground().probeRadius() + 1) + ": план обязан пересобраться");
+                        + (2 * RULES.ground().probeRadius() + 1) + ": план обязан пересобраться"
+                        + " Иначе тест savedLivePlan_StorageUnplaced_IsStaleForCurrentRules перестанет ловить эту поломку. При смене savedLivePlan_StorageUnplaced_IsStaleForCurrentRules проверь это утверждение.");
     }
 
     @Test
@@ -70,7 +82,8 @@ class TownPlannerLiveTests {
         assertTrue(
                 replanned.placement("storage").isPresent(),
                 "На живом рельефе при обмере " + RULES.ground().probeRadius()
-                        + " склад обязан получить лот, не поместилось " + replanned.unplaced());
+                        + " склад обязан получить лот, не поместилось " + replanned.unplaced()
+                        + " Иначе тест savedLiveTerrain_ReplanWithCurrentRules_PlacesStorage перестанет ловить эту поломку. При смене savedLiveTerrain_ReplanWithCurrentRules_PlacesStorage проверь это утверждение.");
     }
 
     @Test
@@ -90,7 +103,8 @@ class TownPlannerLiveTests {
                 missing,
                 "На живом рельефе при обмере " + RULES.ground().probeRadius()
                         + " каждая обязательная постройка этапов 1–4 обязана получить лот: иначе этап не закроется. "
-                        + "Не поместилось " + missing);
+                        + "Не поместилось " + missing
+                        + " При смене savedLiveTerrain_ReplanWithCurrentRules_PlacesAllStageRequirements проверь это утверждение.");
     }
 
     private static TownPlan replannedLive() throws Exception {
@@ -103,13 +117,18 @@ class TownPlannerLiveTests {
         assertEquals(
                 2 * RULES.ground().probeRadius() + 1,
                 side,
-                "Живой рельеф снят текущим обмером " + RULES.ground().probeRadius() + ": иначе проверка не о том мире");
+                "Живой рельеф снят текущим обмером " + RULES.ground().probeRadius() + ": иначе проверка не о том мире"
+                        + " При смене savedLiveTerrain_ReplanWithCurrentRules_PlacesAllStageRequirements проверь это утверждение.");
         int[] heights = new int[side * side];
         BitSet wet = new BitSet(side * side);
         for (int rz = 0; rz < side; rz++) {
             String[] feet = lines.get(1 + rz).split(" ", -1);
             String water = lines.get(1 + side + rz);
-            assertEquals(side, feet.length, "Строка высот живого рельефа " + rz + " не одной длины с обмером");
+            assertEquals(
+                    side,
+                    feet.length,
+                    "Строка высот живого рельефа " + rz + " не одной длины с обмером"
+                            + " Иначе тест savedLiveTerrain_ReplanWithCurrentRules_PlacesAllStageRequirements перестанет ловить эту поломку. При смене savedLiveTerrain_ReplanWithCurrentRules_PlacesAllStageRequirements проверь это утверждение.");
             for (int rx = 0; rx < side; rx++) {
                 int index = TerrainGrid.index(radius, rx - radius, rz - radius);
                 heights[index] = Integer.parseInt(feet[rx]);
@@ -126,20 +145,29 @@ class TownPlannerLiveTests {
         Placement storage = plan.placement("storage")
                 .orElseThrow(
                         () -> new AssertionError("Склад этапа 2 без лота в плане: не поместилось " + plan.unplaced()));
-        assertEquals(2, storage.stage(), "Склад — постройка этапа 2: место берётся из набора этапа");
+        assertEquals(
+                2,
+                storage.stage(),
+                "Склад — постройка этапа 2: место берётся из набора этапа"
+                        + " Иначе тест plan_FlatLand_StorageLotPlacedInsidePlot перестанет ловить эту поломку. При смене plan_FlatLand_StorageLotPlacedInsidePlot проверь это утверждение.");
         for (ColumnMask.Cell cell : storage.mask().cells()) {
             assertTrue(
                     plan.onPlot(cell.x(), cell.z()),
-                    "Клетка " + cell + " склада вне контура поселения: склад стоял бы за оградой");
+                    "Клетка " + cell + " склада вне контура поселения: склад стоял бы за оградой"
+                            + " Иначе тест plan_FlatLand_StorageLotPlacedInsidePlot перестанет ловить эту поломку. При смене plan_FlatLand_StorageLotPlacedInsidePlot проверь это утверждение.");
             assertFalse(
                     plan.streets().contains(cell.x(), cell.z()),
-                    "Клетка " + cell + " склада лежит на улице: улица — общий проход");
+                    "Клетка " + cell + " склада лежит на улице: улица — общий проход"
+                            + " Иначе тест plan_FlatLand_StorageLotPlacedInsidePlot перестанет ловить эту поломку. При смене plan_FlatLand_StorageLotPlacedInsidePlot проверь это утверждение.");
         }
     }
 
     private static String fixture(String resource) throws Exception {
         try (InputStream in = TownPlannerLiveTests.class.getResourceAsStream(resource)) {
-            assertTrue(in != null, "Нет фикстуры " + resource);
+            assertTrue(
+                    in != null,
+                    "Нет фикстуры " + resource
+                            + " Иначе тест plan_FlatLand_StorageLotPlacedInsidePlot перестанет ловить эту поломку. При смене plan_FlatLand_StorageLotPlacedInsidePlot проверь это утверждение.");
             return new String(in.readAllBytes(), StandardCharsets.UTF_8);
         }
     }

@@ -13,22 +13,62 @@ class StageConfirmationTests {
     void observe_SingleBadAudit_KeepsConfirmedStage() {
         StageConfirmation confirmation = new StageConfirmation(2);
 
-        assertEquals(2, confirmation.observe(1), "Один сбой аудита не откатывает этап: мир мог не загрузиться");
-        assertEquals(2, confirmation.stage(), "Подтверждённый этап остаётся прежним");
-        assertEquals(1, confirmation.candidate(), "Сбой запомнен как кандидат, а не потерян");
+        assertEquals(
+                2,
+                confirmation.observe(1),
+                "Один сбой аудита не откатывает этап: мир мог не загрузиться"
+                        + " Иначе тест observe_SingleBadAudit_KeepsConfirmedStage перестанет ловить эту поломку. При смене observe_SingleBadAudit_KeepsConfirmedStage проверь это утверждение.");
+        assertEquals(
+                2,
+                confirmation.stage(),
+                "Подтверждённый этап остаётся прежним"
+                        + " Иначе тест observe_SingleBadAudit_KeepsConfirmedStage перестанет ловить эту поломку. При смене observe_SingleBadAudit_KeepsConfirmedStage проверь это утверждение.");
+        assertEquals(
+                1,
+                confirmation.candidate(),
+                "Сбой запомнен как кандидат, а не потерян"
+                        + " Иначе тест observe_SingleBadAudit_KeepsConfirmedStage перестанет ловить эту поломку. При смене observe_SingleBadAudit_KeepsConfirmedStage проверь это утверждение.");
     }
 
     @Test
     void observe_ThreeBadAudits_RollsStageBack() {
         StageConfirmation confirmation = new StageConfirmation(2);
 
-        assertEquals(2, confirmation.observe(1), "Первый плохой аудит этап не откатывает");
-        assertEquals(2, confirmation.observe(1), "Второй плохой аудит этап не откатывает");
-        assertEquals(1, confirmation.observe(1), "Третий одинаковый аудит — граница подтверждения отката");
-        assertEquals(1, confirmation.stage(), "Этап откатился на подтверждённый мир");
-        assertEquals(1, confirmation.candidate(), "Кандидат после отката совпадает с новым этапом");
-        assertEquals(0, confirmation.streak(), "Подтверждённый откат начинает счёт подтверждений заново");
-        assertEquals(1, confirmation.observe(1), "Откат держится, пока мир не восстановлен");
+        assertEquals(
+                2,
+                confirmation.observe(1),
+                "Первый плохой аудит этап не откатывает"
+                        + " Иначе тест observe_ThreeBadAudits_RollsStageBack перестанет ловить эту поломку. При смене observe_ThreeBadAudits_RollsStageBack проверь это утверждение.");
+        assertEquals(
+                2,
+                confirmation.observe(1),
+                "Второй плохой аудит этап не откатывает"
+                        + " Иначе тест observe_ThreeBadAudits_RollsStageBack перестанет ловить эту поломку. При смене observe_ThreeBadAudits_RollsStageBack проверь это утверждение.");
+        assertEquals(
+                1,
+                confirmation.observe(1),
+                "Третий одинаковый аудит — граница подтверждения отката"
+                        + " Иначе тест observe_ThreeBadAudits_RollsStageBack перестанет ловить эту поломку. При смене observe_ThreeBadAudits_RollsStageBack проверь это утверждение.");
+        assertEquals(
+                1,
+                confirmation.stage(),
+                "Этап откатился на подтверждённый мир"
+                        + " Иначе тест observe_ThreeBadAudits_RollsStageBack перестанет ловить эту поломку. При смене observe_ThreeBadAudits_RollsStageBack проверь это утверждение.");
+        assertEquals(
+                1,
+                confirmation.candidate(),
+                "Кандидат после отката совпадает с новым этапом"
+                        + " Иначе тест observe_ThreeBadAudits_RollsStageBack перестанет ловить эту поломку. При смене observe_ThreeBadAudits_RollsStageBack проверь это утверждение.");
+        assertEquals(
+                0,
+                confirmation.streak(),
+                "Подтверждённый откат начинает счёт подтверждений заново"
+                        + " Иначе тест observe_ThreeBadAudits_RollsStageBack перестанет ловить эту поломку. При смене observe_ThreeBadAudits_RollsStageBack проверь это утверждение.");
+        assertEquals(
+                1,
+                confirmation.observe(1),
+                "Откат держится, пока мир не восстановлен"
+                        + " Иначе тест observe_ThreeBadAudits_RollsStageBack перестанет ловить эту поломку. При смене observe_ThreeBadAudits_RollsStageBack проверь это утверждение.");
     }
 
     @Test
@@ -41,18 +81,42 @@ class StageConfirmationTests {
         confirmation.observe(1);
         confirmation.observe(1);
 
-        assertEquals(2, confirmation.stage(), "Сбой аудита после хорошего начинает счёт заново");
-        assertEquals(2, confirmation.streak(), "Два сбоя подряд ещё не смена этапа");
+        assertEquals(
+                2,
+                confirmation.stage(),
+                "Сбой аудита после хорошего начинает счёт заново"
+                        + " Иначе тест observe_GoodAuditBetweenBad_ResetsStreak перестанет ловить эту поломку. При смене observe_GoodAuditBetweenBad_ResetsStreak проверь это утверждение.");
+        assertEquals(
+                2,
+                confirmation.streak(),
+                "Два сбоя подряд ещё не смена этапа"
+                        + " Иначе тест observe_GoodAuditBetweenBad_ResetsStreak перестанет ловить эту поломку. При смене observe_GoodAuditBetweenBad_ResetsStreak проверь это утверждение.");
     }
 
     @Test
     void observe_HigherStage_WaitsForConfirmations() {
         StageConfirmation confirmation = new StageConfirmation(1);
 
-        assertEquals(1, confirmation.observe(2), "Первый аудит не открывает этап: нужен ряд подтверждений");
-        assertEquals(1, confirmation.observe(2), "Второй аудит ещё не открывает этап");
-        assertEquals(2, confirmation.observe(2), "Третий аудит подряд открывает этап");
-        assertEquals(2, confirmation.stage(), "Этап растёт только по подтверждённому аудиту мира");
+        assertEquals(
+                1,
+                confirmation.observe(2),
+                "Первый аудит не открывает этап: нужен ряд подтверждений"
+                        + " Иначе тест observe_HigherStage_WaitsForConfirmations перестанет ловить эту поломку. При смене observe_HigherStage_WaitsForConfirmations проверь это утверждение.");
+        assertEquals(
+                1,
+                confirmation.observe(2),
+                "Второй аудит ещё не открывает этап"
+                        + " Иначе тест observe_HigherStage_WaitsForConfirmations перестанет ловить эту поломку. При смене observe_HigherStage_WaitsForConfirmations проверь это утверждение.");
+        assertEquals(
+                2,
+                confirmation.observe(2),
+                "Третий аудит подряд открывает этап"
+                        + " Иначе тест observe_HigherStage_WaitsForConfirmations перестанет ловить эту поломку. При смене observe_HigherStage_WaitsForConfirmations проверь это утверждение.");
+        assertEquals(
+                2,
+                confirmation.stage(),
+                "Этап растёт только по подтверждённому аудиту мира"
+                        + " Иначе тест observe_HigherStage_WaitsForConfirmations перестанет ловить эту поломку. При смене observe_HigherStage_WaitsForConfirmations проверь это утверждение.");
     }
 
     @Test
@@ -63,15 +127,24 @@ class StageConfirmationTests {
         StageWorld built = new SetWorld(first);
         StageConfirmation confirmation = new StageConfirmation(1);
 
-        assertEquals(1, confirmation.gate(built).stage(), "Первый аудит держит прежний этап");
+        assertEquals(
+                1,
+                confirmation.gate(built).stage(),
+                "Первый аудит держит прежний этап"
+                        + " Иначе тест gate_WorldMovesStage_ReturnsGateOfConfirmedStage перестанет ловить эту поломку. При смене gate_WorldMovesStage_ReturnsGateOfConfirmedStage проверь это утверждение.");
         confirmation.gate(built);
         StageGate gate = confirmation.gate(built);
 
-        assertEquals(2, gate.stage(), "Подтверждённый аудит открывает второй этап");
+        assertEquals(
+                2,
+                gate.stage(),
+                "Подтверждённый аудит открывает второй этап"
+                        + " Иначе тест gate_WorldMovesStage_ReturnsGateOfConfirmedStage перестанет ловить эту поломку. При смене gate_WorldMovesStage_ReturnsGateOfConfirmedStage проверь это утверждение.");
         assertEquals(
                 SettlementStage.missing(built, 2),
                 gate.missing(),
-                "Гейт подтверждённого этапа называет остаток второго этапа по тому же миру");
+                "Гейт подтверждённого этапа называет остаток второго этапа по тому же миру"
+                        + " Иначе тест gate_WorldMovesStage_ReturnsGateOfConfirmedStage перестанет ловить эту поломку. При смене gate_WorldMovesStage_ReturnsGateOfConfirmedStage проверь это утверждение.");
     }
 
     @Test
@@ -79,7 +152,8 @@ class StageConfirmationTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new StageConfirmation(1, 0),
-                "Нулевое подтверждение означало бы смену этапа на каждом тике — запрещено");
+                "Нулевое подтверждение означало бы смену этапа на каждом тике — запрещено"
+                        + " Иначе тест constructor_WithoutConfirmations_Rejected перестанет ловить эту поломку. При смене constructor_WithoutConfirmations_Rejected проверь это утверждение.");
     }
 
     private record SetWorld(Set<String> built) implements StageWorld {

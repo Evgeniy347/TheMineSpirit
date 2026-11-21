@@ -23,11 +23,13 @@ class BoardTicketViewTests {
                 List.of("first", "second"),
                 board.tickets().stream().map(BoardTicket::id).toList(),
                 "Неотсортированный вид отдаёт задания в порядке постановки: счёт открытых "
-                        + "не платит за сортировку очереди на каждом раунде");
+                        + "не платит за сортировку очереди на каждом раунде"
+                        + " Иначе тест tickets_SubmissionOrder_IsNotQueueOrder перестанет ловить эту поломку. При смене tickets_SubmissionOrder_IsNotQueueOrder проверь это утверждение.");
         assertEquals(
                 List.of("second", "first"),
                 board.all().stream().map(BoardTicket::id).toList(),
-                "Очередь по-прежнему сортируется по приоритету: неотсортированный вид не подменяет её");
+                "Очередь по-прежнему сортируется по приоритету: неотсортированный вид не подменяет её"
+                        + " Иначе тест tickets_SubmissionOrder_IsNotQueueOrder перестанет ловить эту поломку. При смене tickets_SubmissionOrder_IsNotQueueOrder проверь это утверждение.");
     }
 
     @Test
@@ -49,11 +51,13 @@ class BoardTicketViewTests {
                         BoardTicket.ALWAYS_CAUSE,
                         List.of(),
                         Map.of())),
-                "Вид доски только для чтения: иначе счётчик открытых заданий менял бы доску");
+                "Вид доски только для чтения: иначе счётчик открытых заданий менял бы доску"
+                        + " При смене tickets_ReturnedView_DoesNotChangeBoard проверь это утверждение.");
         assertEquals(
                 List.of("only"),
                 board.tickets().stream().map(BoardTicket::id).toList(),
-                "Вид доски остаётся прежним после попытки изменить его извне");
+                "Вид доски остаётся прежним после попытки изменить его извне"
+                        + " Иначе тест tickets_ReturnedView_DoesNotChangeBoard перестанет ловить эту поломку. При смене tickets_ReturnedView_DoesNotChangeBoard проверь это утверждение.");
     }
 
     @Test
@@ -77,7 +81,8 @@ class BoardTicketViewTests {
                 0,
                 clockReads.get(),
                 "Перебор заданий не сортирует очередь: очередь сортирует только all(), а перебор берёт "
-                        + "tickets() — иначе каждый цикл платит за порядок, который ему не нужен");
+                        + "tickets() — иначе каждый цикл платит за порядок, который ему не нужен"
+                        + " При смене iterationViews_UnsortedQueue_DoNotPayForOrder проверь это утверждение.");
     }
 
     private static void submit(Board board, String id, int priority) {
@@ -93,6 +98,7 @@ class BoardTicketViewTests {
                         BoardTicket.ALWAYS_CAUSE,
                         List.of(),
                         Map.of())),
-                "Постановка " + id + " принята доской");
+                "Постановка " + id + " принята доской"
+                        + " Иначе тест submit перестанет ловить эту поломку. При смене submit проверь это утверждение. Иначе поломка пройдёт незамеченной в прогоне.");
     }
 }

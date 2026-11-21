@@ -26,7 +26,8 @@ class HealthRoutesTests {
                         + ",\"threshold_ms\":180000,\"debug_paused\":false}",
                 json,
                 "GET /v1/health — контракт сторожа зависания: он берёт verdict и age_ms, чтобы отличить живой тик "
-                        + "от зависания без тяжёлого /v1/bots; смена ключей сломает снятие дампа и перезапуск");
+                        + "от зависания без тяжёлого /v1/bots; смена ключей сломает снятие дампа и перезапуск"
+                        + " При смене health_StaleTick_ReportsHungJson проверь это утверждение.");
     }
 
     @Test
@@ -39,7 +40,8 @@ class HealthRoutesTests {
                 response.body().contains("\"verdict\":\"hung\"")
                         && response.body().contains("\"age_ms\":300000"),
                 "Маршрут обязан считать возраст от времени запроса, а не от зашитого в снимке значения: "
-                        + "иначе после долгого аптайма health отдаёт неверный возраст. Тело: " + response.body());
+                        + "иначе после долгого аптайма health отдаёт неверный возраст. Тело: " + response.body()
+                        + " При смене health_LiveGateway_ReportsHungAgeFromRequestTime проверь это утверждение.");
     }
 
     @Test
@@ -52,7 +54,8 @@ class HealthRoutesTests {
                 response.body().contains("\"verdict\":\"unknown\"")
                         && response.body().contains("\"age_ms\":-1"),
                 "До первого тика health обязан отвечать unknown с age_ms -1: иначе сторож примет старт сервера "
-                        + "за зависание и перезапустит его по кругу. Тело: " + response.body());
+                        + "за зависание и перезапустит его по кругу. Тело: " + response.body()
+                        + " При смене health_NoTickYet_ReportsUnknownWithMinusOneAge проверь это утверждение.");
     }
 
     @Test
@@ -66,7 +69,8 @@ class HealthRoutesTests {
                         + "\"debug_paused\":true}",
                 response.body(),
                 "При активном замке живой отладки health обязан отвечать debug: сторож не трогает сервер, "
-                        + "остановленный на брейкпоинте, даже если тик стоит");
+                        + "остановленный на брейкпоинте, даже если тик стоит"
+                        + " Иначе тест health_DebugLeaseHeld_ReportsDebug перестанет ловить эту поломку. При смене health_DebugLeaseHeld_ReportsDebug проверь это утверждение.");
     }
 
     @Test
@@ -77,7 +81,8 @@ class HealthRoutesTests {
                 404,
                 response.status(),
                 "Лишний сегмент после /v1/health — неизвестный путь: иначе клиент получит health вместо ошибки "
-                        + "и не заметит опечатку в адресе");
+                        + "и не заметит опечатку в адресе"
+                        + " При смене health_UnknownPath_ReturnsNotFound проверь это утверждение.");
     }
 
     @Test
@@ -89,6 +94,7 @@ class HealthRoutesTests {
                 routes.stream()
                         .map(route -> route.method() + " " + route.pattern())
                         .toList(),
-                "Health — только чтение: POST/DELETE на /v1/health обязаны получать 405, а не побочный эффект");
+                "Health — только чтение: POST/DELETE на /v1/health обязаны получать 405, а не побочный эффект"
+                        + " Иначе тест routes_HealthRegistered_OnlyGetAllowed перестанет ловить эту поломку. При смене routes_HealthRegistered_OnlyGetAllowed проверь это утверждение.");
     }
 }

@@ -18,6 +18,7 @@ class GraphRecipesFreshTests {
         assertTrue(
                 committed.equals(fresh),
                 "graph-recipes.json устарел: закоммиченный файл не совпадает со свежей выгрузкой ванильных рецептов. "
-                        + "Граф не увидит новые рецепты. Запусти ./gradlew graphExport и закоммить файл.");
+                        + "Граф не увидит новые рецепты. Запусти ./gradlew graphExport и закоммить файл."
+                        + " Иначе тест committed_Recipes_MatchFreshExport перестанет ловить эту поломку. При смене committed_Recipes_MatchFreshExport проверь это утверждение.");
     }
 }

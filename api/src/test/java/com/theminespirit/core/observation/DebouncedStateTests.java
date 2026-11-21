@@ -13,7 +13,8 @@ class DebouncedStateTests {
         assertEquals(
                 "вода",
                 state.update("вода", 10).orElseThrow(),
-                "Первое состояние печатается сразу: иначе вход духа в воду теряется за выдержкой");
+                "Первое состояние печатается сразу: иначе вход духа в воду теряется за выдержкой"
+                        + " При смене update_FirstState_IsReturnedImmediately проверь это утверждение.");
     }
 
     @Test
@@ -21,9 +22,19 @@ class DebouncedStateTests {
         DebouncedState state = new DebouncedState(40);
         state.update("вода", 10);
 
-        assertTrue(state.update("берег", 11).isEmpty(), "Короткое всплытие на берег — ещё не смена состояния");
-        assertTrue(state.update("вода", 12).isEmpty(), "Возврат в воду до выдержки не печатается второй раз");
-        assertEquals("вода", state.current(), "Текущее состояние остаётся прежним: лог не дрожит на каждом всплытии");
+        assertTrue(
+                state.update("берег", 11).isEmpty(),
+                "Короткое всплытие на берег — ещё не смена состояния"
+                        + " Иначе тест update_TransientFlip_IsIgnored перестанет ловить эту поломку. При смене update_TransientFlip_IsIgnored проверь это утверждение.");
+        assertTrue(
+                state.update("вода", 12).isEmpty(),
+                "Возврат в воду до выдержки не печатается второй раз"
+                        + " Иначе тест update_TransientFlip_IsIgnored перестанет ловить эту поломку. При смене update_TransientFlip_IsIgnored проверь это утверждение.");
+        assertEquals(
+                "вода",
+                state.current(),
+                "Текущее состояние остаётся прежним: лог не дрожит на каждом всплытии"
+                        + " Иначе тест update_TransientFlip_IsIgnored перестанет ловить эту поломку. При смене update_TransientFlip_IsIgnored проверь это утверждение.");
     }
 
     @Test
@@ -35,7 +46,8 @@ class DebouncedStateTests {
         assertEquals(
                 "берег",
                 state.update("берег", 60).orElseThrow(),
-                "Состояние, продержавшееся выдержку, печатается: выход из воды виден в логе");
+                "Состояние, продержавшееся выдержку, печатается: выход из воды виден в логе"
+                        + " Иначе тест update_HeldFlip_IsReturned перестанет ловить эту поломку. При смене update_HeldFlip_IsReturned проверь это утверждение.");
     }
 
     @Test
@@ -43,7 +55,10 @@ class DebouncedStateTests {
         DebouncedState state = new DebouncedState(40);
         state.update("вода", 10);
 
-        assertTrue(state.update("вода", 100).isEmpty(), "То же состояние не повторяется: сводка идёт по своему сроку");
+        assertTrue(
+                state.update("вода", 100).isEmpty(),
+                "То же состояние не повторяется: сводка идёт по своему сроку"
+                        + " Иначе тест update_SameState_IsSilent перестанет ловить эту поломку. При смене update_SameState_IsSilent проверь это утверждение.");
     }
 
     @Test
@@ -60,6 +75,7 @@ class DebouncedStateTests {
                 1,
                 reported,
                 "Дух на границе воды дрожит каждый тик: [pos] не должен печатать это как смену "
-                        + "состояния сотни раз (observe18 B10, живая проверка)");
+                        + "состояния сотни раз (observe18 B10, живая проверка)"
+                        + " Иначе тест update_FlappingAtBoundary_ReportsOnlyFirstState перестанет ловить эту поломку. При смене update_FlappingAtBoundary_ReportsOnlyFirstState проверь это утверждение.");
     }
 }

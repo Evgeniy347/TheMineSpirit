@@ -41,16 +41,19 @@ class ChestMoveLiveTests {
                 List.of("withdraw", "goto", "deposit"),
                 calls.stream().map(ScriptCall::script).toList(),
                 "перенос из старого сундука идёт к двору и только потом ищет свободный сундук: закреплённый "
-                        + "при постановке сундук к сдаче уже полон (observe10 A3)");
+                        + "при постановке сундук к сдаче уже полон (observe10 A3)"
+                        + " Иначе тест liveMoveTicket_DepositsIntoFreeYardChest_NotIntoPinnedFullChest перестанет ловить эту поломку. При смене liveMoveTicket_DepositsIntoFreeYardChest_NotIntoPinnedFullChest проверь это утверждение.");
         assertEquals(
                 Map.of("x", yard.x(), "y", yard.y(), "z", yard.z()),
                 calls.get(1).params(),
-                "переход ведёт к сундуку двора, а не в пустую клетку");
+                "переход ведёт к сундуку двора, а не в пустую клетку"
+                        + " Иначе тест liveMoveTicket_DepositsIntoFreeYardChest_NotIntoPinnedFullChest перестанет ловить эту поломку. При смене liveMoveTicket_DepositsIntoFreeYardChest_NotIntoPinnedFullChest проверь это утверждение.");
         assertEquals(
                 "yard",
                 calls.get(2).params().get("container"),
                 "deposit выбирает свободный сундук двора в момент сдачи; фиксированный полный сундук и дал "
-                        + "«контейнер полон: перенесено 0 из " + count + "»");
+                        + "«контейнер полон: перенесено 0 из " + count + "»"
+                        + " Иначе тест liveMoveTicket_DepositsIntoFreeYardChest_NotIntoPinnedFullChest перестанет ловить эту поломку. При смене liveMoveTicket_DepositsIntoFreeYardChest_NotIntoPinnedFullChest проверь это утверждение.");
     }
 
     @Test
@@ -67,11 +70,12 @@ class ChestMoveLiveTests {
         IllegalArgumentException refused = assertThrows(
                 IllegalArgumentException.class,
                 () -> TicketPlans.plan(BoardCase.SUPPLY_SITE, target),
-                "перенос из сундука -92,67,-113 не строится: до двора около 400 блоков через пещеры "
-                        + "(observe11 N2)");
+                "перенос из сундука -92,67,-113 не строится: до двора около 400 блоков через пещеры " + "(observe11 N2)"
+                        + " Иначе тест liveFarMoveTicket_RefusedByDistanceLimit_NotSentAcrossCaves перестанет ловить эту поломку. При смене liveFarMoveTicket_RefusedByDistanceLimit_NotSentAcrossCaves проверь это утверждение.");
         assertTrue(
                 refused.getMessage().contains("предел"),
-                "отказ называет предел расстояния, а не молчит: " + refused.getMessage());
+                "отказ называет предел расстояния, а не молчит: " + refused.getMessage()
+                        + " Иначе тест liveFarMoveTicket_RefusedByDistanceLimit_NotSentAcrossCaves перестанет ловить эту поломку. При смене liveFarMoveTicket_RefusedByDistanceLimit_NotSentAcrossCaves проверь это утверждение.");
     }
 
     private static JsonNode farMove() throws IOException {

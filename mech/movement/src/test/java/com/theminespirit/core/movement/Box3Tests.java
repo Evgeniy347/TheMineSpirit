@@ -11,7 +11,10 @@ class Box3Tests {
     @Test
     void intersects_FencePostInBody_True() {
         Box3 post = new Box3(0.375, 0.0, 0.375, 0.625, 1.5, 0.625);
-        assertTrue(BODY.intersects(post), "Дух внутри столба забора — замурован: шаг ходьбы не начать, нужен dig_out");
+        assertTrue(
+                BODY.intersects(post),
+                "Дух внутри столба забора — замурован: шаг ходьбы не начать, нужен dig_out"
+                        + " Иначе тест intersects_FencePostInBody_True перестанет ловить эту поломку. При смене intersects_FencePostInBody_True проверь это утверждение.");
     }
 
     @Test
@@ -19,6 +22,8 @@ class Box3Tests {
         Box3 slab = new Box3(0.0, 0.0, 0.0, 1.0, 0.5, 1.0);
         Box3 onSlab = new Box3(0.2, 0.5, 0.2, 0.8, 1.9, 0.8);
         assertFalse(
-                onSlab.intersects(slab), "Дух стоит НА полублоке, а не внутри него: это обычная стоянка, не замурован");
+                onSlab.intersects(slab),
+                "Дух стоит НА полублоке, а не внутри него: это обычная стоянка, не замурован"
+                        + " Иначе тест intersects_SlabUnderFeet_False перестанет ловить эту поломку. При смене intersects_SlabUnderFeet_False проверь это утверждение.");
     }
 }

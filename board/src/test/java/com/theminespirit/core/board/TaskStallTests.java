@@ -16,10 +16,14 @@ class TaskStallTests {
         TaskStall stall = new TaskStall();
         stall.stalled(SPIRIT, null, BOTTOM, 0);
 
-        assertFalse(stall.stalled(SPIRIT, null, BOTTOM, TaskStall.STALL_TICKS - 1), "До предела — ещё не простой");
+        assertFalse(
+                stall.stalled(SPIRIT, null, BOTTOM, TaskStall.STALL_TICKS - 1),
+                "До предела — ещё не простой"
+                        + " Иначе тест stalled_NoScriptSameSpot_AfterLimit перестанет ловить эту поломку. При смене stalled_NoScriptSameSpot_AfterLimit проверь это утверждение.");
         assertTrue(
                 stall.stalled(SPIRIT, null, BOTTOM, TaskStall.STALL_TICKS),
-                "Задание доски без скрипта на одном месте минуту — простой: «busy» без задачи 5 минут (INC-65)");
+                "Задание доски без скрипта на одном месте минуту — простой: «busy» без задачи 5 минут (INC-65)"
+                        + " Иначе тест stalled_NoScriptSameSpot_AfterLimit перестанет ловить эту поломку. При смене stalled_NoScriptSameSpot_AfterLimit проверь это утверждение.");
     }
 
     @Test
@@ -28,7 +32,8 @@ class TaskStallTests {
         for (int step = 0; step <= 3; step++) {
             assertFalse(
                     stall.stalled(SPIRIT, "goto", new BlockCoord(step * 5, 64, 0), step * TaskStall.STALL_TICKS),
-                    "Подход, который идёт, — не простой");
+                    "Подход, который идёт, — не простой"
+                            + " Иначе тест stalled_GotoMoving_NotStalled перестанет ловить эту поломку. При смене stalled_GotoMoving_NotStalled проверь это утверждение.");
         }
     }
 
@@ -39,7 +44,8 @@ class TaskStallTests {
 
         assertFalse(
                 stall.stalled(SPIRIT, "smelt", BOTTOM, 10 * TaskStall.STALL_TICKS),
-                "Плавка на месте — работа со своим скриптом, не простой");
+                "Плавка на месте — работа со своим скриптом, не простой"
+                        + " Иначе тест stalled_LongSmeltOnSpot_NotStalled перестанет ловить эту поломку. При смене stalled_LongSmeltOnSpot_NotStalled проверь это утверждение.");
     }
 
     @Test
@@ -47,11 +53,18 @@ class TaskStallTests {
         TaskStall stall = new TaskStall();
         stall.noProgress(SPIRIT, "1/clear_area/0", 0);
 
-        assertFalse(stall.noProgress(SPIRIT, "1/clear_area/0", TaskStall.NO_PROGRESS_TICKS - 1), "До предела — нет");
+        assertFalse(
+                stall.noProgress(SPIRIT, "1/clear_area/0", TaskStall.NO_PROGRESS_TICKS - 1),
+                "До предела — нет"
+                        + " Иначе тест noProgress_WalkingSameProgress_AfterLimit перестанет ловить эту поломку. При смене noProgress_WalkingSameProgress_AfterLimit проверь это утверждение.");
         assertTrue(
                 stall.noProgress(SPIRIT, "1/clear_area/0", TaskStall.NO_PROGRESS_TICKS),
-                "Дух ходит, но прогресс задачи не меняется — простой: 10 минут по пещере без срезки (INC-67)");
-        assertFalse(stall.noProgress(SPIRIT, "1/clear_area/1", TaskStall.NO_PROGRESS_TICKS + 1), "Сдвиг — сброс");
+                "Дух ходит, но прогресс задачи не меняется — простой: 10 минут по пещере без срезки (INC-67)"
+                        + " Иначе тест noProgress_WalkingSameProgress_AfterLimit перестанет ловить эту поломку. При смене noProgress_WalkingSameProgress_AfterLimit проверь это утверждение.");
+        assertFalse(
+                stall.noProgress(SPIRIT, "1/clear_area/1", TaskStall.NO_PROGRESS_TICKS + 1),
+                "Сдвиг — сброс"
+                        + " Иначе тест noProgress_WalkingSameProgress_AfterLimit перестанет ловить эту поломку. При смене noProgress_WalkingSameProgress_AfterLimit проверь это утверждение.");
     }
 
     @Test
@@ -65,7 +78,8 @@ class TaskStallTests {
             assertFalse(
                     stall.noProgress(SPIRIT, "2/chop_tree/0", new BlockCoord(step * 12, 64, 0), now, false),
                     "Дух идёт к дереву, счётчик деревьев ещё 0: подход — подшаг chop_tree, а не застой задания "
-                            + "(observe16 B2: сад валил дуб за 3600 тиков дороги)");
+                            + "(observe16 B2: сад валил дуб за 3600 тиков дороги)"
+                            + " Иначе тест noProgress_MovingToTree_SameCounterKeepsWorking перестанет ловить эту поломку. При смене noProgress_MovingToTree_SameCounterKeepsWorking проверь это утверждение.");
         }
     }
 
@@ -78,15 +92,18 @@ class TaskStallTests {
         for (int step = 1; step <= 3; step++) {
             assertFalse(
                     stall.noProgress(SPIRIT, "2/chop_tree/0", new BlockCoord(step * 32, 64, 0), step * 300, false),
-                    "Дух ещё идёт к дереву: подход — это движение");
+                    "Дух ещё идёт к дереву: подход — это движение"
+                            + " Иначе тест noProgress_StoppedAfterMove_FailsAfterLimit перестанет ловить эту поломку. При смене noProgress_StoppedAfterMove_FailsAfterLimit проверь это утверждение.");
         }
         long arrived = 900 + TaskStall.NO_PROGRESS_TICKS - 1;
         assertFalse(
                 stall.noProgress(SPIRIT, "2/chop_tree/0", tree, arrived, false),
-                "Дух на месте меньше предела: застоя ещё нет");
+                "Дух на месте меньше предела: застоя ещё нет"
+                        + " Иначе тест noProgress_StoppedAfterMove_FailsAfterLimit перестанет ловить эту поломку. При смене noProgress_StoppedAfterMove_FailsAfterLimit проверь это утверждение.");
         assertTrue(
                 stall.noProgress(SPIRIT, "2/chop_tree/0", tree, arrived + 1, false),
-                "Дух встал у дерева и счётчик не растёт весь предел: это настоящий застой, задание проваливается");
+                "Дух встал у дерева и счётчик не растёт весь предел: это настоящий застой, задание проваливается"
+                        + " Иначе тест noProgress_StoppedAfterMove_FailsAfterLimit перестанет ловить эту поломку. При смене noProgress_StoppedAfterMove_FailsAfterLimit проверь это утверждение.");
     }
 
     @Test
@@ -97,10 +114,12 @@ class TaskStallTests {
         assertFalse(
                 stall.noProgress(SPIRIT, "2/chop_tree/1", TaskStall.NO_PROGRESS_TICKS, true),
                 "Пауза политики (AIR: голова под водой) — не простой задачи: рефлекс выводит на сушу, "
-                        + "а задание продолжается, а не проваливается через 3600 тиков (наблюдение 7)");
+                        + "а задание продолжается, а не проваливается через 3600 тиков (наблюдение 7)"
+                        + " Иначе тест noProgress_PausedByPolicy_RestartsClockInsteadOfFailing перестанет ловить эту поломку. При смене noProgress_PausedByPolicy_RestartsClockInsteadOfFailing проверь это утверждение.");
         assertFalse(
                 stall.noProgress(SPIRIT, "2/chop_tree/1", TaskStall.NO_PROGRESS_TICKS + 1),
-                "Выход из паузы начинает отсчёт заново: время под водой не съедает бюджет ожидания");
+                "Выход из паузы начинает отсчёт заново: время под водой не съедает бюджет ожидания"
+                        + " Иначе тест noProgress_PausedByPolicy_RestartsClockInsteadOfFailing перестанет ловить эту поломку. При смене noProgress_PausedByPolicy_RestartsClockInsteadOfFailing проверь это утверждение.");
     }
 
     @Test
@@ -111,7 +130,8 @@ class TaskStallTests {
         assertFalse(
                 stall.stalled(SPIRIT, null, BOTTOM, TaskStall.STALL_TICKS, true),
                 "Стоянка на месте под паузой политики — не простой задания: дух не виноват, что его "
-                        + "держит воздух/вода");
+                        + "держит воздух/вода"
+                        + " Иначе тест stalled_PausedByPolicy_DoesNotFail перестанет ловить эту поломку. При смене stalled_PausedByPolicy_DoesNotFail проверь это утверждение.");
     }
 
     @Test
@@ -121,7 +141,8 @@ class TaskStallTests {
             assertFalse(
                     stall.stalled(SPIRIT, null, "1/null/" + step, BOTTOM, step * TaskStall.STALL_TICKS, false),
                     "Между шагами скрипт ещё не назван, но прогресс задачи растёт: мгновенные шаги — это работа, "
-                            + "а не простой (repair:clear_grounds: пустой бокс закрывается за тик)");
+                            + "а не простой (repair:clear_grounds: пустой бокс закрывается за тик)"
+                            + " Иначе тест stalled_NoScriptButProgressKeyGrows_NotStalled перестанет ловить эту поломку. При смене stalled_NoScriptButProgressKeyGrows_NotStalled проверь это утверждение.");
         }
     }
 }

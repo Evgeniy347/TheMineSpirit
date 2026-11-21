@@ -17,8 +17,16 @@ class NavPathCutoffTests {
 
         NavPath cut = NavPathCutoff.atAvailable(path, world);
 
-        assertEquals(16, cut.length(), "путь обрезан перед незагруженным чанком");
-        assertEquals(15, cut.end().x(), "последняя клетка загруженного чанка");
+        assertEquals(
+                16,
+                cut.length(),
+                "путь обрезан перед незагруженным чанком"
+                        + " Иначе тест atAvailable_FirstUnloadedChunk_TrimsBeforeIt перестанет ловить эту поломку. При смене atAvailable_FirstUnloadedChunk_TrimsBeforeIt проверь это утверждение.");
+        assertEquals(
+                15,
+                cut.end().x(),
+                "последняя клетка загруженного чанка"
+                        + " Иначе тест atAvailable_FirstUnloadedChunk_TrimsBeforeIt перестанет ловить эту поломку. При смене atAvailable_FirstUnloadedChunk_TrimsBeforeIt проверь это утверждение.");
     }
 
     @Test
@@ -26,7 +34,11 @@ class NavPathCutoffTests {
         NavPath path = path(0, 20, 1);
         NavPath cut = NavPathCutoff.staticCutoff(path, new NavGoalBlock(100, 1, 0), 6, 0.5);
 
-        assertEquals(13, cut.length(), "длина = min + (длина - min) * доля");
+        assertEquals(
+                13,
+                cut.length(),
+                "длина = min + (длина - min) * доля"
+                        + " Иначе тест staticCutoff_GoalNotReached_KeepsConfiguredShare перестанет ловить эту поломку. При смене staticCutoff_GoalNotReached_KeepsConfiguredShare проверь это утверждение.");
     }
 
     @Test
@@ -34,7 +46,11 @@ class NavPathCutoffTests {
         NavPath path = path(0, 20, 1);
         NavPath cut = NavPathCutoff.staticCutoff(path, new NavGoalBlock(20, 1, 0), 6, 0.5);
 
-        assertEquals(path.length(), cut.length(), "дошедший до цели путь не режется");
+        assertEquals(
+                path.length(),
+                cut.length(),
+                "дошедший до цели путь не режется"
+                        + " Иначе тест staticCutoff_GoalReached_LeavesPathWhole перестанет ловить эту поломку. При смене staticCutoff_GoalReached_LeavesPathWhole проверь это утверждение.");
     }
 
     @Test
@@ -42,7 +58,8 @@ class NavPathCutoffTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> NavPathCutoff.staticCutoff(path(0, 20, 1), new NavGoalBlock(100, 1, 0), 6, 0),
-                "нулевая доля не оставляла бы пути");
+                "нулевая доля не оставляла бы пути"
+                        + " Иначе тест staticCutoff_InvalidShare_IsRejected перестанет ловить эту поломку. При смене staticCutoff_InvalidShare_IsRejected проверь это утверждение.");
     }
 
     private static NavPath path(int fromX, int toX, int y) {

@@ -18,7 +18,8 @@ class GraphDefensePostTests {
         assertEquals(
                 ceiling,
                 GraphDefensePost.priority(ticket(ceiling)),
-                "Оборона жизни приходит из графа на потолке 100, а BoardTicket принимает 0..100");
+                "Оборона жизни приходит из графа на потолке 100, а BoardTicket принимает 0..100"
+                        + " Иначе тест priority_LifeAtGraphCeiling_StaysHundred перестанет ловить эту поломку. При смене priority_LifeAtGraphCeiling_StaysHundred проверь это утверждение.");
     }
 
     @Test
@@ -26,7 +27,8 @@ class GraphDefensePostTests {
         assertEquals(
                 GraphDefensePost.priority(ticket(1)),
                 GraphDefensePost.priority(ticket(0)),
-                "Нулевой приоритет не выпадает из диапазона доски: держится на нижней границе, как единица");
+                "Нулевой приоритет не выпадает из диапазона доски: держится на нижней границе, как единица"
+                        + " Иначе тест priority_BelowOne_ClampedToOne перестанет ловить эту поломку. При смене priority_BelowOne_ClampedToOne проверь это утверждение.");
     }
 
     private static GraphTickets.Ticket ticket(int priority) {

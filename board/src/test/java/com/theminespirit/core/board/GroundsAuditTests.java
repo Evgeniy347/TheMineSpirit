@@ -17,12 +17,19 @@ class GroundsAuditTests {
         assertTrue(
                 GroundsAudit.uneven(BoardCase.CLEAR_GROUNDS, MOUND),
                 "Есть что срезать — расчистка не готова: аудит рельефа по плану выравнивания, а не по схеме "
-                        + "(у рельефа схемы нет, «0 из 0 блоков» закрывал шаг)");
+                        + "(у рельефа схемы нет, «0 из 0 блоков» закрывал шаг)"
+                        + " Иначе тест uneven_MoundLeft_ClearingStepStaysOpen перестанет ловить эту поломку. При смене uneven_MoundLeft_ClearingStepStaysOpen проверь это утверждение.");
     }
 
     @Test
     void uneven_FlatOrOtherCase_NoReopenByGround() {
-        assertFalse(GroundsAudit.uneven(BoardCase.CLEAR_GROUNDS, PlotLeveling.FLAT), "Ровный участок — готово");
-        assertFalse(GroundsAudit.uneven(BoardCase.BUILD_HOUSE, MOUND), "Рельеф решает только для расчистки");
+        assertFalse(
+                GroundsAudit.uneven(BoardCase.CLEAR_GROUNDS, PlotLeveling.FLAT),
+                "Ровный участок — готово"
+                        + " Иначе тест uneven_FlatOrOtherCase_NoReopenByGround перестанет ловить эту поломку. При смене uneven_FlatOrOtherCase_NoReopenByGround проверь это утверждение.");
+        assertFalse(
+                GroundsAudit.uneven(BoardCase.BUILD_HOUSE, MOUND),
+                "Рельеф решает только для расчистки"
+                        + " Иначе тест uneven_FlatOrOtherCase_NoReopenByGround перестанет ловить эту поломку. При смене uneven_FlatOrOtherCase_NoReopenByGround проверь это утверждение.");
     }
 }

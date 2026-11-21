@@ -19,7 +19,8 @@ class CrafterMemoryTest {
         assertEquals(
                 CRAFTER,
                 chosen,
-                "получивший булыжник крафтер остаётся крафтером, иначе передача идёт обратно по кругу (24.10)");
+                "получивший булыжник крафтер остаётся крафтером, иначе передача идёт обратно по кругу (24.10)"
+                        + " При смене choose_GiverNearerAfterTransfer_KeepsCrafter проверь это утверждение.");
     }
 
     @Test
@@ -27,9 +28,17 @@ class CrafterMemoryTest {
         CrafterMemory memory = new CrafterMemory();
         memory.remember(FURNACE, CRAFTER);
         UUID busy = memory.choose(FURNACE, List.of(GIVER, CRAFTER), id -> id, GIVER::equals, () -> GIVER);
-        assertEquals(GIVER, busy, "занятый крафтер не держит крафт: выбор по умолчанию");
+        assertEquals(
+                GIVER,
+                busy,
+                "занятый крафтер не держит крафт: выбор по умолчанию"
+                        + " Иначе тест choose_CrafterBusyOrGone_FallsBack перестанет ловить эту поломку. При смене choose_CrafterBusyOrGone_FallsBack проверь это утверждение.");
         UUID gone = memory.choose(FURNACE, List.of(GIVER), id -> id, id -> true, () -> GIVER);
-        assertEquals(GIVER, gone, "ушедший крафтер не держит крафт: выбор по умолчанию");
+        assertEquals(
+                GIVER,
+                gone,
+                "ушедший крафтер не держит крафт: выбор по умолчанию"
+                        + " Иначе тест choose_CrafterBusyOrGone_FallsBack перестанет ловить эту поломку. При смене choose_CrafterBusyOrGone_FallsBack проверь это утверждение.");
     }
 
     @Test
@@ -37,6 +46,10 @@ class CrafterMemoryTest {
         CrafterMemory memory = new CrafterMemory();
         memory.remember(FURNACE, CRAFTER);
         memory.retain(id -> false);
-        assertEquals(0, memory.size(), "закрытое задание не держит память крафтера: карта не течёт");
+        assertEquals(
+                0,
+                memory.size(),
+                "закрытое задание не держит память крафтера: карта не течёт"
+                        + " Иначе тест retain_ClosedTicket_Forgotten перестанет ловить эту поломку. При смене retain_ClosedTicket_Forgotten проверь это утверждение.");
     }
 }

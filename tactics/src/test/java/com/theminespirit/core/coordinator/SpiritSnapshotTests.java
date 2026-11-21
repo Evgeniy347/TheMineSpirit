@@ -28,28 +28,55 @@ class SpiritSnapshotTests {
         SpiritSnapshot withWork = new SpiritSnapshot(
                 SPIRIT, POS, 0.5, SpiritRole.DEFENDER, CombatMode.GUARD_AREA, 2, true, Optional.of(tree), 42, 0.6);
 
-        assertEquals(SPIRIT, withWork.id(), "id снимка — кто это: без него координатор не сопоставит решения с духом");
-        assertEquals(POS, withWork.pos(), "Позиция снимка — где дух: от неё считаются расстояния до постов и целей");
-        assertEquals(0.5, withWork.hpFraction(), "Доля здоровья снимка — насколько дух жив: входит в оценку обороны");
+        assertEquals(
+                SPIRIT,
+                withWork.id(),
+                "id снимка — кто это: без него координатор не сопоставит решения с духом"
+                        + " Иначе тест snapshot_ConstructorArgs_AreExposed перестанет ловить эту поломку. При смене snapshot_ConstructorArgs_AreExposed проверь это утверждение.");
+        assertEquals(
+                POS,
+                withWork.pos(),
+                "Позиция снимка — где дух: от неё считаются расстояния до постов и целей"
+                        + " Иначе тест snapshot_ConstructorArgs_AreExposed перестанет ловить эту поломку. При смене snapshot_ConstructorArgs_AreExposed проверь это утверждение.");
+        assertEquals(
+                0.5,
+                withWork.hpFraction(),
+                "Доля здоровья снимка — насколько дух жив: входит в оценку обороны"
+                        + " Иначе тест snapshot_ConstructorArgs_AreExposed перестанет ловить эту поломку. При смене snapshot_ConstructorArgs_AreExposed проверь это утверждение.");
         assertEquals(
                 SpiritRole.DEFENDER,
                 withWork.role(),
-                "Роль снимка — кто дух в поселении: защитник держит сектор, работник получает цель");
+                "Роль снимка — кто дух в поселении: защитник держит сектор, работник получает цель"
+                        + " Иначе тест snapshot_ConstructorArgs_AreExposed перестанет ловить эту поломку. При смене snapshot_ConstructorArgs_AreExposed проверь это утверждение.");
         assertEquals(
                 CombatMode.GUARD_AREA,
                 withWork.mode(),
-                "Режим боя снимка — что дух делает сейчас: координатор не переводит занятого в работу");
-        assertEquals(2, withWork.threatsNear(), "Число угроз рядом — под давлением ли дух: входит в выбор помощников");
-        assertTrue(withWork.attacked(), "Флаг атаки — на духа напали: координатор шлёт помощь атакованному");
+                "Режим боя снимка — что дух делает сейчас: координатор не переводит занятого в работу"
+                        + " Иначе тест snapshot_ConstructorArgs_AreExposed перестанет ловить эту поломку. При смене snapshot_ConstructorArgs_AreExposed проверь это утверждение.");
+        assertEquals(
+                2,
+                withWork.threatsNear(),
+                "Число угроз рядом — под давлением ли дух: входит в выбор помощников"
+                        + " Иначе тест snapshot_ConstructorArgs_AreExposed перестанет ловить эту поломку. При смене snapshot_ConstructorArgs_AreExposed проверь это утверждение.");
+        assertTrue(
+                withWork.attacked(),
+                "Флаг атаки — на духа напали: координатор шлёт помощь атакованному"
+                        + " Иначе тест snapshot_ConstructorArgs_AreExposed перестанет ловить эту поломку. При смене snapshot_ConstructorArgs_AreExposed проверь это утверждение.");
         assertEquals(
                 Optional.of(tree),
                 withWork.workTarget(),
-                "Цель работы снимка — чем дух занят: координатор не даёт работу занятому и распределяет цели");
-        assertEquals(42, withWork.lastSeenTick(), "Тик наблюдения — свежесть снимка: просроченный снимается из плана");
+                "Цель работы снимка — чем дух занят: координатор не даёт работу занятому и распределяет цели"
+                        + " Иначе тест snapshot_ConstructorArgs_AreExposed перестанет ловить эту поломку. При смене snapshot_ConstructorArgs_AreExposed проверь это утверждение.");
+        assertEquals(
+                42,
+                withWork.lastSeenTick(),
+                "Тик наблюдения — свежесть снимка: просроченный снимается из плана"
+                        + " Иначе тест snapshot_ConstructorArgs_AreExposed перестанет ловить эту поломку. При смене snapshot_ConstructorArgs_AreExposed проверь это утверждение.");
         assertEquals(
                 0.6,
                 withWork.food(),
-                "Сытость снимка — насколько дух сыт: координатор и оценка сил берут её из реального голода духа");
+                "Сытость снимка — насколько дух сыт: координатор и оценка сил берут её из реального голода духа"
+                        + " Иначе тест snapshot_ConstructorArgs_AreExposed перестанет ловить эту поломку. При смене snapshot_ConstructorArgs_AreExposed проверь это утверждение.");
     }
 
     @Test
@@ -58,7 +85,10 @@ class SpiritSnapshotTests {
                 SPIRIT, POS, 1, SpiritRole.IDLE, CombatMode.DEFENSIVE, 0, false, Optional.empty(), 42, 1.5);
 
         assertEquals(
-                1.0, snapshot.food(), "Доля сытости выше единицы зажимается в 1: иначе дух выглядит сытее полного");
+                1.0,
+                snapshot.food(),
+                "Доля сытости выше единицы зажимается в 1: иначе дух выглядит сытее полного"
+                        + " При смене food_AboveOne_ClampedToOne проверь это утверждение.");
     }
 
     @Test
@@ -67,7 +97,10 @@ class SpiritSnapshotTests {
                 SPIRIT, POS, 1, SpiritRole.IDLE, CombatMode.DEFENSIVE, 0, false, Optional.empty(), 42, -0.5);
 
         assertEquals(
-                0.0, snapshot.food(), "Отрицательная доля сытости зажимается в 0: иначе голодный дух выглядит сытым");
+                0.0,
+                snapshot.food(),
+                "Отрицательная доля сытости зажимается в 0: иначе голодный дух выглядит сытым"
+                        + " При смене food_Negative_ClampedToZero проверь это утверждение.");
     }
 
     @Test
@@ -75,7 +108,8 @@ class SpiritSnapshotTests {
         assertEquals(
                 1.0,
                 snapshot(1.5, 0, false).hpFraction(),
-                "Доля здоровья выше единицы зажимается в 1: иначе оценка обороны получит духа здоровее живого");
+                "Доля здоровья выше единицы зажимается в 1: иначе оценка обороны получит духа здоровее живого"
+                        + " При смене hpFraction_AboveOne_ClampedToOne проверь это утверждение.");
     }
 
     @Test
@@ -83,7 +117,8 @@ class SpiritSnapshotTests {
         assertEquals(
                 0.0,
                 snapshot(-0.5, 0, false).hpFraction(),
-                "Отрицательная доля здоровья зажимается в 0: иначе оценка обороны получит духа живее мёртвого");
+                "Отрицательная доля здоровья зажимается в 0: иначе оценка обороны получит духа живее мёртвого"
+                        + " При смене hpFraction_Negative_ClampedToZero проверь это утверждение.");
     }
 
     @Test
@@ -92,11 +127,13 @@ class SpiritSnapshotTests {
                 IllegalArgumentException.class,
                 () -> new SpiritSnapshot(
                         null, POS, 1, SpiritRole.IDLE, CombatMode.DEFENSIVE, 0, false, Optional.empty(), 1, 1.0),
-                "Снимок без id не опознает духа: координатор не сможет сопоставить его с решениями");
+                "Снимок без id не опознает духа: координатор не сможет сопоставить его с решениями"
+                        + " При смене constructor_NullId_Throws проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("id"),
-                "Сообщение называет поле id: без этого при падении не видно, какое поле снимка не заполнено");
+                "Сообщение называет поле id: без этого при падении не видно, какое поле снимка не заполнено"
+                        + " При смене constructor_NullId_Throws проверь это утверждение.");
     }
 
     @Test
@@ -105,11 +142,13 @@ class SpiritSnapshotTests {
                 IllegalArgumentException.class,
                 () -> new SpiritSnapshot(
                         SPIRIT, null, 1, SpiritRole.IDLE, CombatMode.DEFENSIVE, 0, false, Optional.empty(), 1, 1.0),
-                "Снимок без позиции не опознает, где дух: расстояния до постов и целей не посчитать");
+                "Снимок без позиции не опознает, где дух: расстояния до постов и целей не посчитать"
+                        + " Иначе тест constructor_NullPos_Throws перестанет ловить эту поломку. При смене constructor_NullPos_Throws проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("pos"),
-                "Сообщение называет поле pos: без этого при падении не видно, какое поле снимка не заполнено");
+                "Сообщение называет поле pos: без этого при падении не видно, какое поле снимка не заполнено"
+                        + " При смене constructor_NullPos_Throws проверь это утверждение.");
     }
 
     @Test
@@ -118,7 +157,8 @@ class SpiritSnapshotTests {
                 IllegalArgumentException.class,
                 () -> new SpiritSnapshot(
                         SPIRIT, POS, 1, null, CombatMode.DEFENSIVE, 0, false, Optional.empty(), 1, 1.0),
-                "Снимок без роли не говорит, защитник дух или работник: координатор не решит, кому сектор, кому цель");
+                "Снимок без роли не говорит, защитник дух или работник: координатор не решит, кому сектор, кому цель"
+                        + " Иначе тест constructor_NullRole_Throws перестанет ловить эту поломку. При смене constructor_NullRole_Throws проверь это утверждение.");
     }
 
     @Test
@@ -126,7 +166,8 @@ class SpiritSnapshotTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new SpiritSnapshot(SPIRIT, POS, 1, SpiritRole.IDLE, CombatMode.DEFENSIVE, 0, false, null, 1, 1.0),
-                "Снимок с null вместо Optional цели не говорит, занят дух или нет: передавайте Optional.empty()");
+                "Снимок с null вместо Optional цели не говорит, занят дух или нет: передавайте Optional.empty()"
+                        + " Иначе тест constructor_NullWorkTarget_Throws перестанет ловить эту поломку. При смене constructor_NullWorkTarget_Throws проверь это утверждение.");
     }
 
     @Test
@@ -135,11 +176,13 @@ class SpiritSnapshotTests {
                 IllegalArgumentException.class,
                 () -> new SpiritSnapshot(
                         SPIRIT, POS, 1, SpiritRole.IDLE, CombatMode.DEFENSIVE, 0, true, Optional.empty(), 1, 1.0),
-                "Атакованный без угроз противоречит снимку: координированная помощь уйдёт на ложную тревогу");
+                "Атакованный без угроз противоречит снимку: координированная помощь уйдёт на ложную тревогу"
+                        + " Иначе тест attacked_TrueWithZeroThreats_Throws перестанет ловить эту поломку. При смене attacked_TrueWithZeroThreats_Throws проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("attacked"),
-                "Сообщение называет флаг attacked: без этого при падении не видно, что именно противоречит");
+                "Сообщение называет флаг attacked: без этого при падении не видно, что именно противоречит"
+                        + " При смене attacked_TrueWithZeroThreats_Throws проверь это утверждение.");
     }
 
     @Test
@@ -150,10 +193,12 @@ class SpiritSnapshotTests {
         assertEquals(
                 3,
                 snapshot.threatsNear(),
-                "Атакован при угрозах рядом не обязательно: дух может стоять под давлением, не будучи целью");
+                "Атакован при угрозах рядом не обязательно: дух может стоять под давлением, не будучи целью"
+                        + " Иначе тест attacked_FalseWithThreats_IsAccepted перестанет ловить эту поломку. При смене attacked_FalseWithThreats_IsAccepted проверь это утверждение.");
         assertTrue(
                 !snapshot.attacked(),
-                "Флаг атаки остаётся false: координированную помощь зовёт только дух, выбранный врагом целью");
+                "Флаг атаки остаётся false: координированную помощь зовёт только дух, выбранный врагом целью"
+                        + " Иначе тест attacked_FalseWithThreats_IsAccepted перестанет ловить эту поломку. При смене attacked_FalseWithThreats_IsAccepted проверь это утверждение.");
     }
 
     @Test
@@ -162,7 +207,8 @@ class SpiritSnapshotTests {
                 IllegalArgumentException.class,
                 () -> new SpiritSnapshot(
                         SPIRIT, POS, 1, SpiritRole.IDLE, CombatMode.DEFENSIVE, -1, false, Optional.empty(), 1, 1.0),
-                "Отрицательное число угроз противоречит снимку: выбор помощников получил бы неверный порядок");
+                "Отрицательное число угроз противоречит снимку: выбор помощников получил бы неверный порядок"
+                        + " Иначе тест threatsNear_Negative_Throws перестанет ловить эту поломку. При смене threatsNear_Negative_Throws проверь это утверждение.");
     }
 
     @Test
@@ -171,6 +217,7 @@ class SpiritSnapshotTests {
                 IllegalArgumentException.class,
                 () -> new SpiritSnapshot(
                         SPIRIT, POS, 1, SpiritRole.IDLE, CombatMode.DEFENSIVE, 0, false, Optional.empty(), -1, 1.0),
-                "Отрицательный тик наблюдения противоречит снимку: просроченность считается от него");
+                "Отрицательный тик наблюдения противоречит снимку: просроченность считается от него"
+                        + " Иначе тест lastSeenTick_Negative_Throws перестанет ловить эту поломку. При смене lastSeenTick_Negative_Throws проверь это утверждение.");
     }
 }

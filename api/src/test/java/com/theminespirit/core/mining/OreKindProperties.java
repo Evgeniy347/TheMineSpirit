@@ -19,7 +19,8 @@ class OreKindProperties {
                     Optional.of(kind),
                     OreKind.ofBlock(block),
                     "Обратное сопоставление обязано держаться для каждого блока вида " + kind
-                            + ": иначе добыча и распознавание руды расходятся");
+                            + ": иначе добыча и распознавание руды расходятся"
+                            + " При смене ofBlock_AnyBlockOfSpecificKind_ReturnsThatKind проверь это утверждение.");
         }
     }
 
@@ -32,7 +33,8 @@ class OreKindProperties {
             assertTrue(
                     OreKind.blocks(OreKind.ANY).contains(block),
                     "any обязан включать блок " + block + " из вида " + kind
-                            + ": иначе mine_vein(ore=any) пропускает эту руду");
+                            + ": иначе mine_vein(ore=any) пропускает эту руду"
+                            + " При смене blocks_AnyKind_ContainsEverySpecificBlock проверь это утверждение.");
         }
     }
 }

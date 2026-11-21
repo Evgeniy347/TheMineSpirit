@@ -23,7 +23,8 @@ class GraphChoiceFeedbackTests {
                 penalized.priority("more_return_before_night") < neutral.priority("more_return_before_night"),
                 "Провал разных целей снижает вес узла, а не выбирает ту же работу снова: "
                         + penalized.priority("more_return_before_night") + " против "
-                        + neutral.priority("more_return_before_night"));
+                        + neutral.priority("more_return_before_night")
+                        + " Иначе тест failureBackoff_ManyDistinctTargets_LowerTaskWeight перестанет ловить эту поломку. При смене failureBackoff_ManyDistinctTargets_LowerTaskWeight проверь это утверждение.");
     }
 
     @Test
@@ -34,7 +35,8 @@ class GraphChoiceFeedbackTests {
         assertTrue(
                 capped.priority("more_return_before_night") < two.priority("more_return_before_night"),
                 "Много провалов разных целей весит меньше двух: " + capped.priority("more_return_before_night")
-                        + " против " + two.priority("more_return_before_night"));
+                        + " против " + two.priority("more_return_before_night")
+                        + " Иначе тест failureBackoff_ManyFailures_CapThePenalty перестанет ловить эту поломку. При смене failureBackoff_ManyFailures_CapThePenalty проверь это утверждение.");
     }
 
     @Test
@@ -46,10 +48,15 @@ class GraphChoiceFeedbackTests {
         int many =
                 new GraphChoiceRules(tuned, failedMany(dusk(), 1, 2).state()).travelTicks("more_return_before_night");
 
-        assertEquals(calm, one, "Одна недоступная цель удлиняет только свой поход, а не дорогу всему узлу");
+        assertEquals(
+                calm,
+                one,
+                "Одна недоступная цель удлиняет только свой поход, а не дорогу всему узлу"
+                        + " Иначе тест avoidFarTrip_OneUnreachableTarget_KeepsTravel перестанет ловить эту поломку. При смене avoidFarTrip_OneUnreachableTarget_KeepsTravel проверь это утверждение.");
         assertTrue(
                 many > calm,
-                "Провал разных целей — узел плох: дорога удлиняется по avoid_far_trip: " + many + " против " + calm);
+                "Провал разных целей — узел плох: дорога удлиняется по avoid_far_trip: " + many + " против " + calm
+                        + " Иначе тест avoidFarTrip_OneUnreachableTarget_KeepsTravel перестанет ловить эту поломку. При смене avoidFarTrip_OneUnreachableTarget_KeepsTravel проверь это утверждение.");
     }
 
     @Test
@@ -69,10 +76,12 @@ class GraphChoiceFeedbackTests {
                 calm,
                 other,
                 1e-9,
-                "Провал без типизированной нужды не штрафует узел: причина едет типом, а не догадкой");
+                "Провал без типизированной нужды не штрафует узел: причина едет типом, а не догадкой"
+                        + " Иначе тест failureBackoff_UnknownNeed_NoPenalty перестанет ловить эту поломку. При смене failureBackoff_UnknownNeed_NoPenalty проверь это утверждение.");
         assertTrue(
                 other > unreachable,
-                "Провал без нужды мягче доказанной недостижимости двух целей: " + other + " против " + unreachable);
+                "Провал без нужды мягче доказанной недостижимости двух целей: " + other + " против " + unreachable
+                        + " Иначе тест failureBackoff_UnknownNeed_NoPenalty перестанет ловить эту поломку. При смене failureBackoff_UnknownNeed_NoPenalty проверь это утверждение.");
     }
 
     @Test
@@ -90,7 +99,8 @@ class GraphChoiceFeedbackTests {
                 penalized,
                 1e-9,
                 "Один недоступный ствол не штрафует рубку везде: пока плоха одна цель, узел сохраняет вес и "
-                        + "переходит к другой цели: " + penalized + " против " + calm);
+                        + "переходит к другой цели: " + penalized + " против " + calm
+                        + " Иначе тест failureBackoff_OneUnreachableTarget_DoesNotPenalizeWholeNode перестанет ловить эту поломку. При смене failureBackoff_OneUnreachableTarget_DoesNotPenalizeWholeNode проверь это утверждение.");
     }
 
     @Test
@@ -108,7 +118,8 @@ class GraphChoiceFeedbackTests {
                 penalized,
                 1e-9,
                 "Незагруженный чанк — не провал узла: чанк подгружается, и задание повторяется: " + penalized
-                        + " против " + calm);
+                        + " против " + calm
+                        + " Иначе тест failureBackoff_ChunkFailure_NoPenalty перестанет ловить эту поломку. При смене failureBackoff_ChunkFailure_NoPenalty проверь это утверждение.");
     }
 
     @Test
@@ -126,7 +137,8 @@ class GraphChoiceFeedbackTests {
                 penalized,
                 1e-9,
                 "Нет материала — вопрос снабжения, а не узла: штраф узла гнал бы работу прочь вместо добычи "
-                        + "входа: " + penalized + " против " + calm);
+                        + "входа: " + penalized + " против " + calm
+                        + " Иначе тест failureBackoff_NoMaterial_NoNodePenalty перестанет ловить эту поломку. При смене failureBackoff_NoMaterial_NoNodePenalty проверь это утверждение.");
     }
 
     @Test
@@ -144,11 +156,13 @@ class GraphChoiceFeedbackTests {
                 calm,
                 failed,
                 1e-9,
-                "Нет материала — нехватка на входе снабжения, а не провал узла: " + failed + " против " + calm);
+                "Нет материала — нехватка на входе снабжения, а не провал узла: " + failed + " против " + calm
+                        + " Иначе тест failureBackoff_NoMaterial_KeepsSupplyInputWork перестанет ловить эту поломку. При смене failureBackoff_NoMaterial_KeepsSupplyInputWork проверь это утверждение.");
         assertTrue(
                 AllocationCases.tickets(world).post().stream()
                         .anyMatch(ticket -> "jungle_log".equals(ticket.task().makes())),
-                "Нехватка входа остаётся работой снабжения: граф добывает вход, а не прячет узел");
+                "Нехватка входа остаётся работой снабжения: граф добывает вход, а не прячет узел"
+                        + " Иначе тест failureBackoff_NoMaterial_KeepsSupplyInputWork перестанет ловить эту поломку. При смене failureBackoff_NoMaterial_KeepsSupplyInputWork проверь это утверждение.");
     }
 
     @Test
@@ -160,10 +174,12 @@ class GraphChoiceFeedbackTests {
 
         assertTrue(
                 plan.notices().stream().noneMatch(notice -> notice.reason().contains(MoreRules.DUSK_SOON)),
-                "Условие времени суток не «нет источника»: граф не просит разведать закат: " + plan.notices());
+                "Условие времени суток не «нет источника»: граф не просит разведать закат: " + plan.notices()
+                        + " Иначе тест conditionTag_NotResource_NoExploreRequest перестанет ловить эту поломку. При смене conditionTag_NotResource_NoExploreRequest проверь это утверждение.");
         assertTrue(
                 plan.task("explore:" + MoreRules.DUSK_SOON).isEmpty(),
-                "Незаданное условие не превращается в задание разведки: " + plan.tasks());
+                "Незаданное условие не превращается в задание разведки: " + plan.tasks()
+                        + " Иначе тест conditionTag_NotResource_NoExploreRequest перестанет ловить эту поломку. При смене conditionTag_NotResource_NoExploreRequest проверь это утверждение.");
     }
 
     private static GraphWorld dusk() {
@@ -183,7 +199,8 @@ class GraphChoiceFeedbackTests {
         assertEquals(
                 calm.priority("event:life_threat:defend"),
                 penalized.priority("event:life_threat:defend"),
-                "Защита жизни не штрафуется памятью неудач: она меняет способ, а не отступает с максимального веса");
+                "Защита жизни не штрафуется памятью неудач: она меняет способ, а не отступает с максимального веса"
+                        + " Иначе тест failureBackoff_LifeEvent_NotPenalized перестанет ловить эту поломку. При смене failureBackoff_LifeEvent_NotPenalized проверь это утверждение.");
     }
 
     @Test
@@ -198,7 +215,8 @@ class GraphChoiceFeedbackTests {
                 calm,
                 penalized,
                 1e-9,
-                "Спасение духа не штрафуется памятью неудач: выход меняется (помощник/выход), вес остаётся максимальным");
+                "Спасение духа не штрафуется памятью неудач: выход меняется (помощник/выход), вес остаётся максимальным"
+                        + " Иначе тест failureBackoff_RescueSpirit_NotPenalized перестанет ловить эту поломку. При смене failureBackoff_RescueSpirit_NotPenalized проверь это утверждение.");
     }
 
     @Test
@@ -210,7 +228,8 @@ class GraphChoiceFeedbackTests {
 
         assertTrue(
                 penalized < calm,
-                "Обычный узел по-прежнему штрафуется: послабление только для жизни: " + penalized + " против " + calm);
+                "Обычный узел по-прежнему штрафуется: послабление только для жизни: " + penalized + " против " + calm
+                        + " Иначе тест failureBackoff_OrdinaryNode_StillPenalized перестанет ловить эту поломку. При смене failureBackoff_OrdinaryNode_StillPenalized проверь это утверждение.");
     }
 
     private static GraphWorld failed(GraphWorld world, int count) {

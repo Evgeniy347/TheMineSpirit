@@ -35,14 +35,20 @@ class SafePointChoiceProperties {
         Optional<Point> result = SafePointChoice.nearest(self, homeInput, campInput);
 
         if (!hasHome && !hasCamp) {
-            assertEquals(Optional.empty(), result, "Без точек выбора нет: иначе отход идёт в выдуманную точку");
+            assertEquals(
+                    Optional.empty(),
+                    result,
+                    "Без точек выбора нет: иначе отход идёт в выдуманную точку"
+                            + " При смене nearest_AnyInput_ResultIsOneOfInputs проверь это утверждение.");
         } else {
             assertTrue(
                     result.isPresent(),
-                    "При хотя бы одной точке выбор обязан быть: иначе дух с базой остаётся без отхода");
+                    "При хотя бы одной точке выбор обязан быть: иначе дух с базой остаётся без отхода"
+                            + " При смене nearest_AnyInput_ResultIsOneOfInputs проверь это утверждение.");
             assertTrue(
                     result.get().equals(home) || result.get().equals(camp),
-                    "Выбор обязан быть одной из входных точек: иначе отход ведёт не к дому и не к лагерю");
+                    "Выбор обязан быть одной из входных точек: иначе отход ведёт не к дому и не к лагерю"
+                            + " При смене nearest_AnyInput_ResultIsOneOfInputs проверь это утверждение.");
         }
     }
 
@@ -54,7 +60,9 @@ class SafePointChoiceProperties {
         double chosen = self.distanceTo(result.orElseThrow());
         double other = result.get().equals(home) ? self.distanceTo(camp) : self.distanceTo(home);
         assertTrue(
-                chosen <= other, "Выбранная точка обязана быть не дальше другой: иначе отход идёт мимо ближней точки");
+                chosen <= other,
+                "Выбранная точка обязана быть не дальше другой: иначе отход идёт мимо ближней точки"
+                        + " При смене nearest_AnyInput_ResultNotFartherThanAlternative проверь это утверждение.");
     }
 
     @Property
@@ -64,7 +72,8 @@ class SafePointChoiceProperties {
         assertEquals(
                 Optional.of(home),
                 SafePointChoice.nearest(self, Optional.of(home), Optional.of(mirrored)),
-                "При равных расстояниях выбирается дом: иначе тай-брейк неустойчив и отход прыгает");
+                "При равных расстояниях выбирается дом: иначе тай-брейк неустойчив и отход прыгает"
+                        + " При смене nearest_Tie_ReturnsHome проверь это утверждение.");
     }
 
     @Property
@@ -73,6 +82,7 @@ class SafePointChoiceProperties {
         assertEquals(
                 SafePointChoice.nearest(self, Optional.of(home), Optional.of(camp)),
                 SafePointChoice.nearest(self, Optional.of(home), Optional.of(camp)),
-                "Тот же вход даёт тот же выбор: иначе точка отхода мигает между тиками");
+                "Тот же вход даёт тот же выбор: иначе точка отхода мигает между тиками"
+                        + " При смене nearest_SameInput_TwiceSameResult проверь это утверждение.");
     }
 }

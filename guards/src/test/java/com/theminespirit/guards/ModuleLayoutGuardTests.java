@@ -22,40 +22,47 @@ class ModuleLayoutGuardTests {
                 layout.contains("module_roots=") || layout.contains("module_test_roots="),
                 "Список корней модулей обязан быть в одном месте — settings.gradle: config/layout.properties "
                         + "снова завёл module_roots/module_test_roots. Как надо: новый модуль добавляется только "
-                        + "через include в settings.gradle, остальные инструменты читают его список оттуда.");
+                        + "через include в settings.gradle, остальные инструменты читают его список оттуда."
+                        + " Иначе тест moduleRoots_HaveOneSource_SettingsGradle перестанет ловить эту поломку. При смене moduleRoots_HaveOneSource_SettingsGradle проверь это утверждение.");
         for (String key : List.of("main=", "test=", "api=", "api_test=")) {
             assertFalse(
                     layout.lines().anyMatch(line -> line.startsWith(key)),
                     "config/layout.properties снова дублирует " + key + ": корни исходников задаёт соглашение "
                             + "build-logic (<модуль>/src/main/java), а модули — settings.gradle. Как надо: убери "
-                            + "ключ, путь выводится из include и sourceSet.");
+                            + "ключ, путь выводится из include и sourceSet."
+                            + " Иначе тест moduleRoots_HaveOneSource_SettingsGradle перестанет ловить эту поломку. При смене moduleRoots_HaveOneSource_SettingsGradle проверь это утверждение.");
         }
         String paths = Files.readString(Path.of("scripts/module-paths.sh"));
         assertFalse(
                 paths.contains("module_layout_value module_roots"),
                 "scripts/module-paths.sh снова читает корни модулей из layout.properties: список разъедется с "
-                        + "settings.gradle. Как надо: разбирай include-строки settings.gradle.");
+                        + "settings.gradle. Как надо: разбирай include-строки settings.gradle."
+                        + " Иначе тест moduleRoots_HaveOneSource_SettingsGradle перестанет ловить эту поломку. При смене moduleRoots_HaveOneSource_SettingsGradle проверь это утверждение.");
         String logical = Files.readString(Path.of("tools/modules/logical_paths.py"));
         assertFalse(
                 logical.contains("\"module_roots\""),
                 "tools/modules/logical_paths.py снова читает корни модулей из layout.properties: список "
-                        + "разъедется с settings.gradle. Как надо: разбирай include-строки settings.gradle.");
+                        + "разъедется с settings.gradle. Как надо: разбирай include-строки settings.gradle."
+                        + " Иначе тест moduleRoots_HaveOneSource_SettingsGradle перестанет ловить эту поломку. При смене moduleRoots_HaveOneSource_SettingsGradle проверь это утверждение.");
         String graph = Files.readString(Path.of("tools/modules/package_graph.py"));
         assertFalse(
                 graph.contains("_layout_extra(\"module_roots\")"),
                 "tools/modules/package_graph.py снова читает корни модулей из layout.properties: список "
-                        + "разъедется с settings.gradle. Как надо: разбирай include-строки settings.gradle.");
+                        + "разъедется с settings.gradle. Как надо: разбирай include-строки settings.gradle."
+                        + " Иначе тест moduleRoots_HaveOneSource_SettingsGradle перестанет ловить эту поломку. При смене moduleRoots_HaveOneSource_SettingsGradle проверь это утверждение.");
 
         for (String id : modules()) {
             String directory = id.substring(1).replace(':', '/');
             assertTrue(
                     SourceFiles.moduleMainRoots().contains(Path.of(directory, "src/main/java")),
                     "Модуль " + id + " есть в settings.gradle, но SourceFiles не знает его корень исходников: "
-                            + "сторожа и baseline снова начнут искать файлы не там.");
+                            + "сторожа и baseline снова начнут искать файлы не там."
+                            + " Иначе тест moduleRoots_HaveOneSource_SettingsGradle перестанет ловить эту поломку. При смене moduleRoots_HaveOneSource_SettingsGradle проверь это утверждение.");
             assertTrue(
                     SourceFiles.moduleTestRoots().contains(Path.of(directory, "src/test/java")),
                     "Модуль " + id + " есть в settings.gradle, но SourceFiles не знает его корень тестов: "
-                            + "тесты модуля выпадут из отчётов и baseline.");
+                            + "тесты модуля выпадут из отчётов и baseline."
+                            + " Иначе тест moduleRoots_HaveOneSource_SettingsGradle перестанет ловить эту поломку. При смене moduleRoots_HaveOneSource_SettingsGradle проверь это утверждение.");
         }
     }
 
@@ -80,7 +87,8 @@ class ModuleLayoutGuardTests {
                 violations.isEmpty(),
                 "Модуль не повторяет пути отчётов и не тянет тестовые классы корня: иначе отчёт теста уходит в "
                         + "literal TestResults/${project.name}, а тест модуля без корня не собрать. Как надо: отчёт "
-                        + "и фикстуры настраивает build-logic (:test-fixtures). Нарушители: " + violations);
+                        + "и фикстуры настраивает build-logic (:test-fixtures). Нарушители: " + violations
+                        + " При смене moduleBuildScripts_HardcodedReportsAndRootTests_AreAbsent проверь это утверждение.");
     }
 
     private static List<String> modules() throws IOException {

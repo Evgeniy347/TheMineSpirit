@@ -14,8 +14,13 @@ class GraphFactMutationsTests {
                 .toList();
 
         assertTrue(
-                names.contains("hut.lotReady=false"), "Генератор 200 состояний обязан проверять факт «лот не готов»");
-        assertTrue(names.contains("hut.wrong=1"), "Генератор 200 состояний обязан проверять факт «чужие клетки»");
+                names.contains("hut.lotReady=false"),
+                "Генератор 200 состояний обязан проверять факт «лот не готов»"
+                        + " Иначе тест exported_FactsPresent_CoverLotReadyAndWrong перестанет ловить эту поломку. При смене exported_FactsPresent_CoverLotReadyAndWrong проверь это утверждение.");
+        assertTrue(
+                names.contains("hut.wrong=1"),
+                "Генератор 200 состояний обязан проверять факт «чужие клетки»"
+                        + " Иначе тест exported_FactsPresent_CoverLotReadyAndWrong перестанет ловить эту поломку. При смене exported_FactsPresent_CoverLotReadyAndWrong проверь это утверждение.");
     }
 
     @Test
@@ -24,10 +29,12 @@ class GraphFactMutationsTests {
 
         assertTrue(
                 GraphAudit.settles(world.state(), "hut"),
-                "Неготовый лот — работа выравнивания, а не полная стройка: граф обязан это видеть");
+                "Неготовый лот — работа выравнивания, а не полная стройка: граф обязан это видеть"
+                        + " Иначе тест lotReadyMutation_LotNotReady_SettlesAudit перестанет ловить эту поломку. При смене lotReadyMutation_LotNotReady_SettlesAudit проверь это утверждение.");
         assertFalse(
                 GraphAudit.settles(GraphWorld.settled().state(), "hut"),
-                "Без факта постройки аудит не закрывает стройку: факт приходит из мира, а не выдумывается");
+                "Без факта постройки аудит не закрывает стройку: факт приходит из мира, а не выдумывается"
+                        + " Иначе тест lotReadyMutation_LotNotReady_SettlesAudit перестанет ловить эту поломку. При смене lotReadyMutation_LotNotReady_SettlesAudit проверь это утверждение.");
     }
 
     @Test
@@ -36,6 +43,7 @@ class GraphFactMutationsTests {
 
         assertTrue(
                 world.state().events().contains("repair_hut"),
-                "Чужие клетки в плане поднимают ремонт: событие приходит из фактов аудита");
+                "Чужие клетки в плане поднимают ремонт: событие приходит из фактов аудита"
+                        + " Иначе тест wrongMutation_WrongCells_AddRepairEvent перестанет ловить эту поломку. При смене wrongMutation_WrongCells_AddRepairEvent проверь это утверждение.");
     }
 }

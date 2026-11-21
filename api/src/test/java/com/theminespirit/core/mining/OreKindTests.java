@@ -39,7 +39,8 @@ class OreKindTests {
                 expected,
                 OreKind.blocks(kind),
                 "Набор блоков вида " + kind + " обязан совпадать с ванильными id: по нему ищется цель добычи, "
-                        + "а пропущенный каменный/глубинносланцевый вариант оставляет часть жилы недобытой");
+                        + "а пропущенный каменный/глубинносланцевый вариант оставляет часть жилы недобытой"
+                        + " Иначе тест blocks_EverySpecificKind_MatchesVanillaOreTable перестанет ловить эту поломку. При смене blocks_EverySpecificKind_MatchesVanillaOreTable проверь это утверждение.");
     }
 
     @Test
@@ -54,7 +55,8 @@ class OreKindTests {
         assertEquals(
                 union,
                 OreKind.blocks(OreKind.ANY),
-                "any обязан покрывать все руды: иначе mine_vein(ore=any) молча пропускает часть руд");
+                "any обязан покрывать все руды: иначе mine_vein(ore=any) молча пропускает часть руд"
+                        + " При смене blocks_AnyKind_IsUnionOfSpecificKinds проверь это утверждение.");
     }
 
     @Test
@@ -74,7 +76,8 @@ class OreKindTests {
                         "netherite"),
                 OreKind.names(),
                 "Список значений для каталога обязан идти в порядке объявления и нижним регистром: "
-                        + "по нему валидатор плана показывает допустимые виды руды ИИ");
+                        + "по нему валидатор плана показывает допустимые виды руды ИИ"
+                        + " Иначе тест names_AllKinds_AreLowercaseInDeclarationOrder перестанет ловить эту поломку. При смене names_AllKinds_AreLowercaseInDeclarationOrder проверь это утверждение.");
     }
 
     @Test
@@ -82,7 +85,8 @@ class OreKindTests {
         assertEquals(
                 OreKind.IRON,
                 OreKind.parse("iron"),
-                "parse обязан принимать имя вида руды из каталога: иначе план с ore=iron не запускается");
+                "parse обязан принимать имя вида руды из каталога: иначе план с ore=iron не запускается"
+                        + " При смене parse_KnownKindName_ReturnsKind проверь это утверждение.");
     }
 
     @Test
@@ -90,7 +94,8 @@ class OreKindTests {
         assertEquals(
                 OreKind.NETHERITE,
                 OreKind.parse("  Netherite "),
-                "parse обязан прощать регистр и пробелы: иначе опечатка в регистре отвергает верный вид руды");
+                "parse обязан прощать регистр и пробелы: иначе опечатка в регистре отвергает верный вид руды"
+                        + " При смене parse_KindNameWithCaseAndSpaces_ReturnsKind проверь это утверждение.");
     }
 
     @Test
@@ -99,14 +104,17 @@ class OreKindTests {
                 IllegalArgumentException.class,
                 () -> OreKind.parse("mithril"),
                 "Неизвестный вид руды обязан отвергаться: иначе mine_vein ищет блоки, которых нет, и молча "
-                        + "завершается без добычи");
+                        + "завершается без добычи"
+                        + " При смене parse_UnknownKind_ThrowsWithAllowedList проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("mithril"),
-                "Отказ обязан называть неизвестное значение. Фактическое: " + error.getMessage());
+                "Отказ обязан называть неизвестное значение. Фактическое: " + error.getMessage()
+                        + " Иначе тест parse_UnknownKind_ThrowsWithAllowedList перестанет ловить эту поломку. При смене parse_UnknownKind_ThrowsWithAllowedList проверь это утверждение.");
         assertTrue(
                 error.getMessage().contains("iron"),
-                "Отказ обязан перечислять допустимые виды руды. Фактическое: " + error.getMessage());
+                "Отказ обязан перечислять допустимые виды руды. Фактическое: " + error.getMessage()
+                        + " Иначе тест parse_UnknownKind_ThrowsWithAllowedList перестанет ловить эту поломку. При смене parse_UnknownKind_ThrowsWithAllowedList проверь это утверждение.");
     }
 
     @ParameterizedTest(name = "{0}")
@@ -117,7 +125,8 @@ class OreKindTests {
                     Optional.of(kind),
                     OreKind.ofBlock(block),
                     "ofBlock(" + block + ") обязан вернуть " + kind + ": по обратному сопоставлению "
-                            + "LevelOreView отвечает, руда ли это");
+                            + "LevelOreView отвечает, руда ли это"
+                            + " Иначе тест ofBlock_EveryBlockOfKind_ReturnsKind перестанет ловить эту поломку. При смене ofBlock_EveryBlockOfKind_ReturnsKind проверь это утверждение.");
         }
     }
 
@@ -126,7 +135,8 @@ class OreKindTests {
         assertEquals(
                 Optional.of(OreKind.DIAMOND),
                 OreKind.ofBlock("diamond_ore"),
-                "id без namespace читается как minecraft:<id>: иначе шаблон `diamond_ore` не находит руду");
+                "id без namespace читается как minecraft:<id>: иначе шаблон `diamond_ore` не находит руду"
+                        + " При смене ofBlock_BlockWithoutNamespace_ReturnsKind проверь это утверждение.");
     }
 
     @Test
@@ -134,7 +144,8 @@ class OreKindTests {
         assertEquals(
                 Optional.empty(),
                 OreKind.ofBlock("minecraft:stone"),
-                "Камень не руда: ofBlock обязан вернуть пусто, иначе любой камень считается целью mine_vein");
+                "Камень не руда: ofBlock обязан вернуть пусто, иначе любой камень считается целью mine_vein"
+                        + " При смене ofBlock_NonOreBlock_ReturnsEmpty проверь это утверждение.");
     }
 
     @Test
@@ -142,6 +153,7 @@ class OreKindTests {
         assertEquals(
                 Optional.empty(),
                 OreKind.ofBlock("othermod:iron_ore"),
-                "Чужой namespace с тем же суффиксом не ванильная руда: иначе дух гоняется за блоком чужого мода");
+                "Чужой namespace с тем же суффиксом не ванильная руда: иначе дух гоняется за блоком чужого мода"
+                        + " При смене ofBlock_OtherNamespaceSameSuffix_ReturnsEmpty проверь это утверждение.");
     }
 }

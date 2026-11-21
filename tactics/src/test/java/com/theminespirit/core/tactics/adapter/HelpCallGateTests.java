@@ -17,7 +17,8 @@ class HelpCallGateTests {
     void ready_FirstCall_IsDue() {
         assertTrue(
                 new HelpCallGate().ready(0, INTERVAL),
-                "Первый зов не ждёт: до него дух не звал и игрок ещё ничего не слышал");
+                "Первый зов не ждёт: до него дух не звал и игрок ещё ничего не слышал"
+                        + " Иначе тест ready_FirstCall_IsDue перестанет ловить эту поломку. При смене ready_FirstCall_IsDue проверь это утверждение.");
     }
 
     @Test
@@ -27,10 +28,12 @@ class HelpCallGateTests {
 
         assertFalse(
                 gate.ready(100 + INTERVAL - 1, INTERVAL),
-                "Зов не повторяется раньше T тиков: иначе чат забивается одним и тем же сообщением");
+                "Зов не повторяется раньше T тиков: иначе чат забивается одним и тем же сообщением"
+                        + " При смене ready_BeforeIntervalNotDue_AtIntervalDue проверь это утверждение.");
         assertTrue(
                 gate.ready(100 + INTERVAL, INTERVAL),
-                "На исходе T тиков зов снова разрешён: предел частоты, а не запрет навсегда");
+                "На исходе T тиков зов снова разрешён: предел частоты, а не запрет навсегда"
+                        + " Иначе тест ready_BeforeIntervalNotDue_AtIntervalDue перестанет ловить эту поломку. При смене ready_BeforeIntervalNotDue_AtIntervalDue проверь это утверждение.");
     }
 
     @Test
@@ -38,7 +41,8 @@ class HelpCallGateTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new HelpCallGate().ready(0, 0),
-                "Предел частоты меньше тика бессмыслен: зов шёл бы каждый тик");
+                "Предел частоты меньше тика бессмыслен: зов шёл бы каждый тик"
+                        + " Иначе тест ready_IntervalBelowOneTick_Rejected перестанет ловить эту поломку. При смене ready_IntervalBelowOneTick_Rejected проверь это утверждение.");
     }
 
     @Property(tries = 200)
@@ -54,11 +58,16 @@ class HelpCallGateTests {
                 assertTrue(
                         now - last >= interval,
                         "Соседние зовы " + last + " и " + now + " ближе предела " + interval + ": чат игрока "
-                                + "превращается в спам, а сигнал помощи обесценивается");
+                                + "превращается в спам, а сигнал помощи обесценивается"
+                                + " Иначе тест called_AnyTickSequence_NeverCloserThanInterval перестанет ловить эту поломку. При смене called_AnyTickSequence_NeverCloserThanInterval проверь это утверждение.");
             }
             gate.called(now);
             last = now;
         }
-        assertEquals(true, last >= 0, "За 5000 тиков исправный зов обязан сработать хотя бы раз");
+        assertEquals(
+                true,
+                last >= 0,
+                "За 5000 тиков исправный зов обязан сработать хотя бы раз"
+                        + " Иначе тест called_AnyTickSequence_NeverCloserThanInterval перестанет ловить эту поломку. При смене called_AnyTickSequence_NeverCloserThanInterval проверь это утверждение.");
     }
 }

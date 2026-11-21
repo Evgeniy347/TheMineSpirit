@@ -60,11 +60,13 @@ class GraphMorePostTests {
                 expected,
                 actual,
                 "Каждый реализованный путь/событие more5/6/7 обязан иметь действие, и наоборот: иначе граф "
-                        + "выбирает работу, которую некому исполнить");
+                        + "выбирает работу, которую некому исполнить"
+                        + " При смене implementedWaysAndEvents_FragmentLoaded_HaveActionHandlers проверь это утверждение.");
         assertTrue(
                 MoreActions.cases().containsKey("life_protect_player")
                         && MoreActions.cases().containsKey("life_feed_player"),
-                "Слабость игрока ведёт жизнь: задачи жизни имеют свои действия");
+                "Слабость игрока ведёт жизнь: задачи жизни имеют свои действия"
+                        + " Иначе тест implementedWaysAndEvents_FragmentLoaded_HaveActionHandlers перестанет ловить эту поломку. При смене implementedWaysAndEvents_FragmentLoaded_HaveActionHandlers проверь это утверждение.");
     }
 
     @Test
@@ -79,12 +81,16 @@ class GraphMorePostTests {
                     : TicketPlans.plan(action.getValue(), target);
             TaskNode validated = PlanValidator.validate(plan, CoreScripts.defaultCatalog(), ConditionCatalog.empty());
             List<String> scripts = scripts(plan);
-            assertFalse(scripts.isEmpty(), "У действия " + action.getKey() + " нет ни одного шага плана");
+            assertFalse(
+                    scripts.isEmpty(),
+                    "У действия " + action.getKey() + " нет ни одного шага плана"
+                            + " Иначе тест actionBoardCases_PlannedThroughBoard_HaveValidCatalogPlans перестанет ловить эту поломку. При смене actionBoardCases_PlannedThroughBoard_HaveValidCatalogPlans проверь это утверждение.");
             assertEquals(
                     scripts,
                     scripts(validated),
                     "План действия " + action.getKey() + " обязан проходить каталог скриптов теми же шагами: "
-                            + "иначе доска выдаст духу задание, которое валидатор отвергнет");
+                            + "иначе доска выдаст духу задание, которое валидатор отвергнет"
+                            + " При смене actionBoardCases_PlannedThroughBoard_HaveValidCatalogPlans проверь это утверждение.");
         }
     }
 
@@ -98,7 +104,8 @@ class GraphMorePostTests {
 
         assertTrue(
                 scripts(plan).contains("bridge"),
-                "Мост чинится существующим скриптом bridge, а не новым проходом: " + scripts(plan));
+                "Мост чинится существующим скриптом bridge, а не новым проходом: " + scripts(plan)
+                        + " Иначе тест bridgeAction_PlanBuilt_UsesExistingBridgeScript перестанет ловить эту поломку. При смене bridgeAction_PlanBuilt_UsesExistingBridgeScript проверь это утверждение.");
     }
 
     @Test
@@ -117,8 +124,15 @@ class GraphMorePostTests {
         GraphTickets.Ticket ticket = new GraphTickets.Ticket(
                 "graph:event:more5_fuel_low:more5_gather_fuel", GraphTickets.Kind.EVENT, "more5:fuel_ready", task, 1);
 
-        assertEquals("more5_gather_fuel", MoreActions.key(ticket), "Событие области ищет действие по id задачи");
-        assertTrue(MoreActions.handles(ticket), "Событие области обязано попасть в свой обработчик");
+        assertEquals(
+                "more5_gather_fuel",
+                MoreActions.key(ticket),
+                "Событие области ищет действие по id задачи"
+                        + " Иначе тест eventTicket_KeyDerived_MatchesFragmentAction перестанет ловить эту поломку. При смене eventTicket_KeyDerived_MatchesFragmentAction проверь это утверждение.");
+        assertTrue(
+                MoreActions.handles(ticket),
+                "Событие области обязано попасть в свой обработчик"
+                        + " Иначе тест eventTicket_KeyDerived_MatchesFragmentAction перестанет ловить эту поломку. При смене eventTicket_KeyDerived_MatchesFragmentAction проверь это утверждение.");
     }
 
     @Test
@@ -137,7 +151,11 @@ class GraphMorePostTests {
         GraphTickets.Ticket ticket =
                 new GraphTickets.Ticket("graph:more5_gather_fuel", GraphTickets.Kind.WAY, "more5_gather_fuel", task, 1);
 
-        assertEquals("more5_gather_fuel", MoreActions.key(ticket), "Путь области ищет действие по своему id");
+        assertEquals(
+                "more5_gather_fuel",
+                MoreActions.key(ticket),
+                "Путь области ищет действие по своему id"
+                        + " Иначе тест wayTicket_KeyDerived_MatchesFragmentAction перестанет ловить эту поломку. При смене wayTicket_KeyDerived_MatchesFragmentAction проверь это утверждение.");
     }
 
     private static boolean fragment(String id) {

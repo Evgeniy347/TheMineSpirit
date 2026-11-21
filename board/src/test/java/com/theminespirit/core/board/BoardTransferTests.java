@@ -23,7 +23,11 @@ class BoardTransferTests {
             events.add(event);
             modifiers.addAll(ticket.modifiers());
             if (event == BoardLog.Event.ASSIGNED) {
-                assertEquals(GIVER, holder, "Передачу исполняет дающий: груз везут от источника");
+                assertEquals(
+                        GIVER,
+                        holder,
+                        "Передачу исполняет дающий: груз везут от источника"
+                                + " Иначе тест transferTicket_ClaimAndComplete_JournalNamesHolderAndAddressee перестанет ловить эту поломку. При смене transferTicket_ClaimAndComplete_JournalNamesHolderAndAddressee проверь это утверждение.");
             }
         });
         BoardTicket ticket = new BoardTicket(
@@ -38,20 +42,37 @@ class BoardTransferTests {
                 Map.of(),
                 List.of("to=" + TAKER, "item=stick", "count=2", "from=" + GIVER));
 
-        assertEquals(BoardOutcome.ACCEPTED, board.submit(ticket), "Задание передачи обязано встать в очередь");
+        assertEquals(
+                BoardOutcome.ACCEPTED,
+                board.submit(ticket),
+                "Задание передачи обязано встать в очередь"
+                        + " Иначе тест transferTicket_ClaimAndComplete_JournalNamesHolderAndAddressee перестанет ловить эту поломку. При смене transferTicket_ClaimAndComplete_JournalNamesHolderAndAddressee проверь это утверждение.");
         assertTrue(
                 board.claimable(new StockView(Map.of()), 10).contains(ticket),
-                "Передача не ждёт предметов на складе: груз уже в инвентаре источника");
-        assertEquals(BoardOutcome.CLAIMED, board.claim(ticket.id(), GIVER, 10), "Задание передачи берёт дающий дух");
-        assertTrue(board.complete(ticket.id()), "Завершённая передача закрывает задание доски");
+                "Передача не ждёт предметов на складе: груз уже в инвентаре источника"
+                        + " Иначе тест transferTicket_ClaimAndComplete_JournalNamesHolderAndAddressee перестанет ловить эту поломку. При смене transferTicket_ClaimAndComplete_JournalNamesHolderAndAddressee проверь это утверждение.");
+        assertEquals(
+                BoardOutcome.CLAIMED,
+                board.claim(ticket.id(), GIVER, 10),
+                "Задание передачи берёт дающий дух"
+                        + " Иначе тест transferTicket_ClaimAndComplete_JournalNamesHolderAndAddressee перестанет ловить эту поломку. При смене transferTicket_ClaimAndComplete_JournalNamesHolderAndAddressee проверь это утверждение.");
+        assertTrue(
+                board.complete(ticket.id()),
+                "Завершённая передача закрывает задание доски"
+                        + " Иначе тест transferTicket_ClaimAndComplete_JournalNamesHolderAndAddressee перестанет ловить эту поломку. При смене transferTicket_ClaimAndComplete_JournalNamesHolderAndAddressee проверь это утверждение.");
 
         assertEquals(
                 List.of(BoardLog.Event.SUBMITTED, BoardLog.Event.ASSIGNED, BoardLog.Event.DONE),
                 events,
-                "Журнал обязан назвать выдачу (кому) и итог: без них передачу не отличить от зависшей");
+                "Журнал обязан назвать выдачу (кому) и итог: без них передачу не отличить от зависшей"
+                        + " Иначе тест transferTicket_ClaimAndComplete_JournalNamesHolderAndAddressee перестанет ловить эту поломку. При смене transferTicket_ClaimAndComplete_JournalNamesHolderAndAddressee проверь это утверждение.");
         assertTrue(
                 modifiers.contains("to=" + TAKER) && modifiers.contains("item=stick"),
-                "Журнал передачи обязан назвать получателя и предмет, а не только исполнителя: " + modifiers);
-        assertTrue(modifiers.contains("count=2"), "Журнал передачи обязан назвать число предметов: " + modifiers);
+                "Журнал передачи обязан назвать получателя и предмет, а не только исполнителя: " + modifiers
+                        + " Иначе тест transferTicket_ClaimAndComplete_JournalNamesHolderAndAddressee перестанет ловить эту поломку. При смене transferTicket_ClaimAndComplete_JournalNamesHolderAndAddressee проверь это утверждение.");
+        assertTrue(
+                modifiers.contains("count=2"),
+                "Журнал передачи обязан назвать число предметов: " + modifiers
+                        + " Иначе тест transferTicket_ClaimAndComplete_JournalNamesHolderAndAddressee перестанет ловить эту поломку. При смене transferTicket_ClaimAndComplete_JournalNamesHolderAndAddressee проверь это утверждение.");
     }
 }

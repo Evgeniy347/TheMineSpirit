@@ -19,10 +19,19 @@ class LeaseSessionTests {
         LeaseSession session = LeaseSession.open(book, SPIRIT, null, "scaffold", 10);
         BlockCoord cell = new BlockCoord(1, 70, 1);
 
-        assertTrue(session.placed(cell, "minecraft:dirt"), "Первая постановка клетки попадает в аренду");
+        assertTrue(
+                session.placed(cell, "minecraft:dirt"),
+                "Первая постановка клетки попадает в аренду"
+                        + " Иначе тест placedTwice_SameCell_RecordedOnce перестанет ловить эту поломку. При смене placedTwice_SameCell_RecordedOnce проверь это утверждение.");
         assertFalse(
-                session.placed(cell, "minecraft:dirt"), "Повтор шага не перезаписывает клетку: откат идёт один раз");
-        assertEquals(List.of(cell), session.cells().stream().map(LeaseCell::pos).toList(), "В аренде одна клетка");
+                session.placed(cell, "minecraft:dirt"),
+                "Повтор шага не перезаписывает клетку: откат идёт один раз"
+                        + " Иначе тест placedTwice_SameCell_RecordedOnce перестанет ловить эту поломку. При смене placedTwice_SameCell_RecordedOnce проверь это утверждение.");
+        assertEquals(
+                List.of(cell),
+                session.cells().stream().map(LeaseCell::pos).toList(),
+                "В аренде одна клетка"
+                        + " Иначе тест placedTwice_SameCell_RecordedOnce перестанет ловить эту поломку. При смене placedTwice_SameCell_RecordedOnce проверь это утверждение.");
     }
 
     @Test
@@ -30,7 +39,8 @@ class LeaseSessionTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new LeaseCell(new BlockCoord(1, 70, 1), LeaseKind.BROKEN, null, null),
-                "Сломанная клетка обязана помнить прежний блок: иначе брошенную аренду нечем вернуть");
+                "Сломанная клетка обязана помнить прежний блок: иначе брошенную аренду нечем вернуть"
+                        + " При смене brokenCell_WithoutBefore_RejectedByModel проверь это утверждение.");
     }
 
     @Test
@@ -44,9 +54,17 @@ class LeaseSessionTests {
         LeaseSession second = LeaseSession.open(book, SPIRIT, null, "dig_out", 20);
         assertFalse(
                 second.placed(cell, "minecraft:dirt"),
-                "Клетку брошенной аренды вторая механика не перезаписывает: откат остаётся за первым владельцем");
-        assertEquals(first.id(), book.owner(cell).orElseThrow().id(), "Владелец клетки не сменился");
-        assertTrue(second.cells().isEmpty(), "Вторая аренда не забрала чужую клетку");
+                "Клетку брошенной аренды вторая механика не перезаписывает: откат остаётся за первым владельцем"
+                        + " Иначе тест placed_CellOwnedByOrphanedLease_LeftToItsOwner перестанет ловить эту поломку. При смене placed_CellOwnedByOrphanedLease_LeftToItsOwner проверь это утверждение.");
+        assertEquals(
+                first.id(),
+                book.owner(cell).orElseThrow().id(),
+                "Владелец клетки не сменился"
+                        + " Иначе тест placed_CellOwnedByOrphanedLease_LeftToItsOwner перестанет ловить эту поломку. При смене placed_CellOwnedByOrphanedLease_LeftToItsOwner проверь это утверждение.");
+        assertTrue(
+                second.cells().isEmpty(),
+                "Вторая аренда не забрала чужую клетку"
+                        + " Иначе тест placed_CellOwnedByOrphanedLease_LeftToItsOwner перестанет ловить эту поломку. При смене placed_CellOwnedByOrphanedLease_LeftToItsOwner проверь это утверждение.");
     }
 
     @Test
@@ -62,12 +80,17 @@ class LeaseSessionTests {
 
         assertTrue(
                 dig.foreignOwner(own).isEmpty(),
-                "Своя клетка не чужая: повтор шага не диагностируют как конфликт механик");
+                "Своя клетка не чужая: повтор шага не диагностируют как конфликт механик"
+                        + " Иначе тест foreignOwner_OtherLeaseAndOwnCell_Distinguished перестанет ловить эту поломку. При смене foreignOwner_OtherLeaseAndOwnCell_Distinguished проверь это утверждение.");
         assertEquals(
                 bridge.id(),
                 dig.foreignOwner(foreign).orElseThrow().id(),
-                "Действующая аренда другой механики видна владельцем клетки");
-        assertTrue(dig.foreignOwner(free).isEmpty(), "Свободная клетка ничья: конфликта нет");
+                "Действующая аренда другой механики видна владельцем клетки"
+                        + " Иначе тест foreignOwner_OtherLeaseAndOwnCell_Distinguished перестанет ловить эту поломку. При смене foreignOwner_OtherLeaseAndOwnCell_Distinguished проверь это утверждение.");
+        assertTrue(
+                dig.foreignOwner(free).isEmpty(),
+                "Свободная клетка ничья: конфликта нет"
+                        + " Иначе тест foreignOwner_OtherLeaseAndOwnCell_Distinguished перестанет ловить эту поломку. При смене foreignOwner_OtherLeaseAndOwnCell_Distinguished проверь это утверждение.");
     }
 
     @Test
@@ -78,9 +101,13 @@ class LeaseSessionTests {
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,
                 () -> session.forget(new BlockCoord(3, 70, 3)),
-                "Забыть незаписанную клетку нельзя: механика разошлась бы с книгой аренд");
+                "Забыть незаписанную клетку нельзя: механика разошлась бы с книгой аренд"
+                        + " Иначе тест forget_UnrecordedCell_Rejected перестанет ловить эту поломку. При смене forget_UnrecordedCell_Rejected проверь это утверждение.");
 
-        assertTrue(error.getMessage().contains("не записана"), "Причина ошибки называет, что клетки нет в аренде");
+        assertTrue(
+                error.getMessage().contains("не записана"),
+                "Причина ошибки называет, что клетки нет в аренде"
+                        + " Иначе тест forget_UnrecordedCell_Rejected перестанет ловить эту поломку. При смене forget_UnrecordedCell_Rejected проверь это утверждение.");
     }
 
     @Test
@@ -93,8 +120,15 @@ class LeaseSessionTests {
         session.orphan();
         session.commit();
 
-        assertEquals(LeaseStatus.DONE, session.status(), "Повторное закрытие не бросает уже закрытую аренду");
-        assertTrue(book.orphanedCells().isEmpty(), "Успешная правка не попадает в уборку");
+        assertEquals(
+                LeaseStatus.DONE,
+                session.status(),
+                "Повторное закрытие не бросает уже закрытую аренду"
+                        + " Иначе тест closeTwice_CancelAfterCommit_DoesNotReopenOrThrow перестанет ловить эту поломку. При смене closeTwice_CancelAfterCommit_DoesNotReopenOrThrow проверь это утверждение.");
+        assertTrue(
+                book.orphanedCells().isEmpty(),
+                "Успешная правка не попадает в уборку"
+                        + " Иначе тест closeTwice_CancelAfterCommit_DoesNotReopenOrThrow перестанет ловить эту поломку. При смене closeTwice_CancelAfterCommit_DoesNotReopenOrThrow проверь это утверждение.");
     }
 
     @Test
@@ -104,8 +138,15 @@ class LeaseSessionTests {
 
         session.orphan();
 
-        assertEquals(LeaseStatus.DONE, session.status(), "Пустая аренда не засоряет уборку: закрывается DONE");
-        assertTrue(book.orphaned().isEmpty(), "Уборке нечего делать с пустой арендой");
+        assertEquals(
+                LeaseStatus.DONE,
+                session.status(),
+                "Пустая аренда не засоряет уборку: закрывается DONE"
+                        + " Иначе тест orphan_WithoutCells_ClosesAsDone перестанет ловить эту поломку. При смене orphan_WithoutCells_ClosesAsDone проверь это утверждение.");
+        assertTrue(
+                book.orphaned().isEmpty(),
+                "Уборке нечего делать с пустой арендой"
+                        + " Иначе тест orphan_WithoutCells_ClosesAsDone перестанет ловить эту поломку. При смене orphan_WithoutCells_ClosesAsDone проверь это утверждение.");
     }
 
     @Test
@@ -117,6 +158,7 @@ class LeaseSessionTests {
         assertThrows(
                 IllegalStateException.class,
                 () -> session.placed(new BlockCoord(7, 70, 7)),
-                "Закрытая аренда новый блок не принимает: иначе откат стал бы непредсказуемым");
+                "Закрытая аренда новый блок не принимает: иначе откат стал бы непредсказуемым"
+                        + " При смене record_AfterCommit_Rejected проверь это утверждение.");
     }
 }

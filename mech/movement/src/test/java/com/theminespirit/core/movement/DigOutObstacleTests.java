@@ -11,18 +11,23 @@ class DigOutObstacleTests {
         assertFalse(
                 DigOutObstacle.obstacle(false, true),
                 "В observe13 дух тонул в пещере с водой: вода в проходе — не блок для ломки, иначе лестница "
-                        + "вверх падает с «в проходе жидкость» и дух не выходит");
+                        + "вверх падает с «в проходе жидкость» и дух не выходит"
+                        + " При смене obstacle_WaterInPassage_IsNotDug проверь это утверждение.");
     }
 
     @Test
     void obstacle_SolidCeiling_IsDug() {
         assertTrue(
                 DigOutObstacle.obstacle(false, false),
-                "Камень над водой остаётся препятствием: его надо копать, иначе лестница к небу не начнётся");
+                "Камень над водой остаётся препятствием: его надо копать, иначе лестница к небу не начнётся"
+                        + " При смене obstacle_SolidCeiling_IsDug проверь это утверждение.");
     }
 
     @Test
     void obstacle_OpenCell_IsPassable() {
-        assertFalse(DigOutObstacle.obstacle(true, false), "Открытая клетка не требует ломки");
+        assertFalse(
+                DigOutObstacle.obstacle(true, false),
+                "Открытая клетка не требует ломки"
+                        + " Иначе тест obstacle_OpenCell_IsPassable перестанет ловить эту поломку. При смене obstacle_OpenCell_IsPassable проверь это утверждение.");
     }
 }

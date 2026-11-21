@@ -36,12 +36,24 @@ class BoardListingsTests {
         assertEquals(
                 BoardListQuery.DEFAULT_LIMIT,
                 listing.tasks().size(),
-                "Живая доска больше порции: ответ обязан отдавать limit заданий, а не все " + tasks.size());
-        assertEquals(tasks.size(), listing.total(), "total обязан равняться всей живой доске без фильтров");
-        assertTrue(listing.nextCursor() != null, "У живой доски остаётся хвост: клиент обязан получить курсор");
+                "Живая доска больше порции: ответ обязан отдавать limit заданий, а не все " + tasks.size()
+                        + " Иначе тест select_LiveBoardDefaultPortion_KeepsBoardBiggerThanPortion перестанет ловить эту поломку. При смене select_LiveBoardDefaultPortion_KeepsBoardBiggerThanPortion проверь это утверждение.");
+        assertEquals(
+                tasks.size(),
+                listing.total(),
+                "total обязан равняться всей живой доске без фильтров"
+                        + " Иначе тест select_LiveBoardDefaultPortion_KeepsBoardBiggerThanPortion перестанет ловить эту поломку. При смене select_LiveBoardDefaultPortion_KeepsBoardBiggerThanPortion проверь это утверждение.");
+        assertTrue(
+                listing.nextCursor() != null,
+                "У живой доски остаётся хвост: клиент обязан получить курсор"
+                        + " Иначе тест select_LiveBoardDefaultPortion_KeepsBoardBiggerThanPortion перестанет ловить эту поломку. При смене select_LiveBoardDefaultPortion_KeepsBoardBiggerThanPortion проверь это утверждение.");
         int byGroups =
                 listing.groups().values().stream().mapToInt(Integer::intValue).sum();
-        assertEquals(byGroups, listing.total(), "Сумма счётчиков колонок обязана совпадать с total");
+        assertEquals(
+                byGroups,
+                listing.total(),
+                "Сумма счётчиков колонок обязана совпадать с total"
+                        + " Иначе тест select_LiveBoardDefaultPortion_KeepsBoardBiggerThanPortion перестанет ловить эту поломку. При смене select_LiveBoardDefaultPortion_KeepsBoardBiggerThanPortion проверь это утверждение.");
     }
 
     @Test
@@ -52,11 +64,13 @@ class BoardListingsTests {
 
         assertTrue(
                 listing.tasks().stream().anyMatch(task -> "first:build_orchard".equals(task.id())),
-                "На живой доске FAILED — это сад: фильтр статуса обязан его вернуть, иначе REST-клиент его не найдёт");
+                "На живой доске FAILED — это сад: фильтр статуса обязан его вернуть, иначе REST-клиент его не найдёт"
+                        + " При смене select_LiveBoardFailedStatus_ReturnsOrchardTask проверь это утверждение.");
         assertEquals(
                 BoardStatus.FAILED.name(),
                 listing.tasks().get(0).status(),
-                "Все задания в ответе обязаны иметь запрошенный статус");
+                "Все задания в ответе обязаны иметь запрошенный статус"
+                        + " Иначе тест select_LiveBoardFailedStatus_ReturnsOrchardTask перестанет ловить эту поломку. При смене select_LiveBoardFailedStatus_ReturnsOrchardTask проверь это утверждение.");
     }
 
     @Test
@@ -74,14 +88,17 @@ class BoardListingsTests {
 
         assertTrue(
                 listing.tasks().size() <= 10,
-                "Порция колонки обязана уважать limit: " + listing.tasks().size());
+                "Порция колонки обязана уважать limit: " + listing.tasks().size()
+                        + " Иначе тест select_LiveBoardGroupFilter_MatchesGroupTotals перестанет ловить эту поломку. При смене select_LiveBoardGroupFilter_MatchesGroupTotals проверь это утверждение.");
         assertTrue(
                 listing.tasks().stream()
                         .allMatch(task -> BoardListings.groupOf(task, unfinished) == BoardTileGroup.WAITING),
-                "Фильтр group обязан отдавать только задания колонки WAITING");
+                "Фильтр group обязан отдавать только задания колонки WAITING"
+                        + " Иначе тест select_LiveBoardGroupFilter_MatchesGroupTotals перестанет ловить эту поломку. При смене select_LiveBoardGroupFilter_MatchesGroupTotals проверь это утверждение.");
         assertEquals(
                 listing.groups().get(BoardTileGroup.WAITING),
                 listing.total(),
-                "total при фильтре колонки обязан совпадать со счётчиком этой колонки");
+                "total при фильтре колонки обязан совпадать со счётчиком этой колонки"
+                        + " Иначе тест select_LiveBoardGroupFilter_MatchesGroupTotals перестанет ловить эту поломку. При смене select_LiveBoardGroupFilter_MatchesGroupTotals проверь это утверждение.");
     }
 }

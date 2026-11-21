@@ -15,7 +15,8 @@ class FarmGraphTests {
 
         assertTrue(
                 plan.task("building:pen_cow").isPresent(),
-                "Загон — узел графа: без сторожей работа выбирается постройкой building:pen_cow — " + plan.tasks());
+                "Загон — узел графа: без сторожей работа выбирается постройкой building:pen_cow — " + plan.tasks()
+                        + " Иначе тест plan_PenAbsentAtStageTwo_GraphDemandsPen перестанет ловить эту поломку. При смене plan_PenAbsentAtStageTwo_GraphDemandsPen проверь это утверждение.");
     }
 
     @Test
@@ -27,7 +28,8 @@ class FarmGraphTests {
 
         assertTrue(
                 plan.task("capture_cow").map(GraphPlan.Task::feasible).orElse(false),
-                "Загон построен и коров мало — граф выбирает ловлю коровы: " + plan.task("capture_cow"));
+                "Загон построен и коров мало — граф выбирает ловлю коровы: " + plan.task("capture_cow")
+                        + " Иначе тест plan_PenBuilt_CaptureCowIsWork перестанет ловить эту поломку. При смене plan_PenBuilt_CaptureCowIsWork проверь это утверждение.");
     }
 
     @Test
@@ -42,7 +44,8 @@ class FarmGraphTests {
 
         assertTrue(
                 plan.task("shear").map(GraphPlan.Task::feasible).orElse(false),
-                "Овчарня и овцы есть — граф выбирает стрижку: " + plan.task("shear"));
+                "Овчарня и овцы есть — граф выбирает стрижку: " + plan.task("shear")
+                        + " Иначе тест plan_SheepInSheepPen_ShearingIsWork перестанет ловить эту поломку. При смене plan_SheepInSheepPen_ShearingIsWork проверь это утверждение.");
     }
 
     @Test
@@ -54,6 +57,7 @@ class FarmGraphTests {
 
         assertTrue(
                 plan.task("weave_wool").map(GraphPlan.Task::feasible).orElse(false),
-                "Нити есть, шерсти нет — граф выбирает тканьё шерсти: " + plan.task("weave_wool"));
+                "Нити есть, шерсти нет — граф выбирает тканьё шерсти: " + plan.task("weave_wool")
+                        + " Иначе тест plan_StringsStocked_WeaveWoolIsWork перестанет ловить эту поломку. При смене plan_StringsStocked_WeaveWoolIsWork проверь это утверждение.");
     }
 }

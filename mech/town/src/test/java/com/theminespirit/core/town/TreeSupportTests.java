@@ -18,18 +18,22 @@ class TreeSupportTests {
         assertEquals(
                 x,
                 columns.get(4).x(),
-                "Середина по X вышла за int: сумма крайних координат переполнилась, и опора встала не рядом с деревом");
+                "Середина по X вышла за int: сумма крайних координат переполнилась, и опора встала не рядом с деревом"
+                        + " Иначе тест candidates_CoordinatesNearIntegerLimit_CenterComputedWithoutOverflow перестанет ловить эту поломку. При смене candidates_CoordinatesNearIntegerLimit_CenterComputedWithoutOverflow проверь это утверждение.");
         assertEquals(
                 x,
                 columns.get(5).x(),
-                "Середина по X вышла за int: сумма крайних координат переполнилась, и опора встала не рядом с деревом");
+                "Середина по X вышла за int: сумма крайних координат переполнилась, и опора встала не рядом с деревом"
+                        + " Иначе тест candidates_CoordinatesNearIntegerLimit_CenterComputedWithoutOverflow перестанет ловить эту поломку. При смене candidates_CoordinatesNearIntegerLimit_CenterComputedWithoutOverflow проверь это утверждение.");
         assertEquals(
                 z + 1,
                 columns.get(6).z(),
-                "Середина по Z вышла за int: сумма крайних координат переполнилась, и опора встала не рядом с деревом");
+                "Середина по Z вышла за int: сумма крайних координат переполнилась, и опора встала не рядом с деревом"
+                        + " Иначе тест candidates_CoordinatesNearIntegerLimit_CenterComputedWithoutOverflow перестанет ловить эту поломку. При смене candidates_CoordinatesNearIntegerLimit_CenterComputedWithoutOverflow проверь это утверждение.");
         assertEquals(
                 z + 1,
                 columns.get(7).z(),
-                "Середина по Z вышла за int: сумма крайних координат переполнилась, и опора встала не рядом с деревом");
+                "Середина по Z вышла за int: сумма крайних координат переполнилась, и опора встала не рядом с деревом"
+                        + " Иначе тест candidates_CoordinatesNearIntegerLimit_CenterComputedWithoutOverflow перестанет ловить эту поломку. При смене candidates_CoordinatesNearIntegerLimit_CenterComputedWithoutOverflow проверь это утверждение.");
     }
 }

@@ -98,7 +98,8 @@ class ApiModuleGuardTests {
                 missing,
                 "Контракты шага 3 обязаны физически лежать в api/src/main/java: иначе :api не собирается сам, "
                         + "а корень снова тянет всё. Как надо: перенеси класс в :api, пакет и имя не меняй. "
-                        + "Нарушители (логический путь → фактический):");
+                        + "Нарушители (логический путь → фактический):"
+                        + " При смене apiContracts_LiveInApiModule_NotInRoot проверь это утверждение.");
     }
 
     @Test
@@ -112,7 +113,8 @@ class ApiModuleGuardTests {
                 "Модуль :api обязан собираться без остального проекта: "
                         + "разрешены JDK, Jackson, jspecify и классы самого :api. Импорт чужого класса делает :api "
                         + "зависимым от корня и возвращает цикл. Как надо: перенеси нужный контракт в :api или "
-                        + "оставь реализацию у владельца за интерфейсом из :api. Нарушители:");
+                        + "оставь реализацию у владельца за интерфейсом из :api. Нарушители:"
+                        + " Иначе тест apiSources_Imports_OnlyJdkJacksonAndApi перестанет ловить эту поломку. При смене apiSources_Imports_OnlyJdkJacksonAndApi проверь это утверждение.");
     }
 
     @Test
@@ -132,11 +134,13 @@ class ApiModuleGuardTests {
         assertEquals(
                 List.of("api/Example.java: net.minecraft.world.level.Level"),
                 violations(sample, apiClasses),
-                "Сторож ослеп: импорт Minecraft в :api обязан попасть в нарушители");
+                "Сторож ослеп: импорт Minecraft в :api обязан попасть в нарушители"
+                        + " Иначе тест apiSources_ForbiddenImport_IsReported перестанет ловить эту поломку. При смене apiSources_ForbiddenImport_IsReported проверь это утверждение.");
         assertEquals(
                 List.of(),
                 violations(neighbor, apiClasses),
-                "Сторож ложно срабатывает: импорт класса самого :api допустим");
+                "Сторож ложно срабатывает: импорт класса самого :api допустим"
+                        + " Иначе тест apiSources_ForbiddenImport_IsReported перестанет ловить эту поломку. При смене apiSources_ForbiddenImport_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -144,11 +148,13 @@ class ApiModuleGuardTests {
         assertTrue(
                 Files.isDirectory(SourceFiles.apiTestPackage()),
                 "У модуля :api обязаны быть свои тесты (api/src/test/java): иначе перенесённые контракты "
-                        + "проверяются только через корень и :api нельзя гонять отдельно");
+                        + "проверяются только через корень и :api нельзя гонять отдельно"
+                        + " При смене apiTestSources_Tests_LiveInApiModule проверь это утверждение.");
         assertTrue(
                 SourceFiles.allTests().keySet().stream()
                         .anyMatch(path -> path.normalize().startsWith(SourceFiles.API_TEST)),
-                "Сторож не нашёл ни одного теста :api: перенос тестов молча отключил проверки");
+                "Сторож не нашёл ни одного теста :api: перенос тестов молча отключил проверки"
+                        + " Иначе тест apiTestSources_Tests_LiveInApiModule перестанет ловить эту поломку. При смене apiTestSources_Tests_LiveInApiModule проверь это утверждение.");
     }
 
     private static Set<String> apiClasses(Map<Path, String> sources) {
@@ -156,7 +162,10 @@ class ApiModuleGuardTests {
         sources.forEach((file, text) -> {
             Matcher pkg = Pattern.compile("^\\s*package\\s+([\\w.]+)\\s*;", Pattern.MULTILINE)
                     .matcher(text);
-            assertTrue(pkg.find(), "Файл " + file + " без package: :api не может быть частью пакета");
+            assertTrue(
+                    pkg.find(),
+                    "Файл " + file + " без package: :api не может быть частью пакета"
+                            + " Иначе тест apiTestSources_Tests_LiveInApiModule перестанет ловить эту поломку. При смене apiTestSources_Tests_LiveInApiModule проверь это утверждение.");
             classes.add(pkg.group(1) + "." + file.getFileName().toString().replace(".java", ""));
         });
         return classes;

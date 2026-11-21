@@ -22,12 +22,14 @@ class GraphPortalPlannerTests {
                         .map(task -> task.implemented() && task.feasible())
                         .orElse(false),
                 "Обсидиана нет, есть ведро воды, алмазная кирка и шахта — задание «получить обсидиан» "
-                        + "выполнимо и реализовано: " + plan.task("cast_obsidian"));
+                        + "выполнимо и реализовано: " + plan.task("cast_obsidian")
+                        + " Иначе тест plan_ObsidianShortStageThree_CastObsidianImplementedAndPosted перестанет ловить эту поломку. При смене plan_ObsidianShortStageThree_CastObsidianImplementedAndPosted проверь это утверждение.");
         assertTrue(
                 GraphTickets.of(world.graph, world.state(), plan).post().stream()
                         .anyMatch(ticket -> "graph:cast_obsidian".equals(ticket.id())),
                 "Задание на обсидиан уходит на доску, а не висит в списке «механик нет»: "
-                        + GraphTickets.of(world.graph, world.state(), plan).post());
+                        + GraphTickets.of(world.graph, world.state(), plan).post()
+                        + " Иначе тест plan_ObsidianShortStageThree_CastObsidianImplementedAndPosted перестанет ловить эту поломку. При смене plan_ObsidianShortStageThree_CastObsidianImplementedAndPosted проверь это утверждение.");
     }
 
     @Test
@@ -41,11 +43,13 @@ class GraphPortalPlannerTests {
 
         assertTrue(
                 plan.task("building:portal_lit").map(task -> !task.feasible()).orElse(false),
-                "Зал портала не готов на 100% — портал не зажигается: " + plan.task("building:portal_lit"));
+                "Зал портала не готов на 100% — портал не зажигается: " + plan.task("building:portal_lit")
+                        + " Иначе тест plan_PortalHallUnfinished_PortalLitNotFeasible перестанет ловить эту поломку. При смене plan_PortalHallUnfinished_PortalLitNotFeasible проверь это утверждение.");
         assertFalse(
                 GraphTickets.of(world.graph, world.state(), plan).post().stream()
                         .anyMatch(ticket -> "graph:building:portal_lit".equals(ticket.id())),
-                "Невыполнимое зажигание портала не ставится на доску");
+                "Невыполнимое зажигание портала не ставится на доску"
+                        + " Иначе тест plan_PortalHallUnfinished_PortalLitNotFeasible перестанет ловить эту поломку. При смене plan_PortalHallUnfinished_PortalLitNotFeasible проверь это утверждение.");
     }
 
     @Test
@@ -62,6 +66,7 @@ class GraphPortalPlannerTests {
                         .map(task -> task.implemented() && task.feasible())
                         .orElse(false),
                 "Зал готов и огниво есть — задание «зажечь портал» выполнимо и реализовано: "
-                        + plan.task("building:portal_lit"));
+                        + plan.task("building:portal_lit")
+                        + " Иначе тест plan_PortalHallBuiltFlintHeld_PortalLitImplementedAndFeasible перестанет ловить эту поломку. При смене plan_PortalHallBuiltFlintHeld_PortalLitImplementedAndFeasible проверь это утверждение.");
     }
 }

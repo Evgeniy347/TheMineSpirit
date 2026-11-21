@@ -22,10 +22,25 @@ class QuarryRoutesTests {
         RestResponse response = router.handle(
                 new RestRequest("GET", QuarryRoutes.SEARCH, Map.of("resource", "dirt"), Map.of(), new byte[0]));
 
-        assertEquals(200, response.status(), "GET /v1/quarry/search обязан отвечать списком лучших областей");
-        assertEquals(128, gateway.query.min(), "По умолчанию поиск начинается со 128 блоков: ближе добыча не нужна");
-        assertEquals(512, gateway.query.max(), "По умолчанию поиск кончается на 512 блоках: дальше тропа не окупается");
-        assertTrue(response.body().contains("\"candidates\""), "Ответ перечисляет кандидатов: " + response.body());
+        assertEquals(
+                200,
+                response.status(),
+                "GET /v1/quarry/search обязан отвечать списком лучших областей"
+                        + " Иначе тест search_Defaults_UseSettlementRange перестанет ловить эту поломку. При смене search_Defaults_UseSettlementRange проверь это утверждение.");
+        assertEquals(
+                128,
+                gateway.query.min(),
+                "По умолчанию поиск начинается со 128 блоков: ближе добыча не нужна"
+                        + " Иначе тест search_Defaults_UseSettlementRange перестанет ловить эту поломку. При смене search_Defaults_UseSettlementRange проверь это утверждение.");
+        assertEquals(
+                512,
+                gateway.query.max(),
+                "По умолчанию поиск кончается на 512 блоках: дальше тропа не окупается"
+                        + " Иначе тест search_Defaults_UseSettlementRange перестанет ловить эту поломку. При смене search_Defaults_UseSettlementRange проверь это утверждение.");
+        assertTrue(
+                response.body().contains("\"candidates\""),
+                "Ответ перечисляет кандидатов: " + response.body()
+                        + " Иначе тест search_Defaults_UseSettlementRange перестанет ловить эту поломку. При смене search_Defaults_UseSettlementRange проверь это утверждение.");
     }
 
     @Test
@@ -40,11 +55,26 @@ class QuarryRoutesTests {
                 Map.of(),
                 new byte[0]));
 
-        assertEquals(RouteResource.SAND, gateway.query.resource(), "Ресурс поиска берётся из запроса");
         assertEquals(
-                new BlockCoord(10, 64, -20), gateway.query.base().orElseThrow(), "Точка отсчёта берётся из запроса");
-        assertEquals(64, gateway.query.min(), "Минимум берётся из запроса");
-        assertEquals(256, gateway.query.max(), "Максимум берётся из запроса");
+                RouteResource.SAND,
+                gateway.query.resource(),
+                "Ресурс поиска берётся из запроса"
+                        + " Иначе тест search_PointAndRange_Parsed перестанет ловить эту поломку. При смене search_PointAndRange_Parsed проверь это утверждение.");
+        assertEquals(
+                new BlockCoord(10, 64, -20),
+                gateway.query.base().orElseThrow(),
+                "Точка отсчёта берётся из запроса"
+                        + " Иначе тест search_PointAndRange_Parsed перестанет ловить эту поломку. При смене search_PointAndRange_Parsed проверь это утверждение.");
+        assertEquals(
+                64,
+                gateway.query.min(),
+                "Минимум берётся из запроса"
+                        + " Иначе тест search_PointAndRange_Parsed перестанет ловить эту поломку. При смене search_PointAndRange_Parsed проверь это утверждение.");
+        assertEquals(
+                256,
+                gateway.query.max(),
+                "Максимум берётся из запроса"
+                        + " Иначе тест search_PointAndRange_Parsed перестанет ловить эту поломку. При смене search_PointAndRange_Parsed проверь это утверждение.");
     }
 
     @Test
@@ -62,7 +92,8 @@ class QuarryRoutesTests {
         assertEquals(
                 400,
                 response.status(),
-                "min больше max — ошибка запроса: поиск не должен молча поменять диапазон; " + response.body());
+                "min больше max — ошибка запроса: поиск не должен молча поменять диапазон; " + response.body()
+                        + " Иначе тест search_BadRange_RejectedWithContract перестанет ловить эту поломку. При смене search_BadRange_RejectedWithContract проверь это утверждение.");
     }
 
     @Test
@@ -80,7 +111,8 @@ class QuarryRoutesTests {
         assertEquals(
                 400,
                 response.status(),
-                "Нечисловая координата — ошибка запроса, а не точка (0,64,0): иначе поиск молча ищет не там");
+                "Нечисловая координата — ошибка запроса, а не точка (0,64,0): иначе поиск молча ищет не там"
+                        + " При смене search_BadCoordinate_RejectedInsteadOfZero проверь это утверждение.");
     }
 
     @Test
@@ -93,12 +125,32 @@ class QuarryRoutesTests {
         RestResponse response = router.handle(
                 new RestRequest("POST", QuarryRoutes.SITE, Map.of(), Map.of(), body.getBytes(StandardCharsets.UTF_8)));
 
-        assertEquals(200, response.status(), "POST /v1/quarry/site ставит место добычи");
+        assertEquals(
+                200,
+                response.status(),
+                "POST /v1/quarry/site ставит место добычи"
+                        + " Иначе тест install_StrategistBody_SetsSite перестанет ловить эту поломку. При смене install_StrategistBody_SetsSite проверь это утверждение.");
         QuarrySite site = gateway.installed;
-        assertEquals(RouteResource.DIRT, site.resource(), "Ресурс места установлен");
-        assertEquals(new BlockCoord(40, 64, 20), site.point(), "Точка места установлена");
-        assertEquals(5, site.radius(), "Радиус области установлен");
-        assertEquals("strategist", gateway.by, "Установку делает стратег или игрок, а не граф");
+        assertEquals(
+                RouteResource.DIRT,
+                site.resource(),
+                "Ресурс места установлен"
+                        + " Иначе тест install_StrategistBody_SetsSite перестанет ловить эту поломку. При смене install_StrategistBody_SetsSite проверь это утверждение.");
+        assertEquals(
+                new BlockCoord(40, 64, 20),
+                site.point(),
+                "Точка места установлена"
+                        + " Иначе тест install_StrategistBody_SetsSite перестанет ловить эту поломку. При смене install_StrategistBody_SetsSite проверь это утверждение.");
+        assertEquals(
+                5,
+                site.radius(),
+                "Радиус области установлен"
+                        + " Иначе тест install_StrategistBody_SetsSite перестанет ловить эту поломку. При смене install_StrategistBody_SetsSite проверь это утверждение.");
+        assertEquals(
+                "strategist",
+                gateway.by,
+                "Установку делает стратег или игрок, а не граф"
+                        + " Иначе тест install_StrategistBody_SetsSite перестанет ловить эту поломку. При смене install_StrategistBody_SetsSite проверь это утверждение.");
     }
 
     @Test
@@ -113,7 +165,8 @@ class QuarryRoutesTests {
         assertEquals(
                 400,
                 response.status(),
-                "Граф не выбирает место: 'by':'graph' отвергается контрактом; " + response.body());
+                "Граф не выбирает место: 'by':'graph' отвергается контрактом; " + response.body()
+                        + " Иначе тест install_GraphDecision_Rejected перестанет ловить эту поломку. При смене install_GraphDecision_Rejected проверь это утверждение.");
     }
 
     @Test
@@ -124,9 +177,20 @@ class QuarryRoutesTests {
         RestResponse response = router.handle(
                 new RestRequest("DELETE", QuarryRoutes.SITE, Map.of("resource", "sand"), Map.of(), new byte[0]));
 
-        assertEquals(200, response.status(), "DELETE /v1/quarry/site снимает место");
-        assertEquals(RouteResource.SAND, gateway.removed, "Снятие касается указанного ресурса");
-        assertTrue(response.body().contains("\"state\":\"unset\""), "Ответ подтверждает снятие: " + response.body());
+        assertEquals(
+                200,
+                response.status(),
+                "DELETE /v1/quarry/site снимает место"
+                        + " Иначе тест remove_Resource_UnsetsSite перестанет ловить эту поломку. При смене remove_Resource_UnsetsSite проверь это утверждение.");
+        assertEquals(
+                RouteResource.SAND,
+                gateway.removed,
+                "Снятие касается указанного ресурса"
+                        + " Иначе тест remove_Resource_UnsetsSite перестанет ловить эту поломку. При смене remove_Resource_UnsetsSite проверь это утверждение.");
+        assertTrue(
+                response.body().contains("\"state\":\"unset\""),
+                "Ответ подтверждает снятие: " + response.body()
+                        + " Иначе тест remove_Resource_UnsetsSite перестанет ловить эту поломку. При смене remove_Resource_UnsetsSite проверь это утверждение.");
     }
 
     @Test
@@ -137,10 +201,15 @@ class QuarryRoutesTests {
         RestResponse response =
                 router.handle(new RestRequest("GET", QuarryRoutes.STATUS, Map.of(), Map.of(), new byte[0]));
 
-        assertEquals(200, response.status(), "GET /v1/quarry/status отдаёт состояние мест добычи");
+        assertEquals(
+                200,
+                response.status(),
+                "GET /v1/quarry/status отдаёт состояние мест добычи"
+                        + " Иначе тест statuses_AllResources_Reported перестанет ловить эту поломку. При смене statuses_AllResources_Reported проверь это утверждение.");
         assertTrue(
                 response.body().contains("\"state\":\"unset\""),
-                "Не заданное место видно как unset: " + "легенда и стратег не гадают");
+                "Не заданное место видно как unset: " + "легенда и стратег не гадают"
+                        + " Иначе тест statuses_AllResources_Reported перестанет ловить эту поломку. При смене statuses_AllResources_Reported проверь это утверждение.");
     }
 
     private static final class RecordingGateway implements QuarryGateway {

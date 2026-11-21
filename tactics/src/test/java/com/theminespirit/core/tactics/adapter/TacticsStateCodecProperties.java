@@ -97,6 +97,10 @@ class TacticsStateCodecProperties {
     void decode_AfterEncode_GivesSameState(@ForAll("stored") StoredTactics stored) {
         StoredTactics restored = TacticsStateCodec.decode(TacticsStateCodec.encode(stored));
 
-        assertEquals(stored, restored, "Любое сохранённое состояние тактики восстанавливается равным себе");
+        assertEquals(
+                stored,
+                restored,
+                "Любое сохранённое состояние тактики восстанавливается равным себе"
+                        + " Иначе тест decode_AfterEncode_GivesSameState перестанет ловить эту поломку. При смене decode_AfterEncode_GivesSameState проверь это утверждение.");
     }
 }

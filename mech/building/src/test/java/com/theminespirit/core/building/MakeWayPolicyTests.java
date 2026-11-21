@@ -10,18 +10,23 @@ class MakeWayPolicyTests {
     void mustMove_BusyBuilder_StillMoves() {
         assertTrue(
                 MakeWayPolicy.mustMove(true, "build_schematic"),
-                "Дух с RUNNING-задачей в клетке будущего блока отходит: иначе стройка ставит забор внутрь него");
+                "Дух с RUNNING-задачей в клетке будущего блока отходит: иначе стройка ставит забор внутрь него"
+                        + " При смене mustMove_BusyBuilder_StillMoves проверь это утверждение.");
     }
 
     @Test
     void mustMove_AlreadyGoingAway_DoesNotRestart() {
         assertFalse(
                 MakeWayPolicy.mustMove(true, "goto"),
-                "Дух уже идёт на освобождённую стоянку: повторный goto каждый тик не дал бы ему сдвинуться");
+                "Дух уже идёт на освобождённую стоянку: повторный goto каждый тик не дал бы ему сдвинуться"
+                        + " Иначе тест mustMove_AlreadyGoingAway_DoesNotRestart перестанет ловить эту поломку. При смене mustMove_AlreadyGoingAway_DoesNotRestart проверь это утверждение.");
     }
 
     @Test
     void mustMove_Idle_StillMoves() {
-        assertTrue(MakeWayPolicy.mustMove(false, "goto"), "Простаивающий дух в клетке блока тоже отходит");
+        assertTrue(
+                MakeWayPolicy.mustMove(false, "goto"),
+                "Простаивающий дух в клетке блока тоже отходит"
+                        + " Иначе тест mustMove_Idle_StillMoves перестанет ловить эту поломку. При смене mustMove_Idle_StillMoves проверь это утверждение.");
     }
 }

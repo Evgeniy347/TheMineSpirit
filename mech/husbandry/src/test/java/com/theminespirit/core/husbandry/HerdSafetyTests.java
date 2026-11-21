@@ -16,8 +16,8 @@ class HerdSafetyTests {
         assertEquals(
                 2.0,
                 HerdSafety.MOTHER_WATCH_RADIUS,
-                "Радиус опеки в production обязан быть 2 блока: дальше детёныш мать не видит, и забой идёт при "
-                        + "детёныше вплотную — стадо теряет приплод. При смене HerdSafety.MOTHER_WATCH_RADIUS "
+                "Радиус опеки в production обязан быть 2 блока: иначе дальше детёныш мать не видит, и забой "
+                        + "идёт при детёныше вплотную — стадо теряет приплод. При смене HerdSafety.MOTHER_WATCH_RADIUS "
                         + "проверь watchedByBaby_* и живой забой коровы с телёнком");
     }
 

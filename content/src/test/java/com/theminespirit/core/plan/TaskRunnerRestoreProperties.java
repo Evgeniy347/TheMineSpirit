@@ -57,12 +57,14 @@ class TaskRunnerRestoreProperties {
                 restarted,
                 "перезапуск с тика " + cut + " обязан дать тот же порядок завершённых скриптов, что и непрерывный "
                         + "прогон: пропуск шага, повтор уже сделанного или неверная ветка fallback/else видны в списке. "
-                        + "seed=" + seed + ", план=" + plan);
+                        + "seed=" + seed + ", план=" + plan
+                        + " Иначе тест restore_AnyRunningSnapshot_ContinuesExactlyLikeUninterruptedRun перестанет ловить эту поломку. При смене restore_AnyRunningSnapshot_ContinuesExactlyLikeUninterruptedRun проверь это утверждение.");
         assertEquals(
                 continuousOutcome.status(),
                 restartedStatus,
                 "итоговый статус перезапущенной задачи обязан совпасть с непрерывным прогоном. seed=" + seed + ", план="
-                        + plan);
+                        + plan
+                        + " Иначе тест restore_AnyRunningSnapshot_ContinuesExactlyLikeUninterruptedRun перестанет ловить эту поломку. При смене restore_AnyRunningSnapshot_ContinuesExactlyLikeUninterruptedRun проверь это утверждение.");
     }
 
     private static Outcome runToTerminal(TaskNode plan, List<String> recorder, int maxTicks) {

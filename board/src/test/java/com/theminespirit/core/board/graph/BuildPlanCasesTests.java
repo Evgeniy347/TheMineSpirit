@@ -27,10 +27,12 @@ class BuildPlanCasesTests {
         assertFalse(
                 PlanCaseFacts.posted(plan, "building:hut"),
                 "Аудит показал 100% — хижину не строят заново, даже если журнал доски этого ещё не записал: "
-                        + plan.tasks());
+                        + plan.tasks()
+                        + " Иначе тест plan_AuditComplete_DoesNotRebuild перестанет ловить эту поломку. При смене plan_AuditComplete_DoesNotRebuild проверь это утверждение.");
         assertTrue(
                 GraphStageGate.buildingReady(facts, "hut"),
-                "Целая известная постройка по аудиту закрывает свой шаг этапа, а не ждёт повторной стройки");
+                "Целая известная постройка по аудиту закрывает свой шаг этапа, а не ждёт повторной стройки"
+                        + " Иначе тест plan_AuditComplete_DoesNotRebuild перестанет ловить эту поломку. При смене plan_AuditComplete_DoesNotRebuild проверь это утверждение.");
     }
 
     @Test
@@ -48,14 +50,19 @@ class BuildPlanCasesTests {
         assertFalse(
                 PlanCaseFacts.posted(plan, "building:hut"),
                 "Дом на 95% не строят заново: полная стройка ломает план, меняет породу и роняет процент "
-                        + "обратно — нужен ремонт недостающих клеток: " + plan.tasks());
+                        + "обратно — нужен ремонт недостающих клеток: " + plan.tasks()
+                        + " При смене plan_PartialBuilding_RepairsMissingInsteadOfRebuild проверь это утверждение.");
         GraphPlan.Task repair = PlanCaseFacts.task(plan, HUT_REPAIR);
-        assertTrue(repair.feasible(), "Ремонт частично построенного дома выполним по аудиту: " + repair);
+        assertTrue(
+                repair.feasible(),
+                "Ремонт частично построенного дома выполним по аудиту: " + repair
+                        + " Иначе тест plan_PartialBuilding_RepairsMissingInsteadOfRebuild перестанет ловить эту поломку. При смене plan_PartialBuilding_RepairsMissingInsteadOfRebuild проверь это утверждение.");
         assertEquals(
                 Map.of("dirt", 5),
                 repair.consumes(),
                 "Ремонт просит только недостающие блоки аудита, а не весь набор схемы: иначе дух тащит "
-                        + "десятки лишних предметов");
+                        + "десятки лишних предметов"
+                        + " При смене plan_PartialBuilding_RepairsMissingInsteadOfRebuild проверь это утверждение.");
     }
 
     @Test
@@ -72,10 +79,12 @@ class BuildPlanCasesTests {
         assertFalse(
                 PlanCaseFacts.posted(plan, "building:hut"),
                 "Незагруженный чанк — «неизвестно», а не «не построено»: слепая полная стройка снесла бы "
-                        + "готовые клетки, поэтому работа ждёт аудита: " + plan.tasks());
+                        + "готовые клетки, поэтому работа ждёт аудита: " + plan.tasks()
+                        + " Иначе тест plan_UnknownAudit_DoesNotRebuildBlindly перестанет ловить эту поломку. При смене plan_UnknownAudit_DoesNotRebuildBlindly проверь это утверждение.");
         assertFalse(
                 GraphStageGate.buildingReady(facts, "hut"),
-                "Неизвестная постройка не закрывает шаг этапа: «неизвестно» = не готово");
+                "Неизвестная постройка не закрывает шаг этапа: «неизвестно» = не готово"
+                        + " Иначе тест plan_UnknownAudit_DoesNotRebuildBlindly перестанет ловить эту поломку. При смене plan_UnknownAudit_DoesNotRebuildBlindly проверь это утверждение.");
     }
 
     @Test
@@ -87,10 +96,14 @@ class BuildPlanCasesTests {
                 List.of(),
                 GraphSiteFacts.Terrain.empty());
 
-        assertTrue(GraphStageGate.buildingReady(facts, "hut"), "Готовая постройка этапа закрыта");
+        assertTrue(
+                GraphStageGate.buildingReady(facts, "hut"),
+                "Готовая постройка этапа закрыта"
+                        + " Иначе тест stageGate_PartialBuilding_KeepsStageOpen перестанет ловить эту поломку. При смене stageGate_PartialBuilding_KeepsStageOpen проверь это утверждение.");
         assertFalse(
                 GraphStageGate.buildingReady(facts, "mine"),
-                "Этап закрывается только когда все его постройки 100%: шахта на 95% держит этап открытым");
+                "Этап закрывается только когда все его постройки 100%: шахта на 95% держит этап открытым"
+                        + " Иначе тест stageGate_PartialBuilding_KeepsStageOpen перестанет ловить эту поломку. При смене stageGate_PartialBuilding_KeepsStageOpen проверь это утверждение.");
     }
 
     @Test
@@ -116,11 +129,13 @@ class BuildPlanCasesTests {
         assertEquals(
                 first.consumes(),
                 second.consumes(),
-                "Смена схемы хижины не меняет расход ремонта шахты: постройки чинятся по своим недостачам");
+                "Смена схемы хижины не меняет расход ремонта шахты: постройки чинятся по своим недостачам"
+                        + " Иначе тест repair_OtherBuildingSchemeChanged_LeavesThisRepairIntact перестанет ловить эту поломку. При смене repair_OtherBuildingSchemeChanged_LeavesThisRepairIntact проверь это утверждение.");
         assertEquals(
                 first.priority(),
                 second.priority(),
-                "Смена схемы хижины не двигает вес ремонта шахты: иначе одна постройка вытесняет другую с доски");
+                "Смена схемы хижины не двигает вес ремонта шахты: иначе одна постройка вытесняет другую с доски"
+                        + " При смене repair_OtherBuildingSchemeChanged_LeavesThisRepairIntact проверь это утверждение.");
     }
 
     @Test
@@ -140,16 +155,20 @@ class BuildPlanCasesTests {
 
         assertFalse(
                 PlanCaseFacts.posted(plan, "building:hut"),
-                "Стройка на невыровненном лоте ждёт расчистки площадки: " + plan.tasks());
+                "Стройка на невыровненном лоте ждёт расчистки площадки: " + plan.tasks()
+                        + " Иначе тест plan_LotNotLeveled_NoBuildUntilLotReady перестанет ловить эту поломку. При смене plan_LotNotLeveled_NoBuildUntilLotReady проверь это утверждение.");
         assertTrue(
                 PlanCaseFacts.posted(plan, "event:level_lot:level_lot"),
-                "Насыпь на лоте срезается до стройки: " + plan.tasks());
+                "Насыпь на лоте срезается до стройки: " + plan.tasks()
+                        + " Иначе тест plan_LotNotLeveled_NoBuildUntilLotReady перестанет ловить эту поломку. При смене plan_LotNotLeveled_NoBuildUntilLotReady проверь это утверждение.");
         assertTrue(
                 PlanCaseFacts.posted(plan, "event:backfill:backfill"),
-                "Яма на лоте засыпается до стройки: " + plan.tasks());
+                "Яма на лоте засыпается до стройки: " + plan.tasks()
+                        + " Иначе тест plan_LotNotLeveled_NoBuildUntilLotReady перестанет ловить эту поломку. При смене plan_LotNotLeveled_NoBuildUntilLotReady проверь это утверждение.");
         assertTrue(
                 PlanCaseFacts.posted(plan, "building:fence"),
-                "Готовый лот не ждёт чужой: постройка на выровненной площадке строится: " + plan.tasks());
+                "Готовый лот не ждёт чужой: постройка на выровненной площадке строится: " + plan.tasks()
+                        + " Иначе тест plan_LotNotLeveled_NoBuildUntilLotReady перестанет ловить эту поломку. При смене plan_LotNotLeveled_NoBuildUntilLotReady проверь это утверждение.");
     }
 
     @Test
@@ -166,7 +185,8 @@ class BuildPlanCasesTests {
         assertTrue(
                 PlanCaseFacts.posted(plan, "event:repair_streets:repair:streets"),
                 "Перекопанные клетки плана (улицы) — факт повреждения, по нему ставится ремонт по плану: "
-                        + plan.tasks());
+                        + plan.tasks()
+                        + " Иначе тест plan_DamagedPlanCells_PostsRepair перестанет ловить эту поломку. При смене plan_DamagedPlanCells_PostsRepair проверь это утверждение.");
     }
 
     @Test
@@ -184,9 +204,11 @@ class BuildPlanCasesTests {
         assertEquals(
                 BoardCase.DISMANTLE_SHELTER,
                 demolition.boardCase(),
-                "Лишний забор сносится кейсом сноса, а не разбирается ради чужой стройки");
+                "Лишний забор сносится кейсом сноса, а не разбирается ради чужой стройки"
+                        + " Иначе тест plan_StrayBesidePlannedHouse_DemolishesOnlyStray перестанет ловить эту поломку. При смене plan_StrayBesidePlannedHouse_DemolishesOnlyStray проверь это утверждение.");
         assertTrue(
                 PlanCaseFacts.posted(plan, "event:demolish_stray:demolish_stray"),
-                "Лишняя постройка без владельца всё равно попадает на доску сноса: " + plan.tasks());
+                "Лишняя постройка без владельца всё равно попадает на доску сноса: " + plan.tasks()
+                        + " Иначе тест plan_StrayBesidePlannedHouse_DemolishesOnlyStray перестанет ловить эту поломку. При смене plan_StrayBesidePlannedHouse_DemolishesOnlyStray проверь это утверждение.");
     }
 }

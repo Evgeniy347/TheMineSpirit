@@ -16,7 +16,8 @@ class YardStationsTests {
         assertEquals(
                 near,
                 YardStations.nearest(List.of(far, near), from, from),
-                "Цель крафта — реальный ближний верстак (-180,69,-519), а не клетка плана на 1 блок выше/западнее");
+                "Цель крафта — реальный ближний верстак (-180,69,-519), а не клетка плана на 1 блок выше/западнее"
+                        + " Иначе тест nearest_TableOneBlockFromYardPoint_WinsOverFarTable перестанет ловить эту поломку. При смене nearest_TableOneBlockFromYardPoint_WinsOverFarTable проверь это утверждение.");
     }
 
     @Test
@@ -25,6 +26,7 @@ class YardStationsTests {
         assertEquals(
                 from,
                 YardStations.nearest(List.of(), from, from),
-                "Без верстака цель остаётся прежней: план не ломается на пустом дворе");
+                "Без верстака цель остаётся прежней: план не ломается на пустом дворе"
+                        + " При смене nearest_NoTable_FallsBackToPlanPoint проверь это утверждение.");
     }
 }

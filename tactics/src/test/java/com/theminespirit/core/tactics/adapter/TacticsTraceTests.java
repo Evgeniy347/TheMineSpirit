@@ -40,7 +40,8 @@ class TacticsTraceTests {
             assertTrue(
                     text.contains(expected),
                     "Запись решения в лог обязана содержать «" + expected
-                            + "»: по ней разбирают, почему дух поступил так; получили: " + text);
+                            + "»: по ней разбирают, почему дух поступил так; получили: " + text
+                            + " Иначе тест format_Outcome_NamesEveryValue перестанет ловить эту поломку. При смене format_Outcome_NamesEveryValue проверь это утверждение.");
         }
     }
 
@@ -52,7 +53,8 @@ class TacticsTraceTests {
                 components,
                 TacticsTrace.LABELS.size(),
                 "У TacticalOutcome " + components + " полей, а подписей в записи " + TacticsTrace.LABELS.size()
-                        + ": новое поле решения обязано попасть в лог, иначе его причину не разобрать");
+                        + ": новое поле решения обязано попасть в лог, иначе его причину не разобрать"
+                        + " При смене format_EveryRecordComponent_HasLabel проверь это утверждение.");
     }
 
     @Test
@@ -62,7 +64,8 @@ class TacticsTraceTests {
 
         assertTrue(
                 text.contains("вернуться к=нет"),
-                "Без цели возврата запись говорит «нет», а не падает на пустом Optional: " + text);
+                "Без цели возврата запись говорит «нет», а не падает на пустом Optional: " + text
+                        + " Иначе тест format_OutcomeWithoutReturnTarget_SaysNone перестанет ловить эту поломку. При смене format_OutcomeWithoutReturnTarget_SaysNone проверь это утверждение.");
     }
 
     @Test
@@ -70,6 +73,7 @@ class TacticsTraceTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> TacticsTrace.format(null),
-                "Форматировать пустое решение — ошибка вызова, а не пустая строка");
+                "Форматировать пустое решение — ошибка вызова, а не пустая строка"
+                        + " Иначе тест format_Null_Rejected перестанет ловить эту поломку. При смене format_Null_Rejected проверь это утверждение.");
     }
 }

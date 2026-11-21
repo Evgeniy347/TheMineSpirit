@@ -32,20 +32,23 @@ class OrchardSaplingSourceTests {
                 calls.stream()
                         .anyMatch(call -> "gather".equals(call.script())
                                 && LEAVES.equals(call.params().get("block"))),
-                "Саженцы берутся с листвы: размещённый саженец — посаженное дерево, а не запас (N8). План: " + calls);
+                "Саженцы берутся с листвы: размещённый саженец — посаженное дерево, а не запас (N8). План: " + calls
+                        + " Иначе тест plan_SaplingSupply_SaplingsComeFromLeavesNotPlacedOnes перестанет ловить эту поломку. При смене plan_SaplingSupply_SaplingsComeFromLeavesNotPlacedOnes проверь это утверждение.");
         assertTrue(
                 calls.stream()
                         .anyMatch(call -> "chop_tree".equals(call.script())
                                 && "oak".equals(call.params().get("species"))
                                 && Boolean.FALSE.equals(call.params().get("replant"))),
                 "Перед сбором листвы дуб валят без пересадки — листва даёт саженцы только с поваленного "
-                        + "дерева. План: " + calls);
+                        + "дерева. План: " + calls
+                        + " Иначе тест plan_SaplingSupply_SaplingsComeFromLeavesNotPlacedOnes перестанет ловить эту поломку. При смене plan_SaplingSupply_SaplingsComeFromLeavesNotPlacedOnes проверь это утверждение.");
         assertFalse(
                 calls.stream()
                         .anyMatch(call -> "acquire".equals(call.script())
                                 && SAPLING.equals(call.params().get("item"))),
                 "Добыча саженцев не просит acquire: acquire уходил в «добыть oak_sapling ×4» из мира и падал "
-                        + "без стоянки. План: " + calls);
+                        + "без стоянки. План: " + calls
+                        + " Иначе тест plan_SaplingSupply_SaplingsComeFromLeavesNotPlacedOnes перестанет ловить эту поломку. При смене plan_SaplingSupply_SaplingsComeFromLeavesNotPlacedOnes проверь это утверждение.");
     }
 
     @Test
@@ -67,14 +70,16 @@ class OrchardSaplingSourceTests {
                                 && Integer.valueOf(plot.z())
                                         .equals(call.params().get("z"))),
                 "Цель добычи саженцев — ствол настоящего дерева, а не центр участка сада: до рубки дух не идёт в "
-                        + "пустую точку сада, а ищет дерево из своего положения. План: " + calls);
+                        + "пустую точку сада, а ищет дерево из своего положения. План: " + calls
+                        + " Иначе тест plan_SaplingGather_TargetsTrunkNotOrchardCenter перестанет ловить эту поломку. При смене plan_SaplingGather_TargetsTrunkNotOrchardCenter проверь это утверждение.");
         assertTrue(
                 calls.stream()
                         .anyMatch(call -> "chop_tree".equals(call.script())
                                 && "oak".equals(call.params().get("species"))
                                 && Boolean.FALSE.equals(call.params().get("replant"))),
                 "Саженцы даёт поваленное дерево: план валит дуб без пересадки, а не идёт в центр участка. План: "
-                        + calls);
+                        + calls
+                        + " Иначе тест plan_SaplingGather_TargetsTrunkNotOrchardCenter перестанет ловить эту поломку. При смене plan_SaplingGather_TargetsTrunkNotOrchardCenter проверь это утверждение.");
     }
 
     @Test
@@ -91,7 +96,8 @@ class OrchardSaplingSourceTests {
         assertTrue(
                 leaves >= 24 * 20,
                 "Саженец падает примерно с каждого двадцатого листа: на 24 саженца нужно не меньше 480 листьев, "
-                        + "а план собирает " + leaves + " — иначе сад остаётся 0 из 24");
+                        + "а план собирает " + leaves + " — иначе сад остаётся 0 из 24"
+                        + " При смене plan_SaplingGather_CollectsEnoughLeavesForWholeOrchard проверь это утверждение.");
     }
 
     private static int firstChop(List<ScriptCall> calls) {
@@ -110,7 +116,8 @@ class OrchardSaplingSourceTests {
         FallbackNode fallback = assertInstanceOf(
                 FallbackNode.class,
                 first,
-                "Топливо для факелов добывается с запасной веткой: без неё шахта без стоянки валит задание (N8)");
+                "Топливо для факелов добывается с запасной веткой: без неё шахта без стоянки валит задание (N8)"
+                        + " Иначе тест supply_TorchFuel_FirstBranchIsCharcoal перестанет ловить эту поломку. При смене supply_TorchFuel_FirstBranchIsCharcoal проверь это утверждение.");
 
         List<ScriptCall> branches = calls(fallback);
         assertTrue(
@@ -118,17 +125,20 @@ class OrchardSaplingSourceTests {
                         .anyMatch(call -> "acquire".equals(call.script())
                                 && "minecraft:charcoal".equals(call.params().get("item"))),
                 "Первая ветка — древесный уголь обжигом: доска требует ровно то, что план добывает первым "
-                        + "(observe12 N19), а угольная руда в глубине не всегда достижима. Ветки: " + branches);
+                        + "(observe12 N19), а угольная руда в глубине не всегда достижима. Ветки: " + branches
+                        + " Иначе тест supply_TorchFuel_FirstBranchIsCharcoal перестанет ловить эту поломку. При смене supply_TorchFuel_FirstBranchIsCharcoal проверь это утверждение.");
         assertTrue(
                 branches.stream()
                         .anyMatch(call -> "acquire".equals(call.script())
                                 && "minecraft:coal".equals(call.params().get("item"))),
-                "Вторая ветка — уголь из шахты: факел принимает и уголь, и древесный уголь. Ветки: " + branches);
+                "Вторая ветка — уголь из шахты: факел принимает и уголь, и древесный уголь. Ветки: " + branches
+                        + " Иначе тест supply_TorchFuel_FirstBranchIsCharcoal перестанет ловить эту поломку. При смене supply_TorchFuel_FirstBranchIsCharcoal проверь это утверждение.");
         assertEquals(
                 2,
                 branches.size(),
                 "Веток ровно две: уголь и древесный уголь, иначе раздел «сколько угля» расходится с планом. "
-                        + "Ветки: " + branches);
+                        + "Ветки: " + branches
+                        + " При смене supply_TorchFuel_FirstBranchIsCharcoal проверь это утверждение.");
     }
 
     @Test
@@ -138,11 +148,13 @@ class OrchardSaplingSourceTests {
         assertFalse(
                 calls.stream().anyMatch(call -> "chop_tree".equals(call.script())),
                 "Саженцы в схеме сада помечены мягкими и не входят в 24 обязательных блока: рубка дерева ради них "
-                        + "не должна стоять перед стройкой и валить её «нет прогресса». План: " + calls);
+                        + "не должна стоять перед стройкой и валить её «нет прогресса». План: " + calls
+                        + " Иначе тест planOrchard_OptionalSaplings_DoNotBlockBuild перестанет ловить эту поломку. При смене planOrchard_OptionalSaplings_DoNotBlockBuild проверь это утверждение.");
         assertTrue(
                 calls.stream().anyMatch(call -> "build_schematic".equals(call.script())),
                 "Стройка сада обязана идти без ожидания необязательных саженцев: дорожки и факелы ставятся "
-                        + "сразу. План: " + calls);
+                        + "сразу. План: " + calls
+                        + " Иначе тест planOrchard_OptionalSaplings_DoNotBlockBuild перестанет ловить эту поломку. При смене planOrchard_OptionalSaplings_DoNotBlockBuild проверь это утверждение.");
     }
 
     private static TaskNode orchardPlan() {

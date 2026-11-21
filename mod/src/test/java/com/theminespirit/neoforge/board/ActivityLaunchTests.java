@@ -20,7 +20,8 @@ class ActivityLaunchTests {
                     ActivityLaunch.stuck(facts(fact), SPIRIT),
                     "Застрявшего духа не отправляют в поход/патруль: он вернёт NOT_REACHED на каждой точке "
                             + "(observe25 B12): stuck=" + fact.stuck() + " trapped=" + fact.trapped() + " trap="
-                            + fact.trap());
+                            + fact.trap()
+                            + " Иначе тест stuck_StuckTrappedOrInTrap_IsNotSentToActivity перестанет ловить эту поломку. При смене stuck_StuckTrappedOrInTrap_IsNotSentToActivity проверь это утверждение.");
         }
     }
 
@@ -28,10 +29,12 @@ class ActivityLaunchTests {
     void stuck_HealthySpirit_GoesToActivity() {
         assertFalse(
                 ActivityLaunch.stuck(facts(spirit(false, false, null)), SPIRIT),
-                "Свободный дух идёт в поход: запрет только для застрявших");
+                "Свободный дух идёт в поход: запрет только для застрявших"
+                        + " Иначе тест stuck_HealthySpirit_GoesToActivity перестанет ловить эту поломку. При смене stuck_HealthySpirit_GoesToActivity проверь это утверждение.");
         assertFalse(
                 ActivityLaunch.stuck(GraphFacts.empty(), SPIRIT),
-                "Дух без факта в графе не считается застрявшим: сведения просто не собраны");
+                "Дух без факта в графе не считается застрявшим: сведения просто не собраны"
+                        + " Иначе тест stuck_HealthySpirit_GoesToActivity перестанет ловить эту поломку. При смене stuck_HealthySpirit_GoesToActivity проверь это утверждение.");
     }
 
     private static GraphFacts facts(GraphFacts.Spirit spirit) {

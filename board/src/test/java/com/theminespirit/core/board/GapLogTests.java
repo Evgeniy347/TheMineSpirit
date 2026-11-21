@@ -14,12 +14,15 @@ class GapLogTests {
 
         assertTrue(
                 GapLog.changed(boardCase, List.of("(-1,70,-1) oak_planks")),
-                "Первое расхождение плана обязано попасть в лог: без него не видно, чего не хватает");
+                "Первое расхождение плана обязано попасть в лог: без него не видно, чего не хватает"
+                        + " Иначе тест changed_SameMissingList_ReportedOnlyOnce перестанет ловить эту поломку. При смене changed_SameMissingList_ReportedOnlyOnce проверь это утверждение.");
         assertFalse(
                 GapLog.changed(boardCase, List.of("(-1,70,-1) oak_planks")),
-                "Тот же список недостающих блоков не пишется каждые 5 секунд: [layout] спамил 164 строки");
+                "Тот же список недостающих блоков не пишется каждые 5 секунд: [layout] спамил 164 строки"
+                        + " Иначе тест changed_SameMissingList_ReportedOnlyOnce перестанет ловить эту поломку. При смене changed_SameMissingList_ReportedOnlyOnce проверь это утверждение.");
         assertTrue(
                 GapLog.changed(boardCase, List.of("(-2,70,-1) oak_planks")),
-                "Изменившийся список недостающих блоков обязан снова попасть в лог");
+                "Изменившийся список недостающих блоков обязан снова попасть в лог"
+                        + " Иначе тест changed_SameMissingList_ReportedOnlyOnce перестанет ловить эту поломку. При смене changed_SameMissingList_ReportedOnlyOnce проверь это утверждение.");
     }
 }

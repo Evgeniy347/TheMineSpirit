@@ -64,7 +64,8 @@ class TransferStandstillTests {
                 Set.of(),
                 TransferCarriers.carrying(board, CRAFT, Set.of()),
                 "Держатель ещё не взятой передачи ничего не несёт: записав его носильщиком, раунд держит его "
-                        + "ожиданием и не даёт взять саму передачу — доска стоит");
+                        + "ожиданием и не даёт взять саму передачу — доска стоит"
+                        + " Иначе тест carrying_TransferPendingWithHolder_HolderNotCounted перестанет ловить эту поломку. При смене carrying_TransferPendingWithHolder_HolderNotCounted проверь это утверждение.");
     }
 
     @Test
@@ -78,7 +79,8 @@ class TransferStandstillTests {
         assertTrue(
                 issued > 0,
                 "Доска стоит: при трёх свободных духах и открытом крафте с передачами за 3 раунда не выдано ни "
-                        + "одного задания (PENDING=" + pending(board) + ", ASSIGNED=" + board.assignedCounts() + ")");
+                        + "одного задания (PENDING=" + pending(board) + ", ASSIGNED=" + board.assignedCounts() + ")"
+                        + " Иначе тест dispatch_FreeSpiritsAndOpenTransfers_AtLeastOneTicketIssued перестанет ловить эту поломку. При смене dispatch_FreeSpiritsAndOpenTransfers_AtLeastOneTicketIssued проверь это утверждение.");
     }
 
     private static int pending(Board board) {

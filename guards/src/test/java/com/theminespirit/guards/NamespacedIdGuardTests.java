@@ -23,7 +23,8 @@ class NamespacedIdGuardTests {
         assertEquals(
                 List.of("core/board/PlanSteps.java: MINECRAFT"),
                 problems(Map.of("core/board/PlanSteps.java", "    static final String MINECRAFT = \"minecraft:\";\n")),
-                "Сторож ослеп: отдельное объявление префикса обязано попасть в нарушители");
+                "Сторож ослеп: отдельное объявление префикса обязано попасть в нарушители"
+                        + " Иначе тест prefixConstant_OutsideOwner_IsReported перестанет ловить эту поломку. При смене prefixConstant_OutsideOwner_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -31,12 +32,17 @@ class NamespacedIdGuardTests {
         assertEquals(
                 List.of(),
                 problems(Map.of(OWNER, "    public static final String MINECRAFT = \"minecraft:\";\n")),
-                "Сторож ложно срабатывает: NamespacedId — сам источник префикса");
+                "Сторож ложно срабатывает: NamespacedId — сам источник префикса"
+                        + " Иначе тест prefixConstant_InOwner_IsAccepted перестанет ловить эту поломку. При смене prefixConstant_InOwner_IsAccepted проверь это утверждение.");
     }
 
     @Test
     void prefixes_RealSources_AreSingle() {
-        assertEquals(List.of(), problems(sources()), RULE + System.lineSeparator() + "Нарушители (файл: имя):");
+        assertEquals(
+                List.of(),
+                problems(sources()),
+                RULE + System.lineSeparator() + "Нарушители (файл: имя):"
+                        + " Иначе тест prefixes_RealSources_AreSingle перестанет ловить эту поломку. При смене prefixes_RealSources_AreSingle проверь это утверждение.");
     }
 
     private static Map<String, String> sources() {

@@ -34,10 +34,12 @@ class DispatchForeignTaskTests {
         assertTrue(
                 round.choose(ticket, List.of(busy)).isEmpty(),
                 "Дух, занятый задачей вне доски (REST, команда, граф), не получает ещё одно задание: две задачи "
-                        + "на одном духе вытесняют друг друга, а REST-задача закрывается как вытесненная");
+                        + "на одном духе вытесняют друг друга, а REST-задача закрывается как вытесненная"
+                        + " Иначе тест choose_SpiritBusyWithForeignTask_NotGivenBoardWork перестанет ловить эту поломку. При смене choose_SpiritBusyWithForeignTask_NotGivenBoardWork проверь это утверждение.");
         String why = round.why(ticket, List.of(busy));
         assertTrue(
                 why.contains("gather:руда"),
-                "Причина ожидания называет чужую задачу духа, по ней видно, почему граф не получил духа: " + why);
+                "Причина ожидания называет чужую задачу духа, по ней видно, почему граф не получил духа: " + why
+                        + " Иначе тест choose_SpiritBusyWithForeignTask_NotGivenBoardWork перестанет ловить эту поломку. При смене choose_SpiritBusyWithForeignTask_NotGivenBoardWork проверь это утверждение.");
     }
 }

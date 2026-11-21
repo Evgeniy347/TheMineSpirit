@@ -52,7 +52,8 @@ class GraphNeedsTests {
         assertNull(
                 need,
                 "Добыча jungle_log не может ждать сама себя: Item(jungle_log) запирал ключ навсегда "
-                        + "(живой тупик 10.11: WAITING ждут jungle_log, а supply_gather:jungle_log BLOCKED)");
+                        + "(живой тупик 10.11: WAITING ждут jungle_log, а supply_gather:jungle_log BLOCKED)"
+                        + " Иначе тест supplyGather_OwnItemOnly_NeverBlocksOnItself перестанет ловить эту поломку. При смене supplyGather_OwnItemOnly_NeverBlocksOnItself проверь это утверждение.");
     }
 
     @Test
@@ -61,9 +62,21 @@ class GraphNeedsTests {
 
         GraphBlock.Need need = ask(ticket, TicketTarget.at(SITE).withSupply("jungle_log", 4), List.of(), null);
 
-        GraphBlock.Tool tool = assertInstanceOf(GraphBlock.Tool.class, need, "Нет топора — нужда в топоре");
-        assertEquals("axe", tool.kind(), "Нужда называет инструмент");
-        assertEquals(HOLDER, tool.spirit(), "Нужда адресована держателю задания");
+        GraphBlock.Tool tool = assertInstanceOf(
+                GraphBlock.Tool.class,
+                need,
+                "Нет топора — нужда в топоре"
+                        + " Иначе тест supplyGather_WithAxe_NeedsToolNotDepositPoint перестанет ловить эту поломку. При смене supplyGather_WithAxe_NeedsToolNotDepositPoint проверь это утверждение.");
+        assertEquals(
+                "axe",
+                tool.kind(),
+                "Нужда называет инструмент"
+                        + " Иначе тест supplyGather_WithAxe_NeedsToolNotDepositPoint перестанет ловить эту поломку. При смене supplyGather_WithAxe_NeedsToolNotDepositPoint проверь это утверждение.");
+        assertEquals(
+                HOLDER,
+                tool.spirit(),
+                "Нужда адресована держателю задания"
+                        + " Иначе тест supplyGather_WithAxe_NeedsToolNotDepositPoint перестанет ловить эту поломку. При смене supplyGather_WithAxe_NeedsToolNotDepositPoint проверь это утверждение.");
     }
 
     @Test
@@ -75,7 +88,8 @@ class GraphNeedsTests {
         assertEquals(
                 new GraphBlock.Path("10,64,20"),
                 need,
-                "У графовой добычи цель — место работы: провал помечает именно его недостижимым");
+                "У графовой добычи цель — место работы: провал помечает именно его недостижимым"
+                        + " Иначе тест graphGather_Failure_NeedsPathAtWorkSite перестанет ловить эту поломку. При смене graphGather_Failure_NeedsPathAtWorkSite проверь это утверждение.");
     }
 
     @Test
@@ -89,7 +103,8 @@ class GraphNeedsTests {
                 new GraphBlock.World("tree:jungle"),
                 need,
                 "«Деревьев jungle в округе нет» — факт мира с ключом: граф ждёт появления породы "
-                        + "(посадка, поход, другая порода), а не ставит ту же рубку снова");
+                        + "(посадка, поход, другая порода), а не ставит ту же рубку снова"
+                        + " Иначе тест graphGather_NoTrees_BlocksOnWorldSpeciesTag перестанет ловить эту поломку. При смене graphGather_NoTrees_BlocksOnWorldSpeciesTag проверь это утверждение.");
     }
 
     @Test
@@ -103,7 +118,8 @@ class GraphNeedsTests {
                 new GraphBlock.World("time:day"),
                 need,
                 "Ночью дух не выходит за границу поселения: провал рубки ждёт рассвета по ключу time:day, "
-                        + "а не повторяется каждую минуту");
+                        + "а не повторяется каждую минуту"
+                        + " Иначе тест graphGather_Night_BlocksOnDaylight перестанет ловить эту поломку. При смене graphGather_Night_BlocksOnDaylight проверь это утверждение.");
     }
 
     @Test
@@ -117,7 +133,8 @@ class GraphNeedsTests {
                 new GraphBlock.Item("minecraft:dirt", 1),
                 need,
                 "Откат без земли/булыжника ждёт материал, а не путь: ключ материала снимается, когда земля "
-                        + "появилась, и задание выдаётся снова");
+                        + "появилась, и задание выдаётся снова"
+                        + " Иначе тест undoLease_NoScaffoldMaterial_NeedsMaterialNotPath перестанет ловить эту поломку. При смене undoLease_NoScaffoldMaterial_NeedsMaterialNotPath проверь это утверждение.");
     }
 
     @Test
@@ -130,7 +147,8 @@ class GraphNeedsTests {
         assertEquals(
                 new GraphBlock.Tool("_pickaxe", 0, HOLDER),
                 need,
-                "Откату нечем пробить блок: граф поднимает кирку, а не метит точку недостижимой");
+                "Откату нечем пробить блок: граф поднимает кирку, а не метит точку недостижимой"
+                        + " Иначе тест undoLease_NoTool_NeedsPickaxeNotPath перестанет ловить эту поломку. При смене undoLease_NoTool_NeedsPickaxeNotPath проверь это утверждение.");
     }
 
     @Test
@@ -140,7 +158,10 @@ class GraphNeedsTests {
         GraphBlock.Need need = ask(ticket, TicketTarget.at(SITE).withSupply("stick", 4), List.of(), null);
 
         assertEquals(
-                new GraphBlock.Item("stick", 4), need, "Неудачный крафт ждёт свой предмет: граф поднимет его цепочку");
+                new GraphBlock.Item("stick", 4),
+                need,
+                "Неудачный крафт ждёт свой предмет: граф поднимет его цепочку"
+                        + " Иначе тест graphMake_EmptyStock_NeedsProducedItem перестанет ловить эту поломку. При смене graphMake_EmptyStock_NeedsProducedItem проверь это утверждение.");
     }
 
     @Test
@@ -153,7 +174,8 @@ class GraphNeedsTests {
                 new GraphBlock.Item("oak_fence", 32),
                 GraphNeeds.materialNeed(BoardCase.REPAIR_BUILDING, plan, SOURCE, new StockView(Map.of())),
                 "Схема внутри SequenceNode обязана дать нужду в своих блоках: плоский place_block видел только "
-                        + "готовую клетку и отправлял граф к «стоянке за преградой»");
+                        + "готовую клетку и отправлял граф к «стоянке за преградой»"
+                        + " Иначе тест materialNeed_NestedSchematic_NeedsMissingBlocks перестанет ловить эту поломку. При смене materialNeed_NestedSchematic_NeedsMissingBlocks проверь это утверждение.");
     }
 
     @Test
@@ -165,7 +187,8 @@ class GraphNeedsTests {
         assertNull(
                 GraphNeeds.materialNeed(
                         BoardCase.REPAIR_BUILDING, plan, SOURCE, new StockView(Map.of("oak_fence", 32))),
-                "Полный запас закрывает вложенный план: лишняя нужда заперла бы задание навсегда");
+                "Полный запас закрывает вложенный план: лишняя нужда заперла бы задание навсегда"
+                        + " Иначе тест materialNeed_PlannedCellsAlreadyFilled_NoNeed перестанет ловить эту поломку. При смене materialNeed_PlannedCellsAlreadyFilled_NoNeed проверь это утверждение.");
     }
 
     private static GraphBlock.Need ask(

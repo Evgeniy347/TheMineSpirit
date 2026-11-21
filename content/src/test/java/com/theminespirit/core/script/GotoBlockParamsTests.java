@@ -14,7 +14,8 @@ class GotoBlockParamsTests {
         assertEquals(
                 new GotoBlockParams("hay_block", 16, 3),
                 params,
-                "goto_block обязан сохранить блок, радиус и число: по ним адаптер ищет ближайший блок вида");
+                "goto_block обязан сохранить блок, радиус и число: по ним адаптер ищет ближайший блок вида"
+                        + " Иначе тест from_AllParamsPresent_ReturnsParams перестанет ловить эту поломку. При смене from_AllParamsPresent_ReturnsParams проверь это утверждение.");
     }
 
     @Test
@@ -22,7 +23,8 @@ class GotoBlockParamsTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> GotoBlockParams.from(Map.of("radius", 16, "count", 1)),
-                "goto_block без block обязан отказывать: без вида блока скрипт не знает, к чему идти");
+                "goto_block без block обязан отказывать: без вида блока скрипт не знает, к чему идти"
+                        + " Иначе тест from_MissingBlock_IsRejected перестанет ловить эту поломку. При смене from_MissingBlock_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -30,7 +32,8 @@ class GotoBlockParamsTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> GotoBlockParams.from(Map.of("block", "  ", "radius", 16, "count", 1)),
-                "Пустой блок обязан отвергаться: пробельный id не совпадёт ни с одним блоком мира");
+                "Пустой блок обязан отвергаться: пробельный id не совпадёт ни с одним блоком мира"
+                        + " Иначе тест from_BlankBlock_IsRejected перестанет ловить эту поломку. При смене from_BlankBlock_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -39,7 +42,8 @@ class GotoBlockParamsTests {
                 IllegalArgumentException.class,
                 () -> GotoBlockParams.from(Map.of("block", "stone", "count", 1)),
                 "goto_block без радиуса обязан отказывать: валидатор плана подставляет значение по умолчанию "
-                        + "из каталога до запуска, а без него скрипт не знает границу поиска");
+                        + "из каталога до запуска, а без него скрипт не знает границу поиска"
+                        + " Иначе тест from_MissingRadius_IsRejected перестанет ловить эту поломку. При смене from_MissingRadius_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -47,7 +51,8 @@ class GotoBlockParamsTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> GotoBlockParams.from(Map.of("block", "stone", "radius", 33, "count", 1)),
-                "radius больше 32 обязан отвергаться: лимит ограничивает поиск и нагрузку на серверный тик");
+                "radius больше 32 обязан отвергаться: лимит ограничивает поиск и нагрузку на серверный тик"
+                        + " Иначе тест from_RadiusOutOfRange_IsRejected перестанет ловить эту поломку. При смене from_RadiusOutOfRange_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -55,6 +60,7 @@ class GotoBlockParamsTests {
         assertThrows(
                 NullPointerException.class,
                 () -> GotoBlockParams.from(null),
-                "GotoBlockParams.from(null) обязан отказывать: без карты параметров маппинг только читает состояние мира");
+                "GotoBlockParams.from(null) обязан отказывать: без карты параметров маппинг только читает состояние мира"
+                        + " Иначе тест from_NullParams_IsRejected перестанет ловить эту поломку. При смене from_NullParams_IsRejected проверь это утверждение.");
     }
 }

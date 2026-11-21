@@ -52,10 +52,16 @@ final class ClearScaffoldWorld {
             switch (decision.action()) {
                 case CLIMB -> {
                     climbs++;
-                    assertTrue(scaffold.isEmpty(), "Подмости ставятся с земли, а не поверх прошлых: " + scaffold);
+                    assertTrue(
+                            scaffold.isEmpty(),
+                            "Подмости ставятся с земли, а не поверх прошлых: " + scaffold
+                                    + " Иначе тест act перестанет ловить эту поломку. При смене act проверь это утверждение.");
                     for (int y = feet.y(); y < feet.y() + decision.height(); y++) {
                         BlockCoord cell = new BlockCoord(feet.x(), y, feet.z());
-                        assertTrue(world.add(cell), "Клетка подмостей " + cell + " уже занята другим духом");
+                        assertTrue(
+                                world.add(cell),
+                                "Клетка подмостей " + cell + " уже занята другим духом"
+                                        + " Иначе тест act перестанет ловить эту поломку. При смене act проверь это утверждение.");
                         scaffold.add(cell);
                     }
                     columns.add(feet.x() * 100_000 + feet.z());
@@ -65,7 +71,8 @@ final class ClearScaffoldWorld {
                     BlockCoord top = ClearScaffold.highest(targets);
                     assertTrue(
                             top != null && Math.abs(top.y() - feet.y()) <= 3,
-                            "С места бьют только достижимую клетку, а не любую: " + top + " при ногах " + feet);
+                            "С места бьют только достижимую клетку, а не любую: " + top + " при ногах " + feet
+                                    + " Иначе тест act перестанет ловить эту поломку. При смене act проверь это утверждение.");
                     targets.remove(top);
                     works++;
                 }

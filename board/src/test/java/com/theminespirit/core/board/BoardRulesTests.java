@@ -29,7 +29,8 @@ class BoardRulesTests {
         assertTrue(
                 BoardRules.priorityOf(BoardCase.REPAIR_FENCE) > BoardRules.priorityOf(BoardCase.FILL_CRATER),
                 "Ремонт ограждений обязан быть выше воронки: ограждения — первый приоритет "
-                        + "из источника (п. 4), иначе дух пойдёт засыпать яму, пока забор открыт");
+                        + "из источника (п. 4), иначе дух пойдёт засыпать яму, пока забор открыт"
+                        + " При смене repairFence_Higher_ThanCrater проверь это утверждение.");
     }
 
     @Test
@@ -37,14 +38,16 @@ class BoardRulesTests {
         assertTrue(
                 BoardRules.priorityOf(BoardCase.FILL_CRATER) < BoardRules.priorityOf(BoardCase.SUPPLY_SITE),
                 "Воронка обязана быть ниже снабжения (v2: «воронка — задание с низким приоритетом»): "
-                        + "открытая яма ждёт, пока поселение снабжается, иначе снабжение встанет");
+                        + "открытая яма ждёт, пока поселение снабжается, иначе снабжение встанет"
+                        + " При смене crater_Lower_ThanSupply проверь это утверждение.");
     }
 
     @Test
     void crater_Higher_ThanShelves() {
         assertTrue(
                 BoardRules.priorityOf(BoardCase.FILL_CRATER) > BoardRules.priorityOf(BoardCase.ENCHANT_SHELVES),
-                "Воронка обязана быть выше полок чаровальни: полки — самый низкий приоритет, " + "яма важнее книг");
+                "Воронка обязана быть выше полок чаровальни: полки — самый низкий приоритет, " + "яма важнее книг"
+                        + " Иначе тест crater_Higher_ThanShelves перестанет ловить эту поломку. При смене crater_Higher_ThanShelves проверь это утверждение.");
     }
 
     @Test
@@ -52,7 +55,8 @@ class BoardRulesTests {
         assertTrue(
                 BoardRules.priorityOf(BoardCase.SUPPLY_SITE) < BoardRules.priorityOf(BoardCase.CLEAR_GROUNDS),
                 "Снабжение обязано быть ниже первых шагов: сначала зачистка территории, "
-                        + "потом воз материалов, иначе дух таскает ресурсы в лес");
+                        + "потом воз материалов, иначе дух таскает ресурсы в лес"
+                        + " При смене supply_Lower_ThanFirstSteps проверь это утверждение.");
     }
 
     @Test
@@ -61,7 +65,8 @@ class BoardRulesTests {
             assertTrue(
                     BoardConfig.readFromClasspath().priorities().containsKey(boardCase.name()),
                     "Кейс " + boardCase + " без строки в таблице приоритетов: кейс-сирота, а молчаливый "
-                            + "пропуск спрятал бы задание в очереди");
+                            + "пропуск спрятал бы задание в очереди"
+                            + " Иначе тест everyCase_Has_Priority перестанет ловить эту поломку. При смене everyCase_Has_Priority проверь это утверждение.");
         }
     }
 
@@ -71,7 +76,8 @@ class BoardRulesTests {
                 BoardRules.priorityOf(BoardCase.REPAIR_FENCE),
                 BoardRules.priorityOf(BoardCase.REPAIR_FENCE),
                 "Приоритет кейса обязан быть детерминирован: доска сортирует очередь "
-                        + "по приоритету, нестабильное значение перетасует выдачу между пересборками");
+                        + "по приоритету, нестабильное значение перетасует выдачу между пересборками"
+                        + " Иначе тест priorityOf_Is_Deterministic перестанет ловить эту поломку. При смене priorityOf_Is_Deterministic проверь это утверждение.");
     }
 
     @Test
@@ -80,10 +86,12 @@ class BoardRulesTests {
                 IllegalArgumentException.class,
                 () -> BoardRules.priorityOf(null),
                 "Кейс вне таблицы обязан падать с текстом: сирота в очереди проваливается "
-                        + "молча, и задание никогда не выдаётся без объяснения причины");
+                        + "молча, и задание никогда не выдаётся без объяснения причины"
+                        + " Иначе тест priorityOf_NullCase_IsRejected перестанет ловить эту поломку. При смене priorityOf_NullCase_IsRejected проверь это утверждение.");
         assertTrue(
                 error.getMessage().contains("Приоритет кейса не задан"),
-                "Сообщение обязано называть причину: приоритет не задан. Фактическое: " + error.getMessage());
+                "Сообщение обязано называть причину: приоритет не задан. Фактическое: " + error.getMessage()
+                        + " Иначе тест priorityOf_NullCase_IsRejected перестанет ловить эту поломку. При смене priorityOf_NullCase_IsRejected проверь это утверждение.");
     }
 
     @Property
@@ -99,7 +107,8 @@ class BoardRulesTests {
                         + "разведение и контроль > снабжение > воронка > полки»: " + first + " ("
                         + BoardRules.priorityOf(first) + ") ниже или равен " + second + " ("
                         + BoardRules.priorityOf(second)
-                        + "), и доска выдаст сначала менее важное");
+                        + "), и доска выдаст сначала менее важное"
+                        + " Иначе тест priorityOrder_Agrees_WithPartialOrder перестанет ловить эту поломку. При смене priorityOrder_Agrees_WithPartialOrder проверь это утверждение.");
     }
 
     @Property
@@ -109,7 +118,8 @@ class BoardRulesTests {
                     BoardRules.priorityOf(boardCase),
                     BoardRules.priorityOf(boardCase),
                     "Приоритет кейса " + boardCase + " обязан читаться одинаково: по нему "
-                            + "доска сортирует очередь выдачи");
+                            + "доска сортирует очередь выдачи"
+                            + " Иначе тест priorityOf_Is_StableAcrossReads перестанет ловить эту поломку. При смене priorityOf_Is_StableAcrossReads проверь это утверждение.");
         }
     }
 

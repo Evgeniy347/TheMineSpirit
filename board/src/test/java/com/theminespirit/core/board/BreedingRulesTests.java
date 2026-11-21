@@ -21,10 +21,12 @@ class BreedingRulesTests {
         assertEquals(
                 BreedingRules.Action.NONE,
                 BreedingRules.action(Species.COW, 1, true),
-                "Одна корова в загоне — разведение недоступно: пару сводят из двух, одна голова " + "не даёт приплода");
+                "Одна корова в загоне — разведение недоступно: пару сводят из двух, одна голова " + "не даёт приплода"
+                        + " Иначе тест action_OneAnimal_NoBreed перестанет ловить эту поломку. При смене action_OneAnimal_NoBreed проверь это утверждение.");
         assertFalse(
                 BreedingRules.breedingAvailable(Species.COW, 1, true),
-                "Задание разведения не ставится, пока в загоне меньше пары");
+                "Задание разведения не ставится, пока в загоне меньше пары"
+                        + " Иначе тест action_OneAnimal_NoBreed перестанет ловить эту поломку. При смене action_OneAnimal_NoBreed проверь это утверждение.");
     }
 
     @Test
@@ -32,10 +34,12 @@ class BreedingRulesTests {
         assertEquals(
                 BreedingRules.Action.BREED,
                 BreedingRules.action(Species.COW, 2, true),
-                "Две коровы в загоне — разведение доступно: пара есть и лимит 4 не выбран");
+                "Две коровы в загоне — разведение доступно: пара есть и лимит 4 не выбран"
+                        + " Иначе тест action_TwoAnimals_Breed перестанет ловить эту поломку. При смене action_TwoAnimals_Breed проверь это утверждение.");
         assertTrue(
                 BreedingRules.breedingAvailable(Species.COW, 2, true),
-                "BREED_ANIMALS ставится, когда в загоне вида ≥ 2 и лимит не выбран");
+                "BREED_ANIMALS ставится, когда в загоне вида ≥ 2 и лимит не выбран"
+                        + " Иначе тест action_TwoAnimals_Breed перестанет ловить эту поломку. При смене action_TwoAnimals_Breed проверь это утверждение.");
     }
 
     @Test
@@ -43,12 +47,16 @@ class BreedingRulesTests {
         assertEquals(
                 BreedingRules.Action.CULL,
                 BreedingRules.action(Species.COW, 4, true),
-                "Четыре коровы — лимит выбран: вместо разведения контроль численности (HERD_CULL)");
+                "Четыре коровы — лимит выбран: вместо разведения контроль численности (HERD_CULL)"
+                        + " Иначе тест action_FourAnimals_Cull перестанет ловить эту поломку. При смене action_FourAnimals_Cull проверь это утверждение.");
         assertTrue(
                 BreedingRules.cullNeeded(Species.COW, 4, true),
-                "При выбранном лимите ставится HERD_CULL, а не BREED_ANIMALS");
+                "При выбранном лимите ставится HERD_CULL, а не BREED_ANIMALS"
+                        + " Иначе тест action_FourAnimals_Cull перестанет ловить эту поломку. При смене action_FourAnimals_Cull проверь это утверждение.");
         assertFalse(
-                BreedingRules.breedingAvailable(Species.COW, 4, true), "Пятую голову не разводим: лимит вида закрыт");
+                BreedingRules.breedingAvailable(Species.COW, 4, true),
+                "Пятую голову не разводим: лимит вида закрыт"
+                        + " Иначе тест action_FourAnimals_Cull перестанет ловить эту поломку. При смене action_FourAnimals_Cull проверь это утверждение.");
     }
 
     @Test
@@ -57,10 +65,12 @@ class BreedingRulesTests {
                 BreedingRules.Action.NONE,
                 BreedingRules.action(Species.SHEEP, 4, true),
                 "Четыре овцы — лимит выбран, но забой не ставится: овец загона не убиваем, "
-                        + "шерсть — возобновляемый ресурс");
+                        + "шерсть — возобновляемый ресурс"
+                        + " Иначе тест action_FourSheep_NoCull перестанет ловить эту поломку. При смене action_FourSheep_NoCull проверь это утверждение.");
         assertFalse(
                 BreedingRules.cullNeeded(Species.SHEEP, 4, true),
-                "HERD_CULL на овец не выдаётся: иначе доска сама наряжала бы духа резать своё стадо");
+                "HERD_CULL на овец не выдаётся: иначе доска сама наряжала бы духа резать своё стадо"
+                        + " При смене action_FourSheep_NoCull проверь это утверждение.");
     }
 
     @Test
@@ -68,7 +78,8 @@ class BreedingRulesTests {
         assertEquals(
                 BreedingRules.Action.NONE,
                 BreedingRules.action(Species.COW, 4, false),
-                "Без загона разведение и контроль численности не идут: стадо не приманено, " + "работать некому");
+                "Без загона разведение и контроль численности не идут: стадо не приманено, " + "работать некому"
+                        + " Иначе тест action_WithoutPen_None перестанет ловить эту поломку. При смене action_WithoutPen_None проверь это утверждение.");
     }
 
     @Test
@@ -76,11 +87,13 @@ class BreedingRulesTests {
         assertThrows(
                 NullPointerException.class,
                 () -> BreedingRules.action(null, 2, true),
-                "Вид null обязан отвергаться: без него неизвестно, чей загон и лимит считать");
+                "Вид null обязан отвергаться: без него неизвестно, чей загон и лимит считать"
+                        + " Иначе тест action_NullSpeciesOrNegative_Rejected перестанет ловить эту поломку. При смене action_NullSpeciesOrNegative_Rejected проверь это утверждение.");
         assertThrows(
                 IllegalArgumentException.class,
                 () -> BreedingRules.action(Species.COW, -1, true),
-                "Отрицательное поголовье обязано падать: минус голов ломал бы переход к контролю");
+                "Отрицательное поголовье обязано падать: минус голов ломал бы переход к контролю"
+                        + " Иначе тест action_NullSpeciesOrNegative_Rejected перестанет ловить эту поломку. При смене action_NullSpeciesOrNegative_Rejected проверь это утверждение.");
     }
 
     @Test
@@ -88,12 +101,13 @@ class BreedingRulesTests {
         assertEquals(
                 Map.of("minecraft:wheat", 2),
                 BreedingRules.breedingGate(Species.COW),
-                "Гейт разведения коровы — пшеница вида из FeedTable, две на пару: чужой корм не " + "свёл бы пару");
+                "Гейт разведения коровы — пшеница вида из FeedTable, две на пару: чужой корм не " + "свёл бы пару"
+                        + " Иначе тест breedingGate_AnySpecies_UsesOwnFeed перестанет ловить эту поломку. При смене breedingGate_AnySpecies_UsesOwnFeed проверь это утверждение.");
         assertEquals(
                 Map.of("minecraft:carrot", 2),
                 BreedingRules.breedingGate(Species.PIG),
-                "Гейт разведения свиньи — морковь вида: корм берётся из таблицы husbandry, а не "
-                        + "выбирается наугад");
+                "Гейт разведения свиньи — морковь вида: корм берётся из таблицы husbandry, а не " + "выбирается наугад"
+                        + " Иначе тест breedingGate_AnySpecies_UsesOwnFeed перестанет ловить эту поломку. При смене breedingGate_AnySpecies_UsesOwnFeed проверь это утверждение.");
     }
 
     @Test
@@ -101,11 +115,13 @@ class BreedingRulesTests {
         assertEquals(
                 Map.of("minecraft:beef", 4, "minecraft:leather", 4),
                 BreedingRules.stockFor(Species.COW, 4),
-                "Запас на 4 коровы — норма на душу (1) умножена на поголовье: мясо и шкура по 4");
+                "Запас на 4 коровы — норма на душу (1) умножена на поголовье: мясо и шкура по 4"
+                        + " Иначе тест stockFor_AnyPopulation_MultipliesPerCapita перестанет ловить эту поломку. При смене stockFor_AnyPopulation_MultipliesPerCapita проверь это утверждение.");
         assertEquals(
                 Map.of("minecraft:mutton", 2, "minecraft:white_wool", 2),
                 BreedingRules.stockFor(Species.SHEEP, 2),
-                "Овцы дают мясо и шерсть: норма на душу умножается на число голов");
+                "Овцы дают мясо и шерсть: норма на душу умножается на число голов"
+                        + " Иначе тест stockFor_AnyPopulation_MultipliesPerCapita перестанет ловить эту поломку. При смене stockFor_AnyPopulation_MultipliesPerCapita проверь это утверждение.");
     }
 
     @Test
@@ -114,7 +130,8 @@ class BreedingRulesTests {
                 Map.of("minecraft:chicken", 0, "minecraft:egg", 0),
                 BreedingRules.stockFor(Species.CHICKEN, 0),
                 "Ноль кур — нулевой запас: норма на душу умножается на ноль, задание склада на "
-                        + "ноль голов не ставится");
+                        + "ноль голов не ставится"
+                        + " Иначе тест stockFor_ZeroPopulation_NoStock перестанет ловить эту поломку. При смене stockFor_ZeroPopulation_NoStock проверь это утверждение.");
     }
 
     @Test
@@ -122,11 +139,13 @@ class BreedingRulesTests {
         assertThrows(
                 NullPointerException.class,
                 () -> BreedingRules.stockPerCapita(null),
-                "Вид null обязан отвергаться: норму считают по виду");
+                "Вид null обязан отвергаться: норму считают по виду"
+                        + " Иначе тест stockFor_NullSpeciesOrNegative_Rejected перестанет ловить эту поломку. При смене stockFor_NullSpeciesOrNegative_Rejected проверь это утверждение.");
         assertThrows(
                 IllegalArgumentException.class,
                 () -> BreedingRules.stockFor(Species.COW, -1),
-                "Отрицательная численность обязана падать: запас на минус голов не считается");
+                "Отрицательная численность обязана падать: запас на минус голов не считается"
+                        + " Иначе тест stockFor_NullSpeciesOrNegative_Rejected перестанет ловить эту поломку. При смене stockFor_NullSpeciesOrNegative_Rejected проверь это утверждение.");
     }
 
     @Property
@@ -141,23 +160,33 @@ class BreedingRulesTests {
             assertEquals(
                     BreedingRules.Action.NONE,
                     action,
-                    "Овца на лимите не забивается: загон держит 4 головы, шерсть стригут повторно");
+                    "Овца на лимите не забивается: загон держит 4 головы, шерсть стригут повторно"
+                            + " Иначе тест action_AnyHoused_MatchesLimitAndIsMonotone перестанет ловить эту поломку. При смене action_AnyHoused_MatchesLimitAndIsMonotone проверь это утверждение.");
         } else if (housed >= max) {
             assertEquals(
                     BreedingRules.Action.CULL,
                     action,
-                    "При выбранном лимите (" + max + ") — контроль численности, а не разведение");
+                    "При выбранном лимите (" + max + ") — контроль численности, а не разведение"
+                            + " Иначе тест action_AnyHoused_MatchesLimitAndIsMonotone перестанет ловить эту поломку. При смене action_AnyHoused_MatchesLimitAndIsMonotone проверь это утверждение.");
         } else if (housed >= min) {
             assertEquals(
-                    BreedingRules.Action.BREED, action, "От пары (" + min + ") до лимита (" + max + ") — разведение");
+                    BreedingRules.Action.BREED,
+                    action,
+                    "От пары (" + min + ") до лимита (" + max + ") — разведение"
+                            + " Иначе тест action_AnyHoused_MatchesLimitAndIsMonotone перестанет ловить эту поломку. При смене action_AnyHoused_MatchesLimitAndIsMonotone проверь это утверждение.");
         } else {
-            assertEquals(BreedingRules.Action.NONE, action, "Меньше пары — нечего разводить");
+            assertEquals(
+                    BreedingRules.Action.NONE,
+                    action,
+                    "Меньше пары — нечего разводить"
+                            + " Иначе тест action_AnyHoused_MatchesLimitAndIsMonotone перестанет ловить эту поломку. При смене action_AnyHoused_MatchesLimitAndIsMonotone проверь это утверждение.");
         }
         if (action == BreedingRules.Action.CULL) {
             assertEquals(
                     BreedingRules.Action.CULL,
                     BreedingRules.action(species, housed + 1, true),
-                    "Лимит монотонен: добавление головы не возвращает разведение");
+                    "Лимит монотонен: добавление головы не возвращает разведение"
+                            + " Иначе тест action_AnyHoused_MatchesLimitAndIsMonotone перестанет ловить эту поломку. При смене action_AnyHoused_MatchesLimitAndIsMonotone проверь это утверждение.");
         }
     }
 
@@ -167,8 +196,8 @@ class BreedingRulesTests {
         assertEquals(
                 BreedingRules.action(species, housed, penBuilt),
                 BreedingRules.action(species, housed, penBuilt),
-                "Переход детерминирован: один вход — одно действие, иначе доска плывёт между "
-                        + "разведением и забоем");
+                "Переход детерминирован: один вход — одно действие, иначе доска плывёт между " + "разведением и забоем"
+                        + " При смене action_AnyInput_IsDeterministic проверь это утверждение.");
     }
 
     @Property
@@ -179,13 +208,15 @@ class BreedingRulesTests {
         assertEquals(
                 smaller.keySet(),
                 larger.keySet(),
-                "Состав продуктов не зависит от поголовья: у вида одни и те же продукты");
+                "Состав продуктов не зависит от поголовья: у вида одни и те же продукты"
+                        + " Иначе тест stockFor_AnyPopulation_IsMonotone перестанет ловить эту поломку. При смене stockFor_AnyPopulation_IsMonotone проверь это утверждение.");
         for (Map.Entry<String, Integer> entry : smaller.entrySet()) {
             String item = entry.getKey();
             assertTrue(
                     larger.get(item) >= entry.getValue(),
                     "Запас растёт с поголовьем: " + item + " при " + population + " голов не больше, " + "чем при "
-                            + (population + 1));
+                            + (population + 1)
+                            + " Иначе тест stockFor_AnyPopulation_IsMonotone перестанет ловить эту поломку. При смене stockFor_AnyPopulation_IsMonotone проверь это утверждение.");
         }
     }
 

@@ -35,13 +35,37 @@ class BoardPagingTests {
         assertEquals(
                 List.of("free-2", "free-3", "free-4"),
                 page.tiles().stream().map(BoardTile::id).toList(),
-                "Порция обязана брать только запрошенную колонку и сдвиг offset, а не всю доску");
-        assertEquals(7, page.total(), "Счётчик колонки обязан показывать общее число её плиток, а не размер порции");
-        assertEquals(7, page.totals().get(BoardTileGroup.AVAILABLE), "Число доступных обязано попасть в totals");
-        assertEquals(5, page.totals().get(BoardTileGroup.DONE), "Totals обязаны считать и незапрошенные колонки");
-        assertEquals(0, page.totals().get(BoardTileGroup.ACTIVE), "Пустая колонка обязана иметь ноль");
-        assertTrue(page.hasMore(), "После смещения 2 при семи плитках обязан остаться хвост ленты");
-        assertEquals(77L, page.version(), "Порция обязана нести версию доски, по которой клиент решает об обновлении");
+                "Порция обязана брать только запрошенную колонку и сдвиг offset, а не всю доску"
+                        + " Иначе тест page_AvailableGroup_ReturnsOnlyRequestedColumnPortion перестанет ловить эту поломку. При смене page_AvailableGroup_ReturnsOnlyRequestedColumnPortion проверь это утверждение.");
+        assertEquals(
+                7,
+                page.total(),
+                "Счётчик колонки обязан показывать общее число её плиток, а не размер порции"
+                        + " Иначе тест page_AvailableGroup_ReturnsOnlyRequestedColumnPortion перестанет ловить эту поломку. При смене page_AvailableGroup_ReturnsOnlyRequestedColumnPortion проверь это утверждение.");
+        assertEquals(
+                7,
+                page.totals().get(BoardTileGroup.AVAILABLE),
+                "Число доступных обязано попасть в totals"
+                        + " Иначе тест page_AvailableGroup_ReturnsOnlyRequestedColumnPortion перестанет ловить эту поломку. При смене page_AvailableGroup_ReturnsOnlyRequestedColumnPortion проверь это утверждение.");
+        assertEquals(
+                5,
+                page.totals().get(BoardTileGroup.DONE),
+                "Totals обязаны считать и незапрошенные колонки"
+                        + " Иначе тест page_AvailableGroup_ReturnsOnlyRequestedColumnPortion перестанет ловить эту поломку. При смене page_AvailableGroup_ReturnsOnlyRequestedColumnPortion проверь это утверждение.");
+        assertEquals(
+                0,
+                page.totals().get(BoardTileGroup.ACTIVE),
+                "Пустая колонка обязана иметь ноль"
+                        + " Иначе тест page_AvailableGroup_ReturnsOnlyRequestedColumnPortion перестанет ловить эту поломку. При смене page_AvailableGroup_ReturnsOnlyRequestedColumnPortion проверь это утверждение.");
+        assertTrue(
+                page.hasMore(),
+                "После смещения 2 при семи плитках обязан остаться хвост ленты"
+                        + " Иначе тест page_AvailableGroup_ReturnsOnlyRequestedColumnPortion перестанет ловить эту поломку. При смене page_AvailableGroup_ReturnsOnlyRequestedColumnPortion проверь это утверждение.");
+        assertEquals(
+                77L,
+                page.version(),
+                "Порция обязана нести версию доски, по которой клиент решает об обновлении"
+                        + " Иначе тест page_AvailableGroup_ReturnsOnlyRequestedColumnPortion перестанет ловить эту поломку. При смене page_AvailableGroup_ReturnsOnlyRequestedColumnPortion проверь это утверждение.");
     }
 
     @Test
@@ -50,9 +74,20 @@ class BoardPagingTests {
 
         BoardPage page = BoardPaging.page(board(), query, 1L);
 
-        assertEquals(List.of(), page.tiles(), "Конец ленты обязан отдавать пустую порцию, а не падать");
-        assertFalse(page.hasMore(), "За концом ленты хвоста нет: догрузка обязана остановиться");
-        assertEquals(7, page.total(), "Даже за концом ленты счётчик колонки обязан остаться общим");
+        assertEquals(
+                List.of(),
+                page.tiles(),
+                "Конец ленты обязан отдавать пустую порцию, а не падать"
+                        + " Иначе тест page_OffsetPastEnd_ReturnsEmptyPortionWithoutTail перестанет ловить эту поломку. При смене page_OffsetPastEnd_ReturnsEmptyPortionWithoutTail проверь это утверждение.");
+        assertFalse(
+                page.hasMore(),
+                "За концом ленты хвоста нет: догрузка обязана остановиться"
+                        + " Иначе тест page_OffsetPastEnd_ReturnsEmptyPortionWithoutTail перестанет ловить эту поломку. При смене page_OffsetPastEnd_ReturnsEmptyPortionWithoutTail проверь это утверждение.");
+        assertEquals(
+                7,
+                page.total(),
+                "Даже за концом ленты счётчик колонки обязан остаться общим"
+                        + " Иначе тест page_OffsetPastEnd_ReturnsEmptyPortionWithoutTail перестанет ловить эту поломку. При смене page_OffsetPastEnd_ReturnsEmptyPortionWithoutTail проверь это утверждение.");
     }
 
     @Test
@@ -61,9 +96,20 @@ class BoardPagingTests {
 
         BoardPage page = BoardPaging.page(board(), query, 3L);
 
-        assertEquals(List.of(), page.tiles(), "У пустой колонки нет плиток: ответ обязан быть пустым списком");
-        assertEquals(0, page.total(), "Счётчик пустой колонки обязан быть нулём");
-        assertFalse(page.hasMore(), "У пустой колонки нечего догружать");
+        assertEquals(
+                List.of(),
+                page.tiles(),
+                "У пустой колонки нет плиток: ответ обязан быть пустым списком"
+                        + " Иначе тест page_EmptyColumn_ReturnsZeroTotalsAndNoTail перестанет ловить эту поломку. При смене page_EmptyColumn_ReturnsZeroTotalsAndNoTail проверь это утверждение.");
+        assertEquals(
+                0,
+                page.total(),
+                "Счётчик пустой колонки обязан быть нулём"
+                        + " Иначе тест page_EmptyColumn_ReturnsZeroTotalsAndNoTail перестанет ловить эту поломку. При смене page_EmptyColumn_ReturnsZeroTotalsAndNoTail проверь это утверждение.");
+        assertFalse(
+                page.hasMore(),
+                "У пустой колонки нечего догружать"
+                        + " Иначе тест page_EmptyColumn_ReturnsZeroTotalsAndNoTail перестанет ловить эту поломку. При смене page_EmptyColumn_ReturnsZeroTotalsAndNoTail проверь это утверждение.");
     }
 
     @Test
@@ -76,9 +122,18 @@ class BoardPagingTests {
         assertEquals(
                 List.of("free-0", "free-2", "free-4", "free-6"),
                 page.tiles().stream().map(BoardTile::id).toList(),
-                "Фильтр духа обязан применяться до нарезки порции, иначе счётчик и страницы разойдутся");
-        assertEquals(4, page.total(), "Счётчик колонки обязан считать отфильтрованные плитки");
-        assertEquals(4, page.totals().get(BoardTileGroup.AVAILABLE), "Totals обязаны учитывать фильтр духа");
+                "Фильтр духа обязан применяться до нарезки порции, иначе счётчик и страницы разойдутся"
+                        + " При смене page_SpiritFilter_KeepsOnlyNamedSpiritBeforePaging проверь это утверждение.");
+        assertEquals(
+                4,
+                page.total(),
+                "Счётчик колонки обязан считать отфильтрованные плитки"
+                        + " Иначе тест page_SpiritFilter_KeepsOnlyNamedSpiritBeforePaging перестанет ловить эту поломку. При смене page_SpiritFilter_KeepsOnlyNamedSpiritBeforePaging проверь это утверждение.");
+        assertEquals(
+                4,
+                page.totals().get(BoardTileGroup.AVAILABLE),
+                "Totals обязаны учитывать фильтр духа"
+                        + " Иначе тест page_SpiritFilter_KeepsOnlyNamedSpiritBeforePaging перестанет ловить эту поломку. При смене page_SpiritFilter_KeepsOnlyNamedSpiritBeforePaging проверь это утверждение.");
     }
 
     @Test
@@ -88,9 +143,21 @@ class BoardPagingTests {
 
         BoardPage page = BoardPaging.page(board(), query, 1L);
 
-        assertEquals(List.of(), page.tiles(), "Фильтр статуса на другую колонку обязан оставить запрошенную пустой");
-        assertEquals(5, page.totals().get(BoardTileGroup.DONE), "Totals обязаны считать отфильтрованную колонку");
-        assertEquals(0, page.totals().get(BoardTileGroup.AVAILABLE), "Колонка вне фильтра статуса обязана обнулиться");
+        assertEquals(
+                List.of(),
+                page.tiles(),
+                "Фильтр статуса на другую колонку обязан оставить запрошенную пустой"
+                        + " Иначе тест page_StatusFilterOtherColumn_LeavesRequestedColumnEmpty перестанет ловить эту поломку. При смене page_StatusFilterOtherColumn_LeavesRequestedColumnEmpty проверь это утверждение.");
+        assertEquals(
+                5,
+                page.totals().get(BoardTileGroup.DONE),
+                "Totals обязаны считать отфильтрованную колонку"
+                        + " Иначе тест page_StatusFilterOtherColumn_LeavesRequestedColumnEmpty перестанет ловить эту поломку. При смене page_StatusFilterOtherColumn_LeavesRequestedColumnEmpty проверь это утверждение.");
+        assertEquals(
+                0,
+                page.totals().get(BoardTileGroup.AVAILABLE),
+                "Колонка вне фильтра статуса обязана обнулиться"
+                        + " Иначе тест page_StatusFilterOtherColumn_LeavesRequestedColumnEmpty перестанет ловить эту поломку. При смене page_StatusFilterOtherColumn_LeavesRequestedColumnEmpty проверь это утверждение.");
     }
 
     @Test
@@ -102,6 +169,7 @@ class BoardPagingTests {
         assertEquals(
                 List.of("Яков"),
                 page.spirits(),
-                "Список духов обязан собираться по всей доске: иначе кнопка фильтра не переберёт духов за пределами порции");
+                "Список духов обязан собираться по всей доске: иначе кнопка фильтра не переберёт духов за пределами порции"
+                        + " При смене page_Spirits_ListAllNamesOnBoardForFilterCycle проверь это утверждение.");
     }
 }

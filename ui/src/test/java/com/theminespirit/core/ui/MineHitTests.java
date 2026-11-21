@@ -18,11 +18,13 @@ class MineHitTests {
         assertEquals(
                 Optional.of(SMALL),
                 MineHit.rectAt(VIEW, VIEWPORT, VIEWPORT.screenX(6.5), VIEWPORT.screenY(1.5)),
-                "Под курсором спуск и ход — подсказка о меньшем: он нарисован поверх");
+                "Под курсором спуск и ход — подсказка о меньшем: он нарисован поверх"
+                        + " Иначе тест rectAt_NestedPlans_SmallestWins перестанет ловить эту поломку. При смене rectAt_NestedPlans_SmallestWins проверь это утверждение.");
         assertEquals(
                 Optional.of(BIG),
                 MineHit.rectAt(VIEW, VIEWPORT, VIEWPORT.screenX(1.5), VIEWPORT.screenY(3.5)),
-                "Курсор на спуске — его подсказка");
+                "Курсор на спуске — его подсказка"
+                        + " Иначе тест rectAt_NestedPlans_SmallestWins перестанет ловить эту поломку. При смене rectAt_NestedPlans_SmallestWins проверь это утверждение.");
     }
 
     @Test
@@ -30,7 +32,12 @@ class MineHitTests {
         assertEquals(
                 Optional.empty(),
                 MineHit.rectAt(VIEW, VIEWPORT, VIEWPORT.screenX(18.5), VIEWPORT.screenY(8.5)),
-                "Вне прямоугольников шахты подсказки нет");
-        assertEquals(Optional.empty(), MineHit.rectAt(VIEW, VIEWPORT, -5, 10), "Вне окна карты подсказки нет");
+                "Вне прямоугольников шахты подсказки нет"
+                        + " Иначе тест rectAt_OutsideMapOrPlans_NoHint перестанет ловить эту поломку. При смене rectAt_OutsideMapOrPlans_NoHint проверь это утверждение.");
+        assertEquals(
+                Optional.empty(),
+                MineHit.rectAt(VIEW, VIEWPORT, -5, 10),
+                "Вне окна карты подсказки нет"
+                        + " Иначе тест rectAt_OutsideMapOrPlans_NoHint перестанет ловить эту поломку. При смене rectAt_OutsideMapOrPlans_NoHint проверь это утверждение.");
     }
 }

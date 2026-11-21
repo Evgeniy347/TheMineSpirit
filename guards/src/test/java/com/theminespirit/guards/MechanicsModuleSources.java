@@ -75,7 +75,8 @@ final class MechanicsModuleSources {
         assertTrue(
                 list.find(),
                 "В settings.gradle нет списка def mechanicsModules = [...]: тип модуля не вывести. Как надо: "
-                        + "механики под mech/ находятся по каталогу, а верхнеуровневую (:policy) перечисли в списке.");
+                        + "механики под mech/ находятся по каталогу, а верхнеуровневую (:policy) перечисли в списке."
+                        + " Иначе тест механику перестанет ловить эту поломку. При смене механику проверь это утверждение.");
         Matcher id = MODULE_ID.matcher(list.group(1));
         while (id.find()) {
             mechanics.add(id.group(1));
@@ -83,14 +84,16 @@ final class MechanicsModuleSources {
         assertTrue(
                 !mechanics.isEmpty(),
                 "Модулей-механик не нашлось: сторож молча проверяет ноль механик. Как надо: модуль механики лежит "
-                        + "в mech/ или перечислен в mechanicsModules.");
+                        + "в mech/ или перечислен в mechanicsModules."
+                        + " Иначе тест механику перестанет ловить эту поломку. При смене механику проверь это утверждение.");
         assertTrue(
                 included.containsAll(mechanics),
                 "Список mechanicsModules называет модуль, которого нет в include settings.gradle: тип и сборка "
                         + "разъедутся. Лишние: "
                         + mechanics.stream()
                                 .filter(module -> !included.contains(module))
-                                .toList());
+                                .toList()
+                        + " Иначе тест механику перестанет ловить эту поломку. При смене механику проверь это утверждение.");
         return Set.copyOf(mechanics);
     }
 

@@ -21,7 +21,8 @@ class AcquireSuppliesTests {
         assertEquals(
                 7,
                 supplies.inInventory("oak_log"),
-                "Снабжение обязано отдавать счётчик инвентаря: по нему acquire решает, добывать ли остаток");
+                "Снабжение обязано отдавать счётчик инвентаря: по нему acquire решает, добывать ли остаток"
+                        + " Иначе тест inInventory_StubWithStock_ReturnsCounter перестанет ловить эту поломку. При смене inInventory_StubWithStock_ReturnsCounter проверь это утверждение.");
     }
 
     @Test
@@ -31,7 +32,8 @@ class AcquireSuppliesTests {
         assertEquals(
                 0,
                 supplies.inInventory("diamond"),
-                "Предмета нет в инвентаре — счётчик обязан быть 0, а не отрицательным или выбросом");
+                "Предмета нет в инвентаре — счётчик обязан быть 0, а не отрицательным или выбросом"
+                        + " Иначе тест inInventory_UnknownItem_ReturnsZero перестанет ловить эту поломку. При смене inInventory_UnknownItem_ReturnsZero проверь это утверждение.");
     }
 
     @Test
@@ -40,17 +42,26 @@ class AcquireSuppliesTests {
 
         List<ScriptCall> steps = supplies.withdraw("oak_log", 3);
 
-        assertEquals(1, steps.size(), "Сундук с предметом обязан дать ровно один шаг withdraw на acquire");
+        assertEquals(
+                1,
+                steps.size(),
+                "Сундук с предметом обязан дать ровно один шаг withdraw на acquire"
+                        + " Иначе тест withdraw_StubWithChests_ReturnsSteps перестанет ловить эту поломку. При смене withdraw_StubWithChests_ReturnsSteps проверь это утверждение.");
         assertEquals(
                 "withdraw",
                 steps.get(0).script(),
-                "Шаг снабжения — обычный вызов withdraw: движок не знает про acquire");
+                "Шаг снабжения — обычный вызов withdraw: движок не знает про acquire"
+                        + " Иначе тест withdraw_StubWithChests_ReturnsSteps перестанет ловить эту поломку. При смене withdraw_StubWithChests_ReturnsSteps проверь это утверждение.");
         assertEquals(
                 "chestA",
                 steps.get(0).params().get("container"),
-                "Шаг обязан называть контейнер, из которого берут предмет");
+                "Шаг обязан называть контейнер, из которого берут предмет"
+                        + " Иначе тест withdraw_StubWithChests_ReturnsSteps перестанет ловить эту поломку. При смене withdraw_StubWithChests_ReturnsSteps проверь это утверждение.");
         assertEquals(
-                3, steps.get(0).params().get("count"), "Шаг обязан просить не больше остатка цели: count = maxCount");
+                3,
+                steps.get(0).params().get("count"),
+                "Шаг обязан просить не больше остатка цели: count = maxCount"
+                        + " Иначе тест withdraw_StubWithChests_ReturnsSteps перестанет ловить эту поломку. При смене withdraw_StubWithChests_ReturnsSteps проверь это утверждение.");
     }
 
     @Test
@@ -61,7 +72,8 @@ class AcquireSuppliesTests {
 
         assertTrue(
                 steps.isEmpty(),
-                "Контейнеров нет — пустой список шагов, а не шаг «в никуда»: acquire тогда идёт в мир");
+                "Контейнеров нет — пустой список шагов, а не шаг «в никуда»: acquire тогда идёт в мир"
+                        + " Иначе тест withdraw_NoChests_ReturnsEmptyList перестанет ловить эту поломку. При смене withdraw_NoChests_ReturnsEmptyList проверь это утверждение.");
     }
 
     @Test
@@ -73,7 +85,8 @@ class AcquireSuppliesTests {
         assertEquals(
                 List.of("near", "far"),
                 steps.stream().map(step -> step.params().get("container")).toList(),
-                "Порядок шагов обязан сохраняться: ближний сундук первым, иначе дух ходит за дальним, минуя ближний");
+                "Порядок шагов обязан сохраняться: ближний сундук первым, иначе дух ходит за дальним, минуя ближний"
+                        + " При смене withdraw_TwoChests_KeepsNearestFirstOrder проверь это утверждение.");
     }
 
     @Test
@@ -83,7 +96,8 @@ class AcquireSuppliesTests {
         assertThrows(
                 NullPointerException.class,
                 () -> supplies.withdraw(null, 1),
-                "withdraw(null) обязан отказывать: без имени предмета переносить нечего");
+                "withdraw(null) обязан отказывать: без имени предмета переносить нечего"
+                        + " Иначе тест withdraw_NullItem_IsRejected перестанет ловить эту поломку. При смене withdraw_NullItem_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -93,7 +107,8 @@ class AcquireSuppliesTests {
         assertThrows(
                 NullPointerException.class,
                 () -> supplies.inInventory(null),
-                "inInventory(null) обязан отказывать: без имени предмета счёт бессмыслен");
+                "inInventory(null) обязан отказывать: без имени предмета счёт бессмыслен"
+                        + " Иначе тест inInventory_NullItem_IsRejected перестанет ловить эту поломку. При смене inInventory_NullItem_IsRejected проверь это утверждение.");
     }
 
     private static Map<String, Map<String, Integer>> orderedChests(String first, String second) {

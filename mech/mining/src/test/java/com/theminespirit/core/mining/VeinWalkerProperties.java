@@ -30,10 +30,12 @@ class VeinWalkerProperties {
                 view.component(start),
                 new HashSet<>(vein.blocks()),
                 "Обход обязан вернуть ровно связную компоненту старта: пропуск или лишний блок искажает жилу "
-                        + "и сбивает счёт добытой руды");
+                        + "и сбивает счёт добытой руды"
+                        + " Иначе тест collect_RandomWorld_MatchesConnectedComponent перестанет ловить эту поломку. При смене collect_RandomWorld_MatchesConnectedComponent проверь это утверждение.");
         assertFalse(
                 vein.truncated(),
-                "Пока блоков меньше предела, жила не помечается усечённой: иначе адаптер преждевременно ищет новую");
+                "Пока блоков меньше предела, жила не помечается усечённой: иначе адаптер преждевременно ищет новую"
+                        + " При смене collect_RandomWorld_MatchesConnectedComponent проверь это утверждение.");
     }
 
     @Property
@@ -51,7 +53,8 @@ class VeinWalkerProperties {
                 view.reads() <= 27 * size + 27,
                 "Число чтений OreView обязано быть линейным по размеру жилы (27 × размер + 27): иначе обход "
                         + "большой жилы многократно перечитывает клетки и кладёт серверный тик. Чтений: "
-                        + view.reads() + ", блоков: " + size);
+                        + view.reads() + ", блоков: " + size
+                        + " При смене collect_RandomWorld_ReadsStayBounded проверь это утверждение.");
     }
 
     private static CountingOreView randomView(Random random) {

@@ -19,11 +19,12 @@ class GraphExplainTests {
 
         assertFalse(
                 first.why().contains("неосуществима") && !first.why().contains("следующая"),
-                "Причина выбранной работы не описывает её саму как неосуществимую, если она осуществима: "
-                        + first.why());
+                "Причина выбранной работы не описывает её саму как неосуществимую, если она осуществима: " + first.why()
+                        + " Иначе тест of_ChosenFeasibleNextInfeasible_ExplainsNextNotChosen перестанет ловить эту поломку. При смене of_ChosenFeasibleNextInfeasible_ExplainsNextNotChosen проверь это утверждение.");
         assertTrue(
                 first.why().contains("следующая неосуществима"),
-                "Неосуществимость следующего кандидата объясняется его словом, а не выбранной работы: " + first.why());
+                "Неосуществимость следующего кандидата объясняется его словом, а не выбранной работы: " + first.why()
+                        + " Иначе тест of_ChosenFeasibleNextInfeasible_ExplainsNextNotChosen перестанет ловить эту поломку. При смене of_ChosenFeasibleNextInfeasible_ExplainsNextNotChosen проверь это утверждение.");
     }
 
     @Test
@@ -34,7 +35,8 @@ class GraphExplainTests {
 
         assertTrue(
                 first.why().contains("выше по весу, но неосуществима"),
-                "Если выбрана неосуществимая работа, причина говорит о ней, а не о следующей: " + first.why());
+                "Если выбрана неосуществимая работа, причина говорит о ней, а не о следующей: " + first.why()
+                        + " Иначе тест of_ChosenInfeasible_ExplainsItsOwnInfeasibility перестанет ловить эту поломку. При смене of_ChosenInfeasible_ExplainsItsOwnInfeasibility проверь это утверждение.");
     }
 
     @Test
@@ -44,16 +46,36 @@ class GraphExplainTests {
 
         GraphDecisions decisions = GraphExplain.of(plan, 500);
 
-        assertEquals(500, decisions.tick(), "Объяснение помечено тиком, на котором принято решение");
+        assertEquals(
+                500,
+                decisions.tick(),
+                "Объяснение помечено тиком, на котором принято решение"
+                        + " Иначе тест of_ChosenAndNext_ExplainsWeightGap перестанет ловить эту поломку. При смене of_ChosenAndNext_ExplainsWeightGap проверь это утверждение.");
         GraphDecisions.Row first = decisions.decisions().get(0);
-        assertEquals("make:dirt", first.task(), "Первым объясняется самая тяжёлая работа");
-        assertEquals("chop_oak_log", first.next(), "Следующий кандидат — вторая по весу работа");
-        assertTrue(first.why().contains("20"), "Причина отказа — разница веса: " + first.why());
-        assertEquals("любой", first.spirit(), "Работа без духа объясняется как «любой»");
+        assertEquals(
+                "make:dirt",
+                first.task(),
+                "Первым объясняется самая тяжёлая работа"
+                        + " Иначе тест of_ChosenAndNext_ExplainsWeightGap перестанет ловить эту поломку. При смене of_ChosenAndNext_ExplainsWeightGap проверь это утверждение.");
+        assertEquals(
+                "chop_oak_log",
+                first.next(),
+                "Следующий кандидат — вторая по весу работа"
+                        + " Иначе тест of_ChosenAndNext_ExplainsWeightGap перестанет ловить эту поломку. При смене of_ChosenAndNext_ExplainsWeightGap проверь это утверждение.");
+        assertTrue(
+                first.why().contains("20"),
+                "Причина отказа — разница веса: " + first.why()
+                        + " Иначе тест of_ChosenAndNext_ExplainsWeightGap перестанет ловить эту поломку. При смене of_ChosenAndNext_ExplainsWeightGap проверь это утверждение.");
+        assertEquals(
+                "любой",
+                first.spirit(),
+                "Работа без духа объясняется как «любой»"
+                        + " Иначе тест of_ChosenAndNext_ExplainsWeightGap перестанет ловить эту поломку. При смене of_ChosenAndNext_ExplainsWeightGap проверь это утверждение.");
         assertTrue(
                 decisions.decisions().get(1).why().contains("неосуществим"),
                 "Невозможная работа объясняется материалами: "
-                        + decisions.decisions().get(1).why());
+                        + decisions.decisions().get(1).why()
+                        + " Иначе тест of_ChosenAndNext_ExplainsWeightGap перестанет ловить эту поломку. При смене of_ChosenAndNext_ExplainsWeightGap проверь это утверждение.");
     }
 
     @Test
@@ -72,9 +94,20 @@ class GraphExplainTests {
 
         GraphDecisions.Row row = GraphExplain.of(plan, 1).decisions().get(0);
 
-        assertEquals("spirit-1", row.spirit(), "Личная работа объясняется духом, который её получил");
-        assertEquals("", row.next(), "Если кандидатов нет, следующий пуст");
-        assertTrue(row.line().contains("кандидатов больше нет"), "Строка лога говорит, что выбора больше нет");
+        assertEquals(
+                "spirit-1",
+                row.spirit(),
+                "Личная работа объясняется духом, который её получил"
+                        + " Иначе тест of_SpiritBoundTask_NamesSpirit перестанет ловить эту поломку. При смене of_SpiritBoundTask_NamesSpirit проверь это утверждение.");
+        assertEquals(
+                "",
+                row.next(),
+                "Если кандидатов нет, следующий пуст"
+                        + " Иначе тест of_SpiritBoundTask_NamesSpirit перестанет ловить эту поломку. При смене of_SpiritBoundTask_NamesSpirit проверь это утверждение.");
+        assertTrue(
+                row.line().contains("кандидатов больше нет"),
+                "Строка лога говорит, что выбора больше нет"
+                        + " Иначе тест of_SpiritBoundTask_NamesSpirit перестанет ловить эту поломку. При смене of_SpiritBoundTask_NamesSpirit проверь это утверждение.");
     }
 
     @Test
@@ -84,7 +117,8 @@ class GraphExplainTests {
         assertEquals(
                 "spirit-1 → make:dirt (42), следующий chop (38): вес ниже на 4",
                 row.line(),
-                "Формат строки [graph] решение: дух → работа (вес), следующий кандидат и почему не он");
+                "Формат строки [graph] решение: дух → работа (вес), следующий кандидат и почему не он"
+                        + " Иначе тест row_Line_ContainsWorkWeightAndNext перестанет ловить эту поломку. При смене row_Line_ContainsWorkWeightAndNext проверь это утверждение.");
     }
 
     private static GraphPlan plan(GraphPlan.Task... tasks) {

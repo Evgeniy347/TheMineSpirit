@@ -53,12 +53,16 @@ class AbsentOwnersTests {
         List<String> early = owners.sweep(board, Set.of(ALIVE), 0);
         List<String> late = owners.sweep(board, Set.of(ALIVE), AbsentOwners.GRACE_TICKS);
 
-        assertTrue(early.isEmpty(), "До срока задания не снимаются: дух мог не успеть загрузиться, снято " + early);
+        assertTrue(
+                early.isEmpty(),
+                "До срока задания не снимаются: дух мог не успеть загрузиться, снято " + early
+                        + " Иначе тест sweep_StockOfRemovedSpiritAfterGrace_Cancelled перестанет ловить эту поломку. При смене sweep_StockOfRemovedSpiritAfterGrace_Cancelled проверь это утверждение.");
         assertEquals(
                 Set.of("stock:craft_wooden_pickaxe:" + REMOVED, "transfer:" + REMOVED),
                 Set.copyOf(late),
                 "Запас и передача удалённому духу снимаются (INC-94: stock:craft_wooden_pickaxe висел за удалённым "
-                        + "7b85ab0c), иначе висят на доске вечно");
+                        + "7b85ab0c), иначе висят на доске вечно"
+                        + " При смене sweep_StockOfRemovedSpiritAfterGrace_Cancelled проверь это утверждение.");
     }
 
     @Test
@@ -73,7 +77,8 @@ class AbsentOwnersTests {
 
         assertTrue(
                 later.isEmpty(),
-                "Вернувшийся дух сбрасывает отсчёт: его запас не снимается за прошлое отсутствие, снято " + later);
+                "Вернувшийся дух сбрасывает отсчёт: его запас не снимается за прошлое отсутствие, снято " + later
+                        + " Иначе тест sweep_OwnerReturnedBeforeGrace_Kept перестанет ловить эту поломку. При смене sweep_OwnerReturnedBeforeGrace_Kept проверь это утверждение.");
     }
 
     @Test
@@ -86,12 +91,14 @@ class AbsentOwnersTests {
         owners.sweep(board, Set.of(ALIVE), 0);
         assertTrue(
                 board.stuck().of(REMOVED, 1).isPresent(),
-                "До срока метка удалённого духа живёт: дух мог не успеть загрузиться после перезапуска");
+                "До срока метка удалённого духа живёт: дух мог не успеть загрузиться после перезапуска"
+                        + " Иначе тест sweep_NoPathMarkOfRemovedSpirit_RemovedAfterGrace перестанет ловить эту поломку. При смене sweep_NoPathMarkOfRemovedSpirit_RemovedAfterGrace проверь это утверждение.");
 
         owners.sweep(board, Set.of(ALIVE), AbsentOwners.GRACE_TICKS);
         assertTrue(
                 board.stuck().of(REMOVED, AbsentOwners.GRACE_TICKS + 1).isEmpty(),
-                "Метка «пути нет» удалённого духа снимается после срока: иначе она висит вечно и держит спасение");
+                "Метка «пути нет» удалённого духа снимается после срока: иначе она висит вечно и держит спасение"
+                        + " При смене sweep_NoPathMarkOfRemovedSpirit_RemovedAfterGrace проверь это утверждение.");
     }
 
     @Test
@@ -106,10 +113,12 @@ class AbsentOwnersTests {
 
         assertTrue(
                 board.stuck().of(ALIVE, alive + 1).isPresent(),
-                "Метка живого духа не снимается уборкой отсутствующих, пока не истёк её срок: его спасает граф");
+                "Метка живого духа не снимается уборкой отсутствующих, пока не истёк её срок: его спасает граф"
+                        + " Иначе тест sweep_NoPathMarkOfLiveSpirit_KeptUntilTtl перестанет ловить эту поломку. При смене sweep_NoPathMarkOfLiveSpirit_KeptUntilTtl проверь это утверждение.");
         assertTrue(
                 board.stuck().of(ALIVE, BoardTuning.STUCK_TTL_TICKS).isEmpty(),
                 "После срока метка живого духа истекает сама: иначе idle-дух навсегда выпадает из раздачи "
-                        + "(observe25 B1)");
+                        + "(observe25 B1)"
+                        + " При смене sweep_NoPathMarkOfLiveSpirit_KeptUntilTtl проверь это утверждение.");
     }
 }

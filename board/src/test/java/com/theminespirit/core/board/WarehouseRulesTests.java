@@ -11,25 +11,53 @@ class WarehouseRulesTests {
     void site_EachLevel_StaysAtHomeAnchor() {
         BlockCoord home = new BlockCoord(10, 64, -5);
 
-        assertEquals(home, WarehouseRules.site(home, 1), "Первый склад ставится у дома");
+        assertEquals(
+                home,
+                WarehouseRules.site(home, 1),
+                "Первый склад ставится у дома"
+                        + " Иначе тест site_EachLevel_StaysAtHomeAnchor перестанет ловить эту поломку. При смене site_EachLevel_StaysAtHomeAnchor проверь это утверждение.");
         assertEquals(
                 home,
                 WarehouseRules.site(home, 2),
-                "Второй склад улучшает первый на месте: второй участок не занимается");
+                "Второй склад улучшает первый на месте: второй участок не занимается"
+                        + " Иначе тест site_EachLevel_StaysAtHomeAnchor перестанет ловить эту поломку. При смене site_EachLevel_StaysAtHomeAnchor проверь это утверждение.");
         assertThrows(
-                IllegalArgumentException.class, () -> WarehouseRules.site(home, 0), "Места для нулевого уровня нет");
+                IllegalArgumentException.class,
+                () -> WarehouseRules.site(home, 0),
+                "Места для нулевого уровня нет"
+                        + " Иначе тест site_EachLevel_StaysAtHomeAnchor перестанет ловить эту поломку. При смене site_EachLevel_StaysAtHomeAnchor проверь это утверждение.");
     }
 
     @Test
     void levelOf_NodeWithLevel_ReturnsItsLevel() {
-        assertEquals(1, WarehouseRules.levelOf("warehouse"), "Узел building:warehouse — первый уровень");
-        assertEquals(3, WarehouseRules.levelOf("warehouse_3"), "Узел warehouse_3 — третий уровень");
+        assertEquals(
+                1,
+                WarehouseRules.levelOf("warehouse"),
+                "Узел building:warehouse — первый уровень"
+                        + " Иначе тест levelOf_NodeWithLevel_ReturnsItsLevel перестанет ловить эту поломку. При смене levelOf_NodeWithLevel_ReturnsItsLevel проверь это утверждение.");
+        assertEquals(
+                3,
+                WarehouseRules.levelOf("warehouse_3"),
+                "Узел warehouse_3 — третий уровень"
+                        + " Иначе тест levelOf_NodeWithLevel_ReturnsItsLevel перестанет ловить эту поломку. При смене levelOf_NodeWithLevel_ReturnsItsLevel проверь это утверждение.");
     }
 
     @Test
     void scheme_EachLevel_NamesItsOwnPreset() {
-        assertEquals("storage_v1", WarehouseRules.scheme(1), "Уровень 1 — схема storage_v1");
-        assertEquals("storage_v4", WarehouseRules.scheme(4), "Уровень 4 — схема storage_v4");
-        assertThrows(IllegalArgumentException.class, () -> WarehouseRules.scheme(5), "Схемы пятого уровня нет");
+        assertEquals(
+                "storage_v1",
+                WarehouseRules.scheme(1),
+                "Уровень 1 — схема storage_v1"
+                        + " Иначе тест scheme_EachLevel_NamesItsOwnPreset перестанет ловить эту поломку. При смене scheme_EachLevel_NamesItsOwnPreset проверь это утверждение.");
+        assertEquals(
+                "storage_v4",
+                WarehouseRules.scheme(4),
+                "Уровень 4 — схема storage_v4"
+                        + " Иначе тест scheme_EachLevel_NamesItsOwnPreset перестанет ловить эту поломку. При смене scheme_EachLevel_NamesItsOwnPreset проверь это утверждение.");
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> WarehouseRules.scheme(5),
+                "Схемы пятого уровня нет"
+                        + " Иначе тест scheme_EachLevel_NamesItsOwnPreset перестанет ловить эту поломку. При смене scheme_EachLevel_NamesItsOwnPreset проверь это утверждение.");
     }
 }

@@ -31,8 +31,12 @@ class RouteThrottleLiveTests {
                 allowed <= 3,
                 "spirit-1 строил маршрут каждые 3–7 с (" + live.get("route_attempt_ticks") + "), сервер получал "
                         + "Can't keep up: за окно " + RouteThrottle.MIN_TICKS + " тиков допустим один расчёт, а "
-                        + "разрешено " + allowed);
-        assertTrue(allowed >= 2, "Ограничение не должно запрещать все расчёты: разрешено " + allowed);
+                        + "разрешено " + allowed
+                        + " Иначе тест allow_LiveReplanCadence_KeepsOneRoutePerWindow перестанет ловить эту поломку. При смене allow_LiveReplanCadence_KeepsOneRoutePerWindow проверь это утверждение.");
+        assertTrue(
+                allowed >= 2,
+                "Ограничение не должно запрещать все расчёты: разрешено " + allowed
+                        + " Иначе тест allow_LiveReplanCadence_KeepsOneRoutePerWindow перестанет ловить эту поломку. При смене allow_LiveReplanCadence_KeepsOneRoutePerWindow проверь это утверждение.");
     }
 
     @Test
@@ -48,9 +52,12 @@ class RouteThrottleLiveTests {
         assertTrue(
                 lines == 1,
                 "RouteDetour писал INFO на каждый подавленный вызов (657 строк за 17 мин): за окно " + window
-                        + " тиков допустима одна строка, а их " + lines);
+                        + " тиков допустима одна строка, а их " + lines
+                        + " Иначе тест logGate_RepeatedSuppressedCalls_OneLinePerWindow перестанет ловить эту поломку. При смене logGate_RepeatedSuppressedCalls_OneLinePerWindow проверь это утверждение.");
         assertTrue(
-                logs.allow(SPIRIT, 100 + window), "Следующее окно снова даёт одну строку: лог не замолкает навсегда");
+                logs.allow(SPIRIT, 100 + window),
+                "Следующее окно снова даёт одну строку: лог не замолкает навсегда"
+                        + " Иначе тест logGate_RepeatedSuppressedCalls_OneLinePerWindow перестанет ловить эту поломку. При смене logGate_RepeatedSuppressedCalls_OneLinePerWindow проверь это утверждение.");
     }
 
     @Test
@@ -60,10 +67,17 @@ class RouteThrottleLiveTests {
         UUID other = UUID.fromString("c48663b4-da59-43d9-9804-81a680580300");
         long now = live.get("route_attempt_ticks").get(1).asLong();
 
-        assertTrue(throttle.allow(SPIRIT, 0), "Первый расчёт духа разрешён");
+        assertTrue(
+                throttle.allow(SPIRIT, 0),
+                "Первый расчёт духа разрешён"
+                        + " Иначе тест allow_DifferentSpirits_AreIndependent перестанет ловить эту поломку. При смене allow_DifferentSpirits_AreIndependent проверь это утверждение.");
         assertFalse(
                 throttle.allow(SPIRIT, now),
-                "Повторный расчёт того же духа внутри окна " + RouteThrottle.MIN_TICKS + " тиков запрещён");
-        assertTrue(throttle.allow(other, now), "Ограничение одного духа не блокирует расчёт другому");
+                "Повторный расчёт того же духа внутри окна " + RouteThrottle.MIN_TICKS + " тиков запрещён"
+                        + " Иначе тест allow_DifferentSpirits_AreIndependent перестанет ловить эту поломку. При смене allow_DifferentSpirits_AreIndependent проверь это утверждение.");
+        assertTrue(
+                throttle.allow(other, now),
+                "Ограничение одного духа не блокирует расчёт другому"
+                        + " Иначе тест allow_DifferentSpirits_AreIndependent перестанет ловить эту поломку. При смене allow_DifferentSpirits_AreIndependent проверь это утверждение.");
     }
 }

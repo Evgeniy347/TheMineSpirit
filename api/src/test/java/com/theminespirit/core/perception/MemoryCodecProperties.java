@@ -46,6 +46,7 @@ class MemoryCodecProperties {
                 store,
                 MemoryCodec.decode(MemoryCodec.encode(store)),
                 "decode(encode(store)) обязан равняться store для любой памяти: иначе точки меняются при "
-                        + "перезапуске сервера");
+                        + "перезапуске сервера"
+                        + " При смене roundTrip_AnyStore_DecodeOfEncodeIsEqual проверь это утверждение.");
     }
 }

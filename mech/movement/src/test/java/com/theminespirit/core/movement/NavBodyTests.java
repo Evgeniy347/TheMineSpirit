@@ -22,7 +22,8 @@ final class NavBodyTests {
         assertFalse(
                 BodyMotion.canMove(world, feet, new BlockCoord(6, 2, 5)),
                 "Шаг на ступень под притолокой неисполним: тело ростом 1.4 поднимает голову в клетку над головой, "
-                        + "а она занята. Планировщик, разрешивший такой подъём, оставит духа прыгать на месте");
+                        + "а она занята. Планировщик, разрешивший такой подъём, оставит духа прыгать на месте"
+                        + " Иначе тест bodyMotion_StepUpWithoutHeadroom_Rejected перестанет ловить эту поломку. При смене bodyMotion_StepUpWithoutHeadroom_Rejected проверь это утверждение.");
     }
 
     @Test
@@ -38,7 +39,8 @@ final class NavBodyTests {
         assertFalse(
                 BodyMotion.canMove(world, feet, new BlockCoord(6, 1, 5)),
                 "Спуск под притолоку неисполним: в целевой колонке занята клетка на исходной высоте, и голова "
-                        + "духа не проходит. Путь «к небу» вниз под притолоку — та же ошибка");
+                        + "духа не проходит. Путь «к небу» вниз под притолоку — та же ошибка"
+                        + " Иначе тест bodyMotion_DropUnderLintel_Rejected перестанет ловить эту поломку. При смене bodyMotion_DropUnderLintel_Rejected проверь это утверждение.");
     }
 
     @Test
@@ -52,7 +54,8 @@ final class NavBodyTests {
 
         assertFalse(
                 BodyMotion.canMove(world, feet, new BlockCoord(6, 1, 5)),
-                "Падение глубже трёх блоков на сушу калечит духа: тело не считает такой спуск безопасным");
+                "Падение глубже трёх блоков на сушу калечит духа: тело не считает такой спуск безопасным"
+                        + " Иначе тест bodyMotion_DropFourBlocksWithoutWater_Rejected перестанет ловить эту поломку. При смене bodyMotion_DropFourBlocksWithoutWater_Rejected проверь это утверждение.");
     }
 
     @Test
@@ -66,7 +69,8 @@ final class NavBodyTests {
 
         assertTrue(
                 BodyMotion.canMove(world, feet, new BlockCoord(6, 1, 5)),
-                "В воду падать можно глубже трёх блоков: вода гасит удар, и дух выбирается на берег");
+                "В воду падать можно глубже трёх блоков: вода гасит удар, и дух выбирается на берег"
+                        + " Иначе тест bodyMotion_DropFourBlocksIntoWater_Allowed перестанет ловить эту поломку. При смене bodyMotion_DropFourBlocksIntoWater_Allowed проверь это утверждение.");
     }
 
     @Test
@@ -79,7 +83,8 @@ final class NavBodyTests {
         assertFalse(
                 BodyMotion.fits(world, slit),
                 "Щель высотой 1 не проходит для тела ростом 1.4: планировщик, считающий её выходом, снова "
-                        + "оставит духа замурованным");
+                        + "оставит духа замурованным"
+                        + " Иначе тест bodyMotion_OneHighSlit_NotFit перестанет ловить эту поломку. При смене bodyMotion_OneHighSlit_NotFit проверь это утверждение.");
     }
 
     @Test
@@ -92,7 +97,8 @@ final class NavBodyTests {
 
         assertTrue(
                 BodyMotion.canMove(world, feet, new BlockCoord(5, 2, 5)),
-                "По лестнице дух поднимается без опоры под ногами: лестница — проходимая клетка");
+                "По лестнице дух поднимается без опоры под ногами: лестница — проходимая клетка"
+                        + " Иначе тест bodyMotion_Ladder_ClimbsUpWithoutSupport перестанет ловить эту поломку. При смене bodyMotion_Ladder_ClimbsUpWithoutSupport проверь это утверждение.");
     }
 
     @Test
@@ -105,34 +111,57 @@ final class NavBodyTests {
             world.set(5 + side[0], 4, 5 + side[1], FuzzWorld.Cell.STONE);
         }
         Set<BlockCoord> plateau = NavPillarEscape.plateau(FuzzWorldViews.navWorld(world), 5, 4, 5);
-        assertEquals(1, plateau.size(), "Предусловие: дух стоит на одиночном столбе, а не на ровном полу");
+        assertEquals(
+                1,
+                plateau.size(),
+                "Предусловие: дух стоит на одиночном столбе, а не на ровном полу"
+                        + " Иначе тест navPillarEscape_LandingUnderLintel_Rejected перестанет ловить эту поломку. При смене navPillarEscape_LandingUnderLintel_Rejected проверь это утверждение.");
 
         assertTrue(
                 NavPillarEscape.landingFrom(FuzzWorldViews.navWorld(world), plateau, 6)
                         .isEmpty(),
                 "Спуск под притолоку неисполним: соседняя колонка занята на высоте ног, и тело туда не пройдёт. "
-                        + "Планировщик, назвавший такой спуск, отправляет духа вниз сквозь блок");
+                        + "Планировщик, назвавший такой спуск, отправляет духа вниз сквозь блок"
+                        + " Иначе тест navPillarEscape_LandingUnderLintel_Rejected перестанет ловить эту поломку. При смене navPillarEscape_LandingUnderLintel_Rejected проверь это утверждение.");
     }
 
     @Test
     void navPillarEscape_LiveFixtures_LandingReachableByBody() throws IOException {
         LiveWorld pillar = LiveWorld.load("/live/observe25-pillar-1108.live");
         Set<BlockCoord> single = NavPillarEscape.plateau(pillar, -155, 72, -490);
-        assertEquals(1, single.size(), "Живая клетка spirit-1 (-155,72,-490) — одиночная опора");
+        assertEquals(
+                1,
+                single.size(),
+                "Живая клетка spirit-1 (-155,72,-490) — одиночная опора"
+                        + " Иначе тест navPillarEscape_LiveFixtures_LandingReachableByBody перестанет ловить эту поломку. При смене navPillarEscape_LiveFixtures_LandingReachableByBody проверь это утверждение.");
         int ground = NavPillarEscape.landingFrom(pillar, single, 12).orElse(-1);
-        assertEquals(68, ground, "Под одиночной опорой spirit-1 площадка y=68");
+        assertEquals(
+                68,
+                ground,
+                "Под одиночной опорой spirit-1 площадка y=68"
+                        + " Иначе тест navPillarEscape_LiveFixtures_LandingReachableByBody перестанет ловить эту поломку. При смене navPillarEscape_LiveFixtures_LandingReachableByBody проверь это утверждение.");
         assertTrue(
                 NavEscapeChecks.canDrop(pillar, single, ground, 12),
                 "Тело духа обязано пройти с живой опоры (-155,72,-490) на площадку y=68: иначе модель проходимости "
-                        + "расходится с observe25");
+                        + "расходится с observe25"
+                        + " При смене navPillarEscape_LiveFixtures_LandingReachableByBody проверь это утверждение.");
 
         LiveWorld tower = LiveWorld.load("/live/observe26-tower-1108.live");
         Set<BlockCoord> two = NavPillarEscape.plateau(tower, -142, 79, -504);
-        assertEquals(2, two.size(), "Опора spirit-4 шириной 2×2 — всё ещё узкая опора");
+        assertEquals(
+                2,
+                two.size(),
+                "Опора spirit-4 шириной 2×2 — всё ещё узкая опора"
+                        + " Иначе тест navPillarEscape_LiveFixtures_LandingReachableByBody перестанет ловить эту поломку. При смене navPillarEscape_LiveFixtures_LandingReachableByBody проверь это утверждение.");
         int yard = NavPillarEscape.landingFrom(tower, two, 12).orElse(-1);
-        assertEquals(72, yard, "Предел спуска с башни spirit-4 — земля y=72");
+        assertEquals(
+                72,
+                yard,
+                "Предел спуска с башни spirit-4 — земля y=72"
+                        + " Иначе тест navPillarEscape_LiveFixtures_LandingReachableByBody перестанет ловить эту поломку. При смене navPillarEscape_LiveFixtures_LandingReachableByBody проверь это утверждение.");
         assertTrue(
                 NavEscapeChecks.canDrop(tower, two, yard, 12),
-                "Тело духа обязано сойти с башни spirit-4 на землю y=72: иначе модель не подтверждает observe26");
+                "Тело духа обязано сойти с башни spirit-4 на землю y=72: иначе модель не подтверждает observe26"
+                        + " При смене navPillarEscape_LiveFixtures_LandingReachableByBody проверь это утверждение.");
     }
 }

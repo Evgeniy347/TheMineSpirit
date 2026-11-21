@@ -48,7 +48,11 @@ class OrchardFuelLiveTicketTests {
     void liveOrchardTicket_RequiredFuel_MatchesWhatThePlanFetches() throws IOException {
         JsonNode ticket = new ObjectMapper().readTree(read(TICKET));
         BoardCase boardCase = BoardCase.valueOf(ticket.get("case").asText());
-        assertEquals(BoardCase.BUILD_ORCHARD, boardCase, "Живой тикет обязан быть постройкой сада");
+        assertEquals(
+                BoardCase.BUILD_ORCHARD,
+                boardCase,
+                "Живой тикет обязан быть постройкой сада"
+                        + " Иначе тест liveOrchardTicket_RequiredFuel_MatchesWhatThePlanFetches перестанет ловить эту поломку. При смене liveOrchardTicket_RequiredFuel_MatchesWhatThePlanFetches проверь это утверждение.");
         StageSite site = TownFixtures.flatSite();
         TicketTarget target = TicketTarget.at(site.workYard()).withWork(new StageWork(site, List.of()));
         TaskNode plan = TicketPlans.plan(boardCase, ticket.get("level").asInt(), target);
@@ -59,11 +63,13 @@ class OrchardFuelLiveTicketTests {
                 need.containsKey(CHARCOAL),
                 "Тикет сада обязан требовать тот же уголь, который план добывает первым: " + need
                         + ". В observe12 requiredItems={stick=1, coal=1}, а acquire падал на "
-                        + "'minecraft:charcoal' — доска ждала уголь из шахты, а дух жёг древесный");
+                        + "'minecraft:charcoal' — доска ждала уголь из шахты, а дух жёг древесный"
+                        + " Иначе тест liveOrchardTicket_RequiredFuel_MatchesWhatThePlanFetches перестанет ловить эту поломку. При смене liveOrchardTicket_RequiredFuel_MatchesWhatThePlanFetches проверь это утверждение.");
         assertFalse(
                 need.containsKey(COAL),
                 "Уголь и древесный уголь — замена друг другу в рецепте факела: доска не может требовать оба " + "сразу "
-                        + need + " — иначе гейт ждёт уголь, которого в поселении нет");
+                        + need + " — иначе гейт ждёт уголь, которого в поселении нет"
+                        + " При смене liveOrchardTicket_RequiredFuel_MatchesWhatThePlanFetches проверь это утверждение.");
     }
 
     private static String read(Path path) throws IOException {

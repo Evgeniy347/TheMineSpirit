@@ -16,7 +16,8 @@ class ProcessingRulesTests {
         assertEquals(
                 ProcessingRules.defaults(),
                 ProcessingRules.parse(VALID, "processing.json"),
-                "Файл данных обязан совпадать с умолчаниями: иначе ядро и адаптер расходятся в числах");
+                "Файл данных обязан совпадать с умолчаниями: иначе ядро и адаптер расходятся в числах"
+                        + " При смене parse_ValidJson_MatchesDefaults проверь это утверждение.");
     }
 
     @Test
@@ -25,7 +26,8 @@ class ProcessingRulesTests {
                 ProcessingRules.defaults(),
                 ProcessingRules.load(),
                 "Файл data/theminespirit/processing/processing.json обязан читаться: цели и коэффициенты "
-                        + "переработки — данные, а не ветки в коде");
+                        + "переработки — данные, а не ветки в коде"
+                        + " Иначе тест load_ClasspathResource_Reads перестанет ловить эту поломку. При смене load_ClasspathResource_Reads проверь это утверждение.");
     }
 
     @Test
@@ -35,10 +37,14 @@ class ProcessingRulesTests {
         IllegalStateException error = assertThrows(
                 IllegalStateException.class,
                 () -> ProcessingRules.parse(json, "processing.json"),
-                "Неизвестное поле ломает загрузку: опечатка в данных не должна молча ложиться в умолчания");
+                "Неизвестное поле ломает загрузку: опечатка в данных не должна молча ложиться в умолчания"
+                        + " При смене parse_UnknownField_Throws проверь это утверждение.");
 
         assertEquals(
-                true, error.getMessage().contains("вкус"), "Сообщение называет лишнее поле: " + error.getMessage());
+                true,
+                error.getMessage().contains("вкус"),
+                "Сообщение называет лишнее поле: " + error.getMessage()
+                        + " Иначе тест parse_UnknownField_Throws перестанет ловить эту поломку. При смене parse_UnknownField_Throws проверь это утверждение.");
     }
 
     @Test
@@ -47,7 +53,8 @@ class ProcessingRulesTests {
                 IllegalStateException.class,
                 () -> ProcessingRules.parse(
                         VALID.replace("\"plankTarget\": 32", "\"plankTarget\": -1"), "processing.json"),
-                "Отрицательная цель запаса отвергается: дефицит выходил бы за границы и ломал спрос");
+                "Отрицательная цель запаса отвергается: дефицит выходил бы за границы и ломал спрос"
+                        + " Иначе тест parse_NegativeTarget_Throws перестанет ловить эту поломку. При смене parse_NegativeTarget_Throws проверь это утверждение.");
     }
 
     @Test
@@ -55,6 +62,7 @@ class ProcessingRulesTests {
         assertThrows(
                 IllegalStateException.class,
                 () -> ProcessingRules.parse(VALID.replace("\"cookCount\": 4", "\"cookCount\": 0"), "processing.json"),
-                "Нулевое число предметов за запуск отвергается: скрипт отказал бы на плане без работы");
+                "Нулевое число предметов за запуск отвергается: скрипт отказал бы на плане без работы"
+                        + " Иначе тест parse_CountOutOfRange_Throws перестанет ловить эту поломку. При смене parse_CountOutOfRange_Throws проверь это утверждение.");
     }
 }

@@ -81,12 +81,15 @@ class BlockProtectionUseTests {
             BlockProtection.Refused refused = assertInstanceOf(
                     BlockProtection.Refused.class,
                     decision,
-                    "«" + name + "»: чужой или запрещённый механизм обязан отвергаться. Ответ: " + decision
+                    "«" + name
+                            + "»: чужой или запрещённый механизм обязан отвергаться, иначе механизм сломается. Ответ: "
+                            + decision
                             + ". При смене checkUse проверь, что зона сильнее метки игрока, а постройка рядом — сильнее поля");
             assertEquals(
                     refusedBy,
                     refused.policy(),
-                    "«" + name + "»: политика отказа должна называть причину, чтобы скрипт показал понятное сообщение. "
+                    "«" + name
+                            + "»: политика отказа должна называть причину, чтобы скрипт показал понятное сообщение, иначе в логе будет пусто. "
                             + "При смене порядка проверок сверь ожидаемую PolicyId для каждой строки таблицы");
         }
     }
@@ -110,7 +113,7 @@ class BlockProtectionUseTests {
                 IllegalArgumentException.class,
                 () -> protection.checkUse(List.of("minecraft:air"), new BlockProtection.Placement(false, false, false)),
                 "Список соседей обязан быть 26: иное число значит, что постройку считают не по 3×3×3, и защита "
-                        + "слепнет. При смене NEIGHBOUR_COUNT проверь, что размер списка валидируется");
+                        + "слепнет, иначе проверка пропустит чужое. При смене NEIGHBOUR_COUNT проверь, что размер списка валидируется");
     }
 
     @Test
@@ -119,6 +122,6 @@ class BlockProtectionUseTests {
                 NullPointerException.class,
                 () -> protection.checkUse(null, new BlockProtection.Placement(false, false, false)),
                 "Без списка соседей нельзя отличить постройку от природы: null обязан отказывать, а не молча "
-                        + "пропускать проверку. При смене checkUse проверь null до обращения к списку");
+                        + "пропускать проверку, иначе дух снесёт чужое. При смене checkUse проверь null до обращения к списку");
     }
 }

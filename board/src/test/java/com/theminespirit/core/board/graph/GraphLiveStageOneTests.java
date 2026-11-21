@@ -18,48 +18,88 @@ class GraphLiveStageOneTests {
         GraphWorld world = GraphMutations.liveStageOne();
         Map<String, GraphPlan.Task> start = new HashMap<>();
         world.plan().tasks().forEach(task -> start.put(task.id(), task));
-        assertTrue(start.containsKey("building:mine"), "Живой этап 1 обязан планировать шахту: " + start.keySet());
+        assertTrue(
+                start.containsKey("building:mine"),
+                "Живой этап 1 обязан планировать шахту: " + start.keySet()
+                        + " Иначе тест simulate_LiveStageOne_ClosesWholeStageOne перестанет ловить эту поломку. При смене simulate_LiveStageOne_ClosesWholeStageOne проверь это утверждение.");
         assertFalse(
-                start.get("building:mine").feasible(), "Шахта без кирки не выполняется, пока инструмент не скрафчен");
-        assertTrue(world.world.contains(GraphNames.SOIL), "Живой этап 1 берёт землю с карьера: нет soil");
+                start.get("building:mine").feasible(),
+                "Шахта без кирки не выполняется, пока инструмент не скрафчен"
+                        + " Иначе тест simulate_LiveStageOne_ClosesWholeStageOne перестанет ловить эту поломку. При смене simulate_LiveStageOne_ClosesWholeStageOne проверь это утверждение.");
+        assertTrue(
+                world.world.contains(GraphNames.SOIL),
+                "Живой этап 1 берёт землю с карьера: нет soil"
+                        + " Иначе тест simulate_LiveStageOne_ClosesWholeStageOne перестанет ловить эту поломку. При смене simulate_LiveStageOne_ClosesWholeStageOne проверь это утверждение.");
         assertTrue(
                 start.containsKey("dig_dirt") && start.get("dig_dirt").feasible(),
-                "Земля обязана быть выполнимой с карьера: " + start.get("dig_dirt"));
+                "Земля обязана быть выполнимой с карьера: " + start.get("dig_dirt")
+                        + " Иначе тест simulate_LiveStageOne_ClosesWholeStageOne перестанет ловить эту поломку. При смене simulate_LiveStageOne_ClosesWholeStageOne проверь это утверждение.");
 
         GraphSimulation.Outcome outcome = GraphSimulation.runUntil(world, LIMIT, 2);
-        assertEquals("", outcome.stuck(), "Живой этап 1 не закрылся: " + outcome.stuck());
-        assertEquals(2, outcome.reachedStage(), "Живой этап 1 не дошёл до этапа 2");
+        assertEquals(
+                "",
+                outcome.stuck(),
+                "Живой этап 1 не закрылся: " + outcome.stuck()
+                        + " Иначе тест simulate_LiveStageOne_ClosesWholeStageOne перестанет ловить эту поломку. При смене simulate_LiveStageOne_ClosesWholeStageOne проверь это утверждение.");
+        assertEquals(
+                2,
+                outcome.reachedStage(),
+                "Живой этап 1 не дошёл до этапа 2"
+                        + " Иначе тест simulate_LiveStageOne_ClosesWholeStageOne перестанет ловить эту поломку. При смене simulate_LiveStageOne_ClosesWholeStageOne проверь это утверждение.");
 
         List<String> steps = new ArrayList<>();
         outcome.trail().stream().filter(step -> step.stage() == 1).forEach(step -> steps.add(step.task()));
         for (String task :
                 List.of("building:mine", "building:streets", "building:orchard_oak", "building:wheat_field")) {
-            assertTrue(steps.contains(task), "Этап 1 закрыт без '" + task + "': " + steps);
+            assertTrue(
+                    steps.contains(task),
+                    "Этап 1 закрыт без '" + task + "': " + steps
+                            + " Иначе тест simulate_LiveStageOne_ClosesWholeStageOne перестанет ловить эту поломку. При смене simulate_LiveStageOne_ClosesWholeStageOne проверь это утверждение.");
         }
         assertTrue(
                 steps.stream().anyMatch(task -> task.contains("pickaxe")),
-                "Шахта построена без крафта кирки: " + steps);
-        assertTrue(steps.indexOf("building:mine") > firstPickaxe(steps), "Кирка должна появиться до шахты: " + steps);
+                "Шахта построена без крафта кирки: " + steps
+                        + " Иначе тест simulate_LiveStageOne_ClosesWholeStageOne перестанет ловить эту поломку. При смене simulate_LiveStageOne_ClosesWholeStageOne проверь это утверждение.");
+        assertTrue(
+                steps.indexOf("building:mine") > firstPickaxe(steps),
+                "Кирка должна появиться до шахты: " + steps
+                        + " Иначе тест simulate_LiveStageOne_ClosesWholeStageOne перестанет ловить эту поломку. При смене simulate_LiveStageOne_ClosesWholeStageOne проверь это утверждение.");
         assertEquals(
-                2, count(steps, "rescue_spirit"), "Два застрявших духа дают ровно два спасения, а не цикл: " + steps);
-        assertTrue(count(steps, "dig_dirt") >= 8, "Карьер даёт землю улицам: " + steps);
+                2,
+                count(steps, "rescue_spirit"),
+                "Два застрявших духа дают ровно два спасения, а не цикл: " + steps
+                        + " Иначе тест simulate_LiveStageOne_ClosesWholeStageOne перестанет ловить эту поломку. При смене simulate_LiveStageOne_ClosesWholeStageOne проверь это утверждение.");
+        assertTrue(
+                count(steps, "dig_dirt") >= 8,
+                "Карьер даёт землю улицам: " + steps
+                        + " Иначе тест simulate_LiveStageOne_ClosesWholeStageOne перестанет ловить эту поломку. При смене simulate_LiveStageOne_ClosesWholeStageOne проверь это утверждение.");
         assertTrue(
                 steps.stream().anyMatch(task -> task.startsWith("event:demolish_stray")),
-                "Этап 1 обходит лишние постройки: " + steps);
+                "Этап 1 обходит лишние постройки: " + steps
+                        + " Иначе тест simulate_LiveStageOne_ClosesWholeStageOne перестанет ловить эту поломку. При смене simulate_LiveStageOne_ClosesWholeStageOne проверь это утверждение.");
         assertTrue(
                 steps.stream().anyMatch(task -> task.startsWith("event:clear_floating")),
-                "Этап 1 обходит висящее: " + steps);
-        assertTrue(steps.size() <= 200, "Этап 1 зациклился: " + steps.size() + " заданий");
-        assertTrue(maxRepeat(steps) <= 60, "Одно задание повторяется без продвижения: " + maxRepeat(steps));
+                "Этап 1 обходит висящее: " + steps
+                        + " Иначе тест simulate_LiveStageOne_ClosesWholeStageOne перестанет ловить эту поломку. При смене simulate_LiveStageOne_ClosesWholeStageOne проверь это утверждение.");
+        assertTrue(
+                steps.size() <= 200,
+                "Этап 1 зациклился: " + steps.size() + " заданий"
+                        + " Иначе тест simulate_LiveStageOne_ClosesWholeStageOne перестанет ловить эту поломку. При смене simulate_LiveStageOne_ClosesWholeStageOne проверь это утверждение.");
+        assertTrue(
+                maxRepeat(steps) <= 60,
+                "Одно задание повторяется без продвижения: " + maxRepeat(steps)
+                        + " Иначе тест simulate_LiveStageOne_ClosesWholeStageOne перестанет ловить эту поломку. При смене simulate_LiveStageOne_ClosesWholeStageOne проверь это утверждение.");
         assertTrue(
                 outcome.ticks() <= 10 * 60 * 1200,
                 String.format(
-                        "Поселение из снимка с четырьмя духами не уложилось в 10 минут игрового времени: %d тиков "
-                                + "на %d заданий",
-                        outcome.ticks(), steps.size()));
+                                "Поселение из снимка с четырьмя духами не уложилось в 10 минут игрового времени: %d тиков "
+                                        + "на %d заданий",
+                                outcome.ticks(), steps.size())
+                        + " Иначе тест simulate_LiveStageOne_ClosesWholeStageOne перестанет ловить эту поломку. При смене simulate_LiveStageOne_ClosesWholeStageOne проверь это утверждение.");
         assertTrue(
                 outcome.ticks() > 0,
-                "Симуляция закрыла этап за нуль тиков: время работ не учитывается, аудит мира бессмыслен");
+                "Симуляция закрыла этап за нуль тиков: время работ не учитывается, аудит мира бессмыслен"
+                        + " Иначе тест simulate_LiveStageOne_ClosesWholeStageOne перестанет ловить эту поломку. При смене simulate_LiveStageOne_ClosesWholeStageOne проверь это утверждение.");
     }
 
     private static int firstPickaxe(List<String> steps) {
@@ -108,6 +148,9 @@ class GraphLiveStageOneTests {
                                 List.of(),
                                 "pit")));
         world.freed();
-        assertFalse(world.facts.spirits().get("spirit-1").trapped(), "Выход из ловушки освобождает замурованного духа");
+        assertFalse(
+                world.facts.spirits().get("spirit-1").trapped(),
+                "Выход из ловушки освобождает замурованного духа"
+                        + " Иначе тест world_Freed_LiftsTrap перестанет ловить эту поломку. При смене world_Freed_LiftsTrap проверь это утверждение.");
     }
 }

@@ -31,15 +31,18 @@ class LeaseCodecTests {
                 book.all(),
                 loaded.all(),
                 "Кодек обязан вернуть ту же книгу: id, владельца, тикет, назначение, "
-                        + "статус, срок и каждую клетку с before/after");
+                        + "статус, срок и каждую клетку с before/after"
+                        + " Иначе тест saveThenLoad_WholeBook_KeepsEveryField перестанет ловить эту поломку. При смене saveThenLoad_WholeBook_KeepsEveryField проверь это утверждение.");
         assertEquals(
                 book.orphanedCells(),
                 loaded.orphanedCells(),
-                "После загрузки скан видит те же брошенные клетки в том же порядке отката");
+                "После загрузки скан видит те же брошенные клетки в том же порядке отката"
+                        + " Иначе тест saveThenLoad_WholeBook_KeepsEveryField перестанет ловить эту поломку. При смене saveThenLoad_WholeBook_KeepsEveryField проверь это утверждение.");
         assertEquals(
                 book.owner(new BlockCoord(1, 65, 2)),
                 loaded.owner(new BlockCoord(1, 65, 2)),
-                "Владелец действующей клетки восстанавливается по id");
+                "Владелец действующей клетки восстанавливается по id"
+                        + " Иначе тест saveThenLoad_WholeBook_KeepsEveryField перестанет ловить эту поломку. При смене saveThenLoad_WholeBook_KeepsEveryField проверь это утверждение.");
     }
 
     @Test
@@ -64,12 +67,21 @@ class LeaseCodecTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> LeaseCodec.decode(List.of(first, second)),
-                "Повреждённое сохранение с одной клеткой в двух арендах не загружается молча: откат сломал бы чужую правку");
+                "Повреждённое сохранение с одной клеткой в двух арендах не загружается молча: откат сломал бы чужую правку"
+                        + " Иначе тест decode_DuplicateActiveCell_Rejected перестанет ловить эту поломку. При смене decode_DuplicateActiveCell_Rejected проверь это утверждение.");
     }
 
     @Test
     void encode_EmptyBook_IsEmptyList() {
-        assertEquals(List.of(), LeaseCodec.encode(new LeaseBook()), "Пустая книга кодируется пустым списком");
-        assertEquals(List.of(), LeaseCodec.decode(List.of()).all(), "Пустой список загружается пустой книгой");
+        assertEquals(
+                List.of(),
+                LeaseCodec.encode(new LeaseBook()),
+                "Пустая книга кодируется пустым списком"
+                        + " Иначе тест encode_EmptyBook_IsEmptyList перестанет ловить эту поломку. При смене encode_EmptyBook_IsEmptyList проверь это утверждение.");
+        assertEquals(
+                List.of(),
+                LeaseCodec.decode(List.of()).all(),
+                "Пустой список загружается пустой книгой"
+                        + " Иначе тест encode_EmptyBook_IsEmptyList перестанет ловить эту поломку. При смене encode_EmptyBook_IsEmptyList проверь это утверждение.");
     }
 }

@@ -16,7 +16,8 @@ class SetCombatModeParamsTests {
                 List.of("passive", "defensive", "protect", "aggressive"),
                 SetCombatModeParams.MODE_IDS,
                 "set_combat_mode обязан принимать ровно четыре режима задания: guard_area включается зоной охраны, "
-                        + "а не строкой режима");
+                        + "а не строкой режима"
+                        + " Иначе тест modeIds_TaskModes_AreExactlyFour перестанет ловить эту поломку. При смене modeIds_TaskModes_AreExactlyFour проверь это утверждение.");
     }
 
     @Test
@@ -27,8 +28,8 @@ class SetCombatModeParamsTests {
             assertEquals(
                     CombatMode.valueOf(id.toUpperCase(Locale.ROOT)),
                     params.mode(),
-                    "Режим '" + id
-                            + "' обязан разбираться в соответствующий CombatMode: иначе дух включит не тот режим");
+                    "Режим '" + id + "' обязан разбираться в соответствующий CombatMode: иначе дух включит не тот режим"
+                            + " При смене from_EachAllowedMode_ReturnsMatchingCombatMode проверь это утверждение.");
         }
     }
 
@@ -39,7 +40,8 @@ class SetCombatModeParamsTests {
         assertEquals(
                 CombatMode.PASSIVE,
                 params.mode(),
-                "Регистр режима не должен мешать: стратег может прислать строку в разном регистре");
+                "Регистр режима не должен мешать: стратег может прислать строку в разном регистре"
+                        + " Иначе тест from_UppercaseMode_IsAccepted перестанет ловить эту поломку. При смене from_UppercaseMode_IsAccepted проверь это утверждение.");
     }
 
     @Test
@@ -47,13 +49,15 @@ class SetCombatModeParamsTests {
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,
                 () -> SetCombatModeParams.from(Map.of("mode", "guard_area")),
-                "guard_area нельзя включить одним режимом: он требует зоны охраны, поэтому режим отвергается");
+                "guard_area нельзя включить одним режимом: он требует зоны охраны, поэтому режим отвергается"
+                        + " Иначе тест from_GuardArea_IsRejected перестанет ловить эту поломку. При смене from_GuardArea_IsRejected проверь это утверждение.");
 
         assertEquals(
                 true,
                 error.getMessage().contains("guard_area"),
                 "Сообщение обязано назвать guard_area: по нему понятно, почему режим не принят. Текст: "
-                        + error.getMessage());
+                        + error.getMessage()
+                        + " Иначе тест from_GuardArea_IsRejected перестанет ловить эту поломку. При смене from_GuardArea_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -61,7 +65,8 @@ class SetCombatModeParamsTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> SetCombatModeParams.from(Map.of("mode", "berserk")),
-                "Неизвестный режим обязан отвергаться до старта задачи, а не подменяться молчаливым умолчанием");
+                "Неизвестный режим обязан отвергаться до старта задачи, а не подменяться молчаливым умолчанием"
+                        + " Иначе тест from_UnknownMode_IsRejected перестанет ловить эту поломку. При смене from_UnknownMode_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -69,7 +74,8 @@ class SetCombatModeParamsTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> SetCombatModeParams.from(Map.of()),
-                "Без параметра mode непонятно, какой режим включать, — задача обязана отказывать");
+                "Без параметра mode непонятно, какой режим включать, — задача обязана отказывать"
+                        + " Иначе тест from_MissingMode_IsRejected перестанет ловить эту поломку. При смене from_MissingMode_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -77,6 +83,7 @@ class SetCombatModeParamsTests {
         assertThrows(
                 NullPointerException.class,
                 () -> SetCombatModeParams.from(null),
-                "from(null) обязан отказывать: без карты параметров режим не прочитать");
+                "from(null) обязан отказывать: без карты параметров режим не прочитать"
+                        + " Иначе тест from_NullParams_IsRejected перестанет ловить эту поломку. При смене from_NullParams_IsRejected проверь это утверждение.");
     }
 }

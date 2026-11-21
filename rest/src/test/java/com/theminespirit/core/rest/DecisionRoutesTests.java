@@ -66,39 +66,62 @@ class DecisionRoutesTests {
     void decisions_HuskFightRecord_ServedWithReasonAndFacts() {
         RestResponse response = send(gateway(), "/v1/spirits/" + ID + "/decisions?limit=5");
 
-        assertEquals(200, response.status(), "Журнал решений духа отдаётся с 200: " + response.body());
+        assertEquals(
+                200,
+                response.status(),
+                "Журнал решений духа отдаётся с 200: " + response.body()
+                        + " Иначе тест decisions_HuskFightRecord_ServedWithReasonAndFacts перестанет ловить эту поломку. При смене decisions_HuskFightRecord_ServedWithReasonAndFacts проверь это утверждение.");
         assertTrue(
                 response.body().startsWith("{\"bot\":\"" + ID + "\",\"limit\":5,\"decisions\":["),
-                "Ответ называет духа, предел и записи в этом порядке: " + response.body());
-        assertTrue(response.body().contains("\"tick\":1000"), "Запись называет тик решения: " + response.body());
+                "Ответ называет духа, предел и записи в этом порядке: " + response.body()
+                        + " Иначе тест decisions_HuskFightRecord_ServedWithReasonAndFacts перестанет ловить эту поломку. При смене decisions_HuskFightRecord_ServedWithReasonAndFacts проверь это утверждение.");
+        assertTrue(
+                response.body().contains("\"tick\":1000"),
+                "Запись называет тик решения: " + response.body()
+                        + " Иначе тест decisions_HuskFightRecord_ServedWithReasonAndFacts перестанет ловить эту поломку. При смене decisions_HuskFightRecord_ServedWithReasonAndFacts проверь это утверждение.");
         assertTrue(
                 response.body().contains("\"changed\":\"decision\""),
-                "Запись называет сменившееся поле: " + response.body());
+                "Запись называет сменившееся поле: " + response.body()
+                        + " Иначе тест decisions_HuskFightRecord_ServedWithReasonAndFacts перестанет ловить эту поломку. При смене decisions_HuskFightRecord_ServedWithReasonAndFacts проверь это утверждение.");
         assertTrue(
                 response.body().contains("\"from\":\"IGNORE\",\"to\":\"FIGHT\""),
-                "Запись показывает «было → стало»: " + response.body());
+                "Запись показывает «было → стало»: " + response.body()
+                        + " Иначе тест decisions_HuskFightRecord_ServedWithReasonAndFacts перестанет ловить эту поломку. При смене decisions_HuskFightRecord_ServedWithReasonAndFacts проверь это утверждение.");
         assertTrue(
                 response.body().contains("\"rule\":\"score\",\"hold\":\"none\""),
-                "Запись называет причину и удержание: " + response.body());
+                "Запись называет причину и удержание: " + response.body()
+                        + " Иначе тест decisions_HuskFightRecord_ServedWithReasonAndFacts перестанет ловить эту поломку. При смене decisions_HuskFightRecord_ServedWithReasonAndFacts проверь это утверждение.");
         assertTrue(
                 response.body()
                         .contains("\"factors\":[{\"factor\":\"WIN_MARGIN\",\"value\":0.62,"
                                 + "\"weight\":1.06},{\"factor\":\"PROXIMITY\",\"value\":0.58,\"weight\":0.23}]"),
-                "Решение по оценке называет факторы с весами: " + response.body());
+                "Решение по оценке называет факторы с весами: " + response.body()
+                        + " Иначе тест decisions_HuskFightRecord_ServedWithReasonAndFacts перестанет ловить эту поломку. При смене decisions_HuskFightRecord_ServedWithReasonAndFacts проверь это утверждение.");
         assertTrue(
                 response.body()
                         .contains("\"facts\":{\"enemies\":1,\"nearest\":\"minecraft:husk в 5.0\","
                                 + "\"hp\":20.0,\"max_hp\":20.0,\"armor\":0.0,\"weapon\":\"оружие ближнего боя\"}"),
-                "Ключевые факты идут в записи: враги, здоровье, броня, оружие: " + response.body());
+                "Ключевые факты идут в записи: враги, здоровье, броня, оружие: " + response.body()
+                        + " Иначе тест decisions_HuskFightRecord_ServedWithReasonAndFacts перестанет ловить эту поломку. При смене decisions_HuskFightRecord_ServedWithReasonAndFacts проверь это утверждение.");
     }
 
     @Test
     void decisions_RuleDecisionWithoutFactors_ServedAsRule() {
         RestResponse response = send(gateway(), "/v1/spirits/" + ID + "/decisions?limit=1");
 
-        assertEquals(200, response.status(), "Одна запись по пределу 1: " + response.body());
-        assertTrue(response.body().contains("\"rule\":\"score\""), "Новая запись идёт первой: " + response.body());
-        assertTrue(response.body().endsWith("}]}"), "Предел 1 оставляет одну запись: " + response.body());
+        assertEquals(
+                200,
+                response.status(),
+                "Одна запись по пределу 1: " + response.body()
+                        + " Иначе тест decisions_RuleDecisionWithoutFactors_ServedAsRule перестанет ловить эту поломку. При смене decisions_RuleDecisionWithoutFactors_ServedAsRule проверь это утверждение.");
+        assertTrue(
+                response.body().contains("\"rule\":\"score\""),
+                "Новая запись идёт первой: " + response.body()
+                        + " Иначе тест decisions_RuleDecisionWithoutFactors_ServedAsRule перестанет ловить эту поломку. При смене decisions_RuleDecisionWithoutFactors_ServedAsRule проверь это утверждение.");
+        assertTrue(
+                response.body().endsWith("}]}"),
+                "Предел 1 оставляет одну запись: " + response.body()
+                        + " Иначе тест decisions_RuleDecisionWithoutFactors_ServedAsRule перестанет ловить эту поломку. При смене decisions_RuleDecisionWithoutFactors_ServedAsRule проверь это утверждение.");
     }
 
     @Test
@@ -120,17 +143,23 @@ class DecisionRoutesTests {
                 response.body(),
                 "Журнал решений — контракт REST: bot, limit и записи с тиком, духом, полем, «было → стало», "
                         + "причиной (правило или факторы с весами) и ключевыми фактами. ИИ-агент читает его как "
-                        + "объяснение, почему дух так поступил (docs/api/README.md → GET /v1/spirits/{id}/decisions)");
+                        + "объяснение, почему дух так поступил (docs/api/README.md → GET /v1/spirits/{id}/decisions)"
+                        + " Иначе тест decisions_TwoRecords_MatchesReferenceJson перестанет ловить эту поломку. При смене decisions_TwoRecords_MatchesReferenceJson проверь это утверждение.");
     }
 
     @Test
     void decisions_NoLimitParameter_TakesFiveFromContract() {
         RestResponse response = send(gateway(), "/v1/spirits/" + ID + "/decisions");
 
-        assertEquals(200, response.status(), "Без limit журнал отдаётся: " + response.body());
+        assertEquals(
+                200,
+                response.status(),
+                "Без limit журнал отдаётся: " + response.body()
+                        + " Иначе тест decisions_NoLimitParameter_TakesFiveFromContract перестанет ловить эту поломку. При смене decisions_NoLimitParameter_TakesFiveFromContract проверь это утверждение.");
         assertTrue(
                 response.body().contains("\"limit\":5"),
-                "Умолчание контракта — 5 записей, как в команде /spirit decisions: " + response.body());
+                "Умолчание контракта — 5 записей, как в команде /spirit decisions: " + response.body()
+                        + " Иначе тест decisions_NoLimitParameter_TakesFiveFromContract перестанет ловить эту поломку. При смене decisions_NoLimitParameter_TakesFiveFromContract проверь это утверждение.");
     }
 
     @Test
@@ -142,19 +171,49 @@ class DecisionRoutesTests {
         RestResponse extra = send(gateway(), "/v1/spirits/" + ID + "/decisions?limit=5&offset=1");
         RestResponse wrongMethod = send(gateway(), "POST", "/v1/spirits/" + ID + "/decisions?limit=5");
 
-        assertEquals(404, unknown.status(), "Неизвестный дух — 404 not_found: " + unknown.body());
+        assertEquals(
+                404,
+                unknown.status(),
+                "Неизвестный дух — 404 not_found: " + unknown.body()
+                        + " Иначе тест decisions_UnknownSpiritOrBadLimit_ReturnsDocumentedError перестанет ловить эту поломку. При смене decisions_UnknownSpiritOrBadLimit_ReturnsDocumentedError проверь это утверждение.");
         assertTrue(
                 unknown.body().contains("\"code\":\"not_found\"")
                         && unknown.body().contains("unknown"),
-                "404 называет код и искомый id: " + unknown.body());
-        assertEquals(400, zero.status(), "Предел 0 — 400: записей ноль не бывает: " + zero.body());
-        assertTrue(zero.body().contains("'limit'"), "400 называет параметр: " + zero.body());
-        assertEquals(400, word.status(), "Нечисловой limit — 400: " + word.body());
-        assertEquals(400, big.status(), "limit 65 вне контракта 1..64 — 400: " + big.body());
-        assertEquals(400, extra.status(), "Лишний параметр запроса — 400, а не молчаливый пропуск: " + extra.body());
-        assertEquals(405, wrongMethod.status(), "POST на журнал решений — 405 с Allow: " + wrongMethod.body());
+                "404 называет код и искомый id: " + unknown.body()
+                        + " Иначе тест decisions_UnknownSpiritOrBadLimit_ReturnsDocumentedError перестанет ловить эту поломку. При смене decisions_UnknownSpiritOrBadLimit_ReturnsDocumentedError проверь это утверждение.");
+        assertEquals(
+                400,
+                zero.status(),
+                "Предел 0 — 400: записей ноль не бывает: " + zero.body()
+                        + " Иначе тест decisions_UnknownSpiritOrBadLimit_ReturnsDocumentedError перестанет ловить эту поломку. При смене decisions_UnknownSpiritOrBadLimit_ReturnsDocumentedError проверь это утверждение.");
         assertTrue(
-                wrongMethod.body().contains("допустимо GET"), "405 называет допустимый метод: " + wrongMethod.body());
+                zero.body().contains("'limit'"),
+                "400 называет параметр: " + zero.body()
+                        + " Иначе тест decisions_UnknownSpiritOrBadLimit_ReturnsDocumentedError перестанет ловить эту поломку. При смене decisions_UnknownSpiritOrBadLimit_ReturnsDocumentedError проверь это утверждение.");
+        assertEquals(
+                400,
+                word.status(),
+                "Нечисловой limit — 400: " + word.body()
+                        + " Иначе тест decisions_UnknownSpiritOrBadLimit_ReturnsDocumentedError перестанет ловить эту поломку. При смене decisions_UnknownSpiritOrBadLimit_ReturnsDocumentedError проверь это утверждение.");
+        assertEquals(
+                400,
+                big.status(),
+                "limit 65 вне контракта 1..64 — 400: " + big.body()
+                        + " Иначе тест decisions_UnknownSpiritOrBadLimit_ReturnsDocumentedError перестанет ловить эту поломку. При смене decisions_UnknownSpiritOrBadLimit_ReturnsDocumentedError проверь это утверждение.");
+        assertEquals(
+                400,
+                extra.status(),
+                "Лишний параметр запроса — 400, а не молчаливый пропуск: " + extra.body()
+                        + " Иначе тест decisions_UnknownSpiritOrBadLimit_ReturnsDocumentedError перестанет ловить эту поломку. При смене decisions_UnknownSpiritOrBadLimit_ReturnsDocumentedError проверь это утверждение.");
+        assertEquals(
+                405,
+                wrongMethod.status(),
+                "POST на журнал решений — 405 с Allow: " + wrongMethod.body()
+                        + " Иначе тест decisions_UnknownSpiritOrBadLimit_ReturnsDocumentedError перестанет ловить эту поломку. При смене decisions_UnknownSpiritOrBadLimit_ReturnsDocumentedError проверь это утверждение.");
+        assertTrue(
+                wrongMethod.body().contains("допустимо GET"),
+                "405 называет допустимый метод: " + wrongMethod.body()
+                        + " Иначе тест decisions_UnknownSpiritOrBadLimit_ReturnsDocumentedError перестанет ловить эту поломку. При смене decisions_UnknownSpiritOrBadLimit_ReturnsDocumentedError проверь это утверждение.");
     }
 
     @Test
@@ -164,10 +223,15 @@ class DecisionRoutesTests {
 
         RestResponse response = send(gateway().failingWith(failure), "/v1/spirits/" + ID + "/decisions?limit=5");
 
-        assertEquals(500, response.status(), "Сбой шлюза — 500: " + response.body());
+        assertEquals(
+                500,
+                response.status(),
+                "Сбой шлюза — 500: " + response.body()
+                        + " Иначе тест decisions_GatewayFailure_PassesErrorObjectThrough перестанет ловить эту поломку. При смене decisions_GatewayFailure_PassesErrorObjectThrough проверь это утверждение.");
         assertTrue(
                 response.body().contains("\"code\":\"internal\""),
-                "Ошибка шлюза уходит клиенту тем же объектом: " + response.body());
+                "Ошибка шлюза уходит клиенту тем же объектом: " + response.body()
+                        + " Иначе тест decisions_GatewayFailure_PassesErrorObjectThrough перестанет ловить эту поломку. При смене decisions_GatewayFailure_PassesErrorObjectThrough проверь это утверждение.");
     }
 
     @Test
@@ -180,7 +244,14 @@ class DecisionRoutesTests {
                 Map.of(),
                 "{\"limit\":1}".getBytes(StandardCharsets.UTF_8)));
 
-        assertEquals(200, response.status(), "Тело GET не разбирается: журнал читает только query: " + response.body());
-        assertTrue(response.body().contains("\"limit\":5"), "Тело не подменяет умолчание limit: " + response.body());
+        assertEquals(
+                200,
+                response.status(),
+                "Тело GET не разбирается: журнал читает только query: " + response.body()
+                        + " Иначе тест decisions_BodyOfGet_IsNotRead перестанет ловить эту поломку. При смене decisions_BodyOfGet_IsNotRead проверь это утверждение.");
+        assertTrue(
+                response.body().contains("\"limit\":5"),
+                "Тело не подменяет умолчание limit: " + response.body()
+                        + " Иначе тест decisions_BodyOfGet_IsNotRead перестанет ловить эту поломку. При смене decisions_BodyOfGet_IsNotRead проверь это утверждение.");
     }
 }

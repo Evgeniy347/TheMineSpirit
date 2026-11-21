@@ -51,7 +51,8 @@ class ObserveRequestTests {
         assertEquals(
                 expected,
                 ObserveRequest.parse(utf8(body)),
-                "Допустимое тело observe обязано разбираться в ожидаемый запрос, пустое тело — в умолчания: " + body);
+                "Допустимое тело observe обязано разбираться в ожидаемый запрос, пустое тело — в умолчания: " + body
+                        + " Иначе тест parse_ValidBody_ReturnsExpectedRequest перестанет ловить эту поломку. При смене parse_ValidBody_ReturnsExpectedRequest проверь это утверждение.");
     }
 
     static Stream<Arguments> invalidBodies() {
@@ -88,16 +89,19 @@ class ObserveRequestTests {
         ApiException error = assertThrows(
                 ApiException.class,
                 () -> ObserveRequest.parse(utf8(body)),
-                "Неверное тело observe обязано давать invalid_request, а не молча приниматься: " + body);
+                "Неверное тело observe обязано давать invalid_request, а не молча приниматься: " + body
+                        + " Иначе тест parse_InvalidBody_ThrowsInvalidRequestNamingTheProblem перестанет ловить эту поломку. При смене parse_InvalidBody_ThrowsInvalidRequestNamingTheProblem проверь это утверждение.");
 
         assertEquals(
                 ErrorCode.INVALID_REQUEST,
                 error.error().code(),
-                "Ошибка тела запроса — invalid_request (400): " + body);
+                "Ошибка тела запроса — invalid_request (400): " + body
+                        + " Иначе тест parse_InvalidBody_ThrowsInvalidRequestNamingTheProblem перестанет ловить эту поломку. При смене parse_InvalidBody_ThrowsInvalidRequestNamingTheProblem проверь это утверждение.");
         assertTrue(
                 error.getMessage().contains(mustContain),
                 "Сообщение называет поле и проблему ('" + mustContain + "'), чтобы клиент мог исправить запрос: "
-                        + error.getMessage());
+                        + error.getMessage()
+                        + " Иначе тест parse_InvalidBody_ThrowsInvalidRequestNamingTheProblem перестанет ловить эту поломку. При смене parse_InvalidBody_ThrowsInvalidRequestNamingTheProblem проверь это утверждение.");
     }
 
     @Test
@@ -105,13 +109,19 @@ class ObserveRequestTests {
         ApiException error = assertThrows(
                 ApiException.class,
                 () -> ObserveRequest.parse(utf8("{\"foo\":1}")),
-                "Неизвестное поле обязано отклоняться");
+                "Неизвестное поле обязано отклоняться"
+                        + " Иначе тест parse_UnknownField_DetailsNameFieldAndAllowedFields перестанет ловить эту поломку. При смене parse_UnknownField_DetailsNameFieldAndAllowedFields проверь это утверждение.");
 
-        assertEquals("foo", error.error().details().get("field"), "details.field называет лишнее поле");
+        assertEquals(
+                "foo",
+                error.error().details().get("field"),
+                "details.field называет лишнее поле"
+                        + " Иначе тест parse_UnknownField_DetailsNameFieldAndAllowedFields перестанет ловить эту поломку. При смене parse_UnknownField_DetailsNameFieldAndAllowedFields проверь это утверждение.");
         assertEquals(
                 List.of("radius", "filter", "include_entities"),
                 error.error().details().get("allowed"),
-                "details.allowed перечисляет допустимые поля в порядке документации");
+                "details.allowed перечисляет допустимые поля в порядке документации"
+                        + " Иначе тест parse_UnknownField_DetailsNameFieldAndAllowedFields перестанет ловить эту поломку. При смене parse_UnknownField_DetailsNameFieldAndAllowedFields проверь это утверждение.");
     }
 
     @Test
@@ -119,17 +129,24 @@ class ObserveRequestTests {
         ApiException error = assertThrows(
                 ApiException.class,
                 () -> ObserveRequest.parse(utf8("{\"filter\":[\"ok\",\"Iron!\"]}")),
-                "Шаблон с запрещённым символом обязан отклоняться, а не молча уходить в скан");
+                "Шаблон с запрещённым символом обязан отклоняться, а не молча уходить в скан"
+                        + " Иначе тест parse_FilterPatternWithForbiddenSymbol_DetailsNameIdFilterAndIndex перестанет ловить эту поломку. При смене parse_FilterPatternWithForbiddenSymbol_DetailsNameIdFilterAndIndex проверь это утверждение.");
 
-        assertEquals(ErrorCode.INVALID_REQUEST, error.error().code(), "Отвергнутый шаблон — invalid_request (400)");
+        assertEquals(
+                ErrorCode.INVALID_REQUEST,
+                error.error().code(),
+                "Отвергнутый шаблон — invalid_request (400)"
+                        + " Иначе тест parse_FilterPatternWithForbiddenSymbol_DetailsNameIdFilterAndIndex перестанет ловить эту поломку. При смене parse_FilterPatternWithForbiddenSymbol_DetailsNameIdFilterAndIndex проверь это утверждение.");
         assertEquals(
                 1,
                 error.error().details().get("index"),
                 "details.index называет номер плохого шаблона filter[1], чтобы клиент нашёл поле: "
-                        + error.error().details());
+                        + error.error().details()
+                        + " Иначе тест parse_FilterPatternWithForbiddenSymbol_DetailsNameIdFilterAndIndex перестанет ловить эту поломку. При смене parse_FilterPatternWithForbiddenSymbol_DetailsNameIdFilterAndIndex проверь это утверждение.");
         assertTrue(
                 error.getMessage().contains("IdFilter"),
-                "Сообщение обязано называть правило IdFilter, которым проверен шаблон: " + error.getMessage());
+                "Сообщение обязано называть правило IdFilter, которым проверен шаблон: " + error.getMessage()
+                        + " Иначе тест parse_FilterPatternWithForbiddenSymbol_DetailsNameIdFilterAndIndex перестанет ловить эту поломку. При смене parse_FilterPatternWithForbiddenSymbol_DetailsNameIdFilterAndIndex проверь это утверждение.");
     }
 
     @Test
@@ -137,10 +154,18 @@ class ObserveRequestTests {
         ApiException error = assertThrows(
                 ApiException.class,
                 () -> ObserveRequest.parse(utf8("{\n  \"radius\": }")),
-                "Битый JSON обязан отклоняться");
+                "Битый JSON обязан отклоняться"
+                        + " Иначе тест parse_BrokenJson_ErrorCarriesLineAndColumn перестанет ловить эту поломку. При смене parse_BrokenJson_ErrorCarriesLineAndColumn проверь это утверждение.");
 
-        assertEquals(2, error.error().details().get("line"), "details.line называет строку ошибки разбора");
-        assertTrue(error.getMessage().contains("строка 2"), "Сообщение называет позицию ошибки: " + error.getMessage());
+        assertEquals(
+                2,
+                error.error().details().get("line"),
+                "details.line называет строку ошибки разбора"
+                        + " Иначе тест parse_BrokenJson_ErrorCarriesLineAndColumn перестанет ловить эту поломку. При смене parse_BrokenJson_ErrorCarriesLineAndColumn проверь это утверждение.");
+        assertTrue(
+                error.getMessage().contains("строка 2"),
+                "Сообщение называет позицию ошибки: " + error.getMessage()
+                        + " Иначе тест parse_BrokenJson_ErrorCarriesLineAndColumn перестанет ловить эту поломку. При смене parse_BrokenJson_ErrorCarriesLineAndColumn проверь это утверждение.");
     }
 
     @Test
@@ -150,8 +175,13 @@ class ObserveRequestTests {
         ApiException error = assertThrows(
                 ApiException.class,
                 () -> ObserveRequest.parse(body),
-                "Байты вне UTF-8 в теле обязаны давать invalid_request, а не необработанное исключение");
+                "Байты вне UTF-8 в теле обязаны давать invalid_request, а не необработанное исключение"
+                        + " Иначе тест parse_InvalidUtf8Bytes_ThrowsInvalidRequest перестанет ловить эту поломку. При смене parse_InvalidUtf8Bytes_ThrowsInvalidRequest проверь это утверждение.");
 
-        assertEquals(ErrorCode.INVALID_REQUEST, error.error().code(), "Ошибка кодировки — invalid_request (400)");
+        assertEquals(
+                ErrorCode.INVALID_REQUEST,
+                error.error().code(),
+                "Ошибка кодировки — invalid_request (400)"
+                        + " Иначе тест parse_InvalidUtf8Bytes_ThrowsInvalidRequest перестанет ловить эту поломку. При смене parse_InvalidUtf8Bytes_ThrowsInvalidRequest проверь это утверждение.");
     }
 }

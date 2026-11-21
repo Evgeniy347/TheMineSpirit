@@ -60,8 +60,13 @@ class EnvScannerProperties {
         assertTrue(
                 terrain.reads() <= budget,
                 "Реальных чтений мира " + terrain.reads() + " при бюджете " + budget
-                        + ": предел чтений за цикл держит стоимость тика, превышение множится на число духов");
-        assertEquals(readBudget.used(), reading.reads(), "Отчёт о чтениях обязан совпадать со списанным бюджетом");
+                        + ": предел чтений за цикл держит стоимость тика, превышение множится на число духов"
+                        + " Иначе тест scan_AnyTerrain_ReadsNeverExceedBudget перестанет ловить эту поломку. При смене scan_AnyTerrain_ReadsNeverExceedBudget проверь это утверждение.");
+        assertEquals(
+                readBudget.used(),
+                reading.reads(),
+                "Отчёт о чтениях обязан совпадать со списанным бюджетом"
+                        + " Иначе тест scan_AnyTerrain_ReadsNeverExceedBudget перестанет ловить эту поломку. При смене scan_AnyTerrain_ReadsNeverExceedBudget проверь это утверждение.");
     }
 
     @Property(tries = 200)
@@ -75,7 +80,8 @@ class EnvScannerProperties {
                 facts.waterDistance() <= EnvFacts.FAR_DISTANCE
                         && facts.coverDistance() <= EnvFacts.FAR_DISTANCE
                         && facts.lavaNear() <= EnvFacts.FAR_DISTANCE,
-                "Факты окружения обязаны лежать в пределах EnvFacts, иначе ядро бросит исключение в тике духа");
+                "Факты окружения обязаны лежать в пределах EnvFacts, иначе ядро бросит исключение в тике духа"
+                        + " При смене scan_AnyTerrain_FactsStayInEnvFactsRange проверь это утверждение.");
     }
 
     @Property(tries = 200)
@@ -87,7 +93,15 @@ class EnvScannerProperties {
 
         EnvReading second = scanner.scan(SELF, FEET, threat, terrain, new ReadBudget(5000), 10);
 
-        assertEquals(first.water(), second.water(), "Повторный скан той же местности не должен менять цель воды");
-        assertEquals(first.cover(), second.cover(), "Повторный скан той же местности не должен менять цель укрытия");
+        assertEquals(
+                first.water(),
+                second.water(),
+                "Повторный скан той же местности не должен менять цель воды"
+                        + " Иначе тест scan_SameTerrainTwice_GivesSameFacts перестанет ловить эту поломку. При смене scan_SameTerrainTwice_GivesSameFacts проверь это утверждение.");
+        assertEquals(
+                first.cover(),
+                second.cover(),
+                "Повторный скан той же местности не должен менять цель укрытия"
+                        + " Иначе тест scan_SameTerrainTwice_GivesSameFacts перестанет ловить эту поломку. При смене scan_SameTerrainTwice_GivesSameFacts проверь это утверждение.");
     }
 }

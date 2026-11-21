@@ -57,7 +57,8 @@ class TargetDesignationProperties {
         assertTrue(
                 target.isEmpty(),
                 "PASSIVE не выставляет цель никогда, даже при решении " + option + "/" + action
-                        + ": пассивный дух не начинает драку; удар в углу идёт без выбора цели");
+                        + ": пассивный дух не начинает драку; удар в углу идёт без выбора цели"
+                        + " Иначе тест pick_PassiveMode_NeverDesignatesTarget перестанет ловить эту поломку. При смене pick_PassiveMode_NeverDesignatesTarget проверь это утверждение.");
     }
 
     @Property(tries = 200)
@@ -68,7 +69,8 @@ class TargetDesignationProperties {
 
         assertTrue(
                 target.isPresent() && enemies.contains(target.get()),
-                "AGGRESSIVE при решении FIGHT всегда выставляет цель из снятых врагов, иначе дух стоит среди врагов");
+                "AGGRESSIVE при решении FIGHT всегда выставляет цель из снятых врагов, иначе дух стоит среди врагов"
+                        + " При смене pick_AggressiveFight_AlwaysDesignatesTargetFromEnemies проверь это утверждение.");
     }
 
     @Provide

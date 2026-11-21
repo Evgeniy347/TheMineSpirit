@@ -68,7 +68,8 @@ class MemoryStoreProperties {
                 new ArrayList<>(model.values()),
                 apply(operations).all(),
                 "память после remember/forget обязана совпадать с простой моделью «имя -> точка»: повтор имени "
-                        + "заменяет точку на месте, forget убирает");
+                        + "заменяет точку на месте, forget убирает"
+                        + " Иначе тест operations_AnySequence_MatchSimpleMapModel перестанет ловить эту поломку. При смене operations_AnySequence_MatchSimpleMapModel проверь это утверждение.");
     }
 
     @Property
@@ -81,11 +82,15 @@ class MemoryStoreProperties {
             List<MemoryPoint> ofType = store.recallAll(type);
             assertTrue(
                     ofType.stream().allMatch(point -> point.type() == type),
-                    "recallAll(" + type.id() + ") вернул точку другого типа");
+                    "recallAll(" + type.id() + ") вернул точку другого типа"
+                            + " Иначе тест recallAll_AnyStoreAndType_ReturnsOnlyThatTypeAndTypesPartitionTheMemory перестанет ловить эту поломку. При смене recallAll_AnyStoreAndType_ReturnsOnlyThatTypeAndTypesPartitionTheMemory проверь это утверждение.");
             total += ofType.size();
         }
         assertEquals(
-                store.all().size(), total, "точки трёх типов вместе обязаны давать всю память без потерь и повторов");
+                store.all().size(),
+                total,
+                "точки трёх типов вместе обязаны давать всю память без потерь и повторов"
+                        + " Иначе тест recallAll_AnyStoreAndType_ReturnsOnlyThatTypeAndTypesPartitionTheMemory перестанет ловить эту поломку. При смене recallAll_AnyStoreAndType_ReturnsOnlyThatTypeAndTypesPartitionTheMemory проверь это утверждение.");
     }
 
     @Property
@@ -95,9 +100,16 @@ class MemoryStoreProperties {
 
         MemoryStore after = store.forget(victim.name());
 
-        assertNull(after.recall(victim.name()), "после forget точка " + victim.name() + " не должна находиться");
+        assertNull(
+                after.recall(victim.name()),
+                "после forget точка " + victim.name() + " не должна находиться"
+                        + " Иначе тест forget_AnyStoreAndKnownName_PointIsGoneAndOthersUntouched перестанет ловить эту поломку. При смене forget_AnyStoreAndKnownName_PointIsGoneAndOthersUntouched проверь это утверждение.");
         List<MemoryPoint> expected = new ArrayList<>(store.all());
         expected.removeIf(point -> point.name().equals(victim.name()));
-        assertEquals(expected, after.all(), "forget не должен менять остальные точки и их порядок");
+        assertEquals(
+                expected,
+                after.all(),
+                "forget не должен менять остальные точки и их порядок"
+                        + " Иначе тест forget_AnyStoreAndKnownName_PointIsGoneAndOthersUntouched перестанет ловить эту поломку. При смене forget_AnyStoreAndKnownName_PointIsGoneAndOthersUntouched проверь это утверждение.");
     }
 }

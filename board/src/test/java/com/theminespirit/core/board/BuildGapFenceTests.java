@@ -58,13 +58,22 @@ class BuildGapFenceTests {
         TaskNode plan = fencePlan();
         BuildGap.Gap gap = BuildGap.trace(plan, "oak", probe(Set.of()), NONE);
 
-        assertEquals(FENCES, gap.total(), "План ограды — все столбы сегмента: " + gap.total());
-        assertEquals(0, gap.shortage(), "Все 26 блоков поставлены — недостачи нет");
+        assertEquals(
+                FENCES,
+                gap.total(),
+                "План ограды — все столбы сегмента: " + gap.total()
+                        + " Иначе тест need_WholeFencePlaced_EmptyEvenThoughPlanAsksMaterials перестанет ловить эту поломку. При смене need_WholeFencePlaced_EmptyEvenThoughPlanAsksMaterials проверь это утверждение.");
+        assertEquals(
+                0,
+                gap.shortage(),
+                "Все 26 блоков поставлены — недостачи нет"
+                        + " Иначе тест need_WholeFencePlaced_EmptyEvenThoughPlanAsksMaterials перестанет ловить эту поломку. При смене need_WholeFencePlaced_EmptyEvenThoughPlanAsksMaterials проверь это утверждение.");
         assertEquals(
                 Map.of(),
                 BuildGap.need(plan, gap, FAKE),
                 "Если ограда поставлена целиком, задача не ждёт досок: расчёт «план целиком минус поставленное "
-                        + "по имени блока» оставлял oak_planks и вешал first:build_fence навсегда");
+                        + "по имени блока» оставлял oak_planks и вешал first:build_fence навсегда"
+                        + " Иначе тест need_WholeFencePlaced_EmptyEvenThoughPlanAsksMaterials перестанет ловить эту поломку. При смене need_WholeFencePlaced_EmptyEvenThoughPlanAsksMaterials проверь это утверждение.");
     }
 
     @Test
@@ -73,14 +82,20 @@ class BuildGapFenceTests {
         TaskNode plan = fencePlan();
         BuildGap.Gap gap = BuildGap.trace(plan, "oak", probe(new HashSet<>(absent)), NONE);
 
-        assertEquals(3, gap.shortage(), "Три блока не поставлены — три и в недостаче: " + gap.missing());
+        assertEquals(
+                3,
+                gap.shortage(),
+                "Три блока не поставлены — три и в недостаче: " + gap.missing()
+                        + " Иначе тест need_PartialFence_AsksOnlyRemainingCraft перестанет ловить эту поломку. При смене need_PartialFence_AsksOnlyRemainingCraft проверь это утверждение.");
         assertEquals(
                 Map.of("oak_planks", 5),
                 BuildGap.need(plan, gap, FAKE),
-                "На три недостающих забора нужен один крафт (5 досок), а не материал всего сегмента (10)");
+                "На три недостающих забора нужен один крафт (5 досок), а не материал всего сегмента (10)"
+                        + " Иначе тест need_PartialFence_AsksOnlyRemainingCraft перестанет ловить эту поломку. При смене need_PartialFence_AsksOnlyRemainingCraft проверь это утверждение.");
         assertTrue(
                 gap.missing().stream().allMatch(line -> line.contains("oak_fence")),
-                "Недостача ограды называет блок и место: " + gap.missing());
+                "Недостача ограды называет блок и место: " + gap.missing()
+                        + " Иначе тест need_PartialFence_AsksOnlyRemainingCraft перестанет ловить эту поломку. При смене need_PartialFence_AsksOnlyRemainingCraft проверь это утверждение.");
     }
 
     private static TaskNode fencePlan() {

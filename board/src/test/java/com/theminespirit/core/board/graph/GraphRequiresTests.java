@@ -21,10 +21,12 @@ class GraphRequiresTests {
         assertFalse(
                 before.task("building:hut").map(GraphPlan.Task::feasible).orElse(true),
                 "Хижина ждёт выровненной площадки, а не сундуков: стройка этапа идёт вместе с двором, как в цепочке: "
-                        + before.task("building:hut"));
+                        + before.task("building:hut")
+                        + " Иначе тест plan_ClearingNotBuiltHutMaterialsStocked_HutWaitsClearingRaised перестанет ловить эту поломку. При смене plan_ClearingNotBuiltHutMaterialsStocked_HutWaitsClearingRaised проверь это утверждение.");
         assertTrue(
                 after.task("building:hut").map(GraphPlan.Task::feasible).orElse(false),
-                "Площадка выровнена и материалы на складе — хижина выполнима: " + after.task("building:hut"));
+                "Площадка выровнена и материалы на складе — хижина выполнима: " + after.task("building:hut")
+                        + " Иначе тест plan_ClearingNotBuiltHutMaterialsStocked_HutWaitsClearingRaised перестанет ловить эту поломку. При смене plan_ClearingNotBuiltHutMaterialsStocked_HutWaitsClearingRaised проверь это утверждение.");
     }
 
     @Test
@@ -37,7 +39,8 @@ class GraphRequiresTests {
 
         assertTrue(
                 plan.task("building:hut").map(GraphPlan.Task::feasible).orElse(false),
-                "Двор готов и материалы на складе — хижина выполнима: " + plan.task("building:hut"));
+                "Двор готов и материалы на складе — хижина выполнима: " + plan.task("building:hut")
+                        + " Иначе тест plan_ChestsBuiltHutMaterialsStocked_HutFeasible перестанет ловить эту поломку. При смене plan_ChestsBuiltHutMaterialsStocked_HutFeasible проверь это утверждение.");
     }
 
     @Test
@@ -55,10 +58,12 @@ class GraphRequiresTests {
                         .map(GraphPlan.Task::feasible)
                         .orElse(true),
                 "Сад идёт после хижины: пока её нет, его цветы и дорожки не отвлекают духов от ограды и дома: "
-                        + before.task("building:orchard_oak"));
+                        + before.task("building:orchard_oak")
+                        + " Иначе тест plan_HutNotBuiltOrchardMaterialsStocked_OrchardWaitsHutRaised перестанет ловить эту поломку. При смене plan_HutNotBuiltOrchardMaterialsStocked_OrchardWaitsHutRaised проверь это утверждение.");
         assertTrue(
                 after.task("building:orchard_oak").map(GraphPlan.Task::feasible).orElse(false),
-                "Хижина построена и материалы сада на складе — сад выполним: " + after.task("building:orchard_oak"));
+                "Хижина построена и материалы сада на складе — сад выполним: " + after.task("building:orchard_oak")
+                        + " Иначе тест plan_HutNotBuiltOrchardMaterialsStocked_OrchardWaitsHutRaised перестанет ловить эту поломку. При смене plan_HutNotBuiltOrchardMaterialsStocked_OrchardWaitsHutRaised проверь это утверждение.");
     }
 
     @Test
@@ -71,8 +76,12 @@ class GraphRequiresTests {
         assertFalse(
                 plan.task("mine_cobble").map(GraphPlan.Task::feasible).orElse(true),
                 "Булыжник добывается в шахте: без неё копать камень на участке нельзя (ямы под постройками): "
-                        + plan.task("mine_cobble"));
-        assertTrue(plan.raised("building:mine"), "Нет булыжника и шахты — шахта получает давление: " + plan.tasks());
+                        + plan.task("mine_cobble")
+                        + " Иначе тест plan_MineNotBuiltNoCobble_CobbleWaitsMineRaised перестанет ловить эту поломку. При смене plan_MineNotBuiltNoCobble_CobbleWaitsMineRaised проверь это утверждение.");
+        assertTrue(
+                plan.raised("building:mine"),
+                "Нет булыжника и шахты — шахта получает давление: " + plan.tasks()
+                        + " Иначе тест plan_MineNotBuiltNoCobble_CobbleWaitsMineRaised перестанет ловить эту поломку. При смене plan_MineNotBuiltNoCobble_CobbleWaitsMineRaised проверь это утверждение.");
     }
 
     @Test
@@ -84,6 +93,7 @@ class GraphRequiresTests {
         assertThrows(
                 IllegalStateException.class,
                 () -> SupplyGraph.parse(json, "test.json"),
-                "Ссылка на неизвестную постройку в requires — опечатка графа: задание ждало бы её вечно");
+                "Ссылка на неизвестную постройку в requires — опечатка графа: задание ждало бы её вечно"
+                        + " Иначе тест parse_RequiresUnknownBuilding_Rejected перестанет ловить эту поломку. При смене parse_RequiresUnknownBuilding_Rejected проверь это утверждение.");
     }
 }

@@ -15,7 +15,8 @@ class ComeToPlayerParamsTests {
         assertEquals(
                 new ComeToPlayerParams("Steve"),
                 params,
-                "come_to_player обязан сохранить имя игрока: по нему адаптер выбирает, к кому идти");
+                "come_to_player обязан сохранить имя игрока: по нему адаптер выбирает, к кому идти"
+                        + " Иначе тест from_PlayerPresent_ReturnsPlayer перестанет ловить эту поломку. При смене from_PlayerPresent_ReturnsPlayer проверь это утверждение.");
     }
 
     @Test
@@ -24,11 +25,13 @@ class ComeToPlayerParamsTests {
                 IllegalArgumentException.class,
                 () -> ComeToPlayerParams.from(Map.of()),
                 "come_to_player без игрока обязан отказывать: валидатор плана подставляет 'nearest' "
-                        + "из каталога до запуска, а без него скрипт не знает, к кому идти");
+                        + "из каталога до запуска, а без него скрипт не знает, к кому идти"
+                        + " Иначе тест from_MissingPlayer_IsRejected перестанет ловить эту поломку. При смене from_MissingPlayer_IsRejected проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("player"),
-                "Отказ обязан называть недостающий параметр 'player'. Фактическое: " + error.getMessage());
+                "Отказ обязан называть недостающий параметр 'player'. Фактическое: " + error.getMessage()
+                        + " Иначе тест from_MissingPlayer_IsRejected перестанет ловить эту поломку. При смене from_MissingPlayer_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -36,7 +39,8 @@ class ComeToPlayerParamsTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> ComeToPlayerParams.from(Map.of("player", "  ")),
-                "come_to_player с пустым именем обязан отказывать: пустую строку нельзя сопоставить с игроком");
+                "come_to_player с пустым именем обязан отказывать: пустую строку нельзя сопоставить с игроком"
+                        + " Иначе тест from_BlankPlayer_IsRejected перестанет ловить эту поломку. При смене from_BlankPlayer_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -44,6 +48,7 @@ class ComeToPlayerParamsTests {
         assertThrows(
                 NullPointerException.class,
                 () -> ComeToPlayerParams.from(null),
-                "ComeToPlayerParams.from(null) обязан отказывать: без карты параметров маппинг только читает состояние мира");
+                "ComeToPlayerParams.from(null) обязан отказывать: без карты параметров маппинг только читает состояние мира"
+                        + " Иначе тест from_NullParams_IsRejected перестанет ловить эту поломку. При смене from_NullParams_IsRejected проверь это утверждение.");
     }
 }

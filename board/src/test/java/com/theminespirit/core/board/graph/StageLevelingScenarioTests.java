@@ -11,7 +11,10 @@ class StageLevelingScenarioTests {
     @Test
     void defectAfterClosure_AfterClosedStage_BlocksAndRaisesLeveling() {
         GraphFacts clean = facts(building(), GraphSiteFacts.Terrain.empty(), List.of());
-        assertTrue(GraphStageGate.lotsReady(clean), "Ровная зона готова: этап можно закрывать");
+        assertTrue(
+                GraphStageGate.lotsReady(clean),
+                "Ровная зона готова: этап можно закрывать"
+                        + " Иначе тест defectAfterClosure_AfterClosedStage_BlocksAndRaisesLeveling перестанет ловить эту поломку. При смене defectAfterClosure_AfterClosedStage_BlocksAndRaisesLeveling проверь это утверждение.");
 
         GraphFacts defect = facts(
                 building(),
@@ -21,10 +24,12 @@ class StageLevelingScenarioTests {
 
         assertFalse(
                 GraphStageGate.lotsReady(defect),
-                "Столб или яма, появившиеся после закрытия, снова держат этап: ровность — условие перехода");
+                "Столб или яма, появившиеся после закрытия, снова держат этап: ровность — условие перехода"
+                        + " Иначе тест defectAfterClosure_AfterClosedStage_BlocksAndRaisesLeveling перестанет ловить эту поломку. При смене defectAfterClosure_AfterClosedStage_BlocksAndRaisesLeveling проверь это утверждение.");
         assertTrue(
                 GraphWorldEvents.of(defect).contains(GraphWorldEvents.LEVEL_LOT),
-                "Дефект зоны поднимает узел выравнивания, а не задачу мимо графа: " + GraphWorldEvents.of(defect));
+                "Дефект зоны поднимает узел выравнивания, а не задачу мимо графа: " + GraphWorldEvents.of(defect)
+                        + " Иначе тест defectAfterClosure_AfterClosedStage_BlocksAndRaisesLeveling перестанет ловить эту поломку. При смене defectAfterClosure_AfterClosedStage_BlocksAndRaisesLeveling проверь это утверждение.");
     }
 
     private static GraphFacts.Building building() {

@@ -29,7 +29,8 @@ class RecipeExportTests {
         assertTrue(
                 Files.size(OUT) > 0,
                 "Импорт ванильных рецептов записан в " + OUT + ": путей "
-                        + text.lines().count());
+                        + text.lines().count()
+                        + " Иначе тест export_VanillaRecipes_WriteGraphRecipes перестанет ловить эту поломку. При смене export_VanillaRecipes_WriteGraphRecipes проверь это утверждение.");
     }
 
     static String render() throws IOException {

@@ -26,6 +26,7 @@ class ChestMoveTests {
                                 + call.params().get("count"))
                         .toList(),
                 "Старый сундук вне двора разбирается в свободный сундук двора партиями ≤256: двор — единственный "
-                        + "склад, материалы из старого сундука доходят до заданий (INC-80, observe10 A3)");
+                        + "склад, материалы из старого сундука доходят до заданий (INC-80, observe10 A3)"
+                        + " Иначе тест plan_OldChestOutsideYard_WithdrawThenDepositToYard перестанет ловить эту поломку. При смене plan_OldChestOutsideYard_WithdrawThenDepositToYard проверь это утверждение.");
     }
 }

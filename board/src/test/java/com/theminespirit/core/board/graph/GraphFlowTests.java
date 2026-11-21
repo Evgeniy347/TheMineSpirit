@@ -16,7 +16,12 @@ class GraphFlowTests {
 
         Map<String, Double> values = flow.solve();
 
-        assertEquals(20.0, values.get("coal"), 1e-9, "Цепочка факел → крафт → уголь: уголь получает 40 × 1 × 0.5");
+        assertEquals(
+                20.0,
+                values.get("coal"),
+                1e-9,
+                "Цепочка факел → крафт → уголь: уголь получает 40 × 1 × 0.5"
+                        + " Иначе тест solve_Chain_DecaysAlongLinks перестанет ловить эту поломку. При смене solve_Chain_DecaysAlongLinks проверь это утверждение.");
     }
 
     @Test
@@ -36,7 +41,8 @@ class GraphFlowTests {
                 one.solve(),
                 two.solve(),
                 "Порядок вставки узлов и рёбер (обход Map.copyOf меняется от запуска JVM) не меняет поток: "
-                        + "обратные рёбра выбираются в каноническом порядке ключей");
+                        + "обратные рёбра выбираются в каноническом порядке ключей"
+                        + " Иначе тест solve_CycleBuiltInOtherOrder_SameValues перестанет ловить эту поломку. При смене solve_CycleBuiltInOtherOrder_SameValues проверь это утверждение.");
     }
 
     @Test
@@ -55,7 +61,8 @@ class GraphFlowTests {
                 straight.solve(),
                 values,
                 "Цикл булыжник ↔ кирка не разгоняет давление: обратное ребро в узел на текущем пути отбрасывается, "
-                        + "даже с коэффициентом больше единицы");
+                        + "даже с коэффициентом больше единицы"
+                        + " Иначе тест solve_Cycle_PressureDoesNotReturnToSource перестанет ловить эту поломку. При смене solve_Cycle_PressureDoesNotReturnToSource проверь это утверждение.");
     }
 
     @Test
@@ -69,7 +76,8 @@ class GraphFlowTests {
 
         assertTrue(
                 values.get("hut") == 110.0 && values.get("planks") == 25.0,
-                "Надбавка готовой постройке — местная: поднимает хижину, но не её материалы: " + values);
+                "Надбавка готовой постройке — местная: поднимает хижину, но не её материалы: " + values
+                        + " Иначе тест solve_Local_NotPropagated перестанет ловить эту поломку. При смене solve_Local_NotPropagated проверь это утверждение.");
     }
 
     @Test
@@ -83,6 +91,7 @@ class GraphFlowTests {
                         && GraphFlow.priority(900, ceiling) < GraphFlow.priority(GraphFlow.SCORE_SPAN, ceiling)
                         && GraphFlow.priority(GraphFlow.SCORE_SPAN, ceiling) == ceiling,
                 "Шкала работы логарифмическая до SCORE_SPAN: крупные давления различаются (раньше 400, 500 и "
-                        + "900 сливались у потолка), ничто не поднимается выше потолка работы, ноль не поднят");
+                        + "900 сливались у потолка), ничто не поднимается выше потолка работы, ноль не поднят"
+                        + " Иначе тест priority_Scale_LogarithmicWithoutSaturation перестанет ловить эту поломку. При смене priority_Scale_LogarithmicWithoutSaturation проверь это утверждение.");
     }
 }

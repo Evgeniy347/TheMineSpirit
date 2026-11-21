@@ -34,19 +34,30 @@ class SurfaceEscapeSessionTests {
             result = session.step(BUDGET_MILLIS * 1_000_000L);
             maxStep = Math.max(maxStep, world.nanos() - before);
             steps++;
-            assertTrue(steps < 10_000, "Поиск обязан закончиться: иначе шаг бюджета не двигает работу");
+            assertTrue(
+                    steps < 10_000,
+                    "Поиск обязан закончиться: иначе шаг бюджета не двигает работу"
+                            + " При смене step_HeavySearch_StopsWithinBudgetAndContinuesNextStep проверь это утверждение.");
         }
 
-        assertTrue(steps > 1, "Долгий поиск не укладывается в один тик: работа делится на " + steps + " шагов");
+        assertTrue(
+                steps > 1,
+                "Долгий поиск не укладывается в один тик: работа делится на " + steps + " шагов"
+                        + " Иначе тест step_HeavySearch_StopsWithinBudgetAndContinuesNextStep перестанет ловить эту поломку. При смене step_HeavySearch_StopsWithinBudgetAndContinuesNextStep проверь это утверждение.");
         assertTrue(
                 maxStep <= (BUDGET_MILLIS + 1) * 1_000_000L,
                 "Один шаг держал поток " + maxStep / 1_000_000L + " мс при бюджете " + BUDGET_MILLIS
-                        + " мс: путь на 200 клеток не должен вставать в тик целиком");
-        assertTrue(result.found(), "Цель на плоскости достижима — путь обязан найтись");
+                        + " мс: путь на 200 клеток не должен вставать в тик целиком"
+                        + " Иначе тест step_HeavySearch_StopsWithinBudgetAndContinuesNextStep перестанет ловить эту поломку. При смене step_HeavySearch_StopsWithinBudgetAndContinuesNextStep проверь это утверждение.");
+        assertTrue(
+                result.found(),
+                "Цель на плоскости достижима — путь обязан найтись"
+                        + " Иначе тест step_HeavySearch_StopsWithinBudgetAndContinuesNextStep перестанет ловить эту поломку. При смене step_HeavySearch_StopsWithinBudgetAndContinuesNextStep проверь это утверждение.");
         assertEquals(
                 goal,
                 result.path().get(result.path().size() - 1),
-                "Поиск порциями обязан прийти в ту же цель, что и синхронный");
+                "Поиск порциями обязан прийти в ту же цель, что и синхронный"
+                        + " Иначе тест step_HeavySearch_StopsWithinBudgetAndContinuesNextStep перестанет ловить эту поломку. При смене step_HeavySearch_StopsWithinBudgetAndContinuesNextStep проверь это утверждение.");
     }
 
     @Test
@@ -58,7 +69,10 @@ class SurfaceEscapeSessionTests {
 
         SurfaceEscapeSession.Result result = session.step(0);
 
-        assertNull(result, "Нулевой бюджет не ищет: поиск продолжится на следующем тике");
+        assertNull(
+                result,
+                "Нулевой бюджет не ищет: поиск продолжится на следующем тике"
+                        + " Иначе тест step_ZeroBudget_DoesNoWorkAndWaitsNextTick перестанет ловить эту поломку. При смене step_ZeroBudget_DoesNoWorkAndWaitsNextTick проверь это утверждение.");
     }
 
     @Test
@@ -74,8 +88,15 @@ class SurfaceEscapeSessionTests {
         }
         Optional<List<BlockCoord>> direct = SurfaceEscape.path(START, world, goal::equals, goal);
 
-        assertTrue(direct.isPresent(), "Предусловие: синхронный поиск находит цель");
-        assertEquals(direct.orElseThrow(), result.path(), "Порционный поиск — тот же путь, а не другой обход");
+        assertTrue(
+                direct.isPresent(),
+                "Предусловие: синхронный поиск находит цель"
+                        + " Иначе тест step_SameWorld_ReturnsSamePathAsSynchronousSearch перестанет ловить эту поломку. При смене step_SameWorld_ReturnsSamePathAsSynchronousSearch проверь это утверждение.");
+        assertEquals(
+                direct.orElseThrow(),
+                result.path(),
+                "Порционный поиск — тот же путь, а не другой обход"
+                        + " Иначе тест step_SameWorld_ReturnsSamePathAsSynchronousSearch перестанет ловить эту поломку. При смене step_SameWorld_ReturnsSamePathAsSynchronousSearch проверь это утверждение.");
     }
 
     @Test
@@ -91,9 +112,19 @@ class SurfaceEscapeSessionTests {
             result = session.step(1_000_000L);
         }
 
-        assertTrue(result.found(), "Дом достижим — путь к дому обязан найтись");
-        assertTrue(result.primary(), "Дом — основная цель: запасное небо не подменяет его, даже если ближе");
-        assertEquals(home, result.path().get(result.path().size() - 1), "Конец пути — дом, а не любое небо");
+        assertTrue(
+                result.found(),
+                "Дом достижим — путь к дому обязан найтись"
+                        + " Иначе тест toHome_HomeReachable_PrefersHomeOverSky перестанет ловить эту поломку. При смене toHome_HomeReachable_PrefersHomeOverSky проверь это утверждение.");
+        assertTrue(
+                result.primary(),
+                "Дом — основная цель: запасное небо не подменяет его, даже если ближе"
+                        + " Иначе тест toHome_HomeReachable_PrefersHomeOverSky перестанет ловить эту поломку. При смене toHome_HomeReachable_PrefersHomeOverSky проверь это утверждение.");
+        assertEquals(
+                home,
+                result.path().get(result.path().size() - 1),
+                "Конец пути — дом, а не любое небо"
+                        + " Иначе тест toHome_HomeReachable_PrefersHomeOverSky перестанет ловить эту поломку. При смене toHome_HomeReachable_PrefersHomeOverSky проверь это утверждение.");
     }
 
     @Test
@@ -110,9 +141,19 @@ class SurfaceEscapeSessionTests {
             result = session.step(1_000_000L);
         }
 
-        assertTrue(result.found(), "Дом замурован, но небо достижимо: спасение обязано состояться");
-        assertFalse(result.primary(), "Найден запасной выход, а не дом — журнал обязан назвать это честно");
-        assertEquals(sky, result.path().get(result.path().size() - 1), "Конец пути — запасная клетка неба");
+        assertTrue(
+                result.found(),
+                "Дом замурован, но небо достижимо: спасение обязано состояться"
+                        + " Иначе тест toHome_HomeUnreachable_FallsBackToSky перестанет ловить эту поломку. При смене toHome_HomeUnreachable_FallsBackToSky проверь это утверждение.");
+        assertFalse(
+                result.primary(),
+                "Найден запасной выход, а не дом — журнал обязан назвать это честно"
+                        + " Иначе тест toHome_HomeUnreachable_FallsBackToSky перестанет ловить эту поломку. При смене toHome_HomeUnreachable_FallsBackToSky проверь это утверждение.");
+        assertEquals(
+                sky,
+                result.path().get(result.path().size() - 1),
+                "Конец пути — запасная клетка неба"
+                        + " Иначе тест toHome_HomeUnreachable_FallsBackToSky перестанет ловить эту поломку. При смене toHome_HomeUnreachable_FallsBackToSky проверь это утверждение.");
     }
 
     @Test
@@ -128,8 +169,14 @@ class SurfaceEscapeSessionTests {
             result = session.step(1_000_000L);
         }
 
-        assertFalse(result.found(), "Выхода нет — путь не выдумывается");
-        assertTrue(result.visits() <= SurfaceEscapeSession.MAX_VISITS, "Предел посещений держится");
+        assertFalse(
+                result.found(),
+                "Выхода нет — путь не выдумывается"
+                        + " Иначе тест step_NoExitAtAll_EndsEmpty перестанет ловить эту поломку. При смене step_NoExitAtAll_EndsEmpty проверь это утверждение.");
+        assertTrue(
+                result.visits() <= SurfaceEscapeSession.MAX_VISITS,
+                "Предел посещений держится"
+                        + " Иначе тест step_NoExitAtAll_EndsEmpty перестанет ловить эту поломку. При смене step_NoExitAtAll_EndsEmpty проверь это утверждение.");
     }
 
     private static final class CountingWorld implements RouteWorld {

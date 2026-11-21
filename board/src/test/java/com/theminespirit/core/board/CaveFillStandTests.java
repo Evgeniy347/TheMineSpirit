@@ -18,7 +18,8 @@ class CaveFillStandTests {
                 SITE.yard().x(), SITE.anchor().y() - 7, SITE.yard().z());
         assertFalse(
                 StageStands.fillStandAllowed(SITE, pocket, false),
-                "Подсыпка не встаёт в пещеру без неба под площадкой: карман " + pocket + " (INC-72)");
+                "Подсыпка не встаёт в пещеру без неба под площадкой: карман " + pocket + " (INC-72)"
+                        + " Иначе тест fillStandAllowed_CaveUnderPad_Refused перестанет ловить эту поломку. При смене fillStandAllowed_CaveUnderPad_Refused проверь это утверждение.");
     }
 
     @Test
@@ -29,9 +30,11 @@ class CaveFillStandTests {
                 new BlockCoord(SITE.enclosure().minX() - 30, 40, SITE.anchor().z());
         assertTrue(
                 StageStands.fillStandAllowed(SITE, pit, true),
-                "Открытая низина площадки с небом — законная стоянка (INC-66)");
+                "Открытая низина площадки с небом — законная стоянка (INC-66)"
+                        + " Иначе тест fillStandAllowed_OpenPitOrOutside_Allowed перестанет ловить эту поломку. При смене fillStandAllowed_OpenPitOrOutside_Allowed проверь это утверждение.");
         assertTrue(
                 StageStands.fillStandAllowed(SITE, far, false),
-                "Вне площадок правило не действует: подсыпка в шахте и ямах далеко от поселения");
+                "Вне площадок правило не действует: подсыпка в шахте и ямах далеко от поселения"
+                        + " Иначе тест fillStandAllowed_OpenPitOrOutside_Allowed перестанет ловить эту поломку. При смене fillStandAllowed_OpenPitOrOutside_Allowed проверь это утверждение.");
     }
 }

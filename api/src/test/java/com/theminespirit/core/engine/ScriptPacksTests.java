@@ -24,7 +24,8 @@ class ScriptPacksTests {
         assertEquals(
                 List.of("a", "b", "c"),
                 List.copyOf(merged.keySet()),
-                "Порядок набора задаёт порядок скриптов: перестановка мешает сверке реестра");
+                "Порядок набора задаёт порядок скриптов: перестановка мешает сверке реестра"
+                        + " Иначе тест factories_MergePacks_InDeclaredOrder перестанет ловить эту поломку. При смене factories_MergePacks_InDeclaredOrder проверь это утверждение.");
     }
 
     @Test
@@ -35,12 +36,14 @@ class ScriptPacksTests {
         IllegalStateException error = assertThrows(
                 IllegalStateException.class,
                 () -> ScriptPacks.factories(List.of(first, second), "spirit-1"),
-                "Дубль id между наборами обязан падать: иначе реестр молча возьмёт скрипт чужой механики");
+                "Дубль id между наборами обязан падать: иначе реестр молча возьмёт скрипт чужой механики"
+                        + " При смене factories_DuplicateScript_NamesBothPacks проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("first") && error.getMessage().contains("second"),
                 "При дубле скрипта сообщение обязано называть оба набора: иначе не понять, какой оставить. Текст: "
-                        + error.getMessage());
+                        + error.getMessage()
+                        + " При смене factories_DuplicateScript_NamesBothPacks проверь это утверждение.");
     }
 
     @Test
@@ -65,11 +68,13 @@ class ScriptPacksTests {
         IllegalStateException error = assertThrows(
                 IllegalStateException.class,
                 () -> ScriptPacks.factories(List.of(broken), "spirit-1"),
-                "Набор, объявивший скрипты и не собравший их, обязан падать: иначе граф вызовет пустое действие");
+                "Набор, объявивший скрипты и не собравший их, обязан падать: иначе граф вызовет пустое действие"
+                        + " При смене factories_DeclaredAndProducedMismatch_IsReported проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("broken"),
-                "Расхождение объявленных и собранных скриптов обязано называть набор. Текст: " + error.getMessage());
+                "Расхождение объявленных и собранных скриптов обязано называть набор. Текст: " + error.getMessage()
+                        + " Иначе тест factories_DeclaredAndProducedMismatch_IsReported перестанет ловить эту поломку. При смене factories_DeclaredAndProducedMismatch_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -77,7 +82,8 @@ class ScriptPacksTests {
         assertThrows(
                 NullPointerException.class,
                 () -> ScriptPacks.factories(List.of(pack("first", "a")), null),
-                "Без владельца фабрики не замкнуть: null обязан падать, а не давать пустой реестр");
+                "Без владельца фабрики не замкнуть: null обязан падать, а не давать пустой реестр"
+                        + " Иначе тест factories_NullOwner_IsReported перестанет ловить эту поломку. При смене factories_NullOwner_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -85,14 +91,16 @@ class ScriptPacksTests {
         assertThrows(
                 IllegalStateException.class,
                 () -> ScriptPacks.ids(List.of(pack("first", "a"), pack("second", "a"))),
-                "Список id до сборки реестра тоже обязан ловить дубль: по нему строится каталог");
+                "Список id до сборки реестра тоже обязан ловить дубль: по нему строится каталог"
+                        + " Иначе тест ids_DuplicateAcrossPacks_IsReported перестанет ловить эту поломку. При смене ids_DuplicateAcrossPacks_IsReported проверь это утверждение.");
     }
 
     @Test
     void ids_EmptyPackList_IsEmptyNotBroken() {
         assertTrue(
                 ScriptPacks.ids(List.of()).isEmpty(),
-                "Пустой список наборов — пустой реестр, а не ошибка: механика без скриптов возможна");
+                "Пустой список наборов — пустой реестр, а не ошибка: механика без скриптов возможна"
+                        + " Иначе тест ids_EmptyPackList_IsEmptyNotBroken перестанет ловить эту поломку. При смене ids_EmptyPackList_IsEmptyNotBroken проверь это утверждение.");
     }
 
     @Test
@@ -102,8 +110,12 @@ class ScriptPacksTests {
 
         assertTrue(
                 factories.keySet().containsAll(List.of("a", "b", "c")),
-                "Сборка обязана знать каждый скрипт из наборов");
-        assertFalse(factories.containsKey("missing"), "Сборка не выдумывает скрипты, которых нет в наборах");
+                "Сборка обязана знать каждый скрипт из наборов"
+                        + " Иначе тест factories_MultiplePacks_ContainsEveryScript перестанет ловить эту поломку. При смене factories_MultiplePacks_ContainsEveryScript проверь это утверждение.");
+        assertFalse(
+                factories.containsKey("missing"),
+                "Сборка не выдумывает скрипты, которых нет в наборах"
+                        + " Иначе тест factories_MultiplePacks_ContainsEveryScript перестанет ловить эту поломку. При смене factories_MultiplePacks_ContainsEveryScript проверь это утверждение.");
     }
 
     private static ScriptPack<String> pack(String packId, String... ids) {

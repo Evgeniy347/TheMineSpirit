@@ -21,11 +21,13 @@ class MapHitTests {
         assertEquals(
                 Optional.of(SMALL),
                 MapHit.lotAt(VIEW, VIEWPORT, VIEWPORT.screenX(6.5), VIEWPORT.screenY(6.5)),
-                "Под курсором два участка — подсказка о меньшем: он нарисован поверх");
+                "Под курсором два участка — подсказка о меньшем: он нарисован поверх"
+                        + " Иначе тест lotAt_CursorOverNestedLots_SmallestWins перестанет ловить эту поломку. При смене lotAt_CursorOverNestedLots_SmallestWins проверь это утверждение.");
         assertEquals(
                 Optional.of(BIG),
                 MapHit.lotAt(VIEW, VIEWPORT, VIEWPORT.screenX(1.5), VIEWPORT.screenY(18.5)),
-                "Курсор на участке — его подсказка");
+                "Курсор на участке — его подсказка"
+                        + " Иначе тест lotAt_CursorOverNestedLots_SmallestWins перестанет ловить эту поломку. При смене lotAt_CursorOverNestedLots_SmallestWins проверь это утверждение.");
     }
 
     @Test
@@ -33,8 +35,13 @@ class MapHitTests {
         assertEquals(
                 Optional.empty(),
                 MapHit.lotAt(VIEW, VIEWPORT, VIEWPORT.screenX(22), VIEWPORT.screenY(3)),
-                "Улица — не участок: подсказки нет");
-        assertEquals(Optional.empty(), MapHit.lotAt(VIEW, VIEWPORT, -5, 10), "Вне окна карты подсказки нет");
+                "Улица — не участок: подсказки нет"
+                        + " Иначе тест lotAt_StreetOrOutside_NoHint перестанет ловить эту поломку. При смене lotAt_StreetOrOutside_NoHint проверь это утверждение.");
+        assertEquals(
+                Optional.empty(),
+                MapHit.lotAt(VIEW, VIEWPORT, -5, 10),
+                "Вне окна карты подсказки нет"
+                        + " Иначе тест lotAt_StreetOrOutside_NoHint перестанет ловить эту поломку. При смене lotAt_StreetOrOutside_NoHint проверь это утверждение.");
     }
 
     @Test
@@ -44,6 +51,7 @@ class MapHitTests {
         assertEquals(
                 List.of(0, 0),
                 List.of(box.x1(), box.y1()),
-                "Прямоугольник за краем окна обрезан по окну: рисовать за рамкой карты нельзя");
+                "Прямоугольник за краем окна обрезан по окну: рисовать за рамкой карты нельзя"
+                        + " Иначе тест boxes_LotPartlyOffWindow_Clipped перестанет ловить эту поломку. При смене boxes_LotPartlyOffWindow_Clipped проверь это утверждение.");
     }
 }

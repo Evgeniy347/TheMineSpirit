@@ -22,7 +22,8 @@ class ConfigStampTests {
         assertFalse(
                 ConfigStamp.current().isBlank(),
                 "Хэш версии конфигурации обязан существовать: журнал без него не отличить по времени, "
-                        + "а отсутствие таблицы — не повод вернуть пустую строку");
+                        + "а отсутствие таблицы — не повод вернуть пустую строку"
+                        + " Иначе тест current_FromBoardTable_NotBlank перестанет ловить эту поломку. При смене current_FromBoardTable_NotBlank проверь это утверждение.");
     }
 
     @Test
@@ -30,7 +31,8 @@ class ConfigStampTests {
         assertEquals(
                 DataTables.INSTANCE.board().status().hash(),
                 ConfigStamp.current(),
-                "Хэш берётся из статуса таблицы board: по нему видно, что /reload сменил конфигурацию");
+                "Хэш берётся из статуса таблицы board: по нему видно, что /reload сменил конфигурацию"
+                        + " Иначе тест current_BoardStatusHash_Matches перестанет ловить эту поломку. При смене current_BoardStatusHash_Matches проверь это утверждение.");
     }
 
     @Test
@@ -42,7 +44,8 @@ class ConfigStampTests {
         assertEquals(
                 "hash-new",
                 ConfigStamp.of(holder),
-                "После замены таблицы хэш новый: записи после /reload несут новую версию конфигурации");
+                "После замены таблицы хэш новый: записи после /reload несут новую версию конфигурации"
+                        + " Иначе тест of_AfterReplace_ReturnsNewHash перестанет ловить эту поломку. При смене of_AfterReplace_ReturnsNewHash проверь это утверждение.");
     }
 
     @Test
@@ -50,6 +53,7 @@ class ConfigStampTests {
         assertThrows(
                 NullPointerException.class,
                 () -> ConfigStamp.of(null),
-                "Держатель null обязан отвергаться: без него неизвестен хэш версии конфигурации");
+                "Держатель null обязан отвергаться: без него неизвестен хэш версии конфигурации"
+                        + " Иначе тест of_NullHolder_Rejected перестанет ловить эту поломку. При смене of_NullHolder_Rejected проверь это утверждение.");
     }
 }

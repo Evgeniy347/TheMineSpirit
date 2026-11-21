@@ -23,7 +23,8 @@ class ToolChoiceHandDigTests {
         assertTrue(
                 ToolChoice.refusesHandDig(choice, options, true, false),
                 "Камень без кирки руками не копается (владелец 27.10, INC-94): без дропа шахта стоит, а дух держит "
-                        + "задание; при смене правила пересмотреть BlockBreaker и выдачу first:build_mine");
+                        + "задание; при смене правила пересмотреть BlockBreaker и выдачу first:build_mine"
+                        + " Иначе тест refusesHandDig_StoneWithoutPickaxe_Refused перестанет ловить эту поломку. При смене refusesHandDig_StoneWithoutPickaxe_Refused проверь это утверждение.");
     }
 
     @Test
@@ -33,7 +34,8 @@ class ToolChoiceHandDigTests {
         assertFalse(
                 ToolChoice.refusesHandDig(ToolChoice.best(options), options, true, true),
                 "Замурованному духу без кирки копать руками можно — иначе он не выберется (единственное исключение "
-                        + "владельца 27.10)");
+                        + "владельца 27.10)"
+                        + " При смене refusesHandDig_WalledInWithoutPickaxe_Allowed проверь это утверждение.");
     }
 
     @Test
@@ -44,7 +46,8 @@ class ToolChoiceHandDigTests {
                 ToolChoice.refusesHandDig(
                         ToolChoice.best(options), options, true, ToolChoice.DigMode.ESCAPING_WITH_HELPER),
                 "Замурованному без кирки копать руками нельзя, если рядом есть дух с киркой: камень копает он, "
-                        + "а не руки того, кому кирки не хватило");
+                        + "а не руки того, кому кирки не хватило"
+                        + " Иначе тест refusesHandDig_EscapingWithPickaxeNearby_Refused перестанет ловить эту поломку. При смене refusesHandDig_EscapingWithPickaxeNearby_Refused проверь это утверждение.");
     }
 
     @Test
@@ -53,7 +56,8 @@ class ToolChoiceHandDigTests {
 
         assertFalse(
                 ToolChoice.refusesHandDig(ToolChoice.best(options), options, true, ToolChoice.DigMode.ESCAPING),
-                "Если кирки нет ни у кого рядом, замурованный дух копает руками: иначе он не выберется");
+                "Если кирки нет ни у кого рядом, замурованный дух копает руками: иначе он не выберется"
+                        + " При смене refusesHandDig_EscapingWithoutPickaxeNearby_Allowed проверь это утверждение.");
     }
 
     @Test
@@ -63,7 +67,8 @@ class ToolChoiceHandDigTests {
 
         assertFalse(
                 ToolChoice.refusesHandDig(ToolChoice.best(options), options, false, false),
-                "Земля и дерево руками копаются: запрет касается только блоков, которым нужна кирка");
+                "Земля и дерево руками копаются: запрет касается только блоков, которым нужна кирка"
+                        + " Иначе тест refusesHandDig_BlockWithoutPickaxeNeed_Allowed перестанет ловить эту поломку. При смене refusesHandDig_BlockWithoutPickaxeNeed_Allowed проверь это утверждение.");
     }
 
     @Test
@@ -73,6 +78,7 @@ class ToolChoiceHandDigTests {
         assertFalse(
                 ToolChoice.refusesHandDig(ToolChoice.best(options), options, true, false),
                 "Кирка слабого уровня в инвентаре — это не копание руками: руду не по уровню решают правила руд, "
-                        + "а не запрет ручной копки");
+                        + "а не запрет ручной копки"
+                        + " Иначе тест refusesHandDig_WrongTierPickaxeInInventory_NotHandDig перестанет ловить эту поломку. При смене refusesHandDig_WrongTierPickaxeInInventory_NotHandDig проверь это утверждение.");
     }
 }

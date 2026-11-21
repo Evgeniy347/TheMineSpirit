@@ -31,7 +31,8 @@ class BreakSightGuardTests {
                 "Ломка блока сквозь стену возвращается: дух обязан видеть цель из глаз, как игрок. Цена — дух "
                         + "рубит и копает через стены и потолки, игрок видит чит. Как надо: прямой вызов "
                         + "destroyBlock только в BlockBreaker, безлимит по расстоянию (beginAnyDistance/beginChop) — "
-                        + "только из рубки и сбора урожая, и BlockBreaker.begin проверяет BreakSight. Нарушители");
+                        + "только из рубки и сбора урожая, и BlockBreaker.begin проверяет BreakSight. Нарушители"
+                        + " При смене productionSources_BreakWithoutSight_AreReported проверь это утверждение.");
     }
 
     @Test
@@ -46,7 +47,8 @@ class BreakSightGuardTests {
         assertEquals(
                 List.of("neoforge/Other.java:1 destroyBlock("),
                 violations(sources),
-                "Сторож ослеп: прямой destroyBlock вне BlockBreaker обязан ловиться — иначе стену можно сломать мимо проверки");
+                "Сторож ослеп: прямой destroyBlock вне BlockBreaker обязан ловиться — иначе стену можно сломать мимо проверки"
+                        + " При смене f проверь это утверждение.");
     }
 
     @Test
@@ -61,7 +63,8 @@ class BreakSightGuardTests {
         assertEquals(
                 List.of("neoforge/Other.java:1 beginAnyDistance("),
                 violations(sources),
-                "Сторож ослеп: обходной путь безлимитной ломки вне разрешённого списка обязан ловиться");
+                "Сторож ослеп: обходной путь безлимитной ломки вне разрешённого списка обязан ловиться"
+                        + " Иначе тест f перестанет ловить эту поломку. При смене f проверь это утверждение.");
     }
 
     @Test
@@ -78,7 +81,8 @@ class BreakSightGuardTests {
         assertEquals(
                 List.of("neoforge/Other.java:1 setBlock(AIR)"),
                 violations(sources),
-                "Сторож ослеп: удаление блока воздухом мимо проверки видимости обязано ловиться");
+                "Сторож ослеп: удаление блока воздухом мимо проверки видимости обязано ловиться"
+                        + " Иначе тест f перестанет ловить эту поломку. При смене f проверь это утверждение.");
     }
 
     @Test
@@ -97,7 +101,8 @@ class BreakSightGuardTests {
         assertEquals(
                 List.of(),
                 violations(sources),
-                "Сторож ложно срабатывает: рубка и сбор урожая — известные места безлимита, они разрешены");
+                "Сторож ложно срабатывает: рубка и сбор урожая — известные места безлимита, они разрешены"
+                        + " Иначе тест f перестанет ловить эту поломку. При смене f проверь это утверждение.");
     }
 
     @Test
@@ -109,7 +114,8 @@ class BreakSightGuardTests {
         assertEquals(
                 List.of("neoforge/BlockBreaker.java: ломка начинается без BreakSight.visible"),
                 violations(sources),
-                "Сторож ослеп: BlockBreaker без проверки видимости обязан ловиться — иначе ломать сквозь стены снова можно");
+                "Сторож ослеп: BlockBreaker без проверки видимости обязан ловиться — иначе ломать сквозь стены снова можно"
+                        + " При смене f проверь это утверждение.");
     }
 
     private static String breaker(String body) {

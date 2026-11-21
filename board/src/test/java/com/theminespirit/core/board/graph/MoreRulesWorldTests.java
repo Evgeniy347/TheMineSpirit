@@ -16,7 +16,8 @@ class MoreRulesWorldTests {
 
         assertTrue(
                 MoreRules.signals(signals).contains(MoreRules.FOREST_DEPLETED),
-                "Деревьев мало, саженцев в земле нет, запас есть — пора восстанавливать лес");
+                "Деревьев мало, саженцев в земле нет, запас есть — пора восстанавливать лес"
+                        + " Иначе тест forest_TreesLowWithoutSaplings_Signal перестанет ловить эту поломку. При смене forest_TreesLowWithoutSaplings_Signal проверь это утверждение.");
     }
 
     @Test
@@ -25,7 +26,8 @@ class MoreRulesWorldTests {
 
         assertFalse(
                 MoreRules.signals(signals).contains(MoreRules.FOREST_DEPLETED),
-                "Саженцы уже растут — повторно не сажаем");
+                "Саженцы уже растут — повторно не сажаем"
+                        + " Иначе тест forest_SaplingsPlanted_NoSignal перестанет ловить эту поломку. При смене forest_SaplingsPlanted_NoSignal проверь это утверждение.");
     }
 
     @Test
@@ -34,7 +36,8 @@ class MoreRulesWorldTests {
 
         assertFalse(
                 MoreRules.signals(signals).contains(MoreRules.FOREST_DEPLETED),
-                "Сажать нечего — сначала нужен запас саженцев");
+                "Сажать нечего — сначала нужен запас саженцев"
+                        + " Иначе тест forest_NoSaplingStock_NoSignal перестанет ловить эту поломку. При смене forest_NoSaplingStock_NoSignal проверь это утверждение.");
     }
 
     @Test
@@ -43,7 +46,8 @@ class MoreRulesWorldTests {
 
         assertTrue(
                 MoreRules.signals(signals).contains(MoreRules.ORE_DEPLETED),
-                "Шахта есть, руды рядом нет — искать новый пласт");
+                "Шахта есть, руды рядом нет — искать новый пласт"
+                        + " Иначе тест ore_MineBuiltWithoutOre_Signal перестанет ловить эту поломку. При смене ore_MineBuiltWithoutOre_Signal проверь это утверждение.");
     }
 
     @Test
@@ -52,14 +56,18 @@ class MoreRulesWorldTests {
 
         assertFalse(
                 MoreRules.signals(signals).contains(MoreRules.ORE_DEPLETED),
-                "Без шахты истощение руды не задача поселения");
+                "Без шахты истощение руды не задача поселения"
+                        + " Иначе тест ore_WithoutMine_NoSignal перестанет ловить эту поломку. При смене ore_WithoutMine_NoSignal проверь это утверждение.");
     }
 
     @Test
     void ore_Present_NoSignal() {
         MoreRules.Signals signals = withResources(new MoreRules.Resources(10, 0, 0, 5, true));
 
-        assertFalse(MoreRules.signals(signals).contains(MoreRules.ORE_DEPLETED), "Руда рядом есть — не истощена");
+        assertFalse(
+                MoreRules.signals(signals).contains(MoreRules.ORE_DEPLETED),
+                "Руда рядом есть — не истощена"
+                        + " Иначе тест ore_Present_NoSignal перестанет ловить эту поломку. При смене ore_Present_NoSignal проверь это утверждение.");
     }
 
     @Test
@@ -67,7 +75,8 @@ class MoreRulesWorldTests {
         assertTrue(
                 MoreRules.signals(withSecurity(new MoreRules.Security(1, 0, 0, false)))
                         .contains(MoreRules.FENCE_GAP),
-                "Пролом ограды — вход защиты поселения");
+                "Пролом ограды — вход защиты поселения"
+                        + " Иначе тест security_FenceGap_Signal перестанет ловить эту поломку. При смене security_FenceGap_Signal проверь это утверждение.");
     }
 
     @Test
@@ -75,15 +84,22 @@ class MoreRulesWorldTests {
         assertFalse(
                 MoreRules.signals(withSecurity(new MoreRules.Security(0, 1, 0, false)))
                         .contains(MoreRules.DOOR_OPEN_NIGHT),
-                "Днём открытая дверь не угроза");
+                "Днём открытая дверь не угроза"
+                        + " Иначе тест security_OpenDoorDay_NoSignal перестанет ловить эту поломку. При смене security_OpenDoorDay_NoSignal проверь это утверждение.");
     }
 
     @Test
     void security_OpenDoorNight_Signal() {
         Set<String> signals = MoreRules.signals(withSecurity(new MoreRules.Security(0, 1, 0, true)));
 
-        assertTrue(signals.contains(MoreRules.DOOR_OPEN_NIGHT), "Ночью открытая дверь — вход защиты");
-        assertTrue(signals.contains("more:open_doors:1"), "Число открытых дверей передаётся дальше");
+        assertTrue(
+                signals.contains(MoreRules.DOOR_OPEN_NIGHT),
+                "Ночью открытая дверь — вход защиты"
+                        + " Иначе тест security_OpenDoorNight_Signal перестанет ловить эту поломку. При смене security_OpenDoorNight_Signal проверь это утверждение.");
+        assertTrue(
+                signals.contains("more:open_doors:1"),
+                "Число открытых дверей передаётся дальше"
+                        + " Иначе тест security_OpenDoorNight_Signal перестанет ловить эту поломку. При смене security_OpenDoorNight_Signal проверь это утверждение.");
     }
 
     @Test
@@ -91,31 +107,50 @@ class MoreRulesWorldTests {
         assertTrue(
                 MoreRules.signals(withSecurity(new MoreRules.Security(0, 0, 1, false)))
                         .contains(MoreRules.HOPPER_UNCOVERED),
-                "Открытая воронка — вход защиты поселения");
+                "Открытая воронка — вход защиты поселения"
+                        + " Иначе тест security_Hopper_Signal перестанет ловить эту поломку. При смене security_Hopper_Signal проверь это утверждение.");
     }
 
     @Test
     void reserves_UnprotectedWithSpareArmor_Signal() {
         Set<String> signals = MoreRules.signals(withReserves(new MoreRules.Reserves(1, 2, 0)));
 
-        assertTrue(signals.contains(MoreRules.RESERVE_UNUSED), "Есть запасная броня и дух без неё — поделиться");
-        assertTrue(signals.contains("more:spare_armor:2"), "Запас брони передаётся дальше");
+        assertTrue(
+                signals.contains(MoreRules.RESERVE_UNUSED),
+                "Есть запасная броня и дух без неё — поделиться"
+                        + " Иначе тест reserves_UnprotectedWithSpareArmor_Signal перестанет ловить эту поломку. При смене reserves_UnprotectedWithSpareArmor_Signal проверь это утверждение.");
+        assertTrue(
+                signals.contains("more:spare_armor:2"),
+                "Запас брони передаётся дальше"
+                        + " Иначе тест reserves_UnprotectedWithSpareArmor_Signal перестанет ловить эту поломку. При смене reserves_UnprotectedWithSpareArmor_Signal проверь это утверждение.");
     }
 
     @Test
     void reserves_DuplicateActivities_Signal() {
         Set<String> signals = MoreRules.signals(withReserves(new MoreRules.Reserves(0, 0, 2)));
 
-        assertTrue(signals.contains(MoreRules.WORK_DUPLICATE), "Двое на одной работе — не дублировать");
-        assertTrue(signals.contains("more:duplicates:2"), "Число дублей передаётся дальше");
+        assertTrue(
+                signals.contains(MoreRules.WORK_DUPLICATE),
+                "Двое на одной работе — не дублировать"
+                        + " Иначе тест reserves_DuplicateActivities_Signal перестанет ловить эту поломку. При смене reserves_DuplicateActivities_Signal проверь это утверждение.");
+        assertTrue(
+                signals.contains("more:duplicates:2"),
+                "Число дублей передаётся дальше"
+                        + " Иначе тест reserves_DuplicateActivities_Signal перестанет ловить эту поломку. При смене reserves_DuplicateActivities_Signal проверь это утверждение.");
     }
 
     @Test
     void strategicGoals_GoalsPresent_SignalWithCount() {
         Set<String> signals = MoreRules.signals(withGoals(2));
 
-        assertTrue(signals.contains(MoreRules.STRATEGIC_GOAL), "Цель стратега — вход с весом");
-        assertTrue(signals.contains("more:goals:2"), "Число целей передаётся дальше");
+        assertTrue(
+                signals.contains(MoreRules.STRATEGIC_GOAL),
+                "Цель стратега — вход с весом"
+                        + " Иначе тест strategicGoals_GoalsPresent_SignalWithCount перестанет ловить эту поломку. При смене strategicGoals_GoalsPresent_SignalWithCount проверь это утверждение.");
+        assertTrue(
+                signals.contains("more:goals:2"),
+                "Число целей передаётся дальше"
+                        + " Иначе тест strategicGoals_GoalsPresent_SignalWithCount перестанет ловить эту поломку. При смене strategicGoals_GoalsPresent_SignalWithCount проверь это утверждение.");
     }
 
     private static MoreRules.Signals withResources(MoreRules.Resources resources) {

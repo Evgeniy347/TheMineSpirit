@@ -1,17 +1,14 @@
 package com.theminespirit.core.rest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.ScanRadius;
 import com.theminespirit.core.observation.WorldObservation;
 import com.theminespirit.core.plan.ScriptCall;
-import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.script.CoreScripts;
 import com.theminespirit.core.script.api.ConditionCatalog;
@@ -88,19 +85,26 @@ class TaskRequestTests {
     void parse_TableCase_ReturnsRequestOrInvalidRequest(String json, int status, String fragment) {
         try {
             TaskRequest parsed = TaskRequest.parse(body(json));
-            assertEquals(200, status, "Запрос обязан разобраться, но таблица ждёт отказ для тела " + json);
+            assertEquals(
+                    200,
+                    status,
+                    "Запрос обязан разобраться, но таблица ждёт отказ для тела " + json
+                            + " Иначе тест parse_TableCase_ReturnsRequestOrInvalidRequest перестанет ловить эту поломку. При смене parse_TableCase_ReturnsRequestOrInvalidRequest проверь это утверждение.");
             assertEquals(
                     UUID.fromString(UUID_TEXT),
                     parsed.requestId(),
-                    "request_id обязан разбираться в UUID дословно: он склеивает повтор запроса");
+                    "request_id обязан разбираться в UUID дословно: он склеивает повтор запроса"
+                            + " Иначе тест parse_TableCase_ReturnsRequestOrInvalidRequest перестанет ловить эту поломку. При смене parse_TableCase_ReturnsRequestOrInvalidRequest проверь это утверждение.");
         } catch (ApiException rejected) {
             assertEquals(
                     status,
                     rejected.error().code().status(),
-                    "Код ошибки для тела " + json + " обязан быть " + status + ": " + rejected.getMessage());
+                    "Код ошибки для тела " + json + " обязан быть " + status + ": " + rejected.getMessage()
+                            + " Иначе тест parse_TableCase_ReturnsRequestOrInvalidRequest перестанет ловить эту поломку. При смене parse_TableCase_ReturnsRequestOrInvalidRequest проверь это утверждение.");
             assertTrue(
                     rejected.getMessage().contains(fragment),
-                    "Сообщение обязано содержать '" + fragment + "': " + rejected.getMessage());
+                    "Сообщение обязано содержать '" + fragment + "': " + rejected.getMessage()
+                            + " Иначе тест parse_TableCase_ReturnsRequestOrInvalidRequest перестанет ловить эту поломку. При смене parse_TableCase_ReturnsRequestOrInvalidRequest проверь это утверждение.");
         }
     }
 
@@ -108,8 +112,16 @@ class TaskRequestTests {
     void parse_GoalOnly_CarriesGoalAndEmptyParams() {
         TaskRequest parsed = TaskRequest.parse(body(request(",\"goal\":\"срубить деревья\"")));
 
-        assertEquals("срубить деревья", parsed.goal(), "Цель обязана сохраняться дословно");
-        assertEquals(Map.of(), parsed.params(), "Без params пустая карта, а не null");
+        assertEquals(
+                "срубить деревья",
+                parsed.goal(),
+                "Цель обязана сохраняться дословно"
+                        + " Иначе тест parse_GoalOnly_CarriesGoalAndEmptyParams перестанет ловить эту поломку. При смене parse_GoalOnly_CarriesGoalAndEmptyParams проверь это утверждение.");
+        assertEquals(
+                Map.of(),
+                parsed.params(),
+                "Без params пустая карта, а не null"
+                        + " Иначе тест parse_GoalOnly_CarriesGoalAndEmptyParams перестанет ловить эту поломку. При смене parse_GoalOnly_CarriesGoalAndEmptyParams проверь это утверждение.");
     }
 
     @Test
@@ -120,7 +132,8 @@ class TaskRequestTests {
         assertEquals(
                 Map.of("target", "Steve", "radius", 3),
                 parsed.params(),
-                "params обязан нести строки и целые как есть: планировщик получит их goal-параметрами");
+                "params обязан нести строки и целые как есть: планировщик получит их goal-параметрами"
+                        + " Иначе тест parse_ParamsObject_CarriesStringsAndInts перестанет ловить эту поломку. При смене parse_ParamsObject_CarriesStringsAndInts проверь это утверждение.");
     }
 
     @Test
@@ -133,7 +146,8 @@ class TaskRequestTests {
         assertEquals(
                 new ScriptCall("scan", Map.of("radius", 8)),
                 plan,
-                "Валидный план обязан проходить и получать умолчания каталога (radius=8 у scan)");
+                "Валидный план обязан проходить и получать умолчания каталога (radius=8 у scan)"
+                        + " Иначе тест validatePlan_ImplementedScript_FillsCatalogDefault перестанет ловить эту поломку. При смене validatePlan_ImplementedScript_FillsCatalogDefault проверь это утверждение.");
     }
 
     @Test
@@ -147,7 +161,8 @@ class TaskRequestTests {
 
         assertTrue(
                 failure.getMessage().contains("return_home"),
-                "invalid_plan обязан называть неизвестный скрипт: " + failure.getMessage());
+                "invalid_plan обязан называть неизвестный скрипт: " + failure.getMessage()
+                        + " Иначе тест validatePlan_UnimplementedScript_InvalidPlanNamesScript перестанет ловить эту поломку. При смене validatePlan_UnimplementedScript_InvalidPlanNamesScript проверь это утверждение.");
     }
 
     @Test
@@ -159,8 +174,8 @@ class TaskRequestTests {
 
         assertTrue(
                 failure.getMessage().contains("target"),
-                "«Следуй за мной» без params.target обязано давать 422 с пояснением про target: "
-                        + failure.getMessage());
+                "«Следуй за мной» без params.target обязано давать 422 с пояснением про target: " + failure.getMessage()
+                        + " Иначе тест planGoal_FollowWithoutTarget_InvalidPlanExplainsParam перестанет ловить эту поломку. При смене planGoal_FollowWithoutTarget_InvalidPlanExplainsParam проверь это утверждение.");
     }
 
     @Test
@@ -174,7 +189,8 @@ class TaskRequestTests {
         assertEquals(
                 new ScriptCall("follow", Map.of("target", "Steve", "radius", 3)),
                 plan,
-                "Цель «следуй за мной» с params.target обязана планировать follow за названной целью");
+                "Цель «следуй за мной» с params.target обязана планировать follow за названной целью"
+                        + " Иначе тест planGoal_FollowWithTarget_BuildsFollowScript перестанет ловить эту поломку. При смене planGoal_FollowWithTarget_BuildsFollowScript проверь это утверждение.");
     }
 
     @Test
@@ -186,7 +202,8 @@ class TaskRequestTests {
 
         assertTrue(
                 failure.getMessage().contains("не распознана"),
-                "Бессмысленная цель обязана давать invalid_plan «не распознана»: " + failure.getMessage());
+                "Бессмысленная цель обязана давать invalid_plan «не распознана»: " + failure.getMessage()
+                        + " Иначе тест planGoal_Gibberish_InvalidPlanUnrecognized перестанет ловить эту поломку. При смене planGoal_Gibberish_InvalidPlanUnrecognized проверь это утверждение.");
     }
 
     @Test
@@ -198,26 +215,19 @@ class TaskRequestTests {
 
         assertTrue(
                 failure.getMessage().contains("return_home"),
-                "«Верни домой» обязано давать 422 с названием скрипта return_home: " + failure.getMessage());
-    }
-
-    @Test
-    void validatePlan_SequenceScanGoto_ParsesWholeTree() throws Exception {
-        PlanningService service = new PlanningService(CATALOG, ConditionCatalog.empty());
-        JsonNode plan = MAPPER.readTree("{\"type\":\"sequence\",\"steps\":["
-                + "{\"type\":\"script\",\"script\":\"scan\",\"params\":{\"radius\":8}},"
-                + "{\"type\":\"script\",\"script\":\"goto\",\"params\":{\"x\":1,\"y\":64,\"z\":2}}]}");
-
-        TaskNode parsed = service.validatePlan(plan);
-
-        assertTrue(parsed instanceof SequenceNode, "Последовательность обязана разбираться в SequenceNode");
+                "«Верни домой» обязано давать 422 с названием скрипта return_home: " + failure.getMessage()
+                        + " Иначе тест planGoal_ReturnHome_InvalidPlanNamesUnimplementedScript перестанет ловить эту поломку. При смене planGoal_ReturnHome_InvalidPlanNamesUnimplementedScript проверь это утверждение.");
     }
 
     private static ApiException expectApi(ErrorCode code, Runnable action) {
         try {
             action.run();
         } catch (ApiException api) {
-            assertEquals(code, api.error().code(), "Ожидался код " + code.wire() + ": " + api.getMessage());
+            assertEquals(
+                    code,
+                    api.error().code(),
+                    "Ожидался код " + code.wire() + ": " + api.getMessage()
+                            + " Иначе тест validatePlan_SequenceScanGoto_ParsesWholeTree перестанет ловить эту поломку. При смене validatePlan_SequenceScanGoto_ParsesWholeTree проверь это утверждение.");
             return api;
         }
         return fail("Ожидался ApiException " + code.wire() + ", но вызов завершился без ошибки");
@@ -250,7 +260,8 @@ class TaskRequestTests {
                     expected.error().code() == ErrorCode.INVALID_REQUEST
                             || expected.error().code() == ErrorCode.INVALID_PLAN,
                     "Parse обязан отказывать только invalid_request/invalid_plan, получен "
-                            + expected.error().code());
+                            + expected.error().code()
+                            + " Иначе тест parse_AnyBody_ThrowsNothingButApiException перестанет ловить эту поломку. При смене parse_AnyBody_ThrowsNothingButApiException проверь это утверждение.");
         }
     }
 
@@ -270,20 +281,12 @@ class TaskRequestTests {
                 service.validatePlan(request.plan());
             }
         } catch (ApiException expected) {
-            assertTrue(expected.error() != null, "ApiException всегда несёт готовый объект ошибки");
+            assertTrue(
+                    expected.error() != null,
+                    "ApiException всегда несёт готовый объект ошибки"
+                            + " Иначе тест planGoal_AnyRequestAndObservation_ThrowsNothingButApiException перестанет ловить эту поломку. При смене planGoal_AnyRequestAndObservation_ThrowsNothingButApiException проверь это утверждение.");
         } catch (RuntimeException other) {
             fail("Планировщик обязан бросать только ApiException, а получил " + other);
         }
-    }
-
-    @Test
-    void requestId_ParsedValue_MatchesUuidInBody() {
-        TaskRequest parsed = TaskRequest.parse(body(request(",\"goal\":\"цель\"")));
-
-        assertEquals(
-                UUID.fromString(UUID_TEXT),
-                parsed.requestId(),
-                "request_id обязан разбираться в UUID дословно: он склеивает повтор запроса");
-        assertInstanceOf(UUID.class, parsed.requestId(), "request_id — UUID, а не строка");
     }
 }

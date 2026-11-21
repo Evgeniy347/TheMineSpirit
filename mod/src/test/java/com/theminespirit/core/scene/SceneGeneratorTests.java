@@ -20,12 +20,18 @@ class SceneGeneratorTests {
         assertEquals(
                 first.heights(),
                 second.heights(),
-                "Сид " + seed + " дал два разных рельефа: --seed N не повторит упавшую сцену");
+                "Сид " + seed + " дал два разных рельефа: --seed N не повторит упавшую сцену"
+                        + " Иначе тест generate_SameSeed_SameScene перестанет ловить эту поломку. При смене generate_SameSeed_SameScene проверь это утверждение.");
         assertEquals(
                 first.blocks(),
                 second.blocks(),
-                "Сид " + seed + " дал разные объекты сцены: повтор упавшего теста шёл бы на другом мире");
-        assertEquals(first.wood(), second.wood(), "Сид " + seed + " дал разную породу: повтор не тот же мир");
+                "Сид " + seed + " дал разные объекты сцены: повтор упавшего теста шёл бы на другом мире"
+                        + " Иначе тест generate_SameSeed_SameScene перестанет ловить эту поломку. При смене generate_SameSeed_SameScene проверь это утверждение.");
+        assertEquals(
+                first.wood(),
+                second.wood(),
+                "Сид " + seed + " дал разную породу: повтор не тот же мир"
+                        + " Иначе тест generate_SameSeed_SameScene перестанет ловить эту поломку. При смене generate_SameSeed_SameScene проверь это утверждение.");
     }
 
     @Test
@@ -34,7 +40,11 @@ class SceneGeneratorTests {
                 .mapToObj(seed -> SceneGenerator.generate(seed).heights())
                 .distinct()
                 .count();
-        assertEquals(8, distinct, "8 сидов дали повторяющийся рельеф: новый сид должен давать новый мир");
+        assertEquals(
+                8,
+                distinct,
+                "8 сидов дали повторяющийся рельеф: новый сид должен давать новый мир"
+                        + " Иначе тест generate_DifferentSeeds_DifferentRelief перестанет ловить эту поломку. При смене generate_DifferentSeeds_DifferentRelief проверь это утверждение.");
     }
 
     @Property
@@ -48,32 +58,42 @@ class SceneGeneratorTests {
                 assertTrue(
                         Math.abs(height) <= SceneGenerator.RELIEF,
                         "Сид " + seed + ": высота " + height + " в (" + x + ", " + z
-                                + ") за пределом ±4 — рельеф сцены выходит из решения владельца");
+                                + ") за пределом ±4 — рельеф сцены выходит из решения владельца"
+                                + " Иначе тест generate_AnySeed_ReliefWithinFourBlocksAndNotFlat перестанет ловить эту поломку. При смене generate_AnySeed_ReliefWithinFourBlocksAndNotFlat проверь это утверждение.");
                 min = Math.min(min, height);
                 if (Math.abs(x) <= PLOT && Math.abs(z) <= PLOT) {
                     plotMax = Math.max(plotMax, height);
                 }
             }
         }
-        assertTrue(plotMax >= 3, "Сид " + seed + ": холм на участке " + plotMax + " < 3 — участок почти плоский");
+        assertTrue(
+                plotMax >= 3,
+                "Сид " + seed + ": холм на участке " + plotMax + " < 3 — участок почти плоский"
+                        + " Иначе тест generate_AnySeed_ReliefWithinFourBlocksAndNotFlat перестанет ловить эту поломку. При смене generate_AnySeed_ReliefWithinFourBlocksAndNotFlat проверь это утверждение.");
         assertEquals(
                 -SceneGenerator.RELIEF,
                 min,
-                "Сид " + seed + ": низины глубиной 4 нет — подсыпка у края участка не проверяется");
+                "Сид " + seed + ": низины глубиной 4 нет — подсыпка у края участка не проверяется"
+                        + " Иначе тест generate_AnySeed_ReliefWithinFourBlocksAndNotFlat перестанет ловить эту поломку. При смене generate_AnySeed_ReliefWithinFourBlocksAndNotFlat проверь это утверждение.");
     }
 
     @Property
     void generate_AnySeed_CaveUnderPlotBelowSurface(@ForAll long seed) {
         ScenePlan plan = SceneGenerator.generate(seed);
         List<SceneBlock> cave = blocksOf(plan, "air");
-        assertFalse(cave.isEmpty(), "Сид " + seed + ": пещеры под участком нет — карман под ящиком не проверяется");
+        assertFalse(
+                cave.isEmpty(),
+                "Сид " + seed + ": пещеры под участком нет — карман под ящиком не проверяется"
+                        + " Иначе тест generate_AnySeed_CaveUnderPlotBelowSurface перестанет ловить эту поломку. При смене generate_AnySeed_CaveUnderPlotBelowSurface проверь это утверждение.");
         for (SceneBlock cell : cave) {
             assertTrue(
                     Math.abs(cell.x()) <= PLOT && Math.abs(cell.z()) <= PLOT,
-                    "Сид " + seed + ": пещера в " + cell + " вне участка — она должна быть под ним");
+                    "Сид " + seed + ": пещера в " + cell + " вне участка — она должна быть под ним"
+                            + " Иначе тест generate_AnySeed_CaveUnderPlotBelowSurface перестанет ловить эту поломку. При смене generate_AnySeed_CaveUnderPlotBelowSurface проверь это утверждение.");
             assertTrue(
                     cell.y() <= plan.height(cell.x(), cell.z()) - 2 && cell.y() > plan.bottom(),
-                    "Сид " + seed + ": клетка пещеры " + cell + " не под землёй — это яма, а не пещера");
+                    "Сид " + seed + ": клетка пещеры " + cell + " не под землёй — это яма, а не пещера"
+                            + " Иначе тест generate_AnySeed_CaveUnderPlotBelowSurface перестанет ловить эту поломку. При смене generate_AnySeed_CaveUnderPlotBelowSurface проверь это утверждение.");
         }
     }
 
@@ -83,7 +103,8 @@ class SceneGeneratorTests {
         String log = plan.wood() + "_log";
         assertTrue(
                 SceneGenerator.WOODS.contains(plan.wood()),
-                "Сид " + seed + ": порода " + plan.wood() + " — не джунгли и не дуб");
+                "Сид " + seed + ": порода " + plan.wood() + " — не джунгли и не дуб"
+                        + " Иначе тест generate_AnySeed_TreesWaterAndRuins перестанет ловить эту поломку. При смене generate_AnySeed_TreesWaterAndRuins проверь это утверждение.");
         long trunksOnPlot = blocksOf(plan, log).stream()
                 .filter(b -> b.y() == plan.height(b.x(), b.z()) + 1)
                 .filter(b -> Math.abs(b.x()) <= PLOT && Math.abs(b.z()) <= PLOT)
@@ -91,18 +112,29 @@ class SceneGeneratorTests {
         long trunks = blocksOf(plan, log).stream()
                 .filter(b -> b.y() == plan.height(b.x(), b.z()) + 1)
                 .count();
-        assertTrue(trunksOnPlot >= 4, "Сид " + seed + ": деревьев на участке " + trunksOnPlot + " < 4");
-        assertTrue(trunks - trunksOnPlot >= 8, "Сид " + seed + ": деревьев за участком мало — не из чего строить");
-        assertFalse(blocksOf(plan, "water").isEmpty(), "Сид " + seed + ": воды в низине нет");
+        assertTrue(
+                trunksOnPlot >= 4,
+                "Сид " + seed + ": деревьев на участке " + trunksOnPlot + " < 4"
+                        + " Иначе тест generate_AnySeed_TreesWaterAndRuins перестанет ловить эту поломку. При смене generate_AnySeed_TreesWaterAndRuins проверь это утверждение.");
+        assertTrue(
+                trunks - trunksOnPlot >= 8,
+                "Сид " + seed + ": деревьев за участком мало — не из чего строить"
+                        + " Иначе тест generate_AnySeed_TreesWaterAndRuins перестанет ловить эту поломку. При смене generate_AnySeed_TreesWaterAndRuins проверь это утверждение.");
+        assertFalse(
+                blocksOf(plan, "water").isEmpty(),
+                "Сид " + seed + ": воды в низине нет"
+                        + " Иначе тест generate_AnySeed_TreesWaterAndRuins перестанет ловить эту поломку. При смене generate_AnySeed_TreesWaterAndRuins проверь это утверждение.");
         List<SceneBlock> ruins =
                 plan.blocks().stream().filter(SceneBlock::settlement).toList();
         assertTrue(
                 ruins.stream().anyMatch(b -> b.block().endsWith("_fence")) && ruins.size() >= 9,
-                "Сид " + seed + ": остатков старых построек " + ruins.size() + " — без старой ограды INC-70 не виден");
+                "Сид " + seed + ": остатков старых построек " + ruins.size() + " — без старой ограды INC-70 не виден"
+                        + " Иначе тест generate_AnySeed_TreesWaterAndRuins перестанет ловить эту поломку. При смене generate_AnySeed_TreesWaterAndRuins проверь это утверждение.");
         for (SceneBlock ruin : ruins) {
             assertTrue(
                     Math.abs(ruin.x()) <= PLOT && Math.abs(ruin.z()) <= PLOT,
-                    "Сид " + seed + ": старая постройка " + ruin + " вне участка — она должна мешать выравниванию");
+                    "Сид " + seed + ": старая постройка " + ruin + " вне участка — она должна мешать выравниванию"
+                            + " Иначе тест generate_AnySeed_TreesWaterAndRuins перестанет ловить эту поломку. При смене generate_AnySeed_TreesWaterAndRuins проверь это утверждение.");
         }
     }
 
@@ -113,7 +145,8 @@ class SceneGeneratorTests {
             boolean center = Math.abs(block.x()) <= 1 && Math.abs(block.z()) <= 1;
             assertFalse(
                     center && block.y() > plan.height(block.x(), block.z()),
-                    "Сид " + seed + ": " + block + " над центром — духи появятся в дереве или постройке");
+                    "Сид " + seed + ": " + block + " над центром — духи появятся в дереве или постройке"
+                            + " Иначе тест generate_AnySeed_SpawnCenterFree перестанет ловить эту поломку. При смене generate_AnySeed_SpawnCenterFree проверь это утверждение.");
         }
     }
 

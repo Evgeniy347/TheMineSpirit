@@ -21,29 +21,40 @@ class DefenderCapabilityTests {
         DefenderCapability capability = capable(true);
 
         assertEquals(
-                ID, capability.id(), "Приказ обороны адресуется по id: перепутанный id отправит на пост чужого духа");
+                ID,
+                capability.id(),
+                "Приказ обороны адресуется по id: перепутанный id отправит на пост чужого духа"
+                        + " Иначе тест capability_Fields_ReadBack перестанет ловить эту поломку. При смене capability_Fields_ReadBack проверь это утверждение.");
         assertEquals(
                 POS,
                 capability.pos(),
-                "Пост и дистанция считаются от позиции: неверная позиция ставит духа не на тот сектор");
+                "Пост и дистанция считаются от позиции: неверная позиция ставит духа не на тот сектор"
+                        + " Иначе тест capability_Fields_ReadBack перестанет ловить эту поломку. При смене capability_Fields_ReadBack проверь это утверждение.");
         assertEquals(
                 1.0,
                 capability.hpFraction(),
-                "Доля здоровья входит во фронтовость: неверное значение исказит распределение по силе");
+                "Доля здоровья входит во фронтовость: неверное значение исказит распределение по силе"
+                        + " Иначе тест capability_Fields_ReadBack перестанет ловить эту поломку. При смене capability_Fields_ReadBack проверь это утверждение.");
         assertEquals(
                 10,
                 capability.armor(),
-                "Броня входит во фронтовость: неверное значение отправит слабого духа на сильное направление");
+                "Броня входит во фронтовость: неверное значение отправит слабого духа на сильное направление"
+                        + " Иначе тест capability_Fields_ReadBack перестанет ловить эту поломку. При смене capability_Fields_ReadBack проверь это утверждение.");
         assertEquals(
-                true, capability.bow(), "Флаг лука решает специализацию: неверный флаг перепутает лучника и мечника");
+                true,
+                capability.bow(),
+                "Флаг лука решает специализацию: неверный флаг перепутает лучника и мечника"
+                        + " Иначе тест capability_Fields_ReadBack перестанет ловить эту поломку. При смене capability_Fields_ReadBack проверь это утверждение.");
         assertEquals(
                 6.0,
                 capability.meleeDps(),
-                "Урон ближнего боя отличает вооружённого от безоружного: неверный урон сломает оценку сил");
+                "Урон ближнего боя отличает вооружённого от безоружного: неверный урон сломает оценку сил"
+                        + " При смене capability_Fields_ReadBack проверь это утверждение.");
         assertEquals(
                 true,
                 capability.heal(),
-                "Флаг лечилки решает инстинкт лечения: неверный флаг оставит раненого без лечения");
+                "Флаг лечилки решает инстинкт лечения: неверный флаг оставит раненого без лечения"
+                        + " Иначе тест capability_Fields_ReadBack перестанет ловить эту поломку. При смене capability_Fields_ReadBack проверь это утверждение.");
     }
 
     @Test
@@ -51,7 +62,8 @@ class DefenderCapabilityTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new DefenderCapability(null, POS, 1.0, 10, false, 6.0, true),
-                "Снимок бойца без id обязан падать: иначе приказ уйдёт духу, которого нельзя опознать");
+                "Снимок бойца без id обязан падать: иначе приказ уйдёт духу, которого нельзя опознать"
+                        + " При смене capability_NullId_Throws проверь это утверждение.");
     }
 
     @Test
@@ -59,7 +71,8 @@ class DefenderCapabilityTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new DefenderCapability(ID, null, 1.0, 10, false, 6.0, true),
-                "Снимок бойца без позиции обязан падать: иначе пост и дистанция посчитаются из ничего");
+                "Снимок бойца без позиции обязан падать: иначе пост и дистанция посчитаются из ничего"
+                        + " При смене capability_NullPos_Throws проверь это утверждение.");
     }
 
     @Test
@@ -67,7 +80,8 @@ class DefenderCapabilityTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new DefenderCapability(ID, POS, 1.0, -1, false, 6.0, true),
-                "Отрицательная броня обязана падать: иначе фронтовость выйдет за шкалу и сравнение сломается");
+                "Отрицательная броня обязана падать: иначе фронтовость выйдет за шкалу и сравнение сломается"
+                        + " При смене capability_ArmorBelowZero_Throws проверь это утверждение.");
     }
 
     @Test
@@ -75,7 +89,8 @@ class DefenderCapabilityTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new DefenderCapability(ID, POS, 1.0, 21, false, 6.0, true),
-                "Броня выше 20 обязана падать: шкала брони духа кончается на 20, большее — ошибка источника");
+                "Броня выше 20 обязана падать: шкала брони духа кончается на 20, большее — ошибка источника"
+                        + " Иначе тест capability_ArmorAboveTwenty_Throws перестанет ловить эту поломку. При смене capability_ArmorAboveTwenty_Throws проверь это утверждение.");
     }
 
     @Test
@@ -83,7 +98,8 @@ class DefenderCapabilityTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new DefenderCapability(ID, POS, 1.0, 10, false, -0.5, true),
-                "Отрицательный урон обязан падать: иначе безоружный дух посчитается бьющим");
+                "Отрицательный урон обязан падать: иначе безоружный дух посчитается бьющим"
+                        + " При смене capability_NegativeDps_Throws проверь это утверждение.");
     }
 
     @Test
@@ -93,7 +109,8 @@ class DefenderCapabilityTests {
         assertEquals(
                 1.0,
                 capability.hpFraction(),
-                "Доля здоровья зажимается в 0..1 как в SpiritSnapshot: иначе фронтовость выйдет за шкалу");
+                "Доля здоровья зажимается в 0..1 как в SpiritSnapshot: иначе фронтовость выйдет за шкалу"
+                        + " При смене capability_HpAboveOne_ClampedToOne проверь это утверждение.");
     }
 
     @Test
@@ -103,7 +120,8 @@ class DefenderCapabilityTests {
         assertEquals(
                 0.0,
                 capability.hpFraction(),
-                "Доля здоровья зажимается в 0..1 как в SpiritSnapshot: иначе фронтовость выйдет за шкалу");
+                "Доля здоровья зажимается в 0..1 как в SpiritSnapshot: иначе фронтовость выйдет за шкалу"
+                        + " При смене capability_HpBelowZero_ClampedToZero проверь это утверждение.");
     }
 
     @Test
@@ -111,7 +129,8 @@ class DefenderCapabilityTests {
         assertEquals(
                 DefenderRole.ARCHER,
                 capable(true).role(),
-                "Дух с луком — стрелок: иначе крипер и скелет останутся без приоритетного бойца");
+                "Дух с луком — стрелок: иначе крипер и скелет останутся без приоритетного бойца"
+                        + " При смене role_BowPresent_Archer проверь это утверждение.");
     }
 
     @Test
@@ -121,7 +140,8 @@ class DefenderCapabilityTests {
         assertEquals(
                 DefenderRole.MELEE,
                 strong.role(),
-                "Только лук меняет роль: броня и урон решают фронтовость, а не специализацию");
+                "Только лук меняет роль: броня и урон решают фронтовость, а не специализацию"
+                        + " Иначе тест role_NoBow_MeleeDespiteArmorAndDps перестанет ловить эту поломку. При смене role_NoBow_MeleeDespiteArmorAndDps проверь это утверждение.");
     }
 
     @Test
@@ -131,7 +151,8 @@ class DefenderCapabilityTests {
         assertEquals(
                 1.0,
                 best.frontRank(),
-                "Полная броня и здоровье дают фронтовость 1: иначе лучший боец не встанет на сильное направление");
+                "Полная броня и здоровье дают фронтовость 1: иначе лучший боец не встанет на сильное направление"
+                        + " При смене frontRank_FullArmorAndHealth_EqualsOne проверь это утверждение.");
     }
 
     @Test
@@ -141,7 +162,8 @@ class DefenderCapabilityTests {
         assertEquals(
                 0.0,
                 worst.frontRank(),
-                "Нулевые броня и здоровье дают фронтовость 0: иначе раздетый дух полезет в лоб");
+                "Нулевые броня и здоровье дают фронтовость 0: иначе раздетый дух полезет в лоб"
+                        + " При смене frontRank_NoArmorNoHealth_EqualsZero проверь это утверждение.");
     }
 
     @Test
@@ -151,6 +173,7 @@ class DefenderCapabilityTests {
 
         assertTrue(
                 light.frontRank() < heavy.frontRank(),
-                "При равном здоровье броня решает фронтовость: иначе слабый доспех пойдёт первым на крипера");
+                "При равном здоровье броня решает фронтовость: иначе слабый доспех пойдёт первым на крипера"
+                        + " При смене frontRank_BetterArmor_HigherRank проверь это утверждение.");
     }
 }

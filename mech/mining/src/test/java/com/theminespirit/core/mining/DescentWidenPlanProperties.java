@@ -32,12 +32,14 @@ class DescentWidenPlanProperties {
         assertEquals(
                 depth,
                 plan.steps().size(),
-                "Число шагов расширения обязано равняться глубине спуска: расширяют весь существующий спуск");
+                "Число шагов расширения обязано равняться глубине спуска: расширяют весь существующий спуск"
+                        + " Иначе тест from_SafeShaft_EveryStepHasWidthTimesHeightCells перестанет ловить эту поломку. При смене from_SafeShaft_EveryStepHasWidthTimesHeightCells проверь это утверждение.");
         for (DescentWidenStep step : plan.steps()) {
             assertEquals(
                     width * 6,
                     step.cells().size(),
-                    "Каждый шаг обязан нести " + width + "×6 клеток прохода: иначе тоннель не той ширины или высоты");
+                    "Каждый шаг обязан нести " + width + "×6 клеток прохода: иначе тоннель не той ширины или высоты"
+                            + " При смене from_SafeShaft_EveryStepHasWidthTimesHeightCells проверь это утверждение.");
         }
     }
 
@@ -61,11 +63,17 @@ class DescentWidenPlanProperties {
         assertEquals(
                 stepIndex,
                 plan.steps().size(),
-                "Лава в клетке расширения шага k обязана обрезать план ровно перед шагом k: дальше копать нельзя");
-        assertEquals(DescentStop.DANGER, plan.stop(), "Лава — остановка по опасности");
+                "Лава в клетке расширения шага k обязана обрезать план ровно перед шагом k: дальше копать нельзя"
+                        + " Иначе тест from_LavaAtWidenCell_StopsExactlyBeforeThatStep перестанет ловить эту поломку. При смене from_LavaAtWidenCell_StopsExactlyBeforeThatStep проверь это утверждение.");
+        assertEquals(
+                DescentStop.DANGER,
+                plan.stop(),
+                "Лава — остановка по опасности"
+                        + " Иначе тест from_LavaAtWidenCell_StopsExactlyBeforeThatStep перестанет ловить эту поломку. При смене from_LavaAtWidenCell_StopsExactlyBeforeThatStep проверь это утверждение.");
         assertTrue(
                 plan.dangerReason().contains("лава"),
-                "Причина остановки обязана называть лаву, чтобы игрок понял причину");
+                "Причина остановки обязана называть лаву, чтобы игрок понял причину"
+                        + " Иначе тест from_LavaAtWidenCell_StopsExactlyBeforeThatStep перестанет ловить эту поломку. При смене from_LavaAtWidenCell_StopsExactlyBeforeThatStep проверь это утверждение.");
     }
 
     @Property(tries = 200)
@@ -87,7 +95,8 @@ class DescentWidenPlanProperties {
                 assertTrue(
                         cell.y() > step.floor() && cell.y() <= step.floor() + 6,
                         "Клетка расширения " + cell + " обязана быть на высотах floor+1..floor+6 над полом "
-                                + step.floor());
+                                + step.floor()
+                                + " Иначе тест from_SafeShaft_CellsStayWithinHeightAboveFloor перестанет ловить эту поломку. При смене from_SafeShaft_CellsStayWithinHeightAboveFloor проверь это утверждение.");
             }
         }
     }

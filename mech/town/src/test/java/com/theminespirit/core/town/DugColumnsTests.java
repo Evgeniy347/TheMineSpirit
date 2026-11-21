@@ -16,7 +16,11 @@ class DugColumnsTests {
         columns.remember(1, 61, 2);
         columns.remember(1, 63, 2);
 
-        assertEquals(OptionalInt.of(64), columns.top(1, 2), "яма считается от самой высокой снятой клетки");
+        assertEquals(
+                OptionalInt.of(64),
+                columns.top(1, 2),
+                "яма считается от самой высокой снятой клетки"
+                        + " Иначе тест top_HighestDigPerColumn_Wins перестанет ловить эту поломку. При смене top_HighestDigPerColumn_Wins проверь это утверждение.");
     }
 
     @Test
@@ -24,8 +28,16 @@ class DugColumnsTests {
         DugColumns columns = new DugColumns();
         columns.remember(1, 64, 2);
 
-        assertEquals(OptionalInt.empty(), columns.top(1, 3), "учёт ям — по колонке, а не по всему участку");
-        assertEquals(OptionalInt.empty(), columns.top(2, 2), "соседняя колонка не наследует чужую яму");
+        assertEquals(
+                OptionalInt.empty(),
+                columns.top(1, 3),
+                "учёт ям — по колонке, а не по всему участку"
+                        + " Иначе тест top_OtherColumns_DoNotMix перестанет ловить эту поломку. При смене top_OtherColumns_DoNotMix проверь это утверждение.");
+        assertEquals(
+                OptionalInt.empty(),
+                columns.top(2, 2),
+                "соседняя колонка не наследует чужую яму"
+                        + " Иначе тест top_OtherColumns_DoNotMix перестанет ловить эту поломку. При смене top_OtherColumns_DoNotMix проверь это утверждение.");
     }
 
     @Test
@@ -34,7 +46,10 @@ class DugColumnsTests {
         columns.remember(-17, 70, -300);
 
         assertEquals(
-                List.of(new DugColumns.Column(-17, -300, 70)), columns.columns(), "координаты колонки не теряют знак");
+                List.of(new DugColumns.Column(-17, -300, 70)),
+                columns.columns(),
+                "координаты колонки не теряют знак"
+                        + " Иначе тест columns_NegativeCoordinates_RoundTrip перестанет ловить эту поломку. При смене columns_NegativeCoordinates_RoundTrip проверь это утверждение.");
     }
 
     @Test
@@ -44,8 +59,19 @@ class DugColumnsTests {
             columns.remember(index, 64, 0);
         }
 
-        assertEquals(DugColumns.MAX_COLUMNS, columns.size(), "учёт ям ограничен по числу колонок");
-        assertTrue(columns.top(0, 0).isEmpty(), "самая старая колонка забывается первой");
-        assertEquals(OptionalInt.of(64), columns.top(DugColumns.MAX_COLUMNS, 0), "новая колонка сохраняется");
+        assertEquals(
+                DugColumns.MAX_COLUMNS,
+                columns.size(),
+                "учёт ям ограничен по числу колонок"
+                        + " Иначе тест columns_OverLimit_DropsOldest перестанет ловить эту поломку. При смене columns_OverLimit_DropsOldest проверь это утверждение.");
+        assertTrue(
+                columns.top(0, 0).isEmpty(),
+                "самая старая колонка забывается первой"
+                        + " Иначе тест columns_OverLimit_DropsOldest перестанет ловить эту поломку. При смене columns_OverLimit_DropsOldest проверь это утверждение.");
+        assertEquals(
+                OptionalInt.of(64),
+                columns.top(DugColumns.MAX_COLUMNS, 0),
+                "новая колонка сохраняется"
+                        + " Иначе тест columns_OverLimit_DropsOldest перестанет ловить эту поломку. При смене columns_OverLimit_DropsOldest проверь это утверждение.");
     }
 }

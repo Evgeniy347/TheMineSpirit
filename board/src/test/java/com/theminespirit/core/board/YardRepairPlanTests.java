@@ -35,7 +35,8 @@ class YardRepairPlanTests {
                 List.of(),
                 gotos,
                 "Ремонт пола двора не идёт ни к workYard, ни в саму дыру: place_block сам подбирает стоянку "
-                        + "рядом, иначе дух «застревает» на краю ямы");
+                        + "рядом, иначе дух «застревает» на краю ямы"
+                        + " При смене plan_YardFloorRepair_GoesToHoleNotUnreachableWorkYard проверь это утверждение.");
     }
 
     private static void collect(TaskNode node, List<BlockCoord> gotos) {

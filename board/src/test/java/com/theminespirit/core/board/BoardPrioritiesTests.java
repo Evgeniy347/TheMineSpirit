@@ -29,7 +29,8 @@ class BoardPrioritiesTests {
                     base,
                     BoardPriorities.effective(boardCase, PriorityContext.none()),
                     "Без ситуации итог равен базе кейса " + boardCase + ": модификаторы без "
-                            + "условий не начисляются, иначе доска пересортирует очередь без причины");
+                            + "условий не начисляются, иначе доска пересортирует очередь без причины"
+                            + " При смене effective_NoContext_EqualsBase проверь это утверждение.");
         }
     }
 
@@ -43,7 +44,8 @@ class BoardPrioritiesTests {
                 expected,
                 BoardPriorities.effective(BoardCase.BUILD_PEN, context),
                 "Пойманное животное без загона повышает BUILD_PEN на дельту из таблицы: "
-                        + "найденных ограждаем сразу, а не ставим в общую очередь строек");
+                        + "найденных ограждаем сразу, а не ставим в общую очередь строек"
+                        + " Иначе тест effective_CaughtAnimal_RaisesPen перестанет ловить эту поломку. При смене effective_CaughtAnimal_RaisesPen проверь это утверждение.");
     }
 
     @Test
@@ -55,7 +57,8 @@ class BoardPrioritiesTests {
                 base,
                 BoardPriorities.effective(BoardCase.BUILD_PEN, context),
                 "Пойманное животное при построенном загоне не повышает BUILD_PEN: загон вида "
-                        + "уже стоит, повышать нечего");
+                        + "уже стоит, повышать нечего"
+                        + " Иначе тест effective_CaughtAnimalWithPenBuilt_NoRaise перестанет ловить эту поломку. При смене effective_CaughtAnimalWithPenBuilt_NoRaise проверь это утверждение.");
     }
 
     @Test
@@ -67,7 +70,8 @@ class BoardPrioritiesTests {
         assertEquals(
                 expected,
                 BoardPriorities.effective(BoardCase.BUILD_PEN, context),
-                "Нет приманки — загон строим, пока приманку добывают: BUILD_PEN растёт на " + "дельту из таблицы");
+                "Нет приманки — загон строим, пока приманку добывают: BUILD_PEN растёт на " + "дельту из таблицы"
+                        + " Иначе тест effective_MissingBait_RaisesPen перестанет ловить эту поломку. При смене effective_MissingBait_RaisesPen проверь это утверждение.");
     }
 
     @Test
@@ -80,11 +84,13 @@ class BoardPrioritiesTests {
                 Math.max(0, base + delta),
                 BoardPriorities.effective(BoardCase.BUILD_PEN, context),
                 "Полный загон вида обнуляет BUILD_PEN (" + base + " + " + delta + "): "
-                        + "пятую голову того же вида не селим, доска задание не выдаёт");
+                        + "пятую голову того же вида не селим, доска задание не выдаёт"
+                        + " Иначе тест effective_SpeciesFull_DropsPenToZero перестанет ловить эту поломку. При смене effective_SpeciesFull_DropsPenToZero проверь это утверждение.");
         assertEquals(
                 0,
                 BoardPriorities.effective(BoardCase.BUILD_PEN, context),
-                "Полный загон даёт ровно 0, а не отрицательное: приоритет вне [0, MAX] " + "сломает сортировку выдачи");
+                "Полный загон даёт ровно 0, а не отрицательное: приоритет вне [0, MAX] " + "сломает сортировку выдачи"
+                        + " При смене effective_SpeciesFull_DropsPenToZero проверь это утверждение.");
     }
 
     @Test
@@ -97,7 +103,8 @@ class BoardPrioritiesTests {
                 expected,
                 BoardPriorities.effective(BoardCase.LURE_ANIMAL, context),
                 "Загон стоит и приманка есть — LURE_ANIMAL растёт на дельту: приманивать "
-                        + "нечем было вчера, а сегодня есть чем");
+                        + "нечем было вчера, а сегодня есть чем"
+                        + " Иначе тест effective_BaitReady_RaisesLure перестанет ловить эту поломку. При смене effective_BaitReady_RaisesLure проверь это утверждение.");
     }
 
     @Test
@@ -109,7 +116,8 @@ class BoardPrioritiesTests {
         assertEquals(
                 expected,
                 BoardPriorities.effective(BoardCase.RELOCATE_BUILDING, context),
-                "Невыполненный ремонт понижает перенос: ремонт важнее переделки, стратег ждёт");
+                "Невыполненный ремонт понижает перенос: ремонт важнее переделки, стратег ждёт"
+                        + " Иначе тест effective_ActiveRepair_LowersRelocate перестанет ловить эту поломку. При смене effective_ActiveRepair_LowersRelocate проверь это утверждение.");
     }
 
     @Test
@@ -123,7 +131,8 @@ class BoardPrioritiesTests {
                 expected,
                 BoardPriorities.effective(BoardCase.BUILD_PEN, context),
                 "Два модификатора на одном задании суммируются: пойманное животное плюс "
-                        + "отсутствие приманки повышают загон дважды");
+                        + "отсутствие приманки повышают загон дважды"
+                        + " Иначе тест effective_TwoModifiers_SumUp перестанет ловить эту поломку. При смене effective_TwoModifiers_SumUp проверь это утверждение.");
     }
 
     @Test
@@ -135,7 +144,8 @@ class BoardPrioritiesTests {
                 base,
                 BoardPriorities.effective(BoardCase.FILL_CRATER, context),
                 "Чужие модификаторы воронку не трогают: дельты привязаны к кейсу, иначе "
-                        + "пойманная корова повышала бы засыпку ямы");
+                        + "пойманная корова повышала бы засыпку ямы"
+                        + " При смене effective_UnrelatedCase_IgnoresContext проверь это утверждение.");
     }
 
     @Property
@@ -146,7 +156,8 @@ class BoardPrioritiesTests {
         assertTrue(
                 effective >= 0 && effective <= BoardTuning.MAX_PRIORITY,
                 "Итог обязан лежать в [0, MAX_PRIORITY]: " + boardCase + " при " + context + " дал " + effective
-                        + ", выход за границу сломает сортировку выдачи");
+                        + ", выход за границу сломает сортировку выдачи"
+                        + " При смене effective_AnyContext_StaysWithinBounds проверь это утверждение.");
     }
 
     @Property
@@ -162,7 +173,8 @@ class BoardPrioritiesTests {
                 expected,
                 BoardPriorities.effective(boardCase, context),
                 "Итог равен базе плюс сумме сработавших дельт с зажимом: вычисление в тесте, "
-                        + "факт из production-функции");
+                        + "факт из production-функции"
+                        + " Иначе тест effective_AnyContext_EqualsBasePlusApplied перестанет ловить эту поломку. При смене effective_AnyContext_EqualsBasePlusApplied проверь это утверждение.");
     }
 
     @Property
@@ -172,7 +184,8 @@ class BoardPrioritiesTests {
                 BoardPriorities.effective(boardCase, context),
                 BoardPriorities.effective(boardCase, context),
                 "Итог детерминирован: доска сортирует очередь по итогу, нестабильное значение "
-                        + "перетасует выдачу между пересборками");
+                        + "перетасует выдачу между пересборками"
+                        + " Иначе тест effective_AnyContext_IsDeterministic перестанет ловить эту поломку. При смене effective_AnyContext_IsDeterministic проверь это утверждение.");
     }
 
     @Test
@@ -181,8 +194,8 @@ class BoardPrioritiesTests {
             assertEquals(
                     List.of(),
                     BoardPriorities.applied(boardCase, PriorityContext.none()),
-                    "Без ситуации сработавших модификаторов нет: журнал пишет пустой список, "
-                            + "а не выдуманные ключи");
+                    "Без ситуации сработавших модификаторов нет: журнал пишет пустой список, " + "а не выдуманные ключи"
+                            + " Иначе тест applied_EmptyContext_NamesNothing перестанет ловить эту поломку. При смене applied_EmptyContext_NamesNothing проверь это утверждение.");
         }
     }
 

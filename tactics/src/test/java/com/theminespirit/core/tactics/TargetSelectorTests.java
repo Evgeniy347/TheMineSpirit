@@ -27,11 +27,13 @@ class TargetSelectorTests {
                 expected,
                 target.kind(),
                 "Ключевое слово '" + raw + "' обязано разбираться в вид " + expected
-                        + ": иначе скрипт получит не тот вид цели и уйдёт не туда");
+                        + ": иначе скрипт получит не тот вид цели и уйдёт не туда"
+                        + " При смене parse_KeywordTable_ReturnsKindWithoutName проверь это утверждение.");
         assertTrue(
                 target.name().isEmpty(),
                 "Ключевое слово '" + raw + "' не называет существо, поэтому имя обязано быть пустым. Фактическое: "
-                        + target.name());
+                        + target.name()
+                        + " Иначе тест parse_KeywordTable_ReturnsKindWithoutName перестанет ловить эту поломку. При смене parse_KeywordTable_ReturnsKindWithoutName проверь это утверждение.");
     }
 
     @ParameterizedTest(name = "цель {0} в другом регистре принимается")
@@ -41,7 +43,8 @@ class TargetSelectorTests {
                 TargetSelector.parse(raw.toLowerCase(Locale.ROOT)).kind(),
                 TargetSelector.parse(raw).kind(),
                 "Регистр ключевого слова обязан схлопываться: план, записанный в другом регистре, обязан читаться "
-                        + "так же, как в нижнем");
+                        + "так же, как в нижнем"
+                        + " Иначе тест parse_KeywordUppercase_ReturnsSameKind перестанет ловить эту поломку. При смене parse_KeywordUppercase_ReturnsSameKind проверь это утверждение.");
     }
 
     @ParameterizedTest(name = "цель '{0}' сохраняет имя '{1}'")
@@ -54,11 +57,13 @@ class TargetSelectorTests {
         assertEquals(
                 Kind.PLAYER,
                 target.kind(),
-                "Цель '" + raw + "' обязана разбираться в игрока: иначе дух пойдёт не к тому игроку");
+                "Цель '" + raw + "' обязана разбираться в игрока: иначе дух пойдёт не к тому игроку"
+                        + " При смене parse_PlayerTarget_ReturnsKindAndName проверь это утверждение.");
         assertEquals(
                 Optional.of(expectedName),
                 target.name(),
-                "Имя игрока обязано сохранять регистр дословно: иначе ник не совпадёт с именем игрока в мире");
+                "Имя игрока обязано сохранять регистр дословно: иначе ник не совпадёт с именем игрока в мире"
+                        + " При смене parse_PlayerTarget_ReturnsKindAndName проверь это утверждение.");
     }
 
     @ParameterizedTest(name = "дух по UUID {0} сохраняется")
@@ -69,11 +74,13 @@ class TargetSelectorTests {
         assertEquals(
                 Kind.SPIRIT,
                 target.kind(),
-                "Цель '" + raw + "' обязана разбираться в духа: иначе скрипт ищет среди игроков вместо семьи");
+                "Цель '" + raw + "' обязана разбираться в духа: иначе скрипт ищет среди игроков вместо семьи"
+                        + " При смене parse_SpiritTarget_ReturnsKindAndUuid проверь это утверждение.");
         assertEquals(
                 Optional.of(SPIRIT_UUID),
                 target.name(),
-                "UUID духа обязан сохраняться дословно: сущность находится только по точному UUID");
+                "UUID духа обязан сохраняться дословно: сущность находится только по точному UUID"
+                        + " Иначе тест parse_SpiritTarget_ReturnsKindAndUuid перестанет ловить эту поломку. При смене parse_SpiritTarget_ReturnsKindAndUuid проверь это утверждение.");
     }
 
     @ParameterizedTest(name = "пустая цель '{0}' отказывает")
@@ -82,11 +89,13 @@ class TargetSelectorTests {
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,
                 () -> TargetSelector.parse(raw),
-                "Пустая цель обязана отказывать: скрипт без цели не знает, кого искать, и молчание скроет ошибку плана");
+                "Пустая цель обязана отказывать: скрипт без цели не знает, кого искать, и молчание скроет ошибку плана"
+                        + " Иначе тест parse_EmptyTarget_IsRejected перестанет ловить эту поломку. При смене parse_EmptyTarget_IsRejected проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("пуст"),
-                "Отказ обязан говорить, что цель пустая. Фактическое: " + error.getMessage());
+                "Отказ обязан говорить, что цель пустая. Фактическое: " + error.getMessage()
+                        + " Иначе тест parse_EmptyTarget_IsRejected перестанет ловить эту поломку. При смене parse_EmptyTarget_IsRejected проверь это утверждение.");
     }
 
     @ParameterizedTest(name = "неизвестная цель {0} отказывает со списком")
@@ -95,14 +104,16 @@ class TargetSelectorTests {
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,
                 () -> TargetSelector.parse(raw),
-                "Неизвестная цель обязана отказывать: молчаливая подмена вида увела бы скрипт к не тому существу");
+                "Неизвестная цель обязана отказывать: молчаливая подмена вида увела бы скрипт к не тому существу"
+                        + " Иначе тест parse_UnknownTarget_IsRejected перестанет ловить эту поломку. При смене parse_UnknownTarget_IsRejected проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("hostile")
                         && error.getMessage().contains("player:")
                         && error.getMessage().contains("spirit:"),
                 "Отказ обязан перечислить допустимые значения, чтобы план можно было поправить по тексту ошибки. "
-                        + "Фактическое: " + error.getMessage());
+                        + "Фактическое: " + error.getMessage()
+                        + " Иначе тест parse_UnknownTarget_IsRejected перестанет ловить эту поломку. При смене parse_UnknownTarget_IsRejected проверь это утверждение.");
     }
 
     @ParameterizedTest(name = "цель {0} без имени отказывает")
@@ -112,11 +123,13 @@ class TargetSelectorTests {
                 IllegalArgumentException.class,
                 () -> TargetSelector.parse(raw),
                 "Цель с пустым именем обязана отказывать: без имени не найти ни игрока, ни духа, "
-                        + "и скрипт поехал бы к случайному существу");
+                        + "и скрипт поехал бы к случайному существу"
+                        + " Иначе тест parse_NamedTargetWithoutName_IsRejected перестанет ловить эту поломку. При смене parse_NamedTargetWithoutName_IsRejected проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("имя"),
-                "Отказ обязан называть проблему с именем. Фактическое: " + error.getMessage());
+                "Отказ обязан называть проблему с именем. Фактическое: " + error.getMessage()
+                        + " Иначе тест parse_NamedTargetWithoutName_IsRejected перестанет ловить эту поломку. При смене parse_NamedTargetWithoutName_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -125,11 +138,13 @@ class TargetSelectorTests {
                 IllegalArgumentException.class,
                 () -> TargetSelector.parse("spirit:not-a-uuid"),
                 "Spirit-цель с не-UUID обязана отказывать: по мусору сущность не найти, "
-                        + "а ошибка всплывёт только в рантайме адаптера");
+                        + "а ошибка всплывёт только в рантайме адаптера"
+                        + " Иначе тест parse_SpiritWithInvalidUuid_IsRejected перестанет ловить эту поломку. При смене parse_SpiritWithInvalidUuid_IsRejected проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("UUID"),
-                "Отказ обязан говорить, что значение не является UUID. Фактическое: " + error.getMessage());
+                "Отказ обязан говорить, что значение не является UUID. Фактическое: " + error.getMessage()
+                        + " Иначе тест parse_SpiritWithInvalidUuid_IsRejected перестанет ловить эту поломку. При смене parse_SpiritWithInvalidUuid_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -138,7 +153,8 @@ class TargetSelectorTests {
                 NullPointerException.class,
                 () -> TargetSelector.parse(null),
                 "TargetSelector.parse(null) обязан отказывать: параметр обязан прийти строкой, "
-                        + "а null означает ошибку маппинга плана");
+                        + "а null означает ошибку маппинга плана"
+                        + " Иначе тест parse_NullTarget_IsRejected перестанет ловить эту поломку. При смене parse_NullTarget_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -147,11 +163,13 @@ class TargetSelectorTests {
                 IllegalArgumentException.class,
                 () -> new Target(Kind.HOSTILE, Optional.of("Steve")),
                 "Имя у вида без имени обязано отказывать: hostile не указывает на конкретное существо, "
-                        + "и молча брошенное имя ввело бы адаптер в заблуждение");
+                        + "и молча брошенное имя ввело бы адаптер в заблуждение"
+                        + " Иначе тест target_NameOnKeywordKind_IsRejected перестанет ловить эту поломку. При смене target_NameOnKeywordKind_IsRejected проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("HOSTILE"),
-                "Отказ обязан называть несогласованный вид. Фактическое: " + error.getMessage());
+                "Отказ обязан называть несогласованный вид. Фактическое: " + error.getMessage()
+                        + " Иначе тест target_NameOnKeywordKind_IsRejected перестанет ловить эту поломку. При смене target_NameOnKeywordKind_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -159,10 +177,12 @@ class TargetSelectorTests {
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,
                 () -> new Target(Kind.PLAYER, Optional.empty()),
-                "Цель PLAYER без имени обязана отказывать: найти игрока по пустому имени невозможно");
+                "Цель PLAYER без имени обязана отказывать: найти игрока по пустому имени невозможно"
+                        + " Иначе тест target_NameMissingOnPlayer_IsRejected перестанет ловить эту поломку. При смене target_NameMissingOnPlayer_IsRejected проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("PLAYER"),
-                "Отказ обязан называть вид, которому не хватает имени. Фактическое: " + error.getMessage());
+                "Отказ обязан называть вид, которому не хватает имени. Фактическое: " + error.getMessage()
+                        + " Иначе тест target_NameMissingOnPlayer_IsRejected перестанет ловить эту поломку. При смене target_NameMissingOnPlayer_IsRejected проверь это утверждение.");
     }
 }

@@ -27,7 +27,8 @@ class ForestryReplantTableTests {
                 new ReplantData(4, 8, 4, 3),
                 holder.current(),
                 "После /reload с изменённым json держатель обязан нести новые числа: иначе датапак мира "
-                        + "не поменяет шаг досадки без перезапуска, а таблица числится горячей ложно");
+                        + "не поменяет шаг досадки без перезапуска, а таблица числится горячей ложно"
+                        + " При смене reload_ChangedJson_HolderReturnsNewData проверь это утверждение.");
     }
 
     @Test
@@ -36,7 +37,8 @@ class ForestryReplantTableTests {
                 ReplantData.defaults(),
                 DataTables.INSTANCE.replant().current(),
                 "Держатель replant обязан стартовать с файла " + ReplantData.RESOURCE + " и совпадать с DEFAULTS: "
-                        + "иначе /reload и первый запуск дают разные числа");
+                        + "иначе /reload и первый запуск дают разные числа"
+                        + " При смене dataTables_ReplantSeed_MatchesClasspathDefaults проверь это утверждение.");
     }
 
     @SuppressWarnings("unchecked")

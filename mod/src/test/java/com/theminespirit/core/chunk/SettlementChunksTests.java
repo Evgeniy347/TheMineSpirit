@@ -35,7 +35,8 @@ class SettlementChunksTests {
                         new ChunkCoord(1, 1)),
                 chunks,
                 "Дом с участком 33×33 блока лежит в девяти чанках вокруг своего: если набор другой, доска и "
-                        + "участки без духов останутся выгруженными, пока на сервере есть игрок");
+                        + "участки без духов останутся выгруженными, пока на сервере есть игрок"
+                        + " Иначе тест around_HomeWithWorkRadius_CoversChunksOfWholePlot перестанет ловить эту поломку. При смене around_HomeWithWorkRadius_CoversChunksOfWholePlot проверь это утверждение.");
     }
 
     @Test
@@ -56,7 +57,8 @@ class SettlementChunksTests {
                         new ChunkCoord(2, 2)),
                 chunks,
                 "Дом ровно на границе чанка обязан держать свой чанк и восемь соседних: округление вниз "
-                        + "не должно терять западный и северный ряд участка");
+                        + "не должно терять западный и северный ряд участка"
+                        + " Иначе тест around_HomeOnChunkEdge_CoversChunkAndNeighbours перестанет ловить эту поломку. При смене around_HomeOnChunkEdge_CoversChunkAndNeighbours проверь это утверждение.");
     }
 
     @Test
@@ -68,7 +70,8 @@ class SettlementChunksTests {
                 18,
                 chunks.size(),
                 "Два дома в трёх чанках друг от друга обязаны дать объединение участков без дублей: "
-                        + "каждый дом — свои девять чанков, пересечений нет");
+                        + "каждый дом — свои девять чанков, пересечений нет"
+                        + " Иначе тест around_SeveralHomes_UnitesTheirChunks перестанет ловить эту поломку. При смене around_SeveralHomes_UnitesTheirChunks проверь это утверждение.");
     }
 
     @Test
@@ -84,13 +87,15 @@ class SettlementChunksTests {
                     chunks.contains(chunk),
                     "Место '" + place.id() + "' в (" + place.x() + ", " + place.z() + ") лежит в чанке " + chunk
                             + ", а поселение держит только чанки вокруг домов: дух идёт к цели, чанк выгружен, "
-                            + "position_tick замирает, задание проваливается «нет прогресса»");
+                            + "position_tick замирает, задание проваливается «нет прогресса»"
+                            + " Иначе тест forPlan_BigSettlement_HoldsEveryPlacementChunk перестанет ловить эту поломку. При смене forPlan_BigSettlement_HoldsEveryPlacementChunk проверь это утверждение.");
         }
         Placement storage = plan.placement("storage").orElseThrow();
         assertFalse(
                 homesOnly.contains(new ChunkCoord(storage.x() >> 4, storage.z() >> 4)),
                 "Склад обязан быть дальше радиуса дома: иначе тест не воспроизводит observe6 (−144,71,−368 "
-                        + "в чанке [−9,−23] вне чанков вокруг дома)");
+                        + "в чанке [−9,−23] вне чанков вокруг дома)"
+                        + " При смене forPlan_BigSettlement_HoldsEveryPlacementChunk проверь это утверждение.");
     }
 
     @Test
@@ -98,7 +103,8 @@ class SettlementChunksTests {
         assertEquals(
                 Set.of(),
                 SettlementChunks.around(List.of(), SettlementChunks.WORK_RADIUS_BLOCKS),
-                "У поселения без домов и лагерей нет чанков: пустой набор, а не чанк (0,0)");
+                "У поселения без домов и лагерей нет чанков: пустой набор, а не чанк (0,0)"
+                        + " Иначе тест around_NoAnchors_IsEmpty перестанет ловить эту поломку. При смене around_NoAnchors_IsEmpty проверь это утверждение.");
     }
 
     @Test
@@ -107,7 +113,8 @@ class SettlementChunksTests {
                 IllegalArgumentException.class,
                 () -> SettlementChunks.around(List.of(HOME), -1),
                 "Отрицательный радиус работы — ошибка конфигурации: молча пустой набор оставил бы поселение "
-                        + "без чанков. Ожидается IllegalArgumentException");
+                        + "без чанков. Ожидается IllegalArgumentException"
+                        + " Иначе тест around_NegativeRadius_ThrowsIllegalArgument перестанет ловить эту поломку. При смене around_NegativeRadius_ThrowsIllegalArgument проверь это утверждение.");
     }
 
     @Test
@@ -120,11 +127,13 @@ class SettlementChunksTests {
                 settlement,
                 diff.toRemove(),
                 "Без игроков на сервере поселение обязано выгрузиться полностью: сервер не тратит ресурсы "
-                        + "на тикающие чанки");
+                        + "на тикающие чанки"
+                        + " Иначе тест transition_NoPlayers_RemovesEveryHeldChunk перестанет ловить эту поломку. При смене transition_NoPlayers_RemovesEveryHeldChunk проверь это утверждение.");
         assertEquals(
                 Set.of(),
                 diff.toAdd(),
-                "Без игроков добавлять чанки нечего: иначе поселение останется нагруженным навсегда");
+                "Без игроков добавлять чанки нечего: иначе поселение останется нагруженным навсегда"
+                        + " При смене transition_NoPlayers_RemovesEveryHeldChunk проверь это утверждение.");
     }
 
     @Test
@@ -137,11 +146,13 @@ class SettlementChunksTests {
                 settlement,
                 diff.toAdd(),
                 "С первым игроком (в любом мире) чанки поселения обязаны загрузиться целиком, включая "
-                        + "участки без духов");
+                        + "участки без духов"
+                        + " Иначе тест transition_FirstPlayerJoins_AddsWholeSettlement перестанет ловить эту поломку. При смене transition_FirstPlayerJoins_AddsWholeSettlement проверь это утверждение.");
         assertEquals(
                 Set.of(),
                 diff.toRemove(),
-                "При входе первого игрока снимать нечего: билеты ставятся на весь набор поселения");
+                "При входе первого игрока снимать нечего: билеты ставятся на весь набор поселения"
+                        + " Иначе тест transition_FirstPlayerJoins_AddsWholeSettlement перестанет ловить эту поломку. При смене transition_FirstPlayerJoins_AddsWholeSettlement проверь это утверждение.");
     }
 
     @Test
@@ -155,7 +166,8 @@ class SettlementChunksTests {
                 settlement,
                 diff.toRemove(),
                 "После выхода последнего игрока обязаны сняться все билеты, поставленные для поселения: "
-                        + "иначе мир продолжает тикать без игроков");
+                        + "иначе мир продолжает тикать без игроков"
+                        + " При смене transition_LastPlayerLeaves_RemovesChunksAddedForPlayers проверь это утверждение.");
     }
 
     @Test
@@ -168,12 +180,14 @@ class SettlementChunksTests {
                 one,
                 crowded,
                 "Пятьсот двенадцать духов с одним домом обязаны держать тот же набор чанков, что и один дух: "
-                        + "тикеты считаются на поселение, а не на духа");
+                        + "тикеты считаются на поселение, а не на духа"
+                        + " Иначе тест around_ManySpiritsInOneHome_KeepsOneTicketSet перестанет ловить эту поломку. При смене around_ManySpiritsInOneHome_KeepsOneTicketSet проверь это утверждение.");
         ChunkDiff crowdedDiff = SettlementChunks.transition(Set.of(), crowded, true);
         assertEquals(
                 one.size(),
                 crowdedDiff.toAdd().size(),
                 "Число операций постановки билетов не должно расти с числом духов: пятьсот духов в одном "
-                        + "поселении ставят столько же билетов, сколько один");
+                        + "поселении ставят столько же билетов, сколько один"
+                        + " Иначе тест around_ManySpiritsInOneHome_KeepsOneTicketSet перестанет ловить эту поломку. При смене around_ManySpiritsInOneHome_KeepsOneTicketSet проверь это утверждение.");
     }
 }

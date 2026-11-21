@@ -29,7 +29,8 @@ class ModeGeometryTests {
                 List.of(new Point(0, 0, 0), -6.0, -8.0),
                 List.of(geometry.anchor(), geometry.leashLeft(), geometry.engageLeft()),
                 "Расстояния меряются от точки начала боя (0,0), а не от самого духа: цель в 14 блоках от якоря "
-                        + "за поводком 8 на 6, за радиусом реакции 6 на 8");
+                        + "за поводком 8 на 6, за радиусом реакции 6 на 8"
+                        + " Иначе тест of_DefensiveWithFightStartAnchor_MeasuresFromAnchorNotFromSpirit перестанет ловить эту поломку. При смене of_DefensiveWithFightStartAnchor_MeasuresFromAnchorNotFromSpirit проверь это утверждение.");
     }
 
     @Test
@@ -46,7 +47,8 @@ class ModeGeometryTests {
         assertEquals(
                 List.of(new Point(20, 0, 0), 5.0, 6.0, 2.0),
                 List.of(geometry.anchor(), geometry.zoneDistance(), geometry.leashLeft(), geometry.engageLeft()),
-                "Охрана зоны: якорь — центр, расстояние до зоны 5, враг в 8 блоках от центра внутри поводка 14 и зоны 10");
+                "Охрана зоны: якорь — центр, расстояние до зоны 5, враг в 8 блоках от центра внутри поводка 14 и зоны 10"
+                        + " Иначе тест of_GuardAreaWithZone_UsesZoneCenterAndZoneRadius перестанет ловить эту поломку. При смене of_GuardAreaWithZone_UsesZoneCenterAndZoneRadius проверь это утверждение.");
     }
 
     @Test
@@ -62,7 +64,8 @@ class ModeGeometryTests {
         assertEquals(
                 List.of(new Point(3, 0, 0), -5.0, -1.0),
                 List.of(geometry.anchor(), geometry.leashLeft(), geometry.engageLeft()),
-                "Защита: якорь — подопечный, враг в 17 блоках от него вне реакции 16 и поводка 12");
+                "Защита: якорь — подопечный, враг в 17 блоках от него вне реакции 16 и поводка 12"
+                        + " Иначе тест of_ProtectWithWard_AnchorsToWard перестанет ловить эту поломку. При смене of_ProtectWithWard_AnchorsToWard проверь это утверждение.");
     }
 
     @Test
@@ -75,7 +78,8 @@ class ModeGeometryTests {
         assertEquals(
                 List.of(Assessment.UNBOUNDED, Assessment.UNBOUNDED),
                 List.of(geometry.leashLeft(), geometry.engageLeft()),
-                "Без врагов ограничивать нечего: поводок и реакция не ограничены, иначе правило поводка сработало бы вхолостую");
+                "Без врагов ограничивать нечего: поводок и реакция не ограничены, иначе правило поводка сработало бы вхолостую"
+                        + " При смене of_NoEnemies_LeashAndEngageAreUnbounded проверь это утверждение.");
     }
 
     @Test
@@ -91,7 +95,8 @@ class ModeGeometryTests {
         assertEquals(
                 List.of(5.0, 3.0),
                 List.of(geometry.leashLeft(), geometry.engageLeft()),
-                "Достаточно одного врага внутри поводка: дальний не отменяет бой с ближним");
+                "Достаточно одного врага внутри поводка: дальний не отменяет бой с ближним"
+                        + " Иначе тест of_SeveralEnemies_UsesTheBestReachableOne перестанет ловить эту поломку. При смене of_SeveralEnemies_UsesTheBestReachableOne проверь это утверждение.");
     }
 
     @Test
@@ -104,6 +109,7 @@ class ModeGeometryTests {
                 ModeGeometry.of(situation, MODES.of(CombatMode.GUARD_AREA), Optional.empty())
                         .zoneDistance(),
                 0.0,
-                "Без зоны расстояние до неё 0, а режим сам вернётся в defensive по таблице переходов");
+                "Без зоны расстояние до неё 0, а режим сам вернётся в defensive по таблице переходов"
+                        + " Иначе тест of_ZoneNotSet_ZoneDistanceIsZero перестанет ловить эту поломку. При смене of_ZoneNotSet_ZoneDistanceIsZero проверь это утверждение.");
     }
 }

@@ -92,9 +92,19 @@ class ExpeditionControllerTests {
             return true;
         });
 
-        assertTrue(controller.lastDispatch().isPresent(), "Собранный набор запускает поход, а не откладывает его");
-        assertEquals(2, scripts.size(), "В шахту идёт вся команда: ведущий и напарник получают свои скрипты");
-        assertTrue(scripts.contains(FIRST + ":mine_vein"), "Ведущий копает жилу: " + scripts);
+        assertTrue(
+                controller.lastDispatch().isPresent(),
+                "Собранный набор запускает поход, а не откладывает его"
+                        + " Иначе тест update_TeamWithKit_DispatchesWholeParty перестанет ловить эту поломку. При смене update_TeamWithKit_DispatchesWholeParty проверь это утверждение.");
+        assertEquals(
+                2,
+                scripts.size(),
+                "В шахту идёт вся команда: ведущий и напарник получают свои скрипты"
+                        + " Иначе тест update_TeamWithKit_DispatchesWholeParty перестанет ловить эту поломку. При смене update_TeamWithKit_DispatchesWholeParty проверь это утверждение.");
+        assertTrue(
+                scripts.contains(FIRST + ":mine_vein"),
+                "Ведущий копает жилу: " + scripts
+                        + " Иначе тест update_TeamWithKit_DispatchesWholeParty перестанет ловить эту поломку. При смене update_TeamWithKit_DispatchesWholeParty проверь это утверждение.");
     }
 
     @Test
@@ -120,8 +130,13 @@ class ExpeditionControllerTests {
 
         assertTrue(
                 controller.lastDispatch().isPresent(),
-                "Пустые слоты инвентаря не мешают походу: набор собран, команда обязана выйти в шахту");
-        assertEquals(2, scripts.size(), "В шахту идёт вся команда, а не только дух с непустыми слотами: " + scripts);
+                "Пустые слоты инвентаря не мешают походу: набор собран, команда обязана выйти в шахту"
+                        + " Иначе тест update_InventoryWithEmptySlots_DispatchesWholeParty перестанет ловить эту поломку. При смене update_InventoryWithEmptySlots_DispatchesWholeParty проверь это утверждение.");
+        assertEquals(
+                2,
+                scripts.size(),
+                "В шахту идёт вся команда, а не только дух с непустыми слотами: " + scripts
+                        + " Иначе тест update_InventoryWithEmptySlots_DispatchesWholeParty перестанет ловить эту поломку. При смене update_InventoryWithEmptySlots_DispatchesWholeParty проверь это утверждение.");
     }
 
     @Test
@@ -139,11 +154,19 @@ class ExpeditionControllerTests {
                     return true;
                 });
 
-        assertTrue(controller.lastDispatch().isEmpty(), "Без факелов поход ждёт, а не выходит в шахту");
+        assertTrue(
+                controller.lastDispatch().isEmpty(),
+                "Без факелов поход ждёт, а не выходит в шахту"
+                        + " Иначе тест update_InventoryWithEmptySlotsAndGap_RefusesWithReason перестанет ловить эту поломку. При смене update_InventoryWithEmptySlotsAndGap_RefusesWithReason проверь это утверждение.");
         assertTrue(
                 controller.refusal().orElse("").contains("torch"),
-                "Причина ожидания называет недостающие факелы, а не пустые слоты: " + controller.refusal());
-        assertEquals(List.of(), launched, "Никто не выходит в шахту, пока набор не собран");
+                "Причина ожидания называет недостающие факелы, а не пустые слоты: " + controller.refusal()
+                        + " Иначе тест update_InventoryWithEmptySlotsAndGap_RefusesWithReason перестанет ловить эту поломку. При смене update_InventoryWithEmptySlotsAndGap_RefusesWithReason проверь это утверждение.");
+        assertEquals(
+                List.of(),
+                launched,
+                "Никто не выходит в шахту, пока набор не собран"
+                        + " Иначе тест update_InventoryWithEmptySlotsAndGap_RefusesWithReason перестанет ловить эту поломку. При смене update_InventoryWithEmptySlotsAndGap_RefusesWithReason проверь это утверждение.");
     }
 
     @Test
@@ -163,11 +186,19 @@ class ExpeditionControllerTests {
                     return true;
                 });
 
-        assertTrue(controller.lastDispatch().isEmpty(), "Без кирки поход не начинается");
+        assertTrue(
+                controller.lastDispatch().isEmpty(),
+                "Без кирки поход не начинается"
+                        + " Иначе тест update_LeaderWithoutPickaxe_RefusesWithReason перестанет ловить эту поломку. При смене update_LeaderWithoutPickaxe_RefusesWithReason проверь это утверждение.");
         assertTrue(
                 controller.refusal().orElse("").contains("нет кирки"),
-                "Причина отказа называет нехватку кирки: " + controller.refusal());
-        assertEquals(List.of(), launched, "Ни один дух не выходит в шахту без кирки у лидера");
+                "Причина отказа называет нехватку кирки: " + controller.refusal()
+                        + " Иначе тест update_LeaderWithoutPickaxe_RefusesWithReason перестанет ловить эту поломку. При смене update_LeaderWithoutPickaxe_RefusesWithReason проверь это утверждение.");
+        assertEquals(
+                List.of(),
+                launched,
+                "Ни один дух не выходит в шахту без кирки у лидера"
+                        + " Иначе тест update_LeaderWithoutPickaxe_RefusesWithReason перестанет ловить эту поломку. При смене update_LeaderWithoutPickaxe_RefusesWithReason проверь это утверждение.");
     }
 
     @Test
@@ -189,7 +220,10 @@ class ExpeditionControllerTests {
                     return true;
                 });
 
-        assertTrue(controller.lastDispatch().isPresent(), "Набор со склада закрывает нехватку — поход начинается");
+        assertTrue(
+                controller.lastDispatch().isPresent(),
+                "Набор со склада закрывает нехватку — поход начинается"
+                        + " Иначе тест update_LeaderLacksTorches_WithdrawsThemBeforeMine перестанет ловить эту поломку. При смене update_LeaderLacksTorches_WithdrawsThemBeforeMine проверь это утверждение.");
         List<ScriptCall> steps = calls(leaderTasks.get(0));
         int torch = index(
                 steps,
@@ -199,10 +233,12 @@ class ExpeditionControllerTests {
         int mine = index(steps, call -> "mine_vein".equals(call.script()));
         assertTrue(
                 torch >= 0 && torch < mine,
-                "Лидер добирает факелы со склада шагом withdraw до mine_vein, а не идёт в шахту без света: " + steps);
+                "Лидер добирает факелы со склада шагом withdraw до mine_vein, а не идёт в шахту без света: " + steps
+                        + " Иначе тест update_LeaderLacksTorches_WithdrawsThemBeforeMine перестанет ловить эту поломку. При смене update_LeaderLacksTorches_WithdrawsThemBeforeMine проверь это утверждение.");
         assertTrue(
                 steps.stream().noneMatch(call -> "acquire".equals(call.script())),
-                "Набор похода не крафтит инструменты мимо графа: " + steps);
+                "Набор похода не крафтит инструменты мимо графа: " + steps
+                        + " Иначе тест update_LeaderLacksTorches_WithdrawsThemBeforeMine перестанет ловить эту поломку. При смене update_LeaderLacksTorches_WithdrawsThemBeforeMine проверь это утверждение.");
     }
 
     @Test
@@ -224,7 +260,8 @@ class ExpeditionControllerTests {
 
         assertTrue(
                 scripts.contains(FIRST + ":return_home"),
-                "Потерянный напарник возвращает оставшегося домой, а не оставляет его одного: " + scripts);
+                "Потерянный напарник возвращает оставшегося домой, а не оставляет его одного: " + scripts
+                        + " Иначе тест update_PartnerLost_RemainingSpiritReturnsHome перестанет ловить эту поломку. При смене update_PartnerLost_RemainingSpiritReturnsHome проверь это утверждение.");
     }
 
     private static int index(List<ScriptCall> steps, Predicate<ScriptCall> match) {

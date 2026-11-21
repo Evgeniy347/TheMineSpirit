@@ -37,7 +37,8 @@ class DataTablesGuardTests {
     void dataTables_EveryJsonFile_RegisteredOrExcluded() throws IOException {
         assertTrue(
                 Files.isDirectory(DATA_ROOT),
-                "Сторож не нашёл " + DATA_ROOT + ": тесты запускаются из корня проекта (./gradlew test)");
+                "Сторож не нашёл " + DATA_ROOT + ": тесты запускаются из корня проекта (./gradlew test)"
+                        + " Иначе тест dataTables_EveryJsonFile_RegisteredOrExcluded перестанет ловить эту поломку. При смене dataTables_EveryJsonFile_RegisteredOrExcluded проверь это утверждение.");
 
         List<String> jsonFiles;
         try (Stream<Path> stream = Files.walk(DATA_ROOT)) {
@@ -71,7 +72,8 @@ class DataTablesGuardTests {
                         + "внутри DataTablesGuardTests с явной причиной. Фрагменты board/graph.d/* читает "
                         + "GraphFragments вместе с graph.json, поэтому DataTables их не регистрирует. "
                         + "Правило: каждый json в data/theminespirit должен быть в DataTables или в исключениях. "
-                        + "Незарегистрированные файлы");
+                        + "Незарегистрированные файлы"
+                        + " Иначе тест dataTables_EveryJsonFile_RegisteredOrExcluded перестанет ловить эту поломку. При смене dataTables_EveryJsonFile_RegisteredOrExcluded проверь это утверждение.");
     }
 
     @Test
@@ -92,7 +94,8 @@ class DataTablesGuardTests {
                 "Зарегистрированная в DataTables таблица не существует как файл: "
                         + "загрузчик DataReload упадёт или вернёт ошибку при /reload, таблица не обновится. "
                         + "Как исправить: создайте файл по указанному пути или удалите регистрацию из DataTables. "
-                        + "Правило: каждая зарегистрированная таблица обязана существовать как файл. Отсутствующие файлы");
+                        + "Правило: каждая зарегистрированная таблица обязана существовать как файл. Отсутствующие файлы"
+                        + " Иначе тест dataTables_EveryRegisteredTable_ExistsAsFile перестанет ловить эту поломку. При смене dataTables_EveryRegisteredTable_ExistsAsFile проверь это утверждение.");
     }
 
     private static Set<String> presetBodies() {

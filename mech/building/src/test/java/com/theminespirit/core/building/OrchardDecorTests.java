@@ -53,23 +53,28 @@ class OrchardDecorTests {
 
         assertTrue(
                 entries(orchard).stream().anyMatch(entry -> "dirt_path".equals(SchematicBlocks.path(entry.block()))),
-                "Схема сада обязана содержать тропинку: иначе тест не проверяет действие лопатой");
+                "Схема сада обязана содержать тропинку: иначе тест не проверяет действие лопатой"
+                        + " При смене orchardMaterials_PathAndFlowers_NotBought проверь это утверждение.");
         assertFalse(
                 need.containsKey("dirt_path"),
-                "Тропинка не предмет: её топчут лопатой по земле или траве на клетке схемы. Материалы: " + need);
+                "Тропинка не предмет: её топчут лопатой по земле или траве на клетке схемы. Материалы: " + need
+                        + " Иначе тест orchardMaterials_PathAndFlowers_NotBought перестанет ловить эту поломку. При смене orchardMaterials_PathAndFlowers_NotBought проверь это утверждение.");
         for (String flower : FLOWERS) {
             assertFalse(
                     need.containsKey(flower),
-                    "Цветок '" + flower + "' — декор: его отсутствие не держит постройку сада. Материалы: " + need);
+                    "Цветок '" + flower + "' — декор: его отсутствие не держит постройку сада. Материалы: " + need
+                            + " Иначе тест orchardMaterials_PathAndFlowers_NotBought перестанет ловить эту поломку. При смене orchardMaterials_PathAndFlowers_NotBought проверь это утверждение.");
         }
         assertTrue(
                 need.containsKey("charcoal") && need.containsKey("stick"),
                 "Необязательная тропинка не должна прятать остальные материалы сада: факелы крафтятся из "
-                        + "древесного угля и палки, и эти материалы остаются. Материалы: " + need);
+                        + "древесного угля и палки, и эти материалы остаются. Материалы: " + need
+                        + " Иначе тест orchardMaterials_PathAndFlowers_NotBought перестанет ловить эту поломку. При смене orchardMaterials_PathAndFlowers_NotBought проверь это утверждение.");
         assertFalse(
                 need.containsKey("coal"),
                 "Сад требует древесный уголь, а не уголь из шахты: это то, что план добывает первым "
-                        + "(observe12 N19). Материалы: " + need);
+                        + "(observe12 N19). Материалы: " + need
+                        + " Иначе тест orchardMaterials_PathAndFlowers_NotBought перестанет ловить эту поломку. При смене orchardMaterials_PathAndFlowers_NotBought проверь это утверждение.");
     }
 
     @Test
@@ -79,7 +84,10 @@ class OrchardDecorTests {
         for (Schematic.Entry entry : entries(orchard)) {
             String block = SchematicBlocks.path(entry.block());
             if (FLOWERS.contains(block)) {
-                assertTrue(entry.optional(), "Цветок '" + block + "' в схеме сада — необязательный декор");
+                assertTrue(
+                        entry.optional(),
+                        "Цветок '" + block + "' в схеме сада — необязательный декор"
+                                + " Иначе тест orchardFlowers_InGardenScheme_MarkedOptional перестанет ловить эту поломку. При смене orchardFlowers_InGardenScheme_MarkedOptional проверь это утверждение.");
             }
         }
     }
@@ -93,11 +101,13 @@ class OrchardDecorTests {
         assertTrue(
                 acquired.stream().noneMatch(item -> item.endsWith("dirt_path")),
                 "План сада не добывает dirt_path: тропинка делается лопатой на месте, а не предметом. Добыча: "
-                        + acquired);
+                        + acquired
+                        + " Иначе тест orchardPlan_BuildOrchard_DoesNotAcquirePathOrFlowers перестанет ловить эту поломку. При смене orchardPlan_BuildOrchard_DoesNotAcquirePathOrFlowers проверь это утверждение.");
         for (String flower : FLOWERS) {
             assertTrue(
                     acquired.stream().noneMatch(item -> item.endsWith(flower)),
-                    "План сада не добывает цветок '" + flower + "': декор не блокирует постройку. Добыча: " + acquired);
+                    "План сада не добывает цветок '" + flower + "': декор не блокирует постройку. Добыча: " + acquired
+                            + " Иначе тест orchardPlan_BuildOrchard_DoesNotAcquirePathOrFlowers перестанет ловить эту поломку. При смене orchardPlan_BuildOrchard_DoesNotAcquirePathOrFlowers проверь это утверждение.");
         }
     }
 
@@ -105,11 +115,24 @@ class OrchardDecorTests {
     void schematicActions_DirtPathCell_NeedsShovelOnDirt() {
         assertTrue(
                 SchematicActions.isActionPlaced("minecraft:dirt_path"),
-                "Клетка dirt_path ставится действием, а не предметом схемы");
-        assertFalse(SchematicActions.isActionPlaced("minecraft:dirt"), "Земля не ставится действием лопаты");
-        assertTrue(SchematicActions.isTrampleGround("minecraft:grass_block"), "По траве тропинку топчут лопатой");
-        assertTrue(SchematicActions.isTrampleGround("minecraft:dirt"), "По земле тропинку топчут лопатой");
-        assertFalse(SchematicActions.isTrampleGround("minecraft:stone"), "Камень лопатой в тропинку не превратить");
+                "Клетка dirt_path ставится действием, а не предметом схемы"
+                        + " Иначе тест schematicActions_DirtPathCell_NeedsShovelOnDirt перестанет ловить эту поломку. При смене schematicActions_DirtPathCell_NeedsShovelOnDirt проверь это утверждение.");
+        assertFalse(
+                SchematicActions.isActionPlaced("minecraft:dirt"),
+                "Земля не ставится действием лопаты"
+                        + " Иначе тест schematicActions_DirtPathCell_NeedsShovelOnDirt перестанет ловить эту поломку. При смене schematicActions_DirtPathCell_NeedsShovelOnDirt проверь это утверждение.");
+        assertTrue(
+                SchematicActions.isTrampleGround("minecraft:grass_block"),
+                "По траве тропинку топчут лопатой"
+                        + " Иначе тест schematicActions_DirtPathCell_NeedsShovelOnDirt перестанет ловить эту поломку. При смене schematicActions_DirtPathCell_NeedsShovelOnDirt проверь это утверждение.");
+        assertTrue(
+                SchematicActions.isTrampleGround("minecraft:dirt"),
+                "По земле тропинку топчут лопатой"
+                        + " Иначе тест schematicActions_DirtPathCell_NeedsShovelOnDirt перестанет ловить эту поломку. При смене schematicActions_DirtPathCell_NeedsShovelOnDirt проверь это утверждение.");
+        assertFalse(
+                SchematicActions.isTrampleGround("minecraft:stone"),
+                "Камень лопатой в тропинку не превратить"
+                        + " Иначе тест schematicActions_DirtPathCell_NeedsShovelOnDirt перестанет ловить эту поломку. При смене schematicActions_DirtPathCell_NeedsShovelOnDirt проверь это утверждение.");
     }
 
     private static Schematic parse() throws IOException {

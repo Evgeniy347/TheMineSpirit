@@ -38,28 +38,32 @@ class RetreatPathTests {
     void allows_PlugSealsNookFromInside_Refuses() {
         assertFalse(
                 RetreatPath.allows(NOOK, Set.of(OPENING_LOW, OPENING_HIGH), nook(Set.of()), OUTSIDE),
-                "Дух в нише не ставит пробку проёма изнутри: после неё к выходу не пройти — замуровал бы себя");
+                "Дух в нише не ставит пробку проёма изнутри: после неё к выходу не пройти — замуровал бы себя"
+                        + " Иначе тест allows_PlugSealsNookFromInside_Refuses перестанет ловить эту поломку. При смене allows_PlugSealsNookFromInside_Refuses проверь это утверждение.");
     }
 
     @Test
     void allows_TopOfOpeningLeavesOneHighGap_Refuses() {
         assertFalse(
                 RetreatPath.allows(NOOK, Set.of(OPENING_HIGH), nook(Set.of()), OUTSIDE),
-                "Верх проёма оставляет щель в один блок: тело высотой 2 в неё не пройдёт — путь отхода перекрыт");
+                "Верх проёма оставляет щель в один блок: тело высотой 2 в неё не пройдёт — путь отхода перекрыт"
+                        + " Иначе тест allows_TopOfOpeningLeavesOneHighGap_Refuses перестанет ловить эту поломку. При смене allows_TopOfOpeningLeavesOneHighGap_Refuses проверь это утверждение.");
     }
 
     @Test
     void allows_BottomOfOpeningLeavesStepUp_Allows() {
         assertTrue(
                 RetreatPath.allows(NOOK, Set.of(OPENING_LOW), nook(Set.of()), OUTSIDE),
-                "Низ проёма — ступенька: на неё шагнуть и выйти верхом проёма, путь отхода остаётся");
+                "Низ проёма — ступенька: на неё шагнуть и выйти верхом проёма, путь отхода остаётся"
+                        + " Иначе тест allows_BottomOfOpeningLeavesStepUp_Allows перестанет ловить эту поломку. При смене allows_BottomOfOpeningLeavesStepUp_Allows проверь это утверждение.");
     }
 
     @Test
     void allows_LastBlockFromOutside_Allows() {
         assertTrue(
                 RetreatPath.allows(cell(1, 0, -1), Set.of(OPENING_LOW, OPENING_HIGH), nook(Set.of()), OUTSIDE),
-                "Снаружи пробку ставить можно: дух уже за выходом");
+                "Снаружи пробку ставить можно: дух уже за выходом"
+                        + " Иначе тест allows_LastBlockFromOutside_Allows перестанет ловить эту поломку. При смене allows_LastBlockFromOutside_Allows проверь это утверждение.");
     }
 
     @Test
@@ -67,7 +71,8 @@ class RetreatPathTests {
         SafetyView sealed = nook(Set.of(OPENING_HIGH));
         assertTrue(
                 RetreatPath.allows(NOOK, Set.of(OPENING_LOW), sealed, OUTSIDE),
-                "Выхода нет и до установки: блок ничего не меняет, правило не останавливает стройку");
+                "Выхода нет и до установки: блок ничего не меняет, правило не останавливает стройку"
+                        + " Иначе тест allows_AlreadyWalledIn_DoesNotBlockWork перестанет ловить эту поломку. При смене allows_AlreadyWalledIn_DoesNotBlockWork проверь это утверждение.");
     }
 
     @Test
@@ -96,7 +101,8 @@ class RetreatPathTests {
 
         assertFalse(
                 open.contains(cell(2, -3, 0)),
-                "Спуск в яму глубже одного блока — ловушка: со дна нет обратного шага, стоянка не годится");
+                "Спуск в яму глубже одного блока — ловушка: со дна нет обратного шага, стоянка не годится"
+                        + " Иначе тест walkable_PitDeeperThanStep_NotOffered перестанет ловить эту поломку. При смене walkable_PitDeeperThanStep_NotOffered проверь это утверждение.");
     }
 
     @Test
@@ -116,7 +122,8 @@ class RetreatPathTests {
 
         assertTrue(
                 open.contains(cell(1, -1, 0)),
-                "Ступенька вниз на один блок проходима в обе стороны: со стоянки есть выход обратно");
+                "Ступенька вниз на один блок проходима в обе стороны: со стоянки есть выход обратно"
+                        + " Иначе тест walkable_StepDownAndBackUp_Offered перестанет ловить эту поломку. При смене walkable_StepDownAndBackUp_Offered проверь это утверждение.");
     }
 
     @Test
@@ -134,19 +141,27 @@ class RetreatPathTests {
 
         assertTrue(
                 open.contains(cell(2, 0, 0)),
-                "Закрытая калитка открывается по пути: стоянка за ней достижима пешком, отказ был бы ложным");
+                "Закрытая калитка открывается по пути: стоянка за ней достижима пешком, отказ был бы ложным"
+                        + " Иначе тест walkable_ClosedGateOpenable_StandBeyondIsReachable перестанет ловить эту поломку. При смене walkable_ClosedGateOpenable_StandBeyondIsReachable проверь это утверждение.");
     }
 
     @Test
     void walkable_RoofOrSealedCell_NotOffered() {
         Predicate<BlockCoord> near = cell -> Math.abs(cell.x()) <= 4 && Math.abs(cell.z()) <= 4;
         Set<BlockCoord> open = RetreatPath.walkable(NOOK, nook(Set.of()), near).orElseThrow();
-        assertTrue(open.contains(cell(1, 0, -2)), "Из открытой ниши дух доходит наружу: стоянки снаружи доступны");
+        assertTrue(
+                open.contains(cell(1, 0, -2)),
+                "Из открытой ниши дух доходит наружу: стоянки снаружи доступны"
+                        + " Иначе тест walkable_RoofOrSealedCell_NotOffered перестанет ловить эту поломку. При смене walkable_RoofOrSealedCell_NotOffered проверь это утверждение.");
         assertFalse(
                 open.contains(cell(0, 2, 1)),
-                "Верх стены (как скат крыши) не стоянка: на него не зайти, подход к нему — срыв");
+                "Верх стены (как скат крыши) не стоянка: на него не зайти, подход к нему — срыв"
+                        + " Иначе тест walkable_RoofOrSealedCell_NotOffered перестанет ловить эту поломку. При смене walkable_RoofOrSealedCell_NotOffered проверь это утверждение.");
         Set<BlockCoord> sealed = RetreatPath.walkable(NOOK, nook(Set.of(OPENING_LOW, OPENING_HIGH)), near)
                 .orElseThrow();
-        assertFalse(sealed.contains(cell(1, 0, -2)), "Из запертой ниши наружу не дойти: внешние стоянки не годятся");
+        assertFalse(
+                sealed.contains(cell(1, 0, -2)),
+                "Из запертой ниши наружу не дойти: внешние стоянки не годятся"
+                        + " Иначе тест walkable_RoofOrSealedCell_NotOffered перестанет ловить эту поломку. При смене walkable_RoofOrSealedCell_NotOffered проверь это утверждение.");
     }
 }

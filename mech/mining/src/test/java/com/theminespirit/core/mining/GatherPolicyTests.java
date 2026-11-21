@@ -50,7 +50,8 @@ class GatherPolicyTests {
         assertEquals(
                 FORBIDDEN_EXACT,
                 GatherPolicy.forbiddenExactIds(),
-                "Таблица запретов теста и кода должна совпадать: иначе запрет незаметно разойдётся с документацией");
+                "Таблица запретов теста и кода должна совпадать: иначе запрет незаметно разойдётся с документацией"
+                        + " При смене check_ForbiddenTable_MatchesProduction проверь это утверждение.");
     }
 
     @ParameterizedTest(name = "{0}")
@@ -62,14 +63,16 @@ class GatherPolicyTests {
                 decision instanceof GatherPolicy.Refused refused
                         && refused.reason().contains(blockId),
                 "Точный запрещённый id '" + blockId + "' обязан отвергаться с причиной: добыча контейнеров, "
-                        + "порталов и неразрушимых блоков теряет чужой лут или ломает мир");
+                        + "порталов и неразрушимых блоков теряет чужой лут или ломает мир"
+                        + " При смене check_ForbiddenExactId_IsRefused проверь это утверждение.");
     }
 
     @Test
     void check_NamespacedForbiddenId_IsRefused() {
         assertTrue(
                 GatherPolicy.check("minecraft:chest") instanceof GatherPolicy.Refused,
-                "Проверка идёт по пути id после ':', поэтому 'minecraft:chest' обязан отвергаться как 'chest'");
+                "Проверка идёт по пути id после ':', поэтому 'minecraft:chest' обязан отвергаться как 'chest'"
+                        + " Иначе тест check_NamespacedForbiddenId_IsRefused перестанет ловить эту поломку. При смене check_NamespacedForbiddenId_IsRefused проверь это утверждение.");
     }
 
     @ParameterizedTest(name = "{0}")
@@ -81,7 +84,8 @@ class GatherPolicyTests {
                 decision instanceof GatherPolicy.Refused refused
                         && refused.reason().contains(blockId),
                 "Семейство '" + blockId + "' (суффикс *_chest/*_shulker_box/*_bed) обязано отвергаться: "
-                        + "шаблон запроса может накрыть запрещённый id, поэтому проверяется каждый найденный блок");
+                        + "шаблон запроса может накрыть запрещённый id, поэтому проверяется каждый найденный блок"
+                        + " Иначе тест check_ForbiddenFamilyId_IsRefused перестанет ловить эту поломку. При смене check_ForbiddenFamilyId_IsRefused проверь это утверждение.");
     }
 
     @ParameterizedTest(name = "{0}")
@@ -102,7 +106,8 @@ class GatherPolicyTests {
     void check_NaturalBlock_IsAllowed(String blockId) {
         assertTrue(
                 GatherPolicy.check(blockId) instanceof GatherPolicy.Allowed,
-                "Природный блок '" + blockId + "' обязан разрешаться: иначе gather не соберёт обычные ресурсы");
+                "Природный блок '" + blockId + "' обязан разрешаться: иначе gather не соберёт обычные ресурсы"
+                        + " При смене check_NaturalBlock_IsAllowed проверь это утверждение.");
     }
 
     @Test
@@ -110,7 +115,8 @@ class GatherPolicyTests {
         assertThrows(
                 NullPointerException.class,
                 () -> GatherPolicy.check(null),
-                "GatherPolicy.check(null) обязан отказывать: без id непонятно, что запрещать");
+                "GatherPolicy.check(null) обязан отказывать: без id непонятно, что запрещать"
+                        + " Иначе тест check_NullId_IsRejected перестанет ловить эту поломку. При смене check_NullId_IsRejected проверь это утверждение.");
     }
 
     @ParameterizedTest(name = "{0}")
@@ -119,7 +125,8 @@ class GatherPolicyTests {
         assertTrue(
                 GatherPolicy.sourceCheck(blockId) instanceof GatherPolicy.Refused,
                 "Крафтовый '" + blockId + "' нельзя брать из мира как ресурс: размещённые доски и заборы — "
-                        + "постройки, а не запас духа (observe9: supply_gather:oak_planks искал доски блоком)");
+                        + "постройки, а не запас духа (observe9: supply_gather:oak_planks искал доски блоком)"
+                        + " Иначе тест sourceCheck_CraftedFamily_IsRefused перестанет ловить эту поломку. При смене sourceCheck_CraftedFamily_IsRefused проверь это утверждение.");
     }
 
     @ParameterizedTest(name = "{0}")
@@ -127,6 +134,7 @@ class GatherPolicyTests {
     void sourceCheck_NaturalBlock_IsAllowed(String blockId) {
         assertTrue(
                 GatherPolicy.sourceCheck(blockId) instanceof GatherPolicy.Allowed,
-                "Природный блок '" + blockId + "' обязан оставаться источником добычи");
+                "Природный блок '" + blockId + "' обязан оставаться источником добычи"
+                        + " Иначе тест sourceCheck_NaturalBlock_IsAllowed перестанет ловить эту поломку. При смене sourceCheck_NaturalBlock_IsAllowed проверь это утверждение.");
     }
 }

@@ -24,7 +24,8 @@ class LightPlanTests {
         assertEquals(
                 9,
                 grid.size(),
-                "Площадь 13×13 при шаге сетки " + LightPlan.GRID_STEP + " даёт 3×3 узла: сетка не нашла часть узлов");
+                "Площадь 13×13 при шаге сетки " + LightPlan.GRID_STEP + " даёт 3×3 узла: сетка не нашла часть узлов"
+                        + " Иначе тест grid_OpenSquare_PlacesCandidateOnEveryGridLine перестанет ловить эту поломку. При смене grid_OpenSquare_PlacesCandidateOnEveryGridLine проверь это утверждение.");
     }
 
     @Test
@@ -36,15 +37,18 @@ class LightPlanTests {
         assertEquals(
                 List.of(new BlockCoord(0, Y, 0)),
                 plan.torches(),
-                "Квадрат 9×9 целиком лежит в досягаемости одного факела в центре: лишние факелы — перерасход");
+                "Квадрат 9×9 целиком лежит в досягаемости одного факела в центре: лишние факелы — перерасход"
+                        + " Иначе тест plan_OpenDarkSquare_OneTorchAtCenterLightsAll перестанет ловить эту поломку. При смене plan_OpenDarkSquare_OneTorchAtCenterLightsAll проверь это утверждение.");
         assertEquals(
                 0,
                 plan.darkRemaining(),
-                "После плана тёмных клеток быть не должно: мобы спавнятся при блочном свете 0");
+                "После плана тёмных клеток быть не должно: мобы спавнятся при блочном свете 0"
+                        + " Иначе тест plan_OpenDarkSquare_OneTorchAtCenterLightsAll перестанет ловить эту поломку. При смене plan_OpenDarkSquare_OneTorchAtCenterLightsAll проверь это утверждение.");
         assertEquals(
                 81,
                 plan.darkTotal(),
-                "Тёмными были все 81 клетка площадки: счёт тёмных врёт — план не защищает территорию");
+                "Тёмными были все 81 клетка площадки: счёт тёмных врёт — план не защищает территорию"
+                        + " Иначе тест plan_OpenDarkSquare_OneTorchAtCenterLightsAll перестанет ловить эту поломку. При смене plan_OpenDarkSquare_OneTorchAtCenterLightsAll проверь это утверждение.");
     }
 
     @Test
@@ -55,8 +59,13 @@ class LightPlanTests {
 
         assertTrue(
                 plan.torches().isEmpty(),
-                "Светлая площадка не требует факелов: факел на освещённой клетке — трата материала");
-        assertEquals(0, plan.darkTotal(), "Ни одна клетка не темнее порога спавна: счёт тёмных обязан быть нулём");
+                "Светлая площадка не требует факелов: факел на освещённой клетке — трата материала"
+                        + " Иначе тест plan_AlreadyLitSquare_NoTorchesNeeded перестанет ловить эту поломку. При смене plan_AlreadyLitSquare_NoTorchesNeeded проверь это утверждение.");
+        assertEquals(
+                0,
+                plan.darkTotal(),
+                "Ни одна клетка не темнее порога спавна: счёт тёмных обязан быть нулём"
+                        + " Иначе тест plan_AlreadyLitSquare_NoTorchesNeeded перестанет ловить эту поломку. При смене plan_AlreadyLitSquare_NoTorchesNeeded проверь это утверждение.");
     }
 
     @Test
@@ -68,8 +77,13 @@ class LightPlanTests {
 
         assertFalse(
                 grid.contains(new BlockCoord(0, Y, 0)),
-                "Запрещённая клетка не может стать факелом: иначе дух ставит блок на чужое или в воду");
-        assertEquals(9, grid.size(), "Ближайшая свободная клетка заменяет запрещённый узел: сетка не теряет узел");
+                "Запрещённая клетка не может стать факелом: иначе дух ставит блок на чужое или в воду"
+                        + " При смене plan_NonPlaceableGridCenter_SubstitutesNearestNeighbor проверь это утверждение.");
+        assertEquals(
+                9,
+                grid.size(),
+                "Ближайшая свободная клетка заменяет запрещённый узел: сетка не теряет узел"
+                        + " Иначе тест plan_NonPlaceableGridCenter_SubstitutesNearestNeighbor перестанет ловить эту поломку. При смене plan_NonPlaceableGridCenter_SubstitutesNearestNeighbor проверь это утверждение.");
     }
 
     @Test
@@ -87,16 +101,19 @@ class LightPlanTests {
         for (BlockCoord torch : plan.torches()) {
             assertTrue(
                     placeable.contains(torch),
-                    "Факел " + torch + " стоит на запрещённой клетке: чужую постройку, воду и листья не трогаем");
+                    "Факел " + torch + " стоит на запрещённой клетке: чужую постройку, воду и листья не трогаем"
+                            + " Иначе тест plan_BlockedSurroundings_NeverPlacesOnBlockedCell перестанет ловить эту поломку. При смене plan_BlockedSurroundings_NeverPlacesOnBlockedCell проверь это утверждение.");
         }
         assertEquals(
                 List.of(new BlockCoord(0, Y, 0)),
                 plan.torches(),
-                "Единственная разрешённая клетка — центр: план ставит факел только там");
+                "Единственная разрешённая клетка — центр: план ставит факел только там"
+                        + " Иначе тест plan_BlockedSurroundings_NeverPlacesOnBlockedCell перестанет ловить эту поломку. При смене plan_BlockedSurroundings_NeverPlacesOnBlockedCell проверь это утверждение.");
         assertTrue(
                 plan.darkRemaining() > 0,
                 "Дальние тёмные клетки вне досягаемости центрального факела остаются тёмными: "
-                        + "план не выдумывает факелы там, где ставить негде");
+                        + "план не выдумывает факелы там, где ставить негде"
+                        + " Иначе тест plan_BlockedSurroundings_NeverPlacesOnBlockedCell перестанет ловить эту поломку. При смене plan_BlockedSurroundings_NeverPlacesOnBlockedCell проверь это утверждение.");
     }
 
     @Test
@@ -106,7 +123,8 @@ class LightPlanTests {
         assertEquals(
                 LightPlan.plan(0, 0, 6, cells),
                 LightPlan.plan(0, 0, 6, cells),
-                "Тот же вход даёт тот же план: иначе исполнитель и бронь расходятся");
+                "Тот же вход даёт тот же план: иначе исполнитель и бронь расходятся"
+                        + " При смене plan_SameInput_ReturnsSamePlan проверь это утверждение.");
     }
 
     @Test
@@ -116,7 +134,8 @@ class LightPlanTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> LightPlan.plan(0, 0, 0, cells),
-                "Нулевой радиус обязан падать: освещать нечего");
+                "Нулевой радиус обязан падать: освещать нечего"
+                        + " Иначе тест plan_ZeroRadius_Throws перестанет ловить эту поломку. При смене plan_ZeroRadius_Throws проверь это утверждение.");
     }
 
     private static List<LightCell> openArea(int radius, int light) {

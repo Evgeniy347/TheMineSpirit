@@ -43,7 +43,8 @@ class PlotMechanicsTests {
                         new BlockCoord(OUTSIDE.x() + 1, OUTSIDE.y() - 2, OUTSIDE.z())),
                 mined,
                 "mine_vein добывает жилу целиком, кроме клеток постройки: защищённая руда остаётся в стене, "
-                        + "а не выедается вместе с домом");
+                        + "а не выедается вместе с домом"
+                        + " Иначе тест mineVein_PartOfVeinIsBuilding_DigsEverythingExceptProtected перестанет ловить эту поломку. При смене mineVein_PartOfVeinIsBuilding_DigsEverythingExceptProtected проверь это утверждение.");
     }
 
     @Test
@@ -60,7 +61,8 @@ class PlotMechanicsTests {
 
         assertFalse(
                 plan.order().contains(new BlockCoord(HOUSE.x(), HOUSE.y() + 1, HOUSE.z())),
-                "Бревно-постройка не попадает в план рубки: иначе дух рубит дерево сквозь дом");
+                "Бревно-постройка не попадает в план рубки: иначе дух рубит дерево сквозь дом"
+                        + " При смене tree_ProtectedLogs_ChoppedAroundAndNotLeftUnfinished проверь это утверждение.");
         assertEquals(
                 List.of(
                         new BlockCoord(OUTSIDE.x(), OUTSIDE.y() + 2, OUTSIDE.z()),
@@ -68,7 +70,8 @@ class PlotMechanicsTests {
                         OUTSIDE),
                 plan.order(),
                 "Остальное дерево снимается целиком, включая нижнее бревно, а не бросается из-за одного "
-                        + "защищённого ствола");
+                        + "защищённого ствола"
+                        + " Иначе тест tree_ProtectedLogs_ChoppedAroundAndNotLeftUnfinished перестанет ловить эту поломку. При смене tree_ProtectedLogs_ChoppedAroundAndNotLeftUnfinished проверь это утверждение.");
     }
 
     @Test
@@ -78,11 +81,13 @@ class PlotMechanicsTests {
         assertEquals(
                 List.of(OUTSIDE),
                 harvestable(targets, PlotProtection.Action.HARVEST),
-                "gather dirt не берёт грунт с дома, шахты и улицы: это не ресурс, а постройка");
+                "gather dirt не берёт грунт с дома, шахты и улицы: это не ресурс, а постройка"
+                        + " Иначе тест dirtGatherAndQuarry_PlanCells_AreNotTouched перестанет ловить эту поломку. При смене dirtGatherAndQuarry_PlanCells_AreNotTouched проверь это утверждение.");
         assertEquals(
                 List.of(OUTSIDE),
                 harvestable(targets, PlotProtection.Action.DIG),
-                "карьер не раскапывает клетки постройки: иначе под домом появляется яма");
+                "карьер не раскапывает клетки постройки: иначе под домом появляется яма"
+                        + " При смене dirtGatherAndQuarry_PlanCells_AreNotTouched проверь это утверждение.");
     }
 
     @Test
@@ -92,7 +97,8 @@ class PlotMechanicsTests {
         assertEquals(
                 List.of(OUTSIDE),
                 placeable(targets),
-                "засыпка и пахота не ставят блоки и пашню в клетки постройки: это заменяет стену или пол двора");
+                "засыпка и пахота не ставят блоки и пашню в клетки постройки: это заменяет стену или пол двора"
+                        + " Иначе тест fillAndPlow_PlanCells_AreNotFilled перестанет ловить эту поломку. При смене fillAndPlow_PlanCells_AreNotFilled проверь это утверждение.");
     }
 
     @Test
@@ -102,11 +108,13 @@ class PlotMechanicsTests {
         assertEquals(
                 List.of(OUTSIDE),
                 removable(targets, PlotProtection.Ground.NONE, PlanBuilding.NONE),
-                "расчистка и уборка висящего не снимают блоки плана без основания");
+                "расчистка и уборка висящего не снимают блоки плана без основания"
+                        + " Иначе тест clearFloatingAndStray_PlanCells_AreKept перестанет ловить эту поломку. При смене clearFloatingAndStray_PlanCells_AreKept проверь это утверждение.");
         assertEquals(
                 List.of(HOUSE, OUTSIDE),
                 removable(targets, PlotProtection.Ground.PLAN_DEMOLISH, PlanBuilding.HOUSE),
-                "снос дома по плану снимает его клетки, но не шахту и не улицу: чужая постройка остаётся");
+                "снос дома по плану снимает его клетки, но не шахту и не улицу: чужая постройка остаётся"
+                        + " Иначе тест clearFloatingAndStray_PlanCells_AreKept перестанет ловить эту поломку. При смене clearFloatingAndStray_PlanCells_AreKept проверь это утверждение.");
     }
 
     @Test
@@ -116,11 +124,13 @@ class PlotMechanicsTests {
         assertEquals(
                 List.of(OUTSIDE),
                 removable(targets, PlotProtection.Ground.NONE, PlanBuilding.NONE),
-                "проход не прокапывает постройку: dig_out и навигация обходят её или отказываются");
+                "проход не прокапывает постройку: dig_out и навигация обходят её или отказываются"
+                        + " Иначе тест navigationDigBridgePillar_PlanCells_AreAvoided перестанет ловить эту поломку. При смене navigationDigBridgePillar_PlanCells_AreAvoided проверь это утверждение.");
         assertEquals(
                 List.of(OUTSIDE),
                 placeable(targets),
-                "мост и столб не ставятся в клетку постройки: иначе опора проходит сквозь стену");
+                "мост и столб не ставятся в клетку постройки: иначе опора проходит сквозь стену"
+                        + " При смене navigationDigBridgePillar_PlanCells_AreAvoided проверь это утверждение.");
     }
 
     @Test
@@ -150,7 +160,8 @@ class PlotMechanicsTests {
         assertEquals(
                 List.of(new BlockCoord(origin.x(), origin.y() + 1, origin.z())),
                 extra,
-                "Повышение уровня снимает только блоки, которых нет в новой схеме: лишний верх старого дома");
+                "Повышение уровня снимает только блоки, которых нет в новой схеме: лишний верх старого дома"
+                        + " Иначе тест upgrade_OldSchemeExtras_RemovedNewSchemeKept перестанет ловить эту поломку. При смене upgrade_OldSchemeExtras_RemovedNewSchemeKept проверь это утверждение.");
         assertInstanceOf(
                 PlotProtection.Allowed.class,
                 PlotProtection.check(
@@ -159,7 +170,8 @@ class PlotMechanicsTests {
                         PlotProtection.Action.BREAK,
                         PlotProtection.Ground.REPAIR,
                         PlanBuilding.HOUSE),
-                "Ремонт к новой схеме законно ломает старый лишний блок своей постройки");
+                "Ремонт к новой схеме законно ломает старый лишний блок своей постройки"
+                        + " При смене upgrade_OldSchemeExtras_RemovedNewSchemeKept проверь это утверждение.");
         assertInstanceOf(
                 PlotProtection.Refused.class,
                 PlotProtection.check(
@@ -168,7 +180,8 @@ class PlotMechanicsTests {
                         PlotProtection.Action.BREAK,
                         PlotProtection.Ground.NONE,
                         PlanBuilding.NONE),
-                "Клетка, совпадающая с новой схемой, остаётся защищённой от обычной ломки");
+                "Клетка, совпадающая с новой схемой, остаётся защищённой от обычной ломки"
+                        + " Иначе тест upgrade_OldSchemeExtras_RemovedNewSchemeKept перестанет ловить эту поломку. При смене upgrade_OldSchemeExtras_RemovedNewSchemeKept проверь это утверждение.");
     }
 
     @Test
@@ -177,7 +190,8 @@ class PlotMechanicsTests {
                 PlotProtection.Allowed.class,
                 PlotProtection.check(
                         SITE, MINE, PlotProtection.Action.BREAK, PlotProtection.Ground.SELF_RESCUE, PlanBuilding.NONE),
-                "Замурованный дух выбирается из блока шахты: жизнь важнее сохранности клетки");
+                "Замурованный дух выбирается из блока шахты: жизнь важнее сохранности клетки"
+                        + " Иначе тест selfRescueAndPlayerCommand_LegalGrounds_AreAccepted перестанет ловить эту поломку. При смене selfRescueAndPlayerCommand_LegalGrounds_AreAccepted проверь это утверждение.");
         assertInstanceOf(
                 PlotProtection.Allowed.class,
                 PlotProtection.check(
@@ -186,7 +200,8 @@ class PlotMechanicsTests {
                         PlotProtection.Action.BREAK,
                         PlotProtection.Ground.PLAYER_COMMAND,
                         PlanBuilding.NONE),
-                "Команда игрока снимает защиту явно: это не самовольная ломка духа");
+                "Команда игрока снимает защиту явно: это не самовольная ломка духа"
+                        + " Иначе тест selfRescueAndPlayerCommand_LegalGrounds_AreAccepted перестанет ловить эту поломку. При смене selfRescueAndPlayerCommand_LegalGrounds_AreAccepted проверь это утверждение.");
     }
 
     private static List<BlockCoord> harvestable(List<BlockCoord> cells, PlotProtection.Action action) {

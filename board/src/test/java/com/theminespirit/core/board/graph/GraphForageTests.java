@@ -37,9 +37,11 @@ class GraphForageTests {
     @Test
     void ways_ForageStageTwo_Implemented() {
         FORAGE.keySet()
-                .forEach(way -> assertTrue(
-                        GraphWorld.GRAPH.implemented(way),
-                        "Сбор в природе реализован — с пути " + way + " снята пометка implemented=false"));
+                .forEach(
+                        way -> assertTrue(
+                                GraphWorld.GRAPH.implemented(way),
+                                "Сбор в природе реализован — с пути " + way + " снята пометка implemented=false"
+                                        + " Иначе тест ways_ForageStageTwo_Implemented перестанет ловить эту поломку. При смене ways_ForageStageTwo_Implemented проверь это утверждение."));
     }
 
     @Test
@@ -51,7 +53,8 @@ class GraphForageTests {
                     task.isPresent()
                             && task.orElseThrow().implemented()
                             && task.orElseThrow().feasible(),
-                    "Метка мира " + tag + " рядом — путь " + way + " стоит на доске выполнимым: " + task);
+                    "Метка мира " + tag + " рядом — путь " + way + " стоит на доске выполнимым: " + task
+                            + " Иначе тест plan_ForageWithWorldTag_TaskFeasible перестанет ловить эту поломку. При смене plan_ForageWithWorldTag_TaskFeasible проверь это утверждение.");
         });
     }
 
@@ -63,7 +66,8 @@ class GraphForageTests {
             assertFalse(
                     feasible,
                     "Без метки мира " + tag + " путь " + way + " невыполним: иначе дух пойдёт искать ресурс, "
-                            + "которого в округе нет");
+                            + "которого в округе нет"
+                            + " При смене plan_ForageWithoutWorldTag_NotFeasible проверь это утверждение.");
         });
     }
 

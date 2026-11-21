@@ -32,8 +32,13 @@ class HomeCacheTests {
                 1,
                 calls.get(),
                 "За один тик дом считается один раз: иначе BFS проходимости (9 мс) "
-                        + "повторяется на каждом запросе цели внутри одного пересбора");
-        assertEquals(Optional.of(STAND), second, "Повторный запрос в том же тике получает ту же стоянку");
+                        + "повторяется на каждом запросе цели внутри одного пересбора"
+                        + " При смене resolve_SameKeySameTick_ComputesOnce проверь это утверждение.");
+        assertEquals(
+                Optional.of(STAND),
+                second,
+                "Повторный запрос в том же тике получает ту же стоянку"
+                        + " Иначе тест resolve_SameKeySameTick_ComputesOnce перестанет ловить эту поломку. При смене resolve_SameKeySameTick_ComputesOnce проверь это утверждение.");
     }
 
     @Test
@@ -50,8 +55,16 @@ class HomeCacheTests {
             return Optional.of(new BlockCoord(-170, 70, -494));
         });
 
-        assertEquals(2, calls.get(), "Новый тик пересчитывает дом: духи и мир могли измениться");
-        assertEquals(Optional.of(new BlockCoord(-170, 70, -494)), next, "Новый тик возвращает свежую стоянку");
+        assertEquals(
+                2,
+                calls.get(),
+                "Новый тик пересчитывает дом: духи и мир могли измениться"
+                        + " Иначе тест resolve_NextTick_Recomputes перестанет ловить эту поломку. При смене resolve_NextTick_Recomputes проверь это утверждение.");
+        assertEquals(
+                Optional.of(new BlockCoord(-170, 70, -494)),
+                next,
+                "Новый тик возвращает свежую стоянку"
+                        + " Иначе тест resolve_NextTick_Recomputes перестанет ловить эту поломку. При смене resolve_NextTick_Recomputes проверь это утверждение.");
     }
 
     @Test
@@ -66,14 +79,16 @@ class HomeCacheTests {
                                 return Optional.empty();
                             })
                             .isEmpty(),
-                    "Нет стоянки — нет дома: выдуманную точку не подставляем");
+                    "Нет стоянки — нет дома: выдуманную точку не подставляем"
+                            + " Иначе тест resolve_NoStand_RememberedWithinTick перестанет ловить эту поломку. При смене resolve_NoStand_RememberedWithinTick проверь это утверждение.");
         }
 
         assertEquals(
                 1,
                 calls.get(),
                 "Пустой ответ тоже кэшируется на тик: иначе пересбор без дома снова и снова "
-                        + "ходит по миру в поисках стоянки");
+                        + "ходит по миру в поисках стоянки"
+                        + " При смене resolve_NoStand_RememberedWithinTick проверь это утверждение.");
     }
 
     @Test
@@ -86,10 +101,15 @@ class HomeCacheTests {
         Optional<BlockCoord> two = cache.resolve(
                 100, new HomeCache.Key(CENTER, second), () -> Optional.of(new BlockCoord(-173, 70, -489)));
 
-        assertEquals(Optional.of(STAND), one, "Дом первого духа не подменяется домом второго");
+        assertEquals(
+                Optional.of(STAND),
+                one,
+                "Дом первого духа не подменяется домом второго"
+                        + " Иначе тест resolve_DifferentSpirits_KeepSeparateHomes перестанет ловить эту поломку. При смене resolve_DifferentSpirits_KeepSeparateHomes проверь это утверждение.");
         assertEquals(
                 Optional.of(new BlockCoord(-173, 70, -489)),
                 two,
-                "У каждого духа своя стоянка: общий кэш по центру смешал бы дома разных духов");
+                "У каждого духа своя стоянка: общий кэш по центру смешал бы дома разных духов"
+                        + " Иначе тест resolve_DifferentSpirits_KeepSeparateHomes перестанет ловить эту поломку. При смене resolve_DifferentSpirits_KeepSeparateHomes проверь это утверждение.");
     }
 }

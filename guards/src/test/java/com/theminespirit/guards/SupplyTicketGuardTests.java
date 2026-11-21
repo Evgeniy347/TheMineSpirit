@@ -27,7 +27,8 @@ class SupplyTicketGuardTests {
                 "Добыча без контейнера снова бросается: при пустом складе GATHER_MATERIALS не выходит на доску, "
                         + "стройка висит в WAITING_RESOURCES навсегда, а сцена снабжения краснеет. Как надо: без "
                         + "точки сдачи задание пропускает только снабжение со склада (SupplyGate.needsDepositPoint), "
-                        + "а добыча выдаётся и сдаёт ближайшему сундуку. Нарушители");
+                        + "а добыча выдаётся и сдаёт ближайшему сундуку. Нарушители"
+                        + " При смене supplyTickets_NoContainer_StillIssuesGather проверь это утверждение.");
     }
 
     @Test
@@ -44,7 +45,8 @@ class SupplyTicketGuardTests {
         assertEquals(
                 List.of("SupplyTickets.java: добыча бросается без контейнера"),
                 violations(Map.of(SUPPLY_TICKETS, old)),
-                "Сторож ослеп: старый код, который возвращается до выдачи добычи без контейнера, обязан ловиться");
+                "Сторож ослеп: старый код, который возвращается до выдачи добычи без контейнера, обязан ловиться"
+                        + " Иначе тест patternSource_NoContainerReturnsBeforeGather_IsReported перестанет ловить эту поломку. При смене patternSource_NoContainerReturnsBeforeGather_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -62,7 +64,8 @@ class SupplyTicketGuardTests {
         assertEquals(
                 List.of(),
                 violations(Map.of(SUPPLY_TICKETS, fixed)),
-                "Сторож ложно срабатывает: проверка needsDepositPoint перед возвратом — правильный код");
+                "Сторож ложно срабатывает: проверка needsDepositPoint перед возвратом — правильный код"
+                        + " Иначе тест patternSource_DepositGuardBeforeReturn_IsAccepted перестанет ловить эту поломку. При смене patternSource_DepositGuardBeforeReturn_IsAccepted проверь это утверждение.");
     }
 
     private static List<String> violations(Map<Path, String> sources) {

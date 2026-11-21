@@ -16,7 +16,8 @@ class WanderPolicyTests {
                 WanderPolicy.next(7, ORIGIN, 8, 0),
                 WanderPolicy.next(7, ORIGIN, 8, 0),
                 "Повтор с тем же сидом обязан давать ту же точку: иначе блуждание нетестируемо "
-                        + "и перезагрузка духа меняет маршрут");
+                        + "и перезагрузка духа меняет маршрут"
+                        + " При смене next_SameSeed_SamePoint проверь это утверждение.");
     }
 
     @Test
@@ -27,7 +28,8 @@ class WanderPolicyTests {
         assertTrue(
                 !first.equals(retry),
                 "Новая попытка после застревания обязана давать другую точку: иначе дух стоит на месте "
-                        + "вместо выбора нового направления");
+                        + "вместо выбора нового направления"
+                        + " При смене next_StuckAttempt_PicksNewPoint проверь это утверждение.");
     }
 
     @Test
@@ -37,11 +39,13 @@ class WanderPolicyTests {
         assertTrue(
                 Math.abs(point.x() - ORIGIN.x()) <= 8 && Math.abs(point.z() - ORIGIN.z()) <= 8,
                 "Точка блуждания обязана лежать в квадрате радиуса от старта: иначе дух уходит за пределы "
-                        + "порученной зоны. Точка: " + point);
+                        + "порученной зоны. Точка: " + point
+                        + " При смене next_PointWithinRadius_LiesInsideSquare проверь это утверждение.");
         assertTrue(
                 Math.abs(point.y() - ORIGIN.y()) <= WanderPolicy.VERTICAL_SPREAD,
                 "Точка блуждания обязана лежать в пределах ±2 по высоте от старта: иначе дух пытается "
-                        + "взлететь или закопаться. Точка: " + point);
+                        + "взлететь или закопаться. Точка: " + point
+                        + " При смене next_PointWithinRadius_LiesInsideSquare проверь это утверждение.");
     }
 
     @Test
@@ -49,7 +53,8 @@ class WanderPolicyTests {
         assertEquals(
                 ORIGIN,
                 WanderPolicy.next(7, ORIGIN, 0, 0),
-                "Нулевой радиус обязан возвращать старт: шагать некуда, дух остаётся на месте");
+                "Нулевой радиус обязан возвращать старт: шагать некуда, дух остаётся на месте"
+                        + " Иначе тест next_ZeroRadius_ReturnsOrigin перестанет ловить эту поломку. При смене next_ZeroRadius_ReturnsOrigin проверь это утверждение.");
     }
 
     @Test
@@ -57,7 +62,8 @@ class WanderPolicyTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> WanderPolicy.next(7, ORIGIN, -1, 0),
-                "Отрицательный радиус обязан отвергаться: точка с таким радиусом недостижима");
+                "Отрицательный радиус обязан отвергаться: точка с таким радиусом недостижима"
+                        + " Иначе тест next_NegativeRadius_Throws перестанет ловить эту поломку. При смене next_NegativeRadius_Throws проверь это утверждение.");
     }
 
     @Test
@@ -65,7 +71,8 @@ class WanderPolicyTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> WanderPolicy.next(7, ORIGIN, 8, -1),
-                "Отрицательная попытка обязана отвергаться: счётчик попыток растёт от нуля при застревании");
+                "Отрицательная попытка обязана отвергаться: счётчик попыток растёт от нуля при застревании"
+                        + " Иначе тест next_NegativeAttempt_Throws перестанет ловить эту поломку. При смене next_NegativeAttempt_Throws проверь это утверждение.");
     }
 
     @Test
@@ -74,6 +81,7 @@ class WanderPolicyTests {
                 2,
                 WanderPolicy.VERTICAL_SPREAD,
                 "Разброс блуждания по высоте — ±2 блока: больше — дух пытается взлететь или закопаться, "
-                        + "при осознанной смене сверьте скрипт блуждания");
+                        + "при осознанной смене сверьте скрипт блуждания"
+                        + " Иначе тест verticalSpread_ValueCheck_EqualsTwo перестанет ловить эту поломку. При смене verticalSpread_ValueCheck_EqualsTwo проверь это утверждение.");
     }
 }

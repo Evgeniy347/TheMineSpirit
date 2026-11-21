@@ -54,7 +54,8 @@ class TacticsScenarioTests {
                 mismatches,
                 "Сценарий «" + name + "» расходится с ожиданием: тактическое решение изменилось. Если изменение "
                         + "осознанное (веса, правила), поправьте scenarios.json и docs/tactics/README.md; иначе откатите "
-                        + "правку. Трасса: " + outcome.trace().explain() + ". Расхождения");
+                        + "правку. Трасса: " + outcome.trace().explain() + ". Расхождения"
+                        + " При смене step_Scenario_MatchesExpectation проверь это утверждение.");
     }
 
     private static List<String> mismatches(ScenarioFile.Expectation want, TacticalOutcome got) {
@@ -83,11 +84,13 @@ class TacticsScenarioTests {
         assertTrue(
                 names.size() >= 40,
                 "В scenarios.json меньше 40 строк (" + names.size()
-                        + "): сценарии — истина, под которую подгоняются веса");
+                        + "): сценарии — истина, под которую подгоняются веса"
+                        + " При смене scenarios_File_HasAtLeastFortyUniqueNamedRows проверь это утверждение.");
         assertEquals(
                 names.size(),
                 new HashSet<>(names).size(),
-                "Имена сценариев уникальны: по имени находят упавшую строку");
+                "Имена сценариев уникальны: по имени находят упавшую строку"
+                        + " При смене scenarios_File_HasAtLeastFortyUniqueNamedRows проверь это утверждение.");
     }
 
     @Test
@@ -104,7 +107,8 @@ class TacticsScenarioTests {
         assertEquals(
                 Set.of(),
                 missing,
-                "Обязательные сценарии из задания пропали из scenarios.json: каждый из них защищает отдельное решение");
+                "Обязательные сценарии из задания пропали из scenarios.json: каждый из них защищает отдельное решение"
+                        + " При смене scenarios_File_ContainsEveryMandatoryCase проверь это утверждение.");
     }
 
     @Test
@@ -120,7 +124,8 @@ class TacticsScenarioTests {
                 unexplained,
                 "Сценарий сверх обязательного списка закрепляет решение без объяснения: поле \"why\" называет, почему "
                         + "именно так, и по нему видно, спорное ли это решение геймдизайна. Допишите \"why\" или удалите "
-                        + "сценарий. Без объяснения");
+                        + "сценарий. Без объяснения"
+                        + " При смене scenarios_OutsideMandatoryList_EachExplainsWhy проверь это утверждение.");
     }
 
     @Test
@@ -130,6 +135,7 @@ class TacticsScenarioTests {
         assertEquals(
                 Optional.empty(),
                 first.memory().previous(),
-                "Сценарий без поля memory начинается с чистой памяти: удержание не влияет на первое решение");
+                "Сценарий без поля memory начинается с чистой памяти: удержание не влияет на первое решение"
+                        + " При смене scenarios_Memory_InitialMemoryHasNoPreviousDecision проверь это утверждение.");
     }
 }

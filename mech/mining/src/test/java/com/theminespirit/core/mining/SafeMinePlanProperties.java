@@ -30,14 +30,31 @@ class SafeMinePlanProperties {
                 depth,
                 plan.steps().size(),
                 "Число шагов лесенки обязано равняться глубине спуска (этаж входа минус целевой): "
-                        + "иначе дух либо стоит рано, либо копает под дно мира");
-        assertEquals(DescentStop.TARGET_Y, plan.stop(), "Безопасная шахта обязана заканчиваться целью");
+                        + "иначе дух либо стоит рано, либо копает под дно мира"
+                        + " При смене staircase_SafeShaft_StepsStayContinuous проверь это утверждение.");
+        assertEquals(
+                DescentStop.TARGET_Y,
+                plan.stop(),
+                "Безопасная шахта обязана заканчиваться целью"
+                        + " Иначе тест staircase_SafeShaft_StepsStayContinuous перестанет ловить эту поломку. При смене staircase_SafeShaft_StepsStayContinuous проверь это утверждение.");
         for (int index = 1; index < plan.steps().size(); index++) {
             BlockCoord previous = plan.steps().get(index - 1).stand();
             BlockCoord stand = plan.steps().get(index).stand();
-            assertEquals(previous.x() + EAST.dx, stand.x(), "Ступень обязана смещаться на блок по направлению");
-            assertEquals(previous.y() - 1, stand.y(), "Ступень обязана опускаться ровно на один этаж");
-            assertEquals(previous.z() + EAST.dz, stand.z(), "Ступень обязана держать координату поперёк направления");
+            assertEquals(
+                    previous.x() + EAST.dx,
+                    stand.x(),
+                    "Ступень обязана смещаться на блок по направлению"
+                            + " Иначе тест staircase_SafeShaft_StepsStayContinuous перестанет ловить эту поломку. При смене staircase_SafeShaft_StepsStayContinuous проверь это утверждение.");
+            assertEquals(
+                    previous.y() - 1,
+                    stand.y(),
+                    "Ступень обязана опускаться ровно на один этаж"
+                            + " Иначе тест staircase_SafeShaft_StepsStayContinuous перестанет ловить эту поломку. При смене staircase_SafeShaft_StepsStayContinuous проверь это утверждение.");
+            assertEquals(
+                    previous.z() + EAST.dz,
+                    stand.z(),
+                    "Ступень обязана держать координату поперёк направления"
+                            + " Иначе тест staircase_SafeShaft_StepsStayContinuous перестанет ловить эту поломку. При смене staircase_SafeShaft_StepsStayContinuous проверь это утверждение.");
         }
     }
 
@@ -51,9 +68,17 @@ class SafeMinePlanProperties {
 
         SafeMinePlan plan = SafeMinePlan.tunnel(world, entry, EAST, length, 4);
 
-        assertEquals(length, plan.steps().size(), "Штольня обязана быть ровно заданной длины без простоев");
+        assertEquals(
+                length,
+                plan.steps().size(),
+                "Штольня обязана быть ровно заданной длины без простоев"
+                        + " Иначе тест tunnel_SafeTunnel_HasExactlyRequestedLength перестанет ловить эту поломку. При смене tunnel_SafeTunnel_HasExactlyRequestedLength проверь это утверждение.");
         for (SafeMineStep step : plan.steps()) {
-            assertEquals(entry.y(), step.stand().y(), "Штольня обязана держать этаж входа по всей длине");
+            assertEquals(
+                    entry.y(),
+                    step.stand().y(),
+                    "Штольня обязана держать этаж входа по всей длине"
+                            + " Иначе тест tunnel_SafeTunnel_HasExactlyRequestedLength перестанет ловить эту поломку. При смене tunnel_SafeTunnel_HasExactlyRequestedLength проверь это утверждение.");
         }
     }
 
@@ -73,9 +98,13 @@ class SafeMinePlanProperties {
         assertEquals(
                 DescentStop.TARGET_Y,
                 plan.stop(),
-                "Лава в боковой стенке обязана закладываться, а не останавливать штольню");
+                "Лава в боковой стенке обязана закладываться, а не останавливать штольню"
+                        + " Иначе тест tunnel_FluidInSideCell_AlwaysBecomesFillNotDanger перестанет ловить эту поломку. При смене tunnel_FluidInSideCell_AlwaysBecomesFillNotDanger проверь это утверждение.");
         SafeMineStep step = plan.steps().get(index);
         assertEquals(
-                true, step.fill().contains(hazard), "Опасная боковая клетка обязана попасть в заделки своего шага");
+                true,
+                step.fill().contains(hazard),
+                "Опасная боковая клетка обязана попасть в заделки своего шага"
+                        + " Иначе тест tunnel_FluidInSideCell_AlwaysBecomesFillNotDanger перестанет ловить эту поломку. При смене tunnel_FluidInSideCell_AlwaysBecomesFillNotDanger проверь это утверждение.");
     }
 }

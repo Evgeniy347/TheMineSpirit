@@ -106,12 +106,14 @@ class SituationValidationTests {
                 IllegalArgumentException.class,
                 construction,
                 "Факт «" + name
-                        + "» недопустим: адаптер, передавший такое, ошибся, а тактика не должна считать по мусору");
+                        + "» недопустим: адаптер, передавший такое, ошибся, а тактика не должна считать по мусору"
+                        + " Иначе тест facts_InvalidValue_ThrowWithFieldName перестанет ловить эту поломку. При смене facts_InvalidValue_ThrowWithFieldName проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains(field),
                 "Сообщение называет поле " + field + ", чтобы адаптер сразу видел, что именно он передал неверно, "
-                        + "а получили: " + error.getMessage());
+                        + "а получили: " + error.getMessage()
+                        + " Иначе тест facts_InvalidValue_ThrowWithFieldName перестанет ловить эту поломку. При смене facts_InvalidValue_ThrowWithFieldName проверь это утверждение.");
     }
 
     @Test
@@ -123,8 +125,14 @@ class SituationValidationTests {
                 0.0,
                 weakest.hpFraction(),
                 0.0,
-                "Нулевое HP на границе допустимо: дух умирает, и тактика обязана считать этот кадр без исключения");
-        assertEquals(1.0, strongest.hpFraction(), 0.0, "Полное HP на верхней границе допустимо");
+                "Нулевое HP на границе допустимо: дух умирает, и тактика обязана считать этот кадр без исключения"
+                        + " Иначе тест facts_BoundaryValues_AreAccepted перестанет ловить эту поломку. При смене facts_BoundaryValues_AreAccepted проверь это утверждение.");
+        assertEquals(
+                1.0,
+                strongest.hpFraction(),
+                0.0,
+                "Полное HP на верхней границе допустимо"
+                        + " Иначе тест facts_BoundaryValues_AreAccepted перестанет ловить эту поломку. При смене facts_BoundaryValues_AreAccepted проверь это утверждение.");
     }
 
     @Test
@@ -134,6 +142,7 @@ class SituationValidationTests {
         assertEquals(
                 List.of(false, false),
                 List.of(orders.zoneSet(), orders.wardPresent()),
-                "Приказ только с режимом не задаёт ни зону, ни подопечного: иначе guard_area без зоны не вернулся бы в defensive");
+                "Приказ только с режимом не задаёт ни зону, ни подопечного: иначе guard_area без зоны не вернулся бы в defensive"
+                        + " При смене ordersMode_OnlyMode_HasNoZoneAndNoWard проверь это утверждение.");
     }
 }

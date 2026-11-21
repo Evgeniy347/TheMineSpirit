@@ -27,8 +27,16 @@ class ClientRateLimitTests {
             }
         }
 
-        assertEquals(40, allowed, "Ведро адреса вмещает 40 запросов подряд");
-        assertEquals(60, rejected, "Остальные 60 запросов всплеска обязаны получить отказ 429");
+        assertEquals(
+                40,
+                allowed,
+                "Ведро адреса вмещает 40 запросов подряд"
+                        + " Иначе тест reject_BurstOfHundred_AllowsFortyThenAnswers429 перестанет ловить эту поломку. При смене reject_BurstOfHundred_AllowsFortyThenAnswers429 проверь это утверждение.");
+        assertEquals(
+                60,
+                rejected,
+                "Остальные 60 запросов всплеска обязаны получить отказ 429"
+                        + " Иначе тест reject_BurstOfHundred_AllowsFortyThenAnswers429 перестанет ловить эту поломку. При смене reject_BurstOfHundred_AllowsFortyThenAnswers429 проверь это утверждение.");
     }
 
     @Test
@@ -40,20 +48,31 @@ class ClientRateLimitTests {
 
         RestResponse response = limit.reject(CLIENT, 0).orElseThrow();
 
-        assertEquals(429, response.status(), "Отказ лимитера обязан быть HTTP 429");
+        assertEquals(
+                429,
+                response.status(),
+                "Отказ лимитера обязан быть HTTP 429"
+                        + " Иначе тест reject_OverLimit_Returns429RateLimitedWithRetryAfterHeaderAndBody перестанет ловить эту поломку. При смене reject_OverLimit_Returns429RateLimitedWithRetryAfterHeaderAndBody проверь это утверждение.");
         assertEquals(
                 "1",
                 response.headers().get("Retry-After"),
-                "Заголовок Retry-After обязан сообщать целые секунды ожидания (минимум 1): клиент решает, когда повторить");
+                "Заголовок Retry-After обязан сообщать целые секунды ожидания (минимум 1): клиент решает, когда повторить"
+                        + " Иначе тест reject_OverLimit_Returns429RateLimitedWithRetryAfterHeaderAndBody перестанет ловить эту поломку. При смене reject_OverLimit_Returns429RateLimitedWithRetryAfterHeaderAndBody проверь это утверждение.");
         JsonNode error = MAPPER.readTree(response.body()).path("error");
-        assertEquals("rate_limited", error.path("code").asText(), "Код ошибки обязан быть rate_limited");
+        assertEquals(
+                "rate_limited",
+                error.path("code").asText(),
+                "Код ошибки обязан быть rate_limited"
+                        + " Иначе тест reject_OverLimit_Returns429RateLimitedWithRetryAfterHeaderAndBody перестанет ловить эту поломку. При смене reject_OverLimit_Returns429RateLimitedWithRetryAfterHeaderAndBody проверь это утверждение.");
         assertEquals(
                 1,
                 error.path("details").path("retry_after_seconds").asInt(),
-                "details обязан дублировать время ожидания для клиентов, не читающих заголовки");
+                "details обязан дублировать время ожидания для клиентов, не читающих заголовки"
+                        + " Иначе тест reject_OverLimit_Returns429RateLimitedWithRetryAfterHeaderAndBody перестанет ловить эту поломку. При смене reject_OverLimit_Returns429RateLimitedWithRetryAfterHeaderAndBody проверь это утверждение.");
         assertTrue(
                 error.path("message").asText().contains("40"),
-                "Сообщение обязано называть лимит, чтобы клиент понял, что превышено: " + response.body());
+                "Сообщение обязано называть лимит, чтобы клиент понял, что превышено: " + response.body()
+                        + " Иначе тест reject_OverLimit_Returns429RateLimitedWithRetryAfterHeaderAndBody перестанет ловить эту поломку. При смене reject_OverLimit_Returns429RateLimitedWithRetryAfterHeaderAndBody проверь это утверждение.");
     }
 
     @Test
@@ -73,7 +92,8 @@ class ClientRateLimitTests {
         assertEquals(
                 10,
                 allowed,
-                "За полсекунды ведро пополняется на 10 запросов (20 в секунду): ровно столько обязано пройти");
+                "За полсекунды ведро пополняется на 10 запросов (20 в секунду): ровно столько обязано пройти"
+                        + " Иначе тест reject_AfterWaiting_AllowsAgainAtRefillRate перестанет ловить эту поломку. При смене reject_AfterWaiting_AllowsAgainAtRefillRate проверь это утверждение.");
     }
 
     @Test
@@ -85,6 +105,7 @@ class ClientRateLimitTests {
 
         assertFalse(
                 limit.reject("192.168.0.11", 0).isPresent(),
-                "Исчерпанное ведро одного адреса не должно блокировать соседний адрес");
+                "Исчерпанное ведро одного адреса не должно блокировать соседний адрес"
+                        + " Иначе тест reject_OtherClient_NotAffectedByNeighbourBurst перестанет ловить эту поломку. При смене reject_OtherClient_NotAffectedByNeighbourBurst проверь это утверждение.");
     }
 }

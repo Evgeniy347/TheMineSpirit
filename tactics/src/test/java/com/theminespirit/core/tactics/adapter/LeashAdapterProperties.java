@@ -46,7 +46,8 @@ class LeashAdapterProperties {
                 geometry.leashLeft() <= params.pursuit(ZONE_RADIUS),
                 "Запас поводка не больше радиуса преследования " + params.pursuit(ZONE_RADIUS) + ": цель на расстоянии "
                         + distance + " дала " + geometry.leashLeft()
-                        + "; запас больше радиуса значил бы, что цель дальше от поста, чем сам пост");
+                        + "; запас больше радиуса значил бы, что цель дальше от поста, чем сам пост"
+                        + " Иначе тест leashLeft_AnyTargetDistance_NeverExceedsPursuitRadius перестанет ловить эту поломку. При смене leashLeft_AnyTargetDistance_NeverExceedsPursuitRadius проверь это утверждение.");
     }
 
     @Property(tries = 200)
@@ -62,6 +63,7 @@ class LeashAdapterProperties {
         assertTrue(
                 target.isEmpty(),
                 "Цель за поводком (" + distance + " > 6) не выставляется: решение " + outcome.decision() + ", правило "
-                        + outcome.trace().rule());
+                        + outcome.trace().rule()
+                        + " Иначе тест pick_TargetBeyondLeash_NeverDesignated перестанет ловить эту поломку. При смене pick_TargetBeyondLeash_NeverDesignated проверь это утверждение.");
     }
 }

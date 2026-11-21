@@ -25,15 +25,18 @@ class NetworkBuilderTests {
         chains.forEach(cells::addAll);
         assertTrue(
                 cells.contains(DOOR),
-                "сеть начинается у двери: без неё дух с улицы не войдёт в сеть дома; клетки сети " + cells.size());
+                "сеть начинается у двери: без неё дух с улицы не войдёт в сеть дома; клетки сети " + cells.size()
+                        + " Иначе тест chains_TwoFloorsWithStairs_ReachFarthestCellOfEachFloor перестанет ловить эту поломку. При смене chains_TwoFloorsWithStairs_ReachFarthestCellOfEachFloor проверь это утверждение.");
         assertTrue(
                 cells.stream().anyMatch(c -> c.y() == 5 && c.x() <= 1),
                 "ветвь сети обязана дойти по лестнице (верх x=13) до дальнего конца второго этажа (x ≤ 1, ноги y=5): "
                         + "иначе дух из "
-                        + "дальней комнаты наверху не найдёт вход в сеть в пределах пути игры");
+                        + "дальней комнаты наверху не найдёт вход в сеть в пределах пути игры"
+                        + " При смене chains_TwoFloorsWithStairs_ReachFarthestCellOfEachFloor проверь это утверждение.");
         assertTrue(
                 cells.stream().anyMatch(c -> c.y() == 1 && c.x() >= 18),
-                "ветвь сети обязана дойти до дальнего конца первого этажа (x ≥ 18, ноги y=1)");
+                "ветвь сети обязана дойти до дальнего конца первого этажа (x ≥ 18, ноги y=1)"
+                        + " Иначе тест chains_TwoFloorsWithStairs_ReachFarthestCellOfEachFloor перестанет ловить эту поломку. При смене chains_TwoFloorsWithStairs_ReachFarthestCellOfEachFloor проверь это утверждение.");
     }
 
     @Test
@@ -42,7 +45,8 @@ class NetworkBuilderTests {
         for (List<BlockCoord> chain : NetworkBuilder.chains(List.of(DOOR), HOUSE, world)) {
             assertTrue(
                     PathSegment.lengthOf(chain, 0, chain.size() - 1) <= PathSegment.MAX_LENGTH,
-                    "отрезок длиннее " + PathSegment.MAX_LENGTH + ": поиск пути игры (32) его не пройдёт — " + chain);
+                    "отрезок длиннее " + PathSegment.MAX_LENGTH + ": поиск пути игры (32) его не пройдёт — " + chain
+                            + " Иначе тест chains_AnyHouse_SegmentsAreShortAndWalkableBothWays перестанет ловить эту поломку. При смене chains_AnyHouse_SegmentsAreShortAndWalkableBothWays проверь это утверждение.");
             for (int i = 1; i < chain.size(); i++) {
                 BlockCoord from = chain.get(i - 1);
                 BlockCoord to = chain.get(i);
@@ -50,7 +54,8 @@ class NetworkBuilderTests {
                         to,
                         BodyStep.twoWay(from, to.x() - from.x(), to.z() - from.z(), world),
                         "соседние клетки отрезка — шаг тела в обе стороны: по сети ходят туда и обратно; " + from
-                                + " → " + to);
+                                + " → " + to
+                                + " Иначе тест chains_AnyHouse_SegmentsAreShortAndWalkableBothWays перестанет ловить эту поломку. При смене chains_AnyHouse_SegmentsAreShortAndWalkableBothWays проверь это утверждение.");
             }
         }
     }
@@ -64,7 +69,8 @@ class NetworkBuilderTests {
         chains.forEach(network::add);
         assertTrue(
                 network.route(DOOR, backDoor).isPresent(),
-                "две двери одного дома связаны сетью: вторая дверь — ветвь того же дерева, а не отдельный кусок");
+                "две двери одного дома связаны сетью: вторая дверь — ветвь того же дерева, а не отдельный кусок"
+                        + " Иначе тест chains_SecondDoorInsideTree_IsJoinedNotSeparate перестанет ловить эту поломку. При смене chains_SecondDoorInsideTree_IsJoinedNotSeparate проверь это утверждение.");
     }
 
     @Test
@@ -79,13 +85,15 @@ class NetworkBuilderTests {
                 expected,
                 pieces.size(),
                 "коридор 70 шагов при пределе " + PathSegment.MAX_LENGTH + " режется на " + expected + " отрезков: "
-                        + pieces.size());
+                        + pieces.size()
+                        + " Иначе тест cut_LongCorridor_PiecesShareEndsAndFitMaxLength перестанет ловить эту поломку. При смене cut_LongCorridor_PiecesShareEndsAndFitMaxLength проверь это утверждение.");
         for (int i = 1; i < pieces.size(); i++) {
             List<BlockCoord> previous = pieces.get(i - 1);
             assertEquals(
                     previous.get(previous.size() - 1),
                     pieces.get(i).get(0),
-                    "соседние отрезки разреза делят конец: иначе граф сети рвётся в месте разреза");
+                    "соседние отрезки разреза делят конец: иначе граф сети рвётся в месте разреза"
+                            + " При смене cut_LongCorridor_PiecesShareEndsAndFitMaxLength проверь это утверждение.");
         }
     }
 }

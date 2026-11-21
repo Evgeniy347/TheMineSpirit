@@ -45,7 +45,8 @@ class InterruptExitGuardTests {
                         + "Как надо: строка в guards/src/test/resources/interrupt-exits.txt (writer | script | "
                         + "exit | test | reason) и тест Class.method с Interrupt в имени; либо явное исключение "
                         + "с причиной. Правило: docs/ARCHITECTURE.md → «Экстренный выход механики», "
-                        + "docs/research/interrupt-map.md. Нарушения");
+                        + "docs/research/interrupt-map.md. Нарушения"
+                        + " Иначе тест interruptMap_EveryTemporaryWriter_DeclaresExitAndInterruptTest перестанет ловить эту поломку. При смене interruptMap_EveryTemporaryWriter_DeclaresExitAndInterruptTest проверь это утверждение.");
     }
 
     @Test
@@ -57,7 +58,8 @@ class InterruptExitGuardTests {
         assertTrue(
                 issues(Set.of("neoforge/NewScript.java"), List.of(), main, Map.of(), Map.of()).stream()
                         .anyMatch(issue -> issue.contains("без объявленного выхода")),
-                "Сторож ослеп: новый вызов markTemporary без строки в реестре обязан попасть в нарушения");
+                "Сторож ослеп: новый вызов markTemporary без строки в реестре обязан попасть в нарушения"
+                        + " Иначе тест tick перестанет ловить эту поломку. При смене tick проверь это утверждение.");
     }
 
     @Test
@@ -72,7 +74,8 @@ class InterruptExitGuardTests {
         assertTrue(
                 issues(Set.of("neoforge/PillarColumn.java"), rows, main, tests, Map.of()).stream()
                         .anyMatch(issue -> issue.contains("без теста прерывания")),
-                "Сторож ослеп: тест без Interrupt в имени не доказывает выход при прерывании");
+                "Сторож ослеп: тест без Interrupt в имени не доказывает выход при прерывании"
+                        + " Иначе тест ok перестанет ловить эту поломку. При смене ok проверь это утверждение.");
     }
 
     @Test
@@ -89,7 +92,8 @@ class InterruptExitGuardTests {
                         main,
                         Map.of(),
                         Map.of("neoforge/NewScript.java", "демо-сцена, к поселению не относится")),
-                "Сторож ложно срабатывает: явное исключение с причиной обязано приниматься");
+                "Сторож ложно срабатывает: явное исключение с причиной обязано приниматься"
+                        + " Иначе тест tick перестанет ловить эту поломку. При смене tick проверь это утверждение.");
     }
 
     @Test
@@ -106,7 +110,8 @@ class InterruptExitGuardTests {
                                 Map.of("neoforge/NewScript.java", " "))
                         .stream()
                         .anyMatch(issue -> issue.contains("исключение без причины")),
-                "Сторож ослеп: исключение без причины прячет нарушение и обязано попасть в нарушения");
+                "Сторож ослеп: исключение без причины прячет нарушение и обязано попасть в нарушения"
+                        + " Иначе тест tick перестанет ловить эту поломку. При смене tick проверь это утверждение.");
     }
 
     @Test
@@ -126,7 +131,8 @@ class InterruptExitGuardTests {
         assertTrue(
                 issues(Set.of("neoforge/PillarColumn.java"), rows, main, tests, Map.of()).stream()
                         .anyMatch(issue -> issue.contains("нет класса GoneScript")),
-                "Сторож ослеп: владелец правки должен существовать, иначе строка реестра — фикция");
+                "Сторож ослеп: владелец правки должен существовать, иначе строка реестра — фикция"
+                        + " При смене pillarUp_InterruptedOnTop_TemporaryMarksAndPerchNeedStayVisible проверь это утверждение.");
     }
 
     static List<String> issues(

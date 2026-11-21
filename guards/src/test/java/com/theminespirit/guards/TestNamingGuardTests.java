@@ -31,7 +31,8 @@ class TestNamingGuardTests {
                         + "буквы этого не говорит. Формат: subject_Condition_ExpectedResult, три части через '_', "
                         + "вторая и третья — с большой буквы. Пример: defaultRadius_WithinLimits → "
                         + "defaultRadius_DefaultValue_LiesWithinMinMax. Правило: docs/TESTING.md → «Имя теста». "
-                        + "Нарушители");
+                        + "Нарушители"
+                        + " Иначе тест testMethods_AllTestSources_FollowSubjectConditionExpectedPattern перестанет ловить эту поломку. При смене testMethods_AllTestSources_FollowSubjectConditionExpectedPattern проверь это утверждение.");
     }
 
     @Test
@@ -41,7 +42,8 @@ class TestNamingGuardTests {
         assertEquals(
                 List.of("defaultRadius_WithinLimits"),
                 badNames(sample),
-                "Сторож ослеп: имя из двух частей должно попадать в нарушители");
+                "Сторож ослеп: имя из двух частей должно попадать в нарушители"
+                        + " Иначе тест defaultRadius_WithinLimits перестанет ловить эту поломку. При смене defaultRadius_WithinLimits проверь это утверждение.");
     }
 
     @Test
@@ -56,7 +58,8 @@ class TestNamingGuardTests {
                 List.of("spawn_spiritType_Lives"),
                 badNames(sample),
                 "Сторож ослеп: тест с аргументами аннотации, второй аннотацией и параметрами должен находиться, "
-                        + "а условие с маленькой буквы — считаться нарушением");
+                        + "а условие с маленькой буквы — считаться нарушением"
+                        + " Иначе тест spawn_spiritType_Lives перестанет ловить эту поломку. При смене spawn_spiritType_Lives проверь это утверждение.");
     }
 
     @Test
@@ -66,7 +69,8 @@ class TestNamingGuardTests {
         assertEquals(
                 List.of(),
                 badNames(sample),
-                "Сторож ложно срабатывает: имя subject_Condition_Expected должно приниматься");
+                "Сторож ложно срабатывает: имя subject_Condition_Expected должно приниматься"
+                        + " Иначе тест hash_InventoryOrderChanged_StaysEqual перестанет ловить эту поломку. При смене hash_InventoryOrderChanged_StaysEqual проверь это утверждение.");
     }
 
     private static void collectBadNames(Map<Path, String> sources, List<String> offenders) {

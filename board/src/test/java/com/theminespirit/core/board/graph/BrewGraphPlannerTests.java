@@ -32,16 +32,29 @@ class BrewGraphPlannerTests {
 
         assertTrue(
                 ids.stream().allMatch(GraphWorld.GRAPH::implemented),
-                "Зельеварение реализовано: с путей и стойки этапа 3 снята пометка implemented=false");
+                "Зельеварение реализовано: с путей и стойки этапа 3 снята пометка implemented=false"
+                        + " Иначе тест ways_StageThreeBrewing_AllImplemented перестанет ловить эту поломку. При смене ways_StageThreeBrewing_AllImplemented проверь это утверждение.");
     }
 
     @Test
     void ways_StageThreeBrewing_RequireGlassBottlesAndFuel() {
         SupplyGraph.Way healing = GraphWorld.GRAPH.way("brew_healing").orElseThrow();
 
-        assertEquals(3, healing.consumes().get("glass_bottle"), "Лечение варит три бутылки за цикл: " + healing);
-        assertEquals(2, healing.consumes().get("blaze_powder"), "Два шага варки — два огненных порошка: " + healing);
-        assertEquals("brewing_stand", healing.building(), "Варка идёт только в варочной стойке: " + healing);
+        assertEquals(
+                3,
+                healing.consumes().get("glass_bottle"),
+                "Лечение варит три бутылки за цикл: " + healing
+                        + " Иначе тест ways_StageThreeBrewing_RequireGlassBottlesAndFuel перестанет ловить эту поломку. При смене ways_StageThreeBrewing_RequireGlassBottlesAndFuel проверь это утверждение.");
+        assertEquals(
+                2,
+                healing.consumes().get("blaze_powder"),
+                "Два шага варки — два огненных порошка: " + healing
+                        + " Иначе тест ways_StageThreeBrewing_RequireGlassBottlesAndFuel перестанет ловить эту поломку. При смене ways_StageThreeBrewing_RequireGlassBottlesAndFuel проверь это утверждение.");
+        assertEquals(
+                "brewing_stand",
+                healing.building(),
+                "Варка идёт только в варочной стойке: " + healing
+                        + " Иначе тест ways_StageThreeBrewing_RequireGlassBottlesAndFuel перестанет ловить эту поломку. При смене ways_StageThreeBrewing_RequireGlassBottlesAndFuel проверь это утверждение.");
     }
 
     @Test
@@ -59,7 +72,8 @@ class BrewGraphPlannerTests {
                 plan.task("brew_fire_resistance")
                         .map(task -> task.implemented() && !task.feasible())
                         .orElse(false),
-                "Варка реализована, но без варочной стойки задание невыполнимо: " + plan.task("brew_fire_resistance"));
+                "Варка реализована, но без варочной стойки задание невыполнимо: " + plan.task("brew_fire_resistance")
+                        + " Иначе тест plan_StageThreePotionNoStand_NotFeasible перестанет ловить эту поломку. При смене plan_StageThreePotionNoStand_NotFeasible проверь это утверждение.");
     }
 
     @Test
@@ -82,7 +96,8 @@ class BrewGraphPlannerTests {
                                 .map(task -> task.implemented() && task.feasible())
                                 .orElse(false),
                 "С варочной стойкой, бутылками и ингредиентами регенерация и взрывное зелье выполнимы: "
-                        + plan.task("brew_regeneration") + ", " + plan.task("splash_regeneration"));
+                        + plan.task("brew_regeneration") + ", " + plan.task("splash_regeneration")
+                        + " Иначе тест plan_StageThreePotionFullLine_Feasible перестанет ловить эту поломку. При смене plan_StageThreePotionFullLine_Feasible проверь это утверждение.");
     }
 
     @Test
@@ -97,7 +112,8 @@ class BrewGraphPlannerTests {
                         .map(task -> task.implemented() && !task.feasible())
                         .orElse(false),
                 "Грядка реализована, но без песка душ (только Незер) задание невыполнимо: "
-                        + plan.task("harvest_nether_wart"));
+                        + plan.task("harvest_nether_wart")
+                        + " Иначе тест plan_NetherWartFarmNoSoulSand_NotFeasible перестанет ловить эту поломку. При смене plan_NetherWartFarmNoSoulSand_NotFeasible проверь это утверждение.");
     }
 
     @Test
@@ -110,6 +126,7 @@ class BrewGraphPlannerTests {
                 plan.task("harvest_nether_wart")
                         .map(task -> task.implemented() && task.feasible())
                         .orElse(false),
-                "С наростом в запасе и песком душ грядка выполнима: " + plan.task("harvest_nether_wart"));
+                "С наростом в запасе и песком душ грядка выполнима: " + plan.task("harvest_nether_wart")
+                        + " Иначе тест plan_NetherWartFarmWithSeed_Feasible перестанет ловить эту поломку. При смене plan_NetherWartFarmWithSeed_Feasible проверь это утверждение.");
     }
 }

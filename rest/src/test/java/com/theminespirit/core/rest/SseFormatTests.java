@@ -23,7 +23,8 @@ class SseFormatTests {
         assertEquals(
                 "id: 7\nevent: progress\ndata: {\"step\":2}\n\n",
                 frame,
-                "Кадр SSE — контракт: id:, event:, data: и пустая строка в конце");
+                "Кадр SSE — контракт: id:, event:, data: и пустая строка в конце"
+                        + " Иначе тест frame_GivenIdEventData_IsThreeLinesEndingWithBlankLine перестанет ловить эту поломку. При смене frame_GivenIdEventData_IsThreeLinesEndingWithBlankLine проверь это утверждение.");
     }
 
     @Test
@@ -31,7 +32,8 @@ class SseFormatTests {
         assertEquals(
                 ": keepalive\n\n",
                 SseFormat.keepalive(),
-                "Keepalive — комментарий-строка с пустой строкой в конце, без id/event/data");
+                "Keepalive — комментарий-строка с пустой строкой в конце, без id/event/data"
+                        + " Иначе тест keepalive_CommentLine_EndsWithBlankLine перестанет ловить эту поломку. При смене keepalive_CommentLine_EndsWithBlankLine проверь это утверждение.");
     }
 
     @Test
@@ -39,7 +41,8 @@ class SseFormatTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> SseFormat.frame(1, "progress", "a\nb"),
-                "Перевод строки внутри data разорвёт поток SSE: форматтер обязан отвергать такие данные");
+                "Перевод строки внутри data разорвёт поток SSE: форматтер обязан отвергать такие данные"
+                        + " Иначе тест frame_DataWithNewline_ThrowsInsteadOfBreakingStream перестанет ловить эту поломку. При смене frame_DataWithNewline_ThrowsInsteadOfBreakingStream проверь это утверждение.");
     }
 
     @Property(tries = 200)
@@ -50,12 +53,33 @@ class SseFormatTests {
         String frame = SseFormat.frame(1, "progress", json);
 
         String[] lines = frame.split("\n", -1);
-        assertEquals(5, lines.length, "Кадр из трёх полей + пустая строка даёт 5 сегментов при split: " + frame);
-        assertTrue(lines[0].startsWith("id: "), "Первая строка — id: " + frame);
-        assertTrue(lines[1].startsWith("event: "), "Вторая строка — event: " + frame);
-        assertTrue(lines[2].startsWith("data: "), "Третья строка — data: " + frame);
-        assertEquals("", lines[3], "После data обязана идти пустая строка-разделитель: " + frame);
-        assertEquals("", lines[4], "Кадр заканчивается переводом строки: " + frame);
+        assertEquals(
+                5,
+                lines.length,
+                "Кадр из трёх полей + пустая строка даёт 5 сегментов при split: " + frame
+                        + " Иначе тест frame_AnyJsonPayload_ExactlyOneDataLineAndBlankLineTerminator перестанет ловить эту поломку. При смене frame_AnyJsonPayload_ExactlyOneDataLineAndBlankLineTerminator проверь это утверждение.");
+        assertTrue(
+                lines[0].startsWith("id: "),
+                "Первая строка — id: " + frame
+                        + " Иначе тест frame_AnyJsonPayload_ExactlyOneDataLineAndBlankLineTerminator перестанет ловить эту поломку. При смене frame_AnyJsonPayload_ExactlyOneDataLineAndBlankLineTerminator проверь это утверждение.");
+        assertTrue(
+                lines[1].startsWith("event: "),
+                "Вторая строка — event: " + frame
+                        + " Иначе тест frame_AnyJsonPayload_ExactlyOneDataLineAndBlankLineTerminator перестанет ловить эту поломку. При смене frame_AnyJsonPayload_ExactlyOneDataLineAndBlankLineTerminator проверь это утверждение.");
+        assertTrue(
+                lines[2].startsWith("data: "),
+                "Третья строка — data: " + frame
+                        + " Иначе тест frame_AnyJsonPayload_ExactlyOneDataLineAndBlankLineTerminator перестанет ловить эту поломку. При смене frame_AnyJsonPayload_ExactlyOneDataLineAndBlankLineTerminator проверь это утверждение.");
+        assertEquals(
+                "",
+                lines[3],
+                "После data обязана идти пустая строка-разделитель: " + frame
+                        + " Иначе тест frame_AnyJsonPayload_ExactlyOneDataLineAndBlankLineTerminator перестанет ловить эту поломку. При смене frame_AnyJsonPayload_ExactlyOneDataLineAndBlankLineTerminator проверь это утверждение.");
+        assertEquals(
+                "",
+                lines[4],
+                "Кадр заканчивается переводом строки: " + frame
+                        + " Иначе тест frame_AnyJsonPayload_ExactlyOneDataLineAndBlankLineTerminator перестанет ловить эту поломку. При смене frame_AnyJsonPayload_ExactlyOneDataLineAndBlankLineTerminator проверь это утверждение.");
     }
 
     @Provide

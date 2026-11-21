@@ -43,11 +43,13 @@ class HazardDetectorProperties {
         assertEquals(
                 cells.get(0) == Terrain.LAVA,
                 hazard.equals(Optional.of(HazardType.LAVA)),
-                "лава сообщается ровно тогда, когда в клетке лава, окружение " + cells);
+                "лава сообщается ровно тогда, когда в клетке лава, окружение " + cells
+                        + " Иначе тест classify_AnyNeighbourhood_LiquidOnlyWhereCellIsLiquid перестанет ловить эту поломку. При смене classify_AnyNeighbourhood_LiquidOnlyWhereCellIsLiquid проверь это утверждение.");
         assertEquals(
                 cells.get(0) == Terrain.WATER,
                 hazard.equals(Optional.of(HazardType.WATER)),
-                "вода сообщается ровно тогда, когда в клетке вода, окружение " + cells);
+                "вода сообщается ровно тогда, когда в клетке вода, окружение " + cells
+                        + " Иначе тест classify_AnyNeighbourhood_LiquidOnlyWhereCellIsLiquid перестанет ловить эту поломку. При смене classify_AnyNeighbourhood_LiquidOnlyWhereCellIsLiquid проверь это утверждение.");
     }
 
     @Property
@@ -58,7 +60,8 @@ class HazardDetectorProperties {
             assertTrue(
                     cells.get(0) == Terrain.AIR && cells.get(1) == Terrain.SOLID,
                     "обрыв возможен только в воздухе над твёрдым полом: иначе дух решит, что стоит на краю, "
-                            + "а он в воде или в воздухе, окружение " + cells);
+                            + "а он в воде или в воздухе, окружение " + cells
+                            + " При смене classify_AnyNeighbourhood_DropOnlyOverSolidFloorInAir проверь это утверждение.");
         }
     }
 }

@@ -37,10 +37,12 @@ class FreshSuppliesTests {
         FreshSupplies fresh = new FreshSupplies(CHESTS, "minecraft:jungle_planks");
         assertTrue(
                 fresh.withdraw("jungle_planks", 13).isEmpty(),
-                "добыча «ещё 13 досок» не берёт доски из сундука, куда их же сдаёт: запас не рос (24.10)");
+                "добыча «ещё 13 досок» не берёт доски из сундука, куда их же сдаёт: запас не рос (24.10)"
+                        + " Иначе тест withdraw_TargetItem_NotFromChests перестанет ловить эту поломку. При смене withdraw_TargetItem_NotFromChests проверь это утверждение.");
         assertEquals(
                 1,
                 fresh.withdraw("jungle_log", 4).size(),
-                "ингредиенты из сундука берутся: брёвна склада на доски — новые доски");
+                "ингредиенты из сундука берутся: брёвна склада на доски — новые доски"
+                        + " Иначе тест withdraw_TargetItem_NotFromChests перестанет ловить эту поломку. При смене withdraw_TargetItem_NotFromChests проверь это утверждение.");
     }
 }

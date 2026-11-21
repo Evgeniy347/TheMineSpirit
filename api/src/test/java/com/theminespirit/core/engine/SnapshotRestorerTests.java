@@ -34,7 +34,8 @@ class SnapshotRestorerTests {
                 5,
                 ((ScriptCall) validated.plan()).params().get("radius"),
                 "проверенный план обязан подставить умолчание необязательного параметра: адаптер восстанавливает "
-                        + "именно проверенный план, а не исходный снимок, иначе скрипт упадёт на requireInt");
+                        + "именно проверенный план, а не исходный снимок, иначе скрипт упадёт на requireInt"
+                        + " При смене withValidatedPlan_FillsOptionalDefault_SoRestoredScriptReceivesIt проверь это утверждение.");
 
         List<Map<String, Object>> seenParams = new ArrayList<>();
         ScriptRegistry registry = ScriptRegistry.of(Map.of("follow", params -> {
@@ -42,11 +43,16 @@ class SnapshotRestorerTests {
             return () -> ScriptStatus.SUCCEEDED;
         }));
         TaskRunner runner = TaskRunner.restore(validated, registry, ConditionRegistry.of(Map.of()));
-        assertEquals(RunStatus.SUCCEEDED, runner.tick(), "восстановленный скрипт обязан исполниться");
+        assertEquals(
+                RunStatus.SUCCEEDED,
+                runner.tick(),
+                "восстановленный скрипт обязан исполниться"
+                        + " Иначе тест withValidatedPlan_FillsOptionalDefault_SoRestoredScriptReceivesIt перестанет ловить эту поломку. При смене withValidatedPlan_FillsOptionalDefault_SoRestoredScriptReceivesIt проверь это утверждение.");
         assertEquals(
                 5,
                 seenParams.get(0).get("radius"),
-                "восстановленный скрипт обязан получить подставленное умолчание, а не пустой набор параметров");
+                "восстановленный скрипт обязан получить подставленное умолчание, а не пустой набор параметров"
+                        + " Иначе тест withValidatedPlan_FillsOptionalDefault_SoRestoredScriptReceivesIt перестанет ловить эту поломку. При смене withValidatedPlan_FillsOptionalDefault_SoRestoredScriptReceivesIt проверь это утверждение.");
     }
 
     @Test
@@ -63,13 +69,15 @@ class SnapshotRestorerTests {
         assertEquals(
                 RunStatus.RUNNING,
                 validated.status(),
-                "проверка из переданного каталога условий обязана быть принята, план остаётся работающим");
+                "проверка из переданного каталога условий обязана быть принята, план остаётся работающим"
+                        + " Иначе тест withValidatedPlan_ConditionCatalogGiven_UsesIt перестанет ловить эту поломку. При смене withValidatedPlan_ConditionCatalogGiven_UsesIt проверь это утверждение.");
 
         assertThrows(
                 PlanValidationException.class,
                 () -> SnapshotRestorer.withValidatedPlan(snapshot, scripts, ConditionCatalog.empty()),
                 "с пустым каталогом условий проверка плана обязана упасть: значит каталог действительно "
-                        + "передаётся в проверку, а не подменяется пустым");
+                        + "передаётся в проверку, а не подменяется пустым"
+                        + " Иначе тест withValidatedPlan_ConditionCatalogGiven_UsesIt перестанет ловить эту поломку. При смене withValidatedPlan_ConditionCatalogGiven_UsesIt проверь это утверждение.");
     }
 
     private static TaskSnapshot running(TaskNode plan) {

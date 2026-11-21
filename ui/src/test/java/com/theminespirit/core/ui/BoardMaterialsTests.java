@@ -37,7 +37,8 @@ class BoardMaterialsTests {
         assertEquals(
                 List.of(new BoardMaterials.Material(BoardMaterials.Kind.GATHER, "minecraft:oak_log", 7)),
                 materials,
-                "Задание добычи обязано показывать предмет и количество, которого не хватает до завершения");
+                "Задание добычи обязано показывать предмет и количество, которого не хватает до завершения"
+                        + " Иначе тест of_GatherTicket_ShowsItemAndRemainingCount перестанет ловить эту поломку. При смене of_GatherTicket_ShowsItemAndRemainingCount проверь это утверждение.");
     }
 
     @Test
@@ -48,7 +49,8 @@ class BoardMaterialsTests {
         assertEquals(
                 List.of(new BoardMaterials.Material(BoardMaterials.Kind.SUPPLY, "minecraft:dirt", 12)),
                 materials,
-                "Снабжение supply:* — это тоже материалы: экран обязан показать предмет и число");
+                "Снабжение supply:* — это тоже материалы: экран обязан показать предмет и число"
+                        + " Иначе тест of_SupplyTicket_ShowsItemAndCount перестанет ловить эту поломку. При смене of_SupplyTicket_ShowsItemAndCount проверь это утверждение.");
     }
 
     @Test
@@ -61,7 +63,8 @@ class BoardMaterialsTests {
                         new BoardMaterials.Material(BoardMaterials.Kind.MISSING, "dirt", 5),
                         new BoardMaterials.Material(BoardMaterials.Kind.MISSING, "oak_log", 3)),
                 materials,
-                "Несколько недостающих предметов показывают несколькими иконками в устойчивом порядке");
+                "Несколько недостающих предметов показывают несколькими иконками в устойчивом порядке"
+                        + " Иначе тест of_MultipleMissingItems_ShowsEachIconInStableOrder перестанет ловить эту поломку. При смене of_MultipleMissingItems_ShowsEachIconInStableOrder проверь это утверждение.");
     }
 
     @Test
@@ -69,8 +72,16 @@ class BoardMaterialsTests {
         List<BoardMaterials.Material> materials =
                 BoardMaterials.of(tile("BUILD_HOUSE", "WAITING_RESOURCES", Map.of("stone", 4), null, 0));
 
-        assertEquals(4, materials.get(0).count(), "Ожидание материалов показывает нехватку, а не полную нужду");
-        assertEquals(BoardMaterials.Kind.MISSING, materials.get(0).kind(), "Нехватка — отдельный вид материала");
+        assertEquals(
+                4,
+                materials.get(0).count(),
+                "Ожидание материалов показывает нехватку, а не полную нужду"
+                        + " Иначе тест of_WaitingResources_ShowsHowManyAreStillMissing перестанет ловить эту поломку. При смене of_WaitingResources_ShowsHowManyAreStillMissing проверь это утверждение.");
+        assertEquals(
+                BoardMaterials.Kind.MISSING,
+                materials.get(0).kind(),
+                "Нехватка — отдельный вид материала"
+                        + " Иначе тест of_WaitingResources_ShowsHowManyAreStillMissing перестанет ловить эту поломку. При смене of_WaitingResources_ShowsHowManyAreStillMissing проверь это утверждение.");
     }
 
     @Test
@@ -78,7 +89,8 @@ class BoardMaterialsTests {
         assertTrue(
                 BoardMaterials.of(tile("BUILD_HOUSE", "PENDING", Map.of(), null, 0))
                         .isEmpty(),
-                "Задание без материалов не рисует ни иконок, ни подписи");
+                "Задание без материалов не рисует ни иконок, ни подписи"
+                        + " Иначе тест of_TaskWithoutMaterials_ShowsNothing перестанет ловить эту поломку. При смене of_TaskWithoutMaterials_ShowsNothing проверь это утверждение.");
     }
 
     @Test
@@ -86,8 +98,16 @@ class BoardMaterialsTests {
         List<BoardMaterials.Material> materials =
                 BoardMaterials.of(tile("GATHER_MATERIALS", "WAITING_RESOURCES", Map.of("oak_log", 2), "oak_log", 7));
 
-        assertEquals(1, materials.size(), "Один предмет — одна иконка, даже если он есть и в нехватке, и в запасе");
-        assertEquals(7, materials.get(0).count(), "Показывают цель задания, а не промежуточную нехватку");
+        assertEquals(
+                1,
+                materials.size(),
+                "Один предмет — одна иконка, даже если он есть и в нехватке, и в запасе"
+                        + " Иначе тест of_SupplyAndMissingSameItem_ShowsSupplyOnce перестанет ловить эту поломку. При смене of_SupplyAndMissingSameItem_ShowsSupplyOnce проверь это утверждение.");
+        assertEquals(
+                7,
+                materials.get(0).count(),
+                "Показывают цель задания, а не промежуточную нехватку"
+                        + " Иначе тест of_SupplyAndMissingSameItem_ShowsSupplyOnce перестанет ловить эту поломку. При смене of_SupplyAndMissingSameItem_ShowsSupplyOnce проверь это утверждение.");
     }
 
     @Test
@@ -95,7 +115,8 @@ class BoardMaterialsTests {
         assertTrue(
                 BoardMaterials.of(tile("SMELT_CHARCOAL", "PENDING", Map.of(), "oak_log", 4))
                         .isEmpty(),
-                "Не всякий supplyItem — то, что дух добывает: иконку рисуют только для добычи и снабжения");
+                "Не всякий supplyItem — то, что дух добывает: иконку рисуют только для добычи и снабжения"
+                        + " Иначе тест of_OtherCaseWithSupply_DoesNotShowSupplyIcon перестанет ловить эту поломку. При смене of_OtherCaseWithSupply_DoesNotShowSupplyIcon проверь это утверждение.");
     }
 
     @Test
@@ -187,13 +208,16 @@ class BoardMaterialsTests {
                         new BoardMaterials.Material(BoardMaterials.Kind.NEED, "minecraft:cobblestone", 8, 4),
                         new BoardMaterials.Material(BoardMaterials.Kind.NEED, "minecraft:dirt", 5, 10240)),
                 materials,
-                "Карточка показывает «есть / надо» и не дублирует нехватку отдельной строкой");
+                "Карточка показывает «есть / надо» и не дублирует нехватку отдельной строкой"
+                        + " Иначе тест of_RepairWithStock_ShowsHaveAndNeedWithoutDuplicateMissing перестанет ловить эту поломку. При смене of_RepairWithStock_ShowsHaveAndNeedWithoutDuplicateMissing проверь это утверждение.");
         assertTrue(
                 BoardMaterials.shortage(materials.get(0)),
-                "Звезда нехватки — только у предмета, которого на складе меньше: булыжника 4 из 8");
+                "Звезда нехватки — только у предмета, которого на складе меньше: булыжника 4 из 8"
+                        + " Иначе тест of_RepairWithStock_ShowsHaveAndNeedWithoutDuplicateMissing перестанет ловить эту поломку. При смене of_RepairWithStock_ShowsHaveAndNeedWithoutDuplicateMissing проверь это утверждение.");
         assertTrue(
                 !BoardMaterials.shortage(materials.get(1)),
-                "Земли 10 240 при нужде 528: звезды быть не должно, склад закрывает нужду");
+                "Земли 10 240 при нужде 528: звезды быть не должно, склад закрывает нужду"
+                        + " Иначе тест of_RepairWithStock_ShowsHaveAndNeedWithoutDuplicateMissing перестанет ловить эту поломку. При смене of_RepairWithStock_ShowsHaveAndNeedWithoutDuplicateMissing проверь это утверждение.");
     }
 
     @Test
@@ -223,6 +247,7 @@ class BoardMaterialsTests {
                         new BoardMaterials.Material(BoardMaterials.Kind.NEED, "minecraft:dirt", 5),
                         new BoardMaterials.Material(BoardMaterials.Kind.MISSING, "minecraft:cobblestone", 3)),
                 BoardMaterials.of(repair),
-                "Карточка ремонта обязана показать весь список «Нужно», а следом — только нехватку склада");
+                "Карточка ремонта обязана показать весь список «Нужно», а следом — только нехватку склада"
+                        + " Иначе тест of_RepairBuilding_ShowsNeedThenMissing перестанет ловить эту поломку. При смене of_RepairBuilding_ShowsNeedThenMissing проверь это утверждение.");
     }
 }

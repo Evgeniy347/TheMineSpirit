@@ -27,7 +27,8 @@ class BoardWaitReasonsTests {
         assertEquals(
                 List.of(BoardWaitReasons.Kind.FREE_SPIRIT),
                 reasons.stream().map(BoardWaitReasons.Wait::kind).toList(),
-                "Задание без исполнителя ждёт свободного духа, а не абстрактной «выдачи»");
+                "Задание без исполнителя ждёт свободного духа, а не абстрактной «выдачи»"
+                        + " Иначе тест of_PendingWithoutSpirit_ReportsFreeSpirit перестанет ловить эту поломку. При смене of_PendingWithoutSpirit_ReportsFreeSpirit проверь это утверждение.");
     }
 
     @Test
@@ -39,8 +40,13 @@ class BoardWaitReasonsTests {
         assertEquals(
                 List.of(BoardWaitReasons.Kind.SPIRIT),
                 reasons.stream().map(BoardWaitReasons.Wait::kind).toList(),
-                "Задание с назначенным духом ждёт именно его");
-        assertEquals("Тихон", reasons.get(0).subject(), "Причина обязана называть духа по имени");
+                "Задание с назначенным духом ждёт именно его"
+                        + " Иначе тест of_PendingWithSpirit_ReportsThatSpirit перестанет ловить эту поломку. При смене of_PendingWithSpirit_ReportsThatSpirit проверь это утверждение.");
+        assertEquals(
+                "Тихон",
+                reasons.get(0).subject(),
+                "Причина обязана называть духа по имени"
+                        + " Иначе тест of_PendingWithSpirit_ReportsThatSpirit перестанет ловить эту поломку. При смене of_PendingWithSpirit_ReportsThatSpirit проверь это утверждение.");
     }
 
     @Test
@@ -53,9 +59,18 @@ class BoardWaitReasonsTests {
         assertEquals(
                 List.of(BoardWaitReasons.Kind.RESOURCE),
                 reasons.stream().map(BoardWaitReasons.Wait::kind).toList(),
-                "Нехватка обычного предмета — причина «ждёт ресурс»");
-        assertEquals("oak_log", reasons.get(0).subject(), "Причина обязана называть предмет");
-        assertEquals(3, reasons.get(0).count(), "Причина обязана называть недостающее количество");
+                "Нехватка обычного предмета — причина «ждёт ресурс»"
+                        + " Иначе тест of_WaitingResource_ReportsItemAndCount перестанет ловить эту поломку. При смене of_WaitingResource_ReportsItemAndCount проверь это утверждение.");
+        assertEquals(
+                "oak_log",
+                reasons.get(0).subject(),
+                "Причина обязана называть предмет"
+                        + " Иначе тест of_WaitingResource_ReportsItemAndCount перестанет ловить эту поломку. При смене of_WaitingResource_ReportsItemAndCount проверь это утверждение.");
+        assertEquals(
+                3,
+                reasons.get(0).count(),
+                "Причина обязана называть недостающее количество"
+                        + " Иначе тест of_WaitingResource_ReportsItemAndCount перестанет ловить эту поломку. При смене of_WaitingResource_ReportsItemAndCount проверь это утверждение.");
     }
 
     @Test
@@ -68,7 +83,8 @@ class BoardWaitReasonsTests {
         assertEquals(
                 List.of(BoardWaitReasons.Kind.TOOL),
                 reasons.stream().map(BoardWaitReasons.Wait::kind).toList(),
-                "Нехватка кирки — это ожидание инструмента, а не обычного ресурса");
+                "Нехватка кирки — это ожидание инструмента, а не обычного ресурса"
+                        + " Иначе тест of_MissingTool_ReportsToolKind перестанет ловить эту поломку. При смене of_MissingTool_ReportsToolKind проверь это утверждение.");
     }
 
     @Test
@@ -81,8 +97,13 @@ class BoardWaitReasonsTests {
         assertEquals(
                 List.of(BoardWaitReasons.Kind.DEPENDENCY),
                 reasons.stream().map(BoardWaitReasons.Wait::kind).toList(),
-                "Незавершённая зависимость — причина ожидания, а не свободный дух");
-        assertEquals("before", reasons.get(0).subject(), "Причина обязана называть задание-зависимость");
+                "Незавершённая зависимость — причина ожидания, а не свободный дух"
+                        + " Иначе тест of_UnfinishedDependency_ReportsDependencyId перестанет ловить эту поломку. При смене of_UnfinishedDependency_ReportsDependencyId проверь это утверждение.");
+        assertEquals(
+                "before",
+                reasons.get(0).subject(),
+                "Причина обязана называть задание-зависимость"
+                        + " Иначе тест of_UnfinishedDependency_ReportsDependencyId перестанет ловить эту поломку. При смене of_UnfinishedDependency_ReportsDependencyId проверь это утверждение.");
     }
 
     @Test
@@ -95,7 +116,8 @@ class BoardWaitReasonsTests {
         assertEquals(
                 List.of(BoardWaitReasons.Kind.DEPENDENCY),
                 reasons.stream().map(BoardWaitReasons.Wait::kind).toList(),
-                "Проваленная зависимость не считается выполненной: задание обязано её ждать");
+                "Проваленная зависимость не считается выполненной: задание обязано её ждать"
+                        + " Иначе тест of_FailedDependency_ReportsDependencyId перестанет ловить эту поломку. При смене of_FailedDependency_ReportsDependencyId проверь это утверждение.");
     }
 
     @Test
@@ -108,7 +130,8 @@ class BoardWaitReasonsTests {
         assertEquals(
                 List.of(BoardWaitReasons.Kind.FREE_SPIRIT),
                 reasons.stream().map(BoardWaitReasons.Wait::kind).toList(),
-                "Завершённая зависимость не мешает заданию ждать свободного духа");
+                "Завершённая зависимость не мешает заданию ждать свободного духа"
+                        + " Иначе тест of_FinishedDependency_DoesNotReportDependency перестанет ловить эту поломку. При смене of_FinishedDependency_DoesNotReportDependency проверь это утверждение.");
     }
 
     @Test
@@ -120,7 +143,8 @@ class BoardWaitReasonsTests {
         assertEquals(
                 List.of(BoardWaitReasons.Kind.BLOCKED),
                 reasons.stream().map(BoardWaitReasons.Wait::kind).toList(),
-                "Заблокированное задание обязано называть блокировку, а не ждать духа");
+                "Заблокированное задание обязано называть блокировку, а не ждать духа"
+                        + " Иначе тест of_Blocked_ReportsBlocked перестанет ловить эту поломку. При смене of_Blocked_ReportsBlocked проверь это утверждение.");
     }
 
     @Test
@@ -131,10 +155,12 @@ class BoardWaitReasonsTests {
         assertEquals(
                 List.of(),
                 BoardWaitReasons.of(active, List.of(active)),
-                "Выполняющееся задание не ждёт: причин ожидания нет");
+                "Выполняющееся задание не ждёт: причин ожидания нет"
+                        + " Иначе тест of_AssignedOrDone_ReportsNothing перестанет ловить эту поломку. При смене of_AssignedOrDone_ReportsNothing проверь это утверждение.");
         assertEquals(
                 List.of(),
                 BoardWaitReasons.of(done, List.of(done)),
-                "Завершённое задание не ждёт: причин ожидания нет");
+                "Завершённое задание не ждёт: причин ожидания нет"
+                        + " Иначе тест of_AssignedOrDone_ReportsNothing перестанет ловить эту поломку. При смене of_AssignedOrDone_ReportsNothing проверь это утверждение.");
     }
 }

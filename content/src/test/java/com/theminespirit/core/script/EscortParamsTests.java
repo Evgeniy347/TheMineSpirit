@@ -18,13 +18,17 @@ class EscortParamsTests {
         assertEquals(
                 3,
                 params.radius(),
-                "escort без радиуса обязан взять умолчание каталога 3: без дистанции дух не знает, где держаться");
+                "escort без радиуса обязан взять умолчание каталога 3: без дистанции дух не знает, где держаться"
+                        + " Иначе тест from_OnlyTarget_FillsRadiusAndUntilFromCatalogDefaults перестанет ловить эту поломку. При смене from_OnlyTarget_FillsRadiusAndUntilFromCatalogDefaults проверь это утверждение.");
         assertEquals(
                 0,
                 params.untilTicks(),
-                "escort без until идёт до команды стоп: нулевой срок заканчивает задачу только отменой");
+                "escort без until идёт до команды стоп: нулевой срок заканчивает задачу только отменой"
+                        + " Иначе тест from_OnlyTarget_FillsRadiusAndUntilFromCatalogDefaults перестанет ловить эту поломку. При смене from_OnlyTarget_FillsRadiusAndUntilFromCatalogDefaults проверь это утверждение.");
         assertTrue(
-                params.untilStop(), "until = 0 обязан означать «до команды стоп», иначе сопровождение завершится само");
+                params.untilStop(),
+                "until = 0 обязан означать «до команды стоп», иначе сопровождение завершится само"
+                        + " При смене from_OnlyTarget_FillsRadiusAndUntilFromCatalogDefaults проверь это утверждение.");
     }
 
     @Test
@@ -34,12 +38,17 @@ class EscortParamsTests {
         assertEquals(
                 5,
                 params.radius(),
-                "escort обязан принять радиус удержания из параметров: им задаётся расстояние до цели");
+                "escort обязан принять радиус удержания из параметров: им задаётся расстояние до цели"
+                        + " Иначе тест from_ExplicitValues_ReturnsThem перестанет ловить эту поломку. При смене from_ExplicitValues_ReturnsThem проверь это утверждение.");
         assertEquals(
                 120,
                 params.untilTicks(),
-                "escort обязан принять срок until в тиках: им ограничивается длительное сопровождение");
-        assertFalse(params.untilStop(), "положительный until — это срок, а не режим «до команды стоп»");
+                "escort обязан принять срок until в тиках: им ограничивается длительное сопровождение"
+                        + " Иначе тест from_ExplicitValues_ReturnsThem перестанет ловить эту поломку. При смене from_ExplicitValues_ReturnsThem проверь это утверждение.");
+        assertFalse(
+                params.untilStop(),
+                "положительный until — это срок, а не режим «до команды стоп»"
+                        + " Иначе тест from_ExplicitValues_ReturnsThem перестанет ловить эту поломку. При смене from_ExplicitValues_ReturnsThem проверь это утверждение.");
     }
 
     @Test
@@ -49,11 +58,13 @@ class EscortParamsTests {
         assertEquals(
                 TargetSelector.Kind.PLAYER,
                 selector.kind(),
-                "escort по имени игрока обязан искать игрока: иначе охрана пойдёт не за тем существом");
+                "escort по имени игрока обязан искать игрока: иначе охрана пойдёт не за тем существом"
+                        + " При смене selector_PlainPlayerName_IsPlayerTarget проверь это утверждение.");
         assertEquals(
                 "Steve",
                 selector.name().orElseThrow(),
-                "выбранная цель обязана сохранить имя игрока: по нему ScriptTargetResolver находит подопечного");
+                "выбранная цель обязана сохранить имя игрока: по нему ScriptTargetResolver находит подопечного"
+                        + " Иначе тест selector_PlainPlayerName_IsPlayerTarget перестанет ловить эту поломку. При смене selector_PlainPlayerName_IsPlayerTarget проверь это утверждение.");
     }
 
     @Test
@@ -65,11 +76,13 @@ class EscortParamsTests {
         assertEquals(
                 TargetSelector.Kind.SPIRIT,
                 selector.kind(),
-                "escort по UUID обязан искать духа: сопровождение духа и игрока — разные цели резолвера");
+                "escort по UUID обязан искать духа: сопровождение духа и игрока — разные цели резолвера"
+                        + " Иначе тест selector_SpiritUuid_IsSpiritTarget перестанет ловить эту поломку. При смене selector_SpiritUuid_IsSpiritTarget проверь это утверждение.");
         assertEquals(
                 uuid,
                 selector.name().orElseThrow(),
-                "UUID духа обязан дойти до резолвера без искажений: иначе цель не найдётся");
+                "UUID духа обязан дойти до резолвера без искажений: иначе цель не найдётся"
+                        + " При смене selector_SpiritUuid_IsSpiritTarget проверь это утверждение.");
     }
 
     @Test
@@ -81,7 +94,8 @@ class EscortParamsTests {
         assertEquals(
                 TargetSelector.Kind.SPIRIT,
                 selector.kind(),
-                "явный префикс spirit: обязан выбирать духа, даже если имя не похоже на UUID-строку");
+                "явный префикс spirit: обязан выбирать духа, даже если имя не похоже на UUID-строку"
+                        + " Иначе тест selector_SpiritPrefix_IsSpiritTarget перестанет ловить эту поломку. При смене selector_SpiritPrefix_IsSpiritTarget проверь это утверждение.");
     }
 
     @Test
@@ -89,7 +103,8 @@ class EscortParamsTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new EscortParams("  ", 3, 0),
-                "escort с пустой целью обязан отказывать: некого сопровождать и охранять");
+                "escort с пустой целью обязан отказывать: некого сопровождать и охранять"
+                        + " Иначе тест target_Blank_IsRejected перестанет ловить эту поломку. При смене target_Blank_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -97,11 +112,13 @@ class EscortParamsTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new EscortParams("Steve", -1, 0),
-                "escort с отрицательным радиусом обязан отказывать: дистанция меньше нуля бессмысленна");
+                "escort с отрицательным радиусом обязан отказывать: дистанция меньше нуля бессмысленна"
+                        + " Иначе тест radius_OutsideCatalogBounds_IsRejected перестанет ловить эту поломку. При смене radius_OutsideCatalogBounds_IsRejected проверь это утверждение.");
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new EscortParams("Steve", 17, 0),
-                "escort с радиусом больше 16 обязан отказывать: дальше дух уходит из тактической зоны охраны");
+                "escort с радиусом больше 16 обязан отказывать: дальше дух уходит из тактической зоны охраны"
+                        + " Иначе тест radius_OutsideCatalogBounds_IsRejected перестанет ловить эту поломку. При смене radius_OutsideCatalogBounds_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -109,11 +126,13 @@ class EscortParamsTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new EscortParams("Steve", 3, -1),
-                "escort с отрицательным сроком обязан отказывать: срок не может идти назад");
+                "escort с отрицательным сроком обязан отказывать: срок не может идти назад"
+                        + " Иначе тест until_OutsideCatalogBounds_IsRejected перестанет ловить эту поломку. При смене until_OutsideCatalogBounds_IsRejected проверь это утверждение.");
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new EscortParams("Steve", 3, 6001),
-                "escort со сроком больше 6000 тиков обязан отказывать: предел совпадает с лимитом ожидания плана");
+                "escort со сроком больше 6000 тиков обязан отказывать: предел совпадает с лимитом ожидания плана"
+                        + " Иначе тест until_OutsideCatalogBounds_IsRejected перестанет ловить эту поломку. При смене until_OutsideCatalogBounds_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -121,6 +140,7 @@ class EscortParamsTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> EscortParams.from(Map.of("target", "Steve", "radius", "близко")),
-                "escort с нецелым радиусом обязан отказывать: строку нельзя тихо превратить в дистанцию");
+                "escort с нецелым радиусом обязан отказывать: строку нельзя тихо превратить в дистанцию"
+                        + " Иначе тест from_WrongRadiusType_IsRejected перестанет ловить эту поломку. При смене from_WrongRadiusType_IsRejected проверь это утверждение.");
     }
 }

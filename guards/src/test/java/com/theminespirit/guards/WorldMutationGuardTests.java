@@ -45,7 +45,8 @@ class WorldMutationGuardTests {
                 "Изменение блока мимо SpiritBlocks делает яму нерасследуемой: в block_changes не будет ни автора, "
                         + "ни задания, ни основания. Как надо: зовите SpiritBlocks.place/restore/destroy; "
                         + "исключение — только явный список состояний (дверь, крышка, улей, возраст ягоды) с причиной. "
-                        + "Нарушители");
+                        + "Нарушители"
+                        + " Иначе тест spiritCode_BlockMutation_GoesThroughSpiritBlocks перестанет ловить эту поломку. При смене spiritCode_BlockMutation_GoesThroughSpiritBlocks проверь это утверждение.");
     }
 
     @Test
@@ -55,7 +56,8 @@ class WorldMutationGuardTests {
         assertEquals(
                 List.of("neoforge/Sample.java: .setBlock("),
                 offenders(Map.of(), sources),
-                "Сторож ослеп: прямой setBlock обязан попасть в нарушители");
+                "Сторож ослеп: прямой setBlock обязан попасть в нарушители"
+                        + " Иначе тест mutationScan_DirectCall_IsReported перестанет ловить эту поломку. При смене mutationScan_DirectCall_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -65,7 +67,8 @@ class WorldMutationGuardTests {
         assertEquals(
                 List.of(),
                 offenders(Map.of("neoforge/Sample.java", "крышка сундука"), sources),
-                "Сторож ложно срабатывает: явное исключение с причиной обязано приниматься");
+                "Сторож ложно срабатывает: явное исключение с причиной обязано приниматься"
+                        + " Иначе тест mutationScan_ExplicitException_IsAccepted перестанет ловить эту поломку. При смене mutationScan_ExplicitException_IsAccepted проверь это утверждение.");
     }
 
     @Test
@@ -75,7 +78,8 @@ class WorldMutationGuardTests {
         assertEquals(
                 List.of(),
                 offenders(Map.of(), sources),
-                "destroyBlockProgress рисует трещины, а не меняет мир: сторож не должен его запрещать");
+                "destroyBlockProgress рисует трещины, а не меняет мир: сторож не должен его запрещать"
+                        + " Иначе тест mutationScan_DestroyProgress_IsNotWorldChange перестанет ловить эту поломку. При смене mutationScan_DestroyProgress_IsNotWorldChange проверь это утверждение.");
     }
 
     private static List<String> offenders(Map<String, String> exceptions, Map<String, String> sources) {

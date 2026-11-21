@@ -17,7 +17,8 @@ class More3EventsTests {
                 new BlockCoord(roof.x(), TownFixtures.LEVEL, roof.z()),
                 More3Events.dangerBase(site, roof),
                 "Событие пишет основание колонки (уровень ограды), а не ноги духа на крыше склада: иначе "
-                        + "avoidDanger и забор получают произвольную y=80");
+                        + "avoidDanger и забор получают произвольную y=80"
+                        + " При смене dangerBase_DangerAboveSettlement_UsesFenceLevel проверь это утверждение.");
     }
 
     @Test
@@ -28,6 +29,7 @@ class More3EventsTests {
                 feet,
                 More3Events.dangerBase((StageSite) null, feet),
                 "До появления площадки поселения основания колонки нет: запись остаётся на ногах и мигрирует, "
-                        + "когда уровень ограды станет известен");
+                        + "когда уровень ограды станет известен"
+                        + " Иначе тест dangerBase_NoSettlement_KeepsFeet перестанет ловить эту поломку. При смене dangerBase_NoSettlement_KeepsFeet проверь это утверждение.");
     }
 }

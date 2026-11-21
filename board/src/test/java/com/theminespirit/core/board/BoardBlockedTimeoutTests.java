@@ -40,15 +40,20 @@ class BoardBlockedTimeoutTests {
             assertEquals(
                     BoardOutcome.CLAIMED,
                     board.claim(ID, SPIRITS[attempt], now[0]),
-                    "Попытка " + (attempt + 1) + " выдана: иначе провал не к чему привязать");
-            assertTrue(board.fail(ID), "Попытка " + (attempt + 1) + " провалена");
+                    "Попытка " + (attempt + 1) + " выдана: иначе провал не к чему привязать"
+                            + " При смене механику проверь это утверждение. Иначе поломка пройдёт незамеченной в прогоне.");
+            assertTrue(
+                    board.fail(ID),
+                    "Попытка " + (attempt + 1) + " провалена"
+                            + " Иначе тест механику перестанет ловить эту поломку. При смене механику проверь это утверждение. Иначе поломка пройдёт незамеченной в прогоне.");
             now[0] += BoardTuning.failBackoffTicks();
         }
         assertEquals(
                 BoardStatus.BLOCKED,
                 board.statusOf(ID).orElse(null),
                 "После " + BoardTuning.ticketFailLimit() + " провалов задание блокируется: это состояние "
-                        + "живой шахты в observe9");
+                        + "живой шахты в observe9"
+                        + " Иначе тест механику перестанет ловить эту поломку. При смене механику проверь это утверждение.");
         return now[0];
     }
 
@@ -63,18 +68,24 @@ class BoardBlockedTimeoutTests {
         assertEquals(
                 BoardStatus.BLOCKED,
                 board.statusOf(ID).orElse(null),
-                "Таймер больше не снимает блокировку: без изменения условия задание остаётся BLOCKED");
+                "Таймер больше не снимает блокировку: без изменения условия задание остаётся BLOCKED"
+                        + " Иначе тест blocked_StockAppears_UnblocksByConditionNotByTime перестанет ловить эту поломку. При смене blocked_StockAppears_UnblocksByConditionNotByTime проверь это утверждение.");
 
         board.claimable(new StockView(Map.of("dirt", 9)), now[0]);
         assertEquals(
                 BoardStatus.PENDING,
                 board.statusOf(ID).orElse(null),
-                "Предмет появился — условие снято, задание снова доступно");
+                "Предмет появился — условие снято, задание снова доступно"
+                        + " Иначе тест blocked_StockAppears_UnblocksByConditionNotByTime перестанет ловить эту поломку. При смене blocked_StockAppears_UnblocksByConditionNotByTime проверь это утверждение.");
         assertTrue(
                 board.failures().drainBlocks().stream()
                         .anyMatch(entry -> entry.event() == BoardLog.Event.UNBLOCKED
                                 && entry.modifiers().stream().anyMatch(text -> "changed=dirt:9->0".equals(text))),
-                "Разблокировка называет изменение запаса, а не таймаут");
-        assertTrue(board.failures().drainBlocks().isEmpty(), "Запись отдаётся один раз");
+                "Разблокировка называет изменение запаса, а не таймаут"
+                        + " Иначе тест blocked_StockAppears_UnblocksByConditionNotByTime перестанет ловить эту поломку. При смене blocked_StockAppears_UnblocksByConditionNotByTime проверь это утверждение.");
+        assertTrue(
+                board.failures().drainBlocks().isEmpty(),
+                "Запись отдаётся один раз"
+                        + " Иначе тест blocked_StockAppears_UnblocksByConditionNotByTime перестанет ловить эту поломку. При смене blocked_StockAppears_UnblocksByConditionNotByTime проверь это утверждение.");
     }
 }

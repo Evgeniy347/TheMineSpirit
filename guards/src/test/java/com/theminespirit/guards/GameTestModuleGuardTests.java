@@ -20,7 +20,8 @@ class GameTestModuleGuardTests {
         assertTrue(
                 Files.isDirectory(MAIN.resolve(PACKAGE).resolve("gametest")),
                 "GameTest-сцены не вынесены в :gametest: gametest/src/main/java/com/theminespirit/gametest "
-                        + "отсутствует. Как надо: сцены физически в :gametest, пакет прежний.");
+                        + "отсутствует. Как надо: сцены физически в :gametest, пакет прежний."
+                        + " Иначе тест gameTestScenes_LiveInGameTestModule_NotInRoot перестанет ловить эту поломку. При смене gameTestScenes_LiveInGameTestModule_NotInRoot проверь это утверждение.");
         List<String> misplaced = new ArrayList<>();
         SourceFiles.allMain().forEach((file, text) -> {
             String logical = SourceFiles.logical(file);
@@ -32,21 +33,25 @@ class GameTestModuleGuardTests {
                 List.of(),
                 misplaced,
                 "GameTest-сцены обязаны лежать в :gametest: иначе правка сцены гоняет все тесты корня, а "
-                        + "runGameTestServer собирает не тот модуль. Нарушители:");
+                        + "runGameTestServer собирает не тот модуль. Нарушители:"
+                        + " При смене gameTestScenes_LiveInGameTestModule_NotInRoot проверь это утверждение.");
     }
 
     @Test
     void gameTestModule_Layout_HasOwnRunAndTests() {
         assertTrue(
                 Files.isDirectory(TEST.resolve(PACKAGE).resolve("gametest")),
-                "У :gametest нет своих тестов (gametest/src/test/java): перенос отключил проверки сцен.");
+                "У :gametest нет своих тестов (gametest/src/test/java): перенос отключил проверки сцен."
+                        + " Иначе тест gameTestModule_Layout_HasOwnRunAndTests перестанет ловить эту поломку. При смене gameTestModule_Layout_HasOwnRunAndTests проверь это утверждение.");
         assertTrue(
                 Files.isRegularFile(TEST.resolve(PACKAGE).resolve("gametest/GameTestWorldSeedTests.java")),
-                "Тест GameTestWorldSeedTests обязан переехать в :gametest.");
+                "Тест GameTestWorldSeedTests обязан переехать в :gametest."
+                        + " Иначе тест gameTestModule_Layout_HasOwnRunAndTests перестанет ловить эту поломку. При смене gameTestModule_Layout_HasOwnRunAndTests проверь это утверждение.");
         assertTrue(
                 !Files.isDirectory(ROOT_MAIN)
                         || SourceFiles.javaUnder(ROOT_MAIN).isEmpty(),
-                "Корневой src/main/java обязан остаться пустым после переноса сцен и мода.");
+                "Корневой src/main/java обязан остаться пустым после переноса сцен и мода."
+                        + " Иначе тест gameTestModule_Layout_HasOwnRunAndTests перестанет ловить эту поломку. При смене gameTestModule_Layout_HasOwnRunAndTests проверь это утверждение.");
     }
 
     @Test
@@ -61,6 +66,7 @@ class GameTestModuleGuardTests {
                 List.of(),
                 violations,
                 "Сцены :gametest не тянут сторожа и тестовую обвязку корня: модуль собирается от :mod и "
-                        + "механик, а не от тестов корня. Нарушители:");
+                        + "механик, а не от тестов корня. Нарушители:"
+                        + " Иначе тест gameTestModule_KnowsModAndMechanics_NotGuards перестанет ловить эту поломку. При смене gameTestModule_KnowsModAndMechanics_NotGuards проверь это утверждение.");
     }
 }

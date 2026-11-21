@@ -51,10 +51,12 @@ class InterruptExitTests {
                 30,
                 column.size(),
                 "Столб, прерванный на середине, оставляет каждую поставленную клетку временной меткой: "
-                        + "иначе граф не увидит подмости и дух останется на вершине без задачи");
+                        + "иначе граф не увидит подмости и дух останется на вершине без задачи"
+                        + " При смене pillarUp_InterruptedOnTop_TemporaryMarksAndPerchNeedStayVisible проверь это утверждение.");
         assertTrue(
                 column.contains(new BlockCoord(3, LEVEL + 29, 3)),
-                "Вершина столба тоже помечена: нужда perch считается по временному блоку под ногами");
+                "Вершина столба тоже помечена: нужда perch считается по временному блоку под ногами"
+                        + " Иначе тест pillarUp_InterruptedOnTop_TemporaryMarksAndPerchNeedStayVisible перестанет ловить эту поломку. При смене pillarUp_InterruptedOnTop_TemporaryMarksAndPerchNeedStayVisible проверь это утверждение.");
 
         Map<String, String> live = Map.of("perch", "на своих подмостях выше безопасного прыжка");
         assertTrue(
@@ -63,11 +65,13 @@ class InterruptExitTests {
                                 live,
                                 VitalNeeds.needs())
                         .isPresent(),
-                "Перебитый на вершине дух не берёт работу внизу: иначе тикет уходит ему и падает «пути нет»");
+                "Перебитый на вершине дух не берёт работу внизу: иначе тикет уходит ему и падает «пути нет»"
+                        + " При смене pillarUp_InterruptedOnTop_TemporaryMarksAndPerchNeedStayVisible проверь это утверждение.");
         assertFalse(
                 VitalGate.refusal(ticket("graph:rescue_spirit", BoardCase.RESCUE_SPIRIT), live, VitalNeeds.needs())
                         .isPresent(),
-                "Спуск по своему столбу выдаётся как спасение: уборка и выход — работа графа");
+                "Спуск по своему столбу выдаётся как спасение: уборка и выход — работа графа"
+                        + " Иначе тест pillarUp_InterruptedOnTop_TemporaryMarksAndPerchNeedStayVisible перестанет ловить эту поломку. При смене pillarUp_InterruptedOnTop_TemporaryMarksAndPerchNeedStayVisible проверь это утверждение.");
     }
 
     @Test
@@ -83,8 +87,13 @@ class InterruptExitTests {
                 1,
                 found.strays().size(),
                 "Недосыпанная засыпка оставляет временный блок, а скан лота видит его лишним: "
-                        + "граф поставит уборку, а не забудет след");
-        assertEquals("minecraft:dirt", found.strays().get(0).blockId(), "Скан называет, что именно убирать");
+                        + "граф поставит уборку, а не забудет след"
+                        + " Иначе тест fill_Interrupted_PartialFillStaysVisibleToAudit перестанет ловить эту поломку. При смене fill_Interrupted_PartialFillStaysVisibleToAudit проверь это утверждение.");
+        assertEquals(
+                "minecraft:dirt",
+                found.strays().get(0).blockId(),
+                "Скан называет, что именно убирать"
+                        + " Иначе тест fill_Interrupted_PartialFillStaysVisibleToAudit перестанет ловить эту поломку. При смене fill_Interrupted_PartialFillStaysVisibleToAudit проверь это утверждение.");
     }
 
     @Test
@@ -97,13 +106,19 @@ class InterruptExitTests {
 
         reservations.releaseAll(SPIRIT);
 
-        assertEquals(0, reservations.size(), "Отмена расчистки отпускает брони клеток: иначе другой дух не возьмёт их");
+        assertEquals(
+                0,
+                reservations.size(),
+                "Отмена расчистки отпускает брони клеток: иначе другой дух не возьмёт их"
+                        + " При смене clearArea_Interrupted_ReleasesReservationsAndKeepsScaffoldMarked проверь это утверждение.");
         assertTrue(
                 reservations.reserve(first, UUID.fromString("55555555-5555-5555-5555-555555555555")),
-                "После отмены клетку может забронировать другой дух: бронь не умирает вместе с задачей");
+                "После отмены клетку может забронировать другой дух: бронь не умирает вместе с задачей"
+                        + " Иначе тест clearArea_Interrupted_ReleasesReservationsAndKeepsScaffoldMarked перестанет ловить эту поломку. При смене clearArea_Interrupted_ReleasesReservationsAndKeepsScaffoldMarked проверь это утверждение.");
         assertTrue(
                 temporaryColumn(10, 10, 4).contains(new BlockCoord(10, LEVEL + 3, 10)),
-                "Подмости остаются временной меткой: вершина даст нужду perch, а скан — задачу уборки");
+                "Подмости остаются временной меткой: вершина даст нужду perch, а скан — задачу уборки"
+                        + " Иначе тест clearArea_Interrupted_ReleasesReservationsAndKeepsScaffoldMarked перестанет ловить эту поломку. При смене clearArea_Interrupted_ReleasesReservationsAndKeepsScaffoldMarked проверь это утверждение.");
     }
 
     @Test
@@ -112,13 +127,16 @@ class InterruptExitTests {
 
         assertTrue(
                 EscapeRestore.blockedByBody(new BlockCoord(7, 50, 7), feet),
-                "Клетку тела не закладывают: иначе дух замурует сам себя при отмене dig_out");
+                "Клетку тела не закладывают: иначе дух замурует сам себя при отмене dig_out"
+                        + " При смене digOut_Interrupted_RestoreReturnsSpoilExceptBody проверь это утверждение.");
         assertTrue(
                 EscapeRestore.blockedByBody(new BlockCoord(7, 51, 7), feet),
-                "Клетку головы тоже не закладывают: возврат spoil щадит тело духа");
+                "Клетку головы тоже не закладывают: возврат spoil щадит тело духа"
+                        + " Иначе тест digOut_Interrupted_RestoreReturnsSpoilExceptBody перестанет ловить эту поломку. При смене digOut_Interrupted_RestoreReturnsSpoilExceptBody проверь это утверждение.");
         assertFalse(
                 EscapeRestore.blockedByBody(new BlockCoord(7, 49, 7), feet),
-                "Остальные прокопанные клетки возвращаются: прерванный dig_out не оставляет за собой нору");
+                "Остальные прокопанные клетки возвращаются: прерванный dig_out не оставляет за собой нору"
+                        + " Иначе тест digOut_Interrupted_RestoreReturnsSpoilExceptBody перестанет ловить эту поломку. При смене digOut_Interrupted_RestoreReturnsSpoilExceptBody проверь это утверждение.");
     }
 
     @Test
@@ -131,11 +149,17 @@ class InterruptExitTests {
         assertEquals(
                 3,
                 deck.size(),
-                "Недоложенный мост оставляет настил временными метками: граф увидит след и поставит уборку");
+                "Недоложенный мост оставляет настил временными метками: граф увидит след и поставит уборку"
+                        + " Иначе тест bridge_Interrupted_PlacedCellsStayMarkedTemporary перестанет ловить эту поломку. При смене bridge_Interrupted_PlacedCellsStayMarkedTemporary проверь это утверждение.");
         assertTrue(
                 deck.remove(new BlockCoord(21, LEVEL, 20)),
-                "Уборка снимает метку по клетке: след не остаётся навсегда после разбора моста");
-        assertEquals(2, deck.size(), "Снятая клетка больше не числится временной");
+                "Уборка снимает метку по клетке: след не остаётся навсегда после разбора моста"
+                        + " Иначе тест bridge_Interrupted_PlacedCellsStayMarkedTemporary перестанет ловить эту поломку. При смене bridge_Interrupted_PlacedCellsStayMarkedTemporary проверь это утверждение.");
+        assertEquals(
+                2,
+                deck.size(),
+                "Снятая клетка больше не числится временной"
+                        + " Иначе тест bridge_Interrupted_PlacedCellsStayMarkedTemporary перестанет ловить эту поломку. При смене bridge_Interrupted_PlacedCellsStayMarkedTemporary проверь это утверждение.");
     }
 
     @Test
@@ -146,7 +170,8 @@ class InterruptExitTests {
                 2,
                 route.size(),
                 "Маршрут, прерванный на подъёме, оставляет поставленные клетки временными: "
-                        + "иначе граф не отличит свои подмости от природного рельефа");
+                        + "иначе граф не отличит свои подмости от природного рельефа"
+                        + " При смене goto_Interrupted_RoutePillarStaysMarkedTemporary проверь это утверждение.");
     }
 
     @Test
@@ -159,7 +184,8 @@ class InterruptExitTests {
                                 live,
                                 VitalNeeds.needs())
                         .isPresent(),
-                "Угроза сильнее подмостей: дух отбивается или отходит, нужда perch не запирает его на вершине");
+                "Угроза сильнее подмостей: дух отбивается или отходит, нужда perch не запирает его на вершине"
+                        + " Иначе тест perchNeed_Threat_DefendAndRetreatStayAllowed перестанет ловить эту поломку. При смене perchNeed_Threat_DefendAndRetreatStayAllowed проверь это утверждение.");
     }
 
     @Test
@@ -169,11 +195,13 @@ class InterruptExitTests {
         assertTrue(
                 VitalGate.refusal(ticket("graph:event:night:sleep", BoardCase.ACTIVITY_REST), live, VitalNeeds.needs())
                         .isPresent(),
-                "Сон — обычная работа: на вершине столба он не выдаётся, сначала спуск");
+                "Сон — обычная работа: на вершине столба он не выдаётся, сначала спуск"
+                        + " Иначе тест perchNeed_Night_SleepRefusedButRescueAllowed перестанет ловить эту поломку. При смене perchNeed_Night_SleepRefusedButRescueAllowed проверь это утверждение.");
         assertFalse(
                 VitalGate.refusal(ticket("graph:rescue_spirit", BoardCase.RESCUE_SPIRIT), live, VitalNeeds.needs())
                         .isPresent(),
-                "Ночью спасение со спуском остаётся доступным");
+                "Ночью спасение со спуском остаётся доступным"
+                        + " Иначе тест perchNeed_Night_SleepRefusedButRescueAllowed перестанет ловить эту поломку. При смене perchNeed_Night_SleepRefusedButRescueAllowed проверь это утверждение.");
     }
 
     private static BlockProtection rules() {

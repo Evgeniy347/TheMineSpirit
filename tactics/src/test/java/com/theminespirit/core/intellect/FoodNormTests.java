@@ -16,8 +16,16 @@ class FoodNormTests {
     void perSoul_ZeroPopulation_NeedsNothing() {
         FoodNeed need = FoodNorm.perSoul(0, 1, TABLE, 1.5);
 
-        assertEquals(0, need.items(), "Пустому поселению еда не нужна: иначе ферма работает на несуществующих духов");
-        assertEquals(0.0, need.nutrition(), "Пустому поселению сытность не нужна: нужда считается на душу");
+        assertEquals(
+                0,
+                need.items(),
+                "Пустому поселению еда не нужна: иначе ферма работает на несуществующих духов"
+                        + " При смене perSoul_ZeroPopulation_NeedsNothing проверь это утверждение.");
+        assertEquals(
+                0.0,
+                need.nutrition(),
+                "Пустому поселению сытность не нужна: нужда считается на душу"
+                        + " Иначе тест perSoul_ZeroPopulation_NeedsNothing перестанет ловить эту поломку. При смене perSoul_ZeroPopulation_NeedsNothing проверь это утверждение.");
     }
 
     @Test
@@ -27,24 +35,34 @@ class FoodNormTests {
 
         assertTrue(
                 eight.items() > four.items() && eight.nutrition() > four.nutrition(),
-                "Нужда растёт с населением: иначе ферма недооценит голод большого поселения");
+                "Нужда растёт с населением: иначе ферма недооценит голод большого поселения"
+                        + " При смене perSoul_LargerPopulation_NeedsMore проверь это утверждение.");
         assertEquals(
                 12.0,
                 eight.nutrition(),
-                "Нужда 8 душ на сутки с пайком 1.5 — 12 сытности: спрос фермы считается от этого числа");
+                "Нужда 8 душ на сутки с пайком 1.5 — 12 сытности: спрос фермы считается от этого числа"
+                        + " Иначе тест perSoul_LargerPopulation_NeedsMore перестанет ловить эту поломку. При смене perSoul_LargerPopulation_NeedsMore проверь это утверждение.");
     }
 
     @Test
     void deficit_EmptyStock_EqualsNorm() {
         FoodDeficit deficit = FoodNorm.deficit(4, 1, 2, 1.5, 0.75, 0);
 
-        assertEquals(13.5, deficit.need(), "Норма 4 взрослых и ребёнка на 2 суток: 2 × (4×1.5 + 0.75) = 13.5 сытности");
+        assertEquals(
+                13.5,
+                deficit.need(),
+                "Норма 4 взрослых и ребёнка на 2 суток: 2 × (4×1.5 + 0.75) = 13.5 сытности"
+                        + " Иначе тест deficit_EmptyStock_EqualsNorm перестанет ловить эту поломку. При смене deficit_EmptyStock_EqualsNorm проверь это утверждение.");
         assertEquals(
                 0.0,
                 deficit.stock(),
-                "Пустой склад — запас ноль: дефицит равен норме, иначе интеллект недооценит голод");
+                "Пустой склад — запас ноль: дефицит равен норме, иначе интеллект недооценит голод"
+                        + " При смене deficit_EmptyStock_EqualsNorm проверь это утверждение.");
         assertEquals(
-                13.5, deficit.deficit(), "Дефицит пустого склада равен норме: спрос добычи еды растёт от этого числа");
+                13.5,
+                deficit.deficit(),
+                "Дефицит пустого склада равен норме: спрос добычи еды растёт от этого числа"
+                        + " Иначе тест deficit_EmptyStock_EqualsNorm перестанет ловить эту поломку. При смене deficit_EmptyStock_EqualsNorm проверь это утверждение.");
     }
 
     @Test
@@ -54,7 +72,8 @@ class FoodNormTests {
         assertEquals(
                 0.0,
                 deficit.deficit(),
-                "Запас выше нормы не создаёт отрицательного дефицита: излишек еды не превращается в долг");
+                "Запас выше нормы не создаёт отрицательного дефицита: излишек еды не превращается в долг"
+                        + " Иначе тест deficit_StockAboveNorm_Zero перестанет ловить эту поломку. При смене deficit_StockAboveNorm_Zero проверь это утверждение.");
     }
 
     @Test
@@ -64,7 +83,8 @@ class FoodNormTests {
         assertEquals(
                 3.0,
                 deficit.deficit(),
-                "Норма 4.5 минус запас 1.5 — дефицит 3: спрос растёт от нехватки, а не от всего запаса");
+                "Норма 4.5 минус запас 1.5 — дефицит 3: спрос растёт от нехватки, а не от всего запаса"
+                        + " Иначе тест deficit_PartialStock_Remainder перестанет ловить эту поломку. При смене deficit_PartialStock_Remainder проверь это утверждение.");
     }
 
     @Test
@@ -74,7 +94,8 @@ class FoodNormTests {
 
         assertTrue(
                 withChildren.need() < allAdults.need(),
-                "Дети едят меньше взрослых: норма поселения с детьми ниже, иначе ферма копит лишнее");
+                "Дети едят меньше взрослых: норма поселения с детьми ниже, иначе ферма копит лишнее"
+                        + " При смене deficit_ChildrenVersusAdults_NeedsLess проверь это утверждение.");
     }
 
     @Test
@@ -82,27 +103,33 @@ class FoodNormTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> FoodNorm.deficit(-1, 0, 1, 1.5, 0.75, 0),
-                "Отрицательное число взрослых не описывает поселение: норма считается на душу");
+                "Отрицательное число взрослых не описывает поселение: норма считается на душу"
+                        + " Иначе тест deficit_BadInputs_Throw перестанет ловить эту поломку. При смене deficit_BadInputs_Throw проверь это утверждение.");
         assertThrows(
                 IllegalArgumentException.class,
                 () -> FoodNorm.deficit(1, -1, 1, 1.5, 0.75, 0),
-                "Отрицательное число детей не описывает поселение: норма считается на душу");
+                "Отрицательное число детей не описывает поселение: норма считается на душу"
+                        + " Иначе тест deficit_BadInputs_Throw перестанет ловить эту поломку. При смене deficit_BadInputs_Throw проверь это утверждение.");
         assertThrows(
                 IllegalArgumentException.class,
                 () -> FoodNorm.deficit(1, 0, 0, 1.5, 0.75, 0),
-                "Норма на ноль суток всегда выполнена: голод станет невидимым для спроса");
+                "Норма на ноль суток всегда выполнена: голод станет невидимым для спроса"
+                        + " Иначе тест deficit_BadInputs_Throw перестанет ловить эту поломку. При смене deficit_BadInputs_Throw проверь это утверждение.");
         assertThrows(
                 IllegalArgumentException.class,
                 () -> FoodNorm.deficit(1, 0, 1, 0, 0.75, 0),
-                "Паёк взрослого ноль делает голод невидимым: норма задаётся данными > 0");
+                "Паёк взрослого ноль делает голод невидимым: норма задаётся данными > 0"
+                        + " Иначе тест deficit_BadInputs_Throw перестанет ловить эту поломку. При смене deficit_BadInputs_Throw проверь это утверждение.");
         assertThrows(
                 IllegalArgumentException.class,
                 () -> FoodNorm.deficit(1, 0, 1, 1.5, -1, 0),
-                "Отрицательный паёк ребёнка переворачивает норму: спрос падает при голоде");
+                "Отрицательный паёк ребёнка переворачивает норму: спрос падает при голоде"
+                        + " Иначе тест deficit_BadInputs_Throw перестанет ловить эту поломку. При смене deficit_BadInputs_Throw проверь это утверждение.");
         assertThrows(
                 IllegalArgumentException.class,
                 () -> FoodNorm.deficit(1, 0, 1, 1.5, 0.75, -1),
-                "Отрицательный запас невозможен: дефицит посчитался бы больше нормы");
+                "Отрицательный запас невозможен: дефицит посчитался бы больше нормы"
+                        + " Иначе тест deficit_BadInputs_Throw перестанет ловить эту поломку. При смене deficit_BadInputs_Throw проверь это утверждение.");
     }
 
     @Test
@@ -112,7 +139,8 @@ class FoodNormTests {
         assertEquals(
                 List.of("minecraft:bread", "minecraft:apple", "minecraft:cookie"),
                 rank,
-                "Что сытнее — то приоритетнее: хлеб 5 выше яблока 4, печенье 2 последнее");
+                "Что сытнее — то приоритетнее: хлеб 5 выше яблока 4, печенье 2 последнее"
+                        + " Иначе тест rankScore_TastierFood_RanksHigher перестанет ловить эту поломку. При смене rankScore_TastierFood_RanksHigher проверь это утверждение.");
     }
 
     @Test
@@ -120,11 +148,13 @@ class FoodNormTests {
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,
                 () -> new NutritionTable(Map.of()),
-                "Пустая таблица сытности не годится: без данных о еде норма на душу не считается");
+                "Пустая таблица сытности не годится: без данных о еде норма на душу не считается"
+                        + " Иначе тест table_EmptyMap_Throws перестанет ловить эту поломку. При смене table_EmptyMap_Throws проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("пуста"),
-                "Сообщение называет причину: при падении видно, что таблица не заполнена данными");
+                "Сообщение называет причину: при падении видно, что таблица не заполнена данными"
+                        + " Иначе тест table_EmptyMap_Throws перестанет ловить эту поломку. При смене table_EmptyMap_Throws проверь это утверждение.");
     }
 
     @Test
@@ -132,11 +162,13 @@ class FoodNormTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new NutritionTable(null),
-                "Норма без таблицы не считается: сытность еды — данные, а не ветка в коде");
+                "Норма без таблицы не считается: сытность еды — данные, а не ветка в коде"
+                        + " Иначе тест table_BadEntries_Throw перестанет ловить эту поломку. При смене table_BadEntries_Throw проверь это утверждение.");
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new NutritionTable(Map.of("minecraft:bread", -1.0)),
-                "Отрицательная сытность переворачивает ранг: худшая еда станет первой");
+                "Отрицательная сытность переворачивает ранг: худшая еда станет первой"
+                        + " Иначе тест table_BadEntries_Throw перестанет ловить эту поломку. При смене table_BadEntries_Throw проверь это утверждение.");
     }
 
     @Test
@@ -144,15 +176,18 @@ class FoodNormTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> FoodNorm.perSoul(-1, 1, TABLE, 1.5),
-                "Норма на отрицательное население не считается: душ не может быть отрицательно");
+                "Норма на отрицательное население не считается: душ не может быть отрицательно"
+                        + " Иначе тест perSoul_NegativeInputs_Throw перестанет ловить эту поломку. При смене perSoul_NegativeInputs_Throw проверь это утверждение.");
         assertThrows(
                 IllegalArgumentException.class,
                 () -> FoodNorm.perSoul(4, 0, TABLE, 1.5),
-                "Норма на ноль суток всегда нулевая: голод станет невидимым для спроса");
+                "Норма на ноль суток всегда нулевая: голод станет невидимым для спроса"
+                        + " Иначе тест perSoul_NegativeInputs_Throw перестанет ловить эту поломку. При смене perSoul_NegativeInputs_Throw проверь это утверждение.");
         assertThrows(
                 IllegalArgumentException.class,
                 () -> FoodNorm.perSoul(4, 1, TABLE, -1),
-                "Отрицательный паёк переворачивает нужду: ферма остановится при голоде");
+                "Отрицательный паёк переворачивает нужду: ферма остановится при голоде"
+                        + " Иначе тест perSoul_NegativeInputs_Throw перестанет ловить эту поломку. При смене perSoul_NegativeInputs_Throw проверь это утверждение.");
     }
 
     @Test
@@ -160,7 +195,8 @@ class FoodNormTests {
         assertEquals(
                 "minecraft:bread",
                 FoodNorm.best(TABLE, Map.of("minecraft:bread", 1, "minecraft:cookie", 9)),
-                "Из еды склада берут самую сытную: хлеб 5 выше печенья 2, даже если печенья больше");
+                "Из еды склада берут самую сытную: хлеб 5 выше печенья 2, даже если печенья больше"
+                        + " Иначе тест best_TastiestPresent_Chosen перестанет ловить эту поломку. При смене best_TastiestPresent_Chosen проверь это утверждение.");
     }
 
     @Test
@@ -168,11 +204,13 @@ class FoodNormTests {
         assertEquals(
                 "",
                 FoodNorm.best(TABLE, Map.of("minecraft:raw_iron", 64)),
-                "Без еды в описи лучшая еда пустая: добыче нечего брать из сундука");
+                "Без еды в описи лучшая еда пустая: добыче нечего брать из сундука"
+                        + " Иначе тест best_NoFoodInItems_Empty перестанет ловить эту поломку. При смене best_NoFoodInItems_Empty проверь это утверждение.");
         assertEquals(
                 "",
                 FoodNorm.best(TABLE, Map.of("minecraft:bread", 0)),
-                "Ноль хлеба — еды нет: пустой сундук не считается способом добычи");
+                "Ноль хлеба — еды нет: пустой сундук не считается способом добычи"
+                        + " Иначе тест best_NoFoodInItems_Empty перестанет ловить эту поломку. При смене best_NoFoodInItems_Empty проверь это утверждение.");
     }
 
     @Test
@@ -180,10 +218,12 @@ class FoodNormTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> FoodNorm.best(null, Map.of()),
-                "Лучшая еда без таблицы сытности не выбирается: сытность — данные");
+                "Лучшая еда без таблицы сытности не выбирается: сытность — данные"
+                        + " Иначе тест best_NullInputs_Throw перестанет ловить эту поломку. При смене best_NullInputs_Throw проверь это утверждение.");
         assertThrows(
                 IllegalArgumentException.class,
                 () -> FoodNorm.best(TABLE, null),
-                "Лучшая еда без описи не выбирается: пустой набор задают пустой картой");
+                "Лучшая еда без описи не выбирается: пустой набор задают пустой картой"
+                        + " Иначе тест best_NullInputs_Throw перестанет ловить эту поломку. При смене best_NullInputs_Throw проверь это утверждение.");
     }
 }

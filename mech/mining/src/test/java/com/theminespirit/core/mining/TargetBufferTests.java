@@ -22,16 +22,19 @@ class TargetBufferTests {
                 TargetBuffer.CAPACITY,
                 buffer.targets(ORIGIN).size(),
                 "в работе обязано быть не больше " + TargetBuffer.CAPACITY + " цели: список плана ограничен, "
-                        + "иначе планировщик читает сотни клеток за вызов");
+                        + "иначе планировщик читает сотни клеток за вызов"
+                        + " При смене offer_HundredFound_CapsActiveAndKeepsSurplus проверь это утверждение.");
         assertEquals(
                 36,
                 (buffer.size() - buffer.targets(ORIGIN).size()),
                 "найденное сверх " + TargetBuffer.CAPACITY + " обязано ждать в избытке, а не пропадать: "
-                        + "иначе дальние блоки не вернутся никогда и у края радиуса будет ложное «не осталось»");
+                        + "иначе дальние блоки не вернутся никогда и у края радиуса будет ложное «не осталось»"
+                        + " При смене offer_HundredFound_CapsActiveAndKeepsSurplus проверь это утверждение.");
         assertEquals(
                 100,
                 buffer.size(),
-                "буфер обязан помнить все сто найденных целей вместе: ни одна не теряется при переполнении");
+                "буфер обязан помнить все сто найденных целей вместе: ни одна не теряется при переполнении"
+                        + " Иначе тест offer_HundredFound_CapsActiveAndKeepsSurplus перестанет ловить эту поломку. При смене offer_HundredFound_CapsActiveAndKeepsSurplus проверь это утверждение.");
     }
 
     @Test
@@ -45,13 +48,18 @@ class TargetBufferTests {
                 TargetBuffer.CAPACITY,
                 buffer.targets(ORIGIN).size(),
                 "после одного изъятия рабочее множество обязано снова заполниться из избытка до "
-                        + TargetBuffer.CAPACITY + ": простаивающая ёмкость замедляет работу на ровном месте");
+                        + TargetBuffer.CAPACITY + ": простаивающая ёмкость замедляет работу на ровном месте"
+                        + " Иначе тест remove_WhileSurplusRemains_TopsActiveUpToCapacity перестанет ловить эту поломку. При смене remove_WhileSurplusRemains_TopsActiveUpToCapacity проверь это утверждение.");
         assertEquals(
                 35,
                 (buffer.size() - buffer.targets(ORIGIN).size()),
-                "избыток обязан уменьшиться ровно на одну цель, отданную в работу");
+                "избыток обязан уменьшиться ровно на одну цель, отданную в работу"
+                        + " Иначе тест remove_WhileSurplusRemains_TopsActiveUpToCapacity перестанет ловить эту поломку. При смене remove_WhileSurplusRemains_TopsActiveUpToCapacity проверь это утверждение.");
         assertEquals(
-                99, buffer.size(), "общее число целей обязано уменьшиться ровно на одну: изъятая цель не считается");
+                99,
+                buffer.size(),
+                "общее число целей обязано уменьшиться ровно на одну: изъятая цель не считается"
+                        + " Иначе тест remove_WhileSurplusRemains_TopsActiveUpToCapacity перестанет ловить эту поломку. При смене remove_WhileSurplusRemains_TopsActiveUpToCapacity проверь это утверждение.");
     }
 
     @Test
@@ -66,14 +74,17 @@ class TargetBufferTests {
         assertEquals(
                 36,
                 buffer.targets(ORIGIN).size(),
-                "после разбора первых " + TargetBuffer.CAPACITY + " целей избыток обязан перейти в работу");
+                "после разбора первых " + TargetBuffer.CAPACITY + " целей избыток обязан перейти в работу"
+                        + " Иначе тест remove_DrainingActive_KeepsSurplusAvailable перестанет ловить эту поломку. При смене remove_DrainingActive_KeepsSurplusAvailable проверь это утверждение.");
         assertEquals(
                 0,
                 (buffer.size() - buffer.targets(ORIGIN).size()),
-                "после разбора " + TargetBuffer.CAPACITY + " из ста избытка остаться не должно");
+                "после разбора " + TargetBuffer.CAPACITY + " из ста избытка остаться не должно"
+                        + " Иначе тест remove_DrainingActive_KeepsSurplusAvailable перестанет ловить эту поломку. При смене remove_DrainingActive_KeepsSurplusAvailable проверь это утверждение.");
         assertFalse(
                 buffer.isEmpty(),
-                "тридцать шесть целей обязаны остаться доступными: иначе дальние блоки потеряны навсегда");
+                "тридцать шесть целей обязаны остаться доступными: иначе дальние блоки потеряны навсегда"
+                        + " При смене remove_DrainingActive_KeepsSurplusAvailable проверь это утверждение.");
     }
 
     @Test
@@ -84,11 +95,15 @@ class TargetBufferTests {
         assertTrue(
                 buffer.needsRefill(),
                 "при семи целях в работе (< " + TargetBuffer.REFILL_THRESHOLD + ") обязан требоваться досбор: "
-                        + "иначе поиск не повторяется и правило «осталось меньше восьми — искать ещё» мёртвое");
+                        + "иначе поиск не повторяется и правило «осталось меньше восьми — искать ещё» мёртвое"
+                        + " При смене needsRefill_SevenActive_IsTrue проверь это утверждение.");
 
         buffer.offer(line(1));
 
-        assertFalse(buffer.needsRefill(), "при восьми целях в работе досбор не нужен: достаточно материала впереди");
+        assertFalse(
+                buffer.needsRefill(),
+                "при восьми целях в работе досбор не нужен: достаточно материала впереди"
+                        + " Иначе тест needsRefill_SevenActive_IsTrue перестанет ловить эту поломку. При смене needsRefill_SevenActive_IsTrue проверь это утверждение.");
     }
 
     @Test
@@ -102,7 +117,8 @@ class TargetBufferTests {
                 List.of(new BlockCoord(1, 0, 0), new BlockCoord(5, 0, 0), new BlockCoord(10, 0, 0)),
                 ordered,
                 "буфер обязан отдавать ближайшие цели первыми: планировщик выбирает стойку для дальней цели "
-                        + "раньше, чем для ближней, и тратит чтения впустую");
+                        + "раньше, чем для ближней, и тратит чтения впустую"
+                        + " Иначе тест targets_FromPosition_ReturnsNearestFirst перестанет ловить эту поломку. При смене targets_FromPosition_ReturnsNearestFirst проверь это утверждение.");
     }
 
     private static List<BlockCoord> line(int count) {

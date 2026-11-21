@@ -14,13 +14,16 @@ class RepairAuditWatchTests {
 
         assertTrue(
                 oak.blocks().stream().anyMatch(entry -> entry.block().contains("oak_planks")),
-                "Дубовая схема дома содержит дубовые доски — основа для сверки");
+                "Дубовая схема дома содержит дубовые доски — основа для сверки"
+                        + " Иначе тест houseSchematic_JungleWood_SwapsPlanks перестанет ловить эту поломку. При смене houseSchematic_JungleWood_SwapsPlanks проверь это утверждение.");
         assertTrue(
                 jungle.blocks().stream().anyMatch(entry -> entry.block().contains("jungle_planks")),
                 "Аудит дома обязан брать породу поселения: иначе /v1/world считает дом повреждённым (45), "
-                        + "пока сборочный аудит того же дома даёт 100/100");
+                        + "пока сборочный аудит того же дома даёт 100/100"
+                        + " При смене houseSchematic_JungleWood_SwapsPlanks проверь это утверждение.");
         assertFalse(
                 jungle.blocks().stream().anyMatch(entry -> entry.block().contains("oak_planks")),
-                "В джунглевой схеме не остаётся дубовых досок: один источник правды о материале дома");
+                "В джунглевой схеме не остаётся дубовых досок: один источник правды о материале дома"
+                        + " Иначе тест houseSchematic_JungleWood_SwapsPlanks перестанет ловить эту поломку. При смене houseSchematic_JungleWood_SwapsPlanks проверь это утверждение.");
     }
 }

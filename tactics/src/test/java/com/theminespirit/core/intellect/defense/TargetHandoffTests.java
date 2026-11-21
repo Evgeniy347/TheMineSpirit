@@ -31,7 +31,8 @@ class TargetHandoffTests {
         assertEquals(
                 Optional.of(UUID.fromString("22222222-2222-2222-2222-222222222222")),
                 TargetHandoff.handOff(SELF, ZOMBIE, allies, Set.of(), DefenseProfileTests.PROFILE),
-                "Цель уходит ближайшему к ней способному: иначе подмена идёт дольше через полкарты");
+                "Цель уходит ближайшему к ней способному: иначе подмена идёт дольше через полкарты"
+                        + " При смене handOff_TwoCapable_NearestChosen проверь это утверждение.");
     }
 
     @Test
@@ -48,7 +49,8 @@ class TargetHandoffTests {
                         allies,
                         Set.of(UUID.fromString("11111111-1111-1111-1111-111111111111")),
                         DefenseProfileTests.PROFILE),
-                "Занятый союзник пропускается: иначе цель уйдёт духу, который уже ведёт свой бой");
+                "Занятый союзник пропускается: иначе цель уйдёт духу, который уже ведёт свой бой"
+                        + " При смене handOff_NearestBusy_FartherChosen проверь это утверждение.");
     }
 
     @Test
@@ -60,7 +62,8 @@ class TargetHandoffTests {
         assertEquals(
                 Optional.of(UUID.fromString("22222222-2222-2222-2222-222222222222")),
                 TargetHandoff.handOff(SELF, ZOMBIE, allies, Set.of(), DefenseProfileTests.PROFILE),
-                "Раненый союзник пропускается: иначе цель уйдёт духу, который сам вот-вот отойдёт");
+                "Раненый союзник пропускается: иначе цель уйдёт духу, который сам вот-вот отойдёт"
+                        + " При смене handOff_NearestWounded_FartherChosen проверь это утверждение.");
     }
 
     @Test
@@ -72,7 +75,8 @@ class TargetHandoffTests {
         assertEquals(
                 Optional.of(UUID.fromString("22222222-2222-2222-2222-222222222222")),
                 TargetHandoff.handOff(SELF, CREEPER, allies, Set.of(), DefenseProfileTests.PROFILE),
-                "Крипер уходит лучнику, а не ближнему мечнику: иначе подмена подойдёт к взрыву");
+                "Крипер уходит лучнику, а не ближнему мечнику: иначе подмена подойдёт к взрыву"
+                        + " При смене handOff_Creeper_NearerMeleeSkipped проверь это утверждение.");
     }
 
     @Test
@@ -82,7 +86,8 @@ class TargetHandoffTests {
         assertEquals(
                 Optional.empty(),
                 TargetHandoff.handOff(SELF, CREEPER, allies, Set.of(), DefenseProfileTests.PROFILE),
-                "Без лучника крипера передать некому: дух отходит и лечится сам, а не бросает цель другому мечнику");
+                "Без лучника крипера передать некому: дух отходит и лечится сам, а не бросает цель другому мечнику"
+                        + " Иначе тест handOff_CreeperWithoutArcher_ReturnsEmpty перестанет ловить эту поломку. При смене handOff_CreeperWithoutArcher_ReturnsEmpty проверь это утверждение.");
     }
 
     @Test
@@ -94,7 +99,8 @@ class TargetHandoffTests {
         assertEquals(
                 Optional.of(UUID.fromString("22222222-2222-2222-2222-222222222222")),
                 TargetHandoff.handOff(SELF, ZOMBIE, allies, Set.of(), DefenseProfileTests.PROFILE),
-                "Уходящий не принимает свою же цель: иначе передача замкнётся на раненого");
+                "Уходящий не принимает свою же цель: иначе передача замкнётся на раненого"
+                        + " При смене handOff_SelfInAllies_NeverChosen проверь это утверждение.");
     }
 
     @Test
@@ -120,7 +126,8 @@ class TargetHandoffTests {
         assertEquals(
                 Optional.of(UUID.fromString("11111111-1111-1111-1111-111111111111")),
                 TargetHandoff.handOff(SELF, ZOMBIE, allies, Set.of(), DefenseProfileTests.PROFILE),
-                "Ничья по дистанции решается меньшим id: иначе подмена мигает между пересборками");
+                "Ничья по дистанции решается меньшим id: иначе подмена мигает между пересборками"
+                        + " При смене handOff_EqualDistance_LowerIdWins проверь это утверждение.");
     }
 
     @Test
@@ -128,7 +135,8 @@ class TargetHandoffTests {
         assertEquals(
                 Optional.empty(),
                 TargetHandoff.handOff(SELF, ZOMBIE, List.of(), Set.of(), DefenseProfileTests.PROFILE),
-                "Без союзников передавать некому: дух отходит и лечится сам");
+                "Без союзников передавать некому: дух отходит и лечится сам"
+                        + " Иначе тест handOff_NoAllies_ReturnsEmpty перестанет ловить эту поломку. При смене handOff_NoAllies_ReturnsEmpty проверь это утверждение.");
     }
 
     @Test
@@ -141,6 +149,7 @@ class TargetHandoffTests {
                         List.of(ally("11111111-1111-1111-1111-111111111111", 4, 1.0, false)),
                         Set.of(),
                         DefenseProfileTests.PROFILE),
-                "Передача без цели обязана падать: иначе приказ уйдёт без объекта боя");
+                "Передача без цели обязана падать: иначе приказ уйдёт без объекта боя"
+                        + " При смене handOff_NullTarget_Throws проверь это утверждение.");
     }
 }

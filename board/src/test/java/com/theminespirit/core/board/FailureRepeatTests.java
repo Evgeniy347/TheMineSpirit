@@ -14,7 +14,8 @@ class FailureRepeatTests {
 
         assertTrue(
                 repeat.note("rescue:1", "путь в тупик", 10).orElseThrow().changed(),
-                "Первый провал задания печатается сразу: иначе причина теряется за окном сводки");
+                "Первый провал задания печатается сразу: иначе причина теряется за окном сводки"
+                        + " При смене note_FirstReason_IsPrinted проверь это утверждение.");
     }
 
     @Test
@@ -25,7 +26,8 @@ class FailureRepeatTests {
         assertEquals(
                 Optional.empty(),
                 repeat.note("rescue:1", "путь в тупик", 20),
-                "Тот же провал на следующей попытке не печатается: иначе rescue заливает лог каждую минуту");
+                "Тот же провал на следующей попытке не печатается: иначе rescue заливает лог каждую минуту"
+                        + " При смене note_SameReasonNextAttempt_IsSilent проверь это утверждение.");
     }
 
     @Test
@@ -36,7 +38,8 @@ class FailureRepeatTests {
         assertEquals(
                 Optional.empty(),
                 repeat.note("rescue:1", "путь в тупик", 20),
-                "Статус задания (FAILED/BLOCKED) не входит в причину: смена статуса не должна повторять провал");
+                "Статус задания (FAILED/BLOCKED) не входит в причину: смена статуса не должна повторять провал"
+                        + " Иначе тест note_SameReasonAfterStatusFlip_IsStillSilent перестанет ловить эту поломку. При смене note_SameReasonAfterStatusFlip_IsStillSilent проверь это утверждение.");
     }
 
     @Test
@@ -48,7 +51,8 @@ class FailureRepeatTests {
                 repeat.note("rescue:1", "нет материала столба", 20)
                         .orElseThrow()
                         .changed(),
-                "Смена причины — новый провал: её нельзя прятать за сводкой старой");
+                "Смена причины — новый провал: её нельзя прятать за сводкой старой"
+                        + " Иначе тест note_ChangedReason_IsPrintedImmediately перестанет ловить эту поломку. При смене note_ChangedReason_IsPrintedImmediately проверь это утверждение.");
     }
 
     @Test
@@ -58,9 +62,20 @@ class FailureRepeatTests {
 
         FailureRepeat.Note note = repeat.note("rescue:1", "путь в тупик", 200).orElseThrow();
 
-        assertFalse(note.changed(), "Сводка повторов не притворяется новым провалом");
-        assertEquals(2, note.count(), "Сводка называет число провалов за окно");
-        assertEquals("путь в тупик", note.reason(), "Сводка называет причину: по ней решают, что чинить");
+        assertFalse(
+                note.changed(),
+                "Сводка повторов не притворяется новым провалом"
+                        + " Иначе тест note_AfterWindow_ReturnsSummaryOfRepeats перестанет ловить эту поломку. При смене note_AfterWindow_ReturnsSummaryOfRepeats проверь это утверждение.");
+        assertEquals(
+                2,
+                note.count(),
+                "Сводка называет число провалов за окно"
+                        + " Иначе тест note_AfterWindow_ReturnsSummaryOfRepeats перестанет ловить эту поломку. При смене note_AfterWindow_ReturnsSummaryOfRepeats проверь это утверждение.");
+        assertEquals(
+                "путь в тупик",
+                note.reason(),
+                "Сводка называет причину: по ней решают, что чинить"
+                        + " Иначе тест note_AfterWindow_ReturnsSummaryOfRepeats перестанет ловить эту поломку. При смене note_AfterWindow_ReturnsSummaryOfRepeats проверь это утверждение.");
     }
 
     @Test
@@ -70,6 +85,7 @@ class FailureRepeatTests {
 
         assertTrue(
                 repeat.note("rescue:2", "путь в тупик", 20).orElseThrow().changed(),
-                "Провалы разных заданий считаются отдельно: причина общая, но задания разные");
+                "Провалы разных заданий считаются отдельно: причина общая, но задания разные"
+                        + " Иначе тест note_OtherTicket_IsPrintedSeparately перестанет ловить эту поломку. При смене note_OtherTicket_IsPrintedSeparately проверь это утверждение.");
     }
 }

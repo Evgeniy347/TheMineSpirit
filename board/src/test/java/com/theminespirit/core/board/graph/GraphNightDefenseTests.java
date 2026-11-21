@@ -20,7 +20,8 @@ class GraphNightDefenseTests {
         assertFalse(
                 plan.tasks().stream().anyMatch(task -> "oak_log".equals(task.makes()) && task.feasible()),
                 "Ночью граф не выдаёт далёкую добычу: иначе NightLeashGate провалит задачу на подходе. Задания: "
-                        + GraphCaseFixtures.ids(plan));
+                        + GraphCaseFixtures.ids(plan)
+                        + " При смене plan_NightAndFarTree_DoesNotGiveDistantGather проверь это утверждение.");
     }
 
     @Test
@@ -33,7 +34,8 @@ class GraphNightDefenseTests {
 
         assertTrue(
                 plan.tasks().stream().anyMatch(task -> "oak_log".equals(task.makes()) && task.feasible()),
-                "Днём ближнее дерево — обычная работа графа: " + GraphCaseFixtures.ids(plan));
+                "Днём ближнее дерево — обычная работа графа: " + GraphCaseFixtures.ids(plan)
+                        + " Иначе тест plan_DayAndNearTree_GivesGather перестанет ловить эту поломку. При смене plan_DayAndNearTree_GivesGather проверь это утверждение.");
     }
 
     @Test
@@ -47,6 +49,7 @@ class GraphNightDefenseTests {
                         .anyMatch(task -> "event:expedition_ready:expedition".equals(task.id())
                                 && task.boardCase() == BoardCase.ACTIVITY_EXPEDITION
                                 && task.feasible()),
-                "Поход выдаёт только узел графа expedition, а не контроллер: " + GraphCaseFixtures.ids(plan));
+                "Поход выдаёт только узел графа expedition, а не контроллер: " + GraphCaseFixtures.ids(plan)
+                        + " Иначе тест plan_ExpeditionReady_GivesExpeditionNode перестанет ловить эту поломку. При смене plan_ExpeditionReady_GivesExpeditionNode проверь это утверждение.");
     }
 }

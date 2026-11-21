@@ -21,10 +21,12 @@ class GearUnreachableChestTests {
         assertTrue(
                 events.contains(GearInputs.CRAFT_TOOL + "pickaxe"),
                 "Кирка в сундуке без пути не закрывает нужду: иначе шахта падает с «нужна кирка», а крафт "
-                        + "не ставится");
+                        + "не ставится"
+                        + " При смене events_UnreachableChestWithPickaxe_CraftsInsteadOfEquip проверь это утверждение.");
         assertFalse(
                 events.contains(GearInputs.EQUIP_BEST),
-                "Сундук без пути не годится для смены инструмента: дух ходит к нему вхолостую");
+                "Сундук без пути не годится для смены инструмента: дух ходит к нему вхолостую"
+                        + " Иначе тест events_UnreachableChestWithPickaxe_CraftsInsteadOfEquip перестанет ловить эту поломку. При смене events_UnreachableChestWithPickaxe_CraftsInsteadOfEquip проверь это утверждение.");
     }
 
     @Test
@@ -35,7 +37,8 @@ class GearUnreachableChestTests {
         assertTrue(
                 GearRules.equipUpgrade(spirit, List.of(chest), GearInputs.settings())
                         .isEmpty(),
-                "Обновка из недостижимого сундука не выбирается: до неё не дойти");
+                "Обновка из недостижимого сундука не выбирается: до неё не дойти"
+                        + " Иначе тест equipUpgrade_UnreachableChest_Skipped перестанет ловить эту поломку. При смене equipUpgrade_UnreachableChest_Skipped проверь это утверждение.");
     }
 
     @Test
@@ -43,7 +46,10 @@ class GearUnreachableChestTests {
         Map<String, Integer> ranks = GearRules.chestToolRanks(
                 List.of(unreachableChest(Map.of("minecraft:stone_pickaxe", 1))), GearInputs.settings());
 
-        assertTrue(ranks.isEmpty(), "Ранги инструментов считаются только по достижимым сундукам");
+        assertTrue(
+                ranks.isEmpty(),
+                "Ранги инструментов считаются только по достижимым сундукам"
+                        + " Иначе тест chestToolRanks_UnreachableChest_Ignored перестанет ловить эту поломку. При смене chestToolRanks_UnreachableChest_Ignored проверь это утверждение.");
     }
 
     private static GraphFacts.Spirit spirit(String activity, List<GraphFacts.Tool> tools) {

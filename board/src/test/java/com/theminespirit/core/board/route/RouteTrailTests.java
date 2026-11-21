@@ -18,8 +18,16 @@ class RouteTrailTests {
 
         RouteTrail trail = RouteTrail.of(path);
 
-        assertEquals(2, trail.cells().size(), "Тропа помнит каждую проложенную клетку: иначе старый след не найти");
-        assertEquals("sand", trail.block(), "Материал тропы сохраняется: снимают тот блок, который ставили");
+        assertEquals(
+                2,
+                trail.cells().size(),
+                "Тропа помнит каждую проложенную клетку: иначе старый след не найти"
+                        + " При смене of_PathFill_CollectsEveryCellAndMaterial проверь это утверждение.");
+        assertEquals(
+                "sand",
+                trail.block(),
+                "Материал тропы сохраняется: снимают тот блок, который ставили"
+                        + " Иначе тест of_PathFill_CollectsEveryCellAndMaterial перестанет ловить эту поломку. При смене of_PathFill_CollectsEveryCellAndMaterial проверь это утверждение.");
     }
 
     @Test
@@ -28,9 +36,20 @@ class RouteTrailTests {
 
         PlotLeveling removal = trail.removal();
 
-        assertEquals(1, removal.cutVolume(), "Снятие срезает проложенный блок, а не засыпает его сверху");
-        assertEquals(0, removal.fillVolume(), "Снятие ничего не подсыпает: земля под тропой уже на месте");
-        assertTrue(removal.voids().isEmpty(), "Снятие не оставляет пустот: старую тропу убирают до земли");
+        assertEquals(
+                1,
+                removal.cutVolume(),
+                "Снятие срезает проложенный блок, а не засыпает его сверху"
+                        + " Иначе тест removal_CutsTrailCells_WithoutFillingOrVoids перестанет ловить эту поломку. При смене removal_CutsTrailCells_WithoutFillingOrVoids проверь это утверждение.");
+        assertEquals(
+                0,
+                removal.fillVolume(),
+                "Снятие ничего не подсыпает: земля под тропой уже на месте"
+                        + " Иначе тест removal_CutsTrailCells_WithoutFillingOrVoids перестанет ловить эту поломку. При смене removal_CutsTrailCells_WithoutFillingOrVoids проверь это утверждение.");
+        assertTrue(
+                removal.voids().isEmpty(),
+                "Снятие не оставляет пустот: старую тропу убирают до земли"
+                        + " Иначе тест removal_CutsTrailCells_WithoutFillingOrVoids перестанет ловить эту поломку. При смене removal_CutsTrailCells_WithoutFillingOrVoids проверь это утверждение.");
     }
 
     @Test
@@ -42,12 +61,17 @@ class RouteTrailTests {
 
         PlotLeveling removal = trail.removal();
 
-        assertEquals(cells.size(), removal.cutVolume(), "Снятие покрывает все клетки тропы без пропусков");
+        assertEquals(
+                cells.size(),
+                removal.cutVolume(),
+                "Снятие покрывает все клетки тропы без пропусков"
+                        + " Иначе тест removal_StraightTrail_MergesIntoOneRun перестанет ловить эту поломку. При смене removal_StraightTrail_MergesIntoOneRun проверь это утверждение.");
         assertEquals(
                 3,
                 removal.cutTopDown().size(),
                 "Тропа ширины три снимается тремя полосами, а не клеткой на вызов: сотни одиночных "
-                        + "clear_area не влезают в задание");
+                        + "clear_area не влезают в задание"
+                        + " Иначе тест removal_StraightTrail_MergesIntoOneRun перестанет ловить эту поломку. При смене removal_StraightTrail_MergesIntoOneRun проверь это утверждение.");
     }
 
     @Test
@@ -58,6 +82,7 @@ class RouteTrailTests {
         assertEquals(
                 new BlockCoord(1, 64, 3),
                 trail.first(),
-                "Работа начинается с нижней западной клетки: дух идёт к ближнему концу старой тропы");
+                "Работа начинается с нижней западной клетки: дух идёт к ближнему концу старой тропы"
+                        + " Иначе тест first_LowestThenWestCell_IsStartOfWork перестанет ловить эту поломку. При смене first_LowestThenWestCell_IsStartOfWork проверь это утверждение.");
     }
 }

@@ -55,7 +55,8 @@ class ClearScaffoldStepTests {
                 ClearScaffold.Action.WORK,
                 ClearScaffold.step(FEET, tops, 3, false, 2).action(),
                 "верхушки дальше досягаемости колонки — сначала подойти, столб на месте не строится (сервер 12.11:"
-                        + " дух поднял 26 блоков земли там, где стоял). Проверить при смене: параметр reach (COLUMN_REACH)");
+                        + " дух поднял 26 блоков земли там, где стоял). Проверить при смене: параметр reach (COLUMN_REACH)"
+                        + " Иначе тест step_TopsFar_WalksFirst перестанет ловить эту поломку.");
     }
 
     @Test
@@ -63,6 +64,7 @@ class ClearScaffoldStepTests {
         assertEquals(
                 ClearScaffold.Action.DONE,
                 ClearScaffold.step(FEET, List.of(), 3, false, 2).action(),
-                "срезать нечего — расчистка окончена, столб разбирается в finish(). Сломается: вечная сессия");
+                "срезать нечего — расчистка окончена, столб разбирается в finish(). Сломается: вечная сессия"
+                        + " При смене step_NoTops_Done проверь это утверждение.");
     }
 }

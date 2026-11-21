@@ -16,8 +16,15 @@ class SettlementReachTests {
     void access_Inside_Allowed() {
         SettlementReach.Access access = SettlementReach.access(Optional.of(REACH), true, 80.5, 80.5);
 
-        assertTrue(access.allowed(), "Внутри участка вкладка крафта работает");
-        assertEquals(0, access.distance(), "Внутри участка расстояние до границы — 0");
+        assertTrue(
+                access.allowed(),
+                "Внутри участка вкладка крафта работает"
+                        + " Иначе тест access_Inside_Allowed перестанет ловить эту поломку. При смене access_Inside_Allowed проверь это утверждение.");
+        assertEquals(
+                0,
+                access.distance(),
+                "Внутри участка расстояние до границы — 0"
+                        + " Иначе тест access_Inside_Allowed перестанет ловить эту поломку. При смене access_Inside_Allowed проверь это утверждение.");
     }
 
     @Test
@@ -25,7 +32,10 @@ class SettlementReachTests {
         SettlementReach.Access access =
                 SettlementReach.access(Optional.of(REACH), true, 160 + SettlementReach.MARGIN, 10);
 
-        assertTrue(access.allowed(), "Ровно 64 блока от границы — ещё в зоне (решение владельца 27.10)");
+        assertTrue(
+                access.allowed(),
+                "Ровно 64 блока от границы — ещё в зоне (решение владельца 27.10)"
+                        + " Иначе тест access_ExactlyMarginAway_Allowed перестанет ловить эту поломку. При смене access_ExactlyMarginAway_Allowed проверь это утверждение.");
     }
 
     @Test
@@ -33,8 +43,16 @@ class SettlementReachTests {
         SettlementReach.Access access = SettlementReach.access(
                 Optional.of(REACH), true, -SettlementReach.MARGIN - 1.0, -SettlementReach.MARGIN - 1.0);
 
-        assertEquals(SettlementReach.Verdict.TOO_FAR, access.verdict(), "По диагонали за 64 блока — отказ");
-        assertEquals(92, access.distance(), "Расстояние — евклидово до угла участка: √(65²+65²) ≈ 92");
+        assertEquals(
+                SettlementReach.Verdict.TOO_FAR,
+                access.verdict(),
+                "По диагонали за 64 блока — отказ"
+                        + " Иначе тест access_BeyondMargin_TooFar перестанет ловить эту поломку. При смене access_BeyondMargin_TooFar проверь это утверждение.");
+        assertEquals(
+                92,
+                access.distance(),
+                "Расстояние — евклидово до угла участка: √(65²+65²) ≈ 92"
+                        + " Иначе тест access_BeyondMargin_TooFar перестанет ловить эту поломку. При смене access_BeyondMargin_TooFar проверь это утверждение.");
     }
 
     @Test
@@ -42,7 +60,8 @@ class SettlementReachTests {
         assertEquals(
                 SettlementReach.Verdict.NO_SETTLEMENT,
                 SettlementReach.access(Optional.empty(), true, 0, 0).verdict(),
-                "Без плана поселения брать и крафтить нечего: вкладка показывает причину");
+                "Без плана поселения брать и крафтить нечего: вкладка показывает причину"
+                        + " Иначе тест access_NoSettlement_Refused перестанет ловить эту поломку. При смене access_NoSettlement_Refused проверь это утверждение.");
     }
 
     @Test
@@ -50,7 +69,8 @@ class SettlementReachTests {
         assertEquals(
                 SettlementReach.Verdict.OTHER_DIMENSION,
                 SettlementReach.access(Optional.of(REACH), false, 10, 10).verdict(),
-                "Из Нижнего мира координаты не сравниваются с участком в верхнем мире");
+                "Из Нижнего мира координаты не сравниваются с участком в верхнем мире"
+                        + " Иначе тест access_OtherDimension_Refused перестанет ловить эту поломку. При смене access_OtherDimension_Refused проверь это утверждение.");
     }
 
     @Test
@@ -69,6 +89,7 @@ class SettlementReachTests {
         assertEquals(
                 new SettlementReach(-3, 0, 50, 45),
                 reach,
-                "Граница — участок плана плюс столбы ограды и кольца стройки: сундук у ограды тоже в поселении");
+                "Граница — участок плана плюс столбы ограды и кольца стройки: сундук у ограды тоже в поселении"
+                        + " Иначе тест of_FencePostOutsideRegion_WidensBorder перестанет ловить эту поломку. При смене of_FencePostOutsideRegion_WidensBorder проверь это утверждение.");
     }
 }

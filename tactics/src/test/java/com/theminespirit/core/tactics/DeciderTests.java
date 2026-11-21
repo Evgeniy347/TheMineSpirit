@@ -40,7 +40,8 @@ class DeciderTests {
         assertEquals(
                 List.of(TacticalOption.FIGHT, Decision.BY_SCORE),
                 List.of(decision.option(), decision.rule()),
-                "Один зомби при полном HP — обычная оценка без жёстких правил: бой, победа по счёту");
+                "Один зомби при полном HP — обычная оценка без жёстких правил: бой, победа по счёту"
+                        + " Иначе тест decide_NoHardRuleMatches_ChoosesByScore перестанет ловить эту поломку. При смене decide_NoHardRuleMatches_ChoosesByScore проверь это утверждение.");
     }
 
     @Test
@@ -53,7 +54,8 @@ class DeciderTests {
                         Decision.SOLE_CANDIDATE,
                         Set.of(TacticalOption.FIGHT, TacticalOption.IGNORE)),
                 List.of(decision.option(), decision.rule(), decision.excluded()),
-                "Когда вычеркнуты два варианта из трёх, остаётся один и выбирается без оценки");
+                "Когда вычеркнуты два варианта из трёх, остаётся один и выбирается без оценки"
+                        + " Иначе тест decide_ExcludeLeavesOneOption_ThatOptionIsChosen перестанет ловить эту поломку. При смене decide_ExcludeLeavesOneOption_ThatOptionIsChosen проверь это утверждение.");
     }
 
     @Test
@@ -63,11 +65,13 @@ class DeciderTests {
         assertEquals(
                 List.of(Decision.BY_SCORE, Set.of(TacticalOption.FIGHT)),
                 List.of(decision.rule(), decision.excluded()),
-                "Лава рядом вычёркивает FIGHT, а выбор между отходом и игнором идёт по счёту");
+                "Лава рядом вычёркивает FIGHT, а выбор между отходом и игнором идёт по счёту"
+                        + " Иначе тест decide_ExcludeLeavesTwoOptions_BestOfRemainingWins перестанет ловить эту поломку. При смене decide_ExcludeLeavesTwoOptions_BestOfRemainingWins проверь это утверждение.");
         assertEquals(
                 false,
                 decision.option() == TacticalOption.FIGHT,
-                "Драться у лавы нельзя ни при каких весах: вычеркнутый вариант не может победить");
+                "Драться у лавы нельзя ни при каких весах: вычеркнутый вариант не может победить"
+                        + " Иначе тест decide_ExcludeLeavesTwoOptions_BestOfRemainingWins перестанет ловить эту поломку. При смене decide_ExcludeLeavesTwoOptions_BestOfRemainingWins проверь это утверждение.");
     }
 
     @Test
@@ -77,7 +81,8 @@ class DeciderTests {
         assertEquals(
                 List.of(TacticalOption.RETREAT, Decision.ALL_EXCLUDED),
                 List.of(decision.option(), decision.rule()),
-                "Если вычеркнуто всё и есть куда отходить, дух отступает: это самый безопасный остаток");
+                "Если вычеркнуто всё и есть куда отходить, дух отступает: это самый безопасный остаток"
+                        + " Иначе тест decide_AllOptionsExcludedAndRetreatPossible_RetreatIsChosen перестанет ловить эту поломку. При смене decide_AllOptionsExcludedAndRetreatPossible_RetreatIsChosen проверь это утверждение.");
     }
 
     @Test
@@ -87,7 +92,8 @@ class DeciderTests {
         assertEquals(
                 List.of(TacticalOption.FIGHT, Decision.ALL_EXCLUDED),
                 List.of(decision.option(), decision.rule()),
-                "Если вычеркнуто всё и отступать некуда, остаётся драться: выбирать между гибелью и боем не из чего");
+                "Если вычеркнуто всё и отступать некуда, остаётся драться: выбирать между гибелью и боем не из чего"
+                        + " Иначе тест decide_AllOptionsExcludedAndNoRetreat_FightIsChosen перестанет ловить эту поломку. При смене decide_AllOptionsExcludedAndNoRetreat_FightIsChosen проверь это утверждение.");
     }
 
     @Test
@@ -100,7 +106,8 @@ class DeciderTests {
                 List.of(TacticalOption.RETREAT, "explosive_close_retreat"),
                 List.of(decision.option(), decision.rule()),
                 "Решение жёсткого правила называет его id: trace объясняет, какое правило сработало "
-                        + "(крипер в 4 блоках, дух без меча)");
+                        + "(крипер в 4 блоках, дух без меча)"
+                        + " Иначе тест decide_DecisiveRule_CarriesRuleIdAndExcludedFromHigherRules перестанет ловить эту поломку. При смене decide_DecisiveRule_CarriesRuleIdAndExcludedFromHigherRules проверь это утверждение.");
     }
 
     @Test
@@ -122,7 +129,8 @@ class DeciderTests {
                 List.of(TacticalOption.FIGHT, "no_route_fight_targeted", HoldStatus.NONE),
                 List.of(decision.option(), decision.rule(), decision.hold()),
                 "Удерживаемое RETREAT без способа отхода подменено боем: подмена — решение правила, а не удержания, "
-                        + "поэтому hold = NONE, а не HELD внутреннего решения");
+                        + "поэтому hold = NONE, а не HELD внутреннего решения"
+                        + " Иначе тест decide_HeldRetreatReplacedWithoutRoute_HasNoHold перестанет ловить эту поломку. При смене decide_HeldRetreatReplacedWithoutRoute_HasNoHold проверь это утверждение.");
     }
 
     @Test
@@ -135,7 +143,8 @@ class DeciderTests {
         assertEquals(
                 List.of(TacticalOption.IGNORE, "no_route_ignore"),
                 List.of(decision.option(), decision.rule()),
-                "Бой у лавы вычеркнут: подмена RETREAT без пути обязана уйти на невычеркнутый вариант IGNORE");
+                "Бой у лавы вычеркнут: подмена RETREAT без пути обязана уйти на невычеркнутый вариант IGNORE"
+                        + " Иначе тест decide_NoRouteAndFightExcluded_ReplacesRetreatWithIgnore перестанет ловить эту поломку. При смене decide_NoRouteAndFightExcluded_ReplacesRetreatWithIgnore проверь это утверждение.");
     }
 
     @Test
@@ -151,15 +160,18 @@ class DeciderTests {
         assertEquals(
                 List.of(TacticalOption.IGNORE, "no_route_ignore"),
                 List.of(decision.option(), decision.rule()),
-                "HP 20 % даёт жёсткий отход, путей нет, враг целится: подмена уходит в IGNORE, а не в вычеркнутый бой");
+                "HP 20 % даёт жёсткий отход, путей нет, враг целится: подмена уходит в IGNORE, а не в вычеркнутый бой"
+                        + " Иначе тест decide_NoRouteAfterDecisiveRetreat_KeepsExclusionsConsideredByReplacement перестанет ловить эту поломку. При смене decide_NoRouteAfterDecisiveRetreat_KeepsExclusionsConsideredByReplacement проверь это утверждение.");
         assertEquals(
                 Set.of(TacticalOption.FIGHT),
                 decision.excluded(),
                 "Подмена noRoute учла вычёркивание боя у лавы: иначе trace не объяснит, почему дух не дерётся. "
-                        + "Проверьте слияние вычёркиваний подмены в Decider");
+                        + "Проверьте слияние вычёркиваний подмены в Decider"
+                        + " При смене decide_NoRouteAfterDecisiveRetreat_KeepsExclusionsConsideredByReplacement проверь это утверждение.");
         assertEquals(
                 List.of("no_fight_near_lava"),
                 decision.excludingRules(),
-                "Trace обязан называть правило, вычеркнувшее бой: иначе «почему не FIGHT» сошлётся на подмену без причины");
+                "Trace обязан называть правило, вычеркнувшее бой: иначе «почему не FIGHT» сошлётся на подмену без причины"
+                        + " При смене decide_NoRouteAfterDecisiveRetreat_KeepsExclusionsConsideredByReplacement проверь это утверждение.");
     }
 }

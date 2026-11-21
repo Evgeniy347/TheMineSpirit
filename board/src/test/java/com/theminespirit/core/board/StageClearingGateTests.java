@@ -11,10 +11,12 @@ class StageClearingGateTests {
     void stages_EveryStageWithoutClearing_KeepsStepAndRollsBack() {
         StageRules rules = StageRules.load();
         rules.stages()
-                .forEach(stage -> assertTrue(
-                        stage.buildings().containsKey(BoardCase.CLEAR_GROUNDS),
-                        "Этап " + stage.stage()
-                                + " не требует ровной зоны: ямы после перехода остались бы без работы расчистки"));
+                .forEach(
+                        stage -> assertTrue(
+                                stage.buildings().containsKey(BoardCase.CLEAR_GROUNDS),
+                                "Этап " + stage.stage()
+                                        + " не требует ровной зоны: ямы после перехода остались бы без работы расчистки"
+                                        + " Иначе тест stages_EveryStageWithoutClearing_KeepsStepAndRollsBack перестанет ловить эту поломку. При смене stages_EveryStageWithoutClearing_KeepsStepAndRollsBack проверь это утверждение."));
 
         StageWorld defect = new StageWorld() {
             @Override
@@ -28,7 +30,15 @@ class StageClearingGateTests {
             }
         };
 
-        assertEquals(1, SettlementStage.of(defect), "Дефект зоны снова открывает первый этап, где живёт расчистка");
-        assertEquals(1, new StageConfirmation(5, 1).gate(defect).stage(), "Гейт возвращает этап к состоянию мира");
+        assertEquals(
+                1,
+                SettlementStage.of(defect),
+                "Дефект зоны снова открывает первый этап, где живёт расчистка"
+                        + " Иначе тест stages_EveryStageWithoutClearing_KeepsStepAndRollsBack перестанет ловить эту поломку. При смене stages_EveryStageWithoutClearing_KeepsStepAndRollsBack проверь это утверждение.");
+        assertEquals(
+                1,
+                new StageConfirmation(5, 1).gate(defect).stage(),
+                "Гейт возвращает этап к состоянию мира"
+                        + " Иначе тест stages_EveryStageWithoutClearing_KeepsStepAndRollsBack перестанет ловить эту поломку. При смене stages_EveryStageWithoutClearing_KeepsStepAndRollsBack проверь это утверждение.");
     }
 }

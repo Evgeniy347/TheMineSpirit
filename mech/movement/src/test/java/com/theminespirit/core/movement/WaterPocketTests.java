@@ -20,11 +20,14 @@ class WaterPocketTests {
         world.set(5, 3, 5, FuzzWorld.Cell.STONE);
 
         assertFalse(
-                BodyMotion.fits(world, FEET), "Тело в воде под твёрдой крышей не помещается: голова занята породой");
+                BodyMotion.fits(world, FEET),
+                "Тело в воде под твёрдой крышей не помещается: голова занята породой"
+                        + " Иначе тест blocking_WaterUnderRoof_NamesHeadCell перестанет ловить эту поломку. При смене blocking_WaterUnderRoof_NamesHeadCell проверь это утверждение.");
         assertEquals(
                 List.of(HEAD),
                 BodyMotion.blocking(world, FEET),
-                "Мешающая клетка тела — голова, а не вода в ногах: ломать надо её, иначе дух не встанет");
+                "Мешающая клетка тела — голова, а не вода в ногах: ломать надо её, иначе дух не встанет"
+                        + " При смене blocking_WaterUnderRoof_NamesHeadCell проверь это утверждение.");
     }
 
     @Test
@@ -33,10 +36,14 @@ class WaterPocketTests {
         world.set(FEET.x(), FEET.y(), FEET.z(), FuzzWorld.Cell.WATER);
         world.set(HEAD.x(), HEAD.y(), HEAD.z(), FuzzWorld.Cell.WATER);
 
-        assertTrue(BodyMotion.fits(world, FEET), "Вода в ногах и голове — тело помещается");
+        assertTrue(
+                BodyMotion.fits(world, FEET),
+                "Вода в ногах и голове — тело помещается"
+                        + " Иначе тест blocking_WaterWithHeadroom_IsEmptyAndFits перестанет ловить эту поломку. При смене blocking_WaterWithHeadroom_IsEmptyAndFits проверь это утверждение.");
         assertTrue(
                 BodyMotion.blocking(world, FEET).isEmpty(),
-                "Вода не мешает телу: правило общее, отдельной ветки «если вода» нет");
+                "Вода не мешает телу: правило общее, отдельной ветки «если вода» нет"
+                        + " Иначе тест blocking_WaterWithHeadroom_IsEmptyAndFits перестанет ловить эту поломку. При смене blocking_WaterWithHeadroom_IsEmptyAndFits проверь это утверждение.");
     }
 
     @Test
@@ -51,8 +58,12 @@ class WaterPocketTests {
 
         assertTrue(
                 steps.contains(new BlockCoord(5, 2, 5)),
-                "По водяному столбу дух всплывает вверх: шаг в +1 — часть общего движения по воде; шаги " + steps);
-        assertTrue(BodyMotion.canMove(world, FEET, new BlockCoord(5, 2, 5)), "Всплытие в воде исполнимо телом");
+                "По водяному столбу дух всплывает вверх: шаг в +1 — часть общего движения по воде; шаги " + steps
+                        + " Иначе тест steps_WaterColumn_RisesThroughEveryWaterCell перестанет ловить эту поломку. При смене steps_WaterColumn_RisesThroughEveryWaterCell проверь это утверждение.");
+        assertTrue(
+                BodyMotion.canMove(world, FEET, new BlockCoord(5, 2, 5)),
+                "Всплытие в воде исполнимо телом"
+                        + " Иначе тест steps_WaterColumn_RisesThroughEveryWaterCell перестанет ловить эту поломку. При смене steps_WaterColumn_RisesThroughEveryWaterCell проверь это утверждение.");
     }
 
     @Test
@@ -64,7 +75,8 @@ class WaterPocketTests {
         assertEquals(
                 List.of(FEET),
                 BodyMotion.blocking(world, FEET),
-                "Если порода в ногах, а вода в голове — ломать надо клетку ног");
+                "Если порода в ногах, а вода в голове — ломать надо клетку ног"
+                        + " Иначе тест blocking_StoneAtFeetAndWaterAbove_NamesFeet перестанет ловить эту поломку. При смене blocking_StoneAtFeetAndWaterAbove_NamesFeet проверь это утверждение.");
     }
 
     @Test
@@ -73,10 +85,13 @@ class WaterPocketTests {
         BlockCoord feet = new BlockCoord(0, 0, 0);
 
         assertFalse(
-                BodyMotion.fits(world, feet), "Живой случай 10.11: ноги в воде, голова в породе — тело не помещается");
+                BodyMotion.fits(world, feet),
+                "Живой случай 10.11: ноги в воде, голова в породе — тело не помещается"
+                        + " Иначе тест blocking_LiveWaterPocket_NamesHeadFromRealWorld перестанет ловить эту поломку. При смене blocking_LiveWaterPocket_NamesHeadFromRealWorld проверь это утверждение.");
         assertEquals(
                 List.of(new BlockCoord(0, 1, 0)),
                 BodyMotion.blocking(world, feet),
-                "Из настоящего среза видно ту же клетку головы, что и в модели: вода не поднимает тело сквозь породу");
+                "Из настоящего среза видно ту же клетку головы, что и в модели: вода не поднимает тело сквозь породу"
+                        + " Иначе тест blocking_LiveWaterPocket_NamesHeadFromRealWorld перестанет ловить эту поломку. При смене blocking_LiveWaterPocket_NamesHeadFromRealWorld проверь это утверждение.");
     }
 }

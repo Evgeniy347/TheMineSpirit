@@ -26,7 +26,8 @@ class RespawnRulesTests {
         assertEquals(
                 RespawnRules.defaults(),
                 RespawnRules.parse(VALID, "respawn.json"),
-                "Файл данных обязан совпадать с умолчаниями: иначе быстрый JUnit и адаптер расходятся в задержке");
+                "Файл данных обязан совпадать с умолчаниями: иначе быстрый JUnit и адаптер расходятся в задержке"
+                        + " При смене parse_ValidJson_MatchesDefaults проверь это утверждение.");
     }
 
     @Test
@@ -34,7 +35,10 @@ class RespawnRulesTests {
         RespawnRules rules = RespawnRules.load();
 
         assertEquals(
-                600, rules.delayTicks(), "Задержка возрождения — данные: json обязан задавать 600 тиков, а не код");
+                600,
+                rules.delayTicks(),
+                "Задержка возрождения — данные: json обязан задавать 600 тиков, а не код"
+                        + " Иначе тест load_ClasspathResource_ReadsSixHundredTicks перестанет ловить эту поломку. При смене load_ClasspathResource_ReadsSixHundredTicks проверь это утверждение.");
     }
 
     @Test
@@ -51,7 +55,8 @@ class RespawnRulesTests {
                 40,
                 holder.current().delayTicks(),
                 "После /reload с изменённым json держатель обязан нести новую задержку: иначе датапак мира не "
-                        + "поменяет срок возрождения без перезапуска");
+                        + "поменяет срок возрождения без перезапуска"
+                        + " При смене reload_ChangedJson_HolderReturnsNewDelay проверь это утверждение.");
     }
 
     @Test
@@ -59,7 +64,8 @@ class RespawnRulesTests {
         assertSame(
                 DataTables.INSTANCE.respawn().current(),
                 RespawnRules.loadDefault(),
-                "Потребитель обязан брать версию из держателя: иначе /reload не поменяет ему задержку");
+                "Потребитель обязан брать версию из держателя: иначе /reload не поменяет ему задержку"
+                        + " При смене loadDefault_ConsumerCall_ReturnsLiveHolder проверь это утверждение.");
     }
 
     @Test
@@ -67,11 +73,13 @@ class RespawnRulesTests {
         IllegalStateException error = assertThrows(
                 IllegalStateException.class,
                 () -> RespawnRules.parse(VALID.replace("600", "600, \"вкус\": 1"), "respawn.json"),
-                "Неизвестное поле ломает загрузку: опечатка в данных не должна молча ложиться в умолчания");
+                "Неизвестное поле ломает загрузку: опечатка в данных не должна молча ложиться в умолчания"
+                        + " При смене parse_UnknownField_Throws проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("вкус"),
-                "Сообщение обязано назвать лишнее поле, чтобы ошибку в json было видно: " + error.getMessage());
+                "Сообщение обязано назвать лишнее поле, чтобы ошибку в json было видно: " + error.getMessage()
+                        + " Иначе тест parse_UnknownField_Throws перестанет ловить эту поломку. При смене parse_UnknownField_Throws проверь это утверждение.");
     }
 
     @Test
@@ -79,7 +87,8 @@ class RespawnRulesTests {
         assertThrows(
                 IllegalStateException.class,
                 () -> RespawnRules.parse(VALID.replace("600", "0"), "respawn.json"),
-                "Нулевая задержка отвергается: дух не может возродиться в тот же тик, что погиб");
+                "Нулевая задержка отвергается: дух не может возродиться в тот же тик, что погиб"
+                        + " Иначе тест parse_NonPositiveDelay_Throws перестанет ловить эту поломку. При смене parse_NonPositiveDelay_Throws проверь это утверждение.");
     }
 
     @SuppressWarnings("unchecked")

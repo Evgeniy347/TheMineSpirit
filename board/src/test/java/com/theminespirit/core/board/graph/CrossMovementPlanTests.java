@@ -44,45 +44,77 @@ class CrossMovementPlanTests {
         assertEquals(
                 List.of("unload"),
                 unloadScripts,
-                "Выгрузка не идёт отдельным goto в занятую клетку сундука: " + unloadScripts);
+                "Выгрузка не идёт отдельным goto в занятую клетку сундука: " + unloadScripts
+                        + " Иначе тест movement_WorkCards_MoveToTargetThenAct перестанет ловить эту поломку. При смене movement_WorkCards_MoveToTargetThenAct проверь это утверждение.");
         assertEquals(
                 "3,64,3",
                 ((ScriptCall) ActivityPlans.unload(at).task()).params().get("container"),
-                "Сундук назван координатами — подход ищет стоянку у самой цели");
+                "Сундук назван координатами — подход ищет стоянку у самой цели"
+                        + " Иначе тест movement_WorkCards_MoveToTargetThenAct перестанет ловить эту поломку. При смене movement_WorkCards_MoveToTargetThenAct проверь это утверждение.");
         assertMovesFirst(
                 "перенос", ActivityPlans.moveItem(chest, at, at, "bread", 1).task(), "deposit");
         assertMovesFirst("еда", ActivityPlans.withdraw(chest, at, "bread", 2).task(), "withdraw");
         assertMovesFirst("плавка", ActivityPlans.smelt(at, "iron_ore", 2).task(), "smelt");
 
         List<String> chop = scripts(BoardCase.GATHER_MATERIALS, chopTarget());
-        assertEquals("goto", chop.get(0), "Рубка начинается с подхода к дереву: " + chop);
-        assertTrue(chop.contains("chop_tree"), "Подошёл — валит дерево: " + chop);
+        assertEquals(
+                "goto",
+                chop.get(0),
+                "Рубка начинается с подхода к дереву: " + chop
+                        + " Иначе тест movement_WorkCards_MoveToTargetThenAct перестанет ловить эту поломку. При смене movement_WorkCards_MoveToTargetThenAct проверь это утверждение.");
+        assertTrue(
+                chop.contains("chop_tree"),
+                "Подошёл — валит дерево: " + chop
+                        + " Иначе тест movement_WorkCards_MoveToTargetThenAct перестанет ловить эту поломку. При смене movement_WorkCards_MoveToTargetThenAct проверь это утверждение.");
         List<String> build = scripts(BoardCase.BUILD_HOUSE);
-        assertEquals("goto", build.get(0), "Стройка начинается с подхода к участку: " + build);
-        assertTrue(build.contains("build_schematic"), "На участке ставит схему: " + build);
+        assertEquals(
+                "goto",
+                build.get(0),
+                "Стройка начинается с подхода к участку: " + build
+                        + " Иначе тест movement_WorkCards_MoveToTargetThenAct перестанет ловить эту поломку. При смене movement_WorkCards_MoveToTargetThenAct проверь это утверждение.");
+        assertTrue(
+                build.contains("build_schematic"),
+                "На участке ставит схему: " + build
+                        + " Иначе тест movement_WorkCards_MoveToTargetThenAct перестанет ловить эту поломку. При смене movement_WorkCards_MoveToTargetThenAct проверь это утверждение.");
         List<String> fence = scripts(BoardCase.REPAIR_FENCE);
         assertTrue(
                 fence.contains("goto") && fence.contains("fill"),
-                "Ремонт забора идёт к пролому и заделывает его: " + fence);
+                "Ремонт забора идёт к пролому и заделывает его: " + fence
+                        + " Иначе тест movement_WorkCards_MoveToTargetThenAct перестанет ловить эту поломку. При смене movement_WorkCards_MoveToTargetThenAct проверь это утверждение.");
         List<String> light = scripts(BoardCase.LIGHTING);
-        assertEquals("goto", light.get(0), "Свет начинается с подхода к тёмному месту: " + light);
-        assertTrue(light.contains("place_block"), "На месте ставит факел: " + light);
+        assertEquals(
+                "goto",
+                light.get(0),
+                "Свет начинается с подхода к тёмному месту: " + light
+                        + " Иначе тест movement_WorkCards_MoveToTargetThenAct перестанет ловить эту поломку. При смене movement_WorkCards_MoveToTargetThenAct проверь это утверждение.");
+        assertTrue(
+                light.contains("place_block"),
+                "На месте ставит факел: " + light
+                        + " Иначе тест movement_WorkCards_MoveToTargetThenAct перестанет ловить эту поломку. При смене movement_WorkCards_MoveToTargetThenAct проверь это утверждение.");
         assertEquals(
                 BoardCase.ACTIVITY_RETREAT,
                 BoardActivities.caseOfScript("retreat").orElseThrow(),
-                "Бегство остаётся действием отхода, а не рубкой");
+                "Бегство остаётся действием отхода, а не рубкой"
+                        + " Иначе тест movement_WorkCards_MoveToTargetThenAct перестанет ловить эту поломку. При смене movement_WorkCards_MoveToTargetThenAct проверь это утверждение.");
         assertEquals(
                 BoardCase.ACTIVITY_EXPEDITION,
                 BoardActivities.caseOfScript("follow").orElseThrow(),
-                "Поход идёт сопровождением follow");
+                "Поход идёт сопровождением follow"
+                        + " Иначе тест movement_WorkCards_MoveToTargetThenAct перестанет ловить эту поломку. При смене movement_WorkCards_MoveToTargetThenAct проверь это утверждение.");
     }
 
     private static void assertMovesFirst(String what, TaskNode plan, String action) {
         List<String> scripts = new ArrayList<>();
         collect(plan, scripts);
         assertEquals(
-                "goto", scripts.get(0), what + " начинается с перехода к цели, а не с действия на месте: " + scripts);
-        assertTrue(scripts.contains(action), what + " после перехода выполняет своё действие: " + scripts);
+                "goto",
+                scripts.get(0),
+                what + " начинается с перехода к цели, а не с действия на месте: " + scripts
+                        + " Иначе тест assertMovesFirst перестанет ловить эту поломку. При смене assertMovesFirst проверь это утверждение.");
+        assertTrue(
+                scripts.contains(action),
+                what + " после перехода выполняет своё действие: " + scripts
+                        + " Иначе тест assertMovesFirst перестанет ловить эту поломку. При смене assertMovesFirst проверь это утверждение.");
     }
 
     private static void collect(TaskNode node, List<String> scripts) {
@@ -116,14 +148,23 @@ class CrossMovementPlanTests {
 
         assertTrue(
                 task(first, "pillar").feasible(),
-                "Доски есть — выход столбом выполним сразу, без ожидания возврата следа: " + ids(first));
-        assertTrue(task(first, "restore_trace").feasible(), "Возврат следа остаётся в плане: " + ids(first));
+                "Доски есть — выход столбом выполним сразу, без ожидания возврата следа: " + ids(first)
+                        + " Иначе тест pit_PillarOpensFromPlanks_AndRestoreTraceStaysPlanned перестанет ловить эту поломку. При смене pit_PillarOpensFromPlanks_AndRestoreTraceStaysPlanned проверь это утверждение.");
+        assertTrue(
+                task(first, "restore_trace").feasible(),
+                "Возврат следа остаётся в плане: " + ids(first)
+                        + " Иначе тест pit_PillarOpensFromPlanks_AndRestoreTraceStaysPlanned перестанет ловить эту поломку. При смене pit_PillarOpensFromPlanks_AndRestoreTraceStaysPlanned проверь это утверждение.");
         List<String> pillar = new ArrayList<>();
         collect(ActivityPlans.pillar(3, "oak_planks").task(), pillar);
-        assertEquals("pillar_up", pillar.get(0), "Столб строится действием pillar_up, а не телепортом: " + pillar);
+        assertEquals(
+                "pillar_up",
+                pillar.get(0),
+                "Столб строится действием pillar_up, а не телепортом: " + pillar
+                        + " Иначе тест pit_PillarOpensFromPlanks_AndRestoreTraceStaysPlanned перестанет ловить эту поломку. При смене pit_PillarOpensFromPlanks_AndRestoreTraceStaysPlanned проверь это утверждение.");
         assertEquals(
                 BoardCase.ACTIVITY_BUILD,
                 BoardActivities.caseOfScript("pillar_up").orElseThrow(),
-                "Столб меняет мир отдельным узлом pillar, а не телепортом");
+                "Столб меняет мир отдельным узлом pillar, а не телепортом"
+                        + " Иначе тест pit_PillarOpensFromPlanks_AndRestoreTraceStaysPlanned перестанет ловить эту поломку. При смене pit_PillarOpensFromPlanks_AndRestoreTraceStaysPlanned проверь это утверждение.");
     }
 }

@@ -21,12 +21,25 @@ class BoardLogPlacementTests {
 
         BoardLogEntry read = journal.last(1).get(0);
 
-        assertEquals(BoardLog.Event.NOTE, read.event(), "Установка блока вне стройки — заметка журнала (INC-54)");
-        assertEquals("place:minecraft:chest", read.ticketId(), "В журнале — что поставлено");
-        assertEquals("spirit-1", read.spirit(), "В журнале — кто поставил: иначе лишний сундук не разобрать");
+        assertEquals(
+                BoardLog.Event.NOTE,
+                read.event(),
+                "Установка блока вне стройки — заметка журнала (INC-54)"
+                        + " Иначе тест placement_ChestPlaced_JournalNamesSpiritTaskPlaceReason перестанет ловить эту поломку. При смене placement_ChestPlaced_JournalNamesSpiritTaskPlaceReason проверь это утверждение.");
+        assertEquals(
+                "place:minecraft:chest",
+                read.ticketId(),
+                "В журнале — что поставлено"
+                        + " Иначе тест placement_ChestPlaced_JournalNamesSpiritTaskPlaceReason перестанет ловить эту поломку. При смене placement_ChestPlaced_JournalNamesSpiritTaskPlaceReason проверь это утверждение.");
+        assertEquals(
+                "spirit-1",
+                read.spirit(),
+                "В журнале — кто поставил: иначе лишний сундук не разобрать"
+                        + " При смене placement_ChestPlaced_JournalNamesSpiritTaskPlaceReason проверь это утверждение.");
         assertEquals(
                 List.of("task=craft", "pos=-177,67,-474", "reason=скрафчено с place"),
                 read.modifiers(),
-                "В журнале — задача, позиция и причина установки (INC-54)");
+                "В журнале — задача, позиция и причина установки (INC-54)"
+                        + " Иначе тест placement_ChestPlaced_JournalNamesSpiritTaskPlaceReason перестанет ловить эту поломку. При смене placement_ChestPlaced_JournalNamesSpiritTaskPlaceReason проверь это утверждение.");
     }
 }

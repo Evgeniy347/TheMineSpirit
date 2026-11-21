@@ -20,7 +20,8 @@ class ChestReachTests {
         assertEquals(
                 Map.of("bread", 2, "oak_log", 8),
                 ChestReach.reachableStock(stock, chests),
-                "Еда в недостижимом сундуке не считается запасом: граф не объявит еду выполнимой, пока её не принесут");
+                "Еда в недостижимом сундуке не считается запасом: граф не объявит еду выполнимой, пока её не принесут"
+                        + " Иначе тест reachableStock_UnreachableChest_CutsOnlyItsContents перестанет ловить эту поломку. При смене reachableStock_UnreachableChest_CutsOnlyItsContents проверь это утверждение.");
     }
 
     @Test
@@ -32,7 +33,8 @@ class ChestReachTests {
         assertEquals(
                 stock,
                 ChestReach.reachableStock(stock, chests),
-                "Неизвестная достижимость — не «нет пути»: такой запас пока считают доступным");
+                "Неизвестная достижимость — не «нет пути»: такой запас пока считают доступным"
+                        + " Иначе тест reachableStock_UnknownReach_KeepsStock перестанет ловить эту поломку. При смене reachableStock_UnknownReach_KeepsStock проверь это утверждение.");
     }
 
     @Test
@@ -45,7 +47,8 @@ class ChestReachTests {
                         stock,
                         List.of(new GraphFacts.Chest(
                                 AT, Map.of("minecraft:bread", 10), 10, 27, GraphFacts.Reach.NO_PATH))),
-                "Списание недостижимого не уводит запас в минус: пустой запас — ноль, а не отрицательное число");
+                "Списание недостижимого не уводит запас в минус: пустой запас — ноль, а не отрицательное число"
+                        + " Иначе тест reachableStock_MoreUnreachableThanStock_LeavesZeroAndNoNegative перестанет ловить эту поломку. При смене reachableStock_MoreUnreachableThanStock_LeavesZeroAndNoNegative проверь это утверждение.");
     }
 
     @Test
@@ -53,12 +56,18 @@ class ChestReachTests {
         assertEquals(
                 GraphFacts.Reach.UNKNOWN,
                 ChestReach.verdict(false, false),
-                "Незагруженный чанк — «неизвестно», а не «пути нет»: архитектура запрещает считать неизвестное воздухом");
-        assertEquals(GraphFacts.Reach.PATH, ChestReach.verdict(true, true), "Сундук в участке поселения достижим");
+                "Незагруженный чанк — «неизвестно», а не «пути нет»: архитектура запрещает считать неизвестное воздухом"
+                        + " Иначе тест verdict_UnloadedChunk_IsUnknownNotNoPath перестанет ловить эту поломку. При смене verdict_UnloadedChunk_IsUnknownNotNoPath проверь это утверждение.");
+        assertEquals(
+                GraphFacts.Reach.PATH,
+                ChestReach.verdict(true, true),
+                "Сундук в участке поселения достижим"
+                        + " Иначе тест verdict_UnloadedChunk_IsUnknownNotNoPath перестанет ловить эту поломку. При смене verdict_UnloadedChunk_IsUnknownNotNoPath проверь это утверждение.");
         assertEquals(
                 GraphFacts.Reach.NO_PATH,
                 ChestReach.verdict(true, false),
-                "Сундук вне границы поселения недостижим тем же правилом, что и выдача еды");
+                "Сундук вне границы поселения недостижим тем же правилом, что и выдача еды"
+                        + " Иначе тест verdict_UnloadedChunk_IsUnknownNotNoPath перестанет ловить эту поломку. При смене verdict_UnloadedChunk_IsUnknownNotNoPath проверь это утверждение.");
     }
 
     @Test
@@ -88,9 +97,11 @@ class ChestReachTests {
         assertTrue(
                 plan.task("event:hungry:eat").map(task -> !task.feasible()).orElse(true),
                 "Еда в недостижимом сундуке не делает eat выполнимым: иначе граф ставит задачу, а выдача пишет "
-                        + "только [food]-лог: " + plan.tasks());
+                        + "только [food]-лог: " + plan.tasks()
+                        + " При смене eat_FoodOnlyInUnreachableChest_IsNotFeasibleAndHuntTakesOver проверь это утверждение.");
         assertTrue(
                 plan.task("event:hungry:hunt").filter(GraphPlan.Task::feasible).isPresent(),
-                "Голодный дух получает доступный путь — охоту, а не ждёт недостижимый сундук: " + plan.tasks());
+                "Голодный дух получает доступный путь — охоту, а не ждёт недостижимый сундук: " + plan.tasks()
+                        + " Иначе тест eat_FoodOnlyInUnreachableChest_IsNotFeasibleAndHuntTakesOver перестанет ловить эту поломку. При смене eat_FoodOnlyInUnreachableChest_IsNotFeasibleAndHuntTakesOver проверь это утверждение.");
     }
 }

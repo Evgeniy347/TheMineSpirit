@@ -21,7 +21,8 @@ class WalkAscentStepTests {
                 arrives(0.9),
                 "Шаг вверх с края клетки у стены: старый RouteWalk прыгает сразу и бьётся углом о ступень "
                         + "(лог N1: воздух, onGround=false, дистанция 0.68, код JUMP_STALLED). Дух обязан сначала "
-                        + "выровняться к центру клетки, затем прыгнуть — иначе задание падает через 60 тиков");
+                        + "выровняться к центру клетки, затем прыгнуть — иначе задание падает через 60 тиков"
+                        + " При смене next_StepUpOffCenterBesideWall_AlignsAndArrives проверь это утверждение.");
     }
 
     @Test
@@ -29,7 +30,8 @@ class WalkAscentStepTests {
         assertTrue(
                 arrives(0.5),
                 "Шаг вверх из центра клетки обязан проходить без выравнивания: дух не тратит тики на возврат "
-                        + "к центру, когда уже стоит ровно перед ступенью");
+                        + "к центру, когда уже стоит ровно перед ступенью"
+                        + " Иначе тест next_StepUpFromCellCenter_ArrivesWithoutDelay перестанет ловить эту поломку. При смене next_StepUpFromCellCenter_ArrivesWithoutDelay проверь это утверждение.");
     }
 
     private static boolean arrives(double startZ) {

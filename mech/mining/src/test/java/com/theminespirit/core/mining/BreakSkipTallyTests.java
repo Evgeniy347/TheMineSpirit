@@ -20,11 +20,13 @@ class BreakSkipTallyTests {
                 1,
                 tally.count(BreakSkipTally.Reason.OUT_OF_REACH),
                 "Отказ «дальше досягаемости» обязан попадать в свой счётчик: иначе дух сдаётся с ложным "
-                        + "«без места для духа» на достижимом блоке");
+                        + "«без места для духа» на достижимом блоке"
+                        + " При смене record_OutOfReach_IncrementsOutOfReachNotNoStand проверь это утверждение.");
         assertEquals(
                 0,
                 tally.count(BreakSkipTally.Reason.NO_STAND),
-                "Отказ «дальше досягаемости» не означает «нет стоянки»: стоянка есть, духу нужно подойти");
+                "Отказ «дальше досягаемости» не означает «нет стоянки»: стоянка есть, духу нужно подойти"
+                        + " Иначе тест record_OutOfReach_IncrementsOutOfReachNotNoStand перестанет ловить эту поломку. При смене record_OutOfReach_IncrementsOutOfReachNotNoStand проверь это утверждение.");
     }
 
     @Test
@@ -35,12 +37,21 @@ class BreakSkipTallyTests {
         tally.record(BreakSkipTally.Reason.CHUNK_NOT_LOADED, TARGET, STAND);
         tally.record(BreakSkipTally.Reason.NO_STAND, TARGET, STAND);
 
-        assertEquals(1, tally.count(BreakSkipTally.Reason.NO_SIGHT), "Отказ «не виден» обязан считаться отдельно");
+        assertEquals(
+                1,
+                tally.count(BreakSkipTally.Reason.NO_SIGHT),
+                "Отказ «не виден» обязан считаться отдельно"
+                        + " Иначе тест record_NoSightAndChunkNotLoaded_KeepSeparateCounters перестанет ловить эту поломку. При смене record_NoSightAndChunkNotLoaded_KeepSeparateCounters проверь это утверждение.");
         assertEquals(
                 1,
                 tally.count(BreakSkipTally.Reason.CHUNK_NOT_LOADED),
-                "Отказ «чанк не загружен» обязан считаться отдельно");
-        assertEquals(1, tally.count(BreakSkipTally.Reason.NO_STAND), "Отказ «нет стоянки» обязан считаться отдельно");
+                "Отказ «чанк не загружен» обязан считаться отдельно"
+                        + " Иначе тест record_NoSightAndChunkNotLoaded_KeepSeparateCounters перестанет ловить эту поломку. При смене record_NoSightAndChunkNotLoaded_KeepSeparateCounters проверь это утверждение.");
+        assertEquals(
+                1,
+                tally.count(BreakSkipTally.Reason.NO_STAND),
+                "Отказ «нет стоянки» обязан считаться отдельно"
+                        + " Иначе тест record_NoSightAndChunkNotLoaded_KeepSeparateCounters перестанет ловить эту поломку. При смене record_NoSightAndChunkNotLoaded_KeepSeparateCounters проверь это утверждение.");
     }
 
     @Test
@@ -56,7 +67,8 @@ class BreakSkipTallyTests {
                 "вне досягаемости: 1, не виден: 1, чанк не загружен: 1, без стоянки: 1",
                 tally.text(),
                 "Итог обязан называть каждую причину пропуска отдельно: по общему «без стоянки» не видно, "
-                        + "что духу нужно подойти, а не искать другое место");
+                        + "что духу нужно подойти, а не искать другое место"
+                        + " Иначе тест text_AllRefusalReasons_ListsEachWithCount перестанет ловить эту поломку. При смене text_AllRefusalReasons_ListsEachWithCount проверь это утверждение.");
     }
 
     @Test
@@ -77,6 +89,7 @@ class BreakSkipTallyTests {
                                 new BlockCoord(2, 70, -500), BreakSkipTally.Reason.OUT_OF_REACH, STAND)),
                 tally.samples(),
                 "В лог идут первые три пропущенных блока с позицией и кандидатом стоянки: без них причину "
-                        + "отказа не проверить в мире");
+                        + "отказа не проверить в мире"
+                        + " Иначе тест record_MoreThanThreeSamples_KeepsFirstThreeWithStand перестанет ловить эту поломку. При смене record_MoreThanThreeSamples_KeepsFirstThreeWithStand проверь это утверждение.");
     }
 }

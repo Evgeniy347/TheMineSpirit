@@ -21,7 +21,8 @@ class CoverFinderTests {
         assertEquals(
                 new Point(5, 64, 0),
                 cover.orElseThrow(),
-                "Моб на линии выбирается укрытием: иначе приём «зомби между» не сработает и стрелы пойдут в духа");
+                "Моб на линии выбирается укрытием: иначе приём «зомби между» не сработает и стрелы пойдут в духа"
+                        + " При смене between_MobOnLine_Chosen проверь это утверждение.");
     }
 
     @Test
@@ -29,7 +30,8 @@ class CoverFinderTests {
         assertEquals(
                 Optional.empty(),
                 CoverFinder.between(SELF, THREAT, List.of(new Point(5, 64, 5)), CORRIDOR),
-                "Кандидат вне коридора не укрытие: иначе укрытием посчитается моб мимо линии обстрела");
+                "Кандидат вне коридора не укрытие: иначе укрытием посчитается моб мимо линии обстрела"
+                        + " При смене between_OffCorridor_Rejected проверь это утверждение.");
     }
 
     @Test
@@ -37,7 +39,8 @@ class CoverFinderTests {
         assertEquals(
                 Optional.empty(),
                 CoverFinder.between(SELF, THREAT, List.of(new Point(12, 64, 0)), CORRIDOR),
-                "Кандидат за целью не укрытие: иначе дух прикроется тем, кто стоит за спиной у скелета");
+                "Кандидат за целью не укрытие: иначе дух прикроется тем, кто стоит за спиной у скелета"
+                        + " При смене between_BehindThreat_Rejected проверь это утверждение.");
     }
 
     @Test
@@ -45,7 +48,8 @@ class CoverFinderTests {
         assertEquals(
                 Optional.empty(),
                 CoverFinder.between(SELF, THREAT, List.of(new Point(-2, 64, 0)), CORRIDOR),
-                "Кандидат за спиной духа не укрытие: иначе проекция вырождается и линия обстрела открыта");
+                "Кандидат за спиной духа не укрытие: иначе проекция вырождается и линия обстрела открыта"
+                        + " При смене between_BehindSelf_Rejected проверь это утверждение.");
     }
 
     @Test
@@ -53,7 +57,8 @@ class CoverFinderTests {
         assertEquals(
                 Optional.empty(),
                 CoverFinder.between(SELF, THREAT, List.of(), CORRIDOR),
-                "Без кандидатов укрытия нет: иначе боец решит, что прикрыт, стоя в чистом поле");
+                "Без кандидатов укрытия нет: иначе боец решит, что прикрыт, стоя в чистом поле"
+                        + " При смене between_EmptyBlockers_ReturnsEmpty проверь это утверждение.");
     }
 
     @Test
@@ -61,7 +66,8 @@ class CoverFinderTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> CoverFinder.between(SELF, THREAT, null, CORRIDOR),
-                "Поиск без списка кандидатов обязан падать: иначе молчаливое отсутствие укроет от проверки");
+                "Поиск без списка кандидатов обязан падать: иначе молчаливое отсутствие укроет от проверки"
+                        + " При смене between_NullBlockers_Throws проверь это утверждение.");
     }
 
     @Test
@@ -69,7 +75,8 @@ class CoverFinderTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> CoverFinder.between(null, THREAT, List.of(new Point(5, 64, 0)), CORRIDOR),
-                "Поиск без позиции духа обязан падать: иначе линия строится из ничего");
+                "Поиск без позиции духа обязан падать: иначе линия строится из ничего"
+                        + " При смене between_NullSelf_Throws проверь это утверждение.");
     }
 
     @Test
@@ -80,7 +87,8 @@ class CoverFinderTests {
         assertEquals(
                 new Point(6, 64, 0.5),
                 cover.orElseThrow(),
-                "Из подходящих выбирается ближайшее к линии: иначе стрела пройдёт мимо дальнего укрытия");
+                "Из подходящих выбирается ближайшее к линии: иначе стрела пройдёт мимо дальнего укрытия"
+                        + " При смене between_SmallerAcross_Wins проверь это утверждение.");
     }
 
     @Test
@@ -91,7 +99,8 @@ class CoverFinderTests {
         assertEquals(
                 new Point(5, 64, 1),
                 cover.orElseThrow(),
-                "При равном сносе выбирается ближнее к духу: иначе боец тянется к дальнему укрытию под обстрелом");
+                "При равном сносе выбирается ближнее к духу: иначе боец тянется к дальнему укрытию под обстрелом"
+                        + " При смене between_EqualAcross_NearerSelfWins проверь это утверждение.");
     }
 
     @Test
@@ -102,7 +111,8 @@ class CoverFinderTests {
         assertEquals(
                 new Point(5, 64, -1),
                 cover.orElseThrow(),
-                "Полная ничья решается координатами: иначе выбор укрытия мигает между пересборками");
+                "Полная ничья решается координатами: иначе выбор укрытия мигает между пересборками"
+                        + " При смене between_SymmetricCandidates_LowerCoordinatesWin проверь это утверждение.");
     }
 
     @Test
@@ -110,6 +120,7 @@ class CoverFinderTests {
         assertEquals(
                 Optional.empty(),
                 CoverFinder.between(SELF, SELF, List.of(new Point(5, 64, 0)), CORRIDOR),
-                "Без направления линии укрытия нет: иначе деление на ноль даст ложного кандидата");
+                "Без направления линии укрытия нет: иначе деление на ноль даст ложного кандидата"
+                        + " При смене between_SelfEqualsThreat_ReturnsEmpty проверь это утверждение.");
     }
 }

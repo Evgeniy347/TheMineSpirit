@@ -42,25 +42,29 @@ class ResourceResolverProperties {
                     finalStep(plan),
                     "Резолвер обязан оканчивать план действием, добывающим сам предмет нужным количеством: "
                             + "иначе дух выполнит подготовку и не получит цель. Предмет=" + root
-                            + ", количество=" + count);
+                            + ", количество=" + count
+                            + " При смене resolve_RandomAcyclicKnowledgeGraph_ReturnsPlanOrThrowsOnlyUnplannableGoal проверь это утверждение.");
             FuelBalance balance = FuelBalance.of(plan);
             assertTrue(
                     balance.burn() >= balance.cook(),
                     "Топлива в плане обязано хватать на все плавки: иначе печь встанет посреди работы. "
                             + "Предмет=" + root + ", количество=" + count + ", горение=" + balance.burn()
-                            + ", нужно=" + balance.cook());
+                            + ", нужно=" + balance.cook()
+                            + " При смене resolve_RandomAcyclicKnowledgeGraph_ReturnsPlanOrThrowsOnlyUnplannableGoal проверь это утверждение.");
         } else {
             UnplannableGoalException error = assertThrows(
                     UnplannableGoalException.class,
                     () -> CorePlanner.resolve(root, count, knowledge),
                     "Для предмета без способа добычи в графе резолвер обязан бросить UnplannableGoalException: "
-                            + "молчаливый план без предмета выглядит исполненной целью. Предмет=" + root);
+                            + "молчаливый план без предмета выглядит исполненной целью. Предмет=" + root
+                            + " Иначе тест resolve_RandomAcyclicKnowledgeGraph_ReturnsPlanOrThrowsOnlyUnplannableGoal перестанет ловить эту поломку. При смене resolve_RandomAcyclicKnowledgeGraph_ReturnsPlanOrThrowsOnlyUnplannableGoal проверь это утверждение.");
 
             String named = error.item();
             assertTrue(
                     named != null && !isObtainable(named, knowledge),
                     "Поле item обязано называть предмет, у которого в графе нет способа добычи: "
-                            + "иначе отказ маскирует дефект резолвера, а не пробел в знаниях. Предмет: " + named);
+                            + "иначе отказ маскирует дефект резолвера, а не пробел в знаниях. Предмет: " + named
+                            + " При смене resolve_RandomAcyclicKnowledgeGraph_ReturnsPlanOrThrowsOnlyUnplannableGoal проверь это утверждение.");
         }
     }
 
@@ -75,11 +79,13 @@ class ResourceResolverProperties {
         assertTrue(
                 balance.smelts() == count,
                 "План обязан содержать плавку ровно " + count + " предметов: иначе проверять нечего. Фактически "
-                        + balance.smelts());
+                        + balance.smelts()
+                        + " При смене smeltPlan_AnyCount_FuelBurnCoversAllSmelts проверь это утверждение.");
         assertTrue(
                 balance.burn() >= balance.cook(),
                 "Топлива в плане обязано хватать на все плавки: горение " + balance.burn() + " тиков обязано крыть "
-                        + balance.cook() + " тиков готовки. Количество=" + count);
+                        + balance.cook() + " тиков готовки. Количество=" + count
+                        + " Иначе тест smeltPlan_AnyCount_FuelBurnCoversAllSmelts перестанет ловить эту поломку. При смене smeltPlan_AnyCount_FuelBurnCoversAllSmelts проверь это утверждение.");
     }
 
     @Property
@@ -102,7 +108,8 @@ class ResourceResolverProperties {
                     "Станция '" + station
                             + "' обязана появляться в плане ровно один раз, если она нужна, и ни разу, если нет: "
                             + "лишний верстак или печь — потерянные материалы, отсутствующий — провал у станции. Нужна="
-                            + needed + ", получена " + produced + " раз(а). Предмет=" + root + ", количество=" + count);
+                            + needed + ", получена " + produced + " раз(а). Предмет=" + root + ", количество=" + count
+                            + " Иначе тест resolve_KnowledgeWithStations_EachNeededStationIsProducedExactlyOnce перестанет ловить эту поломку. При смене resolve_KnowledgeWithStations_EachNeededStationIsProducedExactlyOnce проверь это утверждение.");
         }
     }
 
@@ -118,7 +125,8 @@ class ResourceResolverProperties {
         assertTrue(
                 FuelBalance.of(plan).fuelAheadOfEverySmelt(),
                 "Топливо обязано быть добыто до плавки, которой оно нужно: иначе печь встанет на первом же предмете, "
-                        + "а топливо пригодится только следующей плавке. Предмет=" + root + ", количество=" + count);
+                        + "а топливо пригодится только следующей плавке. Предмет=" + root + ", количество=" + count
+                        + " При смене resolve_AnySmeltPlan_FuelIsGatheredBeforeEverySmelt проверь это утверждение.");
     }
 
     @Property
@@ -155,7 +163,8 @@ class ResourceResolverProperties {
                 calls,
                 "План плавки обязан быть минимален (ровно столько угля, сколько нужно) и нести шаг топлива перед "
                         + "плавкой: лишний уголь — потерянный груз, отсутствующий шаг — холодная печь. Количество="
-                        + count);
+                        + count
+                        + " Иначе тест resolve_AnySmeltPlan_OnlyMinimalFuelStepPrecedesSmelt перестанет ловить эту поломку. При смене resolve_AnySmeltPlan_OnlyMinimalFuelStepPrecedesSmelt проверь это утверждение.");
     }
 
     private static void flatten(TaskNode node, List<ScriptCall> calls) {

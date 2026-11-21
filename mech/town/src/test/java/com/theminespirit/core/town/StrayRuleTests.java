@@ -21,47 +21,57 @@ class StrayRuleTests {
         assertTrue(
                 StrayRule.stray("minecraft:oak_fence", EnumSet.noneOf(StrayRule.Fact.class), PROTECTION),
                 "Старый забор вне плана сносится и без записи в реестре духов: иначе обломки прошлых версий стоят "
-                        + "вечно (INC-91)");
+                        + "вечно (INC-91)"
+                        + " При смене stray_OldFenceNotInRegistry_IsDemolished проверь это утверждение.");
         assertTrue(
                 StrayRule.stray("minecraft:spruce_planks", EnumSet.of(StrayRule.Fact.UNSUPPORTED), PROTECTION),
-                "Доски в воздухе вне плана — искусственный обломок, снос");
+                "Доски в воздухе вне плана — искусственный обломок, снос"
+                        + " Иначе тест stray_OldFenceNotInRegistry_IsDemolished перестанет ловить эту поломку. При смене stray_OldFenceNotInRegistry_IsDemolished проверь это утверждение.");
     }
 
     @Test
     void stray_PlayerPlannedOrNatural_IsKept() {
         assertFalse(
                 StrayRule.stray("minecraft:oak_planks", EnumSet.of(StrayRule.Fact.PLAYER), PROTECTION),
-                "Постройку игрока снос не трогает (PLAYER_BUILDINGS)");
+                "Постройку игрока снос не трогает (PLAYER_BUILDINGS)"
+                        + " Иначе тест stray_PlayerPlannedOrNatural_IsKept перестанет ловить эту поломку. При смене stray_PlayerPlannedOrNatural_IsKept проверь это утверждение.");
         assertFalse(
                 StrayRule.stray("minecraft:oak_fence", EnumSet.of(StrayRule.Fact.PLANNED), PROTECTION),
-                "Блок плана не сносится: это ограда этапа");
+                "Блок плана не сносится: это ограда этапа"
+                        + " Иначе тест stray_PlayerPlannedOrNatural_IsKept перестанет ловить эту поломку. При смене stray_PlayerPlannedOrNatural_IsKept проверь это утверждение.");
         assertFalse(
                 StrayRule.stray("minecraft:stone", EnumSet.noneOf(StrayRule.Fact.class), PROTECTION),
-                "Природный камень — не постройка, не сносится");
+                "Природный камень — не постройка, не сносится"
+                        + " Иначе тест stray_PlayerPlannedOrNatural_IsKept перестанет ловить эту поломку. При смене stray_PlayerPlannedOrNatural_IsKept проверь это утверждение.");
         assertFalse(
                 StrayRule.stray("minecraft:poppy", EnumSet.of(StrayRule.Fact.PLANT), PROTECTION),
-                "Цветы и саженцы — природа, не обломок");
+                "Цветы и саженцы — природа, не обломок"
+                        + " Иначе тест stray_PlayerPlannedOrNatural_IsKept перестанет ловить эту поломку. При смене stray_PlayerPlannedOrNatural_IsKept проверь это утверждение.");
     }
 
     @Test
     void stray_MasterStation_IsKept() {
         assertFalse(
                 StrayRule.stray("minecraft:crafting_table", EnumSet.noneOf(StrayRule.Fact.class), PROTECTION),
-                "Стол мастера не лишняя постройка: без него духи не скрафтят материалы и хижина встанет");
+                "Стол мастера не лишняя постройка: без него духи не скрафтят материалы и хижина встанет"
+                        + " Иначе тест stray_MasterStation_IsKept перестанет ловить эту поломку. При смене stray_MasterStation_IsKept проверь это утверждение.");
         assertFalse(
                 StrayRule.stray("minecraft:furnace", EnumSet.noneOf(StrayRule.Fact.class), PROTECTION),
-                "Печь двора — станция, а не обломок: её снос отнимает у поселения варку");
+                "Печь двора — станция, а не обломок: её снос отнимает у поселения варку"
+                        + " Иначе тест stray_MasterStation_IsKept перестанет ловить эту поломку. При смене stray_MasterStation_IsKept проверь это утверждение.");
     }
 
     @Test
     void stray_LogOutsideTree_IsDemolishedButTreeStays() {
         assertTrue(
                 StrayRule.stray("minecraft:oak_log", EnumSet.of(StrayRule.Fact.LOG), PROTECTION),
-                "Бревно без листвы вне дерева — столб старой хижины, снос");
+                "Бревно без листвы вне дерева — столб старой хижины, снос"
+                        + " Иначе тест stray_LogOutsideTree_IsDemolishedButTreeStays перестанет ловить эту поломку. При смене stray_LogOutsideTree_IsDemolishedButTreeStays проверь это утверждение.");
         assertFalse(
                 StrayRule.stray(
                         "minecraft:oak_log", EnumSet.of(StrayRule.Fact.LOG, StrayRule.Fact.IN_TREE), PROTECTION),
-                "Бревно живого дерева снос не трогает: деревья рубит рубка, а не снос");
+                "Бревно живого дерева снос не трогает: деревья рубит рубка, а не снос"
+                        + " Иначе тест stray_LogOutsideTree_IsDemolishedButTreeStays перестанет ловить эту поломку. При смене stray_LogOutsideTree_IsDemolishedButTreeStays проверь это утверждение.");
     }
 
     @Test
@@ -72,11 +82,13 @@ class StrayRuleTests {
         assertEquals(
                 logs,
                 StrayRule.treeLogs(new BlockCoord(0, 1, 0), tree),
-                "Брёвна с листвой вокруг — дерево целиком: снос не трогает ни одно из них");
+                "Брёвна с листвой вокруг — дерево целиком: снос не трогает ни одно из них"
+                        + " Иначе тест treeLogs_PostWithoutLeavesAndTree_Differ перестанет ловить эту поломку. При смене treeLogs_PostWithoutLeavesAndTree_Differ проверь это утверждение.");
         assertEquals(
                 Set.of(),
                 StrayRule.treeLogs(new BlockCoord(0, 1, 0), view(logs, Set.of())),
-                "Столб брёвен без листвы — не дерево, а остаток постройки");
+                "Столб брёвен без листвы — не дерево, а остаток постройки"
+                        + " Иначе тест treeLogs_PostWithoutLeavesAndTree_Differ перестанет ловить эту поломку. При смене treeLogs_PostWithoutLeavesAndTree_Differ проверь это утверждение.");
     }
 
     private static TreeView view(Set<BlockCoord> logs, Set<BlockCoord> leaves) {

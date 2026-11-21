@@ -25,17 +25,27 @@ class ClearScaffoldLiveTests {
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toSet());
         Set<BlockCoord> top = solid.stream().filter(cell -> cell.y() > 0).collect(Collectors.toSet());
-        assertFalse(top.isEmpty(), "Живая фикстура должна содержать высокие клетки — иначе это не случай столбов");
+        assertFalse(
+                top.isEmpty(),
+                "Живая фикстура должна содержать высокие клетки — иначе это не случай столбов"
+                        + " При смене livePillars_LeaseCellsAreNotTargets_ClimbCountedFromTop проверь это утверждение.");
 
         Set<BlockCoord> own =
                 solid.stream().filter(cell -> cell.x() == 0 && cell.z() == -1).collect(Collectors.toSet());
-        assertFalse(own.isEmpty(), "Свой столб в фикстуре: подмости духа на его колонке");
+        assertFalse(
+                own.isEmpty(),
+                "Свой столб в фикстуре: подмости духа на его колонке"
+                        + " Иначе тест livePillars_LeaseCellsAreNotTargets_ClimbCountedFromTop перестанет ловить эту поломку. При смене livePillars_LeaseCellsAreNotTargets_ClimbCountedFromTop проверь это утверждение.");
         List<BlockCoord> targets = ClearScaffold.withoutLeased(new ArrayList<>(solid), own::contains);
         assertEquals(
                 solid.size() - own.size(),
                 targets.size(),
-                "Клетки своей аренды не цели расчистки: иначе дух ломает только что поставленную опору");
-        assertTrue(targets.stream().noneMatch(own::contains), "Ни одна клетка своего столба не попала в цели");
+                "Клетки своей аренды не цели расчистки: иначе дух ломает только что поставленную опору"
+                        + " При смене livePillars_LeaseCellsAreNotTargets_ClimbCountedFromTop проверь это утверждение.");
+        assertTrue(
+                targets.stream().noneMatch(own::contains),
+                "Ни одна клетка своего столба не попала в цели"
+                        + " Иначе тест livePillars_LeaseCellsAreNotTargets_ClimbCountedFromTop перестанет ловить эту поломку. При смене livePillars_LeaseCellsAreNotTargets_ClimbCountedFromTop проверь это утверждение.");
 
         BlockCoord highest = ClearScaffold.highest(targets);
         BlockCoord feet = new BlockCoord(0, -3, 0);
@@ -44,11 +54,13 @@ class ClearScaffoldLiveTests {
                 ClearScaffold.Action.CLIMB,
                 decision.action(),
                 "Верх высокой колонки не достать с земли: без подъёма клетки объявлялись недостижимыми "
-                        + "(«к клетке ... y=97 нет подхода» в живом журнале)");
+                        + "(«к клетке ... y=97 нет подхода» в живом журнале)"
+                        + " Иначе тест livePillars_LeaseCellsAreNotTargets_ClimbCountedFromTop перестанет ловить эту поломку. При смене livePillars_LeaseCellsAreNotTargets_ClimbCountedFromTop проверь это утверждение.");
         assertEquals(
                 highest.y() - feet.y() - MAX_STAND_RISE,
                 decision.height(),
                 "Подъём считается от верхней цели, а не от низа ящика: иначе дух встаёт на подмости и снова "
-                        + "не достаёт цель");
+                        + "не достаёт цель"
+                        + " При смене livePillars_LeaseCellsAreNotTargets_ClimbCountedFromTop проверь это утверждение.");
     }
 }

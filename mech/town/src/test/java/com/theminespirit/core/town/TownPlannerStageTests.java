@@ -31,7 +31,8 @@ class TownPlannerStageTests {
                 List.of(),
                 missing,
                 "Каждая обязательная и желательная постройка этапов 1–4 обязана иметь своё место в плане: без "
-                        + "участка аудит не закроет этап и постройка не начнётся; не поместилось " + missing);
+                        + "участка аудит не закроет этап и постройка не начнётся; не поместилось " + missing
+                        + " Иначе тест plan_AllStageRequirements_PlacedInPlan перестанет ловить эту поломку. При смене plan_AllStageRequirements_PlacedInPlan проверь это утверждение.");
     }
 
     @Test
@@ -50,7 +51,8 @@ class TownPlannerStageTests {
                 List.of(),
                 missing,
                 "На холмистом рельефе обязательные постройки этапов 1–4 получают лоты: иначе этап держится "
-                        + "навсегда. Не поместилось " + missing + ", непоместившиеся " + plan.unplaced());
+                        + "навсегда. Не поместилось " + missing + ", непоместившиеся " + plan.unplaced()
+                        + " При смене plan_HillyTerrain_PlacesAllStageRequirements проверь это утверждение.");
     }
 
     @Test
@@ -60,9 +62,11 @@ class TownPlannerStageTests {
         assertTrue(
                 plan.area() > RULES.ground().area() / 2,
                 "Одиночный блок над якорем не отрезает участок от соседей: высота якоря — медиана суши вокруг, "
-                        + "иначе план не растёт и ни одна постройка не получает лота. Площадь " + plan.area());
+                        + "иначе план не растёт и ни одна постройка не получает лота. Площадь " + plan.area()
+                        + " При смене plan_StrayBlockAboveAnchor_DoesNotCutContourToItsColumn проверь это утверждение.");
         assertTrue(
                 plan.placement("hut").isPresent(),
-                "Хижина получает лот даже когда ровно над якорем стоит чужой блок: не поместилось " + plan.unplaced());
+                "Хижина получает лот даже когда ровно над якорем стоит чужой блок: не поместилось " + plan.unplaced()
+                        + " Иначе тест plan_StrayBlockAboveAnchor_DoesNotCutContourToItsColumn перестанет ловить эту поломку. При смене plan_StrayBlockAboveAnchor_DoesNotCutContourToItsColumn проверь это утверждение.");
     }
 }

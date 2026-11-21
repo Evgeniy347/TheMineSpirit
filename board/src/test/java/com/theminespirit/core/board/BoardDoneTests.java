@@ -56,11 +56,13 @@ class BoardDoneTests {
                 BoardOutcome.DUPLICATE,
                 outcome,
                 "Тот же id с тем же составом задания не переиздаётся: иначе DONE перезаписывается в PENDING "
-                        + "с новым createdAt и счётчик выполненного падает (наблюдение 6, аномалия 7)");
+                        + "с новым createdAt и счётчик выполненного падает (наблюдение 6, аномалия 7)"
+                        + " При смене submit_SameDoneTicket_KeepsDone проверь это утверждение.");
         assertEquals(
                 BoardStatus.DONE,
                 board.statusOf("graph:craft_stone_axe@spirit").orElse(null),
-                "Сданное задание остаётся DONE: повторная постановка без нового состава — не повод откатывать итог");
+                "Сданное задание остаётся DONE: повторная постановка без нового состава — не повод откатывать итог"
+                        + " Иначе тест submit_SameDoneTicket_KeepsDone перестанет ловить эту поломку. При смене submit_SameDoneTicket_KeepsDone проверь это утверждение.");
     }
 
     @Test
@@ -77,11 +79,13 @@ class BoardDoneTests {
                 BoardOutcome.ACCEPTED,
                 outcome,
                 "Постоянная причина (cause=always) означает повторяющееся дело: поевший дух снова получает "
-                        + "задание есть, когда проголодается, и запрет переиздания его бы не выпустил");
+                        + "задание есть, когда проголодается, и запрет переиздания его бы не выпустил"
+                        + " Иначе тест submit_AlwaysCauseDoneTicket_Reissued перестанет ловить эту поломку. При смене submit_AlwaysCauseDoneTicket_Reissued проверь это утверждение.");
         assertEquals(
                 BoardStatus.PENDING,
                 board.statusOf("eat:spirit").orElse(null),
-                "Повторяющееся задание после DONE ставится заново и ждёт выдачи");
+                "Повторяющееся задание после DONE ставится заново и ждёт выдачи"
+                        + " Иначе тест submit_AlwaysCauseDoneTicket_Reissued перестанет ловить эту поломку. При смене submit_AlwaysCauseDoneTicket_Reissued проверь это утверждение.");
     }
 
     @Test
@@ -94,16 +98,24 @@ class BoardDoneTests {
                 0,
                 "graph:craft_stone_axe@spirit",
                 Map.of()));
-        assertEquals(BoardOutcome.CLAIMED, board.claim("graph:craft_stone_axe@spirit", SPIRIT, 0), "Дух берёт задание");
+        assertEquals(
+                BoardOutcome.CLAIMED,
+                board.claim("graph:craft_stone_axe@spirit", SPIRIT, 0),
+                "Дух берёт задание"
+                        + " Иначе тест complete_MarkFromIndoors_ReleasedByReachedGoal перестанет ловить эту поломку. При смене complete_MarkFromIndoors_ReleasedByReachedGoal проверь это утверждение.");
         board.stuck().see(SPIRIT, indoors, 0);
         board.stuck().mark(SPIRIT, 0, "провал движения");
 
-        assertTrue(board.complete("graph:craft_stone_axe@spirit"), "Задание выполнено");
+        assertTrue(
+                board.complete("graph:craft_stone_axe@spirit"),
+                "Задание выполнено"
+                        + " Иначе тест complete_MarkFromIndoors_ReleasedByReachedGoal перестанет ловить эту поломку. При смене complete_MarkFromIndoors_ReleasedByReachedGoal проверь это утверждение.");
 
         assertFalse(
                 board.stuck().isStuck(SPIRIT, 30),
                 "Дух дошёл до цели и закрыл задание — метка, полученная в помещении, снимается сразу, а не "
-                        + "живёт до TTL (debtnav, п.5): иначе он 300 секунд не получает работу");
+                        + "живёт до TTL (debtnav, п.5): иначе он 300 секунд не получает работу"
+                        + " При смене complete_MarkFromIndoors_ReleasedByReachedGoal проверь это утверждение.");
     }
 
     @Test
@@ -120,14 +132,16 @@ class BoardDoneTests {
                 BoardOutcome.ACCEPTED,
                 outcome,
                 "Билет с тем же id, но новым составом заменяет выполненный: иначе настоящая переделка "
-                        + "(например, после отката мира) упиралась бы в DONE-тень и шаг не повторился бы никогда");
+                        + "(например, после отката мира) упиралась бы в DONE-тень и шаг не повторился бы никогда"
+                        + " При смене submit_ChangedDoneTicket_Replaced проверь это утверждение.");
         assertEquals(
                 BoardStatus.PENDING,
                 board.statusOf("build_1").orElse(null),
-                "Заменённый билет с новым составом снова ждёт выдачи, а не остаётся DONE");
+                "Заменённый билет с новым составом снова ждёт выдачи, а не остаётся DONE"
+                        + " Иначе тест submit_ChangedDoneTicket_Replaced перестанет ловить эту поломку. При смене submit_ChangedDoneTicket_Replaced проверь это утверждение.");
         assertTrue(
                 board.ledger().has(BoardCase.BUILD_HOUSE, 1),
-                "Отметка ledger переживает замену: условие «постройка стоит» не теряется, когда "
-                        + "задание переиздано");
+                "Отметка ledger переживает замену: условие «постройка стоит» не теряется, когда " + "задание переиздано"
+                        + " Иначе тест submit_ChangedDoneTicket_Replaced перестанет ловить эту поломку. При смене submit_ChangedDoneTicket_Replaced проверь это утверждение.");
     }
 }

@@ -22,7 +22,8 @@ class GraphStageOneBuildTests {
                                 .orElse(false),
                 "Счёт схемы (800 брёвен у ограды, 1020 у хижины) больше, чем граф успевает заготовить: "
                         + "стройка открывается по объявленной в графе доле, точный остаток подвозит FirstStepsRunner; "
-                        + "ограда " + plan.task("building:fence") + ", хижина " + plan.task("building:hut"));
+                        + "ограда " + plan.task("building:fence") + ", хижина " + plan.task("building:hut")
+                        + " Иначе тест plan_ActualBillBiggerThanGraphShare_FenceAndHutStillStart перестанет ловить эту поломку. При смене plan_ActualBillBiggerThanGraphShare_FenceAndHutStillStart проверь это утверждение.");
     }
 
     @Test
@@ -39,7 +40,8 @@ class GraphStageOneBuildTests {
                 "Ограда этапа не вытесняется набором духа: она на доске, а выполнимая добыча её материала раньше "
                         + "самой ограды; кирка "
                         + "духу без инструментов — честный соперник ограде. " + CrossScene.ORDER_HINT + ": "
-                        + plan.tasks());
+                        + plan.tasks()
+                        + " Иначе тест plan_StageBuildingMissing_StaysOnBoardAndPressesSupply перестанет ловить эту поломку. При смене plan_StageBuildingMissing_StaysOnBoardAndPressesSupply проверь это утверждение.");
     }
 
     @Test
@@ -57,10 +59,12 @@ class GraphStageOneBuildTests {
                                 .orElse(false),
                 "Расчистка и ограда — сразу обе на доске: ограда встаёт там, где место уже свободно, не дожидаясь "
                         + "конца расчистки (владелец 28.10); расчистка " + plan.task("building:clearing")
-                        + ", ограда " + plan.task("building:fence"));
+                        + ", ограда " + plan.task("building:fence")
+                        + " Иначе тест plan_ClearingInProgress_FenceAndClearingBothOnBoard перестанет ловить эту поломку. При смене plan_ClearingInProgress_FenceAndClearingBothOnBoard проверь это утверждение.");
         assertTrue(
                 GraphWorld.GRAPH.buildings().get("clearing").advice().contains("settlement_single_y")
                         && GraphWorld.GRAPH.buildings().get("fence").advice().contains("build_fence_where_cell_free"),
-                "Правила стройки этапа 1 записаны в граф: всё поселение на одном y, ограда — на освободившейся клетке");
+                "Правила стройки этапа 1 записаны в граф: всё поселение на одном y, ограда — на освободившейся клетке"
+                        + " Иначе тест plan_ClearingInProgress_FenceAndClearingBothOnBoard перестанет ловить эту поломку. При смене plan_ClearingInProgress_FenceAndClearingBothOnBoard проверь это утверждение.");
     }
 }

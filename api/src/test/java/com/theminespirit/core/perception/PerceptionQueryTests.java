@@ -38,17 +38,27 @@ class PerceptionQueryTests {
                     IllegalArgumentException.class,
                     () -> new PerceptionQuery(type, IdFilter.of(patterns), new ScanRadius(radius)),
                     "запрос " + type + " с фильтром " + patterns + " и радиусом " + radius
-                            + " обязан отклоняться: иначе скрипт получит запрос, который не может исполнить");
+                            + " обязан отклоняться: иначе скрипт получит запрос, который не может исполнить"
+                            + " При смене constructor_TypeFilterRadius_AcceptedOnlyWhenConsistent проверь это утверждение.");
             return;
         }
         PerceptionQuery query = new PerceptionQuery(type, IdFilter.of(patterns), new ScanRadius(radius));
 
-        assertEquals(type, query.type(), "тип запроса обязан сохраняться как задан: по нему скрипт выбирает сканер");
-        assertEquals(radius, query.radius().value(), "радиус запроса обязан сохраняться как задан");
+        assertEquals(
+                type,
+                query.type(),
+                "тип запроса обязан сохраняться как задан: по нему скрипт выбирает сканер"
+                        + " Иначе тест constructor_TypeFilterRadius_AcceptedOnlyWhenConsistent перестанет ловить эту поломку. При смене constructor_TypeFilterRadius_AcceptedOnlyWhenConsistent проверь это утверждение.");
+        assertEquals(
+                radius,
+                query.radius().value(),
+                "радиус запроса обязан сохраняться как задан"
+                        + " Иначе тест constructor_TypeFilterRadius_AcceptedOnlyWhenConsistent перестанет ловить эту поломку. При смене constructor_TypeFilterRadius_AcceptedOnlyWhenConsistent проверь это утверждение.");
         assertEquals(
                 IdFilter.of(patterns).patterns(),
                 query.filter().patterns(),
-                "фильтр запроса обязан сохраняться как задан: иначе скан вернёт лишние блоки");
+                "фильтр запроса обязан сохраняться как задан: иначе скан вернёт лишние блоки"
+                        + " При смене constructor_TypeFilterRadius_AcceptedOnlyWhenConsistent проверь это утверждение.");
     }
 
     @Test
@@ -58,16 +68,23 @@ class PerceptionQueryTests {
         assertEquals(
                 PerceptionType.BLOCKS,
                 PerceptionQuery.blocks(IdFilter.matchAll(), radius).type(),
-                "фабрика blocks обязана строить запрос BLOCKS");
+                "фабрика blocks обязана строить запрос BLOCKS"
+                        + " Иначе тест factories_EachType_BuildQueryOfThatType перестанет ловить эту поломку. При смене factories_EachType_BuildQueryOfThatType проверь это утверждение.");
         assertEquals(
                 PerceptionType.ENTITIES,
                 PerceptionQuery.entities(IdFilter.matchAll(), radius).type(),
-                "фабрика entities обязана строить запрос ENTITIES");
+                "фабрика entities обязана строить запрос ENTITIES"
+                        + " Иначе тест factories_EachType_BuildQueryOfThatType перестанет ловить эту поломку. При смене factories_EachType_BuildQueryOfThatType проверь это утверждение.");
         PerceptionQuery hazards = PerceptionQuery.hazards(radius);
-        assertEquals(PerceptionType.HAZARDS, hazards.type(), "фабрика hazards обязана строить запрос HAZARDS");
+        assertEquals(
+                PerceptionType.HAZARDS,
+                hazards.type(),
+                "фабрика hazards обязана строить запрос HAZARDS"
+                        + " Иначе тест factories_EachType_BuildQueryOfThatType перестанет ловить эту поломку. При смене factories_EachType_BuildQueryOfThatType проверь это утверждение.");
         assertTrue(
                 hazards.filter().matchesAll(),
-                "запрос опасностей обязан нести фильтр «всё»: опасности им не отбираются");
+                "запрос опасностей обязан нести фильтр «всё»: опасности им не отбираются"
+                        + " Иначе тест factories_EachType_BuildQueryOfThatType перестанет ловить эту поломку. При смене factories_EachType_BuildQueryOfThatType проверь это утверждение.");
     }
 
     @Test
@@ -75,16 +92,21 @@ class PerceptionQueryTests {
         NullPointerException noType = assertThrows(
                 NullPointerException.class,
                 () -> new PerceptionQuery(null, IdFilter.matchAll(), ScanRadius.DEFAULT),
-                "запрос без типа обязан отклоняться");
+                "запрос без типа обязан отклоняться"
+                        + " Иначе тест constructor_NullPart_NamesMissingPart перестанет ловить эту поломку. При смене constructor_NullPart_NamesMissingPart проверь это утверждение.");
         assertTrue(
-                noType.getMessage().contains("type"), "сообщение обязано называть поле type: " + noType.getMessage());
+                noType.getMessage().contains("type"),
+                "сообщение обязано называть поле type: " + noType.getMessage()
+                        + " Иначе тест constructor_NullPart_NamesMissingPart перестанет ловить эту поломку. При смене constructor_NullPart_NamesMissingPart проверь это утверждение.");
         assertThrows(
                 NullPointerException.class,
                 () -> new PerceptionQuery(PerceptionType.BLOCKS, null, ScanRadius.DEFAULT),
-                "запрос без фильтра обязан отклоняться: «всё» задаётся IdFilter.matchAll()");
+                "запрос без фильтра обязан отклоняться: «всё» задаётся IdFilter.matchAll()"
+                        + " Иначе тест constructor_NullPart_NamesMissingPart перестанет ловить эту поломку. При смене constructor_NullPart_NamesMissingPart проверь это утверждение.");
         assertThrows(
                 NullPointerException.class,
                 () -> new PerceptionQuery(PerceptionType.BLOCKS, IdFilter.matchAll(), null),
-                "запрос без радиуса обязан отклоняться");
+                "запрос без радиуса обязан отклоняться"
+                        + " Иначе тест constructor_NullPart_NamesMissingPart перестанет ловить эту поломку. При смене constructor_NullPart_NamesMissingPart проверь это утверждение.");
     }
 }

@@ -27,7 +27,8 @@ class JqwikTriesGuardTests {
                 offenders,
                 "Свойство с tries > 200 обязано нести jqwik-тег @Tag(\"slow\") (net.jqwik.api.Tag): "
                         + "иначе оно гоняется быстрым тиром с заявленной глубиной и ломает бюджет. "
-                        + "Правило: docs/TESTING.md → «Property-based тесты». Нарушители");
+                        + "Правило: docs/TESTING.md → «Property-based тесты». Нарушители"
+                        + " При смене propertyTries_Over200_WithoutSlowTag проверь это утверждение.");
     }
 
     @Test
@@ -43,7 +44,8 @@ class JqwikTriesGuardTests {
         assertEquals(
                 List.of("tries=1000"),
                 triesOf(sample),
-                "Сторож ослеп: tries = 1000 без @Tag(\"slow\") должно попадать в нарушители");
+                "Сторож ослеп: tries = 1000 без @Tag(\"slow\") должно попадать в нарушители"
+                        + " Иначе тест hash_AnySeed_StaysEqual перестанет ловить эту поломку. При смене hash_AnySeed_StaysEqual проверь это утверждение.");
     }
 
     @Test
@@ -61,7 +63,8 @@ class JqwikTriesGuardTests {
         assertEquals(
                 List.of(),
                 triesOf(sample),
-                "Сторож ложно срабатывает: tries = 1000 с @Tag(\"slow\") — законное исключение");
+                "Сторож ложно срабатывает: tries = 1000 с @Tag(\"slow\") — законное исключение"
+                        + " Иначе тест hash_AnySeed_StaysEqual перестанет ловить эту поломку. При смене hash_AnySeed_StaysEqual проверь это утверждение.");
     }
 
     @Test
@@ -77,7 +80,8 @@ class JqwikTriesGuardTests {
         assertEquals(
                 List.of(),
                 triesOf(sample),
-                "Сторож ложно срабатывает: tries = 200 — граница быстрого тира, тег не нужен");
+                "Сторож ложно срабатывает: tries = 200 — граница быстрого тира, тег не нужен"
+                        + " Иначе тест hash_AnySeed_StaysEqual перестанет ловить эту поломку. При смене hash_AnySeed_StaysEqual проверь это утверждение.");
     }
 
     @Test
@@ -93,7 +97,8 @@ class JqwikTriesGuardTests {
         assertEquals(
                 List.of("tries=1000"),
                 triesOf(sample),
-                "Сторож ослеп: tries = 1000 не первым аргументом должно попадать в нарушители");
+                "Сторож ослеп: tries = 1000 не первым аргументом должно попадать в нарушители"
+                        + " Иначе тест hash_AnySeed_StaysEqual перестанет ловить эту поломку. При смене hash_AnySeed_StaysEqual проверь это утверждение.");
     }
 
     private static void collectOffenders(Map<Path, String> sources, List<String> offenders) {

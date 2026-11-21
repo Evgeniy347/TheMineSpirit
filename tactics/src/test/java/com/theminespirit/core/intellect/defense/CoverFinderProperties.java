@@ -45,7 +45,8 @@ class CoverFinderProperties {
 
         assertTrue(
                 cover.isEmpty() || blockers.contains(cover.orElseThrow()),
-                "Выбранное укрытие — из входа: иначе боец пойдёт к точке, которой нет в мире");
+                "Выбранное укрытие — из входа: иначе боец пойдёт к точке, которой нет в мире"
+                        + " При смене between_AnyInput_SelectedFromInput проверь это утверждение.");
     }
 
     @Property
@@ -62,7 +63,8 @@ class CoverFinderProperties {
             double toThreat = dot(chosen, self, threat, false);
             assertTrue(
                     toSelf >= 0 && toThreat <= 0,
-                    "Укрытие лежит между духом и угрозой: иначе линия обстрела проходит мимо кандидата");
+                    "Укрытие лежит между духом и угрозой: иначе линия обстрела проходит мимо кандидата"
+                            + " При смене between_AnyInput_ProjectionBetweenEnds проверь это утверждение.");
         }
     }
 
@@ -78,7 +80,8 @@ class CoverFinderProperties {
         assertEquals(
                 CoverFinder.between(self, threat, blockers, corridor),
                 CoverFinder.between(self, threat, shuffled, corridor),
-                "Укрытие не зависит от порядка входа: иначе боец мечется между кандидатами");
+                "Укрытие не зависит от порядка входа: иначе боец мечется между кандидатами"
+                        + " При смене between_ShuffledInput_SameResult проверь это утверждение.");
     }
 
     private static double dot(Point candidate, Point self, Point threat, boolean fromSelf) {

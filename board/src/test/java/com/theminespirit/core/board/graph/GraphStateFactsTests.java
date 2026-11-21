@@ -16,8 +16,16 @@ class GraphStateFactsTests {
     void oldConstructors_EmptyInput_LeaveFactsEmpty() {
         GraphState state = GraphWorld.empty().state();
 
-        assertEquals(GraphFacts.empty(), state.facts(), "Старый конструктор оставляет факты пустыми");
-        assertEquals(1, state.spirits(), "Число духов по-прежнему считается по наборам");
+        assertEquals(
+                GraphFacts.empty(),
+                state.facts(),
+                "Старый конструктор оставляет факты пустыми"
+                        + " Иначе тест oldConstructors_EmptyInput_LeaveFactsEmpty перестанет ловить эту поломку. При смене oldConstructors_EmptyInput_LeaveFactsEmpty проверь это утверждение.");
+        assertEquals(
+                1,
+                state.spirits(),
+                "Число духов по-прежнему считается по наборам"
+                        + " Иначе тест oldConstructors_EmptyInput_LeaveFactsEmpty перестанет ловить эту поломку. При смене oldConstructors_EmptyInput_LeaveFactsEmpty проверь это утверждение.");
     }
 
     @Test
@@ -28,8 +36,16 @@ class GraphStateFactsTests {
                 .withFacts(facts, GraphWorld.GRAPH.costs().life())
                 .withOrders(Map.of("coal", 4));
 
-        assertSame(facts, state.facts(), "Заказ не теряет факты графа");
-        assertEquals(Map.of("coal", 4), state.orders(), "Факты не теряют заказ игрока");
+        assertSame(
+                facts,
+                state.facts(),
+                "Заказ не теряет факты графа"
+                        + " Иначе тест withOrders_AndWithFacts_KeepOtherData перестанет ловить эту поломку. При смене withOrders_AndWithFacts_KeepOtherData проверь это утверждение.");
+        assertEquals(
+                Map.of("coal", 4),
+                state.orders(),
+                "Факты не теряют заказ игрока"
+                        + " Иначе тест withOrders_AndWithFacts_KeepOtherData перестанет ловить эту поломку. При смене withOrders_AndWithFacts_KeepOtherData проверь это утверждение.");
     }
 
     @Test
@@ -56,7 +72,8 @@ class GraphStateFactsTests {
         assertEquals(
                 Map.of("minecraft:stick", 3),
                 spirit.inventory(),
-                "Инвентарь духа копируется: правка исходной карты не меняет вход графа");
+                "Инвентарь духа копируется: правка исходной карты не меняет вход графа"
+                        + " Иначе тест facts_MutableInput_AreCopied перестанет ловить эту поломку. При смене facts_MutableInput_AreCopied проверь это утверждение.");
     }
 
     @Test
@@ -71,12 +88,14 @@ class GraphStateFactsTests {
         assertEquals(
                 feedback,
                 GraphFactsUpdates.withStations(facts, Map.of()).feedback(),
-                "Пересборка станций не теряет память неудач: иначе провалы не доходят до выбора");
+                "Пересборка станций не теряет память неудач: иначе провалы не доходят до выбора"
+                        + " При смене withStationsAndStageReqs_FeedbackKnown_StaysSame проверь это утверждение.");
         assertEquals(
                 feedback,
                 GraphFactsUpdates.withStageReqs(facts, new GraphSiteFacts.StageReqs(Map.of(), Map.of()))
                         .feedback(),
-                "Пересборка требований этапа не теряет память неудач");
+                "Пересборка требований этапа не теряет память неудач"
+                        + " Иначе тест withStationsAndStageReqs_FeedbackKnown_StaysSame перестанет ловить эту поломку. При смене withStationsAndStageReqs_FeedbackKnown_StaysSame проверь это утверждение.");
     }
 
     @Test
@@ -84,7 +103,8 @@ class GraphStateFactsTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new GraphFacts.Chest(new GraphFacts.Position(0, 0, 0), Map.of(), 4, 2, GraphFacts.Reach.UNKNOWN),
-                "Свободных слотов не может быть больше общего числа");
+                "Свободных слотов не может быть больше общего числа"
+                        + " Иначе тест chest_FreeSlotsAboveTotal_Rejected перестанет ловить эту поломку. При смене chest_FreeSlotsAboveTotal_Rejected проверь это утверждение.");
     }
 
     @Test
@@ -92,7 +112,8 @@ class GraphStateFactsTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new GraphFacts.Building("hut", 1, 101, 0, Map.of(), Map.of(), 0, null, false, true),
-                "Процент аудита выше 100 невозможен");
+                "Процент аудита выше 100 невозможен"
+                        + " Иначе тест building_AuditPercentAboveHundred_Rejected перестанет ловить эту поломку. При смене building_AuditPercentAboveHundred_Rejected проверь это утверждение.");
     }
 
     @Test
@@ -101,7 +122,8 @@ class GraphStateFactsTests {
                 IllegalArgumentException.class,
                 () -> new GraphFacts.Resource(
                         "tree:oak", new GraphFacts.Position(0, 0, 0), -1, GraphFacts.Reach.UNKNOWN, 0),
-                "Отрицательное расстояние не имеет смысла: неизвестное задают UNKNOWN");
+                "Отрицательное расстояние не имеет смысла: неизвестное задают UNKNOWN"
+                        + " Иначе тест resource_NegativeDistance_Rejected перестанет ловить эту поломку. При смене resource_NegativeDistance_Rejected проверь это утверждение.");
     }
 
     @Test
@@ -122,7 +144,8 @@ class GraphStateFactsTests {
                         3,
                         null,
                         0.2),
-                "Здоровье угрозы не может быть больше максимума");
+                "Здоровье угрозы не может быть больше максимума"
+                        + " Иначе тест threat_HealthAboveMax_Rejected перестанет ловить эту поломку. При смене threat_HealthAboveMax_Rejected проверь это утверждение.");
     }
 
     @Test
@@ -143,7 +166,8 @@ class GraphStateFactsTests {
                         -1,
                         null,
                         0),
-                "Расстояние до угрозы не отрицательно: неизвестное не задают минусом");
+                "Расстояние до угрозы не отрицательно: неизвестное не задают минусом"
+                        + " Иначе тест threat_NegativeDistance_Rejected перестанет ловить эту поломку. При смене threat_NegativeDistance_Rejected проверь это утверждение.");
     }
 
     @Test
@@ -151,8 +175,16 @@ class GraphStateFactsTests {
         GraphFacts.Threat threat = new GraphFacts.Threat(
                 "threat-1", "minecraft:zombie", 20, new GraphFacts.Position(0, 64, 0), "target-1");
 
-        assertEquals(20, threat.maxHealth(), "Короткая форма считает максимум по текущему здоровью");
-        assertEquals(GraphFacts.TargetKind.OTHER, threat.targetKind(), "Цель без вида считается другой до уточнения");
+        assertEquals(
+                20,
+                threat.maxHealth(),
+                "Короткая форма считает максимум по текущему здоровью"
+                        + " Иначе тест threat_ShortForm_KeepsTargetKind перестанет ловить эту поломку. При смене threat_ShortForm_KeepsTargetKind проверь это утверждение.");
+        assertEquals(
+                GraphFacts.TargetKind.OTHER,
+                threat.targetKind(),
+                "Цель без вида считается другой до уточнения"
+                        + " Иначе тест threat_ShortForm_KeepsTargetKind перестанет ловить эту поломку. При смене threat_ShortForm_KeepsTargetKind проверь это утверждение.");
     }
 
     @Test
@@ -161,7 +193,11 @@ class GraphStateFactsTests {
         GraphSiteFacts.StageReqs reqs = new GraphSiteFacts.StageReqs(minimum, Map.of("hut", 0));
         minimum.put("hut", 2);
 
-        assertEquals(Map.of("hut", 1), reqs.minimum(), "Минимум этапа копируется");
+        assertEquals(
+                Map.of("hut", 1),
+                reqs.minimum(),
+                "Минимум этапа копируется"
+                        + " Иначе тест stageReqs_MutableInput_AreCopied перестанет ловить эту поломку. При смене stageReqs_MutableInput_AreCopied проверь это утверждение.");
     }
 
     @Test
@@ -183,7 +219,11 @@ class GraphStateFactsTests {
                 List.of());
         strays.add(new GraphSiteFacts.Stray("s", "wall", new GraphFacts.Position(0, 0, 0), null));
 
-        assertEquals(List.of(), facts.strays(), "Список лишних построек копируется");
+        assertEquals(
+                List.of(),
+                facts.strays(),
+                "Список лишних построек копируется"
+                        + " Иначе тест terrain_Empty_IsFlat перестанет ловить эту поломку. При смене terrain_Empty_IsFlat проверь это утверждение.");
     }
 
     private static GraphFacts facts() {

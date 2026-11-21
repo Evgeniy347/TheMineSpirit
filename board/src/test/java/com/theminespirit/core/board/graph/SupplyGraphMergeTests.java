@@ -92,11 +92,13 @@ class SupplyGraphMergeTests {
         IllegalStateException error = assertThrows(
                 IllegalStateException.class,
                 () -> SupplyGraph.parse(DUPLICATE_IDS, "duplicate.json"),
-                "Повтор id путей обязан отклоняться: иначе причины заданий и дедупликация доски путаются");
+                "Повтор id путей обязан отклоняться: иначе причины заданий и дедупликация доски путаются"
+                        + " При смене parse_DuplicateWayIds_Rejected проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("same"),
-                "Сторож обязан назвать повторяющийся id пути: " + error.getMessage());
+                "Сторож обязан назвать повторяющийся id пути: " + error.getMessage()
+                        + " Иначе тест parse_DuplicateWayIds_Rejected перестанет ловить эту поломку. При смене parse_DuplicateWayIds_Rejected проверь это утверждение.");
     }
 
     @Test
@@ -110,7 +112,8 @@ class SupplyGraphMergeTests {
                 ids.size(),
                 unique.size(),
                 "id путей графа обязаны быть уникальны: повтор путает причины заданий, найдено "
-                        + (ids.size() - unique.size()) + " повторов");
+                        + (ids.size() - unique.size()) + " повторов"
+                        + " Иначе тест loadDefault_MergedWays_HaveUniqueIds перестанет ловить эту поломку. При смене loadDefault_MergedWays_HaveUniqueIds проверь это утверждение.");
     }
 
     @Test
@@ -120,12 +123,31 @@ class SupplyGraphMergeTests {
         assertEquals(
                 List.of("manual_stick"),
                 graph.producers("stick").stream().map(SupplyGraph.Way::id).toList(),
-                "Ручной путь с тем же makes главнее: сгенерированный путь для палок отбрасывается");
-        assertTrue(graph.way("auto_iron_block").isPresent(), "Путь для предмета без ручных путей добавляется");
-        assertEquals(40, graph.items().get("coal").base(), "Ручные данные предмета главнее сгенерированных");
-        assertEquals(2, graph.items().get("iron_block").stage(), "Новый предмет получает этап из генератора");
-        assertEquals(List.of("oak_planks"), graph.groups().get("#planks"), "Ручная группа главнее сгенерированной");
-        assertTrue(graph.buildings().containsKey("blast_furnace"), "Станция из генератора добавляется в граф");
+                "Ручной путь с тем же makes главнее: сгенерированный путь для палок отбрасывается"
+                        + " Иначе тест merge_ManualAndGenerated_ManualWinsForSameMakes перестанет ловить эту поломку. При смене merge_ManualAndGenerated_ManualWinsForSameMakes проверь это утверждение.");
+        assertTrue(
+                graph.way("auto_iron_block").isPresent(),
+                "Путь для предмета без ручных путей добавляется"
+                        + " Иначе тест merge_ManualAndGenerated_ManualWinsForSameMakes перестанет ловить эту поломку. При смене merge_ManualAndGenerated_ManualWinsForSameMakes проверь это утверждение.");
+        assertEquals(
+                40,
+                graph.items().get("coal").base(),
+                "Ручные данные предмета главнее сгенерированных"
+                        + " Иначе тест merge_ManualAndGenerated_ManualWinsForSameMakes перестанет ловить эту поломку. При смене merge_ManualAndGenerated_ManualWinsForSameMakes проверь это утверждение.");
+        assertEquals(
+                2,
+                graph.items().get("iron_block").stage(),
+                "Новый предмет получает этап из генератора"
+                        + " Иначе тест merge_ManualAndGenerated_ManualWinsForSameMakes перестанет ловить эту поломку. При смене merge_ManualAndGenerated_ManualWinsForSameMakes проверь это утверждение.");
+        assertEquals(
+                List.of("oak_planks"),
+                graph.groups().get("#planks"),
+                "Ручная группа главнее сгенерированной"
+                        + " Иначе тест merge_ManualAndGenerated_ManualWinsForSameMakes перестанет ловить эту поломку. При смене merge_ManualAndGenerated_ManualWinsForSameMakes проверь это утверждение.");
+        assertTrue(
+                graph.buildings().containsKey("blast_furnace"),
+                "Станция из генератора добавляется в граф"
+                        + " Иначе тест merge_ManualAndGenerated_ManualWinsForSameMakes перестанет ловить эту поломку. При смене merge_ManualAndGenerated_ManualWinsForSameMakes проверь это утверждение.");
     }
 
     @Test
@@ -134,8 +156,16 @@ class SupplyGraphMergeTests {
 
         assertFalse(
                 graph.items().containsKey("oak_planks"),
-                "Член группы без собственного рецепта не становится предметом-заглушкой");
-        assertTrue(graph.way("auto_iron_ingot").isPresent(), "Сгенерированный путь без ручного аналога остаётся");
-        assertEquals(0, graph.items().get("iron_ingot").xmin(), "Заглушка нового предмета не создаёт спрос");
+                "Член группы без собственного рецепта не становится предметом-заглушкой"
+                        + " Иначе тест merge_GeneratedOnlyItem_IsAddedToGraph перестанет ловить эту поломку. При смене merge_GeneratedOnlyItem_IsAddedToGraph проверь это утверждение.");
+        assertTrue(
+                graph.way("auto_iron_ingot").isPresent(),
+                "Сгенерированный путь без ручного аналога остаётся"
+                        + " Иначе тест merge_GeneratedOnlyItem_IsAddedToGraph перестанет ловить эту поломку. При смене merge_GeneratedOnlyItem_IsAddedToGraph проверь это утверждение.");
+        assertEquals(
+                0,
+                graph.items().get("iron_ingot").xmin(),
+                "Заглушка нового предмета не создаёт спрос"
+                        + " Иначе тест merge_GeneratedOnlyItem_IsAddedToGraph перестанет ловить эту поломку. При смене merge_GeneratedOnlyItem_IsAddedToGraph проверь это утверждение.");
     }
 }

@@ -22,7 +22,8 @@ class StageLevelingSpiritsTests {
         GraphFacts clean = facts(named(spirit("spirit-1"), spirit("spirit-2")));
         assertFalse(
                 plan(world, clean).tasks().stream().anyMatch(task -> task.id().startsWith("event:level_lot")),
-                "Ровная зона не держит духов: выравнивание поднимается только по дефекту");
+                "Ровная зона не держит духов: выравнивание поднимается только по дефекту"
+                        + " Иначе тест leveling_DefectAfterClosedStage_ReturnsTwoSpiritsToWork перестанет ловить эту поломку. При смене leveling_DefectAfterClosedStage_ReturnsTwoSpiritsToWork проверь это утверждение.");
 
         GraphFacts defect = facts(
                 named(spirit("spirit-1"), spirit("spirit-2")),
@@ -35,9 +36,11 @@ class StageLevelingSpiritsTests {
 
         assertTrue(
                 task(plan, "event:level_lot:level_lot").feasible(),
-                "Столб и яма после закрытия этапа снова дают работу выравнивания: " + ids(plan));
+                "Столб и яма после закрытия этапа снова дают работу выравнивания: " + ids(plan)
+                        + " Иначе тест leveling_DefectAfterClosedStage_ReturnsTwoSpiritsToWork перестанет ловить эту поломку. При смене leveling_DefectAfterClosedStage_ReturnsTwoSpiritsToWork проверь это утверждение.");
         assertTrue(
                 plan.tasks().stream().anyMatch(task -> task.spirit().isPresent()),
-                "Работа выравнивания раскладывается по духам графом, а не ставится мимо него: " + ids(plan));
+                "Работа выравнивания раскладывается по духам графом, а не ставится мимо него: " + ids(plan)
+                        + " Иначе тест leveling_DefectAfterClosedStage_ReturnsTwoSpiritsToWork перестанет ловить эту поломку. При смене leveling_DefectAfterClosedStage_ReturnsTwoSpiritsToWork проверь это утверждение.");
     }
 }

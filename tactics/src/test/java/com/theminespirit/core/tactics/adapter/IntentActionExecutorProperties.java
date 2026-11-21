@@ -52,11 +52,13 @@ class IntentActionExecutorProperties {
         assertEquals(
                 first,
                 second,
-                "Повтор одного решения даёт тот же результат: исполнение обязано быть детерминированным");
+                "Повтор одного решения даёт тот же результат: исполнение обязано быть детерминированным"
+                        + " Иначе тест execute_AnyOutcome_IsDeterministicAndInFamily перестанет ловить эту поломку. При смене execute_AnyOutcome_IsDeterministicAndInFamily проверь это утверждение.");
         assertTrue(
                 family(outcome.decision()).contains(first.getClass()),
                 "Решению " + outcome.decision() + " соответствует только его семейство интентов, получили "
-                        + first.getClass().getSimpleName());
+                        + first.getClass().getSimpleName()
+                        + " Иначе тест execute_AnyOutcome_IsDeterministicAndInFamily перестанет ловить эту поломку. При смене execute_AnyOutcome_IsDeterministicAndInFamily проверь это утверждение.");
     }
 
     private static Set<Class<?>> family(TacticalOption option) {

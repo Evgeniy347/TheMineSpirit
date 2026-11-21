@@ -27,7 +27,8 @@ class TacticsRuleCoverageGuardTests {
                 "Правило из rules.json не срабатывает ни в одном сценарии scenarios.json: оно либо мёртвое (условие "
                         + "недостижимо или перекрыто старшим правилом), либо не защищено тестом, и его поломку никто не "
                         + "заметит. Добавьте сценарий, который его вызывает, или удалите правило вместе с упоминаниями в "
-                        + "docs/tactics/README.md. Мёртвые правила");
+                        + "docs/tactics/README.md. Мёртвые правила"
+                        + " При смене rulesJson_EveryRule_FiresInAtLeastOneScenario проверь это утверждение.");
     }
 
     @Test
@@ -37,7 +38,8 @@ class TacticsRuleCoverageGuardTests {
         assertEquals(
                 List.of("b_rule"),
                 dead,
-                "Сторож ослеп: правило, которого нет среди сработавших, обязано попадать в список мёртвых");
+                "Сторож ослеп: правило, которого нет среди сработавших, обязано попадать в список мёртвых"
+                        + " Иначе тест uncovered_RuleWithoutScenario_IsReported перестанет ловить эту поломку. При смене uncovered_RuleWithoutScenario_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -45,7 +47,8 @@ class TacticsRuleCoverageGuardTests {
         assertEquals(
                 List.of(),
                 uncovered(Set.of("a_rule"), Set.of("a_rule", "score")),
-                "Сторож ложно срабатывает: лишние служебные имена среди сработавших (score, hold) не мёртвые правила");
+                "Сторож ложно срабатывает: лишние служебные имена среди сработавших (score, hold) не мёртвые правила"
+                        + " Иначе тест uncovered_AllRulesFired_ReportsNothing перестанет ловить эту поломку. При смене uncovered_AllRulesFired_ReportsNothing проверь это утверждение.");
     }
 
     private static Set<String> allRuleIds(TacticsConfig config) {

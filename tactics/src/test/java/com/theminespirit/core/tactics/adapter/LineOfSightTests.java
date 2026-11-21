@@ -56,6 +56,7 @@ class LineOfSightTests {
                 row.expected(),
                 visibility,
                 "Видимость луча («" + row.name() + "»): стена на высоте глаз закрывает обзор, "
-                        + "лишение бюджета или незагруженный чанк — UNKNOWN, а не догадка");
+                        + "лишение бюджета или незагруженный чанк — UNKNOWN, а не догадка"
+                        + " Иначе тест trace_Terrain_GivesExpectedVisibility перестанет ловить эту поломку. При смене trace_Terrain_GivesExpectedVisibility проверь это утверждение.");
     }
 }

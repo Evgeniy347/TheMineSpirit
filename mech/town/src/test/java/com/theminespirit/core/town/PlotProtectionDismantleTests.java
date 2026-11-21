@@ -17,8 +17,13 @@ class PlotProtectionDismantleTests {
         PlotProtection.Allowed allowed = assertInstanceOf(
                 PlotProtection.Allowed.class,
                 decide(cell, PlotProtection.Action.BREAK, PlotProtection.Ground.PLAN_DEMOLISH, PlanBuilding.HOUSE),
-                "Снос своей постройки по плану — законное основание: без него дом не перестроить и не обновить");
-        assertEquals(PlotProtection.Ground.PLAN_DEMOLISH, allowed.basis(), "Журнал обязан назвать основание");
+                "Снос своей постройки по плану — законное основание: без него дом не перестроить и не обновить"
+                        + " Иначе тест check_DemolishOwnHouse_Allowed перестанет ловить эту поломку. При смене check_DemolishOwnHouse_Allowed проверь это утверждение.");
+        assertEquals(
+                PlotProtection.Ground.PLAN_DEMOLISH,
+                allowed.basis(),
+                "Журнал обязан назвать основание"
+                        + " Иначе тест check_DemolishOwnHouse_Allowed перестанет ловить эту поломку. При смене check_DemolishOwnHouse_Allowed проверь это утверждение.");
     }
 
     @Test
@@ -34,7 +39,8 @@ class PlotProtectionDismantleTests {
                 notStructure,
                 "Глина над footprint'ом дома — не блок схемы дома: расчистка сносит её без своей постройки. "
                         + "Живой сервер 14.11: 102 отказа «дом» у -177,-509 — дух 20 минут не мог срезать "
-                        + "бугор кучки, защита называла «домом» землю и джунгловые брёвна вне схемы");
+                        + "бугор кучки, защита называла «домом» землю и джунгловые брёвна вне схемы"
+                        + " Иначе тест check_DirtAboveHutFootprintNotInScheme_NotNamedHouse перестанет ловить эту поломку. При смене check_DirtAboveHutFootprintNotInScheme_NotNamedHouse проверь это утверждение.");
 
         PlotProtection.Decision structure = PlotProtection.check(
                 SITE, mud, PlotProtection.Action.BREAK, PlotProtection.Ground.PLAN_DEMOLISH, PlanBuilding.NONE, true);
@@ -43,7 +49,8 @@ class PlotProtectionDismantleTests {
                 PlotProtection.Refused.class,
                 structure,
                 "Если клетка всё же отмечена как блок схемы — снос без своей постройки по-прежнему запрещён: "
-                        + "пометка структура/не-структура решает, а не footprint");
+                        + "пометка структура/не-структура решает, а не footprint"
+                        + " Иначе тест check_DirtAboveHutFootprintNotInScheme_NotNamedHouse перестанет ловить эту поломку. При смене check_DirtAboveHutFootprintNotInScheme_NotNamedHouse проверь это утверждение.");
     }
 
     @Test
@@ -54,7 +61,8 @@ class PlotProtectionDismantleTests {
         assertInstanceOf(
                 PlotProtection.Refused.class,
                 decide(cell, PlotProtection.Action.BREAK, PlotProtection.Ground.PLAN_DEMOLISH, PlanBuilding.HOUSE),
-                "Дом не имеет права разбирать ограду: чужая постройка плана остаётся защищённой");
+                "Дом не имеет права разбирать ограду: чужая постройка плана остаётся защищённой"
+                        + " Иначе тест check_DemolishForeignFence_Refused перестанет ловить эту поломку. При смене check_DemolishForeignFence_Refused проверь это утверждение.");
     }
 
     @Test
@@ -64,7 +72,8 @@ class PlotProtectionDismantleTests {
         assertInstanceOf(
                 PlotProtection.Refused.class,
                 decide(cell, PlotProtection.Action.BREAK, PlotProtection.Ground.PLAN_DEMOLISH, PlanBuilding.NONE),
-                "Снос без названной постройки — это уборка, а не план: она не имеет права снимать дом");
+                "Снос без названной постройки — это уборка, а не план: она не имеет права снимать дом"
+                        + " Иначе тест check_DemolishWithoutOwnBuilding_Refused перестанет ловить эту поломку. При смене check_DemolishWithoutOwnBuilding_Refused проверь это утверждение.");
     }
 
     @Test
@@ -74,7 +83,8 @@ class PlotProtectionDismantleTests {
         assertInstanceOf(
                 PlotProtection.Allowed.class,
                 decide(cell, PlotProtection.Action.BREAK, PlotProtection.Ground.REPAIR, PlanBuilding.HOUSE),
-                "Ремонт к схеме заменяет неверный блок своей постройки: это законное основание");
+                "Ремонт к схеме заменяет неверный блок своей постройки: это законное основание"
+                        + " Иначе тест check_RepairHouse_Allowed перестанет ловить эту поломку. При смене check_RepairHouse_Allowed проверь это утверждение.");
     }
 
     private static PlotProtection.Decision decide(

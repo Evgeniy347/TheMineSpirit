@@ -26,22 +26,31 @@ class More7PlannerTests {
                     tasks.stream().filter(task -> !task.implemented()).toList();
             List<GraphPlan.Task> wired =
                     tasks.stream().filter(GraphPlan.Task::implemented).toList();
-            assertFalse(tasks.isEmpty(), "Событие области graphmore7 обязано дать задание: " + event);
-            assertTrue(tasks.stream().allMatch(task -> task.raised()), "Стартовый приоритет положителен: " + event);
+            assertFalse(
+                    tasks.isEmpty(),
+                    "Событие области graphmore7 обязано дать задание: " + event
+                            + " Иначе тест eventStubs_Planned_AreNotPostedButNotLost перестанет ловить эту поломку. При смене eventStubs_Planned_AreNotPostedButNotLost проверь это утверждение.");
+            assertTrue(
+                    tasks.stream().allMatch(task -> task.raised()),
+                    "Стартовый приоритет положителен: " + event
+                            + " Иначе тест eventStubs_Planned_AreNotPostedButNotLost перестанет ловить эту поломку. При смене eventStubs_Planned_AreNotPostedButNotLost проверь это утверждение.");
             assertTrue(
                     wired.stream().allMatch(task -> tickets.live().contains(GraphTickets.id(task))),
-                    "Связанное действие попадает в живые задания области: " + event);
+                    "Связанное действие попадает в живые задания области: " + event
+                            + " Иначе тест eventStubs_Planned_AreNotPostedButNotLost перестанет ловить эту поломку. При смене eventStubs_Planned_AreNotPostedButNotLost проверь это утверждение.");
             assertTrue(
                     tickets.post().stream()
                             .noneMatch(ticket -> stubs.stream()
                                     .anyMatch(task -> (GraphTickets.PREFIX + task.id()).equals(ticket.id()))),
-                    "Несуществующее действие не ставится на доску: " + event);
+                    "Несуществующее действие не ставится на доску: " + event
+                            + " Иначе тест eventStubs_Planned_AreNotPostedButNotLost перестанет ловить эту поломку. При смене eventStubs_Planned_AreNotPostedButNotLost проверь это утверждение.");
             assertTrue(
                     tickets.unimplemented().stream()
                                     .anyMatch(known -> stubs.stream()
                                             .anyMatch(task -> task.id().equals(known.id())))
                             || stubs.isEmpty(),
-                    "Заглушка попадает в список нереализованных: " + event);
+                    "Заглушка попадает в список нереализованных: " + event
+                            + " Иначе тест eventStubs_Planned_AreNotPostedButNotLost перестанет ловить эту поломку. При смене eventStubs_Planned_AreNotPostedButNotLost проверь это утверждение.");
         }
     }
 }

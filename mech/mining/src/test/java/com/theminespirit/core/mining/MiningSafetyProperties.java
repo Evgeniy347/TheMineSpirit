@@ -29,8 +29,12 @@ class MiningSafetyProperties {
                 fluidOnFace(world),
                 safety instanceof BreakSafety.Unsafe,
                 "Запрет ломки обязан совпадать с наличием жидкости на грани: иначе либо дух тонет, "
-                        + "либо безопасная руда остаётся недобытой");
-        assertTrue(world.reads() <= 6, "Проверка ломки читает не более 6 граней. Чтений: " + world.reads());
+                        + "либо безопасная руда остаётся недобытой"
+                        + " При смене canBreak_RandomWorld_UnsafeExactlyWhenFluidOnFace проверь это утверждение.");
+        assertTrue(
+                world.reads() <= 6,
+                "Проверка ломки читает не более 6 граней. Чтений: " + world.reads()
+                        + " Иначе тест canBreak_RandomWorld_UnsafeExactlyWhenFluidOnFace перестанет ловить эту поломку. При смене canBreak_RandomWorld_UnsafeExactlyWhenFluidOnFace проверь это утверждение.");
     }
 
     @Property
@@ -43,12 +47,14 @@ class MiningSafetyProperties {
         for (BlockCoord spot : spots) {
             assertTrue(
                     MiningSafety.canStand(spot, world),
-                    "Каждая выданная стоянка обязана проходить canStand: иначе дух встаёт в воду, огонь или без пола");
+                    "Каждая выданная стоянка обязана проходить canStand: иначе дух встаёт в воду, огонь или без пола"
+                            + " При смене of_RandomWorld_EverySpotPassesCanStandAndReadsBounded проверь это утверждение.");
         }
         assertTrue(
                 reads <= 440,
                 "Поиск стоянок обязан укладываться в предел чтений " + 440
-                        + ": иначе планирование цели кладёт серверный тик. Чтений: " + reads);
+                        + ": иначе планирование цели кладёт серверный тик. Чтений: " + reads
+                        + " При смене of_RandomWorld_EverySpotPassesCanStandAndReadsBounded проверь это утверждение.");
     }
 
     @Property
@@ -64,7 +70,8 @@ class MiningSafetyProperties {
             assertTrue(
                     spot.x() != TARGET.x() || spot.z() != TARGET.z() || spot.y() >= TARGET.y(),
                     "Под гравием над целью стоянка в столбце цели ниже её запрещена — гравий падает после ломки. "
-                            + "Нарушающая стоянка: " + spot);
+                            + "Нарушающая стоянка: " + spot
+                            + " Иначе тест of_RandomWorld_NoStandUnderFallingAboveTarget перестанет ловить эту поломку. При смене of_RandomWorld_NoStandUnderFallingAboveTarget проверь это утверждение.");
         }
     }
 

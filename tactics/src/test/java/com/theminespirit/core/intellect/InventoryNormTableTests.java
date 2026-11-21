@@ -21,29 +21,49 @@ class InventoryNormTableTests {
         assertEquals(
                 List.of(new InventoryNormTable.CurvePoint(0.0, 0.0), new InventoryNormTable.CurvePoint(1.0, 2.0)),
                 table.occupiedCurve(),
-                "Кривые занятости обязаны разобраться из файла: иначе данные не управляют спросом");
+                "Кривые занятости обязаны разобраться из файла: иначе данные не управляют спросом"
+                        + " При смене parse_ValidJson_BuildsCurvesAndThresholds проверь это утверждение.");
         assertEquals(
                 0,
                 table.releaseFreeSlots(ActivityId.UNLOAD),
-                "Порог освобождения читается по деятельностям: иначе дух не знает, когда бросить задачу");
+                "Порог освобождения читается по деятельностям: иначе дух не знает, когда бросить задачу"
+                        + " При смене parse_ValidJson_BuildsCurvesAndThresholds проверь это утверждение.");
         assertEquals(
                 2,
                 table.releaseFreeSlots(ActivityId.FARM),
-                "Ферма из файла бросает задачу при двух свободных ячейках: порог — данные, а не константа");
+                "Ферма из файла бросает задачу при двух свободных ячейках: порог — данные, а не константа"
+                        + " Иначе тест parse_ValidJson_BuildsCurvesAndThresholds перестанет ловить эту поломку. При смене parse_ValidJson_BuildsCurvesAndThresholds проверь это утверждение.");
         assertEquals(
                 0,
                 table.releaseFreeSlots(ActivityId.MINE),
-                "Шахтёр из файла держит задачу до последней ячейки (порог 0): иначе он бросает жилу раньше времени");
+                "Шахтёр из файла держит задачу до последней ячейки (порог 0): иначе он бросает жилу раньше времени"
+                        + " При смене parse_ValidJson_BuildsCurvesAndThresholds проверь это утверждение.");
     }
 
     @Test
     void load_ShippedFile_MatchesOwnerDecision() {
         InventoryNormTable table = InventoryNormTable.load();
 
-        assertEquals(0, table.releaseFreeSlots(ActivityId.MINE), "Шахтёр держит задачу до последней ячейки");
-        assertEquals(0, table.releaseFreeSlots(ActivityId.CHOP), "Рубка держится так же, как шахта");
-        assertEquals(2, table.releaseFreeSlots(ActivityId.FARM), "Ферма бросает задачу раньше: порог 2");
-        assertEquals(2, table.releaseFreeSlots(ActivityId.FORAGE), "Сбор бросает задачу раньше: порог 2");
+        assertEquals(
+                0,
+                table.releaseFreeSlots(ActivityId.MINE),
+                "Шахтёр держит задачу до последней ячейки"
+                        + " Иначе тест load_ShippedFile_MatchesOwnerDecision перестанет ловить эту поломку. При смене load_ShippedFile_MatchesOwnerDecision проверь это утверждение.");
+        assertEquals(
+                0,
+                table.releaseFreeSlots(ActivityId.CHOP),
+                "Рубка держится так же, как шахта"
+                        + " Иначе тест load_ShippedFile_MatchesOwnerDecision перестанет ловить эту поломку. При смене load_ShippedFile_MatchesOwnerDecision проверь это утверждение.");
+        assertEquals(
+                2,
+                table.releaseFreeSlots(ActivityId.FARM),
+                "Ферма бросает задачу раньше: порог 2"
+                        + " Иначе тест load_ShippedFile_MatchesOwnerDecision перестанет ловить эту поломку. При смене load_ShippedFile_MatchesOwnerDecision проверь это утверждение.");
+        assertEquals(
+                2,
+                table.releaseFreeSlots(ActivityId.FORAGE),
+                "Сбор бросает задачу раньше: порог 2"
+                        + " Иначе тест load_ShippedFile_MatchesOwnerDecision перестанет ловить эту поломку. При смене load_ShippedFile_MatchesOwnerDecision проверь это утверждение.");
     }
 
     @Test
@@ -51,9 +71,12 @@ class InventoryNormTableTests {
         IllegalStateException error = assertThrows(
                 IllegalStateException.class,
                 () -> InventoryNormTable.parse("{ это не json", "битый.json"),
-                "Битый json обязан падать: иначе таблица молча подменится пустой");
+                "Битый json обязан падать: иначе таблица молча подменится пустой"
+                        + " При смене parse_BrokenJson_ThrowsWithOrigin проверь это утверждение.");
         assertTrue(
-                error.getMessage().contains("битый.json"), "Сообщение называет файл: при падении видно, что править");
+                error.getMessage().contains("битый.json"),
+                "Сообщение называет файл: при падении видно, что править"
+                        + " Иначе тест parse_BrokenJson_ThrowsWithOrigin перестанет ловить эту поломку. При смене parse_BrokenJson_ThrowsWithOrigin проверь это утверждение.");
     }
 
     @Test
@@ -65,11 +88,13 @@ class InventoryNormTableTests {
         IllegalStateException error = assertThrows(
                 IllegalStateException.class,
                 () -> InventoryNormTable.parse(falling, "падение.json"),
-                "Кривая с падающим спросом недопустима: чем полнее инвентарь, тем сильнее нужда его освободить");
+                "Кривая с падающим спросом недопустима: чем полнее инвентарь, тем сильнее нужда его освободить"
+                        + " Иначе тест parse_FallingDemand_Throws перестанет ловить эту поломку. При смене parse_FallingDemand_Throws проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("extra_curve"),
-                "Сообщение называет кривую: при падении видно, какую точку чинить");
+                "Сообщение называет кривую: при падении видно, какую точку чинить"
+                        + " Иначе тест parse_FallingDemand_Throws перестанет ловить эту поломку. При смене parse_FallingDemand_Throws проверь это утверждение.");
     }
 
     @Test
@@ -81,7 +106,8 @@ class InventoryNormTableTests {
         assertThrows(
                 IllegalStateException.class,
                 () -> InventoryNormTable.parse(unordered, "порядок.json"),
-                "Немонотонные доли точек недопустимы: интерполяция кривой требует роста at");
+                "Немонотонные доли точек недопустимы: интерполяция кривой требует роста at"
+                        + " Иначе тест parse_UnorderedPoints_Throws перестанет ловить эту поломку. При смене parse_UnorderedPoints_Throws проверь это утверждение.");
     }
 
     @Test
@@ -91,11 +117,13 @@ class InventoryNormTableTests {
         IllegalStateException error = assertThrows(
                 IllegalStateException.class,
                 () -> InventoryNormTable.parse(missing, "нет фермы.json"),
-                "Без порога деятельности таблица неполна: дух не узнает, до какой ячейки держать задачу");
+                "Без порога деятельности таблица неполна: дух не узнает, до какой ячейки держать задачу"
+                        + " Иначе тест parse_MissingActivity_Throws перестанет ловить эту поломку. При смене parse_MissingActivity_Throws проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("FARM"),
-                "Сообщение называет деятельность: при падении видно, чего не хватает");
+                "Сообщение называет деятельность: при падении видно, чего не хватает"
+                        + " Иначе тест parse_MissingActivity_Throws перестанет ловить эту поломку. При смене parse_MissingActivity_Throws проверь это утверждение.");
     }
 
     @Test
@@ -105,6 +133,7 @@ class InventoryNormTableTests {
         assertThrows(
                 IllegalStateException.class,
                 () -> InventoryNormTable.parse(empty, "пусто.json"),
-                "Пустая кривая недопустима: без точек спрос не посчитать");
+                "Пустая кривая недопустима: без точек спрос не посчитать"
+                        + " Иначе тест parse_EmptyCurve_Throws перестанет ловить эту поломку. При смене parse_EmptyCurve_Throws проверь это утверждение.");
     }
 }

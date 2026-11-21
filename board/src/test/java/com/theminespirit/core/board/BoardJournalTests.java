@@ -40,11 +40,16 @@ class BoardJournalTests {
                 1,
                 result.restored(),
                 "DONE-запись обязана вернуть ровно одну отметку: без этого «загон построен» "
-                        + "не переживёт перезапуск");
+                        + "не переживёт перезапуск"
+                        + " При смене load_DoneLine_RestoresBuildingMark проверь это утверждение.");
         assertTrue(
                 ledger.has(BoardCase.BUILD_PEN, 2),
-                "Ledger обязан увидеть выполненный уровень 2 загона после загрузки журнала");
-        assertFalse(result.failed(), "Целый журнал обязан загружаться без ошибки");
+                "Ledger обязан увидеть выполненный уровень 2 загона после загрузки журнала"
+                        + " Иначе тест load_DoneLine_RestoresBuildingMark перестанет ловить эту поломку. При смене load_DoneLine_RestoresBuildingMark проверь это утверждение.");
+        assertFalse(
+                result.failed(),
+                "Целый журнал обязан загружаться без ошибки"
+                        + " Иначе тест load_DoneLine_RestoresBuildingMark перестанет ловить эту поломку. При смене load_DoneLine_RestoresBuildingMark проверь это утверждение.");
     }
 
     @Test
@@ -59,7 +64,8 @@ class BoardJournalTests {
 
         assertFalse(
                 ledger.has(BoardCase.LIGHTING, 1),
-                "REOPENED после DONE снимает отметку и после перезапуска: иначе журнал вернул бы старый DONE (INC-50)");
+                "REOPENED после DONE снимает отметку и после перезапуска: иначе журнал вернул бы старый DONE (INC-50)"
+                        + " При смене load_ReopenedAfterDone_MarkForgotten проверь это утверждение.");
     }
 
     @Test
@@ -76,16 +82,19 @@ class BoardJournalTests {
                 1,
                 ledger.doneTotal(),
                 "Журнал прошлой сессии не откатывает DONE на REOPENED: иначе после перезапуска наблюдатель "
-                        + "снова видит 1230→1229");
+                        + "снова видит 1230→1229"
+                        + " При смене load_DoneThenReopened_KeepsCumulativeDoneAcrossReload проверь это утверждение.");
         assertEquals(
                 1,
                 ledger.reopenedTotal(),
-                "REOPENED после перезапуска учитывается отдельно: по нему видно законный ремонт");
+                "REOPENED после перезапуска учитывается отдельно: по нему видно законный ремонт"
+                        + " Иначе тест load_DoneThenReopened_KeepsCumulativeDoneAcrossReload перестанет ловить эту поломку. При смене load_DoneThenReopened_KeepsCumulativeDoneAcrossReload проверь это утверждение.");
         journal.load(ledger);
         assertEquals(
                 1,
                 ledger.doneTotal(),
-                "Повторная загрузка того же журнала не удваивает DONE: счётчик считается один раз на файл");
+                "Повторная загрузка того же журнала не удваивает DONE: счётчик считается один раз на файл"
+                        + " Иначе тест load_DoneThenReopened_KeepsCumulativeDoneAcrossReload перестанет ловить эту поломку. При смене load_DoneThenReopened_KeepsCumulativeDoneAcrossReload проверь это утверждение.");
     }
 
     @Test
@@ -100,16 +109,22 @@ class BoardJournalTests {
 
         assertTrue(
                 result.failed(),
-                "Оборванная хвостовая строка обязана попасть в результат ошибкой, " + "а не потеряться молча");
-        assertTrue(result.truncated(), "Оборванный хвост обязан быть отрезан, иначе он мешает следующей записи");
+                "Оборванная хвостовая строка обязана попасть в результат ошибкой, " + "а не потеряться молча"
+                        + " Иначе тест load_BrokenTail_TruncatesItAndKeepsPreviousMarks перестанет ловить эту поломку. При смене load_BrokenTail_TruncatesItAndKeepsPreviousMarks проверь это утверждение.");
+        assertTrue(
+                result.truncated(),
+                "Оборванный хвост обязан быть отрезан, иначе он мешает следующей записи"
+                        + " При смене load_BrokenTail_TruncatesItAndKeepsPreviousMarks проверь это утверждение.");
         assertTrue(
                 ledger.has(BoardCase.BUILD_MINE, 1),
-                "Строки до оборванного хвоста обязаны восстановиться: обрыв не отменяет выполненное");
+                "Строки до оборванного хвоста обязаны восстановиться: обрыв не отменяет выполненное"
+                        + " Иначе тест load_BrokenTail_TruncatesItAndKeepsPreviousMarks перестанет ловить эту поломку. При смене load_BrokenTail_TruncatesItAndKeepsPreviousMarks проверь это утверждение.");
         String content = Files.readString(log(), StandardCharsets.UTF_8);
         assertEquals(
                 1,
                 content.lines().filter(line -> !line.isBlank()).count(),
-                "После обрезки битой строки в файле остаётся ровно одна целая запись: " + content);
+                "После обрезки битой строки в файле остаётся ровно одна целая запись: " + content
+                        + " Иначе тест load_BrokenTail_TruncatesItAndKeepsPreviousMarks перестанет ловить эту поломку. При смене load_BrokenTail_TruncatesItAndKeepsPreviousMarks проверь это утверждение.");
     }
 
     @Test
@@ -120,13 +135,25 @@ class BoardJournalTests {
         }
 
         assertEquals(
-                2, journal.flush(2), "Бюджет сброса обязан ограничивать число записанных строк: журнал не грузит тик");
+                2,
+                journal.flush(2),
+                "Бюджет сброса обязан ограничивать число записанных строк: журнал не грузит тик"
+                        + " Иначе тест flush_MoreLinesThanBudget_WritesOnlyBudget перестанет ловить эту поломку. При смене flush_MoreLinesThanBudget_WritesOnlyBudget проверь это утверждение.");
         assertEquals(
                 3,
                 journal.pending(),
-                "Остальные строки ждут следующего сброса, а не теряются: за тик пишется не больше бюджета");
-        assertEquals(3, journal.flushAll(), "Второй сброс обязан дописать остаток");
-        assertEquals(0, journal.pending(), "После полного сброса очередь пуста");
+                "Остальные строки ждут следующего сброса, а не теряются: за тик пишется не больше бюджета"
+                        + " Иначе тест flush_MoreLinesThanBudget_WritesOnlyBudget перестанет ловить эту поломку. При смене flush_MoreLinesThanBudget_WritesOnlyBudget проверь это утверждение.");
+        assertEquals(
+                3,
+                journal.flushAll(),
+                "Второй сброс обязан дописать остаток"
+                        + " Иначе тест flush_MoreLinesThanBudget_WritesOnlyBudget перестанет ловить эту поломку. При смене flush_MoreLinesThanBudget_WritesOnlyBudget проверь это утверждение.");
+        assertEquals(
+                0,
+                journal.pending(),
+                "После полного сброса очередь пуста"
+                        + " Иначе тест flush_MoreLinesThanBudget_WritesOnlyBudget перестанет ловить эту поломку. При смене flush_MoreLinesThanBudget_WritesOnlyBudget проверь это утверждение.");
     }
 
     @Test
@@ -140,18 +167,25 @@ class BoardJournalTests {
                 5,
                 journal.enqueued(),
                 "Счётчик поставленных записей обязан равняться числу переходов: тест масштаба "
-                        + "сверяет по нему строки журнала с переходами статусов");
-        assertEquals(0, journal.written(), "До сброса на диске ничего нет, а очередь держит записи");
+                        + "сверяет по нему строки журнала с переходами статусов"
+                        + " Иначе тест flush_Counters_MatchEnqueuedAndWritten перестанет ловить эту поломку. При смене flush_Counters_MatchEnqueuedAndWritten проверь это утверждение.");
+        assertEquals(
+                0,
+                journal.written(),
+                "До сброса на диске ничего нет, а очередь держит записи"
+                        + " Иначе тест flush_Counters_MatchEnqueuedAndWritten перестанет ловить эту поломку. При смене flush_Counters_MatchEnqueuedAndWritten проверь это утверждение.");
         journal.flush(2);
         assertEquals(
                 2,
                 journal.written(),
-                "Счётчик записанных строк обязан расти на бюджет сброса: каждая строка — один переход");
+                "Счётчик записанных строк обязан расти на бюджет сброса: каждая строка — один переход"
+                        + " Иначе тест flush_Counters_MatchEnqueuedAndWritten перестанет ловить эту поломку. При смене flush_Counters_MatchEnqueuedAndWritten проверь это утверждение.");
         journal.flushAll();
         assertEquals(
                 5,
                 journal.written(),
-                "После полного сброса записаны все поставленные строки: журнал не теряет переходы");
+                "После полного сброса записаны все поставленные строки: журнал не теряет переходы"
+                        + " Иначе тест flush_Counters_MatchEnqueuedAndWritten перестанет ловить эту поломку. При смене flush_Counters_MatchEnqueuedAndWritten проверь это утверждение.");
     }
 
     @Test
@@ -163,9 +197,16 @@ class BoardJournalTests {
 
         List<BoardLogEntry> entries = journal.last(1);
 
-        assertEquals(1, entries.size(), "limit обязан ограничивать ответ: " + entries);
         assertEquals(
-                "new", entries.get(0).ticketId(), "Последняя запись отдаётся первой: наблюдатель видит свежие события");
+                1,
+                entries.size(),
+                "limit обязан ограничивать ответ: " + entries
+                        + " Иначе тест last_Limit_ReturnsNewestFirst перестанет ловить эту поломку. При смене last_Limit_ReturnsNewestFirst проверь это утверждение.");
+        assertEquals(
+                "new",
+                entries.get(0).ticketId(),
+                "Последняя запись отдаётся первой: наблюдатель видит свежие события"
+                        + " Иначе тест last_Limit_ReturnsNewestFirst перестанет ловить эту поломку. При смене last_Limit_ReturnsNewestFirst проверь это утверждение.");
     }
 
     @Test
@@ -181,11 +222,13 @@ class BoardJournalTests {
         assertEquals(
                 900,
                 entries.size(),
-                "Хвост журнала обязан собираться из нескольких блоков чтения без потери строк: " + entries.size());
+                "Хвост журнала обязан собираться из нескольких блоков чтения без потери строк: " + entries.size()
+                        + " Иначе тест last_ManyLinesAcrossChunks_ReturnsNewestPortion перестанет ловить эту поломку. При смене last_ManyLinesAcrossChunks_ReturnsNewestPortion проверь это утверждение.");
         assertEquals(
                 "id-999",
                 entries.get(0).ticketId(),
-                "Хвост всё равно обязан начинаться с самой свежей записи, а не с начала файла");
+                "Хвост всё равно обязан начинаться с самой свежей записи, а не с начала файла"
+                        + " Иначе тест last_ManyLinesAcrossChunks_ReturnsNewestPortion перестанет ловить эту поломку. При смене last_ManyLinesAcrossChunks_ReturnsNewestPortion проверь это утверждение.");
     }
 
     @Test
@@ -197,6 +240,7 @@ class BoardJournalTests {
         assertEquals(
                 "загон:корова",
                 journal.last(1).get(0).ticketId(),
-                "Кириллица в id задания обязана переживать запись и чтение UTF-8");
+                "Кириллица в id задания обязана переживать запись и чтение UTF-8"
+                        + " Иначе тест last_Utf8Lines_StayReadable перестанет ловить эту поломку. При смене last_Utf8Lines_StayReadable проверь это утверждение.");
     }
 }

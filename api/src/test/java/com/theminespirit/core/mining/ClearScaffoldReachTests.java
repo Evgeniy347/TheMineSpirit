@@ -20,18 +20,24 @@ class ClearScaffoldReachTests {
                 ClearScaffold.Action.WORK,
                 decision.action(),
                 "Высокая клетка в 47 блоках — сначала подойти к её колонке; столб на месте не строится (сервер 12.11: "
-                        + "дух поднял 26 блоков земли там, где стоял)");
+                        + "дух поднял 26 блоков земли там, где стоял)"
+                        + " Иначе тест decide_HighCellFarAway_ApproachFirstNoPillar перестанет ловить эту поломку. При смене decide_HighCellFarAway_ApproachFirstNoPillar проверь это утверждение.");
     }
 
     @Test
     void decide_HighCellBeside_Climbs() {
         ClearScaffold.Decision decision = ClearScaffold.decide(new BlockCoord(-176, 68, -517), TOP, 3, false, 2);
 
-        assertEquals(ClearScaffold.Action.CLIMB, decision.action(), "Колонка рядом — подъём к верхней клетке");
+        assertEquals(
+                ClearScaffold.Action.CLIMB,
+                decision.action(),
+                "Колонка рядом — подъём к верхней клетке"
+                        + " Иначе тест decide_HighCellBeside_Climbs перестанет ловить эту поломку. При смене decide_HighCellBeside_Climbs проверь это утверждение.");
         assertEquals(
                 26,
                 decision.height(),
-                "Подъём только до досягаемости верхней клетки (рост стоянки 3), а не на её уровень");
+                "Подъём только до досягаемости верхней клетки (рост стоянки 3), а не на её уровень"
+                        + " Иначе тест decide_HighCellBeside_Climbs перестанет ловить эту поломку. При смене decide_HighCellBeside_Climbs проверь это утверждение.");
     }
 
     @Test
@@ -41,21 +47,26 @@ class ClearScaffoldReachTests {
         List<BlockCoord> bases = ClearScaffold.bases(feet, target, 3);
         assertTrue(
                 bases.contains(new BlockCoord(-3, 64, 0)),
-                "Основание в трёх блоках от цели допускается к проверке пути и видимости: прежний радиус два терял безопасные площадки");
+                "Основание в трёх блоках от цели допускается к проверке пути и видимости: прежний радиус два терял безопасные площадки"
+                        + " Иначе тест bases_ThirdBlockAndDiagonal_StaysWithinCircularReach перестанет ловить эту поломку. При смене bases_ThirdBlockAndDiagonal_StaysWithinCircularReach проверь это утверждение.");
         assertFalse(
                 bases.contains(new BlockCoord(3, 64, 3)),
-                "Диагональ 3×3 вне радиуса три: квадратный поиск давал подмости, с которых дух не дотягивается");
+                "Диагональ 3×3 вне радиуса три: квадратный поиск давал подмости, с которых дух не дотягивается"
+                        + " Иначе тест bases_ThirdBlockAndDiagonal_StaysWithinCircularReach перестанет ловить эту поломку. При смене bases_ThirdBlockAndDiagonal_StaysWithinCircularReach проверь это утверждение.");
         assertTrue(
                 bases.stream().noneMatch(cell -> cell.x() == target.x() && cell.z() == target.z()),
-                "Столб нельзя строить в колонке цели: иначе потолок перекроет прыжок и дух застрянет");
+                "Столб нельзя строить в колонке цели: иначе потолок перекроет прыжок и дух застрянет"
+                        + " При смене bases_ThirdBlockAndDiagonal_StaysWithinCircularReach проверь это утверждение.");
         assertEquals(
                 new BlockCoord(-3, 64, 0),
                 bases.get(0),
-                "Ближайшее основание проверяется первым, а не дальняя сторона цели; порядок влияет на лишние обходы");
+                "Ближайшее основание проверяется первым, а не дальняя сторона цели; порядок влияет на лишние обходы"
+                        + " Иначе тест bases_ThirdBlockAndDiagonal_StaysWithinCircularReach перестанет ловить эту поломку. При смене bases_ThirdBlockAndDiagonal_StaysWithinCircularReach проверь это утверждение.");
         assertEquals(
                 196,
                 bases.size(),
-                "Радиус три даёт 28 колонок на семи уровнях: ограничение удерживает стоимость поиска и не расширяется до всего мира");
+                "Радиус три даёт 28 колонок на семи уровнях: ограничение удерживает стоимость поиска и не расширяется до всего мира"
+                        + " Иначе тест bases_ThirdBlockAndDiagonal_StaysWithinCircularReach перестанет ловить эту поломку. При смене bases_ThirdBlockAndDiagonal_StaysWithinCircularReach проверь это утверждение.");
     }
 
     @Test
@@ -66,7 +77,8 @@ class ClearScaffoldReachTests {
         assertTrue(
                 ClearScaffold.bases(feet, target, 3).stream().allMatch(cell -> cell.y() <= 67),
                 "Прежний поиск держится за уровень ног духа: поверхность у цели выше полосы «ноги ± радиус» в него "
-                        + "не попадает. Живой случай: столб -175,92..95,-517 оставался «на 24 выше духа»");
+                        + "не попадает. Живой случай: столб -175,92..95,-517 оставался «на 24 выше духа»"
+                        + " Иначе тест surfaceBases_HillAboveSpiritLevel_ReachesTargetSurface перестанет ловить эту поломку. При смене surfaceBases_HillAboveSpiritLevel_ReachesTargetSurface проверь это утверждение.");
         int[] checks = {0};
         List<BlockCoord> bases = ClearScaffold.surfaceBases(feet, target, 3, cell -> {
             checks[0]++;
@@ -76,10 +88,12 @@ class ClearScaffoldReachTests {
                 List.of(hill),
                 bases,
                 "Основание подмостей — верхняя стоянка столбца у цели, даже если она выше духа: с неё дух ставит "
-                        + "короткий столб и достаёт клетку");
+                        + "короткий столб и достаёт клетку"
+                        + " Иначе тест surfaceBases_HillAboveSpiritLevel_ReachesTargetSurface перестанет ловить эту поломку. При смене surfaceBases_HillAboveSpiritLevel_ReachesTargetSurface проверь это утверждение.");
         assertTrue(
                 checks[0] <= 28 * (target.y() - feet.y()),
                 "Поиск поверхности читает не больше одной стоянки на уровень каждого из 28 столбцов. Чтений: "
-                        + checks[0]);
+                        + checks[0]
+                        + " Иначе тест surfaceBases_HillAboveSpiritLevel_ReachesTargetSurface перестанет ловить эту поломку. При смене surfaceBases_HillAboveSpiritLevel_ReachesTargetSurface проверь это утверждение.");
     }
 }

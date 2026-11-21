@@ -31,7 +31,8 @@ class SchematicRulesTests {
                     fixture.expected(),
                     ruleIds(fixture),
                     "Фикстура '" + fixture.file() + "' обязана нарушать только своё правило " + fixture.expected()
-                            + ": иначе непонятно, какое правило сломалось, а тест зеленеет не на том");
+                            + ": иначе непонятно, какое правило сломалось, а тест зеленеет не на том"
+                            + " При смене fixtures_EachNegative_IsRejectedByItsOwnRule проверь это утверждение.");
         }
     }
 
@@ -45,7 +46,8 @@ class SchematicRulesTests {
                     List.of(),
                     ruleIds(fixture),
                     "Корректная фикстура '" + fixture.file() + "' не обязана давать ни одного нарушения: "
-                            + "иначе правило слишком строгое и забракует годную постройку");
+                            + "иначе правило слишком строгое и забракует годную постройку"
+                            + " При смене fixtures_ValidSchematics_ProduceNoViolations проверь это утверждение.");
         }
     }
 
@@ -54,19 +56,23 @@ class SchematicRulesTests {
         assertEquals(
                 List.of(),
                 ruleIds(new Fixture("valid_double_door", List.of())),
-                "Двойная дверь с петлями по краям и крыльцом из трёх ступенек обязана проходить сторожа");
+                "Двойная дверь с петлями по краям и крыльцом из трёх ступенек обязана проходить сторожа"
+                        + " Иначе тест doorsFireplacePorch_OwnerAnswers_EachCaughtByOwnRule перестанет ловить эту поломку. При смене doorsFireplacePorch_OwnerAnswers_EachCaughtByOwnRule проверь это утверждение.");
         assertEquals(
                 List.of(SchematicRules.RuleId.DOUBLE_DOOR),
                 ruleIds(new Fixture("double_door_hinges_inner", List.of())),
-                "Петли посередине проёма: открытые створки встают в проходе — сторож double_door обязан браковать");
+                "Петли посередине проёма: открытые створки встают в проходе — сторож double_door обязан браковать"
+                        + " Иначе тест doorsFireplacePorch_OwnerAnswers_EachCaughtByOwnRule перестанет ловить эту поломку. При смене doorsFireplacePorch_OwnerAnswers_EachCaughtByOwnRule проверь это утверждение.");
         assertEquals(
                 List.of(SchematicRules.RuleId.FIREPLACE),
                 ruleIds(new Fixture("fireplace_in_wall", List.of())),
-                "Костёр в наружной стене виден снаружи (владелец 20.10: камин внутри на 1 блок) — сторож fireplace");
+                "Костёр в наружной стене виден снаружи (владелец 20.10: камин внутри на 1 блок) — сторож fireplace"
+                        + " Иначе тест doorsFireplacePorch_OwnerAnswers_EachCaughtByOwnRule перестанет ловить эту поломку. При смене doorsFireplacePorch_OwnerAnswers_EachCaughtByOwnRule проверь это утверждение.");
         assertEquals(
                 List.of(SchematicRules.RuleId.ENTRANCE_STEP),
                 ruleIds(new Fixture("porch_missing", List.of())),
-                "Жильё с уровнем без крыльца из трёх ступенек обязано браковаться сторожем entrance_step");
+                "Жильё с уровнем без крыльца из трёх ступенек обязано браковаться сторожем entrance_step"
+                        + " Иначе тест doorsFireplacePorch_OwnerAnswers_EachCaughtByOwnRule перестанет ловить эту поломку. При смене doorsFireplacePorch_OwnerAnswers_EachCaughtByOwnRule проверь это утверждение.");
     }
 
     @Test
@@ -78,11 +84,13 @@ class SchematicRulesTests {
                 List.of(),
                 ruleIds(stack),
                 "Сундук над сундуком (стопка склада) не мешает открыть нижний: в ванили крышку держит только "
-                        + "блок, проводящий редстоун, а сундук его не проводит");
+                        + "блок, проводящий редстоун, а сундук его не проводит"
+                        + " Иначе тест chestOpenable_ChestAboveChest_IsAllowedButPlankAboveChestIsNot перестанет ловить эту поломку. При смене chestOpenable_ChestAboveChest_IsAllowedButPlankAboveChestIsNot проверь это утверждение.");
         assertEquals(
                 List.of(SchematicRules.RuleId.CHEST_OPENABLE),
                 ruleIds(plank),
-                "Доска над сундуком обязана браковаться: сундук под полным блоком не открыть");
+                "Доска над сундуком обязана браковаться: сундук под полным блоком не открыть"
+                        + " Иначе тест chestOpenable_ChestAboveChest_IsAllowedButPlankAboveChestIsNot перестанет ловить эту поломку. При смене chestOpenable_ChestAboveChest_IsAllowedButPlankAboveChestIsNot проверь это утверждение.");
     }
 
     @Test
@@ -94,28 +102,32 @@ class SchematicRulesTests {
                 List.of(),
                 SchematicCheck.check(file, document).problems(),
                 "Факел на столбе забора держится: забор даёт центральную опору, как в игре — сторож не должен "
-                        + "называть это нарушением support");
+                        + "называть это нарушением support"
+                        + " Иначе тест torchOnFence_StandsOnCenterPost_IsNoSupportViolation перестанет ловить эту поломку. При смене torchOnFence_StandsOnCenterPost_IsNoSupportViolation проверь это утверждение.");
     }
 
     @Test
     void wideStairs_FreeApproach_Passes() {
         assertFalse(
                 ruleIds(new Fixture("wide_stairs_free", List.of())).contains(SchematicRules.RuleId.STAIR_APPROACH),
-                "Дорожка шириной 2 от двойного входа к двухклеточной лестнице свободна — сторож не должен ругаться");
+                "Дорожка шириной 2 от двойного входа к двухклеточной лестнице свободна — сторож не должен ругаться"
+                        + " Иначе тест wideStairs_FreeApproach_Passes перестанет ловить эту поломку. При смене wideStairs_FreeApproach_Passes проверь это утверждение.");
     }
 
     @Test
     void wideStairs_NarrowApproach_IsRejected() {
         assertTrue(
                 ruleIds(new Fixture("wide_stairs_narrow", List.of())).contains(SchematicRules.RuleId.STAIR_APPROACH),
-                "Бочка сузила подход к двухклеточной лестнице до одной клетки — нужен stair_approach");
+                "Бочка сузила подход к двухклеточной лестнице до одной клетки — нужен stair_approach"
+                        + " Иначе тест wideStairs_NarrowApproach_IsRejected перестанет ловить эту поломку. При смене wideStairs_NarrowApproach_IsRejected проверь это утверждение.");
     }
 
     @Test
     void wideStairs_ShallowLanding_IsRejected() {
         assertTrue(
                 ruleIds(new Fixture("wide_stairs_shallow", List.of())).contains(SchematicRules.RuleId.STAIR_APPROACH),
-                "Перед двухклеточной лестницей площадка глубиной в одну клетку — нужен stair_approach");
+                "Перед двухклеточной лестницей площадка глубиной в одну клетку — нужен stair_approach"
+                        + " Иначе тест wideStairs_ShallowLanding_IsRejected перестанет ловить эту поломку. При смене wideStairs_ShallowLanding_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -123,7 +135,8 @@ class SchematicRulesTests {
         assertTrue(
                 ruleIds(new Fixture("wide_stairs_single_door", List.of()))
                         .contains(SchematicRules.RuleId.STAIR_APPROACH),
-                "Двухклеточная лестница при входе в одну створку — нужен stair_approach");
+                "Двухклеточная лестница при входе в одну створку — нужен stair_approach"
+                        + " Иначе тест wideStairs_SingleDoor_IsRejected перестанет ловить эту поломку. При смене wideStairs_SingleDoor_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -131,7 +144,8 @@ class SchematicRulesTests {
         List<SchematicRules.Violation> violations = railingViolations(false);
         assertTrue(
                 violations.stream().anyMatch(violation -> violation.rule() == SchematicRules.RuleId.RAILING),
-                "С края пола второго этажа над обрывом можно упасть без ограждения — нужен railing");
+                "С края пола второго этажа над обрывом можно упасть без ограждения — нужен railing"
+                        + " Иначе тест railing_FloorEdgeWithoutFence_IsReported перестанет ловить эту поломку. При смене railing_FloorEdgeWithoutFence_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -139,7 +153,8 @@ class SchematicRulesTests {
         List<SchematicRules.Violation> violations = railingViolations(true);
         assertFalse(
                 violations.stream().anyMatch(violation -> violation.rule() == SchematicRules.RuleId.RAILING),
-                "Ограждение вокруг обрыва замкнуто — сторож не должен ругаться");
+                "Ограждение вокруг обрыва замкнуто — сторож не должен ругаться"
+                        + " Иначе тест railing_CompleteFence_Passes перестанет ловить эту поломку. При смене railing_CompleteFence_Passes проверь это утверждение.");
     }
 
     private static List<SchematicRules.Violation> railingViolations(boolean fenced) {
@@ -192,21 +207,24 @@ class SchematicRulesTests {
     void pane_NextToDoor_IsReported() {
         assertTrue(
                 ruleIds(new Fixture("pane_next_to_door", List.of())).contains(SchematicRules.RuleId.PANE),
-                "Панель рядом с дверью не прилипает и оставляет дыру — нужен pane");
+                "Панель рядом с дверью не прилипает и оставляет дыру — нужен pane"
+                        + " Иначе тест pane_NextToDoor_IsReported перестанет ловить эту поломку. При смене pane_NextToDoor_IsReported проверь это утверждение.");
     }
 
     @Test
     void pane_BetweenBlocks_Passes() {
         assertFalse(
                 ruleIds(new Fixture("pane_between_blocks", List.of())).contains(SchematicRules.RuleId.PANE),
-                "Панель между полными блоками держится — сторож не должен ругаться");
+                "Панель между полными блоками держится — сторож не должен ругаться"
+                        + " Иначе тест pane_BetweenBlocks_Passes перестанет ловить эту поломку. При смене pane_BetweenBlocks_Passes проверь это утверждение.");
     }
 
     @Test
     void pane_NextToPane_Passes() {
         assertFalse(
                 ruleIds(new Fixture("pane_next_to_pane", List.of())).contains(SchematicRules.RuleId.PANE),
-                "Две панели стыкуются друг с другом — сторож не должен ругаться");
+                "Две панели стыкуются друг с другом — сторож не должен ругаться"
+                        + " Иначе тест pane_NextToPane_Passes перестанет ловить эту поломку. При смене pane_NextToPane_Passes проверь это утверждение.");
     }
 
     @Test
@@ -218,7 +236,8 @@ class SchematicRulesTests {
         assertEquals(
                 ids.size(),
                 ids.stream().distinct().count(),
-                "id правил обязаны быть уникальными: по id выбирают исключение, и повтор склеил бы два правила");
+                "id правил обязаны быть уникальными: по id выбирают исключение, и повтор склеил бы два правила"
+                        + " Иначе тест ruleIds_AllValues_HaveUniqueNames перестанет ловить эту поломку. При смене ruleIds_AllValues_HaveUniqueNames проверь это утверждение.");
     }
 
     @Test
@@ -226,7 +245,8 @@ class SchematicRulesTests {
         assertEquals(
                 List.of(),
                 SchematicRules.RuleId.byId("no_such_rule").stream().toList(),
-                "Неизвестный id правила обязан не находиться: исключение с опечаткой не должно молча ослаблять сторож");
+                "Неизвестный id правила обязан не находиться: исключение с опечаткой не должно молча ослаблять сторож"
+                        + " Иначе тест ruleId_UnknownId_IsRejected перестанет ловить эту поломку. При смене ruleId_UnknownId_IsRejected проверь это утверждение.");
     }
 
     private static List<SchematicRules.RuleId> ruleIds(Fixture fixture) {

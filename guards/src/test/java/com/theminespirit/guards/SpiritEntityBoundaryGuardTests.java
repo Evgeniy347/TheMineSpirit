@@ -13,12 +13,17 @@ class SpiritEntityBoundaryGuardTests {
         assertEquals(
                 List.of("SpiritEntity: " + (MAX_FILES + 2) + " файлов при пределе " + MAX_FILES),
                 growthProblems(MAX_FILES + 2),
-                "Сторож ослеп: рост числа ссылок на SpiritEntity обязан попасть в нарушители");
+                "Сторож ослеп: рост числа ссылок на SpiritEntity обязан попасть в нарушители"
+                        + " Иначе тест spiritEntity_ReferencesGrow_AreReported перестанет ловить эту поломку. При смене spiritEntity_ReferencesGrow_AreReported проверь это утверждение.");
     }
 
     @Test
     void spiritEntity_AtLimit_IsAccepted() {
-        assertEquals(List.of(), growthProblems(MAX_FILES), "Сторож ложно срабатывает: предел — не нарушение");
+        assertEquals(
+                List.of(),
+                growthProblems(MAX_FILES),
+                "Сторож ложно срабатывает: предел — не нарушение"
+                        + " Иначе тест spiritEntity_AtLimit_IsAccepted перестанет ловить эту поломку. При смене spiritEntity_AtLimit_IsAccepted проверь это утверждение.");
     }
 
     @Test
@@ -33,7 +38,8 @@ class SpiritEntityBoundaryGuardTests {
                         + "это универсальный контекст адаптера, юнит-тесты механик без Minecraft невозможны, "
                         + "правка сущности задевает сотни файлов (ревью 19.11, P1-1). Как надо: новый код "
                         + "механики принимает узкий интерфейс (WorldView/InventoryAccess/MovementHandle), "
-                        + "а не SpiritEntity; стало меньше ссылок — снизь предел MAX_FILES в этом стороже.");
+                        + "а не SpiritEntity; стало меньше ссылок — снизь предел MAX_FILES в этом стороже."
+                        + " Иначе тест spiritEntity_RealCount_DoesNotGrow перестанет ловить эту поломку. При смене spiritEntity_RealCount_DoesNotGrow проверь это утверждение.");
     }
 
     private static List<String> growthProblems(int files) {

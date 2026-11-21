@@ -68,7 +68,10 @@ class GraphExportTests {
                 OUT.resolveSibling("graph.json"),
                 StandardCopyOption.REPLACE_EXISTING);
         new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT).writeValue(OUT.toFile(), cases);
-        assertTrue(Files.size(OUT) > 0, "Контрольные случаи графа для Python-модели записаны в " + OUT);
+        assertTrue(
+                Files.size(OUT) > 0,
+                "Контрольные случаи графа для Python-модели записаны в " + OUT
+                        + " Иначе тест export_SampledStates_WriteConformanceCases перестанет ловить эту поломку. При смене export_SampledStates_WriteConformanceCases проверь это утверждение.");
     }
 
     private static List<Map<String, Object>> blockCases() {
@@ -158,7 +161,10 @@ class GraphExportTests {
                 .writeValue(
                         LIVE.toFile(),
                         GraphStateJson.state(GraphMutations.liveStageOne().state()));
-        assertTrue(Files.size(LIVE) > 0, "Живой этап 1 для Python-модели записан в " + LIVE);
+        assertTrue(
+                Files.size(LIVE) > 0,
+                "Живой этап 1 для Python-модели записан в " + LIVE
+                        + " Иначе тест export_LiveStageOne_WriteStart перестанет ловить эту поломку. При смене export_LiveStageOne_WriteStart проверь это утверждение.");
     }
 
     @Test
@@ -182,6 +188,9 @@ class GraphExportTests {
         }
         Files.createDirectories(BASES.getParent());
         new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT).writeValue(BASES.toFile(), bases);
-        assertTrue(Files.size(BASES) > 0, "Базовые миры для Python-модели записаны в " + BASES);
+        assertTrue(
+                Files.size(BASES) > 0,
+                "Базовые миры для Python-модели записаны в " + BASES
+                        + " Иначе тест export_BaseWorlds_WriteStarts перестанет ловить эту поломку. При смене export_BaseWorlds_WriteStarts проверь это утверждение.");
     }
 }

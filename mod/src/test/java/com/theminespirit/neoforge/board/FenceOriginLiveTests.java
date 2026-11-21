@@ -30,17 +30,23 @@ class FenceOriginLiveTests {
                 SiteLevels.fenceOrigin(site, ROOF),
                 "Точка опасности (-170,80,-489) лежит на крыше склада; основание забора обязано быть уровнем "
                         + "ограды поселения (-170,70,-489). Цена ошибки: дух снизу «в яме», DigOut ищет путь на y=80 "
-                        + "полным перебором и падает — так 55 раз на 5000 строк лога и тик 3,4 с");
+                        + "полным перебором и падает — так 55 раз на 5000 строк лога и тик 3,4 с"
+                        + " При смене fenceOrigin_DangerOnWarehouseRoof_UsesSettlementFenceLevel проверь это утверждение.");
         assertEquals(
                 "HARD",
                 kind(cells, GROUND),
-                "Живая фикстура обязана подтверждать: на уровне ограды под крышей склада есть твёрдая опора");
+                "Живая фикстура обязана подтверждать: на уровне ограды под крышей склада есть твёрдая опора"
+                        + " Иначе тест fenceOrigin_DangerOnWarehouseRoof_UsesSettlementFenceLevel перестанет ловить эту поломку. При смене fenceOrigin_DangerOnWarehouseRoof_UsesSettlementFenceLevel проверь это утверждение.");
         assertEquals(
-                "SOFT", kind(cells, ROOF), "Живая фикстура обязана подтверждать: y=80 — крыша склада, а не низ забора");
+                "SOFT",
+                kind(cells, ROOF),
+                "Живая фикстура обязана подтверждать: y=80 — крыша склада, а не низ забора"
+                        + " Иначе тест fenceOrigin_DangerOnWarehouseRoof_UsesSettlementFenceLevel перестанет ловить эту поломку. При смене fenceOrigin_DangerOnWarehouseRoof_UsesSettlementFenceLevel проверь это утверждение.");
         assertEquals(
                 "AIR",
                 kind(cells, new BlockCoord(ROOF.x(), ROOF.y() + 1, ROOF.z())),
-                "Над крышей склада воздух: постановка забора из клетки опасности шла именно на крышу");
+                "Над крышей склада воздух: постановка забора из клетки опасности шла именно на крышу"
+                        + " Иначе тест fenceOrigin_DangerOnWarehouseRoof_UsesSettlementFenceLevel перестанет ловить эту поломку. При смене fenceOrigin_DangerOnWarehouseRoof_UsesSettlementFenceLevel проверь это утверждение.");
     }
 
     @Test
@@ -51,11 +57,13 @@ class FenceOriginLiveTests {
         assertEquals(
                 GROUND,
                 SiteLevels.fenceOrigin(site, GROUND),
-                "Точка опасности уже на уровне ограды не двигается: иначе забор уезжает с площадки вниз или вверх");
+                "Точка опасности уже на уровне ограды не двигается: иначе забор уезжает с площадки вниз или вверх"
+                        + " При смене fenceOrigin_DangerAlreadyAtFenceLevel_KeepsPoint проверь это утверждение.");
         assertEquals(
                 "HARD",
                 kind(cells, GROUND),
-                "Фикстура подтверждает, что точка на уровне ограды — реальная клетка мира, а не выдуманная высота");
+                "Фикстура подтверждает, что точка на уровне ограды — реальная клетка мира, а не выдуманная высота"
+                        + " Иначе тест fenceOrigin_DangerAlreadyAtFenceLevel_KeepsPoint перестанет ловить эту поломку. При смене fenceOrigin_DangerAlreadyAtFenceLevel_KeepsPoint проверь это утверждение.");
     }
 
     private static String kind(Map<BlockCoord, String> cells, BlockCoord cell) {

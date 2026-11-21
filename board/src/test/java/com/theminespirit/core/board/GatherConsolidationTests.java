@@ -28,10 +28,12 @@ class GatherConsolidationTests {
         assertEquals(
                 List.of("graph:chop_jungle_log"),
                 result.submit().stream().map(GatherDemand.Need::id).toList(),
-                "Стоящая заявка на ошкуренное бревно не должна мешать новой рубке: на породу ставится одна работа");
+                "Стоящая заявка на ошкуренное бревно не должна мешать новой рубке: на породу ставится одна работа"
+                        + " Иначе тест standingStrippedLogAndFreshChop_FreshChopSubmitted_OldStrippedRemoved перестанет ловить эту поломку. При смене standingStrippedLogAndFreshChop_FreshChopSubmitted_OldStrippedRemoved проверь это утверждение.");
         assertTrue(
                 result.suppressed().contains("graph:strip_jungle_log"),
-                "Старая лесная заявка обязана сниматься с доски, а не висеть рядом с рубкой: " + result);
+                "Старая лесная заявка обязана сниматься с доски, а не висеть рядом с рубкой: " + result
+                        + " Иначе тест standingStrippedLogAndFreshChop_FreshChopSubmitted_OldStrippedRemoved перестанет ловить эту поломку. При смене standingStrippedLogAndFreshChop_FreshChopSubmitted_OldStrippedRemoved проверь это утверждение.");
     }
 
     @Test
@@ -43,10 +45,12 @@ class GatherConsolidationTests {
         assertEquals(
                 List.of("jungle_log"),
                 result.submit().stream().map(GatherDemand.Need::item).toList(),
-                "Саженцы ждут, пока рубят брёвна той же породы: второй лесной работы на породу не ставят");
+                "Саженцы ждут, пока рубят брёвна той же породы: второй лесной работы на породу не ставят"
+                        + " Иначе тест standingSaplingsAndFreshChop_FreshChopSubmitted_SaplingsWait перестанет ловить эту поломку. При смене standingSaplingsAndFreshChop_FreshChopSubmitted_SaplingsWait проверь это утверждение.");
         assertTrue(
                 result.suppressed().contains("graph:gather_jungle_sapling"),
-                "Заявка на саженцы снимается со доски до конца рубки: " + result);
+                "Заявка на саженцы снимается со доски до конца рубки: " + result
+                        + " Иначе тест standingSaplingsAndFreshChop_FreshChopSubmitted_SaplingsWait перестанет ловить эту поломку. При смене standingSaplingsAndFreshChop_FreshChopSubmitted_SaplingsWait проверь это утверждение.");
     }
 
     @Test
@@ -58,10 +62,12 @@ class GatherConsolidationTests {
         assertEquals(
                 List.of("jungle_planks"),
                 result.submit().stream().map(GatherDemand.Need::item).toList(),
-                "Доски — отдельный крафт: новая заявка на доски ставится, даже если рубка брёвен уже стоит");
+                "Доски — отдельный крафт: новая заявка на доски ставится, даже если рубка брёвен уже стоит"
+                        + " Иначе тест standingLogAndFreshPlanks_PlanksSubmitted_LogStays перестанет ловить эту поломку. При смене standingLogAndFreshPlanks_PlanksSubmitted_LogStays проверь это утверждение.");
         assertTrue(
                 result.suppressed().isEmpty(),
-                "Доски и бревно одной породы живут вместе: не снимаем ни рубку, ни крафт: " + result);
+                "Доски и бревно одной породы живут вместе: не снимаем ни рубку, ни крафт: " + result
+                        + " Иначе тест standingLogAndFreshPlanks_PlanksSubmitted_LogStays перестанет ловить эту поломку. При смене standingLogAndFreshPlanks_PlanksSubmitted_LogStays проверь это утверждение.");
     }
 
     @Test
@@ -72,10 +78,12 @@ class GatherConsolidationTests {
 
         assertTrue(
                 result.submit().isEmpty(),
-                "Новая заявка на саженцы ждёт рубки, которая уже стоит: второй лесной работы не появляется");
+                "Новая заявка на саженцы ждёт рубки, которая уже стоит: второй лесной работы не появляется"
+                        + " Иначе тест standingLogAndFreshSapling_SaplingNotSubmitted_LogStays перестанет ловить эту поломку. При смене standingLogAndFreshSapling_SaplingNotSubmitted_LogStays проверь это утверждение.");
         assertTrue(
                 result.suppressed().contains("graph:gather_jungle_sapling"),
-                "Новая заявка на саженцы снимается до конца рубки: " + result);
+                "Новая заявка на саженцы снимается до конца рубки: " + result
+                        + " Иначе тест standingLogAndFreshSapling_SaplingNotSubmitted_LogStays перестанет ловить эту поломку. При смене standingLogAndFreshSapling_SaplingNotSubmitted_LogStays проверь это утверждение.");
     }
 
     @Test
@@ -98,15 +106,18 @@ class GatherConsolidationTests {
         assertEquals(
                 BoardStatus.CANCELLED,
                 board.statusOf(strip).orElse(null),
-                "Сквозь доску: старая заявка strip_* снимается, когда по той же породе стоит рубка");
+                "Сквозь доску: старая заявка strip_* снимается, когда по той же породе стоит рубка"
+                        + " Иначе тест board_SupersededStandingLogAndSapling_RemovedByRetain перестанет ловить эту поломку. При смене board_SupersededStandingLogAndSapling_RemovedByRetain проверь это утверждение.");
         assertEquals(
                 BoardStatus.CANCELLED,
                 board.statusOf(sapling).orElse(null),
-                "Сквозь доску: старая заявка на саженцы снимается, когда по той же породе стоит рубка");
+                "Сквозь доску: старая заявка на саженцы снимается, когда по той же породе стоит рубка"
+                        + " Иначе тест board_SupersededStandingLogAndSapling_RemovedByRetain перестанет ловить эту поломку. При смене board_SupersededStandingLogAndSapling_RemovedByRetain проверь это утверждение.");
         assertEquals(
                 BoardStatus.PENDING,
                 board.statusOf(chop).orElse(null),
-                "Сквозь доску: заявка на брёвна остаётся живой и ждёт исполнителя");
+                "Сквозь доску: заявка на брёвна остаётся живой и ждёт исполнителя"
+                        + " Иначе тест board_SupersededStandingLogAndSapling_RemovedByRetain перестанет ловить эту поломку. При смене board_SupersededStandingLogAndSapling_RemovedByRetain проверь это утверждение.");
     }
 
     private static BoardTicket ticket(String id, int priority) {

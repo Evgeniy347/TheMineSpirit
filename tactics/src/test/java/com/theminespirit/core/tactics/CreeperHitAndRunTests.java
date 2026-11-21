@@ -63,7 +63,8 @@ class CreeperHitAndRunTests {
         assertTrue(
                 hunt.strikes() >= 1,
                 "Дух с мечом без лука против крипера обязан ударить хотя бы раз: иначе бесконечный цикл 5↔8 "
-                        + "оставляет крипера целым, а духа без урона. Дистанции: " + hunt.distances());
+                        + "оставляет крипера целым, а духа без урона. Дистанции: " + hunt.distances()
+                        + " При смене hunt_ChainFromNine_StrikesAtThreeThenRetreatsToSixAndApproaches проверь это утверждение.");
         double nearest = hunt.distances().stream()
                 .mapToDouble(distance -> distance)
                 .min()
@@ -71,7 +72,8 @@ class CreeperHitAndRunTests {
         assertTrue(
                 nearest <= 3,
                 "Дух подходит вплотную (≤3), а не топчется на 5–8 блоках: удар мечом бьёт только вплотную, "
-                        + "полоса 5/8 — для безоружного. Дистанции: " + hunt.distances());
+                        + "полоса 5/8 — для безоружного. Дистанции: " + hunt.distances()
+                        + " Иначе тест hunt_ChainFromNine_StrikesAtThreeThenRetreatsToSixAndApproaches перестанет ловить эту поломку. При смене hunt_ChainFromNine_StrikesAtThreeThenRetreatsToSixAndApproaches проверь это утверждение.");
         int firstStrike = hunt.struck().indexOf(true);
         boolean leftToSix = hunt
                 .distances()
@@ -82,7 +84,8 @@ class CreeperHitAndRunTests {
                 leftToSix,
                 "После удара дух отходит до 6 блоков: удар отбрасывает крипера и сбивает запал, повторный удар "
                         + "вплотную подряд — взрыв. Дистанции после удара: "
-                        + hunt.distances().subList(firstStrike, hunt.distances().size()));
+                        + hunt.distances().subList(firstStrike, hunt.distances().size())
+                        + " Иначе тест hunt_ChainFromNine_StrikesAtThreeThenRetreatsToSixAndApproaches перестанет ловить эту поломку. При смене hunt_ChainFromNine_StrikesAtThreeThenRetreatsToSixAndApproaches проверь это утверждение.");
         boolean approachesAgain = false;
         List<Double> tail =
                 hunt.distances().subList(firstStrike + 1, hunt.distances().size());
@@ -94,12 +97,14 @@ class CreeperHitAndRunTests {
         assertTrue(
                 approachesAgain,
                 "Отошедший до 6 дух снова подходит, а не стоит на месте: тактика «ударил–отошёл» повторяется, "
-                        + "иначе крипер останется недобитым. Дистанции: " + hunt.distances());
+                        + "иначе крипер останется недобитым. Дистанции: " + hunt.distances()
+                        + " При смене hunt_ChainFromNine_StrikesAtThreeThenRetreatsToSixAndApproaches проверь это утверждение.");
         assertTrue(
                 hunt.decisions().contains(TacticalOption.FIGHT)
                         && hunt.decisions().contains(TacticalOption.RETREAT),
                 "За цепочку встречаются и подход, и отход: только бой — бег к взрыву, только отход — стояние "
-                        + "на месте. Решения: " + hunt.decisions());
+                        + "на месте. Решения: " + hunt.decisions()
+                        + " Иначе тест hunt_ChainFromNine_StrikesAtThreeThenRetreatsToSixAndApproaches перестанет ловить эту поломку. При смене hunt_ChainFromNine_StrikesAtThreeThenRetreatsToSixAndApproaches проверь это утверждение.");
     }
 
     @Property(tries = 100)
@@ -117,6 +122,7 @@ class CreeperHitAndRunTests {
                         + hunt.distances().stream()
                                 .mapToDouble(distance -> distance)
                                 .max()
-                                .orElseThrow() + ")");
+                                .orElseThrow() + ")"
+                        + " При смене hunt_EngagedWithoutBow_StrikesWithinHundredSteps проверь это утверждение.");
     }
 }

@@ -17,7 +17,8 @@ class ConditionRegistryTests {
         assertSame(
                 evaluator,
                 registry.find("is_day").orElseThrow(),
-                "find обязан вернуть именно зарегистрированный вычислитель: иначе условие выберет не ту ветку");
+                "find обязан вернуть именно зарегистрированный вычислитель: иначе условие выберет не ту ветку"
+                        + " При смене find_KnownCheck_ReturnsRegisteredEvaluator проверь это утверждение.");
     }
 
     @Test
@@ -26,7 +27,8 @@ class ConditionRegistryTests {
 
         assertTrue(
                 registry.find("ghost").isEmpty(),
-                "неизвестная проверка обязана давать пустой Optional: движок провалит condition, а не угадает ветку");
+                "неизвестная проверка обязана давать пустой Optional: движок провалит condition, а не угадает ветку"
+                        + " Иначе тест find_UnknownCheck_IsEmpty перестанет ловить эту поломку. При смене find_UnknownCheck_IsEmpty проверь это утверждение.");
     }
 
     @Test
@@ -39,7 +41,8 @@ class ConditionRegistryTests {
 
         assertTrue(
                 registry.find("is_day").isPresent(),
-                "реестр обязан делать защитную копию: иначе правка исходной карты меняет ветвление на ходу");
+                "реестр обязан делать защитную копию: иначе правка исходной карты меняет ветвление на ходу"
+                        + " При смене of_SourceMapMutatedLater_DoesNotChangeRegistry проверь это утверждение.");
     }
 
     @Test
@@ -50,7 +53,8 @@ class ConditionRegistryTests {
         assertThrows(
                 NullPointerException.class,
                 () -> ConditionRegistry.of(source),
-                "реестр с null-вычислителем обязан отвергаться при создании: иначе падение случится в серверном тике");
+                "реестр с null-вычислителем обязан отвергаться при создании: иначе падение случится в серверном тике"
+                        + " При смене of_NullEvaluator_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -58,6 +62,7 @@ class ConditionRegistryTests {
         assertThrows(
                 NullPointerException.class,
                 () -> ConditionRegistry.of(null),
-                "реестр без карты обязан отвергаться: пустой реестр задают пустой картой");
+                "реестр без карты обязан отвергаться: пустой реестр задают пустой картой"
+                        + " Иначе тест of_NullMap_IsRejected перестанет ловить эту поломку. При смене of_NullMap_IsRejected проверь это утверждение.");
     }
 }

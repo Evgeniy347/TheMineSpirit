@@ -25,7 +25,8 @@ class ResourceGateTests {
                 GateOutcome.READY,
                 ResourceGate.gate(need, stock),
                 "Когда хватает всего, гейт обязан пропустить задание: иначе дух ждёт "
-                        + "ресурсы, которые уже лежат в инвентаре");
+                        + "ресурсы, которые уже лежат в инвентаре"
+                        + " При смене gate_EnoughOfEverything_Ready проверь это утверждение.");
     }
 
     @Test
@@ -37,12 +38,14 @@ class ResourceGateTests {
                 GateOutcome.WAITING,
                 ResourceGate.gate(need, stock),
                 "Нехватка одного предмета обяна держать задание в очереди: взяв задание "
-                        + "без факелов, дух встанет перед тёмной стеной");
+                        + "без факелов, дух встанет перед тёмной стеной"
+                        + " Иначе тест gate_MissingOneItem_WaitingAndMissingNamesItem перестанет ловить эту поломку. При смене gate_MissingOneItem_WaitingAndMissingNamesItem проверь это утверждение.");
         assertEquals(
                 Map.of("torch", 4),
                 ResourceGate.missing(need, stock),
                 "Отчёт нехватки обязан называть предмет и число: наблюдетель и стратег "
-                        + "видят, что добывать, до постановки задания");
+                        + "видят, что добывать, до постановки задания"
+                        + " Иначе тест gate_MissingOneItem_WaitingAndMissingNamesItem перестанет ловить эту поломку. При смене gate_MissingOneItem_WaitingAndMissingNamesItem проверь это утверждение.");
     }
 
     @Test
@@ -54,7 +57,8 @@ class ResourceGateTests {
                 GateOutcome.READY,
                 ResourceGate.gate(need, stock),
                 "Задание без ресурсов обязано пройти гейт без ожидания: ждать нечего, "
-                        + "зависшее задание блокировало бы всю очередь поселения");
+                        + "зависшее задание блокировало бы всю очередь поселения"
+                        + " Иначе тест gate_EmptyNeed_Ready перестанет ловить эту поломку. При смене gate_EmptyNeed_Ready проверь это утверждение.");
     }
 
     @Test
@@ -65,7 +69,8 @@ class ResourceGateTests {
         assertEquals(
                 GateOutcome.READY,
                 ResourceGate.gate(need, stock),
-                "Ровно столько, сколько нужно, — готово: последний блок земли принадлежит заданию");
+                "Ровно столько, сколько нужно, — готово: последний блок земли принадлежит заданию"
+                        + " Иначе тест gate_ExactAmount_Ready перестанет ловить эту поломку. При смене gate_ExactAmount_Ready проверь это утверждение.");
     }
 
     @Test
@@ -77,7 +82,8 @@ class ResourceGateTests {
                 GateOutcome.READY,
                 ResourceGate.gate(need, stock),
                 "Избыток в запасах обязан пройти гейт: лишние ресурсы принадлежат другим "
-                        + "заданиям, гейт считает только нужду");
+                        + "заданиям, гейт считает только нужду"
+                        + " Иначе тест gate_Surplus_Ready перестанет ловить эту поломку. При смене gate_Surplus_Ready проверь это утверждение.");
     }
 
     @Test
@@ -89,11 +95,13 @@ class ResourceGateTests {
                 GateOutcome.WAITING,
                 ResourceGate.gate(need, stock),
                 "Ноль в запасе при нужде обязан держать задание: доска сначала ставит добычу "
-                        + "недостающего, а не отдаёт задание в пустые руки");
+                        + "недостающего, а не отдаёт задание в пустые руки"
+                        + " Иначе тест gate_ZeroInStock_Waiting перестанет ловить эту поломку. При смене gate_ZeroInStock_Waiting проверь это утверждение.");
         assertEquals(
                 Map.of("dirt", 9),
                 ResourceGate.missing(need, stock),
-                "Нехватка при нулевом запасе равна всей нужде: добыча обяна закрыть всё");
+                "Нехватка при нулевом запасе равна всей нужде: добыча обяна закрыть всё"
+                        + " Иначе тест gate_ZeroInStock_Waiting перестанет ловить эту поломку. При смене gate_ZeroInStock_Waiting проверь это утверждение.");
     }
 
     @Test
@@ -105,7 +113,8 @@ class ResourceGateTests {
                 Map.of("dirt", 6),
                 ResourceGate.missing(need, stock),
                 "В отчёт нехватки идут только положительные числа: избыток факелов не "
-                        + "превращается в отрицательную нехватку, наблюдетель видит чистый остаток");
+                        + "превращается в отрицательную нехватку, наблюдетель видит чистый остаток"
+                        + " Иначе тест missing_PositiveShortages_Only перестанет ловить эту поломку. При смене missing_PositiveShortages_Only проверь это утверждение.");
     }
 
     @Test
@@ -113,11 +122,13 @@ class ResourceGateTests {
         assertThrows(
                 NullPointerException.class,
                 () -> ResourceGate.gate(null, new StockView(Map.of())),
-                "need=null обязан отвергаться: гейт без нужды не проверить");
+                "need=null обязан отвергаться: гейт без нужды не проверить"
+                        + " Иначе тест gate_NullArguments_Rejected перестанет ловить эту поломку. При смене gate_NullArguments_Rejected проверь это утверждение.");
         assertThrows(
                 NullPointerException.class,
                 () -> ResourceGate.gate(new StockNeed(Map.of()), null),
-                "stock=null обязан отвергаться: гейт без снимка запасов не проверить");
+                "stock=null обязан отвергаться: гейт без снимка запасов не проверить"
+                        + " Иначе тест gate_NullArguments_Rejected перестанет ловить эту поломку. При смене gate_NullArguments_Rejected проверь это утверждение.");
     }
 
     @Test
@@ -129,7 +140,8 @@ class ResourceGateTests {
                 ResourceGate.gate(need, stock),
                 ResourceGate.gate(need, stock),
                 "Гейт обязан быть детерминирован: по нему доска держит задание в очереди, "
-                        + "нестабильный вердикт перетасует выдачу между пересборками");
+                        + "нестабильный вердикт перетасует выдачу между пересборками"
+                        + " Иначе тест gate_Is_Deterministic перестанет ловить эту поломку. При смене gate_Is_Deterministic проверь это утверждение.");
     }
 
     @Property
@@ -146,13 +158,15 @@ class ResourceGateTests {
                     GateOutcome.READY,
                     ResourceGate.gate(need, grownStock),
                     "Добавление ресурса не обязано переводить готовое задание в ожидание: "
-                            + "монотонность гейта — иначе пополнение склада зависит ждать, а очередь не двигается");
+                            + "монотонность гейта — иначе пополнение склада зависит ждать, а очередь не двигается"
+                            + " При смене gate_Monotone_ByStock проверь это утверждение.");
         }
         assertTrue(
                 ResourceGate.missing(need, grownStock).entrySet().stream()
                         .allMatch(entry ->
                                 ResourceGate.missing(need, stock).getOrDefault(entry.getKey(), 0) >= entry.getValue()),
-                "Нехватка обязана убывать при пополнении: иначе отчёт наблюдателя врёт о добыче");
+                "Нехватка обязана убывать при пополнении: иначе отчёт наблюдателя врёт о добыче"
+                        + " При смене gate_Monotone_ByStock проверь это утверждение.");
     }
 
     @Property
@@ -164,7 +178,8 @@ class ResourceGateTests {
                     entry.getValue() > 0,
                     "Отчёт нехватки обязан содержать только положительные числа: " + entry.getKey() + "="
                             + entry.getValue()
-                            + " — отрицательная нехватка означала бы избыток, которого нет в отчёте");
+                            + " — отрицательная нехватка означала бы избыток, которого нет в отчёте"
+                            + " Иначе тест missing_PositiveShortages_Only перестанет ловить эту поломку. При смене missing_PositiveShortages_Only проверь это утверждение.");
         }
     }
 
@@ -195,11 +210,13 @@ class ResourceGateTests {
                 Map.of(),
                 ResourceGate.missing(need, stock),
                 "Пролом просит блок с пространством имён, склад хранит короткое имя: без общей сверки задание "
-                        + "висело «ждёт ресурс: дёрн», хотя дёрн лежал у духа");
+                        + "висело «ждёт ресурс: дёрн», хотя дёрн лежал у духа"
+                        + " Иначе тест gate_QualifiedNeed_SeesPlainStock перестанет ловить эту поломку. При смене gate_QualifiedNeed_SeesPlainStock проверь это утверждение.");
         assertEquals(
                 GateOutcome.READY,
                 ResourceGate.gate(need, stock),
-                "Гейт обязан пускать задание, когда запас того же предмета записан коротким именем");
+                "Гейт обязан пускать задание, когда запас того же предмета записан коротким именем"
+                        + " Иначе тест gate_QualifiedNeed_SeesPlainStock перестанет ловить эту поломку. При смене gate_QualifiedNeed_SeesPlainStock проверь это утверждение.");
     }
 
     @Test
@@ -211,7 +228,8 @@ class ResourceGateTests {
                 Map.of("minecraft:jungle_log", 3),
                 ResourceGate.missing(need, stock),
                 "Отчёт нехватки называет предмет так же, как его просит задание: иначе наблюдатель не сопоставит "
-                        + "нехватку с заданием");
+                        + "нехватку с заданием"
+                        + " При смене missing_QualifiedNeed_KeepsItsName проверь это утверждение.");
     }
 
     @Test
@@ -223,11 +241,13 @@ class ResourceGateTests {
                 Map.of(),
                 ResourceGate.missing(need, stock),
                 "Дёрн на складе закрывает нужду в земле: это один предмет, и задание не должно ждать добычи земли "
-                        + "при полутора тысячах травы в сундуках");
+                        + "при полутора тысячах травы в сундуках"
+                        + " Иначе тест missing_GrassInStock_CoversDirtNeed перестанет ловить эту поломку. При смене missing_GrassInStock_CoversDirtNeed проверь это утверждение.");
         assertEquals(
                 GateOutcome.READY,
                 ResourceGate.gate(need, stock),
-                "Гейт обязан пускать задание, когда земляная нужда покрыта дёрном");
+                "Гейт обязан пускать задание, когда земляная нужда покрыта дёрном"
+                        + " Иначе тест missing_GrassInStock_CoversDirtNeed перестанет ловить эту поломку. При смене missing_GrassInStock_CoversDirtNeed проверь это утверждение.");
     }
 
     @Test
@@ -238,7 +258,8 @@ class ResourceGateTests {
         assertEquals(
                 Map.of(),
                 ResourceGate.missing(need, stock),
-                "Земля закрывает нужду в дёрне: взаимозамена работает в обе стороны");
+                "Земля закрывает нужду в дёрне: взаимозамена работает в обе стороны"
+                        + " Иначе тест missing_DirtInStock_CoversGrassNeed перестанет ловить эту поломку. При смене missing_DirtInStock_CoversGrassNeed проверь это утверждение.");
     }
 
     @Test
@@ -249,7 +270,8 @@ class ResourceGateTests {
         assertEquals(
                 Map.of(),
                 ResourceGate.missing(need, stock),
-                "Склад считает землю и дёрн вместе: по отдельности 100 < 200, вместе 250 ≥ 200");
+                "Склад считает землю и дёрн вместе: по отдельности 100 < 200, вместе 250 ≥ 200"
+                        + " Иначе тест missing_EarthInStock_CountedTogether перестанет ловить эту поломку. При смене missing_EarthInStock_CountedTogether проверь это утверждение.");
     }
 
     @Test
@@ -262,10 +284,12 @@ class ResourceGateTests {
         assertFalse(
                 missing.containsKey("dirt_path"),
                 "Дорожка сада делается лопатой по земле, а не лежит на складе: гейт не должен ждать её как предмет. "
-                        + "Нехватка: " + missing);
+                        + "Нехватка: " + missing
+                        + " Иначе тест missing_ActionPlacedDirtPath_DoesNotWaitForStock перестанет ловить эту поломку. При смене missing_ActionPlacedDirtPath_DoesNotWaitForStock проверь это утверждение.");
         assertEquals(
                 4,
                 missing.get("torch"),
-                "Факелы сада — обычный материал: их нехватка обязана остаться гейту. Нехватка: " + missing);
+                "Факелы сада — обычный материал: их нехватка обязана остаться гейту. Нехватка: " + missing
+                        + " Иначе тест missing_ActionPlacedDirtPath_DoesNotWaitForStock перестанет ловить эту поломку. При смене missing_ActionPlacedDirtPath_DoesNotWaitForStock проверь это утверждение.");
     }
 }

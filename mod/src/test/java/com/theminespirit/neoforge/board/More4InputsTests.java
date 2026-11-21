@@ -29,9 +29,22 @@ class More4InputsTests {
 
         GraphState next = More4Inputs.events(state, Set.of(More4Rules.PLAYER_NEAR, More4Rules.CAUTION));
 
-        assertTrue(next.events().contains("night"), "Вход области не теряет события других сборщиков");
-        assertTrue(next.events().contains(More4Rules.PLAYER_NEAR), "Чужой игрок добавляется к событиям");
-        assertTrue(next.events().contains(More4Rules.CAUTION), "Осторожный режим добавляется к событиям");
-        assertEquals(state.facts(), next.facts(), "Сборщик не подменяет факты графа");
+        assertTrue(
+                next.events().contains("night"),
+                "Вход области не теряет события других сборщиков"
+                        + " Иначе тест events_AddToBase_WithoutLosingThem перестанет ловить эту поломку. При смене events_AddToBase_WithoutLosingThem проверь это утверждение.");
+        assertTrue(
+                next.events().contains(More4Rules.PLAYER_NEAR),
+                "Чужой игрок добавляется к событиям"
+                        + " Иначе тест events_AddToBase_WithoutLosingThem перестанет ловить эту поломку. При смене events_AddToBase_WithoutLosingThem проверь это утверждение.");
+        assertTrue(
+                next.events().contains(More4Rules.CAUTION),
+                "Осторожный режим добавляется к событиям"
+                        + " Иначе тест events_AddToBase_WithoutLosingThem перестанет ловить эту поломку. При смене events_AddToBase_WithoutLosingThem проверь это утверждение.");
+        assertEquals(
+                state.facts(),
+                next.facts(),
+                "Сборщик не подменяет факты графа"
+                        + " Иначе тест events_AddToBase_WithoutLosingThem перестанет ловить эту поломку. При смене events_AddToBase_WithoutLosingThem проверь это утверждение.");
     }
 }

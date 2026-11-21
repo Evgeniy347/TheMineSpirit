@@ -18,8 +18,12 @@ class ScaffoldTrailTests {
         assertEquals(
                 List.of(new BlockCoord(1, 70, 1), new BlockCoord(1, 71, 1), new BlockCoord(5, 70, 5)),
                 trail.cells(),
-                "Каждый подъём добавляет клетки к прежним: спуск обязан разобрать все столбы, а не последний");
-        assertFalse(trail.empty(), "Две колонки — не пустой след подмостей");
+                "Каждый подъём добавляет клетки к прежним: спуск обязан разобрать все столбы, а не последний"
+                        + " Иначе тест add_TwoClimbs_KeepsCellsOfBothColumns перестанет ловить эту поломку. При смене add_TwoClimbs_KeepsCellsOfBothColumns проверь это утверждение.");
+        assertFalse(
+                trail.empty(),
+                "Две колонки — не пустой след подмостей"
+                        + " Иначе тест add_TwoClimbs_KeepsCellsOfBothColumns перестанет ловить эту поломку. При смене add_TwoClimbs_KeepsCellsOfBothColumns проверь это утверждение.");
     }
 
     @Test
@@ -35,7 +39,8 @@ class ScaffoldTrailTests {
                         new BlockCoord(1, 71, 1),
                         new BlockCoord(1, 70, 1)),
                 trail.topDown(),
-                "Спуск идёт сверху вниз через все колонки: нижняя клетка держит духа последней");
+                "Спуск идёт сверху вниз через все колонки: нижняя клетка держит духа последней"
+                        + " Иначе тест topDown_MixedColumns_ReturnsHighestFirst перестанет ловить эту поломку. При смене topDown_MixedColumns_ReturnsHighestFirst проверь это утверждение.");
     }
 
     @Test
@@ -47,11 +52,15 @@ class ScaffoldTrailTests {
         assertEquals(
                 List.of(new BlockCoord(1, 70, 1)),
                 trail.cells(),
-                "Повторный подъём по той же клетке не записывает её дважды: иначе разбор ударил бы блок дважды");
+                "Повторный подъём по той же клетке не записывает её дважды: иначе разбор ударил бы блок дважды"
+                        + " При смене add_RepeatedColumn_DoesNotDuplicateCells проверь это утверждение.");
     }
 
     @Test
     void empty_NoClimbs_HasNothingToDismantle() {
-        assertTrue(new ScaffoldTrail().empty(), "Без подъёмов подмостей нет");
+        assertTrue(
+                new ScaffoldTrail().empty(),
+                "Без подъёмов подмостей нет"
+                        + " Иначе тест empty_NoClimbs_HasNothingToDismantle перестанет ловить эту поломку. При смене empty_NoClimbs_HasNothingToDismantle проверь это утверждение.");
     }
 }

@@ -17,11 +17,15 @@ class BuildFarmParamsTests {
         BuildFarmParams params = BuildFarmParams.from(Map.of("crop", "wheat", "x1", 4, "z1", 4, "x2", 6, "z2", 6));
 
         assertEquals(
-                CropKind.WHEAT, params.crop(), "Культура обязана сохраниться: по ней дух берёт семена и вид посева");
+                CropKind.WHEAT,
+                params.crop(),
+                "Культура обязана сохраниться: по ней дух берёт семена и вид посева"
+                        + " Иначе тест from_RectangleAndCrop_ReturnsParams перестанет ловить эту поломку. При смене from_RectangleAndCrop_ReturnsParams проверь это утверждение.");
         assertEquals(
                 FarmPlot.of(4, 4, 6, 6),
                 params.plot(),
-                "Прямоугольник обязан сохраниться: по нему дух вспахивает и сажает");
+                "Прямоугольник обязан сохраниться: по нему дух вспахивает и сажает"
+                        + " Иначе тест from_RectangleAndCrop_ReturnsParams перестанет ловить эту поломку. При смене from_RectangleAndCrop_ReturnsParams проверь это утверждение.");
     }
 
     @Test
@@ -31,7 +35,8 @@ class BuildFarmParamsTests {
         assertEquals(
                 FarmPlot.of(4, 4, 6, 6),
                 params.plot(),
-                "Углы в любом порядке обязаны приниматься: иначе стратег сортирует их сам");
+                "Углы в любом порядке обязаны приниматься: иначе стратег сортирует их сам"
+                        + " При смене from_ReversedCorners_NormalizesPlot проверь это утверждение.");
     }
 
     @Test
@@ -39,7 +44,8 @@ class BuildFarmParamsTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> BuildFarmParams.from(Map.of("crop", "any", "x1", 0, "z1", 0, "x2", 2, "z2", 2)),
-                "any обязан отвергаться: грядку засевают конкретным видом");
+                "any обязан отвергаться: грядку засевают конкретным видом"
+                        + " Иначе тест from_AnyCrop_IsRejected перестанет ловить эту поломку. При смене from_AnyCrop_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -47,7 +53,8 @@ class BuildFarmParamsTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> BuildFarmParams.from(Map.of("crop", "cocoa", "x1", 0, "z1", 0, "x2", 2, "z2", 2)),
-                "Какао растёт на стволе, а не на пашне: параметры обязаны отправить за plant_crop");
+                "Какао растёт на стволе, а не на пашне: параметры обязаны отправить за plant_crop"
+                        + " Иначе тест from_SupportCrop_IsRejected перестанет ловить эту поломку. При смене from_SupportCrop_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -56,7 +63,8 @@ class BuildFarmParamsTests {
                 IllegalArgumentException.class,
                 () -> BuildFarmParams.from(
                         Map.of("crop", "wheat", "x1", 0, "z1", 0, "x2", CatalogLimits.FARM_PLOT_SIDE_MAX, "z2", 0)),
-                "Сторона сверх предела обязана отвергаться до первого блока");
+                "Сторона сверх предела обязана отвергаться до первого блока"
+                        + " Иначе тест from_SideAboveLimit_IsRejected перестанет ловить эту поломку. При смене from_SideAboveLimit_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -65,7 +73,8 @@ class BuildFarmParamsTests {
                 IllegalArgumentException.class,
                 () -> BuildFarmParams.from(Map.of(
                         "crop", "wheat", "x1", CatalogLimits.WORLD_HORIZONTAL_LIMIT + 1, "z1", 0, "x2", 0, "z2", 0)),
-                "Координата вне мира обязана отвергаться: там нечего пахать");
+                "Координата вне мира обязана отвергаться: там нечего пахать"
+                        + " Иначе тест from_CoordinateOutsideWorld_IsRejected перестанет ловить эту поломку. При смене from_CoordinateOutsideWorld_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -79,6 +88,7 @@ class BuildFarmParamsTests {
         assertEquals(
                 CropKind.plotNames(),
                 crop.values(),
-                "Каталог обязан предлагать только культуры открытого грунта: какао на пашне не растёт");
+                "Каталог обязан предлагать только культуры открытого грунта: какао на пашне не растёт"
+                        + " Иначе тест catalog_Farm_CropEnumExcludesSupportCrops перестанет ловить эту поломку. При смене catalog_Farm_CropEnumExcludesSupportCrops проверь это утверждение.");
     }
 }

@@ -38,17 +38,24 @@ class LiveOakSupplyPlanTests {
                 chop != null,
                 "Живой supply_gather:oak_planks снова идёт в сбор отдельных брёвен: " + calls
                         + ". На базе observe14 вокруг поселения одни пни, и сбор бьётся в (−144,72,−503) "
-                        + "«нет пути к блоку» — дуб надо рубить целым деревом");
-        assertEquals("oak", chop.params().get("species"), "Доски дуба обязаны рубить дуб: " + chop);
+                        + "«нет пути к блоку» — дуб надо рубить целым деревом"
+                        + " Иначе тест livePlanksTicket_StumpField_ChopsRealOakBeforeCrafting перестанет ловить эту поломку. При смене livePlanksTicket_StumpField_ChopsRealOakBeforeCrafting проверь это утверждение.");
+        assertEquals(
+                "oak",
+                chop.params().get("species"),
+                "Доски дуба обязаны рубить дуб: " + chop
+                        + " Иначе тест livePlanksTicket_StumpField_ChopsRealOakBeforeCrafting перестанет ловить эту поломку. При смене livePlanksTicket_StumpField_ChopsRealOakBeforeCrafting проверь это утверждение.");
         assertEquals(
                 BoardTuning.chopRadius(),
                 chop.params().get("radius"),
-                "Рубка дуба обязана искать настоящее дерево в том же радиусе, что и сад: " + chop);
+                "Рубка дуба обязана искать настоящее дерево в том же радиусе, что и сад: " + chop
+                        + " Иначе тест livePlanksTicket_StumpField_ChopsRealOakBeforeCrafting перестанет ловить эту поломку. При смене livePlanksTicket_StumpField_ChopsRealOakBeforeCrafting проверь это утверждение.");
         assertTrue(
                 index(calls, call -> "acquire".equals(call.script()) && planks(call))
                         > index(calls, call -> "chop_tree".equals(call.script())),
                 "Крафт досок идёт запасной веткой после рубки: при брёвнах в инвентаре acquire крафтит, "
-                        + "а при настоящем дереве рядом сначала рубит его: " + calls);
+                        + "а при настоящем дереве рядом сначала рубит его: " + calls
+                        + " Иначе тест livePlanksTicket_StumpField_ChopsRealOakBeforeCrafting перестанет ловить эту поломку. При смене livePlanksTicket_StumpField_ChopsRealOakBeforeCrafting проверь это утверждение.");
     }
 
     private static boolean planks(ScriptCall call) {
@@ -65,12 +72,16 @@ class LiveOakSupplyPlanTests {
         List<ScriptCall> calls = calls(TicketPlans.plan(BoardCase.GATHER_MATERIALS, target));
 
         ScriptCall strip = first(calls, call -> "strip_log".equals(call.script()));
-        assertTrue(strip != null, "Живой graph:strip_oak_log обязан обтёсывать брёвна: " + calls);
+        assertTrue(
+                strip != null,
+                "Живой graph:strip_oak_log обязан обтёсывать брёвна: " + calls
+                        + " Иначе тест liveStripTicket_NearestOakBeyondThirtyTwo_IsInRadius перестанет ловить эту поломку. При смене liveStripTicket_NearestOakBeyondThirtyTwo_IsInRadius проверь это утверждение.");
         assertEquals(
                 BoardTuning.chopRadius(),
                 strip.params().get("radius"),
                 "Обтёсывание дуба ищет брёвна в радиусе 32, а ближайший настоящий дуб observe14 — в 83 блоках: "
-                        + "живой провал «брёвна oak в радиусе 32 закончились» повторится: " + strip);
+                        + "живой провал «брёвна oak в радиусе 32 закончились» повторится: " + strip
+                        + " Иначе тест liveStripTicket_NearestOakBeyondThirtyTwo_IsInRadius перестанет ловить эту поломку. При смене liveStripTicket_NearestOakBeyondThirtyTwo_IsInRadius проверь это утверждение.");
     }
 
     private static JsonNode ticket(String file) throws IOException {

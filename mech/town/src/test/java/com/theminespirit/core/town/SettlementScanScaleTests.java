@@ -24,7 +24,8 @@ class SettlementScanScaleTests {
                 world.reads <= budget,
                 "Скан ровного поля 160×160 не читает блоки над площадкой, которых нет по heightmap: "
                         + world.reads + " чтений при бюджете " + budget
-                        + "; иначе каждый пересчёт участка кладёт треть лишних чтений в тик сервера");
+                        + "; иначе каждый пересчёт участка кладёт треть лишних чтений в тик сервера"
+                        + " При смене scan_FlatField160x160_ReadsNoMoreThanHeightmapNeeds проверь это утверждение.");
     }
 
     @Test
@@ -39,7 +40,8 @@ class SettlementScanScaleTests {
                 List.of(new BlockCoord(2, SettlementScanTests.LEVEL, 2)),
                 found.strays().stream().map(StrayGroups.Cell::at).toList(),
                 "Факел не перекрывает движение, но остаётся лишним над площадкой: граница чтения берётся по "
-                        + "WORLD_SURFACE, а не по MOTION_BLOCKING, иначе скан перестанет видеть такие блоки");
+                        + "WORLD_SURFACE, а не по MOTION_BLOCKING, иначе скан перестанет видеть такие блоки"
+                        + " При смене scan_NonMotionBlockAboveLevel_StillFoundBySurfaceHeightmap проверь это утверждение.");
     }
 
     @Test
@@ -54,6 +56,7 @@ class SettlementScanScaleTests {
                 List.of(new BlockCoord(2, SettlementScanTests.LEVEL, 2)),
                 found.strays().stream().map(StrayGroups.Cell::at).toList(),
                 "Heightmap подсказывает только границу чтения: блок над уровнем всё равно обязан попасть "
-                        + "в лишнее, иначе скан перестанет видеть столбы и мусор");
+                        + "в лишнее, иначе скан перестанет видеть столбы и мусор"
+                        + " При смене scan_BlockAboveLevel_StillFoundWhenHeightmapSeesIt проверь это утверждение.");
     }
 }

@@ -18,7 +18,8 @@ class GraphEventsTests {
         assertEquals(
                 Set.of("backfill", "demolish_stray", "crop_ready"),
                 merged,
-                "вход фермы обязан добавлять свои события к событиям мира: иначе граф теряет ямы и лишнее");
+                "вход фермы обязан добавлять свои события к событиям мира: иначе граф теряет ямы и лишнее"
+                        + " При смене merge_WorldFactsAndFarm_KeepBoth проверь это утверждение.");
     }
 
     @Test
@@ -40,19 +41,50 @@ class GraphEventsTests {
         GraphEvent repaired = GraphEvent.withRepairs(Map.of("building_damaged", template), Map.of("hut", building))
                 .get(GraphWorldEvents.REPAIR + "hut");
 
-        assertInstanceOf(GraphEvent.class, repaired, "повреждённая постройка обязана дать событие ремонта");
+        assertInstanceOf(
+                GraphEvent.class,
+                repaired,
+                "повреждённая постройка обязана дать событие ремонта"
+                        + " Иначе тест withRepairs_RepairTask_KeepsWorldConditionsAndBuilding перестанет ловить эту поломку. При смене withRepairs_RepairTask_KeepsWorldConditionsAndBuilding проверь это утверждение.");
         assertTrue(
-                repaired != null && !repaired.tasks().isEmpty(), "повреждённая постройка обязана дать событие ремонта");
+                repaired != null && !repaired.tasks().isEmpty(),
+                "повреждённая постройка обязана дать событие ремонта"
+                        + " Иначе тест withRepairs_RepairTask_KeepsWorldConditionsAndBuilding перестанет ловить эту поломку. При смене withRepairs_RepairTask_KeepsWorldConditionsAndBuilding проверь это утверждение.");
         assertEquals(
                 List.of("repair:hut"),
                 repaired.tasks().stream().map(GraphEvent.Task::id).toList(),
-                "повреждённая постройка обязана дать событие ремонта");
+                "повреждённая постройка обязана дать событие ремонта"
+                        + " Иначе тест withRepairs_RepairTask_KeepsWorldConditionsAndBuilding перестанет ловить эту поломку. При смене withRepairs_RepairTask_KeepsWorldConditionsAndBuilding проверь это утверждение.");
         GraphEvent.Task created = repaired.tasks().get(0);
-        assertEquals("repair:hut", created.id(), "ремонт адресуется конкретной постройке");
-        assertEquals("hut", created.building(), "клетка ремонта — сама повреждённая постройка");
-        assertEquals("more:damaged", created.world(), "условие мира из шаблона ремонта не теряется");
-        assertEquals("charcoal", created.onlyWhenEmpty(), "условие пустоты из шаблона ремонта не теряется");
-        assertEquals("hungriest", created.owner(), "владелец-исполнитель из шаблона ремонта не теряется");
-        assertEquals(85, created.base(), "вес ремонта берётся из шаблона");
+        assertEquals(
+                "repair:hut",
+                created.id(),
+                "ремонт адресуется конкретной постройке"
+                        + " Иначе тест withRepairs_RepairTask_KeepsWorldConditionsAndBuilding перестанет ловить эту поломку. При смене withRepairs_RepairTask_KeepsWorldConditionsAndBuilding проверь это утверждение.");
+        assertEquals(
+                "hut",
+                created.building(),
+                "клетка ремонта — сама повреждённая постройка"
+                        + " Иначе тест withRepairs_RepairTask_KeepsWorldConditionsAndBuilding перестанет ловить эту поломку. При смене withRepairs_RepairTask_KeepsWorldConditionsAndBuilding проверь это утверждение.");
+        assertEquals(
+                "more:damaged",
+                created.world(),
+                "условие мира из шаблона ремонта не теряется"
+                        + " Иначе тест withRepairs_RepairTask_KeepsWorldConditionsAndBuilding перестанет ловить эту поломку. При смене withRepairs_RepairTask_KeepsWorldConditionsAndBuilding проверь это утверждение.");
+        assertEquals(
+                "charcoal",
+                created.onlyWhenEmpty(),
+                "условие пустоты из шаблона ремонта не теряется"
+                        + " Иначе тест withRepairs_RepairTask_KeepsWorldConditionsAndBuilding перестанет ловить эту поломку. При смене withRepairs_RepairTask_KeepsWorldConditionsAndBuilding проверь это утверждение.");
+        assertEquals(
+                "hungriest",
+                created.owner(),
+                "владелец-исполнитель из шаблона ремонта не теряется"
+                        + " Иначе тест withRepairs_RepairTask_KeepsWorldConditionsAndBuilding перестанет ловить эту поломку. При смене withRepairs_RepairTask_KeepsWorldConditionsAndBuilding проверь это утверждение.");
+        assertEquals(
+                85,
+                created.base(),
+                "вес ремонта берётся из шаблона"
+                        + " Иначе тест withRepairs_RepairTask_KeepsWorldConditionsAndBuilding перестанет ловить эту поломку. При смене withRepairs_RepairTask_KeepsWorldConditionsAndBuilding проверь это утверждение.");
     }
 }

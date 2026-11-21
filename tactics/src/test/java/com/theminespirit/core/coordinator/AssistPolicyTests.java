@@ -60,7 +60,8 @@ class AssistPolicyTests {
         assertEquals(
                 List.of(NEAR, FAR),
                 helpers,
-                "Выбран ближайший свободный защитник и идёт первым: иначе помощь идёт через весь круг мимо ближнего");
+                "Выбран ближайший свободный защитник и идёт первым: иначе помощь идёт через весь круг мимо ближнего"
+                        + " При смене assist_NoFreeDefenders_SelectsNearest проверь это утверждение.");
     }
 
     @Test
@@ -72,8 +73,16 @@ class AssistPolicyTests {
         List<UUID> helpers =
                 new AssistPolicy().assist(WARD, List.of(ward, near, far), List.of(post(NEAR, 2), post(FAR, 5)), 1);
 
-        assertEquals(1, helpers.size(), "Не больше maxHelpers помощников: иначе сектора пустеют");
-        assertEquals(List.of(NEAR), helpers, "Среди двух свободных взят ближайший");
+        assertEquals(
+                1,
+                helpers.size(),
+                "Не больше maxHelpers помощников: иначе сектора пустеют"
+                        + " При смене assist_TwoFreeDefenders_MaxOneHelper проверь это утверждение.");
+        assertEquals(
+                List.of(NEAR),
+                helpers,
+                "Среди двух свободных взят ближайший"
+                        + " Иначе тест assist_TwoFreeDefenders_MaxOneHelper перестанет ловить эту поломку. При смене assist_TwoFreeDefenders_MaxOneHelper проверь это утверждение.");
     }
 
     @Test
@@ -82,7 +91,8 @@ class AssistPolicyTests {
 
         assertTrue(
                 new AssistPolicy().assist(WARD, List.of(ward), List.of(), 2).isEmpty(),
-                "Защитников нет — помощь не выбирается");
+                "Защитников нет — помощь не выбирается"
+                        + " Иначе тест assist_NoDefenders_ReturnsEmpty перестанет ловить эту поломку. При смене assist_NoDefenders_ReturnsEmpty проверь это утверждение.");
     }
 
     @Test
@@ -93,8 +103,15 @@ class AssistPolicyTests {
         List<UUID> helpers =
                 new AssistPolicy().assist(WARD, List.of(attacked, helper), List.of(post(WARD, 0), post(NEAR, 3)), 2);
 
-        assertEquals(List.of(NEAR), helpers, "Атакованный не помогает себе: он держит свой сектор или отбивается");
-        assertTrue(!helpers.contains(WARD), "Атакованный исключён из помощников");
+        assertEquals(
+                List.of(NEAR),
+                helpers,
+                "Атакованный не помогает себе: он держит свой сектор или отбивается"
+                        + " Иначе тест assist_AttackedDefender_NotAmongHelpers перестанет ловить эту поломку. При смене assist_AttackedDefender_NotAmongHelpers проверь это утверждение.");
+        assertTrue(
+                !helpers.contains(WARD),
+                "Атакованный исключён из помощников"
+                        + " Иначе тест assist_AttackedDefender_NotAmongHelpers перестанет ловить эту поломку. При смене assist_AttackedDefender_NotAmongHelpers проверь это утверждение.");
     }
 
     @Test
@@ -106,7 +123,11 @@ class AssistPolicyTests {
         List<UUID> helpers =
                 new AssistPolicy().assist(WARD, List.of(ward, busy, free), List.of(post(NEAR, 2), post(FAR, 5)), 2);
 
-        assertEquals(List.of(FAR), helpers, "Занятый боем защитник не бросает сектор: помощь идёт от свободного");
+        assertEquals(
+                List.of(FAR),
+                helpers,
+                "Занятый боем защитник не бросает сектор: помощь идёт от свободного"
+                        + " Иначе тест assist_BusyDefenders_FreeOneChosen перестанет ловить эту поломку. При смене assist_BusyDefenders_FreeOneChosen проверь это утверждение.");
     }
 
     @Test
@@ -121,7 +142,8 @@ class AssistPolicyTests {
                 List.of(NEAR),
                 helpers,
                 "Присутствие угрозы рядом — не бой: передовые посты (33) всегда в радиусе угроз, "
-                        + "помощь идёт от неатакованного, иначе подмена друг друга умирает");
+                        + "помощь идёт от неатакованного, иначе подмена друг друга умирает"
+                        + " При смене assist_ThreatenedButNotAttacked_HelpsWard проверь это утверждение.");
     }
 
     @Test
@@ -135,7 +157,11 @@ class AssistPolicyTests {
         List<UUID> second =
                 new AssistPolicy().assist(WARD, List.of(far, ward, near), List.of(post(FAR, 5), post(NEAR, 2)), 2);
 
-        assertEquals(first, second, "Порядок входа не меняет выход: помощь не зависит от порядка наблюдения");
+        assertEquals(
+                first,
+                second,
+                "Порядок входа не меняет выход: помощь не зависит от порядка наблюдения"
+                        + " Иначе тест assist_ShuffledInput_SameHelpers перестанет ловить эту поломку. При смене assist_ShuffledInput_SameHelpers проверь это утверждение.");
     }
 
     @Test
@@ -147,7 +173,8 @@ class AssistPolicyTests {
                 new AssistPolicy()
                         .assist(WARD, List.of(ward, near), List.of(post(NEAR, 2)), 0)
                         .isEmpty(),
-                "Нулевой предел — помощь не выбирается: оборона не расходится");
+                "Нулевой предел — помощь не выбирается: оборона не расходится"
+                        + " Иначе тест assist_ZeroMaxHelpers_ReturnsEmpty перестанет ловить эту поломку. При смене assist_ZeroMaxHelpers_ReturnsEmpty проверь это утверждение.");
     }
 
     @Test
@@ -159,7 +186,8 @@ class AssistPolicyTests {
                 new AssistPolicy()
                         .assist(unknown, List.of(near), List.of(post(NEAR, 2)), 2)
                         .isEmpty(),
-                "Атакованный вне снимка неизвестен: помощь не выбирается без его позиции");
+                "Атакованный вне снимка неизвестен: помощь не выбирается без его позиции"
+                        + " Иначе тест assist_AttackedUnknown_ReturnsEmpty перестанет ловить эту поломку. При смене assist_AttackedUnknown_ReturnsEmpty проверь это утверждение.");
     }
 
     @Test
@@ -170,7 +198,11 @@ class AssistPolicyTests {
 
         List<UUID> helpers = new AssistPolicy().assist(WARD, List.of(ward, offDuty, onDuty), List.of(post(FAR, 6)), 2);
 
-        assertEquals(List.of(FAR), helpers, "Защитник без поста не в обороне: помощь идёт от тех, кто держит сектор");
+        assertEquals(
+                List.of(FAR),
+                helpers,
+                "Защитник без поста не в обороне: помощь идёт от тех, кто держит сектор"
+                        + " Иначе тест assist_DefenderWithoutPost_OnDutyChosen перестанет ловить эту поломку. При смене assist_DefenderWithoutPost_OnDutyChosen проверь это утверждение.");
     }
 
     @Test
@@ -178,7 +210,8 @@ class AssistPolicyTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new AssistPolicy().assist(null, List.of(), List.of(), 2),
-                "Помощь неизвестному духу не нужна: атакованный обязателен");
+                "Помощь неизвестному духу не нужна: атакованный обязателен"
+                        + " Иначе тест assist_NullAttacked_Throws перестанет ловить эту поломку. При смене assist_NullAttacked_Throws проверь это утверждение.");
     }
 
     @Test
@@ -186,7 +219,8 @@ class AssistPolicyTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new AssistPolicy().assist(WARD, null, List.of(), 2),
-                "null вместо снимков не говорит, есть ли духи: передавайте пустой список");
+                "null вместо снимков не говорит, есть ли духи: передавайте пустой список"
+                        + " Иначе тест assist_NullSpirits_Throws перестанет ловить эту поломку. При смене assist_NullSpirits_Throws проверь это утверждение.");
     }
 
     @Test
@@ -194,7 +228,8 @@ class AssistPolicyTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new AssistPolicy().assist(WARD, List.of(), null, 2),
-                "null вместо постов не говорит, есть ли оборона: передавайте пустой список");
+                "null вместо постов не говорит, есть ли оборона: передавайте пустой список"
+                        + " Иначе тест assist_NullPosts_Throws перестанет ловить эту поломку. При смене assist_NullPosts_Throws проверь это утверждение.");
     }
 
     @Test
@@ -202,6 +237,7 @@ class AssistPolicyTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new AssistPolicy().assist(WARD, List.of(), List.of(), -1),
-                "Отрицательный предел помощников не имеет смысла");
+                "Отрицательный предел помощников не имеет смысла"
+                        + " Иначе тест assist_NegativeMaxHelpers_Throws перестанет ловить эту поломку. При смене assist_NegativeMaxHelpers_Throws проверь это утверждение.");
     }
 }

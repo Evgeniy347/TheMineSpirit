@@ -75,14 +75,17 @@ class ToolChoiceProperties {
                     fastestCorrect,
                     choice.speed(),
                     "Выбранный слот " + choice.slot() + " обязан иметь максимальную скорость среди правильных "
-                            + "инструментов: " + options);
+                            + "инструментов: " + options
+                            + " Иначе тест best_AnyOptions_ChosenSlotHasMaximumSpeedAmongCorrect перестанет ловить эту поломку. При смене best_AnyOptions_ChosenSlotHasMaximumSpeedAmongCorrect проверь это утверждение.");
             assertTrue(
                     choice.dropsAllowed() && choice.speed() > ToolChoice.HAND_SPEED,
-                    "Инструмент выбирается только быстрее руки и только правильный: " + choice);
+                    "Инструмент выбирается только быстрее руки и только правильный: " + choice
+                            + " Иначе тест best_AnyOptions_ChosenSlotHasMaximumSpeedAmongCorrect перестанет ловить эту поломку. При смене best_AnyOptions_ChosenSlotHasMaximumSpeedAmongCorrect проверь это утверждение.");
         } else {
             assertTrue(
                     fastestCorrect <= ToolChoice.HAND_SPEED,
-                    "Рука выбрана при быстром правильном инструменте в наборе: " + options);
+                    "Рука выбрана при быстром правильном инструменте в наборе: " + options
+                            + " Иначе тест best_AnyOptions_ChosenSlotHasMaximumSpeedAmongCorrect перестанет ловить эту поломку. При смене best_AnyOptions_ChosenSlotHasMaximumSpeedAmongCorrect проверь это утверждение.");
         }
     }
 
@@ -94,7 +97,8 @@ class ToolChoiceProperties {
         assertEquals(
                 ToolChoice.best(options),
                 ToolChoice.best(shuffled),
-                "Порядок списка вариантов не должен влиять на выбор: слоты инвентаря перебираются в произвольном порядке");
+                "Порядок списка вариантов не должен влиять на выбор: слоты инвентаря перебираются в произвольном порядке"
+                        + " Иначе тест best_ShuffledOptions_GiveSameChoice перестанет ловить эту поломку. При смене best_ShuffledOptions_GiveSameChoice проверь это утверждение.");
     }
 
     @Property
@@ -112,7 +116,8 @@ class ToolChoiceProperties {
         assertTrue(
                 choice.slot() != ToolChoice.HAND,
                 "Есть подходящий неизношенный инструмент быстрее руки, но выбран не он: " + choice + " из " + options
-                        + " при пороге " + reserve);
+                        + " при пороге " + reserve
+                        + " Иначе тест best_SpentCorrectTool_NeverChosenWhenHealthyFasterExists перестанет ловить эту поломку. При смене best_SpentCorrectTool_NeverChosenWhenHealthyFasterExists проверь это утверждение.");
         ToolOption chosen = options.stream()
                 .filter(option -> option.slot() == choice.slot())
                 .findFirst()
@@ -120,7 +125,8 @@ class ToolChoiceProperties {
         assertFalse(
                 chosen.spent(reserve, REPAIR_TIERS),
                 "Выбранный слот " + choice.slot() + " обязан быть неизношенным, а он ниже порога " + reserve + ": "
-                        + options);
+                        + options
+                        + " Иначе тест best_SpentCorrectTool_NeverChosenWhenHealthyFasterExists перестанет ловить эту поломку. При смене best_SpentCorrectTool_NeverChosenWhenHealthyFasterExists проверь это утверждение.");
     }
 
     @Property
@@ -136,7 +142,8 @@ class ToolChoiceProperties {
                 .orElseThrow();
         assertFalse(
                 chosen.spent(reserve, REPAIR_TIERS),
-                "Изношенный инструмент выбран как рабочий, хотя в наборе " + options + " при пороге " + reserve);
+                "Изношенный инструмент выбран как рабочий, хотя в наборе " + options + " при пороге " + reserve
+                        + " Иначе тест best_ChosenCorrectTool_IsNeverSpent перестанет ловить эту поломку. При смене best_ChosenCorrectTool_IsNeverSpent проверь это утверждение.");
     }
 
     private static List<ToolOption> uniqueSlots(List<ToolOption> options) {

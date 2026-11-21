@@ -21,7 +21,8 @@ class StoreSourceGuardTests {
                 found(sources, "WarehouseWatch.tick("),
                 "Склад снова строит свой сторож: задание на склад выбирает узел графа building:warehouse, "
                         + "иначе граф и сторож ставят одну постройку дважды. Уберите вызов из BoardSources. "
-                        + "Нарушители: WarehouseWatch.tick");
+                        + "Нарушители: WarehouseWatch.tick"
+                        + " При смене boardSources_StorageWatchers_DoNotTickOwnWork проверь это утверждение.");
     }
 
     @Test
@@ -36,7 +37,8 @@ class StoreSourceGuardTests {
                 found,
                 "Сторожа склада снова ставят задания мимо графа: перенос старых сундуков и новую пару выбирают "
                         + "узлы store:transfer и store:space, а сторож — только источник фактов. "
-                        + "Нарушители: OldChests, ChestSpaceWatch");
+                        + "Нарушители: OldChests, ChestSpaceWatch"
+                        + " Иначе тест stageSurroundings_StorageWatchers_AreNotTicked перестанет ловить эту поломку. При смене stageSurroundings_StorageWatchers_AreNotTicked проверь это утверждение.");
     }
 
     @Test
@@ -51,7 +53,8 @@ class StoreSourceGuardTests {
                 found,
                 "ChestSpaceWatch сам решает, когда ставить сундук: порог и место выбирает узел store:space, "
                         + "а сторож оставляет только факт свободных слотов и исполнение задания графа. "
-                        + "Нарушители: ChestSpaceWatch.tick, ChestSpaceWatch.request");
+                        + "Нарушители: ChestSpaceWatch.tick, ChestSpaceWatch.request"
+                        + " Иначе тест request перестанет ловить эту поломку. При смене request проверь это утверждение.");
     }
 
     @Test
@@ -66,7 +69,8 @@ class StoreSourceGuardTests {
                 found,
                 "Дыры под станками двора снова чинятся сторожами мимо графа: ремонт выбирает узел "
                         + "repair:stock_chests, сторож остаётся аудитом пола. "
-                        + "Нарушители: YardFloorWatch.tick, любой вызов YardFloorWatch.tick из аудита");
+                        + "Нарушители: YardFloorWatch.tick, любой вызов YardFloorWatch.tick из аудита"
+                        + " Иначе тест tick перестанет ловить эту поломку. При смене tick проверь это утверждение.");
     }
 
     private static List<String> found(String source, String pattern) {

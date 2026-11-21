@@ -127,13 +127,18 @@ class RetreatPlannerTests {
             assertTrue(
                     plan.isEmpty(),
                     "План отхода («" + row.name() + "») без цели или без блоков не строится: "
-                            + "дух не должен бежать в никуда, получили " + plan);
+                            + "дух не должен бежать в никуда, получили " + plan
+                            + " Иначе тест plan_Method_GivesExpectedKindOfPlan перестанет ловить эту поломку. При смене plan_Method_GivesExpectedKindOfPlan проверь это утверждение.");
         } else {
-            assertTrue(plan.isPresent(), "План отхода («" + row.name() + "») обязан строиться по снятым фактам");
+            assertTrue(
+                    plan.isPresent(),
+                    "План отхода («" + row.name() + "») обязан строиться по снятым фактам"
+                            + " Иначе тест plan_Method_GivesExpectedKindOfPlan перестанет ловить эту поломку. При смене plan_Method_GivesExpectedKindOfPlan проверь это утверждение.");
             assertInstanceOf(
                     row.kind(),
                     plan.get(),
-                    "Вид плана («" + row.name() + "») определяет исполнитель: " + "бег, постройка стены или столб");
+                    "Вид плана («" + row.name() + "») определяет исполнитель: " + "бег, постройка стены или столб"
+                            + " Иначе тест plan_Method_GivesExpectedKindOfPlan перестанет ловить эту поломку. При смене plan_Method_GivesExpectedKindOfPlan проверь это утверждение.");
         }
     }
 
@@ -147,8 +152,14 @@ class RetreatPlannerTests {
                 SELF.x() - RetreatPlanner.AWAY_DISTANCE,
                 walk.target().x(),
                 1e-6,
-                "Бег прочь идёт в сторону, противоположную ближнему врагу, на AWAY_DISTANCE блоков");
-        assertEquals(SELF.z(), walk.target().z(), 1e-6, "Враг на одной линии по x: поперёк бежать незачем");
+                "Бег прочь идёт в сторону, противоположную ближнему врагу, на AWAY_DISTANCE блоков"
+                        + " Иначе тест plan_AwayWithEnemyToTheEast_TargetLiesWestAtAwayDistance перестанет ловить эту поломку. При смене plan_AwayWithEnemyToTheEast_TargetLiesWestAtAwayDistance проверь это утверждение.");
+        assertEquals(
+                SELF.z(),
+                walk.target().z(),
+                1e-6,
+                "Враг на одной линии по x: поперёк бежать незачем"
+                        + " Иначе тест plan_AwayWithEnemyToTheEast_TargetLiesWestAtAwayDistance перестанет ловить эту поломку. При смене plan_AwayWithEnemyToTheEast_TargetLiesWestAtAwayDistance проверь это утверждение.");
     }
 
     @Test
@@ -162,12 +173,14 @@ class RetreatPlannerTests {
                 ally,
                 walk.target(),
                 "Точка сбора — сам союзник (ближайший дух или игрок), а не точка «прочь от врага»: "
-                        + "иначе дух бежит в пустое поле вместо своих");
+                        + "иначе дух бежит в пустое поле вместо своих"
+                        + " При смене plan_RallyWithAllyPoint_WalksToThatPoint проверь это утверждение.");
         assertEquals(
                 RetreatPlanner.RALLY_ARRIVAL,
                 walk.arrival(),
                 1e-6,
-                "К союзнику подходят на дистанцию сбора, а не встают внутрь него");
+                "К союзнику подходят на дистанцию сбора, а не встают внутрь него"
+                        + " Иначе тест plan_RallyWithAllyPoint_WalksToThatPoint перестанет ловить эту поломку. При смене plan_RallyWithAllyPoint_WalksToThatPoint проверь это утверждение.");
     }
 
     @Test
@@ -175,7 +188,8 @@ class RetreatPlannerTests {
         assertTrue(
                 RetreatPlanner.plan(RetreatMethod.RALLY, input(EnvReading.NOTHING, Optional.empty(), 0, ZOMBIE_EAST))
                         .isEmpty(),
-                "Без союзника или игрока в радиусе RALLY не строит план: способ не должен подменяться бегом прочь");
+                "Без союзника или игрока в радиусе RALLY не строит план: способ не должен подменяться бегом прочь"
+                        + " Иначе тест plan_RallyWithoutAllyPoint_NoPlan перестанет ловить эту поломку. При смене plan_RallyWithoutAllyPoint_NoPlan проверь это утверждение.");
     }
 
     @Test
@@ -184,6 +198,9 @@ class RetreatPlannerTests {
                 RetreatPlanner.plan(RetreatMethod.KITE, input(EnvReading.NOTHING, Optional.empty(), 0, ZOMBIE_EAST))
                         .orElseThrow();
 
-        assertTrue(walk.shooting(), "KITE отличается от AWAY тем, что дух стреляет на бегу");
+        assertTrue(
+                walk.shooting(),
+                "KITE отличается от AWAY тем, что дух стреляет на бегу"
+                        + " Иначе тест plan_Kite_WalksAwayAndShoots перестанет ловить эту поломку. При смене plan_Kite_WalksAwayAndShoots проверь это утверждение.");
     }
 }

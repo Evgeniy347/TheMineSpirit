@@ -40,7 +40,8 @@ class BreathSearchTests {
                 Optional.of(new BlockCoord(0, 5, 0)),
                 BreathSearch.nearest(floodedShaft(), new BlockCoord(0, 0, 0)),
                 "из дна затопленной шахты аварийный подъём ведёт вверх до клетки, где голова над водой; прыжок "
-                        + "на месте не спасает (INC-19)");
+                        + "на месте не спасает (INC-19)"
+                        + " Иначе тест nearest_FloodedShaft_FindsCellWithHeadAboveWater перестанет ловить эту поломку. При смене nearest_FloodedShaft_FindsCellWithHeadAboveWater проверь это утверждение.");
     }
 
     @Test
@@ -51,7 +52,8 @@ class BreathSearchTests {
         assertEquals(
                 Optional.empty(),
                 BreathSearch.nearest(world, new BlockCoord(0, 0, 0)),
-                "запечатанная вода без воздуха — подниматься некуда, поиск называет это пустотой, а не клеткой");
+                "запечатанная вода без воздуха — подниматься некуда, поиск называет это пустотой, а не клеткой"
+                        + " Иначе тест nearest_SealedWater_ReturnsEmpty перестанет ловить эту поломку. При смене nearest_SealedWater_ReturnsEmpty проверь это утверждение.");
     }
 
     @Test
@@ -72,7 +74,8 @@ class BreathSearchTests {
                 Optional.of(new BlockCoord(2, 0, 0)),
                 BreathSearch.nearest(world, new BlockCoord(0, 0, 0)),
                 "рядом с водой рефлекс воздуха обязан вести на сушу (стоять на твёрдом полу), а не на "
-                        + "поверхность воды: на поверхности дух снова тонет, тратит 216 [air] и простаивает");
+                        + "поверхность воды: на поверхности дух снова тонет, тратит 216 [air] и простаивает"
+                        + " Иначе тест nearest_PoolWithShore_LeadsToDryLandNotWaterSurface перестанет ловить эту поломку. При смене nearest_PoolWithShore_LeadsToDryLandNotWaterSurface проверь это утверждение.");
     }
 
     @Test
@@ -85,25 +88,29 @@ class BreathSearchTests {
             assertTrue(
                     next.isPresent(),
                     "На шаге " + step + " из " + at + " воздух обязан быть достижим: дух тонет под уступом земли, "
-                            + "как spirit-2 в (-294,55,-483) 01.11");
+                            + "как spirit-2 в (-294,55,-483) 01.11"
+                            + " Иначе тест nextStep_LiveFloodedShaft_GoesAroundDirtToAir перестанет ловить эту поломку. При смене nextStep_LiveFloodedShaft_GoesAroundDirtToAir проверь это утверждение.");
             BlockCoord cell = next.orElseThrow();
             Cell kind = world.cellAt(cell);
             Cell head = world.cellAt(new BlockCoord(cell.x(), cell.y() + 1, cell.z()));
             assertTrue(
                     kind == Cell.WATER || kind == Cell.PASSABLE,
                     "Шаг " + step + " ведёт в " + kind + " " + cell + ": путь к воздуху обязан идти по воде или "
-                            + "пустоте, а не в уступ земли над головой — иначе дух упирается и тонет");
+                            + "пустоте, а не в уступ земли над головой — иначе дух упирается и тонет"
+                            + " При смене nextStep_LiveFloodedShaft_GoesAroundDirtToAir проверь это утверждение.");
             assertTrue(
                     head == Cell.WATER || head == Cell.PASSABLE,
                     "Шаг " + step + " ставит голову в " + head + " над " + cell + ": дух ростом два блока под "
-                            + "уступом земли не поднимется и утонет, как spirit-2 в observe16 N5");
+                            + "уступом земли не поднимется и утонет, как spirit-2 в observe16 N5"
+                            + " Иначе тест nextStep_LiveFloodedShaft_GoesAroundDirtToAir перестанет ловить эту поломку. При смене nextStep_LiveFloodedShaft_GoesAroundDirtToAir проверь это утверждение.");
             at = cell;
         }
 
         assertTrue(
                 BreathSearch.nextStep(world, at).filter(at::equals).isPresent(),
                 "За 24 шага из затонувшей клетки дух обязан выйти к сухой стоянке у воды или к воздуху, "
-                        + "а не кружить под уступом: фактически " + at);
+                        + "а не кружить под уступом: фактически " + at
+                        + " Иначе тест nextStep_LiveFloodedShaft_GoesAroundDirtToAir перестанет ловить эту поломку. При смене nextStep_LiveFloodedShaft_GoesAroundDirtToAir проверь это утверждение.");
     }
 
     private static CellWorld liveShaft() {
@@ -125,7 +132,10 @@ class BreathSearchTests {
             }
         }
         try (InputStream in = BreathSearchTests.class.getResourceAsStream("/live/drownfall/shaft.txt")) {
-            assertTrue(in != null, "Фикстура /live/drownfall/shaft.txt обязана быть в тестовых ресурсах");
+            assertTrue(
+                    in != null,
+                    "Фикстура /live/drownfall/shaft.txt обязана быть в тестовых ресурсах"
+                            + " Иначе тест nextStep_LiveFloodedShaft_GoesAroundDirtToAir перестанет ловить эту поломку. При смене nextStep_LiveFloodedShaft_GoesAroundDirtToAir проверь это утверждение.");
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
                 reader.lines()
                         .filter(line -> !line.isBlank() && !line.startsWith("#"))
@@ -160,7 +170,8 @@ class BreathSearchTests {
                 Optional.of(new BlockCoord(1, 1, 0)),
                 BreathSearch.nearest(world, new BlockCoord(0, 0, 0)),
                 "Берег на блок выше воды (observe17: озеро -324,55,-472, суша y62-63) обязан находиться: "
-                        + "вода касается пола стоянки, а не её ног; иначе дух остаётся в озере");
+                        + "вода касается пола стоянки, а не её ног; иначе дух остаётся в озере"
+                        + " При смене nearest_BankOneAboveWater_FindsStandByFloorWater проверь это утверждение.");
     }
 
     @Test
@@ -178,7 +189,8 @@ class BreathSearchTests {
                 BreathSearch.nearest(world, new BlockCoord(0, 0, 0)),
                 "Широкое озеро 61×61: берег в 91 шаге обязан находиться поиском по поверхности. "
                         + "Старый бюджет 512 уходил в объём воды и возвращал поверхность — дух кружил в озере "
-                        + "(observe17 A2, [air]=781)");
+                        + "(observe17 A2, [air]=781)"
+                        + " Иначе тест nearest_WideLakeSurface_FindsFarBankBeyondOldBudget перестанет ловить эту поломку. При смене nearest_WideLakeSurface_FindsFarBankBeyondOldBudget проверь это утверждение.");
     }
 
     @Test
@@ -190,7 +202,8 @@ class BreathSearchTests {
                 BreathSearch.nearest(world, new BlockCoord(0, 0, 0)),
                 "Живой случай -99,52,-417: вода под землёй (ноги 52, голова 53, потолок 54), берег на блок выше "
                         + "достаётся только прыжком, а прыжок упирается в потолок. Недостижимый берег не цель: "
-                        + "дух плыл в стену 260 тысяч попыток");
+                        + "дух плыл в стену 260 тысяч попыток"
+                        + " Иначе тест nearest_BankOneAboveWaterUnderLowCeiling_StaysOnSurface перестанет ловить эту поломку. При смене nearest_BankOneAboveWaterUnderLowCeiling_StaysOnSurface проверь это утверждение.");
     }
 
     @Test
@@ -200,7 +213,8 @@ class BreathSearchTests {
         assertEquals(
                 Optional.of(new BlockCoord(1, 1, 0)),
                 BreathSearch.nearest(world, new BlockCoord(0, 0, 0)),
-                "Тот же карман, но потолок на блок выше: прыжок на берег возможен, и поиск обязан вести туда");
+                "Тот же карман, но потолок на блок выше: прыжок на берег возможен, и поиск обязан вести туда"
+                        + " Иначе тест nearest_BankOneAboveWaterWithRoomToJump_IsFound перестанет ловить эту поломку. При смене nearest_BankOneAboveWaterWithRoomToJump_IsFound проверь это утверждение.");
     }
 
     private static CellWorld lowCeilingPocket(int ceilingY) {

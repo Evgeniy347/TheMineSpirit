@@ -39,11 +39,13 @@ class ToolLossReleaseTests {
         assertTrue(
                 released.isEmpty(),
                 "Поломка кирки не снимает шахту с духа: задание не возвращается на доску и не отдаётся другому "
-                        + "(владелец 05.11), снято " + released);
+                        + "(владелец 05.11), снято " + released
+                        + " Иначе тест apply_MineHolderLostPickaxe_KeepsTicketWithSpirit перестанет ловить эту поломку. При смене apply_MineHolderLostPickaxe_KeepsTicketWithSpirit проверь это утверждение.");
         assertEquals(
                 Optional.of(BoardStatus.ASSIGNED),
                 board.statusOf("first:build_mine"),
-                "Дух продолжает свою работу сам: берёт новую кирку или дорубает тем, что есть");
+                "Дух продолжает свою работу сам: берёт новую кирку или дорубает тем, что есть"
+                        + " Иначе тест apply_MineHolderLostPickaxe_KeepsTicketWithSpirit перестанет ловить эту поломку. При смене apply_MineHolderLostPickaxe_KeepsTicketWithSpirit проверь это утверждение.");
     }
 
     @Test
@@ -53,9 +55,15 @@ class ToolLossReleaseTests {
         List<ToolLossRelease.Released> released =
                 ToolLossRelease.apply(board, SPIRIT, List.of("minecraft:stone_pickaxe"), false);
 
-        assertTrue(released.isEmpty(), "С киркой шахта остаётся за духом, снято " + released);
+        assertTrue(
+                released.isEmpty(),
+                "С киркой шахта остаётся за духом, снято " + released
+                        + " Иначе тест apply_MineHolderWithPickaxe_Keeps перестанет ловить эту поломку. При смене apply_MineHolderWithPickaxe_Keeps проверь это утверждение.");
         assertEquals(
-                Optional.of(BoardStatus.ASSIGNED), board.statusOf("first:build_mine"), "Дух с киркой продолжает шахту");
+                Optional.of(BoardStatus.ASSIGNED),
+                board.statusOf("first:build_mine"),
+                "Дух с киркой продолжает шахту"
+                        + " Иначе тест apply_MineHolderWithPickaxe_Keeps перестанет ловить эту поломку. При смене apply_MineHolderWithPickaxe_Keeps проверь это утверждение.");
     }
 
     @Test
@@ -66,7 +74,8 @@ class ToolLossReleaseTests {
 
         assertTrue(
                 released.size() == 1 && released.get(0).reason().contains("замурован"),
-                "Замурованный без кирки отпускает задание с киркой и выбирается руками, снято " + released);
+                "Замурованный без кирки отпускает задание с киркой и выбирается руками, снято " + released
+                        + " Иначе тест apply_WalledInWithoutPickaxe_ReleasesWithEscapeReason перестанет ловить эту поломку. При смене apply_WalledInWithoutPickaxe_ReleasesWithEscapeReason проверь это утверждение.");
     }
 
     @Test
@@ -77,6 +86,7 @@ class ToolLossReleaseTests {
 
         assertTrue(
                 released.isEmpty(),
-                "Сбор бревна под первые деревянные инструменты идёт голыми руками: его не снимают, снято " + released);
+                "Сбор бревна под первые деревянные инструменты идёт голыми руками: его не снимают, снято " + released
+                        + " Иначе тест apply_BareHandsCaseWithoutTools_Keeps перестанет ловить эту поломку. При смене apply_BareHandsCaseWithoutTools_Keeps проверь это утверждение.");
     }
 }

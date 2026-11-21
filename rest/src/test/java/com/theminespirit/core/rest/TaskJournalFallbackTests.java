@@ -31,27 +31,53 @@ class TaskJournalFallbackTests {
                 response.status(),
                 "Тикет доски вне REST-реестра обязан находиться по журналу доски: chests:1 провалился и был "
                         + "убран с живой доски, но остался в источнике, а 404 «сервер перезапущен» врёт: "
-                        + response.body());
+                        + response.body()
+                        + " Иначе тест get_PrunedBoardTicket_ReturnsLastJournalCardInsteadOfLostTask перестанет ловить эту поломку. При смене get_PrunedBoardTicket_ReturnsLastJournalCardInsteadOfLostTask проверь это утверждение.");
         JsonNode task = MAPPER.readTree(response.body());
-        assertEquals("chests:1", task.get("id").asText(), "Ответ обязан назвать задание из журнала");
-        assertEquals("STOCK_CHESTS", task.get("case").asText(), "Ответ обязан назвать кейс из журнала");
-        assertEquals("FAILED", task.get("status").asText(), "Последний статус chests:1 в журнале — FAILED");
+        assertEquals(
+                "chests:1",
+                task.get("id").asText(),
+                "Ответ обязан назвать задание из журнала"
+                        + " Иначе тест get_PrunedBoardTicket_ReturnsLastJournalCardInsteadOfLostTask перестанет ловить эту поломку. При смене get_PrunedBoardTicket_ReturnsLastJournalCardInsteadOfLostTask проверь это утверждение.");
+        assertEquals(
+                "STOCK_CHESTS",
+                task.get("case").asText(),
+                "Ответ обязан назвать кейс из журнала"
+                        + " Иначе тест get_PrunedBoardTicket_ReturnsLastJournalCardInsteadOfLostTask перестанет ловить эту поломку. При смене get_PrunedBoardTicket_ReturnsLastJournalCardInsteadOfLostTask проверь это утверждение.");
+        assertEquals(
+                "FAILED",
+                task.get("status").asText(),
+                "Последний статус chests:1 в журнале — FAILED"
+                        + " Иначе тест get_PrunedBoardTicket_ReturnsLastJournalCardInsteadOfLostTask перестанет ловить эту поломку. При смене get_PrunedBoardTicket_ReturnsLastJournalCardInsteadOfLostTask проверь это утверждение.");
         assertEquals(
                 "c48663b4-da59-43d9-9804-81a680580300",
                 task.get("assignee").asText(),
-                "Ответ обязан назвать духа, провалившего chests:1 по журналу");
-        assertEquals(22543773L, task.get("finishedAt").asLong(), "Ответ обязан назвать тик провала из журнала");
-        assertTrue(!task.get("done").asBoolean(), "Проваленное задание не считается выполненным");
+                "Ответ обязан назвать духа, провалившего chests:1 по журналу"
+                        + " Иначе тест get_PrunedBoardTicket_ReturnsLastJournalCardInsteadOfLostTask перестанет ловить эту поломку. При смене get_PrunedBoardTicket_ReturnsLastJournalCardInsteadOfLostTask проверь это утверждение.");
+        assertEquals(
+                22543773L,
+                task.get("finishedAt").asLong(),
+                "Ответ обязан назвать тик провала из журнала"
+                        + " Иначе тест get_PrunedBoardTicket_ReturnsLastJournalCardInsteadOfLostTask перестанет ловить эту поломку. При смене get_PrunedBoardTicket_ReturnsLastJournalCardInsteadOfLostTask проверь это утверждение.");
+        assertTrue(
+                !task.get("done").asBoolean(),
+                "Проваленное задание не считается выполненным"
+                        + " Иначе тест get_PrunedBoardTicket_ReturnsLastJournalCardInsteadOfLostTask перестанет ловить эту поломку. При смене get_PrunedBoardTicket_ReturnsLastJournalCardInsteadOfLostTask проверь это утверждение.");
     }
 
     @Test
     void get_UnknownTicket_StillReportsLostTask() {
         RestResponse response = send(new FakeHistoryBoard(JOURNAL), "GET", "/v1/tasks/нет-такого");
 
-        assertEquals(404, response.status(), "Неизвестное задание обязано давать 404: " + response.body());
+        assertEquals(
+                404,
+                response.status(),
+                "Неизвестное задание обязано давать 404: " + response.body()
+                        + " Иначе тест get_UnknownTicket_StillReportsLostTask перестанет ловить эту поломку. При смене get_UnknownTicket_StillReportsLostTask проверь это утверждение.");
         assertTrue(
                 response.body().contains("\"code\":\"not_found\""),
-                "404 обязан нести код not_found: " + response.body());
+                "404 обязан нести код not_found: " + response.body()
+                        + " Иначе тест get_UnknownTicket_StillReportsLostTask перестанет ловить эту поломку. При смене get_UnknownTicket_StillReportsLostTask проверь это утверждение.");
     }
 
     private static RestResponse send(BoardGateway board, String method, String path) {

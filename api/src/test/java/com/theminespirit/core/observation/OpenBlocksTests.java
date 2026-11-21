@@ -26,7 +26,8 @@ class OpenBlocksTests {
         assertTrue(
                 OpenBlocks.isImportant(block),
                 block + " — руда, камень или бревно: стратег обязан видеть его открытую позицию, чтобы вести духа "
-                        + "к ближайшей руде или стволу, а не искать вслепую");
+                        + "к ближайшей руде или стволу, а не искать вслепую"
+                        + " Иначе тест isImportant_OreStoneOrLog_True перестанет ловить эту поломку. При смене isImportant_OreStoneOrLog_True проверь это утверждение.");
     }
 
     @ParameterizedTest
@@ -44,7 +45,8 @@ class OpenBlocksTests {
         assertFalse(
                 OpenBlocks.isImportant(block),
                 block + " не входит в руды, камень и брёвна: открытые позиции строений не должны тратить предел "
-                        + "наблюдения и подсказывать стратегу ломать постройки игрока");
+                        + "наблюдения и подсказывать стратегу ломать постройки игрока"
+                        + " Иначе тест isImportant_PlayerMadeOrUnlisted_False перестанет ловить эту поломку. При смене isImportant_PlayerMadeOrUnlisted_False проверь это утверждение.");
     }
 
     @Test
@@ -60,7 +62,8 @@ class OpenBlocksTests {
                 List.of(block("coal_ore", 1.0), block("oak_log", 2.0), block("deepslate", 5.0)),
                 kept,
                 "Предел наблюдения обязан оставлять ближайшие открытые блоки: ответ стратегу не должен расти "
-                        + "с каждой жилой в радиусе, но и терять ближайшую руду из-за дальней нельзя");
+                        + "с каждой жилой в радиусе, но и терять ближайшую руду из-за дальней нельзя"
+                        + " Иначе тест keepNearest_MoreThanLimit_KeepsNearestInDistanceOrder перестанет ловить эту поломку. При смене keepNearest_MoreThanLimit_KeepsNearestInDistanceOrder проверь это утверждение.");
     }
 
     @Test
@@ -77,7 +80,8 @@ class OpenBlocksTests {
                         open("stone", new BlockCoord(2, 64, 0), 2.0)),
                 kept,
                 "При равном расстоянии порядок задают имя и координаты: иначе один и тот же мир даёт разный "
-                        + "ответ и hash наблюдения при каждом скане");
+                        + "ответ и hash наблюдения при каждом скане"
+                        + " При смене keepNearest_SameDistance_SortsByItemAndPosition проверь это утверждение.");
     }
 
     @Test
@@ -89,7 +93,8 @@ class OpenBlocksTests {
                 List.of(),
                 kept,
                 "Предел 0 выключает сбор открытых блоков: сканы, которым позиции не нужны, не должны тратить "
-                        + "работу на их поиск");
+                        + "работу на их поиск"
+                        + " Иначе тест keepNearest_ZeroLimit_KeepsNothing перестанет ловить эту поломку. При смене keepNearest_ZeroLimit_KeepsNothing проверь это утверждение.");
     }
 
     private static OpenBlock block(String item, double distance) {

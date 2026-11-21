@@ -23,23 +23,32 @@ class CrossLeaseUndoScenarioTests {
 
         GraphPlan.Task inside = PlanCaseFacts.task(plan, taskId(pillar));
         GraphPlan.Task trip = PlanCaseFacts.task(plan, taskId(bridge));
-        assertTrue(inside.feasible(), "Брошенный столб в поселении обязан получить откат: " + plan.tasks());
+        assertTrue(
+                inside.feasible(),
+                "Брошенный столб в поселении обязан получить откат: " + plan.tasks()
+                        + " Иначе тест abandonedScaffold_InsideSettlement_RollsBackBeforeFarBridge перестанет ловить эту поломку. При смене abandonedScaffold_InsideSettlement_RollsBackBeforeFarBridge проверь это утверждение.");
         assertTrue(
                 inside.priority() > trip.priority(),
                 "Столб внутри поселения и на улице убирается раньше моста далеко в походе: " + inside.priority()
-                        + " против " + trip.priority());
-        assertTrue(inside.raised(), "Откат брошенной правки в поселении — поднятая работа: " + plan.tasks());
+                        + " против " + trip.priority()
+                        + " Иначе тест abandonedScaffold_InsideSettlement_RollsBackBeforeFarBridge перестанет ловить эту поломку. При смене abandonedScaffold_InsideSettlement_RollsBackBeforeFarBridge проверь это утверждение.");
+        assertTrue(
+                inside.raised(),
+                "Откат брошенной правки в поселении — поднятая работа: " + plan.tasks()
+                        + " Иначе тест abandonedScaffold_InsideSettlement_RollsBackBeforeFarBridge перестанет ловить эту поломку. При смене abandonedScaffold_InsideSettlement_RollsBackBeforeFarBridge проверь это утверждение.");
         assertTrue(
                 plan.tasks().stream()
                         .anyMatch(work -> !work.id().startsWith("event:undo_lease")
                                 && !CrossScene.life(work)
                                 && work.priority() >= inside.priority()),
                 "Откат брошенной правки в поселении не выше работ этапа: 11.11 откат впереди всех работ держал пять "
-                        + "духов 4 часа в откате без подхода, поселение стояло; " + plan.tasks());
+                        + "духов 4 часа в откате без подхода, поселение стояло; " + plan.tasks()
+                        + " Иначе тест abandonedScaffold_InsideSettlement_RollsBackBeforeFarBridge перестанет ловить эту поломку. При смене abandonedScaffold_InsideSettlement_RollsBackBeforeFarBridge проверь это утверждение.");
         assertEquals(
                 "undo:pillar-1#0,78,0:5",
                 inside.makes(),
-                "Узел отката несёт id аренды и ключ её состояния: исполнитель берёт id, граф — ключ повтора");
+                "Узел отката несёт id аренды и ключ её состояния: исполнитель берёт id, граф — ключ повтора"
+                        + " Иначе тест abandonedScaffold_InsideSettlement_RollsBackBeforeFarBridge перестанет ловить эту поломку. При смене abandonedScaffold_InsideSettlement_RollsBackBeforeFarBridge проверь это утверждение.");
     }
 
     @Test
@@ -51,11 +60,20 @@ class CrossLeaseUndoScenarioTests {
         GraphSiteFacts.Lease after = new GraphSiteFacts.Lease(
                 "pillar-1", "scaffold", SPIRIT, new GraphFacts.Position(0, 77, 0), 4, true, true, 4, 4);
 
-        assertEquals(GraphEvent.undoTaskId(before), GraphEvent.undoTaskId(same), "Та же аренда — то же задание");
+        assertEquals(
+                GraphEvent.undoTaskId(before),
+                GraphEvent.undoTaskId(same),
+                "Та же аренда — то же задание"
+                        + " Иначе тест undoTaskId_CarriesLeaseState_SoUnchangedFailureIsNotRetried перестанет ловить эту поломку. При смене undoTaskId_CarriesLeaseState_SoUnchangedFailureIsNotRetried проверь это утверждение.");
         assertFalse(
                 GraphEvent.undoTaskId(before).equals(GraphEvent.undoTaskId(after)),
-                "Откатанная клетка меняет ключ задания: только тогда граф вправе повторить откат");
-        assertEquals("pillar-1", GraphEvent.leaseId(GraphEvent.undoTaskId(after)), "Из ключа задания берут id аренды");
+                "Откатанная клетка меняет ключ задания: только тогда граф вправе повторить откат"
+                        + " Иначе тест undoTaskId_CarriesLeaseState_SoUnchangedFailureIsNotRetried перестанет ловить эту поломку. При смене undoTaskId_CarriesLeaseState_SoUnchangedFailureIsNotRetried проверь это утверждение.");
+        assertEquals(
+                "pillar-1",
+                GraphEvent.leaseId(GraphEvent.undoTaskId(after)),
+                "Из ключа задания берут id аренды"
+                        + " Иначе тест undoTaskId_CarriesLeaseState_SoUnchangedFailureIsNotRetried перестанет ловить эту поломку. При смене undoTaskId_CarriesLeaseState_SoUnchangedFailureIsNotRetried проверь это утверждение.");
     }
 
     @Test
@@ -68,12 +86,18 @@ class CrossLeaseUndoScenarioTests {
         assertFalse(
                 GraphEvent.undoTaskId(one).equals(GraphEvent.undoTaskId(two)),
                 "Ключ отката — отдельное поле аренды: тот же верх и число клеток при другом порядке обязаны "
-                        + "различаться");
+                        + "различаться"
+                        + " Иначе тест undoTaskId_UsesLeaseKey_SoOnlyRollbackChangeRetries перестанет ловить эту поломку. При смене undoTaskId_UsesLeaseKey_SoOnlyRollbackChangeRetries проверь это утверждение.");
         assertEquals(
                 "undo:pillar-1#aaa",
                 GraphEvent.undoTaskId(one),
-                "Билет несёт короткий id аренды и ключ, а не координаты с числом клеток");
-        assertEquals("pillar-1", GraphEvent.leaseId(GraphEvent.undoTaskId(one)), "id аренды читается из билета");
+                "Билет несёт короткий id аренды и ключ, а не координаты с числом клеток"
+                        + " Иначе тест undoTaskId_UsesLeaseKey_SoOnlyRollbackChangeRetries перестанет ловить эту поломку. При смене undoTaskId_UsesLeaseKey_SoOnlyRollbackChangeRetries проверь это утверждение.");
+        assertEquals(
+                "pillar-1",
+                GraphEvent.leaseId(GraphEvent.undoTaskId(one)),
+                "id аренды читается из билета"
+                        + " Иначе тест undoTaskId_UsesLeaseKey_SoOnlyRollbackChangeRetries перестанет ловить эту поломку. При смене undoTaskId_UsesLeaseKey_SoOnlyRollbackChangeRetries проверь это утверждение.");
     }
 
     @Test
@@ -87,16 +111,21 @@ class CrossLeaseUndoScenarioTests {
         GraphPlan plan = PlanCaseFacts.plan(blocked, facts(List.of(bridge)));
 
         GraphPlan.Task task = PlanCaseFacts.task(plan, node);
-        assertFalse(task.feasible(), "Без пути откат не выдаётся: дух не дойдёт до брошенного моста");
+        assertFalse(
+                task.feasible(),
+                "Без пути откат не выдаётся: дух не дойдёт до брошенного моста"
+                        + " При смене undoBlockedWithPath_AfterPathAppears_TaskIsIssuedAgain проверь это утверждение.");
         assertTrue(
                 task.blocked().contains("путь"),
                 "Блокировка отката обязана называть нужду (путь): иначе граф не знает, что снимать; получено '"
-                        + task.blocked() + "'");
+                        + task.blocked() + "'"
+                        + " При смене undoBlockedWithPath_AfterPathAppears_TaskIsIssuedAgain проверь это утверждение.");
 
         GraphPlan again = PlanCaseFacts.plan(GraphWorld.settled(), facts(List.of(bridge)));
         assertTrue(
                 PlanCaseFacts.posted(again, node),
-                "После появления пути задание отката выдаётся снова: " + again.tasks());
+                "После появления пути задание отката выдаётся снова: " + again.tasks()
+                        + " Иначе тест undoBlockedWithPath_AfterPathAppears_TaskIsIssuedAgain перестанет ловить эту поломку. При смене undoBlockedWithPath_AfterPathAppears_TaskIsIssuedAgain проверь это утверждение.");
     }
 
     @Test
@@ -114,7 +143,8 @@ class CrossLeaseUndoScenarioTests {
                 PlanCaseFacts.task(plan, taskId(pillar)).priority()
                         > PlanCaseFacts.task(plan, "event:demolish_stray:demolish_stray")
                                 .priority(),
-                "Откат брошенной правки в поселении важнее новой уборки чужого мусора: " + plan.tasks());
+                "Откат брошенной правки в поселении важнее новой уборки чужого мусора: " + plan.tasks()
+                        + " Иначе тест settlementUndo_ComparedToDemolitionWork_GoesFirst перестанет ловить эту поломку. При смене settlementUndo_ComparedToDemolitionWork_GoesFirst проверь это утверждение.");
     }
 
     private static String taskId(GraphSiteFacts.Lease lease) {

@@ -41,7 +41,8 @@ class BoardModuleGuardTests {
         assertTrue(
                 Files.isDirectory(MAIN.resolve(PACKAGE).resolve("core/board")),
                 "Доска не собрана отдельным модулем: board/src/main/java/com/theminespirit/core/board "
-                        + "отсутствует. Как надо: исходники доски физически в :board, пакет прежний.");
+                        + "отсутствует. Как надо: исходники доски физически в :board, пакет прежний."
+                        + " Иначе тест boardSources_LiveInBoardModule_NotInRoot перестанет ловить эту поломку. При смене boardSources_LiveInBoardModule_NotInRoot проверь это утверждение.");
         List<String> misplaced = new ArrayList<>();
         for (String logical : List.of(
                 "core/board/Board.java",
@@ -67,17 +68,20 @@ class BoardModuleGuardTests {
                 List.of(),
                 misplaced,
                 "Классы доски обязаны лежать в :board (кроме контрактов :api): иначе правка доски снова гоняет "
-                        + "все тесты корня, а модуль не собирается сам. Нарушители:");
+                        + "все тесты корня, а модуль не собирается сам. Нарушители:"
+                        + " При смене boardSources_LiveInBoardModule_NotInRoot проверь это утверждение.");
     }
 
     @Test
     void boardTests_LiveInBoardModule_LocalTestsExist() {
         assertTrue(
                 Files.isDirectory(TEST.resolve(PACKAGE).resolve("core/board")),
-                "У :board нет своих тестов (board/src/test/java): перенос тестов молча отключил проверки доски.");
+                "У :board нет своих тестов (board/src/test/java): перенос тестов молча отключил проверки доски."
+                        + " Иначе тест boardTests_LiveInBoardModule_LocalTestsExist перестанет ловить эту поломку. При смене boardTests_LiveInBoardModule_LocalTestsExist проверь это утверждение.");
         assertTrue(
                 Files.isRegularFile(TEST.resolve(PACKAGE).resolve("core/board/BoardRequireTests.java")),
-                "Тест BoardRequireTests обязан переехать в :board: иначе ./gradlew :board:test проверяет не доску.");
+                "Тест BoardRequireTests обязан переехать в :board: иначе ./gradlew :board:test проверяет не доску."
+                        + " При смене boardTests_LiveInBoardModule_LocalTestsExist проверь это утверждение.");
     }
 
     @Test
@@ -90,7 +94,8 @@ class BoardModuleGuardTests {
                 violations(SourceFiles.javaUnder(MAIN.resolve(PACKAGE)), apiClasses, visible),
                 "Доска зависит только от :api и механик, которые сама объявила в build.gradle: импорт корня "
                         + "(script/reload/neoforge) возвращает цикл и запрещает отдельную сборку :board. Как надо: "
-                        + "контракт — в :api, данные и действие — у владельца. Нарушители:");
+                        + "контракт — в :api, данные и действие — у владельца. Нарушители:"
+                        + " Иначе тест boardModule_Imports_OnlyApiAndDeclaredMechanics перестанет ловить эту поломку. При смене boardModule_Imports_OnlyApiAndDeclaredMechanics проверь это утверждение.");
     }
 
     @Test
@@ -104,6 +109,7 @@ class BoardModuleGuardTests {
                 List.of(),
                 violations(SourceFiles.javaUnder(TEST.resolve(PACKAGE)), apiClasses, visible),
                 "Тест доски компилируется только с :api, своими и объявленными модулями: импорт корня в тесте "
-                        + "скрывает, что :board без корня не собрать. Нарушители:");
+                        + "скрывает, что :board без корня не собрать. Нарушители:"
+                        + " Иначе тест boardTests_Imports_OnlyApiAndDeclaredMechanics перестанет ловить эту поломку. При смене boardTests_Imports_OnlyApiAndDeclaredMechanics проверь это утверждение.");
     }
 }

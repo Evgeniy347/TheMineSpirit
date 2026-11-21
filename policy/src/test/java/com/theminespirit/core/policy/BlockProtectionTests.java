@@ -181,7 +181,7 @@ class BlockProtectionTests {
                     refused.policy(),
                     "Строка «" + name + "»: порядок правил — чёрный список, зона, игрок, здание, иначе отказ "
                             + "называет не ту причину. Причина: " + refused.reason()
-                            + ". При смене порядка сверь PolicyId");
+                            + ". При смене порядка проверь PolicyId");
         }
     }
 
@@ -229,7 +229,7 @@ class BlockProtectionTests {
                 new BlockProtection.Allowed(),
                 protection.checkSettlement("minecraft:jungle_fence", false),
                 "Старая ограда на участке поселения убирается выравниванием: чёрный список заборов её держал, и ящик "
-                        + "проваливался «защищено: 22» (INC-71). При смене checkSettlement проверь старый забор");
+                        + "проваливался «защищено: 22» (INC-71), иначе выравнивание снова встанет. При смене checkSettlement проверь старый забор");
         assertInstanceOf(
                 BlockProtection.Refused.class,
                 protection.checkSettlement("minecraft:chest", false),
@@ -249,7 +249,7 @@ class BlockProtectionTests {
                     protection.denyPatterns().contains("minecraft:" + exact),
                     "protection.json → deny не повторяет точный id '" + exact
                             + "' из GatherPolicy: дубль разъедется при правке одного из списков, и защита "
-                            + "начнёт противоречить сама себе. При смене списков проверь отсутствие пересечения");
+                            + "начнёт противоречить сама себе и сломается. При смене списков проверь отсутствие пересечения");
         }
     }
 }

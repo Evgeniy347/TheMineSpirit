@@ -36,7 +36,8 @@ class MiningTablesReloadTests {
                     -40,
                     DescentData.loadDefault().targetY(),
                     "После /reload потребитель обязан видеть новый целевой этаж: иначе датапак мира не поменяет "
-                            + "спуск без перезапуска, а таблица числится горячей ложно");
+                            + "спуск без перезапуска, а таблица числится горячей ложно"
+                            + " При смене descent_ReloadedJson_ConsumerReadsNewTargetY проверь это утверждение.");
         } finally {
             DescentData.useSource(original);
         }
@@ -60,7 +61,8 @@ class MiningTablesReloadTests {
                     5,
                     DescentLevels.loadDefault().widenWidth(),
                     "После /reload потребитель обязан видеть новую ширину расширения: иначе датапак мира не "
-                            + "поменяет шахту без перезапуска, а таблица числится горячей ложно");
+                            + "поменяет шахту без перезапуска, а таблица числится горячей ложно"
+                            + " При смене descentLevels_ReloadedJson_ConsumerReadsNewWidenWidth проверь это утверждение.");
         } finally {
             DescentLevels.useSource(original);
         }
@@ -71,23 +73,28 @@ class MiningTablesReloadTests {
         assertSame(
                 DataTables.INSTANCE.warehouseCategories().current(),
                 WarehouseCategories.current(),
-                "Раскладка склада обязана читать держатель: иначе /reload не поменяет категории без перезапуска");
+                "Раскладка склада обязана читать держатель: иначе /reload не поменяет категории без перезапуска"
+                        + " При смене inventoryAndLootTables_LiveReload_ReadBoundHolders проверь это утверждение.");
         assertSame(
                 DataTables.INSTANCE.kitFor().current(),
                 KitFor.load(),
-                "Наборы по деятельностям обязаны читать держатель: иначе /reload не поменяет их без перезапуска");
+                "Наборы по деятельностям обязаны читать держатель: иначе /reload не поменяет их без перезапуска"
+                        + " При смене inventoryAndLootTables_LiveReload_ReadBoundHolders проверь это утверждение.");
         assertSame(
                 DataTables.INSTANCE.drops().current(),
                 DropTable.shared(),
-                "Таблица дропов обязана читать держатель: иначе /reload не поменяет добычу без перезапуска");
+                "Таблица дропов обязана читать держатель: иначе /reload не поменяет добычу без перезапуска"
+                        + " При смене inventoryAndLootTables_LiveReload_ReadBoundHolders проверь это утверждение.");
         assertSame(
                 DataTables.INSTANCE.descent().current(),
                 DescentData.loadDefault(),
-                "Спуск обязан читать держатель: иначе /reload не поменяет целей этаж без перезапуска");
+                "Спуск обязан читать держатель: иначе /reload не поменяет целей этаж без перезапуска"
+                        + " При смене inventoryAndLootTables_LiveReload_ReadBoundHolders проверь это утверждение.");
         assertSame(
                 DataTables.INSTANCE.descentLevels().current(),
                 DescentLevels.loadDefault(),
-                "Уровни спуска обязаны читать держатель: иначе /reload не поменяет ширину шахты без перезапуска");
+                "Уровни спуска обязаны читать держатель: иначе /reload не поменяет ширину шахты без перезапуска"
+                        + " При смене inventoryAndLootTables_LiveReload_ReadBoundHolders проверь это утверждение.");
     }
 
     @SuppressWarnings("unchecked")

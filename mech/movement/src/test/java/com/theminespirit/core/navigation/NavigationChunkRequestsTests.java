@@ -21,13 +21,17 @@ class NavigationChunkRequestsTests {
 
         assertTrue(
                 chunks.contains(new Chunk(-171 >> 4, -489 >> 4)),
-                "Коридор начинается с чанка духа: иначе расчёт не начнётся с известного места");
+                "Коридор начинается с чанка духа: иначе расчёт не начнётся с известного места"
+                        + " При смене corridor_FromSettlementToFarQuarry_CoversChunksWithoutGaps проверь это утверждение.");
         assertTrue(
                 chunks.contains(new Chunk(-82 >> 4, -87 >> 4)),
                 "observe22: цель (-82,67,-87) в 430 блоках — её чанк обязан быть в коридоре, иначе путь снова "
-                        + "«не найден» по кругу");
+                        + "«не найден» по кругу"
+                        + " При смене corridor_FromSettlementToFarQuarry_CoversChunksWithoutGaps проверь это утверждение.");
         assertTrue(
-                chunks.size() >= 25, "На 430 блоках коридор проходит не меньше 27 чанков, получено " + chunks.size());
+                chunks.size() >= 25,
+                "На 430 блоках коридор проходит не меньше 27 чанков, получено " + chunks.size()
+                        + " Иначе тест corridor_FromSettlementToFarQuarry_CoversChunksWithoutGaps перестанет ловить эту поломку. При смене corridor_FromSettlementToFarQuarry_CoversChunksWithoutGaps проверь это утверждение.");
     }
 
     @Test
@@ -38,7 +42,10 @@ class NavigationChunkRequestsTests {
         List<Chunk> chosen = requests.next(0, missing, 0);
 
         assertEquals(
-                PER_TRIP, chosen.size(), "За один расчёт грузят не больше бюджета похода: диск сервера не резиновый");
+                PER_TRIP,
+                chosen.size(),
+                "За один расчёт грузят не больше бюджета похода: диск сервера не резиновый"
+                        + " Иначе тест next_MoreMissingThanBudget_TakesOnlyPerTrip перестанет ловить эту поломку. При смене next_MoreMissingThanBudget_TakesOnlyPerTrip проверь это утверждение.");
     }
 
     @Test
@@ -49,9 +56,19 @@ class NavigationChunkRequestsTests {
         List<Chunk> second = requests.next(1, chunks(20), first.size());
         List<Chunk> third = requests.next(19, chunks(20), first.size() + second.size());
 
-        assertEquals(PER_SECOND, first.size(), "В первую секунду грузят ровно бюджет секунды");
-        assertTrue(second.isEmpty(), "Во второй вызов той же секунды новых тикетов нет: бюджет исчерпан");
-        assertTrue(third.isEmpty(), "До конца секунды бюджет не обновляется");
+        assertEquals(
+                PER_SECOND,
+                first.size(),
+                "В первую секунду грузят ровно бюджет секунды"
+                        + " Иначе тест next_RepeatedCallsInSecond_RespectPerSecond перестанет ловить эту поломку. При смене next_RepeatedCallsInSecond_RespectPerSecond проверь это утверждение.");
+        assertTrue(
+                second.isEmpty(),
+                "Во второй вызов той же секунды новых тикетов нет: бюджет исчерпан"
+                        + " Иначе тест next_RepeatedCallsInSecond_RespectPerSecond перестанет ловить эту поломку. При смене next_RepeatedCallsInSecond_RespectPerSecond проверь это утверждение.");
+        assertTrue(
+                third.isEmpty(),
+                "До конца секунды бюджет не обновляется"
+                        + " Иначе тест next_RepeatedCallsInSecond_RespectPerSecond перестанет ловить эту поломку. При смене next_RepeatedCallsInSecond_RespectPerSecond проверь это утверждение.");
     }
 
     @Test
@@ -61,7 +78,11 @@ class NavigationChunkRequestsTests {
 
         List<Chunk> next = requests.next(NavigationChunkRequests.WINDOW_TICKS, chunks(20), PER_SECOND);
 
-        assertEquals(PER_SECOND, next.size(), "Через секунду бюджет загрузки снова полон: поход продолжается");
+        assertEquals(
+                PER_SECOND,
+                next.size(),
+                "Через секунду бюджет загрузки снова полон: поход продолжается"
+                        + " Иначе тест next_NewSecond_BudgetRestored перестанет ловить эту поломку. При смене next_NewSecond_BudgetRestored проверь это утверждение.");
     }
 
     @Test
@@ -72,7 +93,8 @@ class NavigationChunkRequestsTests {
 
         assertTrue(
                 chosen.isEmpty(),
-                "Тикеты прошлых шагов похода входят в бюджет: повторная загрузка того же коридора запрещена");
+                "Тикеты прошлых шагов похода входят в бюджет: повторная загрузка того же коридора запрещена"
+                        + " Иначе тест next_AlreadyHeld_CountsAgainstTripBudget перестанет ловить эту поломку. При смене next_AlreadyHeld_CountsAgainstTripBudget проверь это утверждение.");
     }
 
     @Test
@@ -86,7 +108,8 @@ class NavigationChunkRequestsTests {
                 List.of(new Chunk(1, 0), new Chunk(3, 0), new Chunk(4, 0)),
                 fresh,
                 "Чанки, на которые поход уже взял тикет, не запрашиваются снова: иначе бюджет тратится впустую "
-                        + "и коридор дальше не грузится (живая проверка observe22)");
+                        + "и коридор дальше не грузится (живая проверка observe22)"
+                        + " При смене fresh_AlreadyHeldByTrip_Skipped проверь это утверждение.");
     }
 
     private static List<Chunk> chunks(int count) {

@@ -25,7 +25,8 @@ class EvergreenRulesTests {
 
         assertTrue(
                 EvergreenRules.issuedTo(assigned, SPIRIT_A, HUNGRY, FREE),
-                "Адресное задание голодному духу-владельцу выдаётся: он применим и это его задание");
+                "Адресное задание голодному духу-владельцу выдаётся: он применим и это его задание"
+                        + " Иначе тест issuedTo_AssignedApplicableSpirit_Issued перестанет ловить эту поломку. При смене issuedTo_AssignedApplicableSpirit_Issued проверь это утверждение.");
     }
 
     @Test
@@ -34,7 +35,8 @@ class EvergreenRulesTests {
 
         assertFalse(
                 EvergreenRules.issuedTo(assigned, SPIRIT_B, HUNGRY, FREE),
-                "Адресное задание чужому духу не выдаётся: владелец назван, подменять его нельзя");
+                "Адресное задание чужому духу не выдаётся: владелец назван, подменять его нельзя"
+                        + " Иначе тест issuedTo_AssignedOtherSpirit_NotIssued перестанет ловить эту поломку. При смене issuedTo_AssignedOtherSpirit_NotIssued проверь это утверждение.");
     }
 
     @Test
@@ -44,7 +46,8 @@ class EvergreenRulesTests {
         assertTrue(
                 EvergreenRules.issuedTo(open, SPIRIT_B, HUNGRY, FREE),
                 "Задание без владельца доступно любому применимому духу: другой свободный дух "
-                        + "берёт его, когда назначенный не применим");
+                        + "берёт его, когда назначенный не применим"
+                        + " Иначе тест issuedTo_UnassignedSpirit_Available перестанет ловить эту поломку. При смене issuedTo_UnassignedSpirit_Available проверь это утверждение.");
     }
 
     @Test
@@ -54,7 +57,8 @@ class EvergreenRulesTests {
         assertFalse(
                 EvergreenRules.issuedTo(assigned, SPIRIT_A, FULL, FREE),
                 "Сытого владельца задание не получает: задание остаётся на доске, но этот дух "
-                        + "его не берёт — ждёт применимого или снятия адреса");
+                        + "его не берёт — ждёт применимого или снятия адреса"
+                        + " Иначе тест issuedTo_AssignedFullSpirit_NotIssued перестанет ловить эту поломку. При смене issuedTo_AssignedFullSpirit_NotIssued проверь это утверждение.");
     }
 
     @Test
@@ -64,11 +68,13 @@ class EvergreenRulesTests {
         assertThrows(
                 NullPointerException.class,
                 () -> EvergreenRules.issuedTo(null, SPIRIT_A, HUNGRY, FREE),
-                "Задание null обязано отвергаться: выдавать нечего");
+                "Задание null обязано отвергаться: выдавать нечего"
+                        + " Иначе тест issuedTo_NullArgs_AreRejected перестанет ловить эту поломку. При смене issuedTo_NullArgs_AreRejected проверь это утверждение.");
         assertThrows(
                 NullPointerException.class,
                 () -> EvergreenRules.issuedTo(assigned, null, HUNGRY, FREE),
-                "Дух null обязан отвергаться: выдача идёт конкретному духу");
+                "Дух null обязан отвергаться: выдача идёт конкретному духу"
+                        + " Иначе тест issuedTo_NullArgs_AreRejected перестанет ловить эту поломку. При смене issuedTo_NullArgs_AreRejected проверь это утверждение.");
     }
 
     private static BoardTicket ticket(String id, BoardCase boardCase, Optional<UUID> assignee) {

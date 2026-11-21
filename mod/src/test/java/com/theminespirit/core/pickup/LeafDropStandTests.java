@@ -21,7 +21,8 @@ class LeafDropStandTests {
                 Optional.of(new BlockCoord(5, 0, 7)),
                 LeafDropStand.of(LEAF, ground),
                 "Цель сбора саженцев под гниющей листвой — стоянка на земле под ней, а не клетка листвы: goto в полог "
-                        + "невыполним, дух застревает в петле переносов и задание уходит в BLOCKED");
+                        + "невыполним, дух застревает в петле переносов и задание уходит в BLOCKED"
+                        + " Иначе тест of_LeafAboveGround_TargetIsGroundUnderLeaf перестанет ловить эту поломку. При смене of_LeafAboveGround_TargetIsGroundUnderLeaf проверь это утверждение.");
     }
 
     @Test
@@ -31,7 +32,8 @@ class LeafDropStandTests {
         assertEquals(
                 Optional.of(new BlockCoord(4, 0, 7)),
                 LeafDropStand.of(LEAF, ground),
-                "Если под листвой стоит ствол или куст, цель — ближайшая свободная стоянка рядом: дух не встаёт в блок");
+                "Если под листвой стоит ствол или куст, цель — ближайшая свободная стоянка рядом: дух не встаёт в блок"
+                        + " Иначе тест of_LeafColumnOccupied_NearestGroundColumn перестанет ловить эту поломку. При смене of_LeafColumnOccupied_NearestGroundColumn проверь это утверждение.");
     }
 
     @Test
@@ -42,7 +44,8 @@ class LeafDropStandTests {
                 Optional.empty(),
                 LeafDropStand.of(LEAF, ground),
                 "Нет земли в радиусе — цели нет, событие не ставит задание: иначе снова появляется недостижимый "
-                        + "goto в полог и петля переносов");
+                        + "goto в полог и петля переносов"
+                        + " При смене of_NoGroundWithinRadius_Empty проверь это утверждение.");
     }
 
     private static WorkStand.Ground ground(int feet, Set<BlockCoord> occupied) {

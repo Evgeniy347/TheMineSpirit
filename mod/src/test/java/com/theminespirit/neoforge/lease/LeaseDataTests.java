@@ -43,11 +43,13 @@ class LeaseDataTests {
                 loaded.book().all(),
                 "Аренды обязаны пережить перезапуск клетка в клетку: иначе брошенные подмости и мосты исчезнут "
                         + "из скана, а действующие потеряют владельца; в NBT "
-                        + loaded.book().all());
+                        + loaded.book().all()
+                        + " При смене saveLoad_AllCellKindsAndNullOwners_SurviveRestart проверь это утверждение.");
         assertTrue(
                 loaded.migrated(),
                 "Признак миграции старых T-меток обязан пережить перезапуск: иначе они мигрируют снова и "
-                        + "перезапишут аренду legacy");
+                        + "перезапишут аренду legacy"
+                        + " При смене saveLoad_AllCellKindsAndNullOwners_SurviveRestart проверь это утверждение.");
     }
 
     @Test
@@ -66,13 +68,15 @@ class LeaseDataTests {
         assertTrue(
                 restored.spirit() == null && restored.ticket() == null,
                 "Старая запись без владельца и тикета читается как брошенная аренда: пустые поля — это null, "
-                        + "а не выдуманный дух; получено " + restored.spirit() + " / " + restored.ticket());
+                        + "а не выдуманный дух; получено " + restored.spirit() + " / " + restored.ticket()
+                        + " Иначе тест load_MissingOptionalFields_ReadsOlderRecord перестанет ловить эту поломку. При смене load_MissingOptionalFields_ReadsOlderRecord проверь это утверждение.");
         assertTrue(
                 restored.cells().get(0).before() == null
                         && restored.cells().get(0).after() == null,
                 "Старая клетка без прежнего и нового блока читается без подстановки: иначе откат сочтёт, что "
                         + "помнит состояние, и поставит воздух; получено "
-                        + restored.cells().get(0));
+                        + restored.cells().get(0)
+                        + " При смене load_MissingOptionalFields_ReadsOlderRecord проверь это утверждение.");
     }
 
     @Test
@@ -83,12 +87,14 @@ class LeaseDataTests {
         IllegalStateException refusal = assertThrows(
                 IllegalStateException.class,
                 () -> LeaseData.load(saved, null),
-                "Неизвестный статус аренды обязан останавливать загрузку, а не подставлять ACTIVE");
+                "Неизвестный статус аренды обязан останавливать загрузку, а не подставлять ACTIVE"
+                        + " Иначе тест load_UnknownStatus_NamesFileAndValue перестанет ловить эту поломку. При смене load_UnknownStatus_NamesFileAndValue проверь это утверждение.");
         assertTrue(
                 refusal.getMessage().contains("TELEPORTED")
                         && refusal.getMessage().contains("theminespirit_leases.dat"),
                 "Неизвестный статус аренды обязан назвать значение и файл сохранения: иначе скан не поймёт, "
-                        + "трогать ли клетки, а игрок не найдёт, что править; получено: " + refusal.getMessage());
+                        + "трогать ли клетки, а игрок не найдёт, что править; получено: " + refusal.getMessage()
+                        + " При смене load_UnknownStatus_NamesFileAndValue проверь это утверждение.");
     }
 
     @Test
@@ -99,11 +105,13 @@ class LeaseDataTests {
         IllegalStateException refusal = assertThrows(
                 IllegalStateException.class,
                 () -> LeaseData.load(saved, null),
-                "Неверный uuid владельца обязан останавливать загрузку, а не терять аренду молча");
+                "Неверный uuid владельца обязан останавливать загрузку, а не терять аренду молча"
+                        + " Иначе тест load_BrokenSpiritUuid_NamesFileAndValue перестанет ловить эту поломку. При смене load_BrokenSpiritUuid_NamesFileAndValue проверь это утверждение.");
         assertTrue(
                 refusal.getMessage().contains("не-uuid") && refusal.getMessage().contains("theminespirit_leases.dat"),
                 "Неверный uuid владельца обязан назвать значение и файл: иначе владельца не восстановить, а "
-                        + "сообщение не подскажет, где чинить; получено: " + refusal.getMessage());
+                        + "сообщение не подскажет, где чинить; получено: " + refusal.getMessage()
+                        + " При смене load_BrokenSpiritUuid_NamesFileAndValue проверь это утверждение.");
     }
 
     @Test
@@ -114,12 +122,14 @@ class LeaseDataTests {
         IllegalStateException refusal = assertThrows(
                 IllegalStateException.class,
                 () -> LeaseData.load(saved, null),
-                "Неизвестный вид клетки обязан останавливать загрузку: откат без него не знает, что делать");
+                "Неизвестный вид клетки обязан останавливать загрузку: откат без него не знает, что делать"
+                        + " Иначе тест load_UnknownCellKind_NamesFileAndValue перестанет ловить эту поломку. При смене load_UnknownCellKind_NamesFileAndValue проверь это утверждение.");
         assertTrue(
                 refusal.getMessage().contains("FLOATING")
                         && refusal.getMessage().contains("theminespirit_leases.dat"),
                 "Неизвестный вид правки клетки обязан назвать значение и файл: откат не поймёт, что делать с "
-                        + "блоком; получено: " + refusal.getMessage());
+                        + "блоком; получено: " + refusal.getMessage()
+                        + " Иначе тест load_UnknownCellKind_NamesFileAndValue перестанет ловить эту поломку. При смене load_UnknownCellKind_NamesFileAndValue проверь это утверждение.");
     }
 
     private static CompoundTag roundTripTag() {

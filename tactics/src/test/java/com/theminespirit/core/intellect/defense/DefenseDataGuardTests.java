@@ -25,7 +25,8 @@ class DefenseDataGuardTests {
 
         assertTrue(
                 !json.isBlank(),
-                "priorities.json пуст: оборона останется без таблицы приоритетов, и цели выберутся случайно");
+                "priorities.json пуст: оборона останется без таблицы приоритетов, и цели выберутся случайно"
+                        + " Иначе тест prioritiesFile_NonEmpty_HasContent перестанет ловить эту поломку. При смене prioritiesFile_NonEmpty_HasContent проверь это утверждение.");
     }
 
     @Test
@@ -36,17 +37,20 @@ class DefenseDataGuardTests {
                 List.of(TargetClass.CREEPER, TargetClass.SKELETON, TargetClass.RANGED, TargetClass.MELEE),
                 profile.orderFor(DefenderRole.ARCHER, true),
                 "Порядок лучника из постановки: крипер, скелет, дальние, ближние. Смена порядка — решение "
-                        + "владельца: иначе лучник бьёт ближнего вместо крипера");
+                        + "владельца: иначе лучник бьёт ближнего вместо крипера"
+                        + " При смене prioritiesData_ArcherOrder_MatchesOwnerSpec проверь это утверждение.");
         assertEquals(
                 List.of(TargetClass.MELEE, TargetClass.RANGED),
                 profile.orderFor(DefenderRole.MELEE, true),
                 "Порядок мечника из постановки: ближние, дальние. Смена порядка — решение владельца: иначе "
-                        + "мечник подойдёт к взрыву вместо лучника");
+                        + "мечник подойдёт к взрыву вместо лучника"
+                        + " При смене prioritiesData_ArcherOrder_MatchesOwnerSpec проверь это утверждение.");
         assertEquals(
                 List.of(TargetClass.SKELETON, TargetClass.MELEE, TargetClass.RANGED),
                 profile.orderFor(DefenderRole.MELEE, false),
                 "Порядок мечника без лучника из постановки: скелет, ближние, дальние. Смена порядка — решение "
-                        + "владельца: иначе обстрел останется без ответа");
+                        + "владельца: иначе обстрел останется без ответа"
+                        + " При смене prioritiesData_ArcherOrder_MatchesOwnerSpec проверь это утверждение.");
     }
 
     @Test
@@ -62,7 +66,8 @@ class DefenseDataGuardTests {
                 List.of(),
                 silent,
                 "Каждый тип из enemies.json обязан иметь явный класс в priorities.json: иначе новый враг молча "
-                        + "упадёт в fallback, и его приоритет никто не перепроверит. Без класса");
+                        + "упадёт в fallback, и его приоритет никто не перепроверит. Без класса"
+                        + " При смене prioritiesData_EveryEnemyType_HasExplicitClass проверь это утверждение.");
     }
 
     @Test
@@ -71,12 +76,14 @@ class DefenseDataGuardTests {
 
         assertTrue(
                 !names.isEmpty(),
-                "Сторож не нашёл классов в priorities.json: смена схемы молча делает его зелёным на пустом списке");
+                "Сторож не нашёл классов в priorities.json: смена схемы молча делает его зелёным на пустом списке"
+                        + " Иначе тест prioritiesData_PriorityClasses_AllReal перестанет ловить эту поломку. При смене prioritiesData_PriorityClasses_AllReal проверь это утверждение.");
         assertEquals(
                 List.of(),
                 unknownClasses(names),
                 "Каждый класс в списках приоритета — реальный TargetClass: иначе опечатка даст цели чужой "
-                        + "приоритет. Неизвестные");
+                        + "приоритет. Неизвестные"
+                        + " При смене prioritiesData_PriorityClasses_AllReal проверь это утверждение.");
     }
 
     @Test
@@ -87,7 +94,8 @@ class DefenseDataGuardTests {
         assertEquals(
                 List.of("minecraft:creeper"),
                 silent,
-                "Сторож ослеп: тип без явного класса обязан попадать в список молчаливых");
+                "Сторож ослеп: тип без явного класса обязан попадать в список молчаливых"
+                        + " Иначе тест missingExplicit_TypeWithoutClass_IsReported перестанет ловить эту поломку. При смене missingExplicit_TypeWithoutClass_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -95,7 +103,8 @@ class DefenseDataGuardTests {
         assertEquals(
                 List.of(),
                 missingExplicit(Set.of("minecraft:zombie"), Map.of("minecraft:zombie", TargetClass.MELEE)),
-                "Сторож ложно срабатывает: накрытые типы не молчаливые");
+                "Сторож ложно срабатывает: накрытые типы не молчаливые"
+                        + " Иначе тест missingExplicit_AllTypesCovered_ReportsNothing перестанет ловить эту поломку. При смене missingExplicit_AllTypesCovered_ReportsNothing проверь это утверждение.");
     }
 
     @Test
@@ -103,7 +112,8 @@ class DefenseDataGuardTests {
         assertEquals(
                 List.of("BOSS"),
                 unknownClasses(List.of("MELEE", "BOSS")),
-                "Сторож ослеп: имя мимо TargetClass обязано находиться");
+                "Сторож ослеп: имя мимо TargetClass обязано находиться"
+                        + " Иначе тест unknownClasses_BadName_IsReported перестанет ловить эту поломку. При смене unknownClasses_BadName_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -111,7 +121,8 @@ class DefenseDataGuardTests {
         assertEquals(
                 List.of(),
                 unknownClasses(List.of("MELEE", "CREEPER")),
-                "Сторож ложно срабатывает: реальные классы не нарушения");
+                "Сторож ложно срабатывает: реальные классы не нарушения"
+                        + " Иначе тест unknownClasses_AllReal_ReportsNothing перестанет ловить эту поломку. При смене unknownClasses_AllReal_ReportsNothing проверь это утверждение.");
     }
 
     static List<String> missingExplicit(Set<String> enemyTypes, Map<String, TargetClass> classes) {

@@ -26,7 +26,8 @@ class ArchitectureGuardTests {
     void core_Dependencies_NothingFromMinecraftOrNeoForge() {
         assertTrue(
                 PRODUCTION.contain("com.theminespirit.core.observation.BlockCoord"),
-                "Сторож не нашёл классы core: переименование пакета молча делает сторож зелёным на нуле классов");
+                "Сторож не нашёл классы core: переименование пакета молча делает сторож зелёным на нуле классов"
+                        + " Иначе тест core_Dependencies_NothingFromMinecraftOrNeoForge перестанет ловить эту поломку. При смене core_Dependencies_NothingFromMinecraftOrNeoForge проверь это утверждение.");
         forbid(
                         "com.theminespirit.core..",
                         GAME_PACKAGES,
@@ -72,7 +73,8 @@ class ArchitectureGuardTests {
         assertTrue(
                 result.hasViolation() && result.getFailureReport().toString().contains("java.net.http.HttpClient"),
                 "Сторож ослеп: класс с зависимостью от java.net.http обязан попасть в нарушители: "
-                        + result.getFailureReport());
+                        + result.getFailureReport()
+                        + " Иначе тест dependencyRule_ForbiddenImport_IsReported перестанет ловить эту поломку. При смене dependencyRule_ForbiddenImport_IsReported проверь это утверждение.");
     }
 
     private static ArchRule forbid(String from, String[] forbidden, String reason) {

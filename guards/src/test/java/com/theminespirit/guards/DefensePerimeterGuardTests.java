@@ -62,7 +62,8 @@ class DefensePerimeterGuardTests {
                 problems,
                 "Оборонная схема: в линии периметра на земле — только забор, калитка или стена (1,5 блока). Бревно "
                         + "высотой 1 перепрыгивается, и ограда проходима (INC-53). Как надо: столб — забор, факел "
-                        + "держится на заборе");
+                        + "держится на заборе"
+                        + " Иначе тест defenseSchemes_PerimeterLine_OnlyFenceHigh перестанет ловить эту поломку. При смене defenseSchemes_PerimeterLine_OnlyFenceHigh проверь это утверждение.");
     }
 
     @Test
@@ -81,7 +82,8 @@ class DefensePerimeterGuardTests {
         assertEquals(
                 List.of("minecraft:oak_log@1,0"),
                 lowBlocks(schematic),
-                "Шаблон сторожа: бревно в линии забора обязано попасть в отчёт, иначе сторож молчит о проходе");
+                "Шаблон сторожа: бревно в линии забора обязано попасть в отчёт, иначе сторож молчит о проходе"
+                        + " При смене lowBlocks_LogInLine_Reported проверь это утверждение.");
     }
 
     @Test
@@ -106,7 +108,8 @@ class DefensePerimeterGuardTests {
                 problems,
                 "Оборонная ограда: отрезок забора между углом и калиткой — от " + FenceGateRule.MIN_SPAN + " до "
                         + FenceGateRule.MAX_SPAN + " блоков, иначе калитки либо редкие (дыра) либо частые (лишние "
-                        + "проходы). Сторону короче 11 не делят. Как надо: калитки по FenceGateRule.gates. Нарушения");
+                        + "проходы). Сторону короче 11 не делят. Как надо: калитки по FenceGateRule.gates. Нарушения"
+                        + " При смене defenseSchemes_FenceSpans_BetweenTenAndTwenty проверь это утверждение.");
     }
 
     @Test
@@ -128,10 +131,12 @@ class DefensePerimeterGuardTests {
                 2,
                 problems.size(),
                 "Шаблон сторожа: калитка в 5 блоках от угла обязана попасть в отчёт на северной и южной линии, "
-                        + "иначе сторож молчит о слишком коротком отрезке");
+                        + "иначе сторож молчит о слишком коротком отрезке"
+                        + " При смене fenceSpans_GateNearCorner_Reported проверь это утверждение.");
         assertTrue(
                 problems.stream().allMatch(problem -> problem.contains("длиной 5")),
-                "Шаблон сторожа обязан назвать отрезок длиной 5, а не любой другой: " + problems);
+                "Шаблон сторожа обязан назвать отрезок длиной 5, а не любой другой: " + problems
+                        + " Иначе тест fenceSpans_GateNearCorner_Reported перестанет ловить эту поломку. При смене fenceSpans_GateNearCorner_Reported проверь это утверждение.");
     }
 
     @Test
@@ -166,13 +171,18 @@ class DefensePerimeterGuardTests {
             }
         }
 
-        assertEquals(4, gates.size(), "Ограда поселения 23×23 обязана иметь по калитке на каждой стороне");
+        assertEquals(
+                4,
+                gates.size(),
+                "Ограда поселения 23×23 обязана иметь по калитке на каждой стороне"
+                        + " Иначе тест fenceScheme_GatesFaceOutward_WithTorchOnNeighborPost перестанет ловить эту поломку. При смене fenceScheme_GatesFaceOutward_WithTorchOnNeighborPost проверь это утверждение.");
         assertEquals(
                 List.of(),
                 problems,
                 "Калитка ограды смотрит наружу своей стороны и несёт факел на соседнем столбе, как прежняя "
                         + "северная: иначе дух упирается в закрытую калитку или сторона остаётся без света. "
-                        + "Нарушения");
+                        + "Нарушения"
+                        + " При смене fenceScheme_GatesFaceOutward_WithTorchOnNeighborPost проверь это утверждение.");
     }
 
     private static List<String> spanProblems(Schematic schematic) {

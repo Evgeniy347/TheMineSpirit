@@ -12,7 +12,8 @@ class BlockSupportTests {
 
         assertTrue(
                 BlockSupport.hasSupport(world, 5, 4, 5),
-                "Блок над крепкой верхней гранью обязан опираться: это опора пола в BlockPlacer и в схемах");
+                "Блок над крепкой верхней гранью обязан опираться: это опора пола в BlockPlacer и в схемах"
+                        + " Иначе тест hasSupport_BelowSturdyTop_IsSupported перестанет ловить эту поломку. При смене hasSupport_BelowSturdyTop_IsSupported проверь это утверждение.");
     }
 
     @Test
@@ -21,7 +22,8 @@ class BlockSupportTests {
 
         assertTrue(
                 BlockSupport.hasSupport(world, 5, 4, 5),
-                "Блок рядом с крепкой боковой гранью обязан опираться: иначе полки и навесы не поставить");
+                "Блок рядом с крепкой боковой гранью обязан опираться: иначе полки и навесы не поставить"
+                        + " При смене hasSupport_HorizontalNeighbourSturdyToTarget_IsSupported проверь это утверждение.");
     }
 
     @Test
@@ -30,7 +32,8 @@ class BlockSupportTests {
 
         assertFalse(
                 BlockSupport.hasSupport(world, 5, 4, 5),
-                "Сосед обязан быть крепок именно к целевой клетке: крепкая верхняя грань соседа сбоку не держит");
+                "Сосед обязан быть крепок именно к целевой клетке: крепкая верхняя грань соседа сбоку не держит"
+                        + " Иначе тест hasSupport_SturdyNeighbourWithWrongFace_IsRejected перестанет ловить эту поломку. При смене hasSupport_SturdyNeighbourWithWrongFace_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -39,6 +42,7 @@ class BlockSupportTests {
 
         assertFalse(
                 BlockSupport.hasSupport(world, 5, 4, 5),
-                "Блок в воздухе без опоры обязан отвергаться: иначе факел повиснет и упадёт");
+                "Блок в воздухе без опоры обязан отвергаться: иначе факел повиснет и упадёт"
+                        + " При смене hasSupport_NothingSturdy_IsRejected проверь это утверждение.");
     }
 }

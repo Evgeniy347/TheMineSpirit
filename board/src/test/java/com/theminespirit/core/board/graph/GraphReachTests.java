@@ -24,7 +24,8 @@ class GraphReachTests {
                     GRAPH.producers(node),
                     REACH.producers(node),
                     "Индекс обязан отдавать те же производители и в том же порядке, что и перебор путей графа: "
-                            + "иначе планировщик выберет другой путь и задания разойдутся с прежними");
+                            + "иначе планировщик выберет другой путь и задания разойдутся с прежними"
+                            + " При смене producers_EveryWayNode_MatchGraphOrder проверь это утверждение.");
         }
     }
 
@@ -41,8 +42,12 @@ class GraphReachTests {
                 first,
                 REACH.producers(node),
                 "Повторный поиск производителей обязан брать готовый список из индекса, а не перебирать все пути: "
-                        + "иначе план снова стоит «предметы × пути»");
-        assertFalse(first.isEmpty(), "Индекс потерял производителей предмета " + node);
+                        + "иначе план снова стоит «предметы × пути»"
+                        + " При смене producers_RepeatedLookup_ReturnsSameIndexedList проверь это утверждение.");
+        assertFalse(
+                first.isEmpty(),
+                "Индекс потерял производителей предмета " + node
+                        + " Иначе тест producers_RepeatedLookup_ReturnsSameIndexedList перестанет ловить эту поломку. При смене producers_RepeatedLookup_ReturnsSameIndexedList проверь это утверждение.");
     }
 
     @Test
@@ -56,14 +61,16 @@ class GraphReachTests {
         assertSame(
                 GRAPH.producers(node),
                 other.producers(node),
-                "Индекс путей один на граф: планировщик не строит второй набор «предмет → пути» на каждое состояние");
+                "Индекс путей один на граф: планировщик не строит второй набор «предмет → пути» на каждое состояние"
+                        + " Иначе тест producers_TwoStatesShareGraphIndex_NoSecondIndex перестанет ловить эту поломку. При смене producers_TwoStatesShareGraphIndex_NoSecondIndex проверь это утверждение.");
     }
 
     @Test
     void producers_UnknownNode_Empty() {
         assertTrue(
                 REACH.producers("no_such_item").isEmpty(),
-                "Неизвестный предмет не имеет производителей: пустой список, а не падение");
+                "Неизвестный предмет не имеет производителей: пустой список, а не падение"
+                        + " Иначе тест producers_UnknownNode_Empty перестанет ловить эту поломку. При смене producers_UnknownNode_Empty проверь это утверждение.");
     }
 
     @Test
@@ -72,7 +79,11 @@ class GraphReachTests {
         assertEquals(
                 GRAPH.way(way.id()),
                 REACH.way(way.id()),
-                "Индекс путей обязан находить путь по id так же, как перебор графа");
-        assertTrue(REACH.way("no_such_way").isEmpty(), "Неизвестный id не имеет пути: пустой Optional, а не падение");
+                "Индекс путей обязан находить путь по id так же, как перебор графа"
+                        + " Иначе тест way_KnownAndUnknownId_FoundAndEmpty перестанет ловить эту поломку. При смене way_KnownAndUnknownId_FoundAndEmpty проверь это утверждение.");
+        assertTrue(
+                REACH.way("no_such_way").isEmpty(),
+                "Неизвестный id не имеет пути: пустой Optional, а не падение"
+                        + " Иначе тест way_KnownAndUnknownId_FoundAndEmpty перестанет ловить эту поломку. При смене way_KnownAndUnknownId_FoundAndEmpty проверь это утверждение.");
     }
 }

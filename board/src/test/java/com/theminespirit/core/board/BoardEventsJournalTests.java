@@ -38,7 +38,8 @@ class BoardEventsJournalTests {
                 List.of(BoardLog.Event.SUBMITTED, BoardLog.Event.ASSIGNED, BoardLog.Event.DONE),
                 events,
                 "Журнал доски обязан помнить постановку, назначение и итог: по нему видно, кто "
-                        + "выкинул вещь, кто её забрал и закончил ли");
+                        + "выкинул вещь, кто её забрал и закончил ли"
+                        + " Иначе тест transitions_SubmitClaimComplete_EmitEveryEvent перестанет ловить эту поломку. При смене transitions_SubmitClaimComplete_EmitEveryEvent проверь это утверждение.");
     }
 
     @Test
@@ -64,12 +65,17 @@ class BoardEventsJournalTests {
         board.claim("first:build_fence", SPIRIT, 42);
         board.fail("first:build_fence", new StockView(Map.of()), "не хватает: oak_planks 2 из 4");
 
-        assertEquals(1, failed.size(), "Провал обязан попасть в журнал ровно одним событием FAILED");
+        assertEquals(
+                1,
+                failed.size(),
+                "Провал обязан попасть в журнал ровно одним событием FAILED"
+                        + " Иначе тест failed_WithReason_PutsReasonIntoFailedRecord перестанет ловить эту поломку. При смене failed_WithReason_PutsReasonIntoFailedRecord проверь это утверждение.");
         assertTrue(
                 failed.get(0).modifiers().stream().anyMatch(detail -> detail.contains("oak_planks")),
                 "FAILED в board-log обязан назвать причину провала: сейчас modifiers="
                         + failed.get(0).modifiers()
-                        + ", и причину приходится искать в latest.log (наблюдение 6, лог 4)");
+                        + ", и причину приходится искать в latest.log (наблюдение 6, лог 4)"
+                        + " Иначе тест failed_WithReason_PutsReasonIntoFailedRecord перестанет ловить эту поломку. При смене failed_WithReason_PutsReasonIntoFailedRecord проверь это утверждение.");
     }
 
     @Test
@@ -92,11 +98,20 @@ class BoardEventsJournalTests {
         board.complete("activity_unload_test");
         int removed = board.prune(2000, Set.of());
 
-        assertEquals(1, removed, "Завершённая работа-занятие обязана уходить с доски, иначе она растёт за сутки");
-        assertEquals(0, board.all().size(), "После prune завершённых занятий на доске не остаётся");
+        assertEquals(
+                1,
+                removed,
+                "Завершённая работа-занятие обязана уходить с доски, иначе она растёт за сутки"
+                        + " При смене prune_CompletedActivity_DropsTicketButKeepsDoneEvent проверь это утверждение.");
+        assertEquals(
+                0,
+                board.all().size(),
+                "После prune завершённых занятий на доске не остаётся"
+                        + " Иначе тест prune_CompletedActivity_DropsTicketButKeepsDoneEvent перестанет ловить эту поломку. При смене prune_CompletedActivity_DropsTicketButKeepsDoneEvent проверь это утверждение.");
         assertTrue(
                 events.contains(BoardLog.Event.DONE),
-                "История завершённого задания обязана уйти в журнал и task_events до prune: сама доска её уже не хранит");
+                "История завершённого задания обязана уйти в журнал и task_events до prune: сама доска её уже не хранит"
+                        + " Иначе тест prune_CompletedActivity_DropsTicketButKeepsDoneEvent перестанет ловить эту поломку. При смене prune_CompletedActivity_DropsTicketButKeepsDoneEvent проверь это утверждение.");
     }
 
     @Test
@@ -121,6 +136,7 @@ class BoardEventsJournalTests {
         assertEquals(
                 List.of(BoardLog.Event.SUBMITTED, BoardLog.Event.ASSIGNED, BoardLog.Event.FAILED),
                 events,
-                "Провал задания обязан попадать в журнал: без него выкинутая вещь молча остаётся в мире");
+                "Провал задания обязан попадать в журнал: без него выкинутая вещь молча остаётся в мире"
+                        + " Иначе тест transitions_FailedTicket_EmitsFailed перестанет ловить эту поломку. При смене transitions_FailedTicket_EmitsFailed проверь это утверждение.");
     }
 }

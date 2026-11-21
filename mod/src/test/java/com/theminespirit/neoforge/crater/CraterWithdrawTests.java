@@ -20,7 +20,8 @@ class CraterWithdrawTests {
                 restored.needsStart(),
                 "Прерванный заход за материалом после перезапуска обязан начаться заново: иначе засыпка идёт без "
                         + "земли, падает по NO_MATERIAL, и воронка остаётся открытой; сохранение несёт только "
-                        + "признак завершения захода");
+                        + "признак завершения захода"
+                        + " При смене restore_InterruptedWithdraw_NeedsStartAgain проверь это утверждение.");
     }
 
     @Test
@@ -36,6 +37,7 @@ class CraterWithdrawTests {
         assertFalse(
                 restored.needsStart(),
                 "Завершённый заход не повторяют: повторное withdraw после перезапуска дёргает склад без нужды и "
-                        + "задерживает засыпку");
+                        + "задерживает засыпку"
+                        + " Иначе тест restore_FinishedWithdraw_DoesNotRepeat перестанет ловить эту поломку. При смене restore_FinishedWithdraw_DoesNotRepeat проверь это утверждение.");
     }
 }

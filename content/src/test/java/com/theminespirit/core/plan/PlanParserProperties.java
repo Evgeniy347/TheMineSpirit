@@ -27,7 +27,8 @@ class PlanParserProperties {
                 new ScriptCall("wait", Map.of("ticks", ticks)),
                 PlanParser.parse(json, CATALOG),
                 "узел script с любым целым ticks обязан разбираться без потерь: иначе движок ждёт не то время, "
-                        + "что задал планировщик");
+                        + "что задал планировщик"
+                        + " При смене parse_WaitScriptWithAnyTicks_ReturnsSameTicks проверь это утверждение.");
     }
 
     @Property
@@ -35,7 +36,8 @@ class PlanParserProperties {
         assertInstanceOf(
                 SequenceNode.class,
                 PlanParser.parse(nestedSequence(depth), CATALOG),
-                "план глубиной до лимита обязан разбираться: иначе валидатор режет допустимые вложенные планы");
+                "план глубиной до лимита обязан разбираться: иначе валидатор режет допустимые вложенные планы"
+                        + " При смене parse_SequenceWithinDepthLimit_Succeeds проверь это утверждение.");
     }
 
     @Property
@@ -43,7 +45,8 @@ class PlanParserProperties {
         assertThrows(
                 PlanValidationException.class,
                 () -> PlanParser.parse(nestedSequence(depth), CATALOG),
-                "план глубиной больше 16 обязан отвергаться: рекурсивный план переполнит стек и уронит серверный тик");
+                "план глубиной больше 16 обязан отвергаться: рекурсивный план переполнит стек и уронит серверный тик"
+                        + " Иначе тест parse_SequenceOverDepthLimit_IsRejected перестанет ловить эту поломку. При смене parse_SequenceOverDepthLimit_IsRejected проверь это утверждение.");
     }
 
     @Provide

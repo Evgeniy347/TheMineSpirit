@@ -28,8 +28,16 @@ class PillarDescentTests {
                     .orElseThrow(() -> new AssertionError("Дух стоит на своём столбе высотой " + top
                             + " и обязан спуститься разбором, " + "а планировщик не нашёл спуска: " + feet));
 
-            assertEquals(height, plan.depth(), "Спуск разбирает весь свой столб, по блоку за шаг");
-            assertEquals(new BlockCoord(0, GROUND + 1, 0), plan.landing(), "Спуск кончается на земле");
+            assertEquals(
+                    height,
+                    plan.depth(),
+                    "Спуск разбирает весь свой столб, по блоку за шаг"
+                            + " Иначе тест plan_OwnPillarOfEveryHeight_DigsTopDownToGround перестанет ловить эту поломку. При смене plan_OwnPillarOfEveryHeight_DigsTopDownToGround проверь это утверждение.");
+            assertEquals(
+                    new BlockCoord(0, GROUND + 1, 0),
+                    plan.landing(),
+                    "Спуск кончается на земле"
+                            + " Иначе тест plan_OwnPillarOfEveryHeight_DigsTopDownToGround перестанет ловить эту поломку. При смене plan_OwnPillarOfEveryHeight_DigsTopDownToGround проверь это утверждение.");
             List<BlockCoord> expected = new ArrayList<>();
             for (int step = 0; step < Math.min(2, height); step++) {
                 expected.add(new BlockCoord(0, GROUND + height - step, 0));
@@ -37,7 +45,8 @@ class PillarDescentTests {
             assertEquals(
                     expected,
                     plan.dig().subList(0, Math.min(2, height)),
-                    "Столб разбирают сверху вниз: иначе дух повиснет над пустотой");
+                    "Столб разбирают сверху вниз: иначе дух повиснет над пустотой"
+                            + " При смене plan_OwnPillarOfEveryHeight_DigsTopDownToGround проверь это утверждение.");
 
             Set<BlockCoord> removed = new HashSet<>();
             for (BlockCoord cell : plan.dig()) {
@@ -46,11 +55,13 @@ class PillarDescentTests {
                 assertTrue(
                         BodyMotion.fits(world.after(removed), at),
                         "После снятия " + cell + " тело обязано помещаться в " + at
-                                + ": иначе дух падает сквозь собственный столб");
+                                + ": иначе дух падает сквозь собственный столб"
+                                + " При смене plan_OwnPillarOfEveryHeight_DigsTopDownToGround проверь это утверждение.");
             }
             assertTrue(
                     BodyMotion.standable(world.after(removed), plan.landing()),
-                    "Спуск обязан кончаться на твёрдой опоре, а не в воздухе");
+                    "Спуск обязан кончаться на твёрдой опоре, а не в воздухе"
+                            + " Иначе тест plan_OwnPillarOfEveryHeight_DigsTopDownToGround перестанет ловить эту поломку. При смене plan_OwnPillarOfEveryHeight_DigsTopDownToGround проверь это утверждение.");
         }
     }
 
@@ -62,8 +73,16 @@ class PillarDescentTests {
         PillarDescent.Plan plan =
                 PillarDescent.plan(world, feet, world::own, 32).orElseThrow();
 
-        assertEquals(2, plan.depth(), "Разбирают только свои блоки: чужие/природные не трогают");
-        assertEquals(new BlockCoord(0, GROUND + 5, 0), plan.landing(), "Спуск кончается на первом чужом блоке");
+        assertEquals(
+                2,
+                plan.depth(),
+                "Разбирают только свои блоки: чужие/природные не трогают"
+                        + " Иначе тест plan_MixedColumn_StopsAtForeignBlock перестанет ловить эту поломку. При смене plan_MixedColumn_StopsAtForeignBlock проверь это утверждение.");
+        assertEquals(
+                new BlockCoord(0, GROUND + 5, 0),
+                plan.landing(),
+                "Спуск кончается на первом чужом блоке"
+                        + " Иначе тест plan_MixedColumn_StopsAtForeignBlock перестанет ловить эту поломку. При смене plan_MixedColumn_StopsAtForeignBlock проверь это утверждение.");
     }
 
     @Test
@@ -73,7 +92,8 @@ class PillarDescentTests {
 
         assertTrue(
                 PillarDescent.plan(world, feet, world::own, 32).isEmpty(),
-                "Чужой столб не разбирают: свой след убирает владелец, чужой — отдельное решение");
+                "Чужой столб не разбирают: свой след убирает владелец, чужой — отдельное решение"
+                        + " Иначе тест plan_ForeignPillar_NoPlan перестанет ловить эту поломку. При смене plan_ForeignPillar_NoPlan проверь это утверждение.");
     }
 
     @Test
@@ -88,7 +108,8 @@ class PillarDescentTests {
         assertTrue(
                 PillarDescent.plan(voidPillar, new BlockCoord(0, GROUND + 5, 0), own::contains, 32)
                         .isEmpty(),
-                "Под своим столбом бездна: разбор оставил бы духа падать глубже безопасного, такой спуск не план");
+                "Под своим столбом бездна: разбор оставил бы духа падать глубже безопасного, такой спуск не план"
+                        + " Иначе тест plan_OwnBlocksOverVoid_NoPlan перестанет ловить эту поломку. При смене plan_OwnBlocksOverVoid_NoPlan проверь это утверждение.");
     }
 
     @Test
@@ -98,8 +119,16 @@ class PillarDescentTests {
 
         PillarDescent.Plan plan = PillarDescent.plan(world, feet, world::own, 5).orElseThrow();
 
-        assertEquals(5, plan.depth(), "Предел спуска ограничивает разбор, а не отменяет его целиком");
-        assertEquals(new BlockCoord(0, GROUND + 8, 0), plan.landing(), "Останавливается на своём же блоке ниже");
+        assertEquals(
+                5,
+                plan.depth(),
+                "Предел спуска ограничивает разбор, а не отменяет его целиком"
+                        + " Иначе тест plan_DepthLimit_StopsAtAllowedStep перестанет ловить эту поломку. При смене plan_DepthLimit_StopsAtAllowedStep проверь это утверждение.");
+        assertEquals(
+                new BlockCoord(0, GROUND + 8, 0),
+                plan.landing(),
+                "Останавливается на своём же блоке ниже"
+                        + " Иначе тест plan_DepthLimit_StopsAtAllowedStep перестанет ловить эту поломку. При смене plan_DepthLimit_StopsAtAllowedStep проверь это утверждение.");
     }
 
     @Test
@@ -115,7 +144,8 @@ class PillarDescentTests {
         assertFalse(
                 PillarDescent.plan(bridge, new BlockCoord(0, GROUND + 1, 0), own::contains, 32)
                         .isPresent(),
-                "Мост — не столб: под ним воздух. Спуск разбором не выдумывается, мост убирает уборка следа");
+                "Мост — не столб: под ним воздух. Спуск разбором не выдумывается, мост убирает уборка следа"
+                        + " Иначе тест plan_OnBridgeWithoutColumn_NoPlan перестанет ловить эту поломку. При смене plan_OnBridgeWithoutColumn_NoPlan проверь это утверждение.");
     }
 
     private static final class Column implements RouteWorld {

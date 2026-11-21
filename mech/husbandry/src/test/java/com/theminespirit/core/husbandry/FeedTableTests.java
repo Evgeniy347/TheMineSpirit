@@ -57,8 +57,8 @@ class FeedTableTests {
         assertEquals(
                 Set.of(Species.COW, Species.SHEEP, Species.PIG, Species.CHICKEN),
                 fromFile.feeds().keySet(),
-                "Файл feed.json обязан покрывать все четыре вида: непокрытый вид останется без корма и разведения, "
-                        + "и дух молча пройдёт мимо загона. При смене набора Species проверь feed.json и "
+                "Файл feed.json обязан покрывать все четыре вида: иначе непокрытый вид останется без корма и "
+                        + "разведения, и дух молча пройдёт мимо загона. При смене набора Species проверь feed.json и "
                         + "FeedTable.defaults, затем живое разведение каждого вида");
         Set<String> seen = new HashSet<>();
         for (Map.Entry<Species, List<String>> entry : fromFile.feeds().entrySet()) {
@@ -79,7 +79,7 @@ class FeedTableTests {
                 FeedTable.defaults(),
                 fromFile,
                 "Таблица в коде обязана совпадать с feed.json: данные правятся файлом, код его только читает, "
-                        + "а расхождение даст духу чужой корм после рестарта. При смене feed.json обнови "
+                        + "а расхождение даст духу чужой корм после рестарта, иначе разведение встанет. При смене feed.json обнови "
                         + "FeedTable.defaults и проверь живое разведение всех видов");
     }
 
@@ -89,13 +89,15 @@ class FeedTableTests {
                 IllegalArgumentException.class,
                 () -> FeedTable.load(Map.of("dragon", List.of("minecraft:wheat"))),
                 "Неизвестный вид в таблице обязан отвергаться исключением: тихий пропуск оставил бы вид без "
-                        + "корма, а опечатку в файле никто не заметил бы. При смене FeedTable.load проверь отказ "
+                        + "корма, а опечатку в файле никто не заметил бы, иначе вид останется голодным. При смене FeedTable.load проверь отказ "
                         + "с именем вида и живое чтение feed.json при старте сервера");
 
         assertTrue(
                 error.getMessage().contains("dragon"),
                 "Сообщение обязано называть неизвестный вид: иначе опечатку в feed.json не найти, а отказ "
-                        + "выглядит как «неверная таблица» вообще. Фактическое: " + error.getMessage());
+                        + "выглядит как «неверная таблица» вообще, иначе опечатку не найти. Фактическое: "
+                        + error.getMessage()
+                        + ". При смене текста проверь имя вида в причине");
     }
 
     @Test

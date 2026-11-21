@@ -111,7 +111,10 @@ class BuildPlanSnapshotTests {
         PresetLibrary library = LIBRARY;
         List<String> changed = new ArrayList<>();
         Optional<Preset> preset = library.byId(scheme);
-        assertTrue(preset.isPresent(), "постройка каталога '" + scheme + "' без схемы: план не снять");
+        assertTrue(
+                preset.isPresent(),
+                "постройка каталога '" + scheme + "' без схемы: план не снять"
+                        + " Иначе тест plans_ReferenceBuilding_MatchSnapshot перестанет ловить эту поломку. При смене plans_ReferenceBuilding_MatchSnapshot проверь это утверждение.");
         Preset buildable = planned(preset.get());
         for (BuildRotation rotation : BuildRotation.values()) {
             Path file = DIR.resolve(scheme + "-" + rotation.id() + ".txt");
@@ -133,6 +136,7 @@ class BuildPlanSnapshotTests {
                 changed,
                 "план стройки изменился (или снапшота нет): изменение плана — изменение поведения стройки, его читают "
                         + "при ревью. Осознанно — перезапиши снапшоты флагом -Dtheminespirit.updateSnapshots=true и "
-                        + "закоммить дифф build-plans/");
+                        + "закоммить дифф build-plans/"
+                        + " Иначе тест plans_ReferenceBuilding_MatchSnapshot перестанет ловить эту поломку. При смене plans_ReferenceBuilding_MatchSnapshot проверь это утверждение.");
     }
 }

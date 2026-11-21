@@ -135,7 +135,8 @@ class ScriptRegistryGuardTests {
                 new TreeSet<>(registered()),
                 "Реестр скриптов разъехался со списком: пропавший id означает, что граф вызовет несуществующее "
                         + "действие, а лишний — действие без карточки и описания. Как надо: скрипт объявляется "
-                        + "в наборе своей механики (SpiritScriptPack) ровно один раз");
+                        + "в наборе своей механики (SpiritScriptPack) ровно один раз"
+                        + " Иначе тест registeredScripts_ComparedToExpectedSet_Match перестанет ловить эту поломку. При смене registeredScripts_ComparedToExpectedSet_Match проверь это утверждение.");
     }
 
     @Test
@@ -150,7 +151,8 @@ class ScriptRegistryGuardTests {
                             }
                         }
                         """),
-                "Сторож ослеп: объявление скрипта в наборе обязано попадать в список, а прочие put — нет");
+                "Сторож ослеп: объявление скрипта в наборе обязано попадать в список, а прочие put — нет"
+                        + " Иначе тест registered_ParsesContractRegistration_AndIgnoresOtherPut перестанет ловить эту поломку. При смене registered_ParsesContractRegistration_AndIgnoresOtherPut проверь это утверждение.");
     }
 
     private static Set<String> registered() {

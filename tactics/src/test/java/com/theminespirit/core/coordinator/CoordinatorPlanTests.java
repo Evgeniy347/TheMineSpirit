@@ -60,8 +60,14 @@ class CoordinatorPlanTests {
 
         CoordinatorPlan plan = new Coordinator().plan(state, new WorkReservations(), 100);
 
-        assertTrue(plan.defense().isEmpty(), "Без защищаемой точки обороны нет: сектора не строятся");
-        assertTrue(plan.assists().isEmpty(), "Без защищаемой точки помощи нет: защитников не из кого выбирать");
+        assertTrue(
+                plan.defense().isEmpty(),
+                "Без защищаемой точки обороны нет: сектора не строятся"
+                        + " Иначе тест plan_NoDefendedPoint_DefenseAndAssistEmpty перестанет ловить эту поломку. При смене plan_NoDefendedPoint_DefenseAndAssistEmpty проверь это утверждение.");
+        assertTrue(
+                plan.assists().isEmpty(),
+                "Без защищаемой точки помощи нет: защитников не из кого выбирать"
+                        + " Иначе тест plan_NoDefendedPoint_DefenseAndAssistEmpty перестанет ловить эту поломку. При смене plan_NoDefendedPoint_DefenseAndAssistEmpty проверь это утверждение.");
     }
 
     @Test
@@ -74,20 +80,26 @@ class CoordinatorPlanTests {
 
         CoordinatorPlan plan = new Coordinator().plan(state, new WorkReservations(), 100);
 
-        assertEquals(3, plan.defense().size(), "Все защитники в обороне");
+        assertEquals(
+                3,
+                plan.defense().size(),
+                "Все защитники в обороне"
+                        + " Иначе тест plan_DefendedPointWithDefenders_AllDefendersInDefenseAndInRadius перестанет ловить эту поломку. При смене plan_DefendedPointWithDefenders_AllDefendersInDefenseAndInRadius проверь это утверждение.");
         assertEquals(
                 List.of(ALPHA, BETA, GAMMA),
                 plan.defense().stream()
                         .map(DefenseAssignment::defender)
                         .sorted()
                         .toList(),
-                "В обороне именно защитники состояния");
+                "В обороне именно защитники состояния"
+                        + " Иначе тест plan_DefendedPointWithDefenders_AllDefendersInDefenseAndInRadius перестанет ловить эту поломку. При смене plan_DefendedPointWithDefenders_AllDefendersInDefenseAndInRadius проверь это утверждение.");
         for (DefenseAssignment assignment : plan.defense()) {
             assertEquals(
                     16,
                     assignment.post().distanceTo(BASE),
                     1e-6,
-                    "Пост в радиусе обороны: защитник не уходит за её пределы");
+                    "Пост в радиусе обороны: защитник не уходит за её пределы"
+                            + " Иначе тест plan_DefendedPointWithDefenders_AllDefendersInDefenseAndInRadius перестанет ловить эту поломку. При смене plan_DefendedPointWithDefenders_AllDefendersInDefenseAndInRadius проверь это утверждение.");
         }
     }
 
@@ -98,10 +110,22 @@ class CoordinatorPlanTests {
 
         CoordinatorPlan plan = new Coordinator().plan(state, new WorkReservations(), 100);
 
-        assertEquals(1, plan.assists().size(), "Атакованный получает помощника");
+        assertEquals(
+                1,
+                plan.assists().size(),
+                "Атакованный получает помощника"
+                        + " Иначе тест plan_AttackedSpirit_GetsHelper перестанет ловить эту поломку. При смене plan_AttackedSpirit_GetsHelper проверь это утверждение.");
         AssistOrder order = plan.assists().get(0);
-        assertEquals(BETA, order.ward(), "Подопечный — атакованный");
-        assertEquals(ALPHA, order.helper(), "Помощник — свободный защитник из обороны");
+        assertEquals(
+                BETA,
+                order.ward(),
+                "Подопечный — атакованный"
+                        + " Иначе тест plan_AttackedSpirit_GetsHelper перестанет ловить эту поломку. При смене plan_AttackedSpirit_GetsHelper проверь это утверждение.");
+        assertEquals(
+                ALPHA,
+                order.helper(),
+                "Помощник — свободный защитник из обороны"
+                        + " Иначе тест plan_AttackedSpirit_GetsHelper перестанет ловить эту поломку. При смене plan_AttackedSpirit_GetsHelper проверь это утверждение.");
     }
 
     @Test
@@ -114,11 +138,16 @@ class CoordinatorPlanTests {
 
         CoordinatorPlan plan = new Coordinator().plan(state, new WorkReservations(), 100);
 
-        assertEquals(2, plan.work().size(), "Оба свободных работника получают работу");
+        assertEquals(
+                2,
+                plan.work().size(),
+                "Оба свободных работника получают работу"
+                        + " Иначе тест plan_FreeWorkers_GetDifferentTargets перестанет ловить эту поломку. При смене plan_FreeWorkers_GetDifferentTargets проверь это утверждение.");
         assertEquals(
                 2,
                 plan.work().stream().map(WorkAssignment::target).distinct().count(),
-                "Работники получают разные цели: иначе оба идут к одному дереву");
+                "Работники получают разные цели: иначе оба идут к одному дереву"
+                        + " При смене plan_FreeWorkers_GetDifferentTargets проверь это утверждение.");
     }
 
     @Test
@@ -127,7 +156,10 @@ class CoordinatorPlanTests {
 
         CoordinatorPlan plan = new Coordinator().plan(state, new WorkReservations(), 100);
 
-        assertTrue(plan.work().isEmpty(), "Защитник не получает работу одновременно с обороной: он держит сектор");
+        assertTrue(
+                plan.work().isEmpty(),
+                "Защитник не получает работу одновременно с обороной: он держит сектор"
+                        + " Иначе тест plan_DefenderOnPost_GetsNoWork перестанет ловить эту поломку. При смене plan_DefenderOnPost_GetsNoWork проверь это утверждение.");
     }
 
     @Test
@@ -137,7 +169,10 @@ class CoordinatorPlanTests {
 
         CoordinatorPlan plan = new Coordinator().plan(state, new WorkReservations(), 100);
 
-        assertTrue(plan.work().isEmpty(), "Целей в состоянии нет — работ нет: координатор не выдумывает цели");
+        assertTrue(
+                plan.work().isEmpty(),
+                "Целей в состоянии нет — работ нет: координатор не выдумывает цели"
+                        + " Иначе тест plan_SpiritsWithoutWorkTargets_GetNoWork перестанет ловить эту поломку. При смене plan_SpiritsWithoutWorkTargets_GetNoWork проверь это утверждение.");
     }
 
     @Test
@@ -187,7 +222,8 @@ class CoordinatorPlanTests {
                 List.of(new AssistOrder(ALPHA, caller, true)),
                 plan.assists(),
                 "Зов слышит ближайший свободный дух в радиусе R3, даже если дома нет; занятый и далёкий не идут, "
-                        + "а приказ помечен срочным для возврата к работе после боя");
+                        + "а приказ помечен срочным для возврата к работе после боя"
+                        + " Иначе тест plan_HelpCallWithoutDefendedPoint_NearestFreeSpiritGetsUrgentAssist перестанет ловить эту поломку. При смене plan_HelpCallWithoutDefendedPoint_NearestFreeSpiritGetsUrgentAssist проверь это утверждение.");
     }
 
     @Test
@@ -195,7 +231,8 @@ class CoordinatorPlanTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new Coordinator().plan(null, new WorkReservations(), 100),
-                "План строится из состояния: состояние обязательно");
+                "План строится из состояния: состояние обязательно"
+                        + " Иначе тест plan_NullState_Throws перестанет ловить эту поломку. При смене plan_NullState_Throws проверь это утверждение.");
     }
 
     @Test
@@ -205,7 +242,8 @@ class CoordinatorPlanTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new Coordinator().plan(state, null, 100),
-                "Брони без реестра не проверить: реестр обязателен");
+                "Брони без реестра не проверить: реестр обязателен"
+                        + " Иначе тест plan_NullReservations_Throws перестанет ловить эту поломку. При смене plan_NullReservations_Throws проверь это утверждение.");
     }
 
     @Test
@@ -215,6 +253,7 @@ class CoordinatorPlanTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new Coordinator().plan(state, new WorkReservations(), -1),
-                "Время пересборки назад противоречит плану: просрочка броней считается от него");
+                "Время пересборки назад противоречит плану: просрочка броней считается от него"
+                        + " Иначе тест plan_NegativeNow_Throws перестанет ловить эту поломку. При смене plan_NegativeNow_Throws проверь это утверждение.");
     }
 }

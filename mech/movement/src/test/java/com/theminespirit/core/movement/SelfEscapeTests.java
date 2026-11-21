@@ -21,7 +21,8 @@ class SelfEscapeTests {
         assertTrue(
                 SelfEscape.plan(FEET, new BlockCoord(20, 64, 10), grid(air, (x, z) -> 64), true, 0)
                         .isEmpty(),
-                "из клетки с проходом дух выйдет сам: план самоспасения не нужен");
+                "из клетки с проходом дух выйдет сам: план самоспасения не нужен"
+                        + " Иначе тест plan_OpenCell_IsEmpty перестанет ловить эту поломку. При смене plan_OpenCell_IsEmpty проверь это утверждение.");
     }
 
     @Test
@@ -29,13 +30,26 @@ class SelfEscapeTests {
         SelfEscape.Plan plan = SelfEscape.plan(FEET, new BlockCoord(20, 64, 10), grid(Set.of(), (x, z) -> 64), true, 0)
                 .orElseThrow();
 
-        assertEquals(SelfEscape.Method.DIG, plan.method(), "с киркой застрявший дух прокапывает проход сам");
-        assertEquals(new BlockCoord(11, 64, 10), plan.target(), "прокапывать надо в сторону цели движения");
+        assertEquals(
+                SelfEscape.Method.DIG,
+                plan.method(),
+                "с киркой застрявший дух прокапывает проход сам"
+                        + " Иначе тест plan_WalledEastWithTool_DigsTwoBlocksTowardGoal перестанет ловить эту поломку. При смене plan_WalledEastWithTool_DigsTwoBlocksTowardGoal проверь это утверждение.");
+        assertEquals(
+                new BlockCoord(11, 64, 10),
+                plan.target(),
+                "прокапывать надо в сторону цели движения"
+                        + " Иначе тест plan_WalledEastWithTool_DigsTwoBlocksTowardGoal перестанет ловить эту поломку. При смене plan_WalledEastWithTool_DigsTwoBlocksTowardGoal проверь это утверждение.");
         assertEquals(
                 List.of(new BlockCoord(11, 64, 10), new BlockCoord(11, 65, 10)),
                 plan.blocks(),
-                "проход в два блока высотой — сломать ноги и голову клетки впереди");
-        assertEquals(0, plan.rise(), "горизонтальный проход не поднимает духа");
+                "проход в два блока высотой — сломать ноги и голову клетки впереди"
+                        + " Иначе тест plan_WalledEastWithTool_DigsTwoBlocksTowardGoal перестанет ловить эту поломку. При смене plan_WalledEastWithTool_DigsTwoBlocksTowardGoal проверь это утверждение.");
+        assertEquals(
+                0,
+                plan.rise(),
+                "горизонтальный проход не поднимает духа"
+                        + " Иначе тест plan_WalledEastWithTool_DigsTwoBlocksTowardGoal перестанет ловить эту поломку. При смене plan_WalledEastWithTool_DigsTwoBlocksTowardGoal проверь это утверждение.");
     }
 
     @Test
@@ -48,7 +62,8 @@ class SelfEscapeTests {
         assertEquals(
                 List.of(new BlockCoord(11, 64, 10)),
                 plan.blocks(),
-                "если голова уже проходит, ломается только блок на уровне ног");
+                "если голова уже проходит, ломается только блок на уровне ног"
+                        + " При смене plan_WalledHeadOpen_DigsOneBlock проверь это утверждение.");
     }
 
     @Test
@@ -56,7 +71,8 @@ class SelfEscapeTests {
         assertTrue(
                 SelfEscape.plan(FEET, new BlockCoord(20, 64, 10), grid(Set.of(), (x, z) -> 64), false, 0)
                         .isEmpty(),
-                "без инструмента дух не прокапывает стену: его обязан выручить другой дух");
+                "без инструмента дух не прокапывает стену: его обязан выручить другой дух"
+                        + " Иначе тест plan_WalledNoTool_IsEmpty перестанет ловить эту поломку. При смене plan_WalledNoTool_IsEmpty проверь это утверждение.");
     }
 
     @Test
@@ -64,11 +80,16 @@ class SelfEscapeTests {
         SelfEscape.Plan plan = SelfEscape.plan(FEET, new BlockCoord(0, 64, 10), grid(Set.of(), (x, z) -> 64), true, 0)
                 .orElseThrow();
 
-        assertEquals(new BlockCoord(9, 64, 10), plan.target(), "сторона копания выбирается по цели движения");
+        assertEquals(
+                new BlockCoord(9, 64, 10),
+                plan.target(),
+                "сторона копания выбирается по цели движения"
+                        + " Иначе тест plan_GoalWest_DigsWest перестанет ловить эту поломку. При смене plan_GoalWest_DigsWest проверь это утверждение.");
         assertEquals(
                 List.of(new BlockCoord(9, 64, 10), new BlockCoord(9, 65, 10)),
                 plan.blocks(),
-                "блоки ломаются в той же стороне, куда идёт дух");
+                "блоки ломаются в той же стороне, куда идёт дух"
+                        + " Иначе тест plan_GoalWest_DigsWest перестанет ловить эту поломку. При смене plan_GoalWest_DigsWest проверь это утверждение.");
     }
 
     @Test
@@ -81,10 +102,22 @@ class SelfEscapeTests {
         assertEquals(
                 SelfEscape.Method.DESCEND,
                 plan.method(),
-                "дух на крыше/уступе видит проход, но цель ниже: это не пустой выход, а спуск");
-        assertEquals(new BlockCoord(10, 50, 10), plan.target(), "спуск ведёт к цели");
-        assertEquals(0, plan.rise(), "спуск не поднимает духа");
-        assertTrue(plan.blocks().isEmpty(), "спуск не ломает блоки постройки");
+                "дух на крыше/уступе видит проход, но цель ниже: это не пустой выход, а спуск"
+                        + " Иначе тест plan_FreeRoofGoalBelow_Descends перестанет ловить эту поломку. При смене plan_FreeRoofGoalBelow_Descends проверь это утверждение.");
+        assertEquals(
+                new BlockCoord(10, 50, 10),
+                plan.target(),
+                "спуск ведёт к цели"
+                        + " Иначе тест plan_FreeRoofGoalBelow_Descends перестанет ловить эту поломку. При смене plan_FreeRoofGoalBelow_Descends проверь это утверждение.");
+        assertEquals(
+                0,
+                plan.rise(),
+                "спуск не поднимает духа"
+                        + " Иначе тест plan_FreeRoofGoalBelow_Descends перестанет ловить эту поломку. При смене plan_FreeRoofGoalBelow_Descends проверь это утверждение.");
+        assertTrue(
+                plan.blocks().isEmpty(),
+                "спуск не ломает блоки постройки"
+                        + " При смене plan_FreeRoofGoalBelow_Descends проверь это утверждение. Иначе поломка пройдёт незамеченной в прогоне.");
     }
 
     @Test
@@ -92,9 +125,20 @@ class SelfEscapeTests {
         SelfEscape.Plan plan = SelfEscape.plan(FEET, new BlockCoord(10, 70, 10), pit(), false, 3)
                 .orElseThrow();
 
-        assertEquals(SelfEscape.Method.STEP, plan.method(), "с блоками в инвентаре дух поднимается ступенями");
-        assertEquals(2, plan.rise(), "из ямы в три блока подъём на два");
-        assertTrue(plan.blocks().isEmpty(), "ступени не ломают блоки");
+        assertEquals(
+                SelfEscape.Method.STEP,
+                plan.method(),
+                "с блоками в инвентаре дух поднимается ступенями"
+                        + " Иначе тест plan_DeepPitWithBlocks_PlacesSteps перестанет ловить эту поломку. При смене plan_DeepPitWithBlocks_PlacesSteps проверь это утверждение.");
+        assertEquals(
+                2,
+                plan.rise(),
+                "из ямы в три блока подъём на два"
+                        + " Иначе тест plan_DeepPitWithBlocks_PlacesSteps перестанет ловить эту поломку. При смене plan_DeepPitWithBlocks_PlacesSteps проверь это утверждение.");
+        assertTrue(
+                plan.blocks().isEmpty(),
+                "ступени не ломают блоки"
+                        + " Иначе тест plan_DeepPitWithBlocks_PlacesSteps перестанет ловить эту поломку. При смене plan_DeepPitWithBlocks_PlacesSteps проверь это утверждение.");
     }
 
     @Test
@@ -102,7 +146,8 @@ class SelfEscapeTests {
         assertTrue(
                 SelfEscape.plan(FEET, new BlockCoord(10, 70, 10), pit(), false, 1)
                         .isEmpty(),
-                "ни ступеней, ни кирки — сам дух не выйдет, нужно задание спасения");
+                "ни ступеней, ни кирки — сам дух не выйдет, нужно задание спасения"
+                        + " Иначе тест plan_DeepPitWithoutBlocksOrTool_IsEmpty перестанет ловить эту поломку. При смене plan_DeepPitWithoutBlocksOrTool_IsEmpty проверь это утверждение.");
     }
 
     @Test
@@ -110,12 +155,21 @@ class SelfEscapeTests {
         SelfEscape.Plan plan = SelfEscape.plan(FEET, new BlockCoord(10, 70, 10), pit(), true, 1)
                 .orElseThrow();
 
-        assertEquals(SelfEscape.Method.DIG, plan.method(), "с киркой дух прокапывает потолок ямы");
-        assertEquals(2, plan.rise(), "план помнит, на сколько надо подняться к краю");
+        assertEquals(
+                SelfEscape.Method.DIG,
+                plan.method(),
+                "с киркой дух прокапывает потолок ямы"
+                        + " Иначе тест plan_DeepPitWithTool_DigsUpward перестанет ловить эту поломку. При смене plan_DeepPitWithTool_DigsUpward проверь это утверждение.");
+        assertEquals(
+                2,
+                plan.rise(),
+                "план помнит, на сколько надо подняться к краю"
+                        + " Иначе тест plan_DeepPitWithTool_DigsUpward перестанет ловить эту поломку. При смене plan_DeepPitWithTool_DigsUpward проверь это утверждение.");
         assertEquals(
                 List.of(new BlockCoord(10, 65, 10), new BlockCoord(10, 66, 10)),
                 plan.blocks(),
-                "из ямы ломаются два блока над головой — проход к поверхности");
+                "из ямы ломаются два блока над головой — проход к поверхности"
+                        + " Иначе тест plan_DeepPitWithTool_DigsUpward перестанет ловить эту поломку. При смене plan_DeepPitWithTool_DigsUpward проверь это утверждение.");
     }
 
     @Test
@@ -123,7 +177,8 @@ class SelfEscapeTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new SelfEscape.Plan(SelfEscape.Method.STEP, FEET, 0, List.of()),
-                "ступень без подъёма обязана отклоняться: такой план не меняет положение духа");
+                "ступень без подъёма обязана отклоняться: такой план не меняет положение духа"
+                        + " Иначе тест plan_StepWithoutRise_IsRejected перестанет ловить эту поломку. При смене plan_StepWithoutRise_IsRejected проверь это утверждение.");
     }
 
     private static StuckSituation.Grid pit() {

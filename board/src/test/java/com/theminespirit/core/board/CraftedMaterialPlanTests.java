@@ -32,7 +32,8 @@ class CraftedMaterialPlanTests {
             assertTrue(
                     own.isEmpty(),
                     "graph:make/supply_gather для '" + item + "' снова ищет его блоком в мире: " + own
-                            + ". Крафтовый предмет добывается рецептом, а не размещёнными копиями");
+                            + ". Крафтовый предмет добывается рецептом, а не размещёнными копиями"
+                            + " Иначе тест gatherMaterials_CraftedItem_PlanNeverGathersOwnBlock перестанет ловить эту поломку. При смене gatherMaterials_CraftedItem_PlanNeverGathersOwnBlock проверь это утверждение.");
         }
     }
 
@@ -48,7 +49,8 @@ class CraftedMaterialPlanTests {
             assertTrue(
                     own.isEmpty(),
                     "supply:'" + item + "' снова ищет его блоком в мире: " + own
-                            + ". Крафтовый предмет делается рецептом, снабжение только несёт его на склад");
+                            + ". Крафтовый предмет делается рецептом, снабжение только несёт его на склад"
+                            + " Иначе тест supplySite_CraftedItem_PlanNeverGathersOwnBlock перестанет ловить эту поломку. При смене supplySite_CraftedItem_PlanNeverGathersOwnBlock проверь это утверждение.");
         }
     }
 
@@ -62,13 +64,15 @@ class CraftedMaterialPlanTests {
         assertTrue(
                 calls.stream().anyMatch(call -> "acquire".equals(call.script()) && stone(call)),
                 "Крафт каменного топора без камня блокируется вместо добычи: в плане нет шага acquire камня. "
-                        + "Как надо: камень добывается (шахта/поверхность), затем топор крафтится. План: " + calls);
+                        + "Как надо: камень добывается (шахта/поверхность), затем топор крафтится. План: " + calls
+                        + " Иначе тест stoneAxe_MissingStone_PlanMinesStoneBeforeCraft перестанет ловить эту поломку. При смене stoneAxe_MissingStone_PlanMinesStoneBeforeCraft проверь это утверждение.");
         int acquire = index(calls, call -> "acquire".equals(call.script()) && stone(call));
         int craft = index(calls, call -> "craft".equals(call.script()));
         assertTrue(
                 acquire >= 0 && craft > acquire,
                 "Камень обязан добываться до крафта топора: иначе CraftScript падает «не хватает cobblestone». "
-                        + "Шаги: " + calls);
+                        + "Шаги: " + calls
+                        + " При смене stoneAxe_MissingStone_PlanMinesStoneBeforeCraft проверь это утверждение.");
     }
 
     @Test
@@ -83,7 +87,8 @@ class CraftedMaterialPlanTests {
         assertTrue(
                 axe >= 0 && strip > axe,
                 "Обтёсывание брёвен без топора падает: «нет топора для обтёсывания брёвен породы oak» "
-                        + "(observe9, F). Как надо: сначала acquire топора, потом strip_log. Шаги: " + calls);
+                        + "(observe9, F). Как надо: сначала acquire топора, потом strip_log. Шаги: " + calls
+                        + " Иначе тест gatherMaterials_StrippedLog_PlansAxeBeforeStripping перестанет ловить эту поломку. При смене gatherMaterials_StrippedLog_PlansAxeBeforeStripping проверь это утверждение.");
     }
 
     private static boolean axe(ScriptCall call) {
@@ -162,11 +167,13 @@ class CraftedMaterialPlanTests {
 
         assertTrue(
                 crafted.contains("wooden_hoe"),
-                "Задание графа craft_wooden_hoe@дух обязано крафтить hoe, а не добывать dirt: " + crafted);
+                "Задание графа craft_wooden_hoe@дух обязано крафтить hoe, а не добывать dirt: " + crafted
+                        + " Иначе тест gatherMaterials_CraftTarget_MakesTheItemInsteadOfDirt перестанет ловить эту поломку. При смене gatherMaterials_CraftTarget_MakesTheItemInsteadOfDirt проверь это утверждение.");
         assertTrue(
                 calls(plan).stream()
                         .noneMatch(call -> "dirt".equals(call.params().get("item"))),
-                "Цель крафта не подменяется предметом снабжения по умолчанию: иначе дух весь прогон таскает землю");
+                "Цель крафта не подменяется предметом снабжения по умолчанию: иначе дух весь прогон таскает землю"
+                        + " При смене gatherMaterials_CraftTarget_MakesTheItemInsteadOfDirt проверь это утверждение.");
     }
 
     @Test
@@ -178,6 +185,7 @@ class CraftedMaterialPlanTests {
                 calls(plan).stream()
                         .anyMatch(call -> "oak_log".equals(call.params().get("item"))
                                 || "tree".equals(call.params().get("target"))),
-                "Обычное снабжение не сломано: цель без craftItem по-прежнему добывает свой предмет");
+                "Обычное снабжение не сломано: цель без craftItem по-прежнему добывает свой предмет"
+                        + " Иначе тест gatherMaterials_SupplyTarget_StillGathersItem перестанет ловить эту поломку. При смене gatherMaterials_SupplyTarget_StillGathersItem проверь это утверждение.");
     }
 }

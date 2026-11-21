@@ -41,17 +41,32 @@ class IncidentAimTests {
     void describe_SupplyGatherWithTree_NamesGatherTargetNotHome() {
         String aim = IncidentAim.describe(ticket(), target(), List.of(new WorkTarget(WorkKind.TREE, TRUNK)));
 
-        assertTrue(aim.contains(TRUNK.toString()), "Цель добычи — ствол, у которого дух рубит: " + aim);
-        assertFalse(aim.contains(HOME.toString()), "Точка дома не цель добычи: она сбивает разбор инцидента: " + aim);
-        assertTrue(aim.contains("oak_log"), "Причина называет предмет добычи: " + aim);
+        assertTrue(
+                aim.contains(TRUNK.toString()),
+                "Цель добычи — ствол, у которого дух рубит: " + aim
+                        + " Иначе тест describe_SupplyGatherWithTree_NamesGatherTargetNotHome перестанет ловить эту поломку. При смене describe_SupplyGatherWithTree_NamesGatherTargetNotHome проверь это утверждение.");
+        assertFalse(
+                aim.contains(HOME.toString()),
+                "Точка дома не цель добычи: она сбивает разбор инцидента: " + aim
+                        + " Иначе тест describe_SupplyGatherWithTree_NamesGatherTargetNotHome перестанет ловить эту поломку. При смене describe_SupplyGatherWithTree_NamesGatherTargetNotHome проверь это утверждение.");
+        assertTrue(
+                aim.contains("oak_log"),
+                "Причина называет предмет добычи: " + aim
+                        + " Иначе тест describe_SupplyGatherWithTree_NamesGatherTargetNotHome перестанет ловить эту поломку. При смене describe_SupplyGatherWithTree_NamesGatherTargetNotHome проверь это утверждение.");
     }
 
     @Test
     void describe_SupplyGatherWithoutReservation_DoesNotPretendHomeIsTarget() {
         String aim = IncidentAim.describe(ticket(), target(), List.of());
 
-        assertFalse(aim.contains(HOME.toString()), "Пока ствол не выбран, дом не выдаётся за цель добычи: " + aim);
-        assertTrue(aim.contains("точка ещё не выбрана"), "Строка честно говорит, что цель ещё ищется: " + aim);
+        assertFalse(
+                aim.contains(HOME.toString()),
+                "Пока ствол не выбран, дом не выдаётся за цель добычи: " + aim
+                        + " Иначе тест describe_SupplyGatherWithoutReservation_DoesNotPretendHomeIsTarget перестанет ловить эту поломку. При смене describe_SupplyGatherWithoutReservation_DoesNotPretendHomeIsTarget проверь это утверждение.");
+        assertTrue(
+                aim.contains("точка ещё не выбрана"),
+                "Строка честно говорит, что цель ещё ищется: " + aim
+                        + " Иначе тест describe_SupplyGatherWithoutReservation_DoesNotPretendHomeIsTarget перестанет ловить эту поломку. При смене describe_SupplyGatherWithoutReservation_DoesNotPretendHomeIsTarget проверь это утверждение.");
     }
 
     @Test
@@ -70,8 +85,14 @@ class IncidentAimTests {
 
         String aim = IncidentAim.describe(gather, TicketTarget.at(HOME).withSupply("oak_sapling", 1), List.of(sapling));
 
-        assertTrue(aim.contains(sapling.anchor().toString()), "Цель добычи — выбранный блок саженца: " + aim);
-        assertFalse(aim.contains(HOME.toString()), "Точка поселения не цель добычи: " + aim);
+        assertTrue(
+                aim.contains(sapling.anchor().toString()),
+                "Цель добычи — выбранный блок саженца: " + aim
+                        + " Иначе тест describe_GraphGather_NamesGatherTargetNotSettlement перестанет ловить эту поломку. При смене describe_GraphGather_NamesGatherTargetNotSettlement проверь это утверждение.");
+        assertFalse(
+                aim.contains(HOME.toString()),
+                "Точка поселения не цель добычи: " + aim
+                        + " Иначе тест describe_GraphGather_NamesGatherTargetNotSettlement перестанет ловить эту поломку. При смене describe_GraphGather_NamesGatherTargetNotSettlement проверь это утверждение.");
     }
 
     @Test
@@ -90,8 +111,14 @@ class IncidentAimTests {
 
         String aim = IncidentAim.describe(collect, TicketTarget.at(HOME).withSupply("oak_sapling", 1), List.of(drop));
 
-        assertTrue(aim.contains(drop.anchor().toString()), "Цель сбора — выбранный дроп саженца: " + aim);
-        assertFalse(aim.contains(HOME.toString()), "Точка поселения не цель сбора: " + aim);
+        assertTrue(
+                aim.contains(drop.anchor().toString()),
+                "Цель сбора — выбранный дроп саженца: " + aim
+                        + " Иначе тест describe_LeafDecayCollect_NamesDropTargetNotSettlement перестанет ловить эту поломку. При смене describe_LeafDecayCollect_NamesDropTargetNotSettlement проверь это утверждение.");
+        assertFalse(
+                aim.contains(HOME.toString()),
+                "Точка поселения не цель сбора: " + aim
+                        + " Иначе тест describe_LeafDecayCollect_NamesDropTargetNotSettlement перестанет ловить эту поломку. При смене describe_LeafDecayCollect_NamesDropTargetNotSettlement проверь это утверждение.");
     }
 
     @Test
@@ -110,8 +137,14 @@ class IncidentAimTests {
 
         String aim = IncidentAim.describe(build, TicketTarget.at(HOME).withBuilding("orchard_oak"), List.of(tree));
 
-        assertTrue(aim.contains(TRUNK.toString()), "Провал сада называет дерево, у которого брали саженцы: " + aim);
-        assertTrue(aim.contains("дерево"), "Строка прямо говорит, что цель — дерево, а не точка сада: " + aim);
+        assertTrue(
+                aim.contains(TRUNK.toString()),
+                "Провал сада называет дерево, у которого брали саженцы: " + aim
+                        + " Иначе тест describe_OrchardBuildWithTree_NamesTreeNotPlotCenter перестанет ловить эту поломку. При смене describe_OrchardBuildWithTree_NamesTreeNotPlotCenter проверь это утверждение.");
+        assertTrue(
+                aim.contains("дерево"),
+                "Строка прямо говорит, что цель — дерево, а не точка сада: " + aim
+                        + " Иначе тест describe_OrchardBuildWithTree_NamesTreeNotPlotCenter перестанет ловить эту поломку. При смене describe_OrchardBuildWithTree_NamesTreeNotPlotCenter проверь это утверждение.");
     }
 
     @Test
@@ -129,7 +162,13 @@ class IncidentAimTests {
 
         String aim = IncidentAim.describe(build, TicketTarget.at(HOME).withCount(2), List.of());
 
-        assertTrue(aim.contains(HOME.toString()), "У обычного задания цель остаётся прежней: " + aim);
-        assertTrue(aim.contains("часть 2"), "Счётная часть остаётся в тексте: " + aim);
+        assertTrue(
+                aim.contains(HOME.toString()),
+                "У обычного задания цель остаётся прежней: " + aim
+                        + " Иначе тест describe_NonSupplyTicket_KeepsTargetAndCount перестанет ловить эту поломку. При смене describe_NonSupplyTicket_KeepsTargetAndCount проверь это утверждение.");
+        assertTrue(
+                aim.contains("часть 2"),
+                "Счётная часть остаётся в тексте: " + aim
+                        + " Иначе тест describe_NonSupplyTicket_KeepsTargetAndCount перестанет ловить эту поломку. При смене describe_NonSupplyTicket_KeepsTargetAndCount проверь это утверждение.");
     }
 }

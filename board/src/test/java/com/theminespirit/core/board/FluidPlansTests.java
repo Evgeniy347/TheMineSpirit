@@ -32,12 +32,33 @@ class FluidPlansTests {
         assertEquals(
                 List.of("acquire", "goto", "fill_bucket", "goto", "deposit"),
                 calls.stream().map(ScriptCall::script).toList(),
-                "Вода идёт по цепочке: взять ведро, дойти до источника, набрать, донести, сдать");
-        assertEquals("bucket", calls.get(0).params().get("item"), "Сначала берут пустое ведро");
-        assertEquals("water", calls.get(2).params().get("fluid"), "Набирают именно воду");
-        assertEquals("water_bucket", calls.get(4).params().get("item"), "В склад сдают полное ведро воды");
-        assertEquals(SOURCE, point(calls.get(1)), "Дух идёт к найденному источнику");
-        assertEquals(STORE, point(calls.get(3)), "Дух несёт ведро в точку склада");
+                "Вода идёт по цепочке: взять ведро, дойти до источника, набрать, донести, сдать"
+                        + " Иначе тест fetch_Plan_AcquiresBucketFillsAtSourceAndDepositsFullBucket перестанет ловить эту поломку. При смене fetch_Plan_AcquiresBucketFillsAtSourceAndDepositsFullBucket проверь это утверждение.");
+        assertEquals(
+                "bucket",
+                calls.get(0).params().get("item"),
+                "Сначала берут пустое ведро"
+                        + " Иначе тест fetch_Plan_AcquiresBucketFillsAtSourceAndDepositsFullBucket перестанет ловить эту поломку. При смене fetch_Plan_AcquiresBucketFillsAtSourceAndDepositsFullBucket проверь это утверждение.");
+        assertEquals(
+                "water",
+                calls.get(2).params().get("fluid"),
+                "Набирают именно воду"
+                        + " Иначе тест fetch_Plan_AcquiresBucketFillsAtSourceAndDepositsFullBucket перестанет ловить эту поломку. При смене fetch_Plan_AcquiresBucketFillsAtSourceAndDepositsFullBucket проверь это утверждение.");
+        assertEquals(
+                "water_bucket",
+                calls.get(4).params().get("item"),
+                "В склад сдают полное ведро воды"
+                        + " Иначе тест fetch_Plan_AcquiresBucketFillsAtSourceAndDepositsFullBucket перестанет ловить эту поломку. При смене fetch_Plan_AcquiresBucketFillsAtSourceAndDepositsFullBucket проверь это утверждение.");
+        assertEquals(
+                SOURCE,
+                point(calls.get(1)),
+                "Дух идёт к найденному источнику"
+                        + " Иначе тест fetch_Plan_AcquiresBucketFillsAtSourceAndDepositsFullBucket перестанет ловить эту поломку. При смене fetch_Plan_AcquiresBucketFillsAtSourceAndDepositsFullBucket проверь это утверждение.");
+        assertEquals(
+                STORE,
+                point(calls.get(3)),
+                "Дух несёт ведро в точку склада"
+                        + " Иначе тест fetch_Plan_AcquiresBucketFillsAtSourceAndDepositsFullBucket перестанет ловить эту поломку. При смене fetch_Plan_AcquiresBucketFillsAtSourceAndDepositsFullBucket проверь это утверждение.");
     }
 
     @Test
@@ -46,10 +67,22 @@ class FluidPlansTests {
         TaskNode plan = FluidPlans.waterCrops(FluidKind.WATER, SOURCE, cell);
         List<ScriptCall> calls = calls(plan);
 
-        assertEquals("pour_bucket", calls.get(calls.size() - 1).script(), "Полив заканчивается выливанием ведра");
+        assertEquals(
+                "pour_bucket",
+                calls.get(calls.size() - 1).script(),
+                "Полив заканчивается выливанием ведра"
+                        + " Иначе тест waterCrops_Plan_PoursWaterIntoPlannedCell перестанет ловить эту поломку. При смене waterCrops_Plan_PoursWaterIntoPlannedCell проверь это утверждение.");
         ScriptCall pour = calls.get(calls.size() - 1);
-        assertEquals(cell.x(), pour.params().get("x"), "Вода льётся в клетку плана фермы");
-        assertEquals(cell.z(), pour.params().get("z"), "Вода льётся в клетку плана фермы");
+        assertEquals(
+                cell.x(),
+                pour.params().get("x"),
+                "Вода льётся в клетку плана фермы"
+                        + " Иначе тест waterCrops_Plan_PoursWaterIntoPlannedCell перестанет ловить эту поломку. При смене waterCrops_Plan_PoursWaterIntoPlannedCell проверь это утверждение.");
+        assertEquals(
+                cell.z(),
+                pour.params().get("z"),
+                "Вода льётся в клетку плана фермы"
+                        + " Иначе тест waterCrops_Plan_PoursWaterIntoPlannedCell перестанет ловить эту поломку. При смене waterCrops_Plan_PoursWaterIntoPlannedCell проверь это утверждение.");
     }
 
     @Test
@@ -58,8 +91,16 @@ class FluidPlansTests {
         BlockCoord cell = new BlockCoord(21, 64, 21);
         List<ScriptCall> calls = calls(FluidPlans.waterCrops(FluidKind.WATER, SOURCE, stand, cell));
 
-        assertEquals(stand, point(calls.get(1)), "Дух идёт на стоянку у воды, а не в клетку источника");
-        assertEquals(cell.x(), calls.get(calls.size() - 1).params().get("x"), "Льёт в клетку плана");
+        assertEquals(
+                stand,
+                point(calls.get(1)),
+                "Дух идёт на стоянку у воды, а не в клетку источника"
+                        + " Иначе тест waterCrops_StandBesideSource_GoesToStandAndPoursIntoCell перестанет ловить эту поломку. При смене waterCrops_StandBesideSource_GoesToStandAndPoursIntoCell проверь это утверждение.");
+        assertEquals(
+                cell.x(),
+                calls.get(calls.size() - 1).params().get("x"),
+                "Льёт в клетку плана"
+                        + " Иначе тест waterCrops_StandBesideSource_GoesToStandAndPoursIntoCell перестанет ловить эту поломку. При смене waterCrops_StandBesideSource_GoesToStandAndPoursIntoCell проверь это утверждение.");
     }
 
     @Test
@@ -76,7 +117,8 @@ class FluidPlansTests {
         assertEquals(
                 List.of(new BlockCoord(3, -1, 3), new BlockCoord(3, -1, 8)),
                 FarmWaterCell.plannedAll(scheme, new BlockCoord(0, 0, 0)),
-                "Полив видит обе клетки воды в поверхности поля: иначе вторая ямка останется сухой");
+                "Полив видит обе клетки воды в поверхности поля: иначе вторая ямка останется сухой"
+                        + " При смене farmWaterCell_PlanWithTwoCells_ReturnsBothForRefill проверь это утверждение.");
     }
 
     @Test
@@ -90,7 +132,8 @@ class FluidPlansTests {
                     calls(PlanValidator.validate(plan, CoreScripts.defaultCatalog(), ConditionCatalog.empty())).stream()
                             .map(ScriptCall::script)
                             .toList(),
-                    "План с ведром обязан проходить каталог скриптов без подмены шагов");
+                    "План с ведром обязан проходить каталог скриптов без подмены шагов"
+                            + " Иначе тест plans_CatalogValidated_KeepSameScripts перестанет ловить эту поломку. При смене plans_CatalogValidated_KeepSameScripts проверь это утверждение.");
         }
     }
 
@@ -99,11 +142,13 @@ class FluidPlansTests {
         assertEquals(
                 FillBucketParams.RADIUS_DEFAULT,
                 FillBucketParams.from(Map.of("fluid", "lava")).radius(),
-                "Без радиуса берут значение по умолчанию");
+                "Без радиуса берут значение по умолчанию"
+                        + " Иначе тест fillParams_DefaultRadius_AndUnknownFluidRejected перестанет ловить эту поломку. При смене fillParams_DefaultRadius_AndUnknownFluidRejected проверь это утверждение.");
         assertThrows(
                 IllegalArgumentException.class,
                 () -> FillBucketParams.from(Map.of("fluid", "milk")),
-                "Неизвестная жидкость не должна доходить до скрипта");
+                "Неизвестная жидкость не должна доходить до скрипта"
+                        + " Иначе тест fillParams_DefaultRadius_AndUnknownFluidRejected перестанет ловить эту поломку. При смене fillParams_DefaultRadius_AndUnknownFluidRejected проверь это утверждение.");
     }
 
     @Test
@@ -111,7 +156,8 @@ class FluidPlansTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> PourBucketParams.from(Map.of("fluid", "water", "x", 0, "y", 1000, "z", 0)),
-                "Ведро не льют за пределы мира");
+                "Ведро не льют за пределы мира"
+                        + " Иначе тест pourParams_OutOfWorldY_Rejected перестанет ловить эту поломку. При смене pourParams_OutOfWorldY_Rejected проверь это утверждение.");
     }
 
     @Test
@@ -129,10 +175,20 @@ class FluidPlansTests {
         assertEquals(
                 new BlockCoord(104, 63, -46),
                 FarmWaterCell.planned(scheme, origin).orElseThrow(),
-                "Вода ставится в поверхность поля, в клетку схемы по x/z, а не в любую лужу рядом");
-        assertTrue(FarmWaterCell.field("wheat_field"), "Поле узнаётся по id");
-        assertTrue(FarmWaterCell.field("field_a"), "Поле этапа узнаётся по id");
-        assertFalse(FarmWaterCell.field("barn"), "Сарай не считается полем");
+                "Вода ставится в поверхность поля, в клетку схемы по x/z, а не в любую лужу рядом"
+                        + " Иначе тест farmWaterCell_ReadsWaterFromPlan_NotFromGuess перестанет ловить эту поломку. При смене farmWaterCell_ReadsWaterFromPlan_NotFromGuess проверь это утверждение.");
+        assertTrue(
+                FarmWaterCell.field("wheat_field"),
+                "Поле узнаётся по id"
+                        + " Иначе тест farmWaterCell_ReadsWaterFromPlan_NotFromGuess перестанет ловить эту поломку. При смене farmWaterCell_ReadsWaterFromPlan_NotFromGuess проверь это утверждение.");
+        assertTrue(
+                FarmWaterCell.field("field_a"),
+                "Поле этапа узнаётся по id"
+                        + " Иначе тест farmWaterCell_ReadsWaterFromPlan_NotFromGuess перестанет ловить эту поломку. При смене farmWaterCell_ReadsWaterFromPlan_NotFromGuess проверь это утверждение.");
+        assertFalse(
+                FarmWaterCell.field("barn"),
+                "Сарай не считается полем"
+                        + " Иначе тест farmWaterCell_ReadsWaterFromPlan_NotFromGuess перестанет ловить эту поломку. При смене farmWaterCell_ReadsWaterFromPlan_NotFromGuess проверь это утверждение.");
     }
 
     private static List<ScriptCall> calls(TaskNode plan) {

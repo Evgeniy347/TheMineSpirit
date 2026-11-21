@@ -27,7 +27,11 @@ class WorldRoutesTests {
         RestResponse response =
                 router.handle(new RestRequest("GET", WorldRoutes.PATH, Map.of(), Map.of(), new byte[0]));
 
-        assertEquals(200, response.status(), "GET /v1/world отдаёт сводку мира наблюдателю");
+        assertEquals(
+                200,
+                response.status(),
+                "GET /v1/world отдаёт сводку мира наблюдателю"
+                        + " Иначе тест world_Get_ReportsSummaryGroupsAndDamaged перестанет ловить эту поломку. При смене world_Get_ReportsSummaryGroupsAndDamaged проверь это утверждение.");
         assertTrue(
                 response.body().contains("\"strays\":3")
                         && response.body().contains("\"strayGroups\":1")
@@ -36,10 +40,12 @@ class WorldRoutesTests {
                         && response.body().contains("\"natural\":11")
                         && response.body().contains("\"hanging\":5")
                         && response.body().contains("\"damagedBuildings\":1"),
-                "Сводка называет лишнее, ямы, насыпи, висящее и повреждённые постройки. Тело: " + response.body());
+                "Сводка называет лишнее, ямы, насыпи, висящее и повреждённые постройки. Тело: " + response.body()
+                        + " Иначе тест world_Get_ReportsSummaryGroupsAndDamaged перестанет ловить эту поломку. При смене world_Get_ReportsSummaryGroupsAndDamaged проверь это утверждение.");
         assertTrue(
                 response.body().contains("\"type\":\"oak_fence\"")
                         && response.body().contains("\"builder\":\"spirit-1\""),
-                "Наблюдатель видит кусок лишнего и его строителя. Тело: " + response.body());
+                "Наблюдатель видит кусок лишнего и его строителя. Тело: " + response.body()
+                        + " Иначе тест world_Get_ReportsSummaryGroupsAndDamaged перестанет ловить эту поломку. При смене world_Get_ReportsSummaryGroupsAndDamaged проверь это утверждение.");
     }
 }

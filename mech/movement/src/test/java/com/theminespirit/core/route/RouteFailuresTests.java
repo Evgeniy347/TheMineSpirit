@@ -17,12 +17,16 @@ class RouteFailuresTests {
         RouteFailures failures = new RouteFailures();
         RouteFailures.Key key = new RouteFailures.Key(SPIRIT, FROM, TARGET, 2, 1);
 
-        assertFalse(failures.recentlyFailed(key, 1000, 1200), "До первого провала кэш пуст");
+        assertFalse(
+                failures.recentlyFailed(key, 1000, 1200),
+                "До первого провала кэш пуст"
+                        + " Иначе тест recentlyFailed_SameRequestWithinTtl_SuppressesSecondSearch перестанет ловить эту поломку. При смене recentlyFailed_SameRequestWithinTtl_SuppressesSecondSearch проверь это утверждение.");
         failures.remember(key, 1000);
 
         assertTrue(
                 failures.recentlyFailed(key, 1540, 1200),
-                "Тот же запрос через 540 тиков (как повтор подхода в observe15) не считает маршрут заново");
+                "Тот же запрос через 540 тиков (как повтор подхода в observe15) не считает маршрут заново"
+                        + " Иначе тест recentlyFailed_SameRequestWithinTtl_SuppressesSecondSearch перестанет ловить эту поломку. При смене recentlyFailed_SameRequestWithinTtl_SuppressesSecondSearch проверь это утверждение.");
     }
 
     @Test
@@ -33,7 +37,8 @@ class RouteFailuresTests {
 
         assertFalse(
                 failures.recentlyFailed(key, 2200, 1200),
-                "После срока кэш истекает: мир мог измениться, маршрут пересчитывается");
+                "После срока кэш истекает: мир мог измениться, маршрут пересчитывается"
+                        + " Иначе тест recentlyFailed_AfterTtl_AllowsNewSearch перестанет ловить эту поломку. При смене recentlyFailed_AfterTtl_AllowsNewSearch проверь это утверждение.");
     }
 
     @Test
@@ -44,11 +49,13 @@ class RouteFailuresTests {
         assertFalse(
                 failures.recentlyFailed(
                         new RouteFailures.Key(SPIRIT, new BlockCoord(-103, -35, -396), TARGET, 2, 1), 1001, 1200),
-                "Другой старт — другой расчёт: дух сдвинулся, старый провал к нему не относится");
+                "Другой старт — другой расчёт: дух сдвинулся, старый провал к нему не относится"
+                        + " Иначе тест recentlyFailed_OtherStartOrTarget_IsNotSuppressed перестанет ловить эту поломку. При смене recentlyFailed_OtherStartOrTarget_IsNotSuppressed проверь это утверждение.");
         assertFalse(
                 failures.recentlyFailed(
                         new RouteFailures.Key(SPIRIT, FROM, new BlockCoord(-167, 70, -500), 2, 1), 1001, 1200),
-                "Другая цель — другой расчёт: цель могла быть достижимой");
+                "Другая цель — другой расчёт: цель могла быть достижимой"
+                        + " Иначе тест recentlyFailed_OtherStartOrTarget_IsNotSuppressed перестанет ловить эту поломку. При смене recentlyFailed_OtherStartOrTarget_IsNotSuppressed проверь это утверждение.");
     }
 
     @Test
@@ -62,9 +69,11 @@ class RouteFailuresTests {
 
         assertFalse(
                 failures.recentlyFailed(new RouteFailures.Key(SPIRIT, FROM, TARGET, 2, 1), 1001, 1200),
-                "Успешный маршрут духа стирает его провалы: иначе удачный путь не запомнится как рабочий");
+                "Успешный маршрут духа стирает его провалы: иначе удачный путь не запомнится как рабочий"
+                        + " При смене forget_Spirit_DropsItsRecordsOnly проверь это утверждение.");
         assertTrue(
                 failures.recentlyFailed(new RouteFailures.Key(other, FROM, TARGET, 2, 1), 1001, 1200),
-                "Записи чужих духов не стираются: кэш ведётся по духу");
+                "Записи чужих духов не стираются: кэш ведётся по духу"
+                        + " Иначе тест forget_Spirit_DropsItsRecordsOnly перестанет ловить эту поломку. При смене forget_Spirit_DropsItsRecordsOnly проверь это утверждение.");
     }
 }

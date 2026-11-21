@@ -42,7 +42,8 @@ class IdFilterTests {
                 expected,
                 actual,
                 "Шаблон '" + pattern + "' против id '" + id + "': фильтр решает, какие блоки и предметы видит дух, "
-                        + "ошибка здесь либо прячет нужное, либо тащит лишнее в добычу. Ожидалось " + expected);
+                        + "ошибка здесь либо прячет нужное, либо тащит лишнее в добычу. Ожидалось " + expected
+                        + " Иначе тест matches_PatternAndId_FollowsGlobTable перестанет ловить эту поломку. При смене matches_PatternAndId_FollowsGlobTable проверь это утверждение.");
     }
 
     @Test
@@ -51,17 +52,20 @@ class IdFilterTests {
 
         assertTrue(
                 filter.matches("minecraft:stone") && filter.matches("create:andesite_alloy"),
-                "Пустой список шаблонов обязан совпадать со всем: scan без filter возвращает все блоки");
+                "Пустой список шаблонов обязан совпадать со всем: scan без filter возвращает все блоки"
+                        + " Иначе тест matches_EmptyFilter_AcceptsEveryId перестанет ловить эту поломку. При смене matches_EmptyFilter_AcceptsEveryId проверь это утверждение.");
         assertTrue(
                 filter.matchesAll(),
-                "Пустой фильтр обязан сообщать, что он без ограничений: по этому признаку не пропускают секции по палитре");
+                "Пустой фильтр обязан сообщать, что он без ограничений: по этому признаку не пропускают секции по палитре"
+                        + " Иначе тест matches_EmptyFilter_AcceptsEveryId перестанет ловить эту поломку. При смене matches_EmptyFilter_AcceptsEveryId проверь это утверждение.");
     }
 
     @Test
     void matchesAll_StarPattern_ReportsUnrestricted() {
         assertTrue(
                 IdFilter.of(List.of("*_log", "*")).matchesAll(),
-                "Шаблон '*' среди прочих делает фильтр неограниченным: иначе секции пропускались бы по палитре зря");
+                "Шаблон '*' среди прочих делает фильтр неограниченным: иначе секции пропускались бы по палитре зря"
+                        + " При смене matchesAll_StarPattern_ReportsUnrestricted проверь это утверждение.");
     }
 
     @Test
@@ -70,8 +74,12 @@ class IdFilterTests {
 
         assertTrue(
                 filter.matches("minecraft:oak_log") && filter.matches("minecraft:coal_ore"),
-                "Фильтр из нескольких шаблонов обязан принимать id, подходящий хотя бы под один");
-        assertTrue(!filter.matches("minecraft:stone"), "Фильтр обязан отвергать id, не подходящий ни под один шаблон");
+                "Фильтр из нескольких шаблонов обязан принимать id, подходящий хотя бы под один"
+                        + " Иначе тест matches_SeveralPatterns_AcceptsIdMatchingAny перестанет ловить эту поломку. При смене matches_SeveralPatterns_AcceptsIdMatchingAny проверь это утверждение.");
+        assertTrue(
+                !filter.matches("minecraft:stone"),
+                "Фильтр обязан отвергать id, не подходящий ни под один шаблон"
+                        + " Иначе тест matches_SeveralPatterns_AcceptsIdMatchingAny перестанет ловить эту поломку. При смене matches_SeveralPatterns_AcceptsIdMatchingAny проверь это утверждение.");
     }
 
     @Test
@@ -81,7 +89,8 @@ class IdFilterTests {
         assertEquals(
                 List.of("minecraft:oak_*", "create:andesite"),
                 filter.patterns(),
-                "Шаблон без ':' читается как minecraft:<шаблон>: иначе модовые блоки с тем же путём попадут в добычу");
+                "Шаблон без ':' читается как minecraft:<шаблон>: иначе модовые блоки с тем же путём попадут в добычу"
+                        + " При смене of_PatternWithoutNamespace_IsStoredWithMinecraftPrefix проверь это утверждение.");
     }
 
     @Test
@@ -89,12 +98,14 @@ class IdFilterTests {
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,
                 () -> IdFilter.of(List.of("Oak_Log")),
-                "Шаблон вне [a-z0-9_:./*-] обязан отвергаться: id в реестре бывают только строчными");
+                "Шаблон вне [a-z0-9_:./*-] обязан отвергаться: id в реестре бывают только строчными"
+                        + " Иначе тест of_UppercasePattern_IsRejectedWithPatternInMessage перестанет ловить эту поломку. При смене of_UppercasePattern_IsRejectedWithPatternInMessage проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("Oak_Log"),
                 "Сообщение об ошибке обязано называть плохой шаблон, чтобы автор плана его нашёл. Фактическое: "
-                        + error.getMessage());
+                        + error.getMessage()
+                        + " Иначе тест of_UppercasePattern_IsRejectedWithPatternInMessage перестанет ловить эту поломку. При смене of_UppercasePattern_IsRejectedWithPatternInMessage проверь это утверждение.");
     }
 
     @Test
@@ -102,7 +113,8 @@ class IdFilterTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> IdFilter.of(List.of("oak log")),
-                "Пробел в шаблоне обязан отвергаться: id блока пробелов не содержит, шаблон никогда не совпадёт");
+                "Пробел в шаблоне обязан отвергаться: id блока пробелов не содержит, шаблон никогда не совпадёт"
+                        + " Иначе тест of_SpaceInPattern_IsRejected перестанет ловить эту поломку. При смене of_SpaceInPattern_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -110,7 +122,8 @@ class IdFilterTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> IdFilter.of(List.of("")),
-                "Пустой шаблон обязан отвергаться: тихое «совпадает со всем» или «ни с чем» скрыло бы ошибку плана");
+                "Пустой шаблон обязан отвергаться: тихое «совпадает со всем» или «ни с чем» скрыло бы ошибку плана"
+                        + " Иначе тест of_EmptyPattern_IsRejected перестанет ловить эту поломку. При смене of_EmptyPattern_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -118,10 +131,12 @@ class IdFilterTests {
         assertTrue(
                 IdFilter.isPattern("*_ore") && IdFilter.isPattern("minecraft:*_ore"),
                 "Шаблон со '*' обязан распознаваться как подстановка независимо от namespace: по этому признаку "
-                        + "gather не требует инструмент, а gather точного блока требует");
+                        + "gather не требует инструмент, а gather точного блока требует"
+                        + " Иначе тест isPattern_WildcardAndExact_ReportsWildcardOnly перестанет ловить эту поломку. При смене isPattern_WildcardAndExact_ReportsWildcardOnly проверь это утверждение.");
         assertTrue(
                 !IdFilter.isPattern("minecraft:iron_ore"),
-                "Точный id без '*' — не шаблон: иначе добыча доверяла бы инструменту вслепую");
+                "Точный id без '*' — не шаблон: иначе добыча доверяла бы инструменту вслепую"
+                        + " При смене isPattern_WildcardAndExact_ReportsWildcardOnly проверь это утверждение.");
     }
 
     @Test
@@ -132,6 +147,7 @@ class IdFilterTests {
         assertEquals(
                 false,
                 IdFilter.of(List.of(pattern)).matches(id),
-                "Подстановки обязаны сопоставляться без перебора с возвратами: шаблон из плана ИИ не должен вешать тик");
+                "Подстановки обязаны сопоставляться без перебора с возвратами: шаблон из плана ИИ не должен вешать тик"
+                        + " Иначе тест matches_PathologicalPattern_FinishesWithoutBacktrackingExplosion перестанет ловить эту поломку. При смене matches_PathologicalPattern_FinishesWithoutBacktrackingExplosion проверь это утверждение.");
     }
 }

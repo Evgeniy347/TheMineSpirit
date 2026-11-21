@@ -43,7 +43,8 @@ class ScorerProperties {
             assertNotEquals(
                     TacticalOption.RETREAT,
                     choose(recovered),
-                    "Рост HP не превращает FIGHT в RETREAT при прочих равных: иначе дух отступает именно после лечения");
+                    "Рост HP не превращает FIGHT в RETREAT при прочих равных: иначе дух отступает именно после лечения"
+                            + " При смене choose_MoreHp_NeverTurnsFightIntoRetreat проверь это утверждение.");
         }
     }
 
@@ -57,7 +58,8 @@ class ScorerProperties {
         assertTrue(
                 preferenceForFight(recovered) >= preferenceForFight(situation) - 1e-9,
                 "Рост HP не уменьшает перевес FIGHT над RETREAT: " + preferenceForFight(situation) + " → "
-                        + preferenceForFight(recovered) + "; знак веса LOW_HP или WIN_MARGIN у RETREAT перепутан");
+                        + preferenceForFight(recovered) + "; знак веса LOW_HP или WIN_MARGIN у RETREAT перепутан"
+                        + " Иначе тест fightOverRetreat_MoreHp_NeverDecreases перестанет ловить эту поломку. При смене fightOverRetreat_MoreHp_NeverDecreases проверь это утверждение.");
     }
 
     private static double preferenceForFight(Situation situation) {
@@ -88,7 +90,8 @@ class ScorerProperties {
                     TacticalOption.FIGHT,
                     choose(crowded),
                     "Рост числа врагов не превращает RETREAT в FIGHT при прочих равных: иначе подкрепление врага "
-                            + "делало бы духа смелее");
+                            + "делало бы духа смелее"
+                            + " При смене choose_MoreEnemiesOfSameKind_NeverTurnsRetreatIntoFight проверь это утверждение.");
         }
     }
 }

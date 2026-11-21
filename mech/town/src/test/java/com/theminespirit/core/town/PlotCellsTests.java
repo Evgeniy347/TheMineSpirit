@@ -14,7 +14,8 @@ class PlotCellsTests {
         assertEquals(
                 Optional.of(PlotCells.Defect.HOLE),
                 PlotCells.defect(new PlotCells.Cell(-1, false, false), PlotCells.Found.OPEN),
-                "Дыра в земле участка под уровнем ног — восстановление подсыпкой: в неё падали духи (INC-73)");
+                "Дыра в земле участка под уровнем ног — восстановление подсыпкой: в неё падали духи (INC-73)"
+                        + " Иначе тест defect_HoleInGroundLayer_Restored перестанет ловить эту поломку. При смене defect_HoleInGroundLayer_Restored проверь это утверждение.");
     }
 
     @Test
@@ -22,7 +23,8 @@ class PlotCellsTests {
         assertEquals(
                 Optional.of(PlotCells.Defect.EXTRA),
                 PlotCells.defect(new PlotCells.Cell(0, false, false), PlotCells.Found.NATURAL),
-                "Лишний природный блок над уровнем участка — срезка: участок остаётся ровным");
+                "Лишний природный блок над уровнем участка — срезка: участок остаётся ровным"
+                        + " Иначе тест defect_NaturalBlockOnPlot_Cut перестанет ловить эту поломку. При смене defect_NaturalBlockOnPlot_Cut проверь это утверждение.");
     }
 
     @Test
@@ -30,7 +32,8 @@ class PlotCellsTests {
         assertEquals(
                 Optional.of(PlotCells.Defect.EXTRA),
                 PlotCells.defect(new PlotCells.Cell(-1, false, false), PlotCells.Found.COBBLESTONE),
-                "Булыжник на поверхности участка — нарушение: верхний блок всегда земля, аудит обязан вернуть её");
+                "Булыжник на поверхности участка — нарушение: верхний блок всегда земля, аудит обязан вернуть её"
+                        + " Иначе тест defect_CobblestoneOnPlotSurface_ReplacedWithDirt перестанет ловить эту поломку. При смене defect_CobblestoneOnPlotSurface_ReplacedWithDirt проверь это утверждение.");
     }
 
     @Test
@@ -38,7 +41,8 @@ class PlotCellsTests {
         assertEquals(
                 Optional.empty(),
                 PlotCells.defect(new PlotCells.Cell(-1, false, true), PlotCells.Found.OTHER),
-                "Пол хижины на месте земли — постройка плана, не дыра: восстановление не ломает постройки");
+                "Пол хижины на месте земли — постройка плана, не дыра: восстановление не ломает постройки"
+                        + " При смене defect_HutFloorInsteadOfGround_Fine проверь это утверждение.");
     }
 
     @Test
@@ -46,7 +50,8 @@ class PlotCellsTests {
         assertEquals(
                 Optional.empty(),
                 PlotCells.defect(new PlotCells.Cell(-1, true, false), PlotCells.Found.OPEN),
-                "Вход и спуск в шахту открыты по плану — не заделываются, иначе шахту засыпали бы по кругу");
+                "Вход и спуск в шахту открыты по плану — не заделываются, иначе шахту засыпали бы по кругу"
+                        + " При смене defect_MineEntranceOpen_Untouched проверь это утверждение.");
     }
 
     @Test
@@ -54,7 +59,8 @@ class PlotCellsTests {
         assertEquals(
                 Optional.of(PlotCells.Defect.PILLAR),
                 PlotCells.defect(new PlotCells.Cell(PlotCells.FREE_HEIGHT, false, false), PlotCells.Found.NATURAL),
-                "Столб выше слоя свободной высоты — дефект любой высоты: аудит не ограничен тремя блоками");
+                "Столб выше слоя свободной высоты — дефект любой высоты: аудит не ограничен тремя блоками"
+                        + " Иначе тест defect_BlockAboveFreeHeight_IsPillar перестанет ловить эту поломку. При смене defect_BlockAboveFreeHeight_IsPillar проверь это утверждение.");
     }
 
     @Test
@@ -62,7 +68,8 @@ class PlotCellsTests {
         assertEquals(
                 Optional.empty(),
                 PlotCells.defect(new PlotCells.Cell(PlotCells.FREE_HEIGHT + 2, false, true), PlotCells.Found.OTHER),
-                "Блок постройки плана выше свободного слоя — не столб: схема дома не срезается");
+                "Блок постройки плана выше свободного слоя — не столб: схема дома не срезается"
+                        + " Иначе тест defect_PlannedBlockAboveFreeHeight_NotPillar перестанет ловить эту поломку. При смене defect_PlannedBlockAboveFreeHeight_NotPillar проверь это утверждение.");
     }
 
     @Test
@@ -78,6 +85,7 @@ class PlotCellsTests {
                         .mapToObj(dy -> PlotCells.expect(new PlotCells.Cell(dy, false, false)))
                         .toList(),
                 "Земля — слой под ногами участка, свободно — " + PlotCells.FREE_HEIGHT + " блока над ним; глубже и "
-                        + "выше аудит ровности не судит");
+                        + "выше аудит ровности не судит"
+                        + " Иначе тест expect_CellsByHeight_GroundFreeAny перестанет ловить эту поломку. При смене expect_CellsByHeight_GroundFreeAny проверь это утверждение.");
     }
 }

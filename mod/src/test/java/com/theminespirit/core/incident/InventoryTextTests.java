@@ -17,11 +17,16 @@ class InventoryTextTests {
         assertEquals(
                 "{cobblestone=2, oak_log=25, oak_planks=86}",
                 InventoryText.of(inventory),
-                "Инвентарь в строке провала обязан идти по именам: одинаковый набор даёт одинаковый текст");
+                "Инвентарь в строке провала обязан идти по именам: одинаковый набор даёт одинаковый текст"
+                        + " Иначе тест of_ItemsSortedByName_GivesReadableList перестанет ловить эту поломку. При смене of_ItemsSortedByName_GivesReadableList проверь это утверждение.");
     }
 
     @Test
     void of_EmptyInventory_SaysEmpty() {
-        assertEquals("пусто", InventoryText.of(Map.of()), "Пустой инвентарь называется словом, а не пустыми скобками");
+        assertEquals(
+                "пусто",
+                InventoryText.of(Map.of()),
+                "Пустой инвентарь называется словом, а не пустыми скобками"
+                        + " Иначе тест of_EmptyInventory_SaysEmpty перестанет ловить эту поломку. При смене of_EmptyInventory_SaysEmpty проверь это утверждение.");
     }
 }

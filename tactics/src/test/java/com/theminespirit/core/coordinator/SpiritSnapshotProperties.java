@@ -29,7 +29,8 @@ class SpiritSnapshotProperties {
         assertTrue(
                 snapshot.hpFraction() >= 0.0 && snapshot.hpFraction() <= 1.0,
                 "Доля здоровья обязана остаться в [0;1] при любом входе: иначе оценка обороны получит духа "
-                        + "здоровее живого или живее мёртвого");
+                        + "здоровее живого или живее мёртвого"
+                        + " При смене hpFraction_AnyFiniteValue_ClampedIntoUnitRange проверь это утверждение.");
     }
 
     @Property
@@ -40,6 +41,7 @@ class SpiritSnapshotProperties {
                 () -> new SpiritSnapshot(
                         UUID.randomUUID(), new Point(0, 64, 0), hp, role, mode, 0, true, Optional.empty(), 1, 1.0),
                 "Атакованный без угроз противоречит снимку при любых остальных полях: координированная помощь "
-                        + "уходила бы на ложную тревогу");
+                        + "уходила бы на ложную тревогу"
+                        + " Иначе тест attacked_TrueWithZeroThreats_Throws перестанет ловить эту поломку. При смене attacked_TrueWithZeroThreats_Throws проверь это утверждение.");
     }
 }

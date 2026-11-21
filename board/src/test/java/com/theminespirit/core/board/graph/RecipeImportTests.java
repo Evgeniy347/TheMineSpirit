@@ -49,7 +49,8 @@ class RecipeImportTests {
                 List.of(),
                 discrepancies,
                 "Импорт не воспроизвёл ручные пути крафта и переплавки: makes, входы (с раскрытием групп) "
-                        + "и yield расходятся. Ручные пути без ванильного рецепта: " + manualOnly);
+                        + "и yield расходятся. Ручные пути без ванильного рецепта: " + manualOnly
+                        + " Иначе тест import_ManualCraftingAndSmeltingWays_AreReproduced перестанет ловить эту поломку. При смене import_ManualCraftingAndSmeltingWays_AreReproduced проверь это утверждение.");
     }
 
     @Test
@@ -58,11 +59,17 @@ class RecipeImportTests {
         assertEquals(
                 Map.of("#planks", 2),
                 way.consumes(),
-                "Палки делаются из группы #planks, а не из отдельной породы дерева");
-        assertEquals(4, way.yield(), "Стойка палок даёт 4 палки");
+                "Палки делаются из группы #planks, а не из отдельной породы дерева"
+                        + " Иначе тест import_Sticks_UsePlanksGroup перестанет ловить эту поломку. При смене import_Sticks_UsePlanksGroup проверь это утверждение.");
+        assertEquals(
+                4,
+                way.yield(),
+                "Стойка палок даёт 4 палки"
+                        + " Иначе тест import_Sticks_UsePlanksGroup перестанет ловить эту поломку. При смене import_Sticks_UsePlanksGroup проверь это утверждение.");
         assertTrue(
                 IMPORT.groups().get("#planks").contains("oak_planks"),
-                "Группа #planks обязана содержать дубовые доски");
+                "Группа #planks обязана содержать дубовые доски"
+                        + " Иначе тест import_Sticks_UsePlanksGroup перестанет ловить эту поломку. При смене import_Sticks_UsePlanksGroup проверь это утверждение.");
     }
 
     @Test
@@ -71,11 +78,13 @@ class RecipeImportTests {
         assertEquals(
                 Map.of("stick", 1, "#coals", 1),
                 way.consumes(),
-                "Список альтернатив «уголь или древесный уголь» — это группа #coals, а не отдельная группа");
+                "Список альтернатив «уголь или древесный уголь» — это группа #coals, а не отдельная группа"
+                        + " Иначе тест import_Torch_UsesCoalsGroupFromAlternatives перестанет ловить эту поломку. При смене import_Torch_UsesCoalsGroupFromAlternatives проверь это утверждение.");
         assertEquals(
                 List.of("coal", "charcoal"),
                 IMPORT.groups().get("#coals"),
-                "Группа #coals обязана совпадать с ванильным тегом coals");
+                "Группа #coals обязана совпадать с ванильным тегом coals"
+                        + " Иначе тест import_Torch_UsesCoalsGroupFromAlternatives перестанет ловить эту поломку. При смене import_Torch_UsesCoalsGroupFromAlternatives проверь это утверждение.");
     }
 
     @Test
@@ -84,12 +93,14 @@ class RecipeImportTests {
         assertEquals(
                 Map.of("stick", 2, "#stone_tool_materials", 3),
                 way.consumes(),
-                "Каменная кирка делается из ванильного тега stone_tool_materials");
+                "Каменная кирка делается из ванильного тега stone_tool_materials"
+                        + " Иначе тест import_StonePickaxe_UsesStoneToolMaterialsGroup перестанет ловить эту поломку. При смене import_StonePickaxe_UsesStoneToolMaterialsGroup проверь это утверждение.");
         assertTrue(
                 IMPORT.groups()
                         .get("#stone_tool_materials")
                         .containsAll(List.of("cobblestone", "cobbled_deepslate", "blackstone")),
-                "В группу stone_tool_materials входят булыжник, глубинный булыжник и чёрный камень");
+                "В группу stone_tool_materials входят булыжник, глубинный булыжник и чёрный камень"
+                        + " Иначе тест import_StonePickaxe_UsesStoneToolMaterialsGroup перестанет ловить эту поломку. При смене import_StonePickaxe_UsesStoneToolMaterialsGroup проверь это утверждение.");
     }
 
     @Test
@@ -101,23 +112,30 @@ class RecipeImportTests {
                 .map(way -> way.id() + " " + way.consumes())
                 .toList();
         assertEquals(
-                List.of(), missing, "Печь, плавильня и коптильня расходуют топливо: в путях обязателен вход #coals 1");
+                List.of(),
+                missing,
+                "Печь, плавильня и коптильня расходуют топливо: в путях обязателен вход #coals 1"
+                        + " Иначе тест import_SmeltingBlastingSmoking_AddCoalsFuel перестанет ловить эту поломку. При смене import_SmeltingBlastingSmoking_AddCoalsFuel проверь это утверждение.");
     }
 
     @Test
     void import_BlockAndIngotRoundTrip_BothWeightsAreLow() {
         assertTrue(
                 hasWay("iron_block", "iron_ingot", RecipeImport.REVERSE_WEIGHT),
-                "Путь слиток → блок обязан иметь низкий вес: пара «туда-обратно» не должна зацикливать граф");
+                "Путь слиток → блок обязан иметь низкий вес: пара «туда-обратно» не должна зацикливать граф"
+                        + " Иначе тест import_BlockAndIngotRoundTrip_BothWeightsAreLow перестанет ловить эту поломку. При смене import_BlockAndIngotRoundTrip_BothWeightsAreLow проверь это утверждение.");
         assertTrue(
                 hasWay("iron_ingot", "iron_block", RecipeImport.REVERSE_WEIGHT),
-                "Путь блок → слиток обязан иметь низкий вес: пара «туда-обратно» не должна зацикливать граф");
+                "Путь блок → слиток обязан иметь низкий вес: пара «туда-обратно» не должна зацикливать граф"
+                        + " Иначе тест import_BlockAndIngotRoundTrip_BothWeightsAreLow перестанет ловить эту поломку. При смене import_BlockAndIngotRoundTrip_BothWeightsAreLow проверь это утверждение.");
         assertTrue(
                 hasWay("iron_nugget", "iron_ingot", RecipeImport.REVERSE_WEIGHT),
-                "Путь слиток → самородок обязан иметь низкий вес");
+                "Путь слиток → самородок обязан иметь низкий вес"
+                        + " Иначе тест import_BlockAndIngotRoundTrip_BothWeightsAreLow перестанет ловить эту поломку. При смене import_BlockAndIngotRoundTrip_BothWeightsAreLow проверь это утверждение.");
         assertTrue(
                 hasWay("iron_ingot", "iron_nugget", RecipeImport.REVERSE_WEIGHT),
-                "Путь самородок → слиток обязан иметь низкий вес");
+                "Путь самородок → слиток обязан иметь низкий вес"
+                        + " Иначе тест import_BlockAndIngotRoundTrip_BothWeightsAreLow перестанет ловить эту поломку. При смене import_BlockAndIngotRoundTrip_BothWeightsAreLow проверь это утверждение.");
     }
 
     @Test
@@ -133,10 +151,12 @@ class RecipeImportTests {
                 List.of(),
                 dead,
                 "Сгенерированный путь для предмета с ручным способом мёртв: слияние графа отбрасывает его по makes. "
-                        + "Файл graph-recipes.json копит пути, которых нет в графе; пропускай makes ручного графа");
+                        + "Файл graph-recipes.json копит пути, которых нет в графе; пропускай makes ручного графа"
+                        + " Иначе тест select_ManualMakes_AreNotGenerated перестанет ловить эту поломку. При смене select_ManualMakes_AreNotGenerated проверь это утверждение.");
         assertTrue(
                 selected.stream().anyMatch(way -> !manualMakes.contains(way.makes())),
-                "Отбор обязан оставить сгенерированные пути для предметов без ручного способа");
+                "Отбор обязан оставить сгенерированные пути для предметов без ручного способа"
+                        + " Иначе тест select_ManualMakes_AreNotGenerated перестанет ловить эту поломку. При смене select_ManualMakes_AreNotGenerated проверь это утверждение.");
     }
 
     @Test
@@ -151,7 +171,10 @@ class RecipeImportTests {
                 .map(entry -> entry.getKey() + ": " + entry.getValue())
                 .toList();
         assertEquals(
-                List.of(), crowded, "На предмет остаётся не больше трёх путей: иначе граф уходит в перебор рецептов");
+                List.of(),
+                crowded,
+                "На предмет остаётся не больше трёх путей: иначе граф уходит в перебор рецептов"
+                        + " При смене select_MoreThanThreeGeneratedWays_AreCut проверь это утверждение.");
     }
 
     private static SupplyGraph.Way way(String makes) {

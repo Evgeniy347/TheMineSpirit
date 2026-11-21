@@ -17,14 +17,25 @@ class YardFloorTests {
 
         YardFloor.Audit audit = YardFloor.of(List.of(table), 8, cell -> solid.contains(cell));
 
-        assertTrue(audit.damaged(), "Под верстаком воздух/вода до y=61 — двор повреждён: " + audit);
+        assertTrue(
+                audit.damaged(),
+                "Под верстаком воздух/вода до y=61 — двор повреждён: " + audit
+                        + " Иначе тест of_StationOverWaterHole_ReportsCellsUnderIt перестанет ловить эту поломку. При смене of_StationOverWaterHole_ReportsCellsUnderIt проверь это утверждение.");
         assertEquals(
-                8, audit.holes().size(), "В пределах глубины 8 под верстаком только воздух/вода: " + audit.holes());
+                8,
+                audit.holes().size(),
+                "В пределах глубины 8 под верстаком только воздух/вода: " + audit.holes()
+                        + " Иначе тест of_StationOverWaterHole_ReportsCellsUnderIt перестанет ловить эту поломку. При смене of_StationOverWaterHole_ReportsCellsUnderIt проверь это утверждение.");
         assertEquals(
                 new BlockCoord(-181, 62, -519),
                 audit.holes().get(0),
-                "Заделывать начинают с нижней клетки над опорой: " + audit.holes());
-        assertEquals(0, audit.supported(), "Опора дальше 8 клеток — станок висит: " + audit);
+                "Заделывать начинают с нижней клетки над опорой: " + audit.holes()
+                        + " Иначе тест of_StationOverWaterHole_ReportsCellsUnderIt перестанет ловить эту поломку. При смене of_StationOverWaterHole_ReportsCellsUnderIt проверь это утверждение.");
+        assertEquals(
+                0,
+                audit.supported(),
+                "Опора дальше 8 клеток — станок висит: " + audit
+                        + " Иначе тест of_StationOverWaterHole_ReportsCellsUnderIt перестанет ловить эту поломку. При смене of_StationOverWaterHole_ReportsCellsUnderIt проверь это утверждение.");
     }
 
     @Test
@@ -32,8 +43,15 @@ class YardFloorTests {
         BlockCoord table = new BlockCoord(-181, 70, -519);
         YardFloor.Audit audit = YardFloor.of(List.of(table), 12, cell -> cell.y() == 60);
 
-        assertTrue(audit.damaged(), "Опора найдена на глубине 10, но между станцией и ей дыра: " + audit);
-        assertEquals(0, audit.supported(), "Дыра до опоры — станок не считается стоящим: " + audit);
+        assertTrue(
+                audit.damaged(),
+                "Опора найдена на глубине 10, но между станцией и ей дыра: " + audit
+                        + " Иначе тест of_SolidFoundDeepBelowHole_StationStillDamaged перестанет ловить эту поломку. При смене of_SolidFoundDeepBelowHole_StationStillDamaged проверь это утверждение.");
+        assertEquals(
+                0,
+                audit.supported(),
+                "Дыра до опоры — станок не считается стоящим: " + audit
+                        + " Иначе тест of_SolidFoundDeepBelowHole_StationStillDamaged перестанет ловить эту поломку. При смене of_SolidFoundDeepBelowHole_StationStillDamaged проверь это утверждение.");
     }
 
     @Test
@@ -41,8 +59,16 @@ class YardFloorTests {
         BlockCoord chest = new BlockCoord(-180, 69, -518);
         YardFloor.Audit audit = YardFloor.of(List.of(chest), 12, cell -> cell.y() == 68);
 
-        assertEquals(List.of(), audit.holes(), "Под сундуком твёрдый пол — дыр нет: " + audit);
-        assertEquals(1, audit.supported(), "Станок стоит на опоре: " + audit);
+        assertEquals(
+                List.of(),
+                audit.holes(),
+                "Под сундуком твёрдый пол — дыр нет: " + audit
+                        + " Иначе тест of_StationOnSolidGround_NotDamaged перестанет ловить эту поломку. При смене of_StationOnSolidGround_NotDamaged проверь это утверждение.");
+        assertEquals(
+                1,
+                audit.supported(),
+                "Станок стоит на опоре: " + audit
+                        + " Иначе тест of_StationOnSolidGround_NotDamaged перестанет ловить эту поломку. При смене of_StationOnSolidGround_NotDamaged проверь это утверждение.");
     }
 
     @Test
@@ -50,12 +76,20 @@ class YardFloorTests {
         assertTrue(
                 YardFloor.due(750, 150, 600),
                 "Проверка двора идёт по прошедшему времени, а не по кратности тика: 750 не делится на 600, "
-                        + "но 600 тиков прошло");
-        assertFalse(YardFloor.due(749, 150, 600), "Меньше периода — не проверяем");
-        assertTrue(YardFloor.due(10, 700, 600), "Тик пошёл назад (перезапуск) — проверяем сразу");
+                        + "но 600 тиков прошло"
+                        + " Иначе тест due_SixtySecondsElapsed_TrueRegardlessOfTickMultiple перестанет ловить эту поломку. При смене due_SixtySecondsElapsed_TrueRegardlessOfTickMultiple проверь это утверждение.");
+        assertFalse(
+                YardFloor.due(749, 150, 600),
+                "Меньше периода — не проверяем"
+                        + " Иначе тест due_SixtySecondsElapsed_TrueRegardlessOfTickMultiple перестанет ловить эту поломку. При смене due_SixtySecondsElapsed_TrueRegardlessOfTickMultiple проверь это утверждение.");
+        assertTrue(
+                YardFloor.due(10, 700, 600),
+                "Тик пошёл назад (перезапуск) — проверяем сразу"
+                        + " Иначе тест due_SixtySecondsElapsed_TrueRegardlessOfTickMultiple перестанет ловить эту поломку. При смене due_SixtySecondsElapsed_TrueRegardlessOfTickMultiple проверь это утверждение.");
         assertTrue(
                 YardFloor.due(12_345, Long.MIN_VALUE, 600),
                 "Первый вызов после запуска сервера — проверяем сразу: иначе now - MIN переполняется и двор "
-                        + "не проверяется никогда");
+                        + "не проверяется никогда"
+                        + " При смене due_SixtySecondsElapsed_TrueRegardlessOfTickMultiple проверь это утверждение.");
     }
 }

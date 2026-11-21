@@ -18,14 +18,17 @@ class WorkTargetProperties {
         assertNotEquals(
                 new WorkTarget(WorkKind.CELL, anchor),
                 new WorkTarget(WorkKind.TREE, anchor),
-                "Клетка и дерево с одним якорем — разные цели: иначе бронь рубки заняла бы клетку стройки");
+                "Клетка и дерево с одним якорем — разные цели: иначе бронь рубки заняла бы клетку стройки"
+                        + " При смене target_KindsWithSameAnchor_AreDifferentKeys проверь это утверждение.");
         assertNotEquals(
                 new WorkTarget(WorkKind.TREE, anchor),
                 new WorkTarget(WorkKind.VEIN, anchor),
-                "Дерево и жила с одним якорем — разные цели: иначе бронь шахты заняла бы ствол рубки");
+                "Дерево и жила с одним якорем — разные цели: иначе бронь шахты заняла бы ствол рубки"
+                        + " При смене target_KindsWithSameAnchor_AreDifferentKeys проверь это утверждение.");
         assertNotEquals(
                 new WorkTarget(WorkKind.CELL, anchor),
                 new WorkTarget(WorkKind.VEIN, anchor),
-                "Клетка и жила с одним якорем — разные цели: иначе бронь шахты заняла бы клетку стройки");
+                "Клетка и жила с одним якорем — разные цели: иначе бронь шахты заняла бы клетку стройки"
+                        + " При смене target_KindsWithSameAnchor_AreDifferentKeys проверь это утверждение.");
     }
 }

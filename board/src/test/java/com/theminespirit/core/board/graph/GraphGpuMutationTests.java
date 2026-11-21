@@ -20,7 +20,10 @@ class GraphGpuMutationTests {
     @Test
     void gpu_PythonMatchesJavaSample_AndMutationBatchFinishes() throws IOException, InterruptedException {
         SimulationSample.write();
-        assertTrue(Files.size(SimulationSample.OUT) > 0, "Выборка симуляций для сверки записана");
+        assertTrue(
+                Files.size(SimulationSample.OUT) > 0,
+                "Выборка симуляций для сверки записана"
+                        + " Иначе тест gpu_PythonMatchesJavaSample_AndMutationBatchFinishes перестанет ловить эту поломку. При смене gpu_PythonMatchesJavaSample_AndMutationBatchFinishes проверь это утверждение.");
         List<String> command = new ArrayList<>();
         String configured = System.getProperty("theminespirit.python");
         if (configured != null && !configured.isBlank()) {
@@ -47,9 +50,15 @@ class GraphGpuMutationTests {
             process.destroyForcibly();
         }
         System.out.println(output);
-        assertTrue(finished, "Перебор на видеокарте не уложился в " + SECONDS + " с: " + output);
+        assertTrue(
+                finished,
+                "Перебор на видеокарте не уложился в " + SECONDS + " с: " + output
+                        + " Иначе тест gpu_PythonMatchesJavaSample_AndMutationBatchFinishes перестанет ловить эту поломку. При смене gpu_PythonMatchesJavaSample_AndMutationBatchFinishes проверь это утверждение.");
         assertEquals(
-                0, process.exitValue(), "Перебор на видеокарте нашёл расхождение с Java или затор: " + tail(output));
+                0,
+                process.exitValue(),
+                "Перебор на видеокарте нашёл расхождение с Java или затор: " + tail(output)
+                        + " Иначе тест gpu_PythonMatchesJavaSample_AndMutationBatchFinishes перестанет ловить эту поломку. При смене gpu_PythonMatchesJavaSample_AndMutationBatchFinishes проверь это утверждение.");
     }
 
     private static String tail(String output) {

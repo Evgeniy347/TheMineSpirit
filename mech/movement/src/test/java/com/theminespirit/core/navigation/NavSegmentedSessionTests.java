@@ -35,10 +35,23 @@ class NavSegmentedSessionTests {
             steps++;
         }
 
-        assertTrue(result != null, "сегменты не теряются между порциями");
-        assertEquals(NavSearchStatus.FOUND, result.status(), "цель достигается за несколько порций");
-        assertTrue(steps > 1, "одной порции не хватило: поиск разбит по тикам");
-        assertTrue(session.done(), "сессия завершена");
+        assertTrue(
+                result != null,
+                "сегменты не теряются между порциями"
+                        + " Иначе тест step_SmallSlices_ReturnsNullThenFound перестанет ловить эту поломку. При смене step_SmallSlices_ReturnsNullThenFound проверь это утверждение.");
+        assertEquals(
+                NavSearchStatus.FOUND,
+                result.status(),
+                "цель достигается за несколько порций"
+                        + " Иначе тест step_SmallSlices_ReturnsNullThenFound перестанет ловить эту поломку. При смене step_SmallSlices_ReturnsNullThenFound проверь это утверждение.");
+        assertTrue(
+                steps > 1,
+                "одной порции не хватило: поиск разбит по тикам"
+                        + " Иначе тест step_SmallSlices_ReturnsNullThenFound перестанет ловить эту поломку. При смене step_SmallSlices_ReturnsNullThenFound проверь это утверждение.");
+        assertTrue(
+                session.done(),
+                "сессия завершена"
+                        + " Иначе тест step_SmallSlices_ReturnsNullThenFound перестанет ловить эту поломку. При смене step_SmallSlices_ReturnsNullThenFound проверь это утверждение.");
     }
 
     @Test
@@ -48,8 +61,16 @@ class NavSegmentedSessionTests {
 
         NavSegmentedRoute result = session.step(Long.MAX_VALUE);
 
-        assertEquals(NavSearchStatus.SEGMENT, result.status(), "один сегмент не доходит до цели");
-        assertEquals(1, result.segments(), "сессия уважает предел сегментов");
+        assertEquals(
+                NavSearchStatus.SEGMENT,
+                result.status(),
+                "один сегмент не доходит до цели"
+                        + " Иначе тест step_MaxSegments_StopsAtLimit перестанет ловить эту поломку. При смене step_MaxSegments_StopsAtLimit проверь это утверждение.");
+        assertEquals(
+                1,
+                result.segments(),
+                "сессия уважает предел сегментов"
+                        + " Иначе тест step_MaxSegments_StopsAtLimit перестанет ловить эту поломку. При смене step_MaxSegments_StopsAtLimit проверь это утверждение.");
     }
 
     @Test
@@ -60,7 +81,11 @@ class NavSegmentedSessionTests {
 
         NavSegmentedRoute second = session.step(Long.MAX_VALUE);
 
-        assertSame(first, second, "завершённая сессия не пересчитывает путь");
+        assertSame(
+                first,
+                second,
+                "завершённая сессия не пересчитывает путь"
+                        + " Иначе тест step_AfterDone_ReturnsSameResult перестанет ловить эту поломку. При смене step_AfterDone_ReturnsSameResult проверь это утверждение.");
     }
 
     @Test
@@ -75,20 +100,35 @@ class NavSegmentedSessionTests {
 
         NavSegmentedRoute result = session.step(Long.MAX_VALUE);
 
-        assertEquals(NavSearchStatus.SEGMENT, result.status(), "без кэша остаётся сегмент до границы");
-        assertTrue(result.end().x() < 16, "поиск не заходит в незагруженный чанк");
-        assertTrue(result.segments() <= 2, "после границы нет прогресса — сессия прекращается");
+        assertEquals(
+                NavSearchStatus.SEGMENT,
+                result.status(),
+                "без кэша остаётся сегмент до границы"
+                        + " Иначе тест step_UnloadedWithoutCache_StopsWithoutLoop перестанет ловить эту поломку. При смене step_UnloadedWithoutCache_StopsWithoutLoop проверь это утверждение.");
+        assertTrue(
+                result.end().x() < 16,
+                "поиск не заходит в незагруженный чанк"
+                        + " Иначе тест step_UnloadedWithoutCache_StopsWithoutLoop перестанет ловить эту поломку. При смене step_UnloadedWithoutCache_StopsWithoutLoop проверь это утверждение.");
+        assertTrue(
+                result.segments() <= 2,
+                "после границы нет прогресса — сессия прекращается"
+                        + " Иначе тест step_UnloadedWithoutCache_StopsWithoutLoop перестанет ловить эту поломку. При смене step_UnloadedWithoutCache_StopsWithoutLoop проверь это утверждение.");
     }
 
     @Test
     void livePillar_SpiritOnSingleBlock_LeavesTowardsGround() throws IOException {
         LiveNavWorld world = LiveNavWorld.live("/live/observe25-pillar-1108.live");
         Set<BlockCoord> pillar = NavPillarEscape.plateau(world, -155, 72, -490);
-        assertEquals(1, pillar.size(), "живая клетка spirit-1 (-155,72,-490) обязана считаться одиночной опорой");
+        assertEquals(
+                1,
+                pillar.size(),
+                "живая клетка spirit-1 (-155,72,-490) обязана считаться одиночной опорой"
+                        + " Иначе тест livePillar_SpiritOnSingleBlock_LeavesTowardsGround перестанет ловить эту поломку. При смене livePillar_SpiritOnSingleBlock_LeavesTowardsGround проверь это утверждение.");
         assertEquals(
                 68,
                 NavPillarEscape.landingFrom(world, pillar, 12).orElse(-1),
-                "под одиночной опорой spirit-1 обязана быть площадка y=68");
+                "под одиночной опорой spirit-1 обязана быть площадка y=68"
+                        + " Иначе тест livePillar_SpiritOnSingleBlock_LeavesTowardsGround перестанет ловить эту поломку. При смене livePillar_SpiritOnSingleBlock_LeavesTowardsGround проверь это утверждение.");
         NavSegmentedSession session = new NavSegmentedSession(
                 new NavContext(world, routeSettings(), 0),
                 new BlockCoord(-155, 72, -490),
@@ -104,16 +144,21 @@ class NavSegmentedSessionTests {
             steps++;
         }
 
-        assertTrue(result != null, "сессия сегментов обязана завершиться");
+        assertTrue(
+                result != null,
+                "сессия сегментов обязана завершиться"
+                        + " Иначе тест livePillar_SpiritOnSingleBlock_LeavesTowardsGround перестанет ловить эту поломку. При смене livePillar_SpiritOnSingleBlock_LeavesTowardsGround проверь это утверждение.");
         assertEquals(
                 NavSearchStatus.FOUND,
                 result.status(),
                 "spirit-1 observe25 стоял на одиночном блоке (-155,72,-490) над землёй (-155,67,-490) и "
                         + "получал NONE после 1–3 узлов: путь на землю в 5 блоках есть, его нельзя объявлять "
-                        + "отсутствующим");
+                        + "отсутствующим"
+                        + " Иначе тест livePillar_SpiritOnSingleBlock_LeavesTowardsGround перестанет ловить эту поломку. При смене livePillar_SpiritOnSingleBlock_LeavesTowardsGround проверь это утверждение.");
         assertTrue(
                 result.positions().stream().anyMatch(cell -> cell.y() <= 68),
-                "путь обязан спустить духа с одиночной опоры на землю, а позиции: " + result.positions());
+                "путь обязан спустить духа с одиночной опоры на землю, а позиции: " + result.positions()
+                        + " Иначе тест livePillar_SpiritOnSingleBlock_LeavesTowardsGround перестанет ловить эту поломку. При смене livePillar_SpiritOnSingleBlock_LeavesTowardsGround проверь это утверждение.");
     }
 
     @Test
@@ -122,11 +167,15 @@ class NavSegmentedSessionTests {
         Set<BlockCoord> plateau = NavPillarEscape.plateau(world, -142, 79, -504);
 
         assertEquals(
-                2, plateau.size(), "опора spirit-4 шириной в две клетки: это всё ещё узкая опора, а не ровный пол");
+                2,
+                plateau.size(),
+                "опора spirit-4 шириной в две клетки: это всё ещё узкая опора, а не ровный пол"
+                        + " Иначе тест liveTower_TwoWidePillar_DescendsWithoutSolidCells перестанет ловить эту поломку. При смене liveTower_TwoWidePillar_DescendsWithoutSolidCells проверь это утверждение.");
         assertEquals(
                 72,
                 NavPillarEscape.landingFrom(world, plateau, 12).orElse(-1),
-                "предел спуска — земля y=72: ближний уступ y=76 ведёт в тупик, и предел обязан покрыть землю");
+                "предел спуска — земля y=72: ближний уступ y=76 ведёт в тупик, и предел обязан покрыть землю"
+                        + " Иначе тест liveTower_TwoWidePillar_DescendsWithoutSolidCells перестанет ловить эту поломку. При смене liveTower_TwoWidePillar_DescendsWithoutSolidCells проверь это утверждение.");
 
         NavSegmentedSession session = new NavSegmentedSession(
                 new NavContext(world, routeSettings(), 0),
@@ -142,20 +191,26 @@ class NavSegmentedSessionTests {
             steps++;
         }
 
-        assertTrue(result != null, "сессия обязана завершиться");
+        assertTrue(
+                result != null,
+                "сессия обязана завершиться"
+                        + " Иначе тест liveTower_TwoWidePillar_DescendsWithoutSolidCells перестанет ловить эту поломку. При смене liveTower_TwoWidePillar_DescendsWithoutSolidCells проверь это утверждение.");
         assertEquals(
                 NavSearchStatus.FOUND,
                 result.status(),
                 "spirit-4 стоял на столбе 2×2 высотой 9 и получал NONE: спуск на землю y=72 есть, "
-                        + "опору нельзя считать ровным полом");
+                        + "опору нельзя считать ровным полом"
+                        + " Иначе тест liveTower_TwoWidePillar_DescendsWithoutSolidCells перестанет ловить эту поломку. При смене liveTower_TwoWidePillar_DescendsWithoutSolidCells проверь это утверждение.");
         for (BlockCoord cell : result.positions()) {
             assertTrue(
                     world.passable(cell.x(), cell.y(), cell.z()),
-                    "маршрут не идёт сквозь блок (" + cell + "): иначе проверка шагов объявит NONE");
+                    "маршрут не идёт сквозь блок (" + cell + "): иначе проверка шагов объявит NONE"
+                            + " При смене liveTower_TwoWidePillar_DescendsWithoutSolidCells проверь это утверждение.");
         }
         assertTrue(
                 result.positions().stream().anyMatch(cell -> cell.y() <= 72),
-                "путь обязан спустить духа с опоры на землю, а позиции: " + result.positions());
+                "путь обязан спустить духа с опоры на землю, а позиции: " + result.positions()
+                        + " Иначе тест liveTower_TwoWidePillar_DescendsWithoutSolidCells перестанет ловить эту поломку. При смене liveTower_TwoWidePillar_DescendsWithoutSolidCells проверь это утверждение.");
     }
 
     private static NavSettings routeSettings() {

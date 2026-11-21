@@ -15,7 +15,11 @@ class LifeEventsTests {
     void events_NoDanger_KeepOnlySuppliedEvents() {
         Set<String> events = LifeEvents.events(Set.of("night"), List.of(), List.of());
 
-        assertEquals(Set.of("night"), events, "Без угроз и бед события округи остаются как есть");
+        assertEquals(
+                Set.of("night"),
+                events,
+                "Без угроз и бед события округи остаются как есть"
+                        + " Иначе тест events_NoDanger_KeepOnlySuppliedEvents перестанет ловить эту поломку. При смене events_NoDanger_KeepOnlySuppliedEvents проверь это утверждение.");
     }
 
     @Test
@@ -23,9 +27,18 @@ class LifeEventsTests {
         Set<String> events =
                 LifeEvents.events(Set.of(), List.of(threat(GraphFacts.TargetKind.SPIRIT, true)), List.of());
 
-        assertTrue(events.contains("life_threat"), "Угроза рядом — событие жизни: " + events);
-        assertTrue(events.contains("life_threat_spirit"), "Враг целится в духа — связь «защитить духа»: " + events);
-        assertFalse(events.contains("life_threat_player"), "Игрок не цель — защита игрока не поднимается: " + events);
+        assertTrue(
+                events.contains("life_threat"),
+                "Угроза рядом — событие жизни: " + events
+                        + " Иначе тест events_ThreatToSpirit_AddsLifeThreatAndProtectSpirit перестанет ловить эту поломку. При смене events_ThreatToSpirit_AddsLifeThreatAndProtectSpirit проверь это утверждение.");
+        assertTrue(
+                events.contains("life_threat_spirit"),
+                "Враг целится в духа — связь «защитить духа»: " + events
+                        + " Иначе тест events_ThreatToSpirit_AddsLifeThreatAndProtectSpirit перестанет ловить эту поломку. При смене events_ThreatToSpirit_AddsLifeThreatAndProtectSpirit проверь это утверждение.");
+        assertFalse(
+                events.contains("life_threat_player"),
+                "Игрок не цель — защита игрока не поднимается: " + events
+                        + " Иначе тест events_ThreatToSpirit_AddsLifeThreatAndProtectSpirit перестанет ловить эту поломку. При смене events_ThreatToSpirit_AddsLifeThreatAndProtectSpirit проверь это утверждение.");
     }
 
     @Test
@@ -33,8 +46,14 @@ class LifeEventsTests {
         Set<String> events =
                 LifeEvents.events(Set.of(), List.of(threat(GraphFacts.TargetKind.PLAYER, false)), List.of());
 
-        assertTrue(events.contains("life_threat_player"), "Враг целится в игрока — связь «защитить игрока»: " + events);
-        assertFalse(events.contains("life_threat_spirit"), "Дух не цель — защита духа не поднимается: " + events);
+        assertTrue(
+                events.contains("life_threat_player"),
+                "Враг целится в игрока — связь «защитить игрока»: " + events
+                        + " Иначе тест events_ThreatToPlayer_AddsProtectPlayer перестанет ловить эту поломку. При смене events_ThreatToPlayer_AddsProtectPlayer проверь это утверждение.");
+        assertFalse(
+                events.contains("life_threat_spirit"),
+                "Дух не цель — защита духа не поднимается: " + events
+                        + " Иначе тест events_ThreatToPlayer_AddsProtectPlayer перестанет ловить эту поломку. При смене events_ThreatToPlayer_AddsProtectPlayer проверь это утверждение.");
     }
 
     @Test
@@ -46,7 +65,8 @@ class LifeEventsTests {
         assertEquals(
                 Set.of("drowning", "suffocation", "fall_risk", "falling", "fire", "poisoned", "hungry", "life_injury"),
                 events,
-                "Каждое состояние духа подаётся своим событием графа: " + events);
+                "Каждое состояние духа подаётся своим событием графа: " + events
+                        + " Иначе тест events_Conditions_AddEachLifeEvent перестанет ловить эту поломку. При смене events_Conditions_AddEachLifeEvent проверь это утверждение.");
     }
 
     @Test
@@ -56,7 +76,8 @@ class LifeEventsTests {
         assertEquals(
                 Set.of("night"),
                 LifeEvents.events(Set.of("night"), List.of(), List.of(calm)),
-                "Спокойный дух не поднимает события жизни");
+                "Спокойный дух не поднимает события жизни"
+                        + " Иначе тест events_CalmCondition_NoLifeEvent перестанет ловить эту поломку. При смене events_CalmCondition_NoLifeEvent проверь это утверждение.");
     }
 
     @Test
@@ -68,8 +89,12 @@ class LifeEventsTests {
 
         assertTrue(
                 events.contains("life_threat") && events.contains("life_threat_spirit"),
-                "События жизни поднимаются из фактов угроз и без отдельной подачи входа: " + events);
-        assertFalse(events.contains("life_threat_player"), "Игрок не цель — защита игрока не поднимается: " + events);
+                "События жизни поднимаются из фактов угроз и без отдельной подачи входа: " + events
+                        + " Иначе тест domainEvents_ThreatsInFacts_DeriveLifeBand перестанет ловить эту поломку. При смене domainEvents_ThreatsInFacts_DeriveLifeBand проверь это утверждение.");
+        assertFalse(
+                events.contains("life_threat_player"),
+                "Игрок не цель — защита игрока не поднимается: " + events
+                        + " Иначе тест domainEvents_ThreatsInFacts_DeriveLifeBand перестанет ловить эту поломку. При смене domainEvents_ThreatsInFacts_DeriveLifeBand проверь это утверждение.");
     }
 
     @Test
@@ -79,8 +104,8 @@ class LifeEventsTests {
 
         assertTrue(
                 events.contains("life_threat_player"),
-                "Факт здоровья игрока сам поднимает жизнь: легаси-событие more5_player_weak больше не нужно: "
-                        + events);
+                "Факт здоровья игрока сам поднимает жизнь: легаси-событие more5_player_weak больше не нужно: " + events
+                        + " Иначе тест events_WeakPlayerFact_AddsPlayerThreat перестанет ловить эту поломку. При смене events_WeakPlayerFact_AddsPlayerThreat проверь это утверждение.");
     }
 
     @Test
@@ -88,7 +113,10 @@ class LifeEventsTests {
         Set<String> events =
                 LifeEvents.events(Set.of(), List.of(), List.of(), List.of(player(20.0F, 20)), GraphLife.DEFAULTS);
 
-        assertFalse(events.contains("life_threat_player"), "Здоровый игрок без угроз не поднимает жизнь: " + events);
+        assertFalse(
+                events.contains("life_threat_player"),
+                "Здоровый игрок без угроз не поднимает жизнь: " + events
+                        + " Иначе тест events_HealthyPlayerFact_NoPlayerThreat перестанет ловить эту поломку. При смене events_HealthyPlayerFact_NoPlayerThreat проверь это утверждение.");
     }
 
     @Test
@@ -98,10 +126,12 @@ class LifeEventsTests {
 
         assertFalse(
                 GraphDomainEvents.of(facts, 1, GraphWorld.GRAPH.costs().life()).contains("life_threat_player"),
-                "По умолчанию слабым считается игрок ниже 0.35 здоровья: 0.45 — ещё не жизнь");
+                "По умолчанию слабым считается игрок ниже 0.35 здоровья: 0.45 — ещё не жизнь"
+                        + " Иначе тест domainEvents_WeakThreshold_LifeComesFromGraphData перестанет ловить эту поломку. При смене domainEvents_WeakThreshold_LifeComesFromGraphData проверь это утверждение.");
         assertTrue(
                 GraphDomainEvents.of(facts, 1, strict).contains("life_threat_player"),
-                "Порог слабого игрока берётся из данных графа: 0.45 ниже 0.5 поднимает жизнь");
+                "Порог слабого игрока берётся из данных графа: 0.45 ниже 0.5 поднимает жизнь"
+                        + " Иначе тест domainEvents_WeakThreshold_LifeComesFromGraphData перестанет ловить эту поломку. При смене domainEvents_WeakThreshold_LifeComesFromGraphData проверь это утверждение.");
     }
 
     @Test
@@ -113,7 +143,8 @@ class LifeEventsTests {
         assertTrue(
                 world.state().events().contains("life_threat_player"),
                 "Вход графа для духа берёт порог слабого игрока из его данных: 0.45 ниже 0.5 порога graph.json, "
-                        + "а не встроенной константы: " + world.state().events());
+                        + "а не встроенной константы: " + world.state().events()
+                        + " Иначе тест state_WeakPlayerThreshold_UsesGraphLifeNotJavaDefaults перестанет ловить эту поломку. При смене state_WeakPlayerThreshold_UsesGraphLifeNotJavaDefaults проверь это утверждение.");
     }
 
     private static GraphFacts.Player player(float health, int food) {

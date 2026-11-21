@@ -22,13 +22,39 @@ class LeaseBookTests {
 
         book.record(lease.id(), LeaseCell.placed(cell, "minecraft:dirt"));
 
-        assertEquals(LeaseStatus.ACTIVE, lease.status(), "Открытая аренда действует: скан не трогает её клетки");
-        assertEquals(SPIRIT, lease.spirit(), "Владелец аренды обязан читаться: по нему смерть бросает правку");
-        assertEquals("ticket-1", lease.ticket(), "Тикет обязан читаться: по нему проверяют, не ушёл ли он другому");
-        assertEquals("scaffold", lease.purpose(), "Назначение обязано читаться: по нему граф выбирает уборку");
-        assertEquals(lease.id(), book.owner(cell).orElseThrow().id(), "Клетка обязана знать свою действующую аренду");
-        assertTrue(book.isActive(cell), "Клетка действующей аренды обязана считаться занятой");
-        assertFalse(book.isOrphaned(cell), "Действующая аренда не бывает брошенной");
+        assertEquals(
+                LeaseStatus.ACTIVE,
+                lease.status(),
+                "Открытая аренда действует: скан не трогает её клетки"
+                        + " Иначе тест open_RecordAdded_KeepsOwnerAndCells перестанет ловить эту поломку. При смене open_RecordAdded_KeepsOwnerAndCells проверь это утверждение.");
+        assertEquals(
+                SPIRIT,
+                lease.spirit(),
+                "Владелец аренды обязан читаться: по нему смерть бросает правку"
+                        + " Иначе тест open_RecordAdded_KeepsOwnerAndCells перестанет ловить эту поломку. При смене open_RecordAdded_KeepsOwnerAndCells проверь это утверждение.");
+        assertEquals(
+                "ticket-1",
+                lease.ticket(),
+                "Тикет обязан читаться: по нему проверяют, не ушёл ли он другому"
+                        + " Иначе тест open_RecordAdded_KeepsOwnerAndCells перестанет ловить эту поломку. При смене open_RecordAdded_KeepsOwnerAndCells проверь это утверждение.");
+        assertEquals(
+                "scaffold",
+                lease.purpose(),
+                "Назначение обязано читаться: по нему граф выбирает уборку"
+                        + " Иначе тест open_RecordAdded_KeepsOwnerAndCells перестанет ловить эту поломку. При смене open_RecordAdded_KeepsOwnerAndCells проверь это утверждение.");
+        assertEquals(
+                lease.id(),
+                book.owner(cell).orElseThrow().id(),
+                "Клетка обязана знать свою действующую аренду"
+                        + " Иначе тест open_RecordAdded_KeepsOwnerAndCells перестанет ловить эту поломку. При смене open_RecordAdded_KeepsOwnerAndCells проверь это утверждение.");
+        assertTrue(
+                book.isActive(cell),
+                "Клетка действующей аренды обязана считаться занятой"
+                        + " Иначе тест open_RecordAdded_KeepsOwnerAndCells перестанет ловить эту поломку. При смене open_RecordAdded_KeepsOwnerAndCells проверь это утверждение.");
+        assertFalse(
+                book.isOrphaned(cell),
+                "Действующая аренда не бывает брошенной"
+                        + " Иначе тест open_RecordAdded_KeepsOwnerAndCells перестанет ловить эту поломку. При смене open_RecordAdded_KeepsOwnerAndCells проверь это утверждение.");
     }
 
     @Test
@@ -42,11 +68,13 @@ class LeaseBookTests {
         IllegalStateException conflict = assertThrows(
                 IllegalStateException.class,
                 () -> book.record(second.id(), LeaseCell.placed(cell)),
-                "Две механики не могут владеть одной клеткой: иначе откат одной сломает чужую правку");
+                "Две механики не могут владеть одной клеткой: иначе откат одной сломает чужую правку"
+                        + " При смене record_SameCellInAnotherActiveLease_Rejected проверь это утверждение.");
 
         assertTrue(
                 conflict.getMessage().contains(first.id()),
-                "Сообщение обязано называть действующую аренду: по id владельца видно, кого ждать");
+                "Сообщение обязано называть действующую аренду: по id владельца видно, кого ждать"
+                        + " Иначе тест record_SameCellInAnotherActiveLease_Rejected перестанет ловить эту поломку. При смене record_SameCellInAnotherActiveLease_Rejected проверь это утверждение.");
     }
 
     @Test
@@ -59,7 +87,8 @@ class LeaseBookTests {
         assertThrows(
                 IllegalStateException.class,
                 () -> book.record(lease.id(), LeaseCell.placed(cell)),
-                "Повторная запись клетки сломала бы обратный откат: клетку откатывали бы дважды");
+                "Повторная запись клетки сломала бы обратный откат: клетку откатывали бы дважды"
+                        + " Иначе тест record_SameCellInSameLeaseTwice_Rejected перестанет ловить эту поломку. При смене record_SameCellInSameLeaseTwice_Rejected проверь это утверждение.");
     }
 
     @Test
@@ -72,7 +101,8 @@ class LeaseBookTests {
         assertThrows(
                 IllegalStateException.class,
                 () -> book.record(lease.id(), LeaseCell.placed(new BlockCoord(4, 70, 5))),
-                "Закрытая аренда новый блок не принимает: иначе откат переменной длины станет непредсказуем");
+                "Закрытая аренда новый блок не принимает: иначе откат переменной длины станет непредсказуем"
+                        + " При смене record_AfterCommit_Rejected проверь это утверждение.");
     }
 
     @Test
@@ -84,10 +114,23 @@ class LeaseBookTests {
 
         book.commit(lease.id());
 
-        assertEquals(LeaseStatus.DONE, book.require(lease.id()).status(), "Откат механики закрывает аренду DONE");
-        assertFalse(book.isActive(cell), "Закрытая аренда клетку не держит: её можно использовать снова");
-        assertFalse(book.isOrphaned(cell), "Закрытая аренда не считается брошенной");
-        assertTrue(book.orphaned().isEmpty(), "DONE не попадает в уборку графа");
+        assertEquals(
+                LeaseStatus.DONE,
+                book.require(lease.id()).status(),
+                "Откат механики закрывает аренду DONE"
+                        + " Иначе тест commit_ReleasesCells_AndKeepsHistory перестанет ловить эту поломку. При смене commit_ReleasesCells_AndKeepsHistory проверь это утверждение.");
+        assertFalse(
+                book.isActive(cell),
+                "Закрытая аренда клетку не держит: её можно использовать снова"
+                        + " Иначе тест commit_ReleasesCells_AndKeepsHistory перестанет ловить эту поломку. При смене commit_ReleasesCells_AndKeepsHistory проверь это утверждение.");
+        assertFalse(
+                book.isOrphaned(cell),
+                "Закрытая аренда не считается брошенной"
+                        + " Иначе тест commit_ReleasesCells_AndKeepsHistory перестанет ловить эту поломку. При смене commit_ReleasesCells_AndKeepsHistory проверь это утверждение.");
+        assertTrue(
+                book.orphaned().isEmpty(),
+                "DONE не попадает в уборку графа"
+                        + " Иначе тест commit_ReleasesCells_AndKeepsHistory перестанет ловить эту поломку. При смене commit_ReleasesCells_AndKeepsHistory проверь это утверждение.");
     }
 
     @Test
@@ -99,15 +142,29 @@ class LeaseBookTests {
 
         book.orphan(lease.id());
 
-        assertEquals(LeaseStatus.ORPHANED, book.require(lease.id()).status(), "Брошенная правка ждёт уборки");
-        assertTrue(book.isOrphaned(cell), "Скан обязан видеть клетку брошенной аренды");
-        assertFalse(book.isActive(cell), "Брошенная аренда больше не действует");
+        assertEquals(
+                LeaseStatus.ORPHANED,
+                book.require(lease.id()).status(),
+                "Брошенная правка ждёт уборки"
+                        + " Иначе тест orphan_MovesLeaseToCleanup_AndFindsOwner перестанет ловить эту поломку. При смене orphan_MovesLeaseToCleanup_AndFindsOwner проверь это утверждение.");
+        assertTrue(
+                book.isOrphaned(cell),
+                "Скан обязан видеть клетку брошенной аренды"
+                        + " Иначе тест orphan_MovesLeaseToCleanup_AndFindsOwner перестанет ловить эту поломку. При смене orphan_MovesLeaseToCleanup_AndFindsOwner проверь это утверждение.");
+        assertFalse(
+                book.isActive(cell),
+                "Брошенная аренда больше не действует"
+                        + " Иначе тест orphan_MovesLeaseToCleanup_AndFindsOwner перестанет ловить эту поломку. При смене orphan_MovesLeaseToCleanup_AndFindsOwner проверь это утверждение.");
         assertEquals(
                 lease.id(),
                 book.owner(cell).orElseThrow().id(),
-                "По клетке обязана находиться брошенная аренда: графу нужно её назначение и срок");
+                "По клетке обязана находиться брошенная аренда: графу нужно её назначение и срок"
+                        + " Иначе тест orphan_MovesLeaseToCleanup_AndFindsOwner перестанет ловить эту поломку. При смене orphan_MovesLeaseToCleanup_AndFindsOwner проверь это утверждение.");
         assertEquals(
-                List.of(cell), book.orphanedCells().stream().map(LeaseCell::pos).toList(), "Очистка знает клетки");
+                List.of(cell),
+                book.orphanedCells().stream().map(LeaseCell::pos).toList(),
+                "Очистка знает клетки"
+                        + " Иначе тест orphan_MovesLeaseToCleanup_AndFindsOwner перестанет ловить эту поломку. При смене orphan_MovesLeaseToCleanup_AndFindsOwner проверь это утверждение.");
     }
 
     @Test
@@ -119,9 +176,21 @@ class LeaseBookTests {
 
         int broken = book.orphanSpirit(SPIRIT);
 
-        assertEquals(1, broken, "Смерть духа бросает только его аренды");
-        assertEquals(LeaseStatus.ORPHANED, book.require(mine.id()).status(), "Аренда умершего брошена");
-        assertEquals(LeaseStatus.ACTIVE, book.require(foreign.id()).status(), "Чужая действующая аренда не тронута");
+        assertEquals(
+                1,
+                broken,
+                "Смерть духа бросает только его аренды"
+                        + " Иначе тест orphanSpirit_OtherSpiritAlive_BreaksOnlyItsLeases перестанет ловить эту поломку. При смене orphanSpirit_OtherSpiritAlive_BreaksOnlyItsLeases проверь это утверждение.");
+        assertEquals(
+                LeaseStatus.ORPHANED,
+                book.require(mine.id()).status(),
+                "Аренда умершего брошена"
+                        + " Иначе тест orphanSpirit_OtherSpiritAlive_BreaksOnlyItsLeases перестанет ловить эту поломку. При смене orphanSpirit_OtherSpiritAlive_BreaksOnlyItsLeases проверь это утверждение.");
+        assertEquals(
+                LeaseStatus.ACTIVE,
+                book.require(foreign.id()).status(),
+                "Чужая действующая аренда не тронута"
+                        + " Иначе тест orphanSpirit_OtherSpiritAlive_BreaksOnlyItsLeases перестанет ловить эту поломку. При смене orphanSpirit_OtherSpiritAlive_BreaksOnlyItsLeases проверь это утверждение.");
     }
 
     @Test
@@ -139,7 +208,8 @@ class LeaseBookTests {
                 book.rollbackOrder(book.require(lease.id())).stream()
                         .map(LeaseCell::pos)
                         .toList(),
-                "Откат идёт сверху вниз, обратно записи: иначе дух разберёт опору под собой");
+                "Откат идёт сверху вниз, обратно записи: иначе дух разберёт опору под собой"
+                        + " При смене rollbackOrder_AfterRecording_ReversesRecordOrder проверь это утверждение.");
     }
 
     @Test
@@ -151,12 +221,29 @@ class LeaseBookTests {
         Lease legacy = book.legacy(List.of(one, two), 42);
 
         assertEquals(
-                LeaseStatus.ORPHANED, legacy.status(), "Старые T-метки не имеют живого владельца: их убирает граф");
-        assertEquals(LeaseBook.LEGACY_PURPOSE, legacy.purpose(), "Миграция узнаётся по единому назначению legacy");
-        assertEquals(2, legacy.cells().size(), "В одну аренду сливаются все старые метки");
-        assertTrue(book.isOrphaned(one) && book.isOrphaned(two), "Старые метки видны скану как брошенные");
+                LeaseStatus.ORPHANED,
+                legacy.status(),
+                "Старые T-метки не имеют живого владельца: их убирает граф"
+                        + " Иначе тест legacy_FirstMigration_MakesSingleOrphanedLease перестанет ловить эту поломку. При смене legacy_FirstMigration_MakesSingleOrphanedLease проверь это утверждение.");
         assertEquals(
-                legacy.id(), book.legacy(List.of(one), 43).id(), "Повторная миграция не плодит вторую legacy-аренду");
+                LeaseBook.LEGACY_PURPOSE,
+                legacy.purpose(),
+                "Миграция узнаётся по единому назначению legacy"
+                        + " Иначе тест legacy_FirstMigration_MakesSingleOrphanedLease перестанет ловить эту поломку. При смене legacy_FirstMigration_MakesSingleOrphanedLease проверь это утверждение.");
+        assertEquals(
+                2,
+                legacy.cells().size(),
+                "В одну аренду сливаются все старые метки"
+                        + " Иначе тест legacy_FirstMigration_MakesSingleOrphanedLease перестанет ловить эту поломку. При смене legacy_FirstMigration_MakesSingleOrphanedLease проверь это утверждение.");
+        assertTrue(
+                book.isOrphaned(one) && book.isOrphaned(two),
+                "Старые метки видны скану как брошенные"
+                        + " Иначе тест legacy_FirstMigration_MakesSingleOrphanedLease перестанет ловить эту поломку. При смене legacy_FirstMigration_MakesSingleOrphanedLease проверь это утверждение.");
+        assertEquals(
+                legacy.id(),
+                book.legacy(List.of(one), 43).id(),
+                "Повторная миграция не плодит вторую legacy-аренду"
+                        + " Иначе тест legacy_FirstMigration_MakesSingleOrphanedLease перестанет ловить эту поломку. При смене legacy_FirstMigration_MakesSingleOrphanedLease проверь это утверждение.");
     }
 
     @Test
@@ -171,7 +258,8 @@ class LeaseBookTests {
         assertThrows(
                 IllegalStateException.class,
                 () -> book.record(next.id(), LeaseCell.placed(cell)),
-                "Новая правка не занимает клетку брошенной аренды: откат старой сломал бы новую");
+                "Новая правка не занимает клетку брошенной аренды: откат старой сломал бы новую"
+                        + " Иначе тест record_CellFromOrphanedLease_Rejected перестанет ловить эту поломку. При смене record_CellFromOrphanedLease_Rejected проверь это утверждение.");
     }
 
     @Test
@@ -179,7 +267,8 @@ class LeaseBookTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new LeaseCell(new BlockCoord(0, 64, 0), LeaseKind.BROKEN, null, null),
-                "Сломанная клетка без прежнего блока неоткатываема: сохранение потеряло бы материал");
+                "Сломанная клетка без прежнего блока неоткатываема: сохранение потеряло бы материал"
+                        + " Иначе тест cell_BrokenWithoutBefore_Rejected перестанет ловить эту поломку. При смене cell_BrokenWithoutBefore_Rejected проверь это утверждение.");
     }
 
     @Test
@@ -187,7 +276,8 @@ class LeaseBookTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new LeaseCell(new BlockCoord(0, 64, 0), LeaseKind.STATE, "open", null),
-                "Состояние без «после» не вернуть: закрыть дверь будет нечем");
+                "Состояние без «после» не вернуть: закрыть дверь будет нечем"
+                        + " Иначе тест cell_StateWithoutAfter_Rejected перестанет ловить эту поломку. При смене cell_StateWithoutAfter_Rejected проверь это утверждение.");
     }
 
     @Test
@@ -195,6 +285,7 @@ class LeaseBookTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> Lease.opened("id", SPIRIT, null, "scaffold", -1),
-                "Отрицательный момент открытия аренды ломает срок брошенной правки");
+                "Отрицательный момент открытия аренды ломает срок брошенной правки"
+                        + " При смене open_NegativeSince_Rejected проверь это утверждение.");
     }
 }

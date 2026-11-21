@@ -27,7 +27,8 @@ class FillIndexTests {
         assertEquals(
                 Optional.of("world:backfill:a"),
                 index.covering(List.of(new BlockCoord(4, 64, 7))),
-                "Клетка ямы внутри открытой засыпки обязана находить её задание, а не ставить второе");
+                "Клетка ямы внутри открытой засыпки обязана находить её задание, а не ставить второе"
+                        + " Иначе тест covering_CellOfOpenFill_NamesItsTicket перестанет ловить эту поломку. При смене covering_CellOfOpenFill_NamesItsTicket проверь это утверждение.");
     }
 
     @Test
@@ -40,20 +41,28 @@ class FillIndexTests {
         assertEquals(
                 Optional.of("world:backfill:first"),
                 index.covering(List.of(new BlockCoord(2, 60, 1), new BlockCoord(1, 60, 1))),
-                "Яма, задетая двумя заданиями, продолжает ближайшее найденное, а не плодит третье");
+                "Яма, задетая двумя заданиями, продолжает ближайшее найденное, а не плодит третье"
+                        + " Иначе тест covering_PitTouchingSeveralFills_ReturnsFirstKnownTicket перестанет ловить эту поломку. При смене covering_PitTouchingSeveralFills_ReturnsFirstKnownTicket проверь это утверждение.");
     }
 
     @Test
     void covering_FreeCellOrNoFills_IsEmpty() {
         FillIndex index = FillIndex.of(Map.of("world:backfill:a", fill(box(4, 64, 7))));
 
-        assertTrue(index.covering(List.of(new BlockCoord(4, 65, 7))).isEmpty(), "Клетка над засыпкой свободна");
+        assertTrue(
+                index.covering(List.of(new BlockCoord(4, 65, 7))).isEmpty(),
+                "Клетка над засыпкой свободна"
+                        + " Иначе тест covering_FreeCellOrNoFills_IsEmpty перестанет ловить эту поломку. При смене covering_FreeCellOrNoFills_IsEmpty проверь это утверждение.");
         assertTrue(
                 FillIndex.of(Map.of())
                         .covering(List.of(new BlockCoord(1, 2, 3)))
                         .isEmpty(),
-                "Нет засыпок — нет попадания");
-        assertTrue(FillIndex.of(Map.of()).covering(List.of()).isEmpty(), "Пустая яма не находит задания");
+                "Нет засыпок — нет попадания"
+                        + " Иначе тест covering_FreeCellOrNoFills_IsEmpty перестанет ловить эту поломку. При смене covering_FreeCellOrNoFills_IsEmpty проверь это утверждение.");
+        assertTrue(
+                FillIndex.of(Map.of()).covering(List.of()).isEmpty(),
+                "Пустая яма не находит задания"
+                        + " Иначе тест covering_FreeCellOrNoFills_IsEmpty перестанет ловить эту поломку. При смене covering_FreeCellOrNoFills_IsEmpty проверь это утверждение.");
     }
 
     @Test
@@ -64,6 +73,7 @@ class FillIndexTests {
         assertEquals(
                 Optional.of("world:backfill:wide"),
                 index.covering(List.of(new BlockCoord(11, 61, 20))),
-                "Индекс обязан покрывать весь объём коробки, а не только её угол");
+                "Индекс обязан покрывать весь объём коробки, а не только её угол"
+                        + " Иначе тест covering_WideBox_IndexesEveryCell перестанет ловить эту поломку. При смене covering_WideBox_IndexesEveryCell проверь это утверждение.");
     }
 }

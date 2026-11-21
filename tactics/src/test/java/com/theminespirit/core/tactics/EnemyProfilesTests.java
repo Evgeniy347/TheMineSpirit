@@ -56,8 +56,8 @@ class EnemyProfilesTests {
         for (String type : REQUIRED_TYPES) {
             assertTrue(
                     profiles.known("minecraft:" + type),
-                    "В enemies.json нет профиля " + type
-                            + ": такой враг оценивался бы как неизвестный и консервативный");
+                    "В enemies.json нет профиля " + type + ": такой враг оценивался бы как неизвестный и консервативный"
+                            + " Иначе тест defaultFile_Loaded_DescribesAllRequiredTypes перестанет ловить эту поломку. При смене defaultFile_Loaded_DescribesAllRequiredTypes проверь это утверждение.");
         }
     }
 
@@ -68,11 +68,13 @@ class EnemyProfilesTests {
         assertEquals(
                 entries,
                 profiles.byType().size() + 1L,
-                "Каждая строка файла — отдельный тип (плюс default): повтор типа затёр бы профиль молча");
+                "Каждая строка файла — отдельный тип (плюс default): повтор типа затёр бы профиль молча"
+                        + " Иначе тест defaultFile_Loaded_KeysAreUniqueAndMatchPattern перестанет ловить эту поломку. При смене defaultFile_Loaded_KeysAreUniqueAndMatchPattern проверь это утверждение.");
         for (String key : profiles.byType().keySet()) {
             assertTrue(
                     KEY.matcher(key).matches(),
-                    "Ключ «" + key + "» не подходит под minecraft:[a-z_]+: адаптер ищет профиль по id сущности");
+                    "Ключ «" + key + "» не подходит под minecraft:[a-z_]+: адаптер ищет профиль по id сущности"
+                            + " Иначе тест defaultFile_Loaded_KeysAreUniqueAndMatchPattern перестанет ловить эту поломку. При смене defaultFile_Loaded_KeysAreUniqueAndMatchPattern проверь это утверждение.");
         }
     }
 
@@ -83,10 +85,25 @@ class EnemyProfilesTests {
         List<Double> warden = numbers(profile("warden"));
 
         assertEquals(
-                List.of(20.0, 3.0, 0.23), zombie, "Зомби: hp 20, dps 3, скорость 0.23 — исходная калибровка весов");
-        assertEquals(List.of(100.0, 8.0, 0.3), ravager, "Разоритель: hp 100, dps 8, скорость 0.3");
-        assertEquals(List.of(500.0, 30.0, 0.3), warden, "Страж: hp 500, dps 30, скорость 0.3");
-        assertEquals(List.of(16.0, 2.0, 0.3), numbers(profile("spider")), "Паук: hp 16, dps 2, скорость 0.3");
+                List.of(20.0, 3.0, 0.23),
+                zombie,
+                "Зомби: hp 20, dps 3, скорость 0.23 — исходная калибровка весов"
+                        + " Иначе тест defaultFile_Loaded_NumbersMatchDesign перестанет ловить эту поломку. При смене defaultFile_Loaded_NumbersMatchDesign проверь это утверждение.");
+        assertEquals(
+                List.of(100.0, 8.0, 0.3),
+                ravager,
+                "Разоритель: hp 100, dps 8, скорость 0.3"
+                        + " Иначе тест defaultFile_Loaded_NumbersMatchDesign перестанет ловить эту поломку. При смене defaultFile_Loaded_NumbersMatchDesign проверь это утверждение.");
+        assertEquals(
+                List.of(500.0, 30.0, 0.3),
+                warden,
+                "Страж: hp 500, dps 30, скорость 0.3"
+                        + " Иначе тест defaultFile_Loaded_NumbersMatchDesign перестанет ловить эту поломку. При смене defaultFile_Loaded_NumbersMatchDesign проверь это утверждение.");
+        assertEquals(
+                List.of(16.0, 2.0, 0.3),
+                numbers(profile("spider")),
+                "Паук: hp 16, dps 2, скорость 0.3"
+                        + " Иначе тест defaultFile_Loaded_NumbersMatchDesign перестанет ловить эту поломку. При смене defaultFile_Loaded_NumbersMatchDesign проверь это утверждение.");
     }
 
     private static List<Double> numbers(EnemyProfile profile) {
@@ -103,12 +120,14 @@ class EnemyProfilesTests {
                         profile("creeper").explosive(),
                         profile("phantom").flies(),
                         profile("blaze").flies() && profile("blaze").ranged()),
-                "Свойства врагов: утопленник плавает, скелет стреляет, крипер взрывается, фантом и блейз летают, блейз стреляет");
+                "Свойства врагов: утопленник плавает, скелет стреляет, крипер взрывается, фантом и блейз летают, блейз стреляет"
+                        + " Иначе тест defaultFile_Loaded_FlagsMatchBehaviour перестанет ловить эту поломку. При смене defaultFile_Loaded_FlagsMatchBehaviour проверь это утверждение.");
         assertFalse(
                 profile("zombie").ranged()
                         || profile("zombie").swims()
                         || profile("zombie").flies(),
-                "Зомби — обычный ближний враг: иначе выбор отхода «в воду» ошибся бы на нём");
+                "Зомби — обычный ближний враг: иначе выбор отхода «в воду» ошибся бы на нём"
+                        + " При смене defaultFile_Loaded_FlagsMatchBehaviour проверь это утверждение.");
     }
 
     @Test
@@ -118,7 +137,8 @@ class EnemyProfilesTests {
         assertEquals(
                 List.of(20.0, 4.0, 1.0),
                 numbers(unknown),
-                "Неизвестный тип оценивается консервативно: hp 20, dps 4, скорость 1.0 (быстрый и опасный)");
+                "Неизвестный тип оценивается консервативно: hp 20, dps 4, скорость 1.0 (быстрый и опасный)"
+                        + " Иначе тест profile_UnknownType_ReturnsConservativeDefault перестанет ловить эту поломку. При смене profile_UnknownType_ReturnsConservativeDefault проверь это утверждение.");
     }
 
     static Stream<Arguments> brokenFiles() {
@@ -179,12 +199,14 @@ class EnemyProfilesTests {
                 IllegalStateException.class,
                 () -> EnemyProfilesParser.parse(ConfigNode.root("enemies.json", broken)),
                 "Сломанный enemies.json («" + name
-                        + "») обязан отклоняться при загрузке, а не молча менять оценку врагов");
+                        + "») обязан отклоняться при загрузке, а не молча менять оценку врагов"
+                        + " Иначе тест parse_BrokenFile_FailsWithPath перестанет ловить эту поломку. При смене parse_BrokenFile_FailsWithPath проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("enemies.json")
                         && error.getMessage().contains(path),
                 "Сообщение называет файл и место сбоя (" + path + "), чтобы правка шла по подсказке, а получили: "
-                        + error.getMessage());
+                        + error.getMessage()
+                        + " Иначе тест parse_BrokenFile_FailsWithPath перестанет ловить эту поломку. При смене parse_BrokenFile_FailsWithPath проверь это утверждение.");
     }
 }

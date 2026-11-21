@@ -28,7 +28,8 @@ class SettlementTreeCodecTests {
         assertEquals(
                 tree,
                 decoded,
-                "Пакет древа переживает упаковку и распаковку без потерь: рамки, связи, проценты и подсказки");
+                "Пакет древа переживает упаковку и распаковку без потерь: рамки, связи, проценты и подсказки"
+                        + " Иначе тест codec_FullStageModel_RoundTripsThroughPacketBytes перестанет ловить эту поломку. При смене codec_FullStageModel_RoundTripsThroughPacketBytes проверь это утверждение.");
     }
 
     @Test
@@ -41,11 +42,13 @@ class SettlementTreeCodecTests {
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,
                 () -> SettlementTreeCodec.decode(cut),
-                "Обрезанный пакет древа обязан давать понятную ошибку, а не молча рисовать половину");
+                "Обрезанный пакет древа обязан давать понятную ошибку, а не молча рисовать половину"
+                        + " Иначе тест decode_TruncatedPacket_ReportsBrokenPayload перестанет ловить эту поломку. При смене decode_TruncatedPacket_ReportsBrokenPayload проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("оборван"),
-                "Ошибка обрезанного пакета называет обрыв: «" + error.getMessage() + "»");
+                "Ошибка обрезанного пакета называет обрыв: «" + error.getMessage() + "»"
+                        + " Иначе тест decode_TruncatedPacket_ReportsBrokenPayload перестанет ловить эту поломку. При смене decode_TruncatedPacket_ReportsBrokenPayload проверь это утверждение.");
     }
 
     @Test
@@ -58,11 +61,13 @@ class SettlementTreeCodecTests {
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,
                 () -> SettlementTreeCodec.decode(payload),
-                "Чужой пакет древа обязан отвергаться: иначе клиент нарисует мусор вместо этапа");
+                "Чужой пакет древа обязан отвергаться: иначе клиент нарисует мусор вместо этапа"
+                        + " При смене decode_ForeignMagic_ReportsVersionMismatch проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("метки сборки"),
-                "Ошибка чужого пакета говорит о расхождении сборок: «" + error.getMessage() + "»");
+                "Ошибка чужого пакета говорит о расхождении сборок: «" + error.getMessage() + "»"
+                        + " Иначе тест decode_ForeignMagic_ReportsVersionMismatch перестанет ловить эту поломку. При смене decode_ForeignMagic_ReportsVersionMismatch проверь это утверждение.");
     }
 
     @Test
@@ -77,7 +82,8 @@ class SettlementTreeCodecTests {
             assertEquals(
                     tree,
                     decoded,
-                    "Этап " + stage + ": пакет древа с реальными таблицами упаковывается и распаковывается");
+                    "Этап " + stage + ": пакет древа с реальными таблицами упаковывается и распаковывается"
+                            + " Иначе тест codec_EveryRealStage_RoundTrips перестанет ловить эту поломку. При смене codec_EveryRealStage_RoundTrips проверь это утверждение.");
         }
     }
 }

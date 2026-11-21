@@ -80,7 +80,8 @@ class ScorerTests {
                     actual.get(i),
                     TOLERANCE,
                     "Ситуация «" + name + "»: счёт варианта #" + i + " (FIGHT, RETREAT, IGNORE) — сумма вес × фактор, "
-                            + "посчитанная вручную; расхождение значит ошибку в формуле фактора или в суммировании");
+                            + "посчитанная вручную; расхождение значит ошибку в формуле фактора или в суммировании"
+                            + " Иначе тест score_KnownSituation_EqualsHandComputedSum перестанет ловить эту поломку. При смене score_KnownSituation_EqualsHandComputedSum проверь это утверждение.");
         }
     }
 
@@ -94,7 +95,8 @@ class ScorerTests {
         assertEquals(
                 Factor.values().length,
                 scorer.factorEvaluations(),
-                "Один вызов считает каждый фактор ровно один раз: пересчёт по вариантам утроил бы стоимость тика");
+                "Один вызов считает каждый фактор ровно один раз: пересчёт по вариантам утроил бы стоимость тика"
+                        + " Иначе тест score_OneCall_EvaluatesEachFactorExactlyOnce перестанет ловить эту поломку. При смене score_OneCall_EvaluatesEachFactorExactlyOnce проверь это утверждение.");
     }
 
     @Test
@@ -114,7 +116,8 @@ class ScorerTests {
                     scores.total(option),
                     sum,
                     TOLERANCE,
-                    "Вклады факторов объясняют счёт " + option + ": trace показывает именно эти слагаемые");
+                    "Вклады факторов объясняют счёт " + option + ": trace показывает именно эти слагаемые"
+                            + " Иначе тест score_ContributionsOfOption_SumToTotal перестанет ловить эту поломку. При смене score_ContributionsOfOption_SumToTotal проверь это утверждение.");
         }
     }
 
@@ -137,7 +140,8 @@ class ScorerTests {
                 List.of(TacticalOption.IGNORE, TacticalOption.RETREAT, TacticalOption.FIGHT),
                 winners,
                 "При равном счёте побеждает вариант, стоящий раньше в tieBreak: без этого результат зависел бы от порядка "
-                        + "перечисления в коде");
+                        + "перечисления в коде"
+                        + " При смене best_EqualScores_FollowsTieBreakOrder проверь это утверждение.");
     }
 
     @Test
@@ -149,7 +153,8 @@ class ScorerTests {
         assertEquals(
                 TacticalOption.FIGHT,
                 scores.best(Set.of(TacticalOption.FIGHT, TacticalOption.RETREAT), weights),
-                "Вычеркнутый вариант не участвует в ничьей: побеждает первый из оставшихся по tieBreak");
+                "Вычеркнутый вариант не участвует в ничьей: побеждает первый из оставшихся по tieBreak"
+                        + " Иначе тест best_TieAmongCandidatesOnly_IgnoresExcludedOptions перестанет ловить эту поломку. При смене best_TieAmongCandidatesOnly_IgnoresExcludedOptions проверь это утверждение.");
     }
 
     @Test
@@ -161,7 +166,8 @@ class ScorerTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> scores.best(Set.of(), weights),
-                "Пустой набор кандидатов — ошибка вызывающего: тихий выбор «по умолчанию» скрыл бы дыру в жёстких правилах");
+                "Пустой набор кандидатов — ошибка вызывающего: тихий выбор «по умолчанию» скрыл бы дыру в жёстких правилах"
+                        + " Иначе тест best_NoCandidates_ThrowsInsteadOfGuessing перестанет ловить эту поломку. При смене best_NoCandidates_ThrowsInsteadOfGuessing проверь это утверждение.");
     }
 
     @Test
@@ -184,7 +190,8 @@ class ScorerTests {
                     2 * once.total(option),
                     twice.total(option),
                     TOLERANCE,
-                    "Счёт линеен по факторам: удвоение всех факторов (кроме BIAS) удваивает счёт " + option);
+                    "Счёт линеен по факторам: удвоение всех факторов (кроме BIAS) удваивает счёт " + option
+                            + " Иначе тест combine_ScalingAllFactorsByTwo_DoublesTotalsWhenBiasIsZero перестанет ловить эту поломку. При смене combine_ScalingAllFactorsByTwo_DoublesTotalsWhenBiasIsZero проверь это утверждение.");
         }
     }
 }

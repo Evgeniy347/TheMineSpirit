@@ -31,7 +31,8 @@ class DeadCodeGuardTests {
                 List.of(),
                 missingTests,
                 "Проба масштаба ссылается на несуществующий тест: исключение устарело и прикрывает мёртвый код. "
-                        + "Верните тест или удалите пробу: " + missingTests);
+                        + "Верните тест или удалите пробу: " + missingTests
+                        + " Иначе тест productionSources_EveryDeclaration_IsReferencedOrEntryPoint перестанет ловить эту поломку. При смене productionSources_EveryDeclaration_IsReferencedOrEntryPoint проверь это утверждение.");
         List<Finding> findings = deadCode(production(), gameTests());
         List<String> offenders = new ArrayList<>();
         List<String> stale = new ArrayList<>();
@@ -52,7 +53,8 @@ class DeadCodeGuardTests {
                 List.of(),
                 stale,
                 "Исключение сторожа мёртвого кода устарело: объявление используется или удалено, "
-                        + "поэтому исключение больше ничего не разрешает. Удалите строку из DeadCodeExemptions.");
+                        + "поэтому исключение больше ничего не разрешает. Удалите строку из DeadCodeExemptions."
+                        + " Иначе тест productionSources_EveryDeclaration_IsReferencedOrEntryPoint перестанет ловить эту поломку. При смене productionSources_EveryDeclaration_IsReferencedOrEntryPoint проверь это утверждение.");
         assertEquals(
                 List.of(),
                 offenders,
@@ -61,7 +63,8 @@ class DeadCodeGuardTests {
                         + "его тесты проверяют только себя, а правки в нём ничего не меняют. Как надо: удалить "
                         + "мёртвое объявление вместе с тестами, которые проверяют только его; заготовку под "
                         + "открытую задачу — в DeadCodeExemptions.OPEN_TASKS с причиной и ссылкой на задачу. Найдено "
-                        + offenders.size() + ": " + String.join("; ", offenders));
+                        + offenders.size() + ": " + String.join("; ", offenders)
+                        + " При смене productionSources_EveryDeclaration_IsReferencedOrEntryPoint проверь это утверждение.");
     }
 
     @Test
@@ -79,7 +82,8 @@ class DeadCodeGuardTests {
                 List.of(),
                 deadCode(sources).stream().map(Finding::describe).toList(),
                 "Класс с @JeiPlugin находит и создаёт JEI по аннотации: ссылок из кода мода на него нет, "
-                        + "но он живой — иначе интеграцию с JEI пришлось бы удалить");
+                        + "но он живой — иначе интеграцию с JEI пришлось бы удалить"
+                        + " При смене deadCodeScanner_JeiPluginClass_IsEntryPoint проверь это утверждение.");
     }
 
     @Test
@@ -105,7 +109,8 @@ class DeadCodeGuardTests {
                         "Live.java:6 method Live#unusedMethod"),
                 deadCode(sources).stream().map(Finding::describe).toList(),
                 "Сторож ослеп: поле, метод и вложенный класс без ссылок из production-кода обязаны находиться; "
-                        + "имя в строке не ссылка, а вызывающий метод — не мёртвый");
+                        + "имя в строке не ссылка, а вызывающий метод — не мёртвый"
+                        + " Иначе тест usedMethod перестанет ловить эту поломку. При смене usedMethod проверь это утверждение.");
     }
 
     @Test
@@ -138,7 +143,8 @@ class DeadCodeGuardTests {
                 List.of(),
                 deadCode(sources).stream().map(Finding::describe).toList(),
                 "Сторож ложно срабатывает на точках входа: @EventBusSubscriber, @SubscribeEvent, @Override, main, "
-                        + "компоненты record и элементы аннотации — не мёртвый код");
+                        + "компоненты record и элементы аннотации — не мёртвый код"
+                        + " Иначе тест main перестанет ловить эту поломку. При смене main проверь это утверждение.");
     }
 
     @Test
@@ -156,7 +162,8 @@ class DeadCodeGuardTests {
         assertEquals(
                 List.of("Speaks.java:3 class <top>#Speaks", "Speaks.java:5 field Speaks#text"),
                 deadCode(sources).stream().map(Finding::describe).toList(),
-                "Сторож ложно считает ссылкой упоминание в комментарии или строке: такой код остаётся мёртвым");
+                "Сторож ложно считает ссылкой упоминание в комментарии или строке: такой код остаётся мёртвым"
+                        + " Иначе тест deadCodeScanner_CommentAndStringReferences_DoNotCount перестанет ловить эту поломку. При смене deadCodeScanner_CommentAndStringReferences_DoNotCount проверь это утверждение.");
     }
 
     @Test
@@ -182,7 +189,7 @@ class DeadCodeGuardTests {
                 deadCode(sources).stream().map(Finding::describe).toList(),
                 "Сторож считает ссылкой вызов из мёртвого кода: класс, поле и метод, на которые ссылаются "
                         + "только недостижимые друг от друга объявления, обязаны находиться. Цена: мёртвая "
-                        + "подсистема держит тесты и выглядит живой");
+                        + "подсистема держит тесты и выглядит живой" + " При смене run проверь это утверждение.");
     }
 
     @Test
@@ -202,7 +209,8 @@ class DeadCodeGuardTests {
         assertEquals(
                 List.of(),
                 deadCode(sources).stream().map(Finding::describe).toList(),
-                "Сторож ослеп на достижимости: точка входа @Mod зовёт Worker, а тот — work; это живая цепочка");
+                "Сторож ослеп на достижимости: точка входа @Mod зовёт Worker, а тот — work; это живая цепочка"
+                        + " Иначе тест work перестанет ловить эту поломку. При смене work проверь это утверждение.");
     }
 
     static Set<String> testMethodNames() {

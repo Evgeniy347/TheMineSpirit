@@ -67,7 +67,8 @@ class CellReportTests {
                 new Finding("look_at", expected),
                 finding,
                 scene + ": описание клетки обязано называть блок, контейнер и сущности, а незагруженную клетку — "
-                        + "пропускать; иначе ИИ примет пропуск за воздух");
+                        + "пропускать; иначе ИИ примет пропуск за воздух"
+                        + " При смене describe_Cell_ListsBlockContainerEntitiesOrSkip проверь это утверждение.");
     }
 
     @Test
@@ -78,6 +79,7 @@ class CellReportTests {
         assertThrows(
                 NullPointerException.class,
                 () -> new LoadedCell("minecraft:air", false, withNull),
-                "сущность без типа обязана отклоняться: описание клетки не может назвать безымянное");
+                "сущность без типа обязана отклоняться: описание клетки не может назвать безымянное"
+                        + " Иначе тест loadedCell_NullEntityType_IsRejected перестанет ловить эту поломку. При смене loadedCell_NullEntityType_IsRejected проверь это утверждение.");
     }
 }

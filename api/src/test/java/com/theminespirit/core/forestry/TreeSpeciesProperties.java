@@ -17,7 +17,8 @@ class TreeSpeciesProperties {
                 Optional.of(species),
                 TreeSpecies.ofLog(species.logId()),
                 "ofLog(s.logId) обязан вернуть ровно s для каждой породы: иначе поиск разойдётся с таблицей пород "
-                        + "и найденное бревно не распознается как дерево");
+                        + "и найденное бревно не распознается как дерево"
+                        + " При смене ofLog_AnySpeciesLogId_ReturnsThatSpecies проверь это утверждение.");
     }
 
     @Provide

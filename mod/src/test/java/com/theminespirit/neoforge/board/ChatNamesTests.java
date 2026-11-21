@@ -15,7 +15,8 @@ class ChatNamesTests {
         assertEquals(
                 "невозможно: нет источника «Земля» в данных графа: нужда 1 не снимется",
                 shown,
-                "Системный id предмета обязан стать отображаемым названием, остальной текст не меняется");
+                "Системный id предмета обязан стать отображаемым названием, остальной текст не меняется"
+                        + " Иначе тест display_ItemId_ShowsDisplayName перестанет ловить эту поломку. При смене display_ItemId_ShowsDisplayName проверь это утверждение.");
     }
 
     @Test
@@ -25,7 +26,8 @@ class ChatNamesTests {
         assertEquals(
                 "нет источника unobtainium в данных графа",
                 shown,
-                "Неизвестный токен остаётся как есть: выдумывать название нельзя");
+                "Неизвестный токен остаётся как есть: выдумывать название нельзя"
+                        + " Иначе тест display_UnknownToken_StaysRaw перестанет ловить эту поломку. При смене display_UnknownToken_StaysRaw проверь это утверждение.");
     }
 
     @Test
@@ -37,7 +39,8 @@ class ChatNamesTests {
         assertEquals(
                 "нужна постройка «Пашня» (событие more7_field_full), её нет в плане",
                 shown,
-                "Id постройки заменяется названием, id события без имени остаётся техническим");
+                "Id постройки заменяется названием, id события без имени остаётся техническим"
+                        + " Иначе тест display_BuildingId_ReplacedAndEventKept перестанет ловить эту поломку. При смене display_BuildingId_ReplacedAndEventKept проверь это утверждение.");
     }
 
     @Test
@@ -46,6 +49,7 @@ class ChatNamesTests {
         assertEquals(
                 text,
                 ChatNames.display(text, token -> null).getString(),
-                "Русский текст, знаки и числа без известного id остаются дословно");
+                "Русский текст, знаки и числа без известного id остаются дословно"
+                        + " Иначе тест display_RussianTextWithSigns_NotTouched перестанет ловить эту поломку. При смене display_RussianTextWithSigns_NotTouched проверь это утверждение.");
     }
 }

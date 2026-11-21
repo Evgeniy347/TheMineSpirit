@@ -74,7 +74,8 @@ class LeaseSupervisorTests {
                 List.of(lease),
                 LeaseSupervisor.due(book, states, new HashMap<>(), 100, 600),
                 "Тикет ушёл другому: прежняя правка стала чужой и бросается, даже если дух ещё жив (но не если он стоит"
-                        + " на ней — см. ownerOnOwnCell). Сломается: правки без хозяина копятся. Проверить: ticketOwners");
+                        + " на ней — см. ownerOnOwnCell). Сломается: правки без хозяина копятся. Проверить: ticketOwners"
+                        + " При смене ticketMovedToAnotherSpirit_NewOwner_OrphansImmediately проверь это утверждение.");
     }
 
     @Test
@@ -143,7 +144,8 @@ class LeaseSupervisorTests {
         assertTrue(
                 since.isEmpty(),
                 "пока хозяин на своём столбе, часы паузы сброшены: сойдя, он получает полный срок, а не остаток."
-                        + " Сломается: аренду бросят сразу после того, как дух сойдёт. Проверить: suspendedSince");
+                        + " Сломается: аренду бросят сразу после того, как дух сойдёт. Проверить: suspendedSince"
+                        + " При смене ownerOnOwnCell_SuspendedOrTicketMoved_StaysActive проверь это утверждение.");
     }
 
     private static Lease open(LeaseBook book, UUID spirit, String ticket) {

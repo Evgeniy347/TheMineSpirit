@@ -49,7 +49,9 @@ class DepositSelectionProperties {
         assertTrue(
                 KIT.isSatisfiedBy(left, VALUES),
                 "Без защищённого инструмента после сдачи инвентарь обязан удовлетворять набору: набор "
-                        + "(инструменты, еда, броня) не сдаётся никогда. Было " + inventory + ", осталось " + left);
+                        + "(инструменты, еда, броня) не сдаётся никогда, иначе дух остаётся без орудий. Было "
+                        + inventory
+                        + ", осталось " + left + ". При смене surplus проверь постоянную часть набора");
     }
 
     @Property
@@ -69,7 +71,8 @@ class DepositSelectionProperties {
                 protectedSlices,
                 "Защита текущего инструмента обязана убирать из сдачи только его слот, не меняя решение "
                         + "по остальным: иначе дух сдал бы часть набора или оставил лишнее. Инвентарь "
-                        + inventory + ", слот " + protectedSlot);
+                        + inventory + ", слот " + protectedSlot
+                        + ". При смене защиты проверь остальные слоты без изменений");
     }
 
     @Property
@@ -80,7 +83,9 @@ class DepositSelectionProperties {
                 List.of(),
                 DepositSelection.surplus(left, KIT, VALUES, -1),
                 "Повторная сдача того же инвентаря без защиты обязана быть пустой: иначе два вызова подряд "
-                        + "сдали бы разное количество. Инвентарь " + inventory + ", осталось " + left);
+                        + "сдали бы разное количество и склад не сходится. Инвентарь " + inventory + ", осталось "
+                        + left
+                        + ". При смене surplus проверь идемпотентность");
     }
 
     private static int firstOccupied(List<Stack> inventory) {

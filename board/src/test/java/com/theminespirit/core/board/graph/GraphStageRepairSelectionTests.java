@@ -26,6 +26,7 @@ class GraphStageRepairSelectionTests {
         assertTrue(
                 missing.isEmpty(),
                 "Курятник и загоны этапа 2 ставит граф своими узлами building:<id>, а не сторож: нет " + missing + " в "
-                        + plan.tasks());
+                        + plan.tasks()
+                        + " Иначе тест stageTwo_Pens_AreChosenByGraphNotByWatcher перестанет ловить эту поломку. При смене stageTwo_Pens_AreChosenByGraphNotByWatcher проверь это утверждение.");
     }
 }

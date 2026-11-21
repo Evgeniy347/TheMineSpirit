@@ -22,12 +22,22 @@ class PitExitGroupTests {
         PitExitPlanner.Plan top =
                 PitExitPlanner.plan(upper, world, new PitExitPlanner.Supplies(0, false), Set.of(FEET));
 
-        assertTrue(lower.possible(), "Нижний дух обязан найти выход, а не ждать, пока верхний уйдёт");
-        assertTrue(top.possible(), "Верхний дух тоже обязан найти выход");
+        assertTrue(
+                lower.possible(),
+                "Нижний дух обязан найти выход, а не ждать, пока верхний уйдёт"
+                        + " Иначе тест plan_TwoSpiritsInOneByOne_DoNotBreakUnderEachOther перестанет ловить эту поломку. При смене plan_TwoSpiritsInOneByOne_DoNotBreakUnderEachOther проверь это утверждение.");
+        assertTrue(
+                top.possible(),
+                "Верхний дух тоже обязан найти выход"
+                        + " Иначе тест plan_TwoSpiritsInOneByOne_DoNotBreakUnderEachOther перестанет ловить эту поломку. При смене plan_TwoSpiritsInOneByOne_DoNotBreakUnderEachOther проверь это утверждение.");
         assertFalse(
                 lower.dig().contains(FEET) || lower.dig().contains(PitTestWorld.below(upper)),
-                "Нижний не ломает блок под соседом: сосед не проваливается");
-        assertFalse(top.dig().contains(FEET), "Верхний не занимает и не ломает клетку нижнего");
+                "Нижний не ломает блок под соседом: сосед не проваливается"
+                        + " При смене plan_TwoSpiritsInOneByOne_DoNotBreakUnderEachOther проверь это утверждение.");
+        assertFalse(
+                top.dig().contains(FEET),
+                "Верхний не занимает и не ломает клетку нижнего"
+                        + " При смене plan_TwoSpiritsInOneByOne_DoNotBreakUnderEachOther проверь это утверждение.");
     }
 
     @Test
@@ -42,11 +52,15 @@ class PitExitGroupTests {
             PitExitPlanner.Plan plan = PitExitPlanner.plan(
                     feet, world, new PitExitPlanner.Supplies(0, false), PitTestWorld.without(occupied, feet));
 
-            assertTrue(plan.possible(), "Каждый дух в яме 2×2 получает свой выход, а не ждёт освобождения");
+            assertTrue(
+                    plan.possible(),
+                    "Каждый дух в яме 2×2 получает свой выход, а не ждёт освобождения"
+                            + " Иначе тест plan_ThreeSpiritsInTwoByTwo_AllEscapeWithoutCrossing перестанет ловить эту поломку. При смене plan_ThreeSpiritsInTwoByTwo_AllEscapeWithoutCrossing проверь это утверждение.");
             for (BlockCoord other : PitTestWorld.without(occupied, feet)) {
                 assertFalse(
                         plan.dig().contains(other) || plan.dig().contains(PitTestWorld.below(other)),
-                        "План " + feet + " не ломает клетку соседа " + other + " и блок под ним");
+                        "План " + feet + " не ломает клетку соседа " + other + " и блок под ним"
+                                + " При смене plan_ThreeSpiritsInTwoByTwo_AllEscapeWithoutCrossing проверь это утверждение.");
             }
         }
     }
@@ -62,7 +76,10 @@ class PitExitGroupTests {
         for (BlockCoord feet : occupied) {
             PitExitPlanner.Plan plan = PitExitPlanner.plan(
                     feet, world, new PitExitPlanner.Supplies(0, false), PitTestWorld.without(occupied, feet));
-            assertTrue(plan.possible(), "В яме 3×3 каждый дух выходит сам");
+            assertTrue(
+                    plan.possible(),
+                    "В яме 3×3 каждый дух выходит сам"
+                            + " Иначе тест plan_ThreeSpiritsInThreeByThree_AllEscape перестанет ловить эту поломку. При смене plan_ThreeSpiritsInThreeByThree_AllEscape проверь это утверждение.");
         }
     }
 
@@ -75,8 +92,12 @@ class PitExitGroupTests {
 
         assertFalse(
                 plan.dig().contains(PitTestWorld.below(upper)),
-                "Блок под ногами верхнего духа — его опора: нижний не выбивает её из-под соседа");
-        assertTrue(plan.possible(), "Нижний всё равно находит выход в сторону");
+                "Блок под ногами верхнего духа — его опора: нижний не выбивает её из-под соседа"
+                        + " Иначе тест plan_SpiritUnderNeighbour_LeavesSupportBlockAlone перестанет ловить эту поломку. При смене plan_SpiritUnderNeighbour_LeavesSupportBlockAlone проверь это утверждение.");
+        assertTrue(
+                plan.possible(),
+                "Нижний всё равно находит выход в сторону"
+                        + " Иначе тест plan_SpiritUnderNeighbour_LeavesSupportBlockAlone перестанет ловить эту поломку. При смене plan_SpiritUnderNeighbour_LeavesSupportBlockAlone проверь это утверждение.");
     }
 
     @Test
@@ -85,8 +106,14 @@ class PitExitGroupTests {
         PitExitPlanner.Plan plan = PitExitPlanner.plan(
                 FEET, PitTestWorld.pit(6, 1, BlockKind.SOFT), new PitExitPlanner.Supplies(0, false), Set.of(neighbour));
 
-        assertTrue(plan.possible(), "Сосед не лишает духа выхода: он выбирает другую сторону");
-        assertFalse(plan.dig().contains(neighbour), "Клетка соседа не ломается");
+        assertTrue(
+                plan.possible(),
+                "Сосед не лишает духа выхода: он выбирает другую сторону"
+                        + " Иначе тест plan_NeighbourCell_IsNeverDug перестанет ловить эту поломку. При смене plan_NeighbourCell_IsNeverDug проверь это утверждение.");
+        assertFalse(
+                plan.dig().contains(neighbour),
+                "Клетка соседа не ломается"
+                        + " При смене plan_NeighbourCell_IsNeverDug проверь это утверждение. Иначе поломка пройдёт незамеченной в прогоне.");
     }
 
     @Test
@@ -94,12 +121,19 @@ class PitExitGroupTests {
         PitExitPlanner.Plan plan =
                 PitExitPlanner.plan(PitTestWorld.LIVE_FEET, PitTestWorld.live(), new PitExitPlanner.Supplies(0, false));
 
-        assertTrue(plan.possible(), "Живая яма под складом (-180,57,-519): дух обязан выйти сам, без блоков и кирки");
+        assertTrue(
+                plan.possible(),
+                "Живая яма под складом (-180,57,-519): дух обязан выйти сам, без блоков и кирки"
+                        + " Иначе тест plan_LiveWarehousePit_SpiritEscapesWithoutBlocks перестанет ловить эту поломку. При смене plan_LiveWarehousePit_SpiritEscapesWithoutBlocks проверь это утверждение.");
         assertEquals(
                 12,
                 plan.exit().y() - PitTestWorld.LIVE_FEET.y(),
-                "Выход ведёт на пол склада (уровень 69): дух поднимается из ямы, а не остаётся на дне");
-        assertFalse(plan.restore().isEmpty(), "После выхода в складе не остаётся дыры: клетки на засыпку названы");
+                "Выход ведёт на пол склада (уровень 69): дух поднимается из ямы, а не остаётся на дне"
+                        + " Иначе тест plan_LiveWarehousePit_SpiritEscapesWithoutBlocks перестанет ловить эту поломку. При смене plan_LiveWarehousePit_SpiritEscapesWithoutBlocks проверь это утверждение.");
+        assertFalse(
+                plan.restore().isEmpty(),
+                "После выхода в складе не остаётся дыры: клетки на засыпку названы"
+                        + " Иначе тест plan_LiveWarehousePit_SpiritEscapesWithoutBlocks перестанет ловить эту поломку. При смене plan_LiveWarehousePit_SpiritEscapesWithoutBlocks проверь это утверждение.");
     }
 
     @Test
@@ -110,11 +144,15 @@ class PitExitGroupTests {
         for (BlockCoord feet : occupied) {
             PitExitPlanner.Plan plan = PitExitPlanner.plan(
                     feet, world, new PitExitPlanner.Supplies(0, false), PitTestWorld.without(occupied, feet));
-            assertTrue(plan.possible(), "Живые три духа в яме: " + feet + " выходит сам, не ожидая спасателя");
+            assertTrue(
+                    plan.possible(),
+                    "Живые три духа в яме: " + feet + " выходит сам, не ожидая спасателя"
+                            + " Иначе тест plan_LiveWarehousePit_ThreeSpiritsEscapeWithoutDiggingUnderEachOther перестанет ловить эту поломку. При смене plan_LiveWarehousePit_ThreeSpiritsEscapeWithoutDiggingUnderEachOther проверь это утверждение.");
             for (BlockCoord other : PitTestWorld.without(occupied, feet)) {
                 assertFalse(
                         plan.dig().contains(other) || plan.dig().contains(PitTestWorld.below(other)),
-                        "План " + feet + " не ломает клетку соседа " + other + " и блок под ним");
+                        "План " + feet + " не ломает клетку соседа " + other + " и блок под ним"
+                                + " При смене plan_LiveWarehousePit_ThreeSpiritsEscapeWithoutDiggingUnderEachOther проверь это утверждение.");
             }
         }
     }

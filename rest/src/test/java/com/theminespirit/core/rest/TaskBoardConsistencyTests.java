@@ -39,7 +39,8 @@ class TaskBoardConsistencyTests {
         Board board = liveBoard();
         assertFalse(
                 board.find(CAULDRON).isPresent(),
-                "Живая доска observe11 уже выбросила проваленный перенос: именно в этот момент /v1/tasks отвечал 404");
+                "Живая доска observe11 уже выбросила проваленный перенос: именно в этот момент /v1/tasks отвечал 404"
+                        + " Иначе тест get_TicketPrunedFromLiveBoard_ReturnsJournalCardInsteadOf404 перестанет ловить эту поломку. При смене get_TicketPrunedFromLiveBoard_ReturnsJournalCardInsteadOf404 проверь это утверждение.");
 
         RestResponse response = task(board, new BoardJournal(LIVE_JOURNAL), CAULDRON);
 
@@ -47,11 +48,24 @@ class TaskBoardConsistencyTests {
                 200,
                 response.status(),
                 "/v1/tasks обязан отдать тикет, который ушёл с доски в журнал: на живой доске он был ASSIGNED, "
-                        + "а ответ 404 «сервер перезапущен» врал: " + response.body());
+                        + "а ответ 404 «сервер перезапущен» врал: " + response.body()
+                        + " Иначе тест get_TicketPrunedFromLiveBoard_ReturnsJournalCardInsteadOf404 перестанет ловить эту поломку. При смене get_TicketPrunedFromLiveBoard_ReturnsJournalCardInsteadOf404 проверь это утверждение.");
         JsonNode task = MAPPER.readTree(response.body());
-        assertEquals(CAULDRON, task.get("id").asText(), "Ответ обязан назвать задание из журнала");
-        assertEquals("SUPPLY_SITE", task.get("case").asText(), "Ответ обязан назвать кейс из журнала");
-        assertEquals("FAILED", task.get("status").asText(), "Последний статус переноса в журнале живой доски — FAILED");
+        assertEquals(
+                CAULDRON,
+                task.get("id").asText(),
+                "Ответ обязан назвать задание из журнала"
+                        + " Иначе тест get_TicketPrunedFromLiveBoard_ReturnsJournalCardInsteadOf404 перестанет ловить эту поломку. При смене get_TicketPrunedFromLiveBoard_ReturnsJournalCardInsteadOf404 проверь это утверждение.");
+        assertEquals(
+                "SUPPLY_SITE",
+                task.get("case").asText(),
+                "Ответ обязан назвать кейс из журнала"
+                        + " Иначе тест get_TicketPrunedFromLiveBoard_ReturnsJournalCardInsteadOf404 перестанет ловить эту поломку. При смене get_TicketPrunedFromLiveBoard_ReturnsJournalCardInsteadOf404 проверь это утверждение.");
+        assertEquals(
+                "FAILED",
+                task.get("status").asText(),
+                "Последний статус переноса в журнале живой доски — FAILED"
+                        + " Иначе тест get_TicketPrunedFromLiveBoard_ReturnsJournalCardInsteadOf404 перестанет ловить эту поломку. При смене get_TicketPrunedFromLiveBoard_ReturnsJournalCardInsteadOf404 проверь это утверждение.");
     }
 
     @Test
@@ -59,25 +73,31 @@ class TaskBoardConsistencyTests {
         Board board = liveBoard();
         assertTrue(
                 board.find(ORCHARD).isPresent(),
-                "Живая доска observe11 держит сад тикетом — без него проверка согласованности слепа");
+                "Живая доска observe11 держит сад тикетом — без него проверка согласованности слепа"
+                        + " Иначе тест get_TicketOnLiveBoard_MatchesBoardListing перестанет ловить эту поломку. При смене get_TicketOnLiveBoard_MatchesBoardListing проверь это утверждение.");
 
         RestResponse listing =
                 send(board, new BoardJournal(LIVE_JOURNAL), "GET", "/v1/board", Map.of("status", "FAILED"));
         JsonNode tasks = MAPPER.readTree(listing.body()).get("tasks");
         boolean listed = StreamSupport.stream(tasks.spliterator(), false)
                 .anyMatch(task -> ORCHARD.equals(task.get("id").asText()));
-        assertTrue(listed, "/v1/board обязан перечислять сад: иначе сверять нечего");
+        assertTrue(
+                listed,
+                "/v1/board обязан перечислять сад: иначе сверять нечего"
+                        + " При смене get_TicketOnLiveBoard_MatchesBoardListing проверь это утверждение.");
 
         RestResponse response = task(board, new BoardJournal(LIVE_JOURNAL), ORCHARD);
 
         assertEquals(
                 200,
                 response.status(),
-                "Тикет, который /v1/board показывает, обязан быть в /v1/tasks: " + response.body());
+                "Тикет, который /v1/board показывает, обязан быть в /v1/tasks: " + response.body()
+                        + " Иначе тест get_TicketOnLiveBoard_MatchesBoardListing перестанет ловить эту поломку. При смене get_TicketOnLiveBoard_MatchesBoardListing проверь это утверждение.");
         assertEquals(
                 "FAILED",
                 MAPPER.readTree(response.body()).get("status").asText(),
-                "Статус в /v1/tasks обязан совпадать со статусом на /v1/board");
+                "Статус в /v1/tasks обязан совпадать со статусом на /v1/board"
+                        + " Иначе тест get_TicketOnLiveBoard_MatchesBoardListing перестанет ловить эту поломку. При смене get_TicketOnLiveBoard_MatchesBoardListing проверь это утверждение.");
     }
 
     @Test
@@ -104,11 +124,13 @@ class TaskBoardConsistencyTests {
                 response.status(),
                 "Тикет, снятый с доски в том же тике, ещё лежит в очереди журнала: /v1/tasks не имеет права "
                         + "отвечать 404, пока запись не сброшена на диск — это и есть гонка переоткрытия: "
-                        + response.body());
+                        + response.body()
+                        + " Иначе тест get_TicketInUnflushedJournalQueue_ReturnsJournalCard перестанет ловить эту поломку. При смене get_TicketInUnflushedJournalQueue_ReturnsJournalCard проверь это утверждение.");
         assertEquals(
                 "ASSIGNED",
                 MAPPER.readTree(response.body()).get("status").asText(),
-                "Ответ обязан назвать статус из несохранённой записи журнала");
+                "Ответ обязан назвать статус из несохранённой записи журнала"
+                        + " Иначе тест get_TicketInUnflushedJournalQueue_ReturnsJournalCard перестанет ловить эту поломку. При смене get_TicketInUnflushedJournalQueue_ReturnsJournalCard проверь это утверждение.");
     }
 
     private static RestResponse task(Board board, BoardJournal journal, String id) {

@@ -33,7 +33,8 @@ class QueueOrderTests {
         assertEquals(
                 List.of("gather:urgent", "gather:plain"),
                 order,
-                "Выдача идёт по приоритету задания, а не только кейса: модификатор без влияния на порядок — скрытая механика");
+                "Выдача идёт по приоритету задания, а не только кейса: модификатор без влияния на порядок — скрытая механика"
+                        + " Иначе тест claimable_TicketPriority_OrdersOverCasePriority перестанет ловить эту поломку. При смене claimable_TicketPriority_OrdersOverCasePriority проверь это утверждение.");
     }
 
     @Test
@@ -50,7 +51,8 @@ class QueueOrderTests {
         assertEquals(
                 List.of("gather:planks", "fence"),
                 order,
-                "Предшественник наследует приоритет ждущего его задания: сбор под кирку (55) раньше ограды (50)");
+                "Предшественник наследует приоритет ждущего его задания: сбор под кирку (55) раньше ограды (50)"
+                        + " Иначе тест claimable_Dependency_InheritsDependantPriority перестанет ловить эту поломку. При смене claimable_Dependency_InheritsDependantPriority проверь это утверждение.");
     }
 
     @Test
@@ -68,7 +70,8 @@ class QueueOrderTests {
                 List.of("pick_berries", "first:build_mine"),
                 order,
                 "Задание, ждущее дольше starveTicks, выдаётся раньше свежего приоритетного: иначе низкий кейс "
-                        + "висит в PENDING всё окно, пока духи берут новые стройки (аномалия 7)");
+                        + "висит в PENDING всё окно, пока духи берут новые стройки (аномалия 7)"
+                        + " При смене order_TicketWaitingLongerThanStarveTicks_GoesBeforeFreshHighPriority проверь это утверждение.");
     }
 
     @Test
@@ -87,7 +90,8 @@ class QueueOrderTests {
         assertEquals(
                 List.of("first:build_mine", "pick_berries"),
                 order,
-                "До порога голодания очередь идёт по приоритету: свежая важная работа не ждёт старую мелочь");
+                "До порога голодания очередь идёт по приоритету: свежая важная работа не ждёт старую мелочь"
+                        + " Иначе тест order_TicketWaitingLessThanStarveTicks_KeepsPriorityOrder перестанет ловить эту поломку. При смене order_TicketWaitingLessThanStarveTicks_KeepsPriorityOrder проверь это утверждение.");
     }
 
     @Test
@@ -104,7 +108,8 @@ class QueueOrderTests {
         assertEquals(
                 70,
                 effective.get("first"),
-                "Приоритет высокой задачи доходит до самого корня цепочки: сбор под неё не тонет ниже обычной работы");
+                "Приоритет высокой задачи доходит до самого корня цепочки: сбор под неё не тонет ниже обычной работы"
+                        + " Иначе тест inherited_DeepDependencyChain_PropagatesPriorityToTheRoot перестанет ловить эту поломку. При смене inherited_DeepDependencyChain_PropagatesPriorityToTheRoot проверь это утверждение.");
     }
 
     @Test
@@ -125,7 +130,8 @@ class QueueOrderTests {
         assertEquals(
                 90,
                 effective.get("base"),
-                "Общий предшественник наследует максимум из ветвей, а не последнюю встреченную");
+                "Общий предшественник наследует максимум из ветвей, а не последнюю встреченную"
+                        + " Иначе тест inherited_DiamondDependency_KeepsHighestPriority перестанет ловить эту поломку. При смене inherited_DiamondDependency_KeepsHighestPriority проверь это утверждение.");
     }
 
     @Test
@@ -142,6 +148,7 @@ class QueueOrderTests {
         assertEquals(
                 Optional.of(BoardStatus.CANCELLED),
                 board.statusOf("craft:pickaxe"),
-                "Задание, чей предшественник провален и убран, снимается, а не ждёт вечно: источник поставит цепочку заново");
+                "Задание, чей предшественник провален и убран, снимается, а не ждёт вечно: источник поставит цепочку заново"
+                        + " Иначе тест prune_FailedDependency_CancelsDependants перестанет ловить эту поломку. При смене prune_FailedDependency_CancelsDependants проверь это утверждение.");
     }
 }

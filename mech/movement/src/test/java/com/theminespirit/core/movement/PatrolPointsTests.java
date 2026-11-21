@@ -37,7 +37,8 @@ class PatrolPointsTests {
         assertEquals(
                 List.of(new BlockCoord(0, 64, 0), new BlockCoord(4, 64, 0), new BlockCoord(0, 63, -4)),
                 points,
-                "Патруль обходит только стоянки: столб +6 и занятая клетка не в счёте, спуск в 1 блок — можно");
+                "Патруль обходит только стоянки: столб +6 и занятая клетка не в счёте, спуск в 1 блок — можно"
+                        + " Иначе тест around_TerrainGiven_OnlyRealStands перестанет ловить эту поломку. При смене around_TerrainGiven_OnlyRealStands проверь это утверждение.");
     }
 
     @Test
@@ -56,7 +57,8 @@ class PatrolPointsTests {
 
         assertTrue(
                 PatrolPoints.around(CENTER, solid).isEmpty(),
-                "Нет ни одной стоянки — патруль не ставится: иначе 5 провалов «0 из 5 точек» (10.11)");
+                "Нет ни одной стоянки — патруль не ставится: иначе 5 провалов «0 из 5 точек» (10.11)"
+                        + " При смене around_NoStands_EmptyInsteadOfImpossiblePatrol проверь это утверждение.");
     }
 
     @Test
@@ -73,6 +75,9 @@ class PatrolPointsTests {
             }
         };
 
-        assertTrue(PatrolPoints.around(CENTER, unloaded).isEmpty(), "Незагруженные чанки не выдумывают точек");
+        assertTrue(
+                PatrolPoints.around(CENTER, unloaded).isEmpty(),
+                "Незагруженные чанки не выдумывают точек"
+                        + " Иначе тест around_UnloadedColumns_Skipped перестанет ловить эту поломку. При смене around_UnloadedColumns_Skipped проверь это утверждение.");
     }
 }

@@ -22,18 +22,29 @@ class QuarryScanTests {
         assertEquals(
                 QuarryStatus.State.ACTIVE,
                 QuarryStatus.of(site, 10, true, true).state(),
-                "Остаток ровно 10% ещё не «мало»: порог оповещения строго меньше 10%");
+                "Остаток ровно 10% ещё не «мало»: порог оповещения строго меньше 10%"
+                        + " Иначе тест status_PercentBelowTen_LowAndEmpty перестанет ловить эту поломку. При смене status_PercentBelowTen_LowAndEmpty проверь это утверждение.");
         QuarryStatus low = QuarryStatus.of(site, 9, true, false);
-        assertEquals(QuarryStatus.State.LOW, low.state(), "Остаток 9% — «мало», стратег должен узнать");
-        assertEquals(91, low.dug(), "Выкопано = начальный запас минус остаток: по нему видно, сколько уже взяли");
+        assertEquals(
+                QuarryStatus.State.LOW,
+                low.state(),
+                "Остаток 9% — «мало», стратег должен узнать"
+                        + " Иначе тест status_PercentBelowTen_LowAndEmpty перестанет ловить эту поломку. При смене status_PercentBelowTen_LowAndEmpty проверь это утверждение.");
+        assertEquals(
+                91,
+                low.dug(),
+                "Выкопано = начальный запас минус остаток: по нему видно, сколько уже взяли"
+                        + " Иначе тест status_PercentBelowTen_LowAndEmpty перестанет ловить эту поломку. При смене status_PercentBelowTen_LowAndEmpty проверь это утверждение.");
         assertEquals(
                 QuarryStatus.State.EMPTY,
                 QuarryStatus.of(site, 0, true, true).state(),
-                "Нулевой остаток — «иссякло», а не «мало»: место больше не кормит граф");
+                "Нулевой остаток — «иссякло», а не «мало»: место больше не кормит граф"
+                        + " Иначе тест status_PercentBelowTen_LowAndEmpty перестанет ловить эту поломку. При смене status_PercentBelowTen_LowAndEmpty проверь это утверждение.");
         assertEquals(
                 QuarryStatus.State.UNSET,
                 QuarryStatus.unset(RouteResource.SAND).state(),
-                "Место не задано — отдельное состояние, карта пишет «не найдено»");
+                "Место не задано — отдельное состояние, карта пишет «не найдено»"
+                        + " Иначе тест status_PercentBelowTen_LowAndEmpty перестанет ловить эту поломку. При смене status_PercentBelowTen_LowAndEmpty проверь это утверждение.");
     }
 
     @Test
@@ -41,20 +52,29 @@ class QuarryScanTests {
         QuarryStatus low =
                 QuarryStatus.of(new QuarrySite(RouteResource.DIRT, SITE, 4, "minecraft:plains", 100), 8, false, false);
 
-        assertTrue(QuarryAlerts.due(0, 0), "Первый раз о малом запасе сообщают сразу");
+        assertTrue(
+                QuarryAlerts.due(0, 0),
+                "Первый раз о малом запасе сообщают сразу"
+                        + " Иначе тест alerts_SameResource_NotMoreOftenThanFiveMinutes перестанет ловить эту поломку. При смене alerts_SameResource_NotMoreOftenThanFiveMinutes проверь это утверждение.");
         assertFalse(
                 QuarryAlerts.due(6099, 100),
-                "Через 6099 тиков от прошлого сообщения ещё рано: чаще раза в 5 минут нельзя");
-        assertTrue(QuarryAlerts.due(6100, 100), "Ровно через 5 минут сообщение снова разрешено");
+                "Через 6099 тиков от прошлого сообщения ещё рано: чаще раза в 5 минут нельзя"
+                        + " Иначе тест alerts_SameResource_NotMoreOftenThanFiveMinutes перестанет ловить эту поломку. При смене alerts_SameResource_NotMoreOftenThanFiveMinutes проверь это утверждение.");
+        assertTrue(
+                QuarryAlerts.due(6100, 100),
+                "Ровно через 5 минут сообщение снова разрешено"
+                        + " Иначе тест alerts_SameResource_NotMoreOftenThanFiveMinutes перестанет ловить эту поломку. При смене alerts_SameResource_NotMoreOftenThanFiveMinutes проверь это утверждение.");
         assertEquals(
                 "Мало земли в месте добычи: остаток 8% — стратег ищет новое место",
                 QuarryAlerts.message(low).orElseThrow(),
-                "Оповещение называет ресурс и остаток: игрок понимает, что кончается и кто это исправит");
+                "Оповещение называет ресурс и остаток: игрок понимает, что кончается и кто это исправит"
+                        + " Иначе тест alerts_SameResource_NotMoreOftenThanFiveMinutes перестанет ловить эту поломку. При смене alerts_SameResource_NotMoreOftenThanFiveMinutes проверь это утверждение.");
         assertEquals(
                 Optional.empty(),
                 QuarryAlerts.message(QuarryStatus.of(
                         new QuarrySite(RouteResource.DIRT, SITE, 4, "minecraft:plains", 100), 50, false, false)),
-                "При нормальном запасе чат молчит");
+                "При нормальном запасе чат молчит"
+                        + " Иначе тест alerts_SameResource_NotMoreOftenThanFiveMinutes перестанет ловить эту поломку. При смене alerts_SameResource_NotMoreOftenThanFiveMinutes проверь это утверждение.");
     }
 
     @Test
@@ -69,22 +89,35 @@ class QuarryScanTests {
         assertEquals(
                 new BlockCoord(200, 64, 0),
                 best.get(0).point(),
-                "Лучшая выгодность — запас на длину пути: близкие 50 блоков песка выгоднее далёких 100");
-        assertEquals(2, best.size(), "Пустой кандидат (запас 0) в список лучших не попадает");
-        assertEquals(5000, best.get(0).valuePermille(), "Выгодность считается в тысячных без плавающей точки");
+                "Лучшая выгодность — запас на длину пути: близкие 50 блоков песка выгоднее далёких 100"
+                        + " Иначе тест ranking_ValuePerPath_BestFirst перестанет ловить эту поломку. При смене ranking_ValuePerPath_BestFirst проверь это утверждение.");
+        assertEquals(
+                2,
+                best.size(),
+                "Пустой кандидат (запас 0) в список лучших не попадает"
+                        + " Иначе тест ranking_ValuePerPath_BestFirst перестанет ловить эту поломку. При смене ranking_ValuePerPath_BestFirst проверь это утверждение.");
+        assertEquals(
+                5000,
+                best.get(0).valuePermille(),
+                "Выгодность считается в тысячных без плавающей точки"
+                        + " Иначе тест ranking_ValuePerPath_BestFirst перестанет ловить эту поломку. При смене ranking_ValuePerPath_BestFirst проверь это утверждение.");
     }
 
     @Test
     void grid_Points_StayInsideRange() {
         List<BlockCoord> points = QuarryGrid.points(HOME, 128, 512);
 
-        assertFalse(points.isEmpty(), "Кольца поиска 128..512 не могут быть пустыми: иначе место не найти");
+        assertFalse(
+                points.isEmpty(),
+                "Кольца поиска 128..512 не могут быть пустыми: иначе место не найти"
+                        + " При смене grid_Points_StayInsideRange проверь это утверждение.");
         for (BlockCoord point : points) {
             int distance = Math.abs(point.x() - HOME.x()) + Math.abs(point.z() - HOME.z());
             assertTrue(
                     distance >= 128 && distance <= 512,
                     "Точка " + point + " на расстоянии " + distance + " вне диапазона 128..512: поиск обязан "
-                            + "уважать min и max");
+                            + "уважать min и max"
+                            + " Иначе тест grid_Points_StayInsideRange перестанет ловить эту поломку. При смене grid_Points_StayInsideRange проверь это утверждение.");
         }
     }
 
@@ -96,16 +129,26 @@ class QuarryScanTests {
                 24,
                 points.size(),
                 "Кольца 128..512 шагом 128 и 8 направлений дают 24 области: поиск обязан укладываться в тайм-аут "
-                        + "REST (10 с), иначе стратег не получит место добычи");
+                        + "REST (10 с), иначе стратег не получит место добычи"
+                        + " При смене grid_Sampling_IsSmallEnoughForRestTimeout проверь это утверждение.");
     }
 
     @Test
     void sites_NoMarker_NoEventAndNoWorldTag() {
         QuarrySites.Feed feed = QuarrySites.feed(List.of(), HOME);
 
-        assertTrue(feed.events().isEmpty(), "Без установленного места граф не получает события: мод не выбирает сам");
-        assertTrue(feed.world().isEmpty(), "Без места нет и тега мира: добыча не начинается сама");
-        assertTrue(feed.nearest().isEmpty(), "Без места нет точки для добычи");
+        assertTrue(
+                feed.events().isEmpty(),
+                "Без установленного места граф не получает события: мод не выбирает сам"
+                        + " Иначе тест sites_NoMarker_NoEventAndNoWorldTag перестанет ловить эту поломку. При смене sites_NoMarker_NoEventAndNoWorldTag проверь это утверждение.");
+        assertTrue(
+                feed.world().isEmpty(),
+                "Без места нет и тега мира: добыча не начинается сама"
+                        + " Иначе тест sites_NoMarker_NoEventAndNoWorldTag перестанет ловить эту поломку. При смене sites_NoMarker_NoEventAndNoWorldTag проверь это утверждение.");
+        assertTrue(
+                feed.nearest().isEmpty(),
+                "Без места нет точки для добычи"
+                        + " Иначе тест sites_NoMarker_NoEventAndNoWorldTag перестанет ловить эту поломку. При смене sites_NoMarker_NoEventAndNoWorldTag проверь это утверждение.");
     }
 
     @Test
@@ -117,15 +160,22 @@ class QuarryScanTests {
         assertEquals(
                 Set.of("biome_found:plains"),
                 feed.events(),
-                "Установленное место даёт графу событие «место есть»: маршрут строит граф, а не мод");
+                "Установленное место даёт графу событие «место есть»: маршрут строит граф, а не мод"
+                        + " Иначе тест sites_Marker_GivesEventWorldAndPath перестанет ловить эту поломку. При смене sites_Marker_GivesEventWorldAndPath проверь это утверждение.");
         assertEquals(
                 Set.of("biome:plains"),
                 feed.world(),
-                "Тег мира появляется только у установленного места: без него граф не добывает");
+                "Тег мира появляется только у установленного места: без него граф не добывает"
+                        + " Иначе тест sites_Marker_GivesEventWorldAndPath перестанет ловить эту поломку. При смене sites_Marker_GivesEventWorldAndPath проверь это утверждение.");
         assertEquals(
                 new BlockCoord(40, 64, 20),
                 feed.nearest().get(GraphNames.SOIL),
-                "Точка земли для добычи берётся из места, а не из ближайшего дёрна");
-        assertEquals(60, feed.distances().get(GraphNames.SOIL), "Путь до места — 60 блоков по тропе углом");
+                "Точка земли для добычи берётся из места, а не из ближайшего дёрна"
+                        + " Иначе тест sites_Marker_GivesEventWorldAndPath перестанет ловить эту поломку. При смене sites_Marker_GivesEventWorldAndPath проверь это утверждение.");
+        assertEquals(
+                60,
+                feed.distances().get(GraphNames.SOIL),
+                "Путь до места — 60 блоков по тропе углом"
+                        + " Иначе тест sites_Marker_GivesEventWorldAndPath перестанет ловить эту поломку. При смене sites_Marker_GivesEventWorldAndPath проверь это утверждение.");
     }
 }

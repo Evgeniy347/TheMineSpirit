@@ -38,7 +38,8 @@ class DataTableSourcesTests {
         assertEquals(
                 bound,
                 ObservationLimits.loadDefault(),
-                "Загруженная таблица наблюдения обязана подменять умолчания: иначе /reload не меняет пределы скана");
+                "Загруженная таблица наблюдения обязана подменять умолчания: иначе /reload не меняет пределы скана"
+                        + " При смене observationLimits_AfterUseSource_LoadDefaultReturnsBoundTable проверь это утверждение.");
     }
 
     @Test
@@ -48,7 +49,8 @@ class DataTableSourcesTests {
         assertEquals(
                 List.of("minecraft:apple"),
                 FeedTable.feedFor(Species.COW),
-                "Таблица кормов обязана приходить из загруженных данных: иначе дух кормит стадо кормом из кода");
+                "Таблица кормов обязана приходить из загруженных данных: иначе дух кормит стадо кормом из кода"
+                        + " При смене feedTable_AfterUseSource_FeedForUsesBoundTable проверь это утверждение.");
     }
 
     @Test
@@ -60,7 +62,8 @@ class DataTableSourcesTests {
         assertEquals(
                 bound,
                 RespawnRules.loadDefault(),
-                "Загруженные правила возрождения обязаны подменять умолчания: иначе /reload их не меняет");
+                "Загруженные правила возрождения обязаны подменять умолчания: иначе /reload их не меняет"
+                        + " При смене respawnRules_AfterUseSource_LoadDefaultReturnsBoundTable проверь это утверждение.");
     }
 
     @Test
@@ -70,7 +73,8 @@ class DataTableSourcesTests {
         assertEquals(
                 "hash-bound",
                 ConfigStamp.current(),
-                "Хэш конфигурации обязан приходить из таблицы доски: иначе журнал не отличит версию конфигурации");
+                "Хэш конфигурации обязан приходить из таблицы доски: иначе журнал не отличит версию конфигурации"
+                        + " При смене configStamp_AfterUseCurrent_ReturnsBoundHash проверь это утверждение.");
     }
 
     @Test
@@ -78,25 +82,30 @@ class DataTableSourcesTests {
         assertThrows(
                 NullPointerException.class,
                 () -> ObservationLimits.useSource(null),
-                "Пустой источник пределов наблюдения обязан отвергаться: без него /reload молча теряется");
+                "Пустой источник пределов наблюдения обязан отвергаться: без него /reload молча теряется"
+                        + " Иначе тест sources_NullSupplier_Rejected перестанет ловить эту поломку. При смене sources_NullSupplier_Rejected проверь это утверждение.");
         assertThrows(
                 NullPointerException.class,
                 () -> FeedTable.useSource(null),
-                "Пустой источник кормов обязан отвергаться: без него стадо остаётся без проверенной таблицы");
+                "Пустой источник кормов обязан отвергаться: без него стадо остаётся без проверенной таблицы"
+                        + " Иначе тест sources_NullSupplier_Rejected перестанет ловить эту поломку. При смене sources_NullSupplier_Rejected проверь это утверждение.");
         assertThrows(
                 NullPointerException.class,
                 () -> RespawnRules.useSource(null),
-                "Пустой источник возрождения обязан отвергаться: без него задержка молча теряется");
+                "Пустой источник возрождения обязан отвергаться: без него задержка молча теряется"
+                        + " Иначе тест sources_NullSupplier_Rejected перестанет ловить эту поломку. При смене sources_NullSupplier_Rejected проверь это утверждение.");
         assertThrows(
                 NullPointerException.class,
                 () -> ConfigStamp.useCurrent(null),
-                "Пустой источник хэша обязан отвергаться: журнал не должен писать выдуманную версию");
+                "Пустой источник хэша обязан отвергаться: журнал не должен писать выдуманную версию"
+                        + " Иначе тест sources_NullSupplier_Rejected перестанет ловить эту поломку. При смене sources_NullSupplier_Rejected проверь это утверждение.");
     }
 
     @Test
     void configStamp_WithoutBinding_DefaultHashIsUnknown() {
         assertTrue(
                 !ConfigStamp.current().isBlank(),
-                "До загрузки таблицы хэш всё равно обязан быть непустым: пустая строка скрывает отсутствие версии");
+                "До загрузки таблицы хэш всё равно обязан быть непустым: пустая строка скрывает отсутствие версии"
+                        + " Иначе тест configStamp_WithoutBinding_DefaultHashIsUnknown перестанет ловить эту поломку. При смене configStamp_WithoutBinding_DefaultHashIsUnknown проверь это утверждение.");
     }
 }

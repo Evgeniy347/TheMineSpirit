@@ -22,7 +22,8 @@ class SituationCanonicalTests {
         assertEquals(
                 List.of("minecraft:spider", "minecraft:creeper", "minecraft:zombie", "minecraft:skeleton"),
                 order,
-                "Порядок врагов в Situation каноничен (дистанция, потом тип): иначе то же поле боя давало бы разные решения");
+                "Порядок врагов в Situation каноничен (дистанция, потом тип): иначе то же поле боя давало бы разные решения"
+                        + " При смене enemies_GivenUnordered_AreSortedByDistanceThenType проверь это утверждение.");
     }
 
     @Test
@@ -40,7 +41,8 @@ class SituationCanonicalTests {
         assertEquals(
                 List.of("b", "a", "c"),
                 situation.enemies().stream().map(EnemyFact::id).toList(),
-                "При равной дистанции и типе раньше идёт раненый, затем по id: тай-брейк обязан быть полным");
+                "При равной дистанции и типе раньше идёт раненый, затем по id: тай-брейк обязан быть полным"
+                        + " Иначе тест enemies_SameDistanceAndType_AreOrderedByHpFractionThenId перестанет ловить эту поломку. При смене enemies_SameDistanceAndType_AreOrderedByHpFractionThenId проверь это утверждение.");
     }
 
     @Test
@@ -56,12 +58,14 @@ class SituationCanonicalTests {
         assertEquals(
                 Situation.MAX_ENEMIES + 2,
                 enemies.size(),
-                "Хвост сверх MAX_ENEMIES сворачивается в по одной записи на тип (здесь зомби и скелет)");
+                "Хвост сверх MAX_ENEMIES сворачивается в по одной записи на тип (здесь зомби и скелет)"
+                        + " Иначе тест enemies_MoreThanMax_TailIsFoldedIntoOneAggregatePerType перестанет ловить эту поломку. При смене enemies_MoreThanMax_TailIsFoldedIntoOneAggregatePerType проверь это утверждение.");
         EnemyFact zombieTail = enemies.get(Situation.MAX_ENEMIES);
         assertEquals(
                 List.of("minecraft:zombie", 3),
                 List.of(zombieTail.type(), zombieTail.count()),
-                "Агрегат «ещё n зомби» хранит число свёрнутых врагов, иначе суммарный урон потеряется");
+                "Агрегат «ещё n зомби» хранит число свёрнутых врагов, иначе суммарный урон потеряется"
+                        + " При смене enemies_MoreThanMax_TailIsFoldedIntoOneAggregatePerType проверь это утверждение.");
     }
 
     @Test
@@ -85,7 +89,8 @@ class SituationCanonicalTests {
                         aggregate.targetingSelf(),
                         aggregate.id()),
                 "Агрегат: число складывается, HP — средневзвешенное по числу, броня — наибольшая (орда не слабеет от сворачивания), видимость — «хоть один», "
-                        + "id и позиция — ближайшего из свёрнутых");
+                        + "id и позиция — ближайшего из свёрнутых"
+                        + " Иначе тест enemies_AggregateOfDifferentHp_KeepsWeightedHpAndFlags перестанет ловить эту поломку. При смене enemies_AggregateOfDifferentHp_KeepsWeightedHpAndFlags проверь это утверждение.");
     }
 
     @Test
@@ -100,6 +105,7 @@ class SituationCanonicalTests {
         assertEquals(
                 1,
                 situation.enemies().size(),
-                "Situation неизменяема: список врагов копируется, иначе адаптер мог бы поменять факты задним числом");
+                "Situation неизменяема: список врагов копируется, иначе адаптер мог бы поменять факты задним числом"
+                        + " При смене enemies_ListIsCopied_LaterChangeOfSourceDoesNotAffectSituation проверь это утверждение.");
     }
 }

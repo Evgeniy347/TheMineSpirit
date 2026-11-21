@@ -47,7 +47,8 @@ class ThreatBearingProperties {
         assertEquals(
                 input,
                 sectors,
-                "Сумма врагов по секторам равна входному числу: иначе враг потеряется и направление ослабеет");
+                "Сумма врагов по секторам равна входному числу: иначе враг потеряется и направление ослабеет"
+                        + " При смене sum_AnyInput_EnemyCountPreserved проверь это утверждение.");
     }
 
     @Property
@@ -57,7 +58,9 @@ class ThreatBearingProperties {
 
         for (DirectionThreat threat : threats) {
             assertTrue(
-                    threat.strength() >= 0, "Сила сектора неотрицательна: иначе вес направления исказит распределение");
+                    threat.strength() >= 0,
+                    "Сила сектора неотрицательна: иначе вес направления исказит распределение"
+                            + " При смене sum_AnyInput_StrengthNonNegative проверь это утверждение.");
         }
     }
 
@@ -69,6 +72,7 @@ class ThreatBearingProperties {
         assertEquals(
                 ThreatBearing.sum(enemies, ThreatBearingTests.CENTER, ThreatBearingTests.PROFILES),
                 ThreatBearing.sum(shuffled, ThreatBearingTests.CENTER, ThreatBearingTests.PROFILES),
-                "Сила направлений не зависит от порядка входа: иначе посты мигают при каждом новом снимке");
+                "Сила направлений не зависит от порядка входа: иначе посты мигают при каждом новом снимке"
+                        + " При смене sum_ShuffledInput_SameResult проверь это утверждение.");
     }
 }

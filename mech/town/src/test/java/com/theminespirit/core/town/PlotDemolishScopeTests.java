@@ -22,7 +22,8 @@ class PlotDemolishScopeTests {
                         PlotProtection.Ground.PLAN_DEMOLISH,
                         PlanBuilding.HOUSE),
                 "Задача сноса одной клетки дома называет постройку этой клетки (World: BuildPlanOwner.demolished): "
-                        + "клетка дома при собственном имени снимается, и фильтр скана не имеет права её выкидывать");
+                        + "клетка дома при собственном имени снимается, и фильтр скана не имеет права её выкидывать"
+                        + " Иначе тест demolish_HouseCellWithOwnBuilding_Allowed перестанет ловить эту поломку. При смене demolish_HouseCellWithOwnBuilding_Allowed проверь это утверждение.");
     }
 
     @Test
@@ -38,6 +39,7 @@ class PlotDemolishScopeTests {
                         PlotProtection.Ground.PLAN_DEMOLISH,
                         PlanBuilding.NONE),
                 "Без имени постройки клетка дома защищена: это правило запрещает чужой разбор, "
-                        + "и ровно оно же отказывало клеткам дома в живом журнале 17.11");
+                        + "и ровно оно же отказывало клеткам дома в живом журнале 17.11"
+                        + " Иначе тест demolish_HouseCellWithoutOwnBuilding_Refused перестанет ловить эту поломку. При смене demolish_HouseCellWithoutOwnBuilding_Refused проверь это утверждение.");
     }
 }

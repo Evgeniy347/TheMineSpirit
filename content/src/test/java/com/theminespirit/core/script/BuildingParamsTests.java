@@ -17,7 +17,8 @@ class BuildingParamsTests {
         assertEquals(
                 new PlaceBlockParams("cobblestone", 1, 64, 2),
                 params,
-                "place_block обязан сохранить блок и точку: по ним адаптер ставит блок");
+                "place_block обязан сохранить блок и точку: по ним адаптер ставит блок"
+                        + " Иначе тест placeBlock_AllParamsPresent_ReturnsParams перестанет ловить эту поломку. При смене placeBlock_AllParamsPresent_ReturnsParams проверь это утверждение.");
     }
 
     @Test
@@ -25,7 +26,8 @@ class BuildingParamsTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> PlaceBlockParams.from(Map.of("block", "  ", "x", 1, "y", 64, "z", 2)),
-                "Пустой блок обязан отвергаться: по пробелам блок не найти");
+                "Пустой блок обязан отвергаться: по пробелам блок не найти"
+                        + " Иначе тест placeBlock_BlankBlock_IsRejected перестанет ловить эту поломку. При смене placeBlock_BlankBlock_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -33,7 +35,8 @@ class BuildingParamsTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> PlaceBlockParams.from(Map.of("block", "stone", "x", 1, "y", 400, "z", 2)),
-                "Координата вне мира обязана отвергаться: точки вне высоты мира не существует");
+                "Координата вне мира обязана отвергаться: точки вне высоты мира не существует"
+                        + " Иначе тест placeBlock_CoordOutsideWorld_IsRejected перестанет ловить эту поломку. При смене placeBlock_CoordOutsideWorld_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -46,11 +49,13 @@ class BuildingParamsTests {
         assertEquals(
                 8L,
                 BuildBox.of(0, 64, 0, 1, 65, 1).volume(),
-                "Проверка обязана идти через объём коробки: иначе лимит считает не то число");
+                "Проверка обязана идти через объём коробки: иначе лимит считает не то число"
+                        + " При смене fill_ReversedCorners_AcceptsSameVolume проверь это утверждение.");
         assertEquals(
                 forward.block(),
                 reversed.block(),
-                "Углы в любом порядке обязаны приниматься: иначе стратег вынужден сортировать углы сам");
+                "Углы в любом порядке обязаны приниматься: иначе стратег вынужден сортировать углы сам"
+                        + " При смене fill_ReversedCorners_AcceptsSameVolume проверь это утверждение.");
     }
 
     @Test
@@ -59,7 +64,8 @@ class BuildingParamsTests {
                 IllegalArgumentException.class,
                 () -> FillParams.from(
                         Map.of("block", "stone", "x1", 0, "y1", 0, "z1", 0, "x2", 63, "y2", 63, "z2", 63)),
-                "Объём сверх предела обязан отвергаться до первого блока: иначе стройка начинается и обрывается на середине");
+                "Объём сверх предела обязан отвергаться до первого блока: иначе стройка начинается и обрывается на середине"
+                        + " При смене fill_VolumeAboveLimit_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -67,7 +73,8 @@ class BuildingParamsTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> ClearAreaParams.from(Map.of("x1", 0, "y1", 0, "z1", 0, "x2", 63, "y2", 63, "z2", 63)),
-                "Объём clear_area сверх предела обязан отвергаться: иначе дух копает часами");
+                "Объём clear_area сверх предела обязан отвергаться: иначе дух копает часами"
+                        + " При смене clearArea_VolumeAboveLimit_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -76,11 +83,16 @@ class BuildingParamsTests {
         ClearAreaParams demolish =
                 ClearAreaParams.from(Map.of("x1", 0, "y1", 64, "z1", 0, "x2", 1, "y2", 65, "z2", 1, "demolish", true));
 
-        assertEquals(false, regular.demolish(), "Без флага разбор идёт обычной защитой: чужую постройку дух не ломает");
+        assertEquals(
+                false,
+                regular.demolish(),
+                "Без флага разбор идёт обычной защитой: чужую постройку дух не ломает"
+                        + " При смене clearArea_DemolishFlag_DefaultsFalseAndParsesTrue проверь это утверждение.");
         assertEquals(
                 true,
                 demolish.demolish(),
-                "С демолишем снос своей постройки проходит защиту: забор и калитка иначе " + "остаются стоять");
+                "С демолишем снос своей постройки проходит защиту: забор и калитка иначе " + "остаются стоять"
+                        + " При смене clearArea_DemolishFlag_DefaultsFalseAndParsesTrue проверь это утверждение.");
     }
 
     @Test
@@ -89,12 +101,17 @@ class BuildingParamsTests {
         ClearAreaParams pit = ClearAreaParams.from(
                 Map.of("x1", 0, "y1", 64, "z1", 0, "x2", 1, "y2", 65, "z2", 1, "keep_ground", true));
 
-        assertEquals(false, regular.keepGround(), "Без флага расчистка снимает и землю: так срезается холм");
+        assertEquals(
+                false,
+                regular.keepGround(),
+                "Без флага расчистка снимает и землю: так срезается холм"
+                        + " Иначе тест clearArea_KeepGroundFlag_DefaultsFalseAndParsesTrue перестанет ловить эту поломку. При смене clearArea_KeepGroundFlag_DefaultsFalseAndParsesTrue проверь это утверждение.");
         assertEquals(
                 true,
                 pit.keepGround(),
                 "keep_ground=true — расчистка ямы подсыпки: землю и камень в ней не трогает, иначе снимает уже "
-                        + "засыпанное (INC-77)");
+                        + "засыпанное (INC-77)"
+                        + " При смене clearArea_KeepGroundFlag_DefaultsFalseAndParsesTrue проверь это утверждение.");
     }
 
     @Test
@@ -102,7 +119,8 @@ class BuildingParamsTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> DigAreaParams.from(Map.of("x", 0, "y", 64, "z", 0, "size", 0)),
-                "Сторона 0 обязана отвергаться: куб нулевого размера копать нечего");
+                "Сторона 0 обязана отвергаться: куб нулевого размера копать нечего"
+                        + " Иначе тест digArea_SizeZero_IsRejected перестанет ловить эту поломку. При смене digArea_SizeZero_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -110,7 +128,8 @@ class BuildingParamsTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> DigAreaParams.from(Map.of("x", 0, "y", 64, "z", 0, "size", 17)),
-                "Сторона больше 16 обязана отвергаться: иначе dig_area роет область сверх лимита объёма");
+                "Сторона больше 16 обязана отвергаться: иначе dig_area роет область сверх лимита объёма"
+                        + " При смене digArea_SizeAboveMax_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -120,7 +139,8 @@ class BuildingParamsTests {
         assertEquals(
                 new DigAreaParams(0, 64, 0, 2),
                 params,
-                "Куб 2 обязан приниматься: по нему адаптер строит коробку от минимального угла");
+                "Куб 2 обязан приниматься: по нему адаптер строит коробку от минимального угла"
+                        + " Иначе тест digArea_ValidCube_ReturnsParams перестанет ловить эту поломку. При смене digArea_ValidCube_ReturnsParams проверь это утверждение.");
     }
 
     @Test
@@ -128,7 +148,8 @@ class BuildingParamsTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> BuildSchematicParams.from(Map.of("file", "", "x", 0, "y", 64, "z", 0)),
-                "Пустой файл схемы обязан отвергаться: без имени схему не найти");
+                "Пустой файл схемы обязан отвергаться: без имени схему не найти"
+                        + " Иначе тест buildSchematic_BlankFile_IsRejected перестанет ловить эту поломку. При смене buildSchematic_BlankFile_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -138,7 +159,8 @@ class BuildingParamsTests {
         assertEquals(
                 new BuildSchematicParams("house", 0, 64, 0, BuildRotation.NONE),
                 params,
-                "Схема обязана сохранить файл и якорь: по ним адаптер грузит и ставит схему");
+                "Схема обязана сохранить файл и якорь: по ним адаптер грузит и ставит схему"
+                        + " Иначе тест buildSchematic_ValidFile_ReturnsParams перестанет ловить эту поломку. При смене buildSchematic_ValidFile_ReturnsParams проверь это утверждение.");
     }
 
     @Test
@@ -154,7 +176,8 @@ class BuildingParamsTests {
                 "hut_1",
                 params.previous(),
                 "Старая схема едет в задании стройки: по её клеткам снимаются лишние блоки уровня, "
-                        + "а не угадываются метками духа в габарите");
+                        + "а не угадываются метками духа в габарите"
+                        + " Иначе тест buildSchematic_PreviousScheme_ComesFromTask перестанет ловить эту поломку. При смене buildSchematic_PreviousScheme_ComesFromTask проверь это утверждение.");
     }
 
     @Test
@@ -165,7 +188,8 @@ class BuildingParamsTests {
         assertEquals(
                 null,
                 params.previous(),
-                "Пустая старая схема — то же, что отсутствие: умолчание каталога не должно ронять стройку");
+                "Пустая старая схема — то же, что отсутствие: умолчание каталога не должно ронять стройку"
+                        + " Иначе тест buildSchematic_BlankPrevious_TreatedAsAbsent перестанет ловить эту поломку. При смене buildSchematic_BlankPrevious_TreatedAsAbsent проверь это утверждение.");
     }
 
     @Test
@@ -176,6 +200,7 @@ class BuildingParamsTests {
         assertEquals(
                 BuildRotation.CLOCKWISE_90,
                 params.rotation(),
-                "Поворот схемы обязан читаться из параметра: без него постройка встанет не той стороной");
+                "Поворот схемы обязан читаться из параметра: без него постройка встанет не той стороной"
+                        + " Иначе тест buildSchematic_RotationName_ParsesQuarterTurns перестанет ловить эту поломку. При смене buildSchematic_RotationName_ParsesQuarterTurns проверь это утверждение.");
     }
 }

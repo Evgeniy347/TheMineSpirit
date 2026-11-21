@@ -25,7 +25,8 @@ class SourceGuardTests {
                 List.of(List.of("wood:false"), List.of("tools"), Set.of("left_ore:1"), true),
                 List.of(reports, ran, causes, guard.failedRound()),
                 "INC-88: исключение одного источника доски не роняет тик сервера — пишется [incident], остальные "
-                        + "источники идут, а раунд помечен сбойным, чтобы не снять живые задания упавшего источника");
+                        + "источники идут, а раунд помечен сбойным, чтобы не снять живые задания упавшего источника"
+                        + " Иначе тест run_OneSourceThrows_OthersRunAndRoundMarkedFailed перестанет ловить эту поломку. При смене run_OneSourceThrows_OthersRunAndRoundMarkedFailed проверь это утверждение.");
     }
 
     @Test
@@ -47,6 +48,7 @@ class SourceGuardTests {
                 List.of(List.of(false, true), false),
                 List.of(repeats, guard.failedRound()),
                 "Тот же сбой в следующей пересборке — короткая строка без стека; источник снова пробуется каждую "
-                        + "пересборку, и после починки раунд чистый");
+                        + "пересборку, и после починки раунд чистый"
+                        + " Иначе тест run_SameErrorNextRound_ReportedAsRepeatAndRoundResets перестанет ловить эту поломку. При смене run_SameErrorNextRound_ReportedAsRepeatAndRoundResets проверь это утверждение.");
     }
 }

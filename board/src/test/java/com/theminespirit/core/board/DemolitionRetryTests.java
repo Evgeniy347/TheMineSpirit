@@ -17,10 +17,12 @@ class DemolitionRetryTests {
 
         assertTrue(
                 retry.waiting(SET, 1599),
-                "Повтор того же набора уборки до конца паузы не выдаётся: иначе уборка создаётся каждый тик");
+                "Повтор того же набора уборки до конца паузы не выдаётся: иначе уборка создаётся каждый тик"
+                        + " При смене waiting_BeforeCooldown_SuppressesTheSameSet проверь это утверждение.");
         assertFalse(
                 retry.waiting(SET, 1600),
-                "После паузы набор обязан снова стать кандидатом: иначе оставшиеся блоки висят навсегда");
+                "После паузы набор обязан снова стать кандидатом: иначе оставшиеся блоки висят навсегда"
+                        + " При смене waiting_BeforeCooldown_SuppressesTheSameSet проверь это утверждение.");
     }
 
     @Test
@@ -29,17 +31,25 @@ class DemolitionRetryTests {
         DemolitionRetry retry = new DemolitionRetry();
 
         String first = retry.signature(SET);
-        assertTrue(gate.allow("demolish:overworld", first), "Первая уборка выдаётся");
+        assertTrue(
+                gate.allow("demolish:overworld", first),
+                "Первая уборка выдаётся"
+                        + " Иначе тест signature_AfterFailedAttempt_ChangesSoTheGateAllowsRetry перестанет ловить эту поломку. При смене signature_AfterFailedAttempt_ChangesSoTheGateAllowsRetry проверь это утверждение.");
         assertFalse(
                 gate.allow("demolish:overworld", first),
-                "Внутри одной попытки подпись не меняется — повтор не выдаётся");
+                "Внутри одной попытки подпись не меняется — повтор не выдаётся"
+                        + " Иначе тест signature_AfterFailedAttempt_ChangesSoTheGateAllowsRetry перестанет ловить эту поломку. При смене signature_AfterFailedAttempt_ChangesSoTheGateAllowsRetry проверь это утверждение.");
         retry.submitted(SET, 1000, COOLDOWN);
         String second = retry.signature(SET);
-        assertFalse(first.equals(second), "Новая попытка обязана иметь новую подпись: " + second);
+        assertFalse(
+                first.equals(second),
+                "Новая попытка обязана иметь новую подпись: " + second
+                        + " Иначе тест signature_AfterFailedAttempt_ChangesSoTheGateAllowsRetry перестанет ловить эту поломку. При смене signature_AfterFailedAttempt_ChangesSoTheGateAllowsRetry проверь это утверждение.");
         assertTrue(
                 gate.allow("demolish:overworld", second),
                 "После провала и паузы тот же набор обязан получить новую попытку: живой разбор закрылся DONE "
-                        + "без единого убранного блока и больше не пересоздавался");
+                        + "без единого убранного блока и больше не пересоздавался"
+                        + " Иначе тест signature_AfterFailedAttempt_ChangesSoTheGateAllowsRetry перестанет ловить эту поломку. При смене signature_AfterFailedAttempt_ChangesSoTheGateAllowsRetry проверь это утверждение.");
     }
 
     @Test
@@ -47,7 +57,15 @@ class DemolitionRetryTests {
         DemolitionRetry retry = new DemolitionRetry();
         retry.submitted(SET, 1000, COOLDOWN);
 
-        assertEquals(1600, retry.until(SET), "Журнал обязан называть тик повтора, а не молчать");
-        assertEquals(0, retry.until("demolish:other"), "Незнакомый набор ещё не ждёт повтора");
+        assertEquals(
+                1600,
+                retry.until(SET),
+                "Журнал обязан называть тик повтора, а не молчать"
+                        + " Иначе тест until_AfterSubmittedAttempt_NamesRetryTick перестанет ловить эту поломку. При смене until_AfterSubmittedAttempt_NamesRetryTick проверь это утверждение.");
+        assertEquals(
+                0,
+                retry.until("demolish:other"),
+                "Незнакомый набор ещё не ждёт повтора"
+                        + " Иначе тест until_AfterSubmittedAttempt_NamesRetryTick перестанет ловить эту поломку. При смене until_AfterSubmittedAttempt_NamesRetryTick проверь это утверждение.");
     }
 }

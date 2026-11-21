@@ -20,7 +20,8 @@ class WallEscapeRulesTests {
         assertEquals(
                 Optional.of(new BlockCoord(-174, 80, -492)),
                 picked,
-                "Клетка, в которой дух уже стоит, не годится для побега: он останется в стене и задохнётся");
+                "Клетка, в которой дух уже стоит, не годится для побега: он останется в стене и задохнётся"
+                        + " Иначе тест nearestFree_OwnCellUsable_PicksNeighbourNotItself перестанет ловить эту поломку. При смене nearestFree_OwnCellUsable_PicksNeighbourNotItself проверь это утверждение.");
     }
 
     @Test
@@ -30,7 +31,8 @@ class WallEscapeRulesTests {
         assertTrue(
                 picked.isEmpty(),
                 "Если свободна только собственная клетка, побег не начинается: шаг в себя — вечный цикл "
-                        + "у стены и смерть от удушья");
+                        + "у стены и смерть от удушья"
+                        + " Иначе тест nearestFree_OnlyOwnCellUsable_RefusesToLoop перестанет ловить эту поломку. При смене nearestFree_OnlyOwnCellUsable_RefusesToLoop проверь это утверждение.");
     }
 
     @Test
@@ -41,7 +43,8 @@ class WallEscapeRulesTests {
         assertEquals(
                 Optional.of(new BlockCoord(1, 70, 0)),
                 picked,
-                "Побег берёт ближайшую свободную клетку: дальняя тратит время, пока дух задыхается");
+                "Побег берёт ближайшую свободную клетку: дальняя тратит время, пока дух задыхается"
+                        + " Иначе тест nearestFree_NearestUsable_ComesFirst перестанет ловить эту поломку. При смене nearestFree_NearestUsable_ComesFirst проверь это утверждение.");
     }
 
     private static List<BlockCoord> around(BlockCoord feet) {

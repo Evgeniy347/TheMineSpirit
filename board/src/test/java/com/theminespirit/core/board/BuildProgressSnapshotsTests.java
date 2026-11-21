@@ -15,7 +15,8 @@ class BuildProgressSnapshotsTests {
         assertEquals(
                 new TownSnapshot.Progress(7, 10, false),
                 snapshots.last("wheat_field").orElseThrow(),
-                "Снимок прогресса живёт между заданиями: без него [plot] грядки/постройки пропадает, пока билета нет");
+                "Снимок прогресса живёт между заданиями: без него [plot] грядки/постройки пропадает, пока билета нет"
+                        + " Иначе тест remember_BetweenTasks_KeepsLastBuiltPercent перестанет ловить эту поломку. При смене remember_BetweenTasks_KeepsLastBuiltPercent проверь это утверждение.");
     }
 
     @Test
@@ -28,11 +29,15 @@ class BuildProgressSnapshotsTests {
                 40,
                 snapshots.last("mine").orElseThrow().done(),
                 "Пустой замер (билета нет, схема не прочитана) не стирает последний честный процент: "
-                        + "иначе [plot] мигает 0% между заданиями");
+                        + "иначе [plot] мигает 0% между заданиями"
+                        + " При смене remember_UnknownProgress_DoesNotEraseLastSnapshot проверь это утверждение.");
     }
 
     @Test
     void last_UnknownBuilding_IsEmpty() {
-        assertTrue(new BuildProgressSnapshots().last("streets").isEmpty(), "Незнакомая постройка — пусто, а не 0%");
+        assertTrue(
+                new BuildProgressSnapshots().last("streets").isEmpty(),
+                "Незнакомая постройка — пусто, а не 0%"
+                        + " Иначе тест last_UnknownBuilding_IsEmpty перестанет ловить эту поломку. При смене last_UnknownBuilding_IsEmpty проверь это утверждение.");
     }
 }

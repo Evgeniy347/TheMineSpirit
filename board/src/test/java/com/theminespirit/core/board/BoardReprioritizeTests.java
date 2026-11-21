@@ -25,11 +25,15 @@ class BoardReprioritizeTests {
 
         boolean changed = board.reprioritize("graph:chop_log", 90);
 
-        assertTrue(changed, "Граф поднял приоритет открытого задания — доска обязана его принять");
+        assertTrue(
+                changed,
+                "Граф поднял приоритет открытого задания — доска обязана его принять"
+                        + " Иначе тест reprioritize_PendingTicket_QueueOrderFollowsNewPriority перестанет ловить эту поломку. При смене reprioritize_PendingTicket_QueueOrderFollowsNewPriority проверь это утверждение.");
         assertEquals(
                 "graph:chop_log",
                 board.claimable(new StockView(Map.of()), 0).get(0).id(),
-                "Поднятое графом задание выдаётся первым: QueueOrder сортирует по новому приоритету");
+                "Поднятое графом задание выдаётся первым: QueueOrder сортирует по новому приоритету"
+                        + " Иначе тест reprioritize_PendingTicket_QueueOrderFollowsNewPriority перестанет ловить эту поломку. При смене reprioritize_PendingTicket_QueueOrderFollowsNewPriority проверь это утверждение.");
     }
 
     @Test
@@ -39,7 +43,8 @@ class BoardReprioritizeTests {
 
         assertFalse(
                 board.reprioritize("graph:chop_log", 40),
-                "Тот же приоритет — не изменение: иначе каждый тик доски писал бы пустую правку");
+                "Тот же приоритет — не изменение: иначе каждый тик доски писал бы пустую правку"
+                        + " При смене reprioritize_SamePriority_NoChange проверь это утверждение.");
     }
 
     @Test
@@ -52,10 +57,14 @@ class BoardReprioritizeTests {
 
         boolean changed = board.reprioritize("graph:chop_log", 90);
 
-        assertFalse(changed, "Сделанное задание не переоценивается: следующий заход граф поставит его заново");
+        assertFalse(
+                changed,
+                "Сделанное задание не переоценивается: следующий заход граф поставит его заново"
+                        + " Иначе тест reprioritize_DoneTicket_Ignored перестанет ловить эту поломку. При смене reprioritize_DoneTicket_Ignored проверь это утверждение.");
         assertEquals(
                 closed,
                 board.find("graph:chop_log").orElseThrow().priority(),
-                "Приоритет закрытого задания остаётся историей, а не текущим давлением графа");
+                "Приоритет закрытого задания остаётся историей, а не текущим давлением графа"
+                        + " Иначе тест reprioritize_DoneTicket_Ignored перестанет ловить эту поломку. При смене reprioritize_DoneTicket_Ignored проверь это утверждение.");
     }
 }

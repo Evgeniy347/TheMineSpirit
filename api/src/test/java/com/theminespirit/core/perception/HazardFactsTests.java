@@ -41,14 +41,31 @@ class HazardFactsTests {
             String scene, List<HazardRef> hazards, boolean lava, boolean water, boolean drop, HazardRef nearest) {
         HazardFacts facts = new HazardFacts(hazards);
 
-        assertEquals(lava, present(facts, HazardType.LAVA), "Лава в сцене «" + scene + "» обязана быть в списке");
-        assertEquals(water, present(facts, HazardType.WATER), "Вода в сцене «" + scene + "» обязана быть в списке");
-        assertEquals(drop, present(facts, HazardType.DROP), "Обрыв в сцене «" + scene + "» обязан быть в списке");
+        assertEquals(
+                lava,
+                present(facts, HazardType.LAVA),
+                "Лава в сцене «" + scene + "» обязана быть в списке"
+                        + " Иначе тест facts_Scene_ReportKindsAndNearest перестанет ловить эту поломку. При смене facts_Scene_ReportKindsAndNearest проверь это утверждение.");
+        assertEquals(
+                water,
+                present(facts, HazardType.WATER),
+                "Вода в сцене «" + scene + "» обязана быть в списке"
+                        + " Иначе тест facts_Scene_ReportKindsAndNearest перестанет ловить эту поломку. При смене facts_Scene_ReportKindsAndNearest проверь это утверждение.");
+        assertEquals(
+                drop,
+                present(facts, HazardType.DROP),
+                "Обрыв в сцене «" + scene + "» обязан быть в списке"
+                        + " Иначе тест facts_Scene_ReportKindsAndNearest перестанет ловить эту поломку. При смене facts_Scene_ReportKindsAndNearest проверь это утверждение.");
         assertEquals(
                 nearest,
                 facts.nearest(),
-                "nearest в сцене «" + scene + "» обязан давать опасность с наименьшим расстоянием");
-        assertEquals(hazards.size(), facts.count(), "count в сцене «" + scene + "» обязан равняться числу опасностей");
+                "nearest в сцене «" + scene + "» обязан давать опасность с наименьшим расстоянием"
+                        + " Иначе тест facts_Scene_ReportKindsAndNearest перестанет ловить эту поломку. При смене facts_Scene_ReportKindsAndNearest проверь это утверждение.");
+        assertEquals(
+                hazards.size(),
+                facts.count(),
+                "count в сцене «" + scene + "» обязан равняться числу опасностей"
+                        + " Иначе тест facts_Scene_ReportKindsAndNearest перестанет ловить эту поломку. При смене facts_Scene_ReportKindsAndNearest проверь это утверждение.");
     }
 
     @Test
@@ -60,11 +77,13 @@ class HazardFactsTests {
                 west,
                 new HazardFacts(List.of(east, west)).nearest(),
                 "при равном расстоянии выбор обязан зависеть от позиции, а не от порядка списка: иначе стратег "
-                        + "получает разные факты об одной и той же сцене");
+                        + "получает разные факты об одной и той же сцене"
+                        + " При смене nearest_EqualDistances_PicksSmallestPositionRegardlessOfOrder проверь это утверждение.");
         assertEquals(
                 west,
                 new HazardFacts(List.of(west, east)).nearest(),
-                "перестановка списка не должна менять ближайшую опасность");
+                "перестановка списка не должна менять ближайшую опасность"
+                        + " Иначе тест nearest_EqualDistances_PicksSmallestPositionRegardlessOfOrder перестанет ловить эту поломку. При смене nearest_EqualDistances_PicksSmallestPositionRegardlessOfOrder проверь это утверждение.");
     }
 
     @Test
@@ -74,7 +93,11 @@ class HazardFactsTests {
 
         source.add(WATER_MID);
 
-        assertEquals(1, facts.count(), "факты обязаны хранить копию списка: правка источника не меняет уже отданное");
+        assertEquals(
+                1,
+                facts.count(),
+                "факты обязаны хранить копию списка: правка источника не меняет уже отданное"
+                        + " Иначе тест constructor_SourceListChangedAfterwards_FactsKeepOwnCopy перестанет ловить эту поломку. При смене constructor_SourceListChangedAfterwards_FactsKeepOwnCopy проверь это утверждение.");
     }
 
     @Test
@@ -82,8 +105,12 @@ class HazardFactsTests {
         assertThrows(
                 NullPointerException.class,
                 () -> new HazardFacts(null),
-                "null вместо списка обязан отклоняться: отсутствие опасностей — пустой список, а не null");
-        assertNull(new HazardFacts(List.of()).nearest(), "в пустых фактах ближайшей опасности нет");
+                "null вместо списка обязан отклоняться: отсутствие опасностей — пустой список, а не null"
+                        + " Иначе тест constructor_NullList_IsRejected перестанет ловить эту поломку. При смене constructor_NullList_IsRejected проверь это утверждение.");
+        assertNull(
+                new HazardFacts(List.of()).nearest(),
+                "в пустых фактах ближайшей опасности нет"
+                        + " Иначе тест constructor_NullList_IsRejected перестанет ловить эту поломку. При смене constructor_NullList_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -96,7 +123,8 @@ class HazardFactsTests {
                 List.of(LAVA_NEAR, DROP_NEAR),
                 closest.hazards(),
                 "closest(2) обязан оставить две ближайшие опасности по возрастанию расстояния: иначе отчёт "
-                        + "sense_hazard теряет ближайшую опасность при переполнении");
+                        + "sense_hazard теряет ближайшую опасность при переполнении"
+                        + " При смене closest_MoreHazardsThanLimit_KeepsNearestInOrder проверь это утверждение.");
     }
 
     @Test
@@ -104,7 +132,8 @@ class HazardFactsTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new HazardFacts(List.of(LAVA_NEAR)).closest(-1),
-                "отрицательный предел отчёта обязан отклоняться: иначе ошибка предела сойдёт за «опасностей нет»");
+                "отрицательный предел отчёта обязан отклоняться: иначе ошибка предела сойдёт за «опасностей нет»"
+                        + " При смене closest_NegativeLimit_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -113,7 +142,8 @@ class HazardFactsTests {
                 64,
                 HazardFacts.MAX_REPORTED,
                 "отчёт sense_hazard ограничен 64 ближайшими опасностями: обрыв и озеро дают тысячи клеток, "
-                        + "а ИИ нужны ближайшие; при смене числа пересмотри размер результата для планировщика");
+                        + "а ИИ нужны ближайшие; при смене числа пересмотри размер результата для планировщика"
+                        + " Иначе тест maxReported_Constant_IsSixtyFour перестанет ловить эту поломку. При смене maxReported_Constant_IsSixtyFour проверь это утверждение.");
     }
 
     private static boolean present(HazardFacts facts, HazardType type) {

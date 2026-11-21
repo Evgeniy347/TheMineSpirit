@@ -83,7 +83,8 @@ class HazardDetectorTests {
                 expected,
                 HazardDetector.classify(terrain, STAND),
                 scene + ": опасность клетки обязана определяться по окружению, иначе sense_hazard врёт ИИ "
-                        + "об обрывах, лаве и воде");
+                        + "об обрывах, лаве и воде"
+                        + " При смене classify_Scene_ReportsHazardOfStandingCell проверь это утверждение.");
     }
 
     @Test
@@ -93,11 +94,13 @@ class HazardDetectorTests {
         assertEquals(
                 Optional.of(HazardType.DROP),
                 HazardDetector.classify(terrain, new BlockCoord(0, 5, 3)),
-                "клетка на краю пола у провала обязана быть обрывом");
+                "клетка на краю пола у провала обязана быть обрывом"
+                        + " Иначе тест classify_EdgeAtOneSideOnly_DetectedAndFarCellIsNot перестанет ловить эту поломку. При смене classify_EdgeAtOneSideOnly_DetectedAndFarCellIsNot проверь это утверждение.");
         assertEquals(
                 Optional.empty(),
                 HazardDetector.classify(terrain, new BlockCoord(-2, 5, 0)),
-                "клетка в глубине пола, вдали от края, обрывом не является");
+                "клетка в глубине пола, вдали от края, обрывом не является"
+                        + " Иначе тест classify_EdgeAtOneSideOnly_DetectedAndFarCellIsNot перестанет ловить эту поломку. При смене classify_EdgeAtOneSideOnly_DetectedAndFarCellIsNot проверь это утверждение.");
     }
 
     @Test
@@ -109,7 +112,8 @@ class HazardDetectorTests {
         assertTrue(
                 terrain.reads() <= 2,
                 "воздух без пола отсекается двумя чтениями (клетка и пол), прочитано " + terrain.reads()
-                        + ": иначе каждая клетка среза стоит как у обрыва, и тик не держит порцию срезов");
+                        + ": иначе каждая клетка среза стоит как у обрыва, и тик не держит порцию срезов"
+                        + " При смене classify_AirCellWithoutFloor_ReadsAtMostTwoCells проверь это утверждение.");
     }
 
     @Test
@@ -121,11 +125,13 @@ class HazardDetectorTests {
         assertEquals(
                 Optional.empty(),
                 result,
-                "яма в две клетки со всех сторон обрывом не является, а проверка обязана дойти до самого дальнего чтения");
+                "яма в две клетки со всех сторон обрывом не является, а проверка обязана дойти до самого дальнего чтения"
+                        + " Иначе тест classify_CellWithFloorAndShallowPitOnAllSides_ReadsAtMostEighteenCells перестанет ловить эту поломку. При смене classify_CellWithFloorAndShallowPitOnAllSides_ReadsAtMostEighteenCells проверь это утверждение.");
         assertTrue(
                 terrain.reads() <= 2 + 4 * (1 + HazardDetector.DROP_DEPTH),
                 "одна клетка читает себя, пол и по четыре клетки (сосед и " + HazardDetector.DROP_DEPTH
-                        + " под ним) на каждого из четырёх соседей, прочитано " + terrain.reads());
+                        + " под ним) на каждого из четырёх соседей, прочитано " + terrain.reads()
+                        + " Иначе тест classify_CellWithFloorAndShallowPitOnAllSides_ReadsAtMostEighteenCells перестанет ловить эту поломку. При смене classify_CellWithFloorAndShallowPitOnAllSides_ReadsAtMostEighteenCells проверь это утверждение.");
     }
 
     @Test
@@ -134,15 +140,29 @@ class HazardDetectorTests {
                 3,
                 HazardDetector.DROP_DEPTH,
                 "обрыв — перепад в три клетки и больше: меньший перепад дух проходит шагом, больший ломает ноги; "
-                        + "при смене числа пересмотри тесты сцен и сценарий GameTest sense_hazard");
+                        + "при смене числа пересмотри тесты сцен и сценарий GameTest sense_hazard"
+                        + " При смене dropDepth_Constant_IsThree проверь это утверждение.");
     }
 
     @Test
     void refOf_PositionAndOrigin_MeasuresEuclideanDistance() {
         HazardRef ref = HazardDetector.refOf(HazardType.LAVA, new BlockCoord(3, 5, 4), new BlockCoord(0, 5, 0));
 
-        assertEquals(5.0, ref.distance(), 1e-9, "расстояние до опасности (3, 0, 4) от духа обязано быть 5");
-        assertEquals(HazardType.LAVA, ref.type(), "вид опасности обязан сохраниться");
-        assertEquals(new BlockCoord(3, 5, 4), ref.pos(), "позиция опасности обязана сохраниться");
+        assertEquals(
+                5.0,
+                ref.distance(),
+                1e-9,
+                "расстояние до опасности (3, 0, 4) от духа обязано быть 5"
+                        + " Иначе тест refOf_PositionAndOrigin_MeasuresEuclideanDistance перестанет ловить эту поломку. При смене refOf_PositionAndOrigin_MeasuresEuclideanDistance проверь это утверждение.");
+        assertEquals(
+                HazardType.LAVA,
+                ref.type(),
+                "вид опасности обязан сохраниться"
+                        + " Иначе тест refOf_PositionAndOrigin_MeasuresEuclideanDistance перестанет ловить эту поломку. При смене refOf_PositionAndOrigin_MeasuresEuclideanDistance проверь это утверждение.");
+        assertEquals(
+                new BlockCoord(3, 5, 4),
+                ref.pos(),
+                "позиция опасности обязана сохраниться"
+                        + " Иначе тест refOf_PositionAndOrigin_MeasuresEuclideanDistance перестанет ловить эту поломку. При смене refOf_PositionAndOrigin_MeasuresEuclideanDistance проверь это утверждение.");
     }
 }

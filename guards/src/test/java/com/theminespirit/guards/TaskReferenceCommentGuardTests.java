@@ -28,7 +28,8 @@ class TaskReferenceCommentGuardTests {
                         + "чеклист 11: radius 1..32\"). "
                         + "Чеклисты удаляются после приёмки — ссылка протухает, а пересказ числа дублирует константу. "
                         + "Как надо: удалить комментарий; смысл несёт имя константы, причина числа — сообщение теста "
-                        + "(docs/CONVENTIONS.md → «Комментарии»). Нарушители (файл:строка)");
+                        + "(docs/CONVENTIONS.md → «Комментарии»). Нарушители (файл:строка)"
+                        + " Иначе тест productionSources_Comments_DoNotReferenceTaskFiles перестанет ловить эту поломку. При смене productionSources_Comments_DoNotReferenceTaskFiles проверь это утверждение.");
     }
 
     @Test
@@ -40,7 +41,8 @@ class TaskReferenceCommentGuardTests {
         assertEquals(
                 List.of(1, 2, 3),
                 taskReferenceLines(sample),
-                "Сторож ослеп: ссылка на чеклист, tasks/ и todo.md в комментарии должна находиться");
+                "Сторож ослеп: ссылка на чеклист, tasks/ и todo.md в комментарии должна находиться"
+                        + " Иначе тест taskReferencePattern_LineAndBlockComments_AreReported перестанет ловить эту поломку. При смене taskReferencePattern_LineAndBlockComments_AreReported проверь это утверждение.");
     }
 
     @Test
@@ -51,7 +53,8 @@ class TaskReferenceCommentGuardTests {
         assertEquals(
                 List.of(),
                 taskReferenceLines(sample),
-                "Сторож ложно срабатывает: строковый литерал и обычный комментарий без ссылки на задачу — не нарушение");
+                "Сторож ложно срабатывает: строковый литерал и обычный комментарий без ссылки на задачу — не нарушение"
+                        + " Иначе тест taskReferencePattern_StringLiteralAndPlainComment_AreIgnored перестанет ловить эту поломку. При смене taskReferencePattern_StringLiteralAndPlainComment_AreIgnored проверь это утверждение.");
     }
 
     private static void collect(Map<Path, String> sources, List<String> offenders) {

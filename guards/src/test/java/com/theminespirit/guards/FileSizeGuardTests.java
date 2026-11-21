@@ -31,7 +31,8 @@ class FileSizeGuardTests {
                         + "файл сверх задачи. Ужимать формат и выжимать строки ради лимита запрещено: лимит не "
                         + "про строки, а про зоны. Новый файл сверх предела сразу красный; файл из "
                         + "config/filesize-baseline.txt не растёт, исправленный — убирается из списка. "
-                        + "Нарушители (путь, строк):");
+                        + "Нарушители (путь, строк):"
+                        + " Иначе тест javaFiles_LongerThanLimit_AreReported перестанет ловить эту поломку. При смене javaFiles_LongerThanLimit_AreReported проверь это утверждение.");
     }
 
     @Test
@@ -39,7 +40,8 @@ class FileSizeGuardTests {
         assertEquals(
                 List.of("Long.java (301): новый файл длиннее " + LIMIT + " строк"),
                 problems(Map.of("Long.java", 301), Map.of()),
-                "Сторож ослеп: новый файл длиной 301 строка обязан попасть в нарушители");
+                "Сторож ослеп: новый файл длиной 301 строка обязан попасть в нарушители"
+                        + " Иначе тест oversized_NewFileOverLimit_IsReported перестанет ловить эту поломку. При смене oversized_NewFileOverLimit_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -47,7 +49,8 @@ class FileSizeGuardTests {
         assertEquals(
                 List.of(),
                 problems(Map.of("Ok.java", LIMIT), Map.of()),
-                "Сторож ложно срабатывает: файл ровно в предел " + LIMIT + " строк допустим");
+                "Сторож ложно срабатывает: файл ровно в предел " + LIMIT + " строк допустим"
+                        + " Иначе тест oversized_FileAtLimit_IsAccepted перестанет ловить эту поломку. При смене oversized_FileAtLimit_IsAccepted проверь это утверждение.");
     }
 
     @Test
@@ -55,7 +58,8 @@ class FileSizeGuardTests {
         assertEquals(
                 List.of(),
                 problems(Map.of("a/Long.java", 320), Map.of("a/Long.java", 320)),
-                "Сторож ложно срабатывает: файл из списка исключений с тем же размером допустим");
+                "Сторож ложно срабатывает: файл из списка исключений с тем же размером допустим"
+                        + " Иначе тест baseline_RecordedSize_IsAccepted перестанет ловить эту поломку. При смене baseline_RecordedSize_IsAccepted проверь это утверждение.");
     }
 
     @Test
@@ -64,7 +68,8 @@ class FileSizeGuardTests {
                 List.of("a/Long.java (321): вырос с 320 — раздели по зонам или выпиши техдолг владельцу;"
                         + " строки ради лимита не жать"),
                 problems(Map.of("a/Long.java", 321), Map.of("a/Long.java", 320)),
-                "Сторож ослеп: файл из списка исключений не имеет права расти");
+                "Сторож ослеп: файл из списка исключений не имеет права расти"
+                        + " Иначе тест baseline_FileGrew_IsReported перестанет ловить эту поломку. При смене baseline_FileGrew_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -72,7 +77,8 @@ class FileSizeGuardTests {
         assertEquals(
                 List.of("a/Long.java (310): уменьшился с 320 — запиши новый размер в списке"),
                 problems(Map.of("a/Long.java", 310), Map.of("a/Long.java", 320)),
-                "Сторож ослеп: уменьшившийся файл обязан обновить свой размер в списке");
+                "Сторож ослеп: уменьшившийся файл обязан обновить свой размер в списке"
+                        + " Иначе тест baseline_FileShrankButStillOversized_IsReported перестанет ловить эту поломку. При смене baseline_FileShrankButStillOversized_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -80,7 +86,8 @@ class FileSizeGuardTests {
         assertEquals(
                 List.of("a/Long.java (300): исправлен — убери запись из списка"),
                 problems(Map.of("a/Long.java", 300), Map.of("a/Long.java", 320)),
-                "Сторож ослеп: исправленный файл обязан уйти из списка исключений");
+                "Сторож ослеп: исправленный файл обязан уйти из списка исключений"
+                        + " Иначе тест baseline_FileFixed_IsReportedAsStale перестанет ловить эту поломку. При смене baseline_FileFixed_IsReportedAsStale проверь это утверждение.");
     }
 
     @Test
@@ -89,13 +96,17 @@ class FileSizeGuardTests {
                 List.of(
                         "config/filesize-baseline.txt: 59 записей при пределе 39 — исправленный файл убирается из списка"),
                 countProblems(59),
-                "Сторож ослеп: базлайн длиннее предела обязан попасть в нарушители");
+                "Сторож ослеп: базлайн длиннее предела обязан попасть в нарушители"
+                        + " Иначе тест baseline_CountOverLimit_IsReported перестанет ловить эту поломку. При смене baseline_CountOverLimit_IsReported проверь это утверждение.");
     }
 
     @Test
     void baseline_CountAtLimit_IsAccepted() {
         assertEquals(
-                List.of(), countProblems(BASELINE_LIMIT), "Сторож ложно срабатывает: базлайн ровно в предел допустим");
+                List.of(),
+                countProblems(BASELINE_LIMIT),
+                "Сторож ложно срабатывает: базлайн ровно в предел допустим"
+                        + " Иначе тест baseline_CountAtLimit_IsAccepted перестанет ловить эту поломку. При смене baseline_CountAtLimit_IsAccepted проверь это утверждение.");
     }
 
     @Test
@@ -107,7 +118,8 @@ class FileSizeGuardTests {
                         + "исключений перестал уменьшаться, и правило «класс делает одно дело» (docs/CONVENTIONS.md) "
                         + "для этих файлов приостановлено навсегда. Как надо: раздели один файл по зонам "
                         + "ответственности в текущей задаче и убери его запись из config/filesize-baseline.txt; "
-                        + "новые записи в список не добавляются.");
+                        + "новые записи в список не добавляются."
+                        + " Иначе тест baseline_RealCount_DoesNotExceedLimit перестанет ловить эту поломку. При смене baseline_RealCount_DoesNotExceedLimit проверь это утверждение.");
     }
 
     private static List<String> countProblems(int entries) {
@@ -141,7 +153,8 @@ class FileSizeGuardTests {
                 int separator = raw.indexOf('\t');
                 assertTrue(
                         separator > 0,
-                        "Строка списка исключений " + BASELINE + " должна быть «путь<TAB>строк», а не: " + raw);
+                        "Строка списка исключений " + BASELINE + " должна быть «путь<TAB>строк», а не: " + raw
+                                + " Иначе тест baseline_RealCount_DoesNotExceedLimit перестанет ловить эту поломку. При смене baseline_RealCount_DoesNotExceedLimit проверь это утверждение.");
                 entries.put(
                         raw.substring(0, separator).trim(),
                         Integer.parseInt(raw.substring(separator + 1).trim()));

@@ -19,11 +19,13 @@ class ScriptCatalogDuplicateTests {
                 IllegalArgumentException.class,
                 () -> ScriptCatalog.of(scripts),
                 "Каталог с дублирующимся id обязан падать: иначе find вернёт случайный скрипт из двух, "
-                        + "и план выполнит не то действие");
+                        + "и план выполнит не то действие"
+                        + " При смене of_DuplicateId_Throws проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("scan"),
                 "Сообщение об ошибке обязано называть дублирующийся id 'scan': по нему правят каталог. "
-                        + "Фактическое сообщение: " + error.getMessage());
+                        + "Фактическое сообщение: " + error.getMessage()
+                        + " Иначе тест of_DuplicateId_Throws перестанет ловить эту поломку. При смене of_DuplicateId_Throws проверь это утверждение.");
     }
 }

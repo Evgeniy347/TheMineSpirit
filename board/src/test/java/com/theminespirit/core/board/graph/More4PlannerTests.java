@@ -19,13 +19,20 @@ class More4PlannerTests {
                 .filter(candidate -> NEAR.equals(candidate.id()))
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("Чужой игрок обязан дать задание охраны: " + NEAR));
-        assertTrue(task.implemented(), "Охрана поселения подключена к действию");
-        assertTrue(task.raised(), "Игрок у поселения — заметный приоритет, а не ноль");
+        assertTrue(
+                task.implemented(),
+                "Охрана поселения подключена к действию"
+                        + " Иначе тест eventImplemented_PlannedTask_IsPosted перестанет ловить эту поломку. При смене eventImplemented_PlannedTask_IsPosted проверь это утверждение.");
+        assertTrue(
+                task.raised(),
+                "Игрок у поселения — заметный приоритет, а не ноль"
+                        + " Иначе тест eventImplemented_PlannedTask_IsPosted перестанет ловить эту поломку. При смене eventImplemented_PlannedTask_IsPosted проверь это утверждение.");
 
         GraphTickets.Result tickets = GraphTickets.of(GRAPH, state, plan);
         assertTrue(
                 tickets.post().stream().anyMatch(ticket -> (GraphTickets.PREFIX + NEAR).equals(ticket.id())),
-                "Реализованное действие ставится на доску: дух обязан взять охрану");
+                "Реализованное действие ставится на доску: дух обязан взять охрану"
+                        + " Иначе тест eventImplemented_PlannedTask_IsPosted перестанет ловить эту поломку. При смене eventImplemented_PlannedTask_IsPosted проверь это утверждение.");
     }
 
     @Test
@@ -35,11 +42,13 @@ class More4PlannerTests {
 
         assertTrue(
                 plan.tasks().stream().noneMatch(task -> task.id().startsWith("event:" + More4Rules.SPACE_FOUND + ":")),
-                "Свободное место — условие выбора постройки, а не работа духа");
+                "Свободное место — условие выбора постройки, а не работа духа"
+                        + " Иначе тест eventSpaceFound_TunesBuildingChoice_NotSeparateWork перестанет ловить эту поломку. При смене eventSpaceFound_TunesBuildingChoice_NotSeparateWork проверь это утверждение.");
         assertTrue(
                 GRAPH.way("more4_plan_expansion").isEmpty()
                         && GRAPH.way("more4_find_space").isEmpty(),
-                "Пути-заглушки расширения удалены: поправка живёт в graph.json.choice");
+                "Пути-заглушки расширения удалены: поправка живёт в graph.json.choice"
+                        + " Иначе тест eventSpaceFound_TunesBuildingChoice_NotSeparateWork перестанет ловить эту поломку. При смене eventSpaceFound_TunesBuildingChoice_NotSeparateWork проверь это утверждение.");
     }
 
     @Test
@@ -58,7 +67,8 @@ class More4PlannerTests {
                     GraphPlanner.plan(GRAPH, GraphWorld.empty().event(event).state());
             assertTrue(
                     plan.tasks().stream().anyMatch(task -> task.id().startsWith("event:" + event + ":")),
-                    "Событие области обязано дать задание: " + event);
+                    "Событие области обязано дать задание: " + event
+                            + " Иначе тест eventTask_EveryAreaEvent_GivesPlannedWork перестанет ловить эту поломку. При смене eventTask_EveryAreaEvent_GivesPlannedWork проверь это утверждение.");
         }
     }
 
@@ -74,7 +84,10 @@ class More4PlannerTests {
                 "more4_guard_with_pet",
                 "more4_store_rare",
                 "more4_feed_hungry")) {
-            assertTrue(plan.task(way).isEmpty(), "Без входа области задачи нет: " + way);
+            assertTrue(
+                    plan.task(way).isEmpty(),
+                    "Без входа области задачи нет: " + way
+                            + " Иначе тест noMore4Event_WithoutInput_NoAreaWork перестанет ловить эту поломку. При смене noMore4Event_WithoutInput_NoAreaWork проверь это утверждение.");
         }
     }
 }

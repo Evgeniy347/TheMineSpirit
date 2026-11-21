@@ -45,17 +45,27 @@ class SettlementRoutesTests {
 
         RestResponse response = send("GET", "/v1/settlement/stage", "");
 
-        assertEquals(200, response.status(), "Чтение этапа обязано отвечать 200: " + response.body());
+        assertEquals(
+                200,
+                response.status(),
+                "Чтение этапа обязано отвечать 200: " + response.body()
+                        + " Иначе тест get_Stage_ReturnsCurrentStageAndRequirements перестанет ловить эту поломку. При смене get_Stage_ReturnsCurrentStageAndRequirements проверь это утверждение.");
         JsonNode parsed = MAPPER.readTree(response.body());
-        assertEquals(2, parsed.get("stage").asInt(), "GET обязан отдавать текущий этап поселения: " + response.body());
+        assertEquals(
+                2,
+                parsed.get("stage").asInt(),
+                "GET обязан отдавать текущий этап поселения: " + response.body()
+                        + " Иначе тест get_Stage_ReturnsCurrentStageAndRequirements перестанет ловить эту поломку. При смене get_Stage_ReturnsCurrentStageAndRequirements проверь это утверждение.");
         assertEquals(
                 "not_ready",
                 parsed.get("requirements").get(0).get("world").asText(),
-                "GET обязан отдавать состояние постройки по миру словами ready/not_ready/unknown: " + response.body());
+                "GET обязан отдавать состояние постройки по миру словами ready/not_ready/unknown: " + response.body()
+                        + " Иначе тест get_Stage_ReturnsCurrentStageAndRequirements перестанет ловить эту поломку. При смене get_Stage_ReturnsCurrentStageAndRequirements проверь это утверждение.");
         assertEquals(
                 false,
                 parsed.get("requirements").get(0).get("optional").asBoolean(),
-                "GET обязан отличать обязательную постройку от желательной: " + response.body());
+                "GET обязан отличать обязательную постройку от желательной: " + response.body()
+                        + " Иначе тест get_Stage_ReturnsCurrentStageAndRequirements перестанет ловить эту поломку. При смене get_Stage_ReturnsCurrentStageAndRequirements проверь это утверждение.");
     }
 
     @Test
@@ -77,9 +87,21 @@ class SettlementRoutesTests {
 
         JsonNode defects =
                 MAPPER.readTree(response.body()).get("requirements").get(0).get("defects");
-        assertEquals(3, defects.get("holes").asInt(), "REST отдаёт число ям: " + response.body());
-        assertEquals(2, defects.get("mounds").asInt(), "REST отдаёт число бугров: " + response.body());
-        assertEquals(1, defects.get("pillars").asInt(), "REST отдаёт число столбов: " + response.body());
+        assertEquals(
+                3,
+                defects.get("holes").asInt(),
+                "REST отдаёт число ям: " + response.body()
+                        + " Иначе тест get_Stage_ClearingCarriesDefectCounts перестанет ловить эту поломку. При смене get_Stage_ClearingCarriesDefectCounts проверь это утверждение.");
+        assertEquals(
+                2,
+                defects.get("mounds").asInt(),
+                "REST отдаёт число бугров: " + response.body()
+                        + " Иначе тест get_Stage_ClearingCarriesDefectCounts перестанет ловить эту поломку. При смене get_Stage_ClearingCarriesDefectCounts проверь это утверждение.");
+        assertEquals(
+                1,
+                defects.get("pillars").asInt(),
+                "REST отдаёт число столбов: " + response.body()
+                        + " Иначе тест get_Stage_ClearingCarriesDefectCounts перестанет ловить эту поломку. При смене get_Stage_ClearingCarriesDefectCounts проверь это утверждение.");
     }
 
     @Test
@@ -88,20 +110,42 @@ class SettlementRoutesTests {
 
         RestResponse response = send("POST", "/v1/settlement/stage", body(requestId, 1, ""));
 
-        assertEquals(200, response.status(), "Откат этапа обязан отвечать 200: " + response.body());
+        assertEquals(
+                200,
+                response.status(),
+                "Откат этапа обязан отвечать 200: " + response.body()
+                        + " Иначе тест post_Rollback_ReturnsChangeAndDefaultsActor перестанет ловить эту поломку. При смене post_Rollback_ReturnsChangeAndDefaultsActor проверь это утверждение.");
         JsonNode parsed = MAPPER.readTree(response.body());
-        assertEquals(1, parsed.get("stage").asInt(), "Откат обязан отдать целевой этап: " + response.body());
-        assertEquals(2, parsed.get("previous").asInt(), "Откат обязан отдать прежний этап: " + response.body());
-        assertEquals(requestId, parsed.get("request_id").asText(), "Откат обязан эхать request_id клиента");
-        assertEquals(1, gateway.changes().size(), "Откат обязан дойти до платформы ровно один раз");
+        assertEquals(
+                1,
+                parsed.get("stage").asInt(),
+                "Откат обязан отдать целевой этап: " + response.body()
+                        + " Иначе тест post_Rollback_ReturnsChangeAndDefaultsActor перестанет ловить эту поломку. При смене post_Rollback_ReturnsChangeAndDefaultsActor проверь это утверждение.");
+        assertEquals(
+                2,
+                parsed.get("previous").asInt(),
+                "Откат обязан отдать прежний этап: " + response.body()
+                        + " Иначе тест post_Rollback_ReturnsChangeAndDefaultsActor перестанет ловить эту поломку. При смене post_Rollback_ReturnsChangeAndDefaultsActor проверь это утверждение.");
+        assertEquals(
+                requestId,
+                parsed.get("request_id").asText(),
+                "Откат обязан эхать request_id клиента"
+                        + " Иначе тест post_Rollback_ReturnsChangeAndDefaultsActor перестанет ловить эту поломку. При смене post_Rollback_ReturnsChangeAndDefaultsActor проверь это утверждение.");
+        assertEquals(
+                1,
+                gateway.changes().size(),
+                "Откат обязан дойти до платформы ровно один раз"
+                        + " Иначе тест post_Rollback_ReturnsChangeAndDefaultsActor перестанет ловить эту поломку. При смене post_Rollback_ReturnsChangeAndDefaultsActor проверь это утверждение.");
         assertEquals(
                 SettlementChange.DEFAULT_BY,
                 gateway.changes().get(0).by(),
-                "Без поля 'by' откат подписывается rest: карточка всё равно называет, кем сделан откат");
+                "Без поля 'by' откат подписывается rest: карточка всё равно называет, кем сделан откат"
+                        + " Иначе тест post_Rollback_ReturnsChangeAndDefaultsActor перестанет ловить эту поломку. При смене post_Rollback_ReturnsChangeAndDefaultsActor проверь это утверждение.");
         assertEquals(
                 SettlementChange.DEFAULT_REASON,
                 gateway.changes().get(0).reason(),
-                "Без поля 'reason' откат называется «" + SettlementChange.DEFAULT_REASON + "»");
+                "Без поля 'reason' откат называется «" + SettlementChange.DEFAULT_REASON + "»"
+                        + " Иначе тест post_Rollback_ReturnsChangeAndDefaultsActor перестанет ловить эту поломку. При смене post_Rollback_ReturnsChangeAndDefaultsActor проверь это утверждение.");
     }
 
     @Test
@@ -110,8 +154,16 @@ class SettlementRoutesTests {
 
         RestResponse response = send("PUT", "/v1/settlement/stage", body(requestId, 1, ",\"by\":\"owner\""));
 
-        assertEquals(200, response.status(), "PUT отката обязан работать так же, как POST: " + response.body());
-        assertEquals("owner", gateway.changes().get(0).by(), "PUT обязан передать 'by' в карточку отката");
+        assertEquals(
+                200,
+                response.status(),
+                "PUT отката обязан работать так же, как POST: " + response.body()
+                        + " Иначе тест put_Rollback_TreatedAsPost перестанет ловить эту поломку. При смене put_Rollback_TreatedAsPost проверь это утверждение.");
+        assertEquals(
+                "owner",
+                gateway.changes().get(0).by(),
+                "PUT обязан передать 'by' в карточку отката"
+                        + " Иначе тест put_Rollback_TreatedAsPost перестанет ловить эту поломку. При смене put_Rollback_TreatedAsPost проверь это утверждение.");
     }
 
     @Test
@@ -122,9 +174,21 @@ class SettlementRoutesTests {
 
         RestResponse replay = send("POST", "/v1/settlement/stage", payload);
 
-        assertEquals(200, replay.status(), "Повтор отката обязан оставаться 200: " + replay.body());
-        assertEquals(first.body(), replay.body(), "Идемпотентный повтор обязан вернуть исходный ответ байт в байт");
-        assertEquals(1, gateway.changes().size(), "Повтор не должен откатывать этап второй раз");
+        assertEquals(
+                200,
+                replay.status(),
+                "Повтор отката обязан оставаться 200: " + replay.body()
+                        + " Иначе тест post_ReplaySameRequestId_ReturnsSameResponseWithoutSecondRollback перестанет ловить эту поломку. При смене post_ReplaySameRequestId_ReturnsSameResponseWithoutSecondRollback проверь это утверждение.");
+        assertEquals(
+                first.body(),
+                replay.body(),
+                "Идемпотентный повтор обязан вернуть исходный ответ байт в байт"
+                        + " Иначе тест post_ReplaySameRequestId_ReturnsSameResponseWithoutSecondRollback перестанет ловить эту поломку. При смене post_ReplaySameRequestId_ReturnsSameResponseWithoutSecondRollback проверь это утверждение.");
+        assertEquals(
+                1,
+                gateway.changes().size(),
+                "Повтор не должен откатывать этап второй раз"
+                        + " Иначе тест post_ReplaySameRequestId_ReturnsSameResponseWithoutSecondRollback перестанет ловить эту поломку. При смене post_ReplaySameRequestId_ReturnsSameResponseWithoutSecondRollback проверь это утверждение.");
     }
 
     @Test
@@ -138,7 +202,8 @@ class SettlementRoutesTests {
                 409,
                 response.status(),
                 "Тот же request_id с другим этапом обязан отвечать 409: иначе клиент решит, что откат другой. "
-                        + response.body());
+                        + response.body()
+                        + " При смене post_SameRequestIdDifferentBody_Conflicts проверь это утверждение.");
     }
 
     @Test
@@ -147,11 +212,20 @@ class SettlementRoutesTests {
 
         RestResponse response = send("POST", "/v1/settlement/stage", body(requestId, 1, ",\"force\":true"));
 
-        assertEquals(400, response.status(), "Лишнее поле обязано отвергаться: " + response.body());
+        assertEquals(
+                400,
+                response.status(),
+                "Лишнее поле обязано отвергаться: " + response.body()
+                        + " Иначе тест post_UnknownField_Returns400 перестанет ловить эту поломку. При смене post_UnknownField_Returns400 проверь это утверждение.");
         assertTrue(
                 response.body().contains("force"),
-                "Ошибка обязана назвать лишнее поле: иначе клиент не поймёт, что убрать. Ответ: " + response.body());
-        assertEquals(0, gateway.changes().size(), "Отвергнутый запрос не имеет права менять доску");
+                "Ошибка обязана назвать лишнее поле: иначе клиент не поймёт, что убрать. Ответ: " + response.body()
+                        + " При смене post_UnknownField_Returns400 проверь это утверждение.");
+        assertEquals(
+                0,
+                gateway.changes().size(),
+                "Отвергнутый запрос не имеет права менять доску"
+                        + " Иначе тест post_UnknownField_Returns400 перестанет ловить эту поломку. При смене post_UnknownField_Returns400 проверь это утверждение.");
     }
 
     @Test
@@ -162,8 +236,13 @@ class SettlementRoutesTests {
                 400,
                 response.status(),
                 "Откат без request_id обязан отвергаться: без UUID клиента повтор отката не отличить от нового. "
-                        + response.body());
-        assertEquals(0, gateway.changes().size(), "Отвергнутый запрос не имеет права менять доску");
+                        + response.body()
+                        + " Иначе тест post_MissingRequestId_Returns400 перестанет ловить эту поломку. При смене post_MissingRequestId_Returns400 проверь это утверждение.");
+        assertEquals(
+                0,
+                gateway.changes().size(),
+                "Отвергнутый запрос не имеет права менять доску"
+                        + " Иначе тест post_MissingRequestId_Returns400 перестанет ловить эту поломку. При смене post_MissingRequestId_Returns400 проверь это утверждение.");
     }
 
     @Test
@@ -172,6 +251,10 @@ class SettlementRoutesTests {
 
         RestResponse response = send("POST", "/v1/settlement/stage", body(requestId, 0, ""));
 
-        assertEquals(400, response.status(), "Нулевой этап обязан отвергаться: " + response.body());
+        assertEquals(
+                400,
+                response.status(),
+                "Нулевой этап обязан отвергаться: " + response.body()
+                        + " Иначе тест post_StageBelowOne_Returns400 перестанет ловить эту поломку. При смене post_StageBelowOne_Returns400 проверь это утверждение.");
     }
 }

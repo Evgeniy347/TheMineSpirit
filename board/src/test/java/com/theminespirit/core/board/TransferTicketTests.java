@@ -43,11 +43,13 @@ class TransferTicketTests {
                 List.of("goto", "withdraw", "wait"),
                 calls.stream().map(ScriptCall::script).toList(),
                 "INC-86: после перезапуска цель передачи — только точка, получатель и груз — в метках задания; без "
-                        + "восстановления план не собирался (×190), крафт каменного топора стоял");
+                        + "восстановления план не собирался (×190), крафт каменного топора стоял"
+                        + " Иначе тест restore_WarehouseTransferToSelfAfterRestart_PlansGotoAndWithdraw перестанет ловить эту поломку. При смене restore_WarehouseTransferToSelfAfterRestart_PlansGotoAndWithdraw проверь это утверждение.");
         assertEquals(
                 List.of("cobblestone", 3),
                 List.of(calls.get(1).params().get("item"), calls.get(1).params().get("count")),
-                "Со склада самому себе — withdraw ровно нехватки в свой инвентарь");
+                "Со склада самому себе — withdraw ровно нехватки в свой инвентарь"
+                        + " Иначе тест restore_WarehouseTransferToSelfAfterRestart_PlansGotoAndWithdraw перестанет ловить эту поломку. При смене restore_WarehouseTransferToSelfAfterRestart_PlansGotoAndWithdraw проверь это утверждение.");
     }
 
     private static List<ScriptCall> calls(TaskNode root) {

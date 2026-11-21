@@ -30,7 +30,8 @@ class GraphSourceClosureTests {
                 holes,
                 "Каждый предмет, который путь тратит или требует, обязан иметь путь добычи: иначе планировщик"
                         + " просит то, чего взять неоткуда. Дыры (предмет = путь, которому нужен) — добавь путь"
-                        + " добычи в board/graph.json (неготовое — implemented=false)");
+                        + " добычи в board/graph.json (неготовое — implemented=false)"
+                        + " При смене ways_EveryConsumedItem_HasSource проверь это утверждение.");
     }
 
     @Test
@@ -46,7 +47,8 @@ class GraphSourceClosureTests {
             assertTrue(
                     GRAPH.way(way).isPresent() && !GRAPH.implemented(way),
                     "Поздняя ваниль (боссы, Энд, океан, испытательные залы, археология, големы) внесена"
-                            + " как «в разработке»: " + way);
+                            + " как «в разработке»: " + way
+                            + " Иначе тест ways_LateVanillaSources_InDevelopment перестанет ловить эту поломку. При смене ways_LateVanillaSources_InDevelopment проверь это утверждение.");
         }
     }
 }

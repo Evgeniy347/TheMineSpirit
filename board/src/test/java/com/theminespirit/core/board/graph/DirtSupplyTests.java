@@ -20,7 +20,8 @@ class DirtSupplyTests {
                 dig.isPresent()
                         && dig.orElseThrow().raised()
                         && dig.orElseThrow().feasible(),
-                "При нехватке земли для улиц граф обязан ставить добычу земли, получено " + plan.tasks());
+                "При нехватке земли для улиц граф обязан ставить добычу земли, получено " + plan.tasks()
+                        + " Иначе тест plan_DirtShortForStreets_PostsDigDirt перестанет ловить эту поломку. При смене plan_DirtShortForStreets_PostsDigDirt проверь это утверждение.");
     }
 
     @Test
@@ -36,7 +37,8 @@ class DirtSupplyTests {
         assertTrue(
                 dig.isPresent() && dig.orElseThrow().raised(),
                 "Карьер в 40 блоках — достижимый источник земли: задание добычи обязано остаться, получено "
-                        + plan.tasks());
+                        + plan.tasks()
+                        + " Иначе тест plan_QuarryInFortyBlocks_StillPostsDigDirt перестанет ловить эту поломку. При смене plan_QuarryInFortyBlocks_StillPostsDigDirt проверь это утверждение.");
     }
 
     @Test
@@ -50,12 +52,14 @@ class DirtSupplyTests {
         Optional<GraphPlan.Task> dig = plan.task("dig_dirt");
         assertFalse(
                 dig.isPresent() && dig.orElseThrow().raised(),
-                "Без дёрна вне участка добыча земли невыполнима: задание не ставится, получено " + plan.tasks());
+                "Без дёрна вне участка добыча земли невыполнима: задание не ставится, получено " + plan.tasks()
+                        + " Иначе тест plan_NoSoilAround_ReportsMissingSourceInsteadOfDigging перестанет ловить эту поломку. При смене plan_NoSoilAround_ReportsMissingSourceInsteadOfDigging проверь это утверждение.");
         assertTrue(
                 plan.notices().stream()
                         .anyMatch(notice -> "dirt".equals(notice.building())
                                 && notice.reason().contains("нет источника")
                                 && notice.reason().contains("soil")),
-                "Нет источника земли — честный факт для стратега с причиной, получено " + plan.notices());
+                "Нет источника земли — честный факт для стратега с причиной, получено " + plan.notices()
+                        + " Иначе тест plan_NoSoilAround_ReportsMissingSourceInsteadOfDigging перестанет ловить эту поломку. При смене plan_NoSoilAround_ReportsMissingSourceInsteadOfDigging проверь это утверждение.");
     }
 }

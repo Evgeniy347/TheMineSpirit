@@ -26,25 +26,30 @@ class CoreFactCollectorTests {
                 row.size(),
                 situation.enemies().size(),
                 "Ситуация после снятия фактов («" + row.name() + "»): факт-радиус отсекает дальних врагов, "
-                        + "а свыше лимита хвост сворачивается — проверьте фильтр CoreFactCollector");
+                        + "а свыше лимита хвост сворачивается — проверьте фильтр CoreFactCollector"
+                        + " Иначе тест collect_Context_ProducesCanonicalSituation перестанет ловить эту поломку. При смене collect_Context_ProducesCanonicalSituation проверь это утверждение.");
         assertEquals(
                 row.firstType(),
                 first,
                 "Ближайший враг ситуации («" + row.name()
-                        + "»): порядок задаёт ядро, факт-радиус только отсекает лишних");
+                        + "»): порядок задаёт ядро, факт-радиус только отсекает лишних"
+                        + " Иначе тест collect_Context_ProducesCanonicalSituation перестанет ловить эту поломку. При смене collect_Context_ProducesCanonicalSituation проверь это утверждение.");
         assertEquals(
                 row.mode(),
                 situation.orders().mode(),
-                "Режим боя из приказов («" + row.name() + "») обязан дойти до ситуации без подмены");
+                "Режим боя из приказов («" + row.name() + "») обязан дойти до ситуации без подмены"
+                        + " Иначе тест collect_Context_ProducesCanonicalSituation перестанет ловить эту поломку. При смене collect_Context_ProducesCanonicalSituation проверь это утверждение.");
         assertEquals(
                 row.night(),
                 situation.env().night(),
-                "Признак ночи из окружения («" + row.name() + "») обязан дойти до ситуации");
+                "Признак ночи из окружения («" + row.name() + "») обязан дойти до ситуации"
+                        + " Иначе тест collect_Context_ProducesCanonicalSituation перестанет ловить эту поломку. При смене collect_Context_ProducesCanonicalSituation проверь это утверждение.");
         assertEquals(
                 row.sinceHit(),
                 situation.ticksSinceHit(),
                 "Тики с последнего урона («" + row.name()
-                        + "») обязаны дойти до ситуации: на них стоит событийный вызов");
+                        + "») обязаны дойти до ситуации: на них стоит событийный вызов"
+                        + " Иначе тест collect_Context_ProducesCanonicalSituation перестанет ловить эту поломку. При смене collect_Context_ProducesCanonicalSituation проверь это утверждение.");
     }
 
     static Stream<Row> rows() {

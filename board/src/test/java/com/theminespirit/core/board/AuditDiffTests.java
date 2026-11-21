@@ -35,10 +35,12 @@ class AuditDiffTests {
                 cells.size(),
                 diff.lost().size(),
                 "observe22: клетка улицы была дёрном (земля по плану покрыта травой), стала воздухом — аудит "
-                        + "обязан назвать её потерей, иначе падение streets 944→899 не разобрать");
+                        + "обязан назвать её потерей, иначе падение streets 944→899 не разобрать"
+                        + " При смене between_StreetBlockDugOut_NamesCellAndStandingBlock проверь это утверждение.");
         assertTrue(
                 diff.lost().get(0).text().contains("стоит minecraft:air"),
-                "Журнал обязан назвать, что стоит на месте клетки: без этого непонятно, дух выкопал или блок подменили");
+                "Журнал обязан назвать, что стоит на месте клетки: без этого непонятно, дух выкопал или блок подменили"
+                        + " При смене between_StreetBlockDugOut_NamesCellAndStandingBlock проверь это утверждение.");
     }
 
     @Test
@@ -52,11 +54,13 @@ class AuditDiffTests {
         assertEquals(
                 1,
                 diff.lost().size(),
-                "Строгий аудит улиц не считает dirt_path землёй: подмена дёрна тропой обязана попасть в журнал");
+                "Строгий аудит улиц не считает dirt_path землёй: подмена дёрна тропой обязана попасть в журнал"
+                        + " Иначе тест between_BlockReplacedByPath_CountedAsLoss перестанет ловить эту поломку. При смене between_BlockReplacedByPath_CountedAsLoss проверь это утверждение.");
         assertTrue(
                 diff.lost().get(0).text().contains("ожидался minecraft:dirt, стоит minecraft:air")
                         || diff.lost().get(0).text().contains("стоит minecraft:dirt_path"),
-                "В причине потери обязан быть реально стоящий блок, а не голая цифра");
+                "В причине потери обязан быть реально стоящий блок, а не голая цифра"
+                        + " Иначе тест between_BlockReplacedByPath_CountedAsLoss перестанет ловить эту поломку. При смене between_BlockReplacedByPath_CountedAsLoss проверь это утверждение.");
     }
 
     @Test
@@ -67,15 +71,21 @@ class AuditDiffTests {
 
         AuditDiff diff = AuditDiff.between(before, after, value -> "minecraft:grass_block");
 
-        assertEquals(1, diff.lost().size(), "Клетка пропала из готовности — потеря одна");
+        assertEquals(
+                1,
+                diff.lost().size(),
+                "Клетка пропала из готовности — потеря одна"
+                        + " Иначе тест between_ChunkBecameUnloaded_ReasonIsChunkNotBlockGone перестанет ловить эту поломку. При смене between_ChunkBecameUnloaded_ReasonIsChunkNotBlockGone проверь это утверждение.");
         assertEquals(
                 "чанк не загружен",
                 diff.lost().get(0).standing(),
-                "Причина потери в незагруженном чанке — не «блока нет»: иначе ремонт снесёт готовую улицу");
+                "Причина потери в незагруженном чанке — не «блока нет»: иначе ремонт снесёт готовую улицу"
+                        + " При смене between_ChunkBecameUnloaded_ReasonIsChunkNotBlockGone проверь это утверждение.");
         assertEquals(
                 List.of(cell),
                 diff.unknownCells(),
-                "Журнал называет клетки, которые перестали быть известны: по ним видно, почему готовность «неизвестно»");
+                "Журнал называет клетки, которые перестали быть известны: по ним видно, почему готовность «неизвестно»"
+                        + " Иначе тест between_ChunkBecameUnloaded_ReasonIsChunkNotBlockGone перестанет ловить эту поломку. При смене between_ChunkBecameUnloaded_ReasonIsChunkNotBlockGone проверь это утверждение.");
     }
 
     @Test
@@ -87,11 +97,16 @@ class AuditDiffTests {
 
         AuditDiff diff = AuditDiff.between(before, after, value -> "minecraft:grass_block");
 
-        assertEquals(1, diff.lost().size(), "Клетка выпала из плана — прежняя готовность перестала считаться");
+        assertEquals(
+                1,
+                diff.lost().size(),
+                "Клетка выпала из плана — прежняя готовность перестала считаться"
+                        + " Иначе тест between_CellGoneFromPlan_ReasonIsPlanMoved перестанет ловить эту поломку. При смене between_CellGoneFromPlan_ReasonIsPlanMoved проверь это утверждение.");
         assertEquals(
                 "клетки больше нет в плане",
                 diff.lost().get(0).standing(),
-                "Если клетки нет в новом плане, нельзя писать «стоит блок»: аудит сверяет другой план");
+                "Если клетки нет в новом плане, нельзя писать «стоит блок»: аудит сверяет другой план"
+                        + " Иначе тест between_CellGoneFromPlan_ReasonIsPlanMoved перестанет ловить эту поломку. При смене between_CellGoneFromPlan_ReasonIsPlanMoved проверь это утверждение.");
     }
 
     @Test
@@ -102,8 +117,15 @@ class AuditDiffTests {
 
         AuditDiff diff = AuditDiff.between(before, after, value -> "minecraft:grass_block");
 
-        assertTrue(diff.lost().isEmpty(), "Клетка стала дёрном — терять нечего");
-        assertEquals(1, diff.gained(), "Дёрн на месте земли — клетка вернулась в готовность");
+        assertTrue(
+                diff.lost().isEmpty(),
+                "Клетка стала дёрном — терять нечего"
+                        + " Иначе тест between_CellBecomesDirt_GainedOne перестанет ловить эту поломку. При смене between_CellBecomesDirt_GainedOne проверь это утверждение.");
+        assertEquals(
+                1,
+                diff.gained(),
+                "Дёрн на месте земли — клетка вернулась в готовность"
+                        + " Иначе тест between_CellBecomesDirt_GainedOne перестанет ловить эту поломку. При смене between_CellBecomesDirt_GainedOne проверь это утверждение.");
     }
 
     @Test
@@ -113,7 +135,8 @@ class AuditDiffTests {
 
         assertTrue(
                 AuditDiff.between(same, same, value -> "minecraft:grass_block").empty(),
-                "Без изменений журнал аудита молчит: иначе лог забивается повторами");
+                "Без изменений журнал аудита молчит: иначе лог забивается повторами"
+                        + " При смене between_NothingChanged_Empty проверь это утверждение.");
     }
 
     private static BuildGap.Gap gap(List<BlockCoord> cells, Probe probe) {

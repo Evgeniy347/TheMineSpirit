@@ -28,9 +28,17 @@ class QuarryPlannerTests {
                 164,
                 plan.reserve(),
                 "На ровном дёрне 9×9 карьер слоями даёт 164 блока: край 1, центр 4 — иначе дух копает стену, "
-                        + "из которой не выйти");
-        assertEquals(plan.reserve(), plan.cutVolume(), "Запас и срезка — одно и то же: иначе % остатка врёт");
-        assertFalse(plan.waterLimited(), "Воды рядом нет — ограничение по воде не должно появляться");
+                        + "из которой не выйти"
+                        + " При смене plan_FlatDirtWithoutWater_DigsSteppedQuarry проверь это утверждение.");
+        assertEquals(
+                plan.reserve(),
+                plan.cutVolume(),
+                "Запас и срезка — одно и то же: иначе % остатка врёт"
+                        + " При смене plan_FlatDirtWithoutWater_DigsSteppedQuarry проверь это утверждение.");
+        assertFalse(
+                plan.waterLimited(),
+                "Воды рядом нет — ограничение по воде не должно появляться"
+                        + " Иначе тест plan_FlatDirtWithoutWater_DigsSteppedQuarry перестанет ловить эту поломку. При смене plan_FlatDirtWithoutWater_DigsSteppedQuarry проверь это утверждение.");
     }
 
     @Test
@@ -61,7 +69,8 @@ class QuarryPlannerTests {
                 List.of(),
                 steep,
                 "Соседние колонки карьера отличаются не больше чем на блок: из ямы выходят "
-                        + "ступенями, а не прыжком со стены");
+                        + "ступенями, а не прыжком со стены"
+                        + " Иначе тест plan_StepAdjacentColumns_DifferByOneLayer перестанет ловить эту поломку. При смене plan_StepAdjacentColumns_DifferByOneLayer проверь это утверждение.");
     }
 
     @Test
@@ -75,11 +84,13 @@ class QuarryPlannerTests {
                 130,
                 plan.reserve(),
                 "Вода на 62 запрещает копать ниже: со дна на уровне воды 130 блоков песка вместо 164 — "
-                        + "иначе карьер затопит и дух утонет");
+                        + "иначе карьер затопит и дух утонет"
+                        + " При смене plan_WaterNearby_StopsAtWaterLevel проверь это утверждение.");
         assertTrue(
                 plan.waterLimited(),
                 "Ограничение воды видно в отчёте плана: иначе стратег не отличит мелкий карьер "
-                        + "у воды от бедного места");
+                        + "у воды от бедного места"
+                        + " При смене plan_WaterNearby_StopsAtWaterLevel проверь это утверждение.");
     }
 
     @Test
@@ -93,7 +104,8 @@ class QuarryPlannerTests {
                 161,
                 plan.reserve(),
                 "Камень под дёрном останавливает колонку: добывают только подряд идущий ресурс, камень не считают "
-                        + "и не ломают");
+                        + "и не ломают"
+                        + " Иначе тест plan_StoneUnderDirt_StopsAtStone перестанет ловить эту поломку. При смене plan_StoneUnderDirt_StopsAtStone проверь это утверждение.");
     }
 
     @Test
@@ -106,7 +118,8 @@ class QuarryPlannerTests {
         assertEquals(
                 160,
                 plan.reserve(),
-                "Блок игрока в колонке не трогают: колонка не входит в карьер, иначе дух ломает чужую постройку");
+                "Блок игрока в колонке не трогают: колонка не входит в карьер, иначе дух ломает чужую постройку"
+                        + " При смене plan_ForbiddenBlock_SkipsWholeColumn проверь это утверждение.");
     }
 
     @Test
@@ -119,7 +132,8 @@ class QuarryPlannerTests {
         assertEquals(
                 160,
                 plan.reserve(),
-                "Незагруженный чанк — «неизвестно», а не воздух: его запас не выдумывают и в план не берут");
+                "Незагруженный чанк — «неизвестно», а не воздух: его запас не выдумывают и в план не берут"
+                        + " Иначе тест plan_UnloadedColumn_NotCounted перестанет ловить эту поломку. При смене plan_UnloadedColumn_NotCounted проверь это утверждение.");
     }
 
     private static final class Probe implements QuarryProbe {

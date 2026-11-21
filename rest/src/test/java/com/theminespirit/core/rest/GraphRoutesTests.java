@@ -20,12 +20,31 @@ class GraphRoutesTests {
         RestResponse response =
                 router.handle(new RestRequest("GET", GraphRoutes.DECISIONS, Map.of(), Map.of(), new byte[0]));
 
-        assertEquals(200, response.status(), "GET /v1/graph/decisions обязан отвечать снимком решений");
-        assertTrue(response.body().contains("\"tick\":777"), "Снимок называет тик: " + response.body());
-        assertTrue(response.body().contains("\"spirit\":\"spirit-1\""), "Снимок называет духа: " + response.body());
-        assertTrue(response.body().contains("\"task\":\"make:dirt\""), "Снимок называет работу: " + response.body());
-        assertTrue(response.body().contains("\"next\":\"chop_oak_log\""), "Снимок называет следующего кандидата");
-        assertTrue(response.body().contains("\"why\":\"вес ниже на 4\""), "Снимок объясняет отказ: " + response.body());
+        assertEquals(
+                200,
+                response.status(),
+                "GET /v1/graph/decisions обязан отвечать снимком решений"
+                        + " Иначе тест decisions_Snapshot_ReturnsTickAndRows перестанет ловить эту поломку. При смене decisions_Snapshot_ReturnsTickAndRows проверь это утверждение.");
+        assertTrue(
+                response.body().contains("\"tick\":777"),
+                "Снимок называет тик: " + response.body()
+                        + " Иначе тест decisions_Snapshot_ReturnsTickAndRows перестанет ловить эту поломку. При смене decisions_Snapshot_ReturnsTickAndRows проверь это утверждение.");
+        assertTrue(
+                response.body().contains("\"spirit\":\"spirit-1\""),
+                "Снимок называет духа: " + response.body()
+                        + " Иначе тест decisions_Snapshot_ReturnsTickAndRows перестанет ловить эту поломку. При смене decisions_Snapshot_ReturnsTickAndRows проверь это утверждение.");
+        assertTrue(
+                response.body().contains("\"task\":\"make:dirt\""),
+                "Снимок называет работу: " + response.body()
+                        + " Иначе тест decisions_Snapshot_ReturnsTickAndRows перестанет ловить эту поломку. При смене decisions_Snapshot_ReturnsTickAndRows проверь это утверждение.");
+        assertTrue(
+                response.body().contains("\"next\":\"chop_oak_log\""),
+                "Снимок называет следующего кандидата"
+                        + " Иначе тест decisions_Snapshot_ReturnsTickAndRows перестанет ловить эту поломку. При смене decisions_Snapshot_ReturnsTickAndRows проверь это утверждение.");
+        assertTrue(
+                response.body().contains("\"why\":\"вес ниже на 4\""),
+                "Снимок объясняет отказ: " + response.body()
+                        + " Иначе тест decisions_Snapshot_ReturnsTickAndRows перестанет ловить эту поломку. При смене decisions_Snapshot_ReturnsTickAndRows проверь это утверждение.");
     }
 
     @Test
@@ -43,10 +62,14 @@ class GraphRoutesTests {
         RestResponse response = Router.of(GraphRoutes.of(gateway))
                 .handle(new RestRequest("GET", GraphRoutes.DECISIONS, Map.of(), Map.of(), new byte[0]));
 
-        assertTrue(response.body().contains("\"need\":\"hunger\""), "Метрика нужды называет нужду: " + response.body());
+        assertTrue(
+                response.body().contains("\"need\":\"hunger\""),
+                "Метрика нужды называет нужду: " + response.body()
+                        + " Иначе тест decisions_VitalNeed_ReportsNeedAndOrdinaryWork перестанет ловить эту поломку. При смене decisions_VitalNeed_ReportsNeedAndOrdinaryWork проверь это утверждение.");
         assertTrue(
                 response.body().contains("\"doing\":\"graph:mine_coal\""),
-                "Метрика видит обычную работу при живой нужде: " + response.body());
+                "Метрика видит обычную работу при живой нужде: " + response.body()
+                        + " Иначе тест decisions_VitalNeed_ReportsNeedAndOrdinaryWork перестанет ловить эту поломку. При смене decisions_VitalNeed_ReportsNeedAndOrdinaryWork проверь это утверждение.");
     }
 
     @Test
@@ -56,7 +79,14 @@ class GraphRoutesTests {
         RestResponse response = Router.of(GraphRoutes.of(gateway))
                 .handle(new RestRequest("GET", GraphRoutes.DECISIONS, Map.of(), Map.of(), new byte[0]));
 
-        assertEquals(200, response.status(), "Пустой снимок — не ошибка: граф ещё не считался");
-        assertTrue(response.body().contains("\"decisions\":[]"), "Пустой список решений в ответе: " + response.body());
+        assertEquals(
+                200,
+                response.status(),
+                "Пустой снимок — не ошибка: граф ещё не считался"
+                        + " Иначе тест decisions_EmptySnapshot_StillValidJson перестанет ловить эту поломку. При смене decisions_EmptySnapshot_StillValidJson проверь это утверждение.");
+        assertTrue(
+                response.body().contains("\"decisions\":[]"),
+                "Пустой список решений в ответе: " + response.body()
+                        + " Иначе тест decisions_EmptySnapshot_StillValidJson перестанет ловить эту поломку. При смене decisions_EmptySnapshot_StillValidJson проверь это утверждение.");
     }
 }

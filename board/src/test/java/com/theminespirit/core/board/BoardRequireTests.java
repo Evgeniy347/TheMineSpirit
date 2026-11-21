@@ -19,26 +19,31 @@ class BoardRequireTests {
                 .orElseThrow(() -> new AssertionError("В живой доске observe12 нет first:build_fence"));
         assertFalse(
                 fence.requiredItems().isEmpty(),
-                "Живая доска observe12 держит ограду с устаревшим требованием " + fence.requiredItems());
+                "Живая доска observe12 держит ограду с устаревшим требованием " + fence.requiredItems()
+                        + " Иначе тест require_LiveFence_ReleasesBlockedTicketWithoutStalePlanks перестанет ловить эту поломку. При смене require_LiveFence_ReleasesBlockedTicketWithoutStalePlanks проверь это утверждение.");
         assertEquals(
                 BoardStatus.PENDING,
                 board.statusOf("first:build_fence").orElseThrow(),
                 "Старая блокировка без типизированной нужды не восстанавливается как BLOCKED: условие "
-                        + "пересчитывается, иначе доска ждёт пустоту вечно (живая доска observe12 хранит такой снимок)");
+                        + "пересчитывается, иначе доска ждёт пустоту вечно (живая доска observe12 хранит такой снимок)"
+                        + " При смене require_LiveFence_ReleasesBlockedTicketWithoutStalePlanks проверь это утверждение.");
 
         assertTrue(
                 board.require("first:build_fence", Map.of()),
-                "Освежение материалов обязано принять пустое требование: ограда уже стоит 26 из 26");
+                "Освежение материалов обязано принять пустое требование: ограда уже стоит 26 из 26"
+                        + " Иначе тест require_LiveFence_ReleasesBlockedTicketWithoutStalePlanks перестанет ловить эту поломку. При смене require_LiveFence_ReleasesBlockedTicketWithoutStalePlanks проверь это утверждение.");
 
         assertEquals(
                 Map.of(),
                 board.find("first:build_fence").orElseThrow().requiredItems(),
-                "Устаревшие oak_planks/stick сняты: иначе задача ждёт доски при готовой ограде");
+                "Устаревшие oak_planks/stick сняты: иначе задача ждёт доски при готовой ограде"
+                        + " При смене require_LiveFence_ReleasesBlockedTicketWithoutStalePlanks проверь это утверждение.");
         List<BoardTicket> ready = board.claimable(new StockView(Map.of()), 0);
         assertTrue(
                 ready.stream().anyMatch(ticket -> "first:build_fence".equals(ticket.id())),
                 "После освежения ограда снова доступна к выдаче: "
-                        + ready.stream().map(BoardTicket::id).toList());
+                        + ready.stream().map(BoardTicket::id).toList()
+                        + " Иначе тест require_LiveFence_ReleasesBlockedTicketWithoutStalePlanks перестанет ловить эту поломку. При смене require_LiveFence_ReleasesBlockedTicketWithoutStalePlanks проверь это утверждение.");
     }
 
     @Test
@@ -46,14 +51,20 @@ class BoardRequireTests {
         Board board = LiveBoardFixture.load(LIVE_BOARD);
         BoardTicket mine = board.find("first:build_mine")
                 .orElseThrow(() -> new AssertionError("В живой доске observe12 нет first:build_mine"));
-        assertEquals(57, mine.requiredItems().get("cobblestone"), "Живая шахта требует 57 полов: " + mine);
+        assertEquals(
+                57,
+                mine.requiredItems().get("cobblestone"),
+                "Живая шахта требует 57 полов: " + mine
+                        + " Иначе тест require_AssignedMine_LeavesTicketAlone перестанет ловить эту поломку. При смене require_AssignedMine_LeavesTicketAlone проверь это утверждение.");
 
         assertFalse(
                 board.require("first:build_mine", Map.of()),
-                "Материалы задания в работе не переписываются: дух уже держит контракт");
+                "Материалы задания в работе не переписываются: дух уже держит контракт"
+                        + " Иначе тест require_AssignedMine_LeavesTicketAlone перестанет ловить эту поломку. При смене require_AssignedMine_LeavesTicketAlone проверь это утверждение.");
         assertEquals(
                 Map.of("cobblestone", 57),
                 board.find("first:build_mine").orElseThrow().requiredItems(),
-                "Требование работающей шахты осталось прежним");
+                "Требование работающей шахты осталось прежним"
+                        + " Иначе тест require_AssignedMine_LeavesTicketAlone перестанет ловить эту поломку. При смене require_AssignedMine_LeavesTicketAlone проверь это утверждение.");
     }
 }

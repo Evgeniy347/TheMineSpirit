@@ -41,7 +41,8 @@ class GameTestHolderGuardTests {
                 "Класс с @GameTest без @GameTestHolder(ModIdentity.MOD_ID) не регистрируется в пространстве "
                         + "мода, без @PrefixGameTestTemplate(false) шаблон ищется с префиксом класса и сцена "
                         + "не находится; шаблон, которого нет в data/theminespirit/structure/*.nbt, роняет "
-                        + "пачку на старте. Правило: docs/TESTING.md → «Сцены». Нарушители");
+                        + "пачку на старте. Правило: docs/TESTING.md → «Сцены». Нарушители"
+                        + " При смене gameTestClasses_CurrentSources_HaveHolderPrefixAndExistingTemplate проверь это утверждение.");
     }
 
     @Test
@@ -56,7 +57,8 @@ class GameTestHolderGuardTests {
 
         assertTrue(
                 offendersOf(sample, Set.of("arena")).stream().anyMatch(line -> line.contains("GameTestHolder")),
-                "Сторож ослеп: класс с @GameTest без @GameTestHolder должен попадать в нарушители");
+                "Сторож ослеп: класс с @GameTest без @GameTestHolder должен попадать в нарушители"
+                        + " Иначе тест spawn_Spirit_Lives перестанет ловить эту поломку. При смене spawn_Spirit_Lives проверь это утверждение.");
     }
 
     @Test
@@ -72,7 +74,8 @@ class GameTestHolderGuardTests {
 
         assertTrue(
                 offendersOf(sample, Set.of("arena")).stream().anyMatch(line -> line.contains("PrefixGameTestTemplate")),
-                "Сторож ослеп: класс с @GameTest без @PrefixGameTestTemplate(false) должен попадать " + "в нарушители");
+                "Сторож ослеп: класс с @GameTest без @PrefixGameTestTemplate(false) должен попадать " + "в нарушители"
+                        + " Иначе тест spawn_Spirit_Lives перестанет ловить эту поломку. При смене spawn_Spirit_Lives проверь это утверждение.");
     }
 
     @Test
@@ -89,7 +92,8 @@ class GameTestHolderGuardTests {
 
         assertTrue(
                 offendersOf(sample, Set.of("arena")).stream().anyMatch(line -> line.contains("missing")),
-                "Сторож ослеп: шаблон без файла .nbt должен попадать в нарушители");
+                "Сторож ослеп: шаблон без файла .nbt должен попадать в нарушители"
+                        + " Иначе тест spawn_Spirit_Lives перестанет ловить эту поломку. При смене spawn_Spirit_Lives проверь это утверждение.");
     }
 
     @Test
@@ -109,7 +113,8 @@ class GameTestHolderGuardTests {
         assertEquals(
                 List.of(),
                 offendersOf(sample, Set.of("arena")),
-                "Сторож ложно срабатывает: шаблон из static final String с существующим .nbt — законное решение");
+                "Сторож ложно срабатывает: шаблон из static final String с существующим .nbt — законное решение"
+                        + " Иначе тест spawn_Spirit_Lives перестанет ловить эту поломку. При смене spawn_Spirit_Lives проверь это утверждение.");
     }
 
     private static void collectOffenders(Map<Path, String> sources, Set<String> templates, List<String> offenders) {

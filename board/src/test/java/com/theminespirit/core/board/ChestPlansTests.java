@@ -27,15 +27,22 @@ class ChestPlansTests {
         assertEquals(
                 List.of("withdraw", "withdraw", "deposit", "deposit", "unload", "clear_area", "collect_drops"),
                 scripts,
-                "Непустой сундук: все предметы вынесены в склад одним заходом, и только потом сломан: " + scripts);
+                "Непустой сундук: все предметы вынесены в склад одним заходом, и только потом сломан: " + scripts
+                        + " Иначе тест demolish_NonEmptyChest_WithdrawsEveryItemBeforeBreaking перестанет ловить эту поломку. При смене demolish_NonEmptyChest_WithdrawsEveryItemBeforeBreaking проверь это утверждение.");
         assertTrue(
                 scripts.indexOf("deposit") > scripts.lastIndexOf("withdraw"),
-                "Сначала забирают всё из сундука, потом несут на склад: иначе лишние ходки на каждый тип: " + scripts);
+                "Сначала забирают всё из сундука, потом несут на склад: иначе лишние ходки на каждый тип: " + scripts
+                        + " При смене demolish_NonEmptyChest_WithdrawsEveryItemBeforeBreaking проверь это утверждение.");
         assertEquals(
                 "10,64,10",
                 calls.get(0).params().get("container"),
-                "Забирают именно из этого сундука, а не из ближайшего");
-        assertEquals("warehouse", calls.get(2).params().get("container"), "Вещи кладут в склад поселения");
+                "Забирают именно из этого сундука, а не из ближайшего"
+                        + " Иначе тест demolish_NonEmptyChest_WithdrawsEveryItemBeforeBreaking перестанет ловить эту поломку. При смене demolish_NonEmptyChest_WithdrawsEveryItemBeforeBreaking проверь это утверждение.");
+        assertEquals(
+                "warehouse",
+                calls.get(2).params().get("container"),
+                "Вещи кладут в склад поселения"
+                        + " Иначе тест demolish_NonEmptyChest_WithdrawsEveryItemBeforeBreaking перестанет ловить эту поломку. При смене demolish_NonEmptyChest_WithdrawsEveryItemBeforeBreaking проверь это утверждение.");
     }
 
     @Test
@@ -51,13 +58,23 @@ class ChestPlansTests {
         assertEquals(
                 20,
                 scripts.stream().filter("withdraw"::equals).count(),
-                "20 типов забирают за один заход к сундуку: " + scripts);
-        assertEquals("withdraw", scripts.get(19), "Все 20 заборов идут подряд, до первого похода на склад: " + scripts);
-        assertEquals("deposit", scripts.get(20), "После забора — перенос на склад: " + scripts);
+                "20 типов забирают за один заход к сундуку: " + scripts
+                        + " Иначе тест demolish_ManyItemTypes_PacksOneChestVisitBeforeWarehouse перестанет ловить эту поломку. При смене demolish_ManyItemTypes_PacksOneChestVisitBeforeWarehouse проверь это утверждение.");
+        assertEquals(
+                "withdraw",
+                scripts.get(19),
+                "Все 20 заборов идут подряд, до первого похода на склад: " + scripts
+                        + " Иначе тест demolish_ManyItemTypes_PacksOneChestVisitBeforeWarehouse перестанет ловить эту поломку. При смене demolish_ManyItemTypes_PacksOneChestVisitBeforeWarehouse проверь это утверждение.");
+        assertEquals(
+                "deposit",
+                scripts.get(20),
+                "После забора — перенос на склад: " + scripts
+                        + " Иначе тест demolish_ManyItemTypes_PacksOneChestVisitBeforeWarehouse перестанет ловить эту поломку. При смене demolish_ManyItemTypes_PacksOneChestVisitBeforeWarehouse проверь это утверждение.");
         assertEquals(
                 43,
                 scripts.size(),
-                "На 20 типов — 20 заборов, 20 переносов, подготовка инвентаря, слом и подбор сундука: " + scripts);
+                "На 20 типов — 20 заборов, 20 переносов, подготовка инвентаря, слом и подбор сундука: " + scripts
+                        + " Иначе тест demolish_ManyItemTypes_PacksOneChestVisitBeforeWarehouse перестанет ловить эту поломку. При смене demolish_ManyItemTypes_PacksOneChestVisitBeforeWarehouse проверь это утверждение.");
     }
 
     @Test
@@ -76,7 +93,8 @@ class ChestPlansTests {
                 List.of("withdraw", "withdraw", "deposit", "deposit", "unload", "clear_area", "collect_drops"),
                 scripts,
                 "300 грязи не влезают в предел скрипта 256: два забора и два переноса, фазы не перемешиваются: "
-                        + scripts);
+                        + scripts
+                        + " Иначе тест demolish_MoveLargerThanScriptLimit_SplitsButKeepsBothPhases перестанет ловить эту поломку. При смене demolish_MoveLargerThanScriptLimit_SplitsButKeepsBothPhases проверь это утверждение.");
     }
 
     @Test
@@ -90,11 +108,17 @@ class ChestPlansTests {
         assertEquals(
                 List.of("clear_area", "collect_drops", "withdraw", "deposit", "unload", "clear_area", "collect_drops"),
                 scripts,
-                "Блок над сундуком снимается до открытия: с закрытой крышкой вещи не забрать: " + scripts);
-        assertEquals(65, calls.get(0).params().get("y1"), "Снимают именно клетку над сундуком");
+                "Блок над сундуком снимается до открытия: с закрытой крышкой вещи не забрать: " + scripts
+                        + " Иначе тест demolish_CoverAboveChest_BreaksCoverBeforeWithdraw перестанет ловить эту поломку. При смене demolish_CoverAboveChest_BreaksCoverBeforeWithdraw проверь это утверждение.");
+        assertEquals(
+                65,
+                calls.get(0).params().get("y1"),
+                "Снимают именно клетку над сундуком"
+                        + " Иначе тест demolish_CoverAboveChest_BreaksCoverBeforeWithdraw перестанет ловить эту поломку. При смене demolish_CoverAboveChest_BreaksCoverBeforeWithdraw проверь это утверждение.");
         assertTrue(
                 scripts.indexOf("collect_drops") < scripts.indexOf("withdraw"),
-                "Дроп с крышки подбирают до похода в сундук: " + scripts);
+                "Дроп с крышки подбирают до похода в сундук: " + scripts
+                        + " Иначе тест demolish_CoverAboveChest_BreaksCoverBeforeWithdraw перестанет ловить эту поломку. При смене demolish_CoverAboveChest_BreaksCoverBeforeWithdraw проверь это утверждение.");
     }
 
     @Test
@@ -104,7 +128,8 @@ class ChestPlansTests {
         assertEquals(
                 List.of("unload", "clear_area", "collect_drops"),
                 calls.stream().map(ScriptCall::script).toList(),
-                "До слома освобождают переполненный инвентарь, затем ломают сундук и сразу подбирают его предмет");
+                "До слома освобождают переполненный инвентарь, затем ломают сундук и сразу подбирают его предмет"
+                        + " Иначе тест demolish_EmptyChest_BreaksWithoutTransfers перестанет ловить эту поломку. При смене demolish_EmptyChest_BreaksWithoutTransfers проверь это утверждение.");
     }
 
     @Test
@@ -113,12 +138,21 @@ class ChestPlansTests {
 
         List<ScriptCall> calls = calls(ChestPlans.demolish(snapshot(), List.of(CHEST), destination));
 
-        assertEquals("unload", calls.get(0).script(), "Разгрузка предшествует слому");
+        assertEquals(
+                "unload",
+                calls.get(0).script(),
+                "Разгрузка предшествует слому"
+                        + " Иначе тест demolish_ExplicitDestination_PreparesInventoryAtSameChest перестанет ловить эту поломку. При смене demolish_ExplicitDestination_PreparesInventoryAtSameChest проверь это утверждение.");
         assertEquals(
                 "20,64,20",
                 calls.get(0).params().get("container"),
-                "Явно заданный склад используется и для подготовки инвентаря");
-        assertEquals(false, calls.get(0).params().get("force"), "Свободный инвентарь не требует разгрузки");
+                "Явно заданный склад используется и для подготовки инвентаря"
+                        + " Иначе тест demolish_ExplicitDestination_PreparesInventoryAtSameChest перестанет ловить эту поломку. При смене demolish_ExplicitDestination_PreparesInventoryAtSameChest проверь это утверждение.");
+        assertEquals(
+                false,
+                calls.get(0).params().get("force"),
+                "Свободный инвентарь не требует разгрузки"
+                        + " Иначе тест demolish_ExplicitDestination_PreparesInventoryAtSameChest перестанет ловить эту поломку. При смене demolish_ExplicitDestination_PreparesInventoryAtSameChest проверь это утверждение.");
     }
 
     @Test
@@ -133,7 +167,11 @@ class ChestPlansTests {
 
         long withdraws =
                 calls.stream().filter(call -> "withdraw".equals(call.script())).count();
-        assertEquals(1, withdraws, "256 грязи переносятся одной порцией: предел скрипта — 256");
+        assertEquals(
+                1,
+                withdraws,
+                "256 грязи переносятся одной порцией: предел скрипта — 256"
+                        + " Иначе тест demolish_LargeStack_SplitsTransfersByScriptLimit перестанет ловить эту поломку. При смене demolish_LargeStack_SplitsTransfersByScriptLimit проверь это утверждение.");
     }
 
     @Test
@@ -145,7 +183,8 @@ class ChestPlansTests {
         assertEquals(
                 List.of("withdraw", "wait", "craft", "place_block"),
                 calls.stream().map(ScriptCall::script).toList(),
-                "Новый сундук делают из досок (с ожиданием досок) и ставят в клетку склада");
+                "Новый сундук делают из досок (с ожиданием досок) и ставят в клетку склада"
+                        + " Иначе тест placeOne_CellInWarehouse_CraftsAndPlacesChest перестанет ловить эту поломку. При смене placeOne_CellInWarehouse_CraftsAndPlacesChest проверь это утверждение.");
         ScriptCall craft = calls.stream()
                 .filter(call -> "craft".equals(call.script()))
                 .findFirst()
@@ -154,8 +193,16 @@ class ChestPlansTests {
                 .filter(call -> "place_block".equals(call.script()))
                 .findFirst()
                 .orElseThrow();
-        assertEquals("minecraft:chest", craft.params().get("item"), "Крафтится сундук");
-        assertEquals(cell.x(), place.params().get("x"), "Ставится в клетку склада по X");
+        assertEquals(
+                "minecraft:chest",
+                craft.params().get("item"),
+                "Крафтится сундук"
+                        + " Иначе тест placeOne_CellInWarehouse_CraftsAndPlacesChest перестанет ловить эту поломку. При смене placeOne_CellInWarehouse_CraftsAndPlacesChest проверь это утверждение.");
+        assertEquals(
+                cell.x(),
+                place.params().get("x"),
+                "Ставится в клетку склада по X"
+                        + " Иначе тест placeOne_CellInWarehouse_CraftsAndPlacesChest перестанет ловить эту поломку. При смене placeOne_CellInWarehouse_CraftsAndPlacesChest проверь это утверждение.");
     }
 
     @Test
@@ -167,19 +214,30 @@ class ChestPlansTests {
         assertEquals(
                 List.of("unload", "clear_area", "collect_drops", "unload", "clear_area", "collect_drops"),
                 calls.stream().map(ScriptCall::script).toList(),
-                "Перед каждой половиной готовят инвентарь, после неё сразу подбирают содержимое");
+                "Перед каждой половиной готовят инвентарь, после неё сразу подбирают содержимое"
+                        + " Иначе тест breakOnly_EmptyCells_BreaksEveryCell перестанет ловить эту поломку. При смене breakOnly_EmptyCells_BreaksEveryCell проверь это утверждение.");
         for (int index : List.of(0, 3)) {
-            assertEquals("warehouse", calls.get(index).params().get("container"), "Излишек сдаётся на склад");
-            assertEquals(false, calls.get(index).params().get("force"), "Свободный инвентарь не требует разгрузки");
+            assertEquals(
+                    "warehouse",
+                    calls.get(index).params().get("container"),
+                    "Излишек сдаётся на склад"
+                            + " Иначе тест breakOnly_EmptyCells_BreaksEveryCell перестанет ловить эту поломку. При смене breakOnly_EmptyCells_BreaksEveryCell проверь это утверждение.");
+            assertEquals(
+                    false,
+                    calls.get(index).params().get("force"),
+                    "Свободный инвентарь не требует разгрузки"
+                            + " Иначе тест breakOnly_EmptyCells_BreaksEveryCell перестанет ловить эту поломку. При смене breakOnly_EmptyCells_BreaksEveryCell проверь это утверждение.");
         }
         for (int index : List.of(2, 5)) {
             assertEquals(
                     "return_to_base",
                     calls.get(index).params().get("overflow"),
-                    "При переполнении вещи относят на склад, а не выбрасывают ради более дорогих");
+                    "При переполнении вещи относят на склад, а не выбрасывают ради более дорогих"
+                            + " Иначе тест breakOnly_EmptyCells_BreaksEveryCell перестанет ловить эту поломку. При смене breakOnly_EmptyCells_BreaksEveryCell проверь это утверждение.");
             assertTrue(
                     ((Number) calls.get(index).params().get("radius")).intValue() >= 5,
-                    "Подбор охватывает сундук, сломанный с расстояния рук, и разлёт содержимого");
+                    "Подбор охватывает сундук, сломанный с расстояния рук, и разлёт содержимого"
+                            + " Иначе тест breakOnly_EmptyCells_BreaksEveryCell перестанет ловить эту поломку. При смене breakOnly_EmptyCells_BreaksEveryCell проверь это утверждение.");
         }
     }
 

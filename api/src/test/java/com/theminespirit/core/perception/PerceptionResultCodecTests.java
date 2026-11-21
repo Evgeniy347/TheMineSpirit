@@ -25,15 +25,18 @@ class PerceptionResultCodecTests {
         assertEquals(
                 200,
                 PerceptionResultCodec.MAX_STRING_LENGTH,
-                "лимит строки — 200 символов (H1 согласован): завышение растит JSON каждой задачи");
+                "лимит строки — 200 символов (H1 согласован): завышение растит JSON каждой задачи"
+                        + " Иначе тест limits_Constants_MatchAgreedNumbers перестанет ловить эту поломку. При смене limits_Constants_MatchAgreedNumbers проверь это утверждение.");
         assertEquals(
                 32,
                 PerceptionResultCodec.MAX_LIST_ITEMS,
-                "лимит списка — 32 элемента (H1 согласован): больше стратег не читает");
+                "лимит списка — 32 элемента (H1 согласован): больше стратег не читает"
+                        + " Иначе тест limits_Constants_MatchAgreedNumbers перестанет ловить эту поломку. При смене limits_Constants_MatchAgreedNumbers проверь это утверждение.");
         assertEquals(
                 4096,
                 PerceptionResultCodec.MAX_JSON_BYTES,
-                "лимит объекта — 4 КиБ (H1 согласован): больше — перегрузка каждой задачи");
+                "лимит объекта — 4 КиБ (H1 согласован): больше — перегрузка каждой задачи"
+                        + " Иначе тест limits_Constants_MatchAgreedNumbers перестанет ловить эту поломку. При смене limits_Constants_MatchAgreedNumbers проверь это утверждение.");
     }
 
     @Test
@@ -43,12 +46,21 @@ class PerceptionResultCodecTests {
 
         Map<String, Object> map = PerceptionResultCodec.toMap(result);
 
-        assertEquals("blocks", map.get("type"), "тип обязан называться в нижнем регистре");
-        assertEquals(8, map.get("radius"), "радиус запроса обязан попасть в JSON");
+        assertEquals(
+                "blocks",
+                map.get("type"),
+                "тип обязан называться в нижнем регистре"
+                        + " Иначе тест toMap_BlocksResult_RoundTripsWithoutLoss перестанет ловить эту поломку. При смене toMap_BlocksResult_RoundTripsWithoutLoss проверь это утверждение.");
+        assertEquals(
+                8,
+                map.get("radius"),
+                "радиус запроса обязан попасть в JSON"
+                        + " Иначе тест toMap_BlocksResult_RoundTripsWithoutLoss перестанет ловить эту поломку. При смене toMap_BlocksResult_RoundTripsWithoutLoss проверь это утверждение.");
         assertEquals(
                 List.of(Map.of("item", "minecraft:oak_log", "count", 12), Map.of("item", "minecraft:dirt", "count", 3)),
                 map.get("blocks"),
-                "JSON-объект блоков обязан хранить item и count без потерь");
+                "JSON-объект блоков обязан хранить item и count без потерь"
+                        + " Иначе тест toMap_BlocksResult_RoundTripsWithoutLoss перестанет ловить эту поломку. При смене toMap_BlocksResult_RoundTripsWithoutLoss проверь это утверждение.");
     }
 
     @Test
@@ -58,12 +70,28 @@ class PerceptionResultCodecTests {
 
         Map<String, Object> map = PerceptionResultCodec.toMap(result);
 
-        assertEquals("entities", map.get("type"), "тип обязан называться в нижнем регистре");
+        assertEquals(
+                "entities",
+                map.get("type"),
+                "тип обязан называться в нижнем регистре"
+                        + " Иначе тест toMap_EntitiesResult_RoundTripsWithoutLoss перестанет ловить эту поломку. При смене toMap_EntitiesResult_RoundTripsWithoutLoss проверь это утверждение.");
         @SuppressWarnings("unchecked")
         Map<String, Object> entry = (Map<String, Object>) ((List<Object>) map.get("entities")).get(0);
-        assertEquals("minecraft:zombie", entry.get("type"), "тип сущности обязан попасть в JSON");
-        assertEquals(List.of(3, 64, -2), entry.get("pos"), "позиция обязана стать массивом [x,y,z]");
-        assertEquals(4.5, entry.get("distance"), "дистанция обязана попасть в JSON");
+        assertEquals(
+                "minecraft:zombie",
+                entry.get("type"),
+                "тип сущности обязан попасть в JSON"
+                        + " Иначе тест toMap_EntitiesResult_RoundTripsWithoutLoss перестанет ловить эту поломку. При смене toMap_EntitiesResult_RoundTripsWithoutLoss проверь это утверждение.");
+        assertEquals(
+                List.of(3, 64, -2),
+                entry.get("pos"),
+                "позиция обязана стать массивом [x,y,z]"
+                        + " Иначе тест toMap_EntitiesResult_RoundTripsWithoutLoss перестанет ловить эту поломку. При смене toMap_EntitiesResult_RoundTripsWithoutLoss проверь это утверждение.");
+        assertEquals(
+                4.5,
+                entry.get("distance"),
+                "дистанция обязана попасть в JSON"
+                        + " Иначе тест toMap_EntitiesResult_RoundTripsWithoutLoss перестанет ловить эту поломку. При смене toMap_EntitiesResult_RoundTripsWithoutLoss проверь это утверждение.");
     }
 
     @Test
@@ -73,12 +101,28 @@ class PerceptionResultCodecTests {
 
         Map<String, Object> map = PerceptionResultCodec.toMap(result);
 
-        assertEquals("hazards", map.get("type"), "тип обязан называться в нижнем регистре");
+        assertEquals(
+                "hazards",
+                map.get("type"),
+                "тип обязан называться в нижнем регистре"
+                        + " Иначе тест toMap_HazardsResult_RoundTripsWithoutLoss перестанет ловить эту поломку. При смене toMap_HazardsResult_RoundTripsWithoutLoss проверь это утверждение.");
         @SuppressWarnings("unchecked")
         Map<String, Object> entry = (Map<String, Object>) ((List<Object>) map.get("hazards")).get(0);
-        assertEquals("lava", entry.get("type"), "вид опасности обязан попасть в JSON");
-        assertEquals(List.of(1, 60, 1), entry.get("pos"), "позиция обязана стать массивом [x,y,z]");
-        assertEquals(2.25, entry.get("distance"), "дистанция обязана попасть в JSON");
+        assertEquals(
+                "lava",
+                entry.get("type"),
+                "вид опасности обязан попасть в JSON"
+                        + " Иначе тест toMap_HazardsResult_RoundTripsWithoutLoss перестанет ловить эту поломку. При смене toMap_HazardsResult_RoundTripsWithoutLoss проверь это утверждение.");
+        assertEquals(
+                List.of(1, 60, 1),
+                entry.get("pos"),
+                "позиция обязана стать массивом [x,y,z]"
+                        + " Иначе тест toMap_HazardsResult_RoundTripsWithoutLoss перестанет ловить эту поломку. При смене toMap_HazardsResult_RoundTripsWithoutLoss проверь это утверждение.");
+        assertEquals(
+                2.25,
+                entry.get("distance"),
+                "дистанция обязана попасть в JSON"
+                        + " Иначе тест toMap_HazardsResult_RoundTripsWithoutLoss перестанет ловить эту поломку. При смене toMap_HazardsResult_RoundTripsWithoutLoss проверь это утверждение.");
     }
 
     @Test
@@ -90,14 +134,38 @@ class PerceptionResultCodecTests {
 
         Map<String, Object> map = PerceptionResultCodec.toMap(finding);
 
-        assertEquals("located", map.get("type"), "locate_* обязан называться located");
-        assertEquals("locate_block", map.get("script"), "находка обязана помнить скрипт, который её дал");
+        assertEquals(
+                "located",
+                map.get("type"),
+                "locate_* обязан называться located"
+                        + " Иначе тест toMap_Finding_RoundTripsWithoutLoss перестанет ловить эту поломку. При смене toMap_Finding_RoundTripsWithoutLoss проверь это утверждение.");
+        assertEquals(
+                "locate_block",
+                map.get("script"),
+                "находка обязана помнить скрипт, который её дал"
+                        + " Иначе тест toMap_Finding_RoundTripsWithoutLoss перестанет ловить эту поломку. При смене toMap_Finding_RoundTripsWithoutLoss проверь это утверждение.");
         @SuppressWarnings("unchecked")
         Map<String, Object> entry = (Map<String, Object>) ((List<Object>) map.get("sightings")).get(0);
-        assertEquals(Sighting.BLOCK, entry.get("kind"), "вид находки обязан попасть в JSON");
-        assertEquals("minecraft:diamond_ore", entry.get("label"), "метка находки обязана попасть в JSON");
-        assertEquals(List.of(5, 12, 9), entry.get("pos"), "позиция обязана стать массивом [x,y,z]");
-        assertEquals("расстояние 12.3", entry.get("detail"), "подробность находки обязана попасть в JSON");
+        assertEquals(
+                Sighting.BLOCK,
+                entry.get("kind"),
+                "вид находки обязан попасть в JSON"
+                        + " Иначе тест toMap_Finding_RoundTripsWithoutLoss перестанет ловить эту поломку. При смене toMap_Finding_RoundTripsWithoutLoss проверь это утверждение.");
+        assertEquals(
+                "minecraft:diamond_ore",
+                entry.get("label"),
+                "метка находки обязана попасть в JSON"
+                        + " Иначе тест toMap_Finding_RoundTripsWithoutLoss перестанет ловить эту поломку. При смене toMap_Finding_RoundTripsWithoutLoss проверь это утверждение.");
+        assertEquals(
+                List.of(5, 12, 9),
+                entry.get("pos"),
+                "позиция обязана стать массивом [x,y,z]"
+                        + " Иначе тест toMap_Finding_RoundTripsWithoutLoss перестанет ловить эту поломку. При смене toMap_Finding_RoundTripsWithoutLoss проверь это утверждение.");
+        assertEquals(
+                "расстояние 12.3",
+                entry.get("detail"),
+                "подробность находки обязана попасть в JSON"
+                        + " Иначе тест toMap_Finding_RoundTripsWithoutLoss перестанет ловить эту поломку. При смене toMap_Finding_RoundTripsWithoutLoss проверь это утверждение.");
     }
 
     @Test
@@ -105,11 +173,13 @@ class PerceptionResultCodecTests {
         assertEquals(
                 "cell",
                 PerceptionResultCodec.toMap(new Finding("look_at", List.of())).get("type"),
-                "look_at — находка ячейки, тип cell");
+                "look_at — находка ячейки, тип cell"
+                        + " Иначе тест toMap_CellAndMemoryScripts_AreTypedCellAndMemory перестанет ловить эту поломку. При смене toMap_CellAndMemoryScripts_AreTypedCellAndMemory проверь это утверждение.");
         assertEquals(
                 "memory",
                 PerceptionResultCodec.toMap(new Finding("recall", List.of())).get("type"),
-                "recall — находка памяти, тип memory");
+                "recall — находка памяти, тип memory"
+                        + " Иначе тест toMap_CellAndMemoryScripts_AreTypedCellAndMemory перестанет ловить эту поломку. При смене toMap_CellAndMemoryScripts_AreTypedCellAndMemory проверь это утверждение.");
     }
 
     @Test
@@ -120,8 +190,15 @@ class PerceptionResultCodecTests {
                 "locate_block", List.of(new Sighting(Sighting.BLOCK, longLabel, new BlockCoord(1, 2, 3), "дальше"))));
 
         assertEquals(
-                200, ((String) labelOf(map)).length(), "строка длиннее 200 символов обязана обрезаться до лимита (H1)");
-        assertEquals(true, map.get("truncated"), "обрезанная строка обязана нести truncated: true");
+                200,
+                ((String) labelOf(map)).length(),
+                "строка длиннее 200 символов обязана обрезаться до лимита (H1)"
+                        + " Иначе тест toMap_StringOverLimit_IsCutAndFlaggedTruncated перестанет ловить эту поломку. При смене toMap_StringOverLimit_IsCutAndFlaggedTruncated проверь это утверждение.");
+        assertEquals(
+                true,
+                map.get("truncated"),
+                "обрезанная строка обязана нести truncated: true"
+                        + " Иначе тест toMap_StringOverLimit_IsCutAndFlaggedTruncated перестанет ловить эту поломку. При смене toMap_StringOverLimit_IsCutAndFlaggedTruncated проверь это утверждение.");
     }
 
     @Test
@@ -133,8 +210,16 @@ class PerceptionResultCodecTests {
 
         Map<String, Object> map = PerceptionResultCodec.toMap(new Finding("locate_block", many));
 
-        assertEquals(32, sightingsOf(map).size(), "список длиннее 32 элементов обязана обрезаться до лимита (H1)");
-        assertEquals(true, map.get("truncated"), "обрезанный список обязана нести truncated: true");
+        assertEquals(
+                32,
+                sightingsOf(map).size(),
+                "список длиннее 32 элементов обязана обрезаться до лимита (H1)"
+                        + " Иначе тест toMap_ListOverLimit_IsCutAndFlaggedTruncated перестанет ловить эту поломку. При смене toMap_ListOverLimit_IsCutAndFlaggedTruncated проверь это утверждение.");
+        assertEquals(
+                true,
+                map.get("truncated"),
+                "обрезанный список обязана нести truncated: true"
+                        + " Иначе тест toMap_ListOverLimit_IsCutAndFlaggedTruncated перестанет ловить эту поломку. При смене toMap_ListOverLimit_IsCutAndFlaggedTruncated проверь это утверждение.");
     }
 
     @Test
@@ -149,8 +234,13 @@ class PerceptionResultCodecTests {
         byte[] json = toJson(map);
         assertTrue(
                 json.length <= PerceptionResultCodec.MAX_JSON_BYTES,
-                "JSON итога обязан укладываться в 4 КиБ (H1), фактически: " + json.length + " байт");
-        assertEquals(true, map.get("truncated"), "обрезка по байтам обязана нести truncated: true");
+                "JSON итога обязан укладываться в 4 КиБ (H1), фактически: " + json.length + " байт"
+                        + " Иначе тест toMap_JsonOverByteLimit_ShrinksToFitAndFlagsTruncated перестанет ловить эту поломку. При смене toMap_JsonOverByteLimit_ShrinksToFitAndFlagsTruncated проверь это утверждение.");
+        assertEquals(
+                true,
+                map.get("truncated"),
+                "обрезка по байтам обязана нести truncated: true"
+                        + " Иначе тест toMap_JsonOverByteLimit_ShrinksToFitAndFlagsTruncated перестанет ловить эту поломку. При смене toMap_JsonOverByteLimit_ShrinksToFitAndFlagsTruncated проверь это утверждение.");
     }
 
     static Stream<Map<String, Object>> roundTripMaps() {
@@ -165,7 +255,8 @@ class PerceptionResultCodecTests {
     void toMap_JsonBytesStayUnderLimit_ForSmallResults(Map<String, Object> map) {
         assertTrue(
                 toJson(map).length <= PerceptionResultCodec.MAX_JSON_BYTES,
-                "небольшой результат обязан помещаться в лимит без обрезки: " + toJson(map).length + " байт");
+                "небольшой результат обязан помещаться в лимит без обрезки: " + toJson(map).length + " байт"
+                        + " Иначе тест toMap_JsonBytesStayUnderLimit_ForSmallResults перестанет ловить эту поломку. При смене toMap_JsonBytesStayUnderLimit_ForSmallResults проверь это утверждение.");
     }
 
     private static Object labelOf(Map<String, Object> map) {

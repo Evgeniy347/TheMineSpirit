@@ -45,7 +45,8 @@ class SpiritTargetsTests {
         assertTrue(
                 SpiritTargets.conditionFor(type).isPresent(),
                 "Враждебный моб " + type + " обязан получать цель «дух»: иначе бой в игре начинается только от игрока, "
-                        + "и тактика духов срабатывает вхолостую");
+                        + "и тактика духов срабатывает вхолостую"
+                        + " При смене attacksSpirits_VanillaHostileMonster_ReturnsTrue проверь это утверждение.");
     }
 
     @ParameterizedTest(name = "{0}")
@@ -76,7 +77,8 @@ class SpiritTargetsTests {
                 SpiritTargets.conditionFor(type).isPresent(),
                 "Нейтральный, пиглин, иллагер, мирный " + type + " или моб, чью цель выбирает Brain (breeze, hoglin, "
                         + "warden, zoglin) и дракон с его фазами босса, не получает цель «дух»: добавленный в "
-                        + "targetSelector goal игнорируется, а своя логика агрессии сломалась бы");
+                        + "targetSelector goal игнорируется, а своя логика агрессии сломалась бы"
+                        + " Иначе тест attacksSpirits_NeutralBrainMobOrPeaceful_ReturnsFalse перестанет ловить эту поломку. При смене attacksSpirits_NeutralBrainMobOrPeaceful_ReturnsFalse проверь это утверждение.");
     }
 
     @ParameterizedTest(name = "{0}")
@@ -86,7 +88,8 @@ class SpiritTargetsTests {
                 Optional.of(SpiritTargets.Condition.LIGHT_BELOW_HALF),
                 SpiritTargets.conditionFor(type),
                 "Паук и пещерный паук берут цель «дух» как игрока в SpiderTargetGoal: только при свете < 0.5, "
-                        + "иначе днём на солнце сами нападают на духов без ванильного правила");
+                        + "иначе днём на солнце сами нападают на духов без ванильного правила"
+                        + " При смене conditionFor_SpiderFamily_ReturnsLightBelowHalf проверь это утверждение.");
     }
 
     @Test
@@ -94,7 +97,8 @@ class SpiritTargetsTests {
         assertEquals(
                 Optional.of(SpiritTargets.Condition.NIGHT_OR_IN_WATER),
                 SpiritTargets.conditionFor("minecraft:drowned"),
-                "Утопленник берёт духа как игрока в Drowned.okTarget: ночь или цель в воде");
+                "Утопленник берёт духа как игрока в Drowned.okTarget: ночь или цель в воде"
+                        + " Иначе тест conditionFor_Drowned_ReturnsNightOrInWater перестанет ловить эту поломку. При смене conditionFor_Drowned_ReturnsNightOrInWater проверь это утверждение.");
     }
 
     @Test
@@ -102,7 +106,8 @@ class SpiritTargetsTests {
         assertEquals(
                 Optional.of(SpiritTargets.Condition.ALWAYS),
                 SpiritTargets.conditionFor("minecraft:zombie"),
-                "Зомби без условий: ванильная цель на игрока не имеет фильтра");
+                "Зомби без условий: ванильная цель на игрока не имеет фильтра"
+                        + " Иначе тест conditionFor_Zombie_ReturnsAlways перестанет ловить эту поломку. При смене conditionFor_Zombie_ReturnsAlways проверь это утверждение.");
     }
 
     @Test
@@ -110,7 +115,8 @@ class SpiritTargetsTests {
         assertFalse(
                 SpiritTargets.conditionFor("minecraft:never_seen").isPresent(),
                 "Неизвестный тип не получает цель: белый список явный, и новый мод-моб не станет охотником за духами "
-                        + "без решения владельца");
+                        + "без решения владельца"
+                        + " Иначе тест conditionFor_UnknownType_ReturnsEmpty перестанет ловить эту поломку. При смене conditionFor_UnknownType_ReturnsEmpty проверь это утверждение.");
     }
 
     @Test
@@ -118,11 +124,13 @@ class SpiritTargetsTests {
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,
                 () -> SpiritTargets.conditionFor(null),
-                "Null-тип — ошибка вызова, а не «мирный моб»: молчаливый null спрятал бы дефект вызова");
+                "Null-тип — ошибка вызова, а не «мирный моб»: молчаливый null спрятал бы дефект вызова"
+                        + " Иначе тест conditionFor_NullType_Throws перестанет ловить эту поломку. При смене conditionFor_NullType_Throws проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("entityTypeId"),
-                "Сообщение называет параметр, чтобы дефект вызова было видно, а получили: " + error.getMessage());
+                "Сообщение называет параметр, чтобы дефект вызова было видно, а получили: " + error.getMessage()
+                        + " Иначе тест conditionFor_NullType_Throws перестанет ловить эту поломку. При смене conditionFor_NullType_Throws проверь это утверждение.");
     }
 
     @Test
@@ -130,7 +138,8 @@ class SpiritTargetsTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> SpiritTargets.conditionFor("  "),
-                "Пустой id — ошибка вызова: адаптер обязан передать id типа из реестра");
+                "Пустой id — ошибка вызова: адаптер обязан передать id типа из реестра"
+                        + " Иначе тест conditionFor_BlankType_Throws перестанет ловить эту поломку. При смене conditionFor_BlankType_Throws проверь это утверждение.");
     }
 
     @ParameterizedTest(name = "свет {0}, день {1}, вода {2} → {3}")
@@ -145,7 +154,8 @@ class SpiritTargetsTests {
         assertEquals(
                 expected,
                 SpiritTargets.Condition.LIGHT_BELOW_HALF.holds(light, day, water),
-                "Паук обязан повторять SpiderTargetGoal: при свете ≥ 0.5 цель не берётся, ночь и вода не влияют");
+                "Паук обязан повторять SpiderTargetGoal: при свете ≥ 0.5 цель не берётся, ночь и вода не влияют"
+                        + " Иначе тест condition_LightBelowHalf_RejectsOnBrightLight перестанет ловить эту поломку. При смене condition_LightBelowHalf_RejectsOnBrightLight проверь это утверждение.");
     }
 
     @ParameterizedTest(name = "свет {0}, день {1}, вода {2} → {3}")
@@ -160,7 +170,8 @@ class SpiritTargetsTests {
                 expected,
                 SpiritTargets.Condition.NIGHT_OR_IN_WATER.holds(light, day, water),
                 "Утопленник обязан повторять Drowned.okTarget: днём на суше цель не берётся, ночь или вода решают, "
-                        + "свет не влияет");
+                        + "свет не влияет"
+                        + " Иначе тест condition_NightOrInWater_RejectsOnDryDay перестанет ловить эту поломку. При смене condition_NightOrInWater_RejectsOnDryDay проверь это утверждение.");
     }
 
     @ParameterizedTest(name = "свет {0}, день {1}, вода {2} → {3}")
@@ -169,7 +180,8 @@ class SpiritTargetsTests {
         assertEquals(
                 expected,
                 SpiritTargets.Condition.ALWAYS.holds(light, day, water),
-                "ALWAYS не имеет условий: мобы этого правила целятся в духа как обычная ванильная цель");
+                "ALWAYS не имеет условий: мобы этого правила целятся в духа как обычная ванильная цель"
+                        + " Иначе тест condition_Always_AcceptsAnyLight перестанет ловить эту поломку. При смене condition_Always_AcceptsAnyLight проверь это утверждение.");
     }
 
     @Test
@@ -177,7 +189,8 @@ class SpiritTargetsTests {
         assertFalse(
                 SpiritTargets.conditionFor("minecraft:never_seen").isPresent(),
                 "Неизвестный тип не получает цель: белый список явный, и новый мод-моб не станет охотником за духами "
-                        + "без решения владельца");
+                        + "без решения владельца"
+                        + " Иначе тест attacksSpirits_UnknownType_ReturnsFalse перестанет ловить эту поломку. При смене attacksSpirits_UnknownType_ReturnsFalse проверь это утверждение.");
     }
 
     @Test
@@ -185,11 +198,13 @@ class SpiritTargetsTests {
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,
                 () -> SpiritTargets.conditionFor(null),
-                "Null-тип — ошибка вызова, а не «мирный моб»: молчаливый false спрятал бы дефект вызова");
+                "Null-тип — ошибка вызова, а не «мирный моб»: молчаливый false спрятал бы дефект вызова"
+                        + " Иначе тест attacksSpirits_NullType_Throws перестанет ловить эту поломку. При смене attacksSpirits_NullType_Throws проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("entityTypeId"),
-                "Сообщение называет параметр, чтобы дефект вызова было видно, а получили: " + error.getMessage());
+                "Сообщение называет параметр, чтобы дефект вызова было видно, а получили: " + error.getMessage()
+                        + " Иначе тест attacksSpirits_NullType_Throws перестанет ловить эту поломку. При смене attacksSpirits_NullType_Throws проверь это утверждение.");
     }
 
     @Test
@@ -197,6 +212,7 @@ class SpiritTargetsTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> SpiritTargets.conditionFor("  "),
-                "Пустой id — ошибка вызова: адаптер обязан передать id типа из реестра");
+                "Пустой id — ошибка вызова: адаптер обязан передать id типа из реестра"
+                        + " Иначе тест attacksSpirits_BlankType_Throws перестанет ловить эту поломку. При смене attacksSpirits_BlankType_Throws проверь это утверждение.");
     }
 }

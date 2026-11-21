@@ -17,10 +17,16 @@ class FenceStripTests {
                 15,
                 strip.count(),
                 "Полоса ограды шириной 1 — линия столбов и по клетке с каждой стороны (3×5): забор встаёт на одну "
-                        + "высоту только на выровненной полосе (INC-53, INC-91)");
-        assertTrue(strip.contains(1, -1) && strip.contains(1, 1), "Клетки по обе стороны линии входят в полосу");
+                        + "высоту только на выровненной полосе (INC-53, INC-91)"
+                        + " Иначе тест of_LineOfPosts_CoversLineAndOneCellEachSide перестанет ловить эту поломку. При смене of_LineOfPosts_CoversLineAndOneCellEachSide проверь это утверждение.");
+        assertTrue(
+                strip.contains(1, -1) && strip.contains(1, 1),
+                "Клетки по обе стороны линии входят в полосу"
+                        + " Иначе тест of_LineOfPosts_CoversLineAndOneCellEachSide перестанет ловить эту поломку. При смене of_LineOfPosts_CoversLineAndOneCellEachSide проверь это утверждение.");
         assertFalse(
-                strip.contains(1, 2), "Вторая клетка за линией при ширине 1 не входит: выравнивание не шире данных");
+                strip.contains(1, 2),
+                "Вторая клетка за линией при ширине 1 не входит: выравнивание не шире данных"
+                        + " Иначе тест of_LineOfPosts_CoversLineAndOneCellEachSide перестанет ловить эту поломку. При смене of_LineOfPosts_CoversLineAndOneCellEachSide проверь это утверждение.");
     }
 
     @Test
@@ -28,6 +34,7 @@ class FenceStripTests {
         TownRules rules = TownRules.load();
         assertTrue(
                 rules.spacing().fenceStrip() >= 1,
-                "Полоса ограды берётся из town.json и не нулевая: без неё забор идёт по рельефу на разных высотах");
+                "Полоса ограды берётся из town.json и не нулевая: без неё забор идёт по рельефу на разных высотах"
+                        + " Иначе тест load_TownRules_FenceStripPositive перестанет ловить эту поломку. При смене load_TownRules_FenceStripPositive проверь это утверждение.");
     }
 }

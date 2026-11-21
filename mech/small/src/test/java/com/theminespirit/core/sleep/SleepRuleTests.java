@@ -79,7 +79,7 @@ class SleepRuleTests {
     void timeToSleep_Day_IsFalse() {
         assertFalse(
                 SleepRule.timeToSleep(new SleepFacts(false, false, true, false)),
-                "Днём спать нельзя, иначе дух ложится вместо работы. При смене timeToSleep проверь строку опасности "
+                "Днём спать нельзя, иначе дух ложится вместо работы и задача встанет. При смене timeToSleep проверь строку опасности "
                         + "ниже в тесте");
     }
 
@@ -112,7 +112,8 @@ class SleepRuleTests {
         assertThrows(
                 NullPointerException.class,
                 () -> SleepRule.timeToSleep(null),
-                "Правило без фактов сравнивать нечего: ошибка обязана быть явной, а не молчаливым сном. При смене "
+                "Правило без фактов сравнивать нечего: ошибка обязана быть явной, а не молчаливым сном, "
+                        + "иначе сон пройдёт вслепую. При смене "
                         + "проверки проверь строку выше в тесте");
     }
 }

@@ -23,7 +23,8 @@ class LiveFloatingBlockTests {
                 FloatingWindow.topOf(plot) >= 98,
                 "Аудит обрезан на y=" + FloatingWindow.topOf(plot) + ": живая крона -163,98,-507 выше потолка "
                         + "участка (max=74) и в него не попадает — поэтому владелец видит деревья, а spirit audit "
-                        + "floating о них молчит");
+                        + "floating о них молчит"
+                        + " Иначе тест liveCrownTop_PlotSurvey_StaysInsideAuditWindow перестанет ловить эту поломку. При смене liveCrownTop_PlotSurvey_StaysInsideAuditWindow проверь это утверждение.");
     }
 
     @Test
@@ -37,13 +38,15 @@ class LiveFloatingBlockTests {
                 supports.stream()
                         .anyMatch(cell -> cell.x() < -163 || cell.x() > -162 || cell.z() < -507 || cell.z() > -506),
                 "Опора обязана стоять снаружи ствола: столб в клетке бревна упирается в дерево и дух не "
-                        + "поднимется. Кандидаты: " + supports);
+                        + "поднимется. Кандидаты: " + supports
+                        + " Иначе тест liveFloatingCrown_Support_StandsOutsideTrunk перестанет ловить эту поломку. При смене liveFloatingCrown_Support_StandsOutsideTrunk проверь это утверждение.");
         assertEquals(
                 0,
                 supports.stream()
                         .filter(cell -> cell.x() == -163 && cell.z() == -507)
                         .count(),
-                "Клетка нижнего бревна не может быть стоянкой опоры: иначе pillar_up ставит блок в ствол");
+                "Клетка нижнего бревна не может быть стоянкой опоры: иначе pillar_up ставит блок в ствол"
+                        + " При смене liveFloatingCrown_Support_StandsOutsideTrunk проверь это утверждение.");
     }
 
     @Test
@@ -57,7 +60,8 @@ class LiveFloatingBlockTests {
                 FloatingBlocks.Kind.TREE,
                 finding.kind(),
                 "Листва -166,96,-510 соединена с кроной только листвой, а не бревном: BFS обязан ходить "
-                        + "по листве, иначе живая крона остаётся OTHER и в уборку не попадает (observe15 B7, 203 листа)");
+                        + "по листве, иначе живая крона остаётся OTHER и в уборку не попадает (observe15 B7, 203 листа)"
+                        + " При смене liveFarCrownLeaf_FloatingTree_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -66,10 +70,12 @@ class LiveFloatingBlockTests {
 
         assertTrue(
                 TreeSupport.isolatedLog(new BlockCoord(-156, 70, -497), world::isLog),
-                "Одинокий пенёк окупаемой вырубки не должен считаться постройкой игрока: под ним нет ствола");
+                "Одинокий пенёк окупаемой вырубки не должен считаться постройкой игрока: под ним нет ствола"
+                        + " Иначе тест liveStump_FewAdjacentLogs_IsIsolated перестанет ловить эту поломку. При смене liveStump_FewAdjacentLogs_IsIsolated проверь это утверждение.");
         assertFalse(
                 TreeSupport.isolatedLog(new BlockCoord(-163, 90, -507), world::isLog),
-                "Бревно в 2x2 стволе не одиноко: его нельзя выдавать за отдельный пенёк и сносить как остаток");
+                "Бревно в 2x2 стволе не одиноко: его нельзя выдавать за отдельный пенёк и сносить как остаток"
+                        + " Иначе тест liveStump_FewAdjacentLogs_IsIsolated перестанет ловить эту поломку. При смене liveStump_FewAdjacentLogs_IsIsolated проверь это утверждение.");
     }
 
     @Test
@@ -83,7 +89,8 @@ class LiveFloatingBlockTests {
                 FloatingBlocks.Kind.TREE,
                 finding.kind(),
                 "Бревно -163,90,-507 висит над срубленным низом (y=69..84), но аудит его не видит: "
-                        + "проверяется только нижний блок, а верх ствола считается «опёртым» на нижнее бревно");
+                        + "проверяется только нижний блок, а верх ствола считается «опёртым» на нижнее бревно"
+                        + " Иначе тест liveMidTrunk_FloatingTree_IsReported перестанет ловить эту поломку. При смене liveMidTrunk_FloatingTree_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -97,6 +104,7 @@ class LiveFloatingBlockTests {
                 FloatingBlocks.Kind.TREE,
                 finding.kind(),
                 "Листва -163,98,-507 осталась висеть после срубленного низа, но считается «природной» "
-                        + "и не попадает ни в аудит, ни в уборку");
+                        + "и не попадает ни в аудит, ни в уборку"
+                        + " Иначе тест liveCrownLeaf_FloatingTree_IsReported перестанет ловить эту поломку. При смене liveCrownLeaf_FloatingTree_IsReported проверь это утверждение.");
     }
 }

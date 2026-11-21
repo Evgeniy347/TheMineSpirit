@@ -19,21 +19,24 @@ class GraphBuildingNamesGuardTests {
                 issues(SupplyGraph.loadDefault().buildings().values()),
                 "Постройка графа без отображаемого названия: в чат уйдёт технический id вместо русского имени. "
                         + "Как надо: допишите \"name\" рядом с постройкой в graph.json или graph.d/*.json. "
-                        + "Правило: у каждой постройки схемы графа есть русское отображаемое название. Нарушения");
+                        + "Правило: у каждой постройки схемы графа есть русское отображаемое название. Нарушения"
+                        + " Иначе тест graphBuildings_MissingNames_AreReported перестанет ловить эту поломку. При смене graphBuildings_MissingNames_AreReported проверь это утверждение.");
     }
 
     @Test
     void issues_BlankName_IsReported() {
         assertTrue(
                 issues(List.of(building("hut", ""))).stream().anyMatch(issue -> issue.contains("hut")),
-                "Сторож ослеп: постройка с пустым названием обязана попасть в нарушения");
+                "Сторож ослеп: постройка с пустым названием обязана попасть в нарушения"
+                        + " Иначе тест issues_BlankName_IsReported перестанет ловить эту поломку. При смене issues_BlankName_IsReported проверь это утверждение.");
     }
 
     @Test
     void issues_LatinName_IsReported() {
         assertTrue(
                 issues(List.of(building("hut", "Hut"))).stream().anyMatch(issue -> issue.contains("Hut")),
-                "Сторож ослеп: название без кириллицы обязано попасть в нарушения");
+                "Сторож ослеп: название без кириллицы обязано попасть в нарушения"
+                        + " Иначе тест issues_LatinName_IsReported перестанет ловить эту поломку. При смене issues_LatinName_IsReported проверь это утверждение.");
     }
 
     private static SupplyGraph.Building building(String id, String name) {

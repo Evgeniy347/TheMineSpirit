@@ -57,7 +57,8 @@ class DesignNumbersGuardTests {
         assertEquals(
                 List.of("core/board/TicketPlans.java: MINE_FLOOR_TAKE"),
                 problems(Map.of("core/board/TicketPlans.java", "    private static final int MINE_FLOOR_TAKE = 32;\n")),
-                "Сторож ослеп: число плана в перенесённом классе обязано попасть в нарушители");
+                "Сторож ослеп: число плана в перенесённом классе обязано попасть в нарушители"
+                        + " Иначе тест designNumber_InMigratedClass_IsReported перестанет ловить эту поломку. При смене designNumber_InMigratedClass_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -65,14 +66,19 @@ class DesignNumbersGuardTests {
         assertEquals(
                 List.of(),
                 problems(Map.of("core/forestry/ChopTuning.java", "public static final int MAX_LOGS = 128;\n")),
-                "Сторож ложно срабатывает: перенесённые классы перечислены явно, чужие правила сюда не входят");
+                "Сторож ложно срабатывает: перенесённые классы перечислены явно, чужие правила сюда не входят"
+                        + " Иначе тест designNumber_InOtherClass_IsNotFlaggedHere перестанет ловить эту поломку. При смене designNumber_InOtherClass_IsNotFlaggedHere проверь это утверждение.");
     }
 
     @Test
     void migrated_RealClasses_HaveNoDesignNumbers() {
         Map<String, String> sources = new TreeMap<>();
         SourceFiles.allMain().forEach((file, text) -> sources.put(SourceFiles.logical(file), text));
-        assertEquals(List.of(), problems(sources), RULE + System.lineSeparator() + "Нарушители (файл: константа):");
+        assertEquals(
+                List.of(),
+                problems(sources),
+                RULE + System.lineSeparator() + "Нарушители (файл: константа):"
+                        + " Иначе тест migrated_RealClasses_HaveNoDesignNumbers перестанет ловить эту поломку. При смене migrated_RealClasses_HaveNoDesignNumbers проверь это утверждение.");
     }
 
     private static List<String> problems(Map<String, String> sources) {

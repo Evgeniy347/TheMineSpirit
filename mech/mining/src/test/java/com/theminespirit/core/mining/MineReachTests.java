@@ -21,7 +21,8 @@ class MineReachTests {
         assertFalse(
                 MineReach.canReach(new BlockCoord(2, FEET, 0), new BlockCoord(0, FEET, 0), world),
                 "Стена в три блока между духом и стоянкой делает её недостижимой: дух не прыгает на три блока "
-                        + "и не проходит сквозь породу, иначе подход кончается у стены и шахта встаёт");
+                        + "и не проходит сквозь породу, иначе подход кончается у стены и шахта встаёт"
+                        + " При смене canReach_WallBetween_False проверь это утверждение.");
     }
 
     @Test
@@ -30,7 +31,8 @@ class MineReachTests {
 
         assertTrue(
                 MineReach.canReach(new BlockCoord(1, FEET, 0), new BlockCoord(0, FEET + 1, 0), world),
-                "Ступень на блок выше достижима прыжком: без этого дух не поднимается по лестнице шахты");
+                "Ступень на блок выше достижима прыжком: без этого дух не поднимается по лестнице шахты"
+                        + " При смене canReach_StepUpOne_True проверь это утверждение.");
     }
 
     @Test
@@ -41,7 +43,8 @@ class MineReachTests {
 
         assertTrue(
                 MineReach.canReach(new BlockCoord(1, FEET, 0), new BlockCoord(0, LEVEL - 1, 0), world),
-                "Падение на два блока в яму у ступени достижимо: дух спускается в проход, а не обходит его");
+                "Падение на два блока в яму у ступени достижимо: дух спускается в проход, а не обходит его"
+                        + " Иначе тест canReach_FallWithinLimit_True перестанет ловить эту поломку. При смене canReach_FallWithinLimit_True проверь это утверждение.");
     }
 
     @Test
@@ -55,7 +58,8 @@ class MineReachTests {
         assertFalse(
                 MineReach.canReach(new BlockCoord(1, FEET, 0), new BlockCoord(0, LEVEL - 3, 0), world),
                 "Падение глубже " + MineReach.MAX_FALL + " блоков в яму не считается подходом: путь в навигации "
-                        + "кончается на краю, и стоянка на дне подводит духа к провалу");
+                        + "кончается на краю, и стоянка на дне подводит духа к провалу"
+                        + " Иначе тест canReach_FallTooDeep_False перестанет ловить эту поломку. При смене canReach_FallTooDeep_False проверь это утверждение.");
     }
 
     @Test
@@ -71,13 +75,15 @@ class MineReachTests {
                 MineReach.canReach(from, pitStand, world),
                 "Падение на 3 блока в тупиковую яму не считается подходом: навигация духа роняет не глубже "
                         + DropPolicy.MAX_DROP + " блоков, поэтому путь заканчивается у духа, а стоянка" + pitStand
-                        + " на дне — «за преградой» (observe6: яма (-189,67,-516), стоянка (-189,68,-517))");
+                        + " на дне — «за преградой» (observe6: яма (-189,67,-516), стоянка (-189,68,-517))"
+                        + " Иначе тест canReach_FallOfThreeIntoDeadEndPit_False перестанет ловить эту поломку. При смене canReach_FallOfThreeIntoDeadEndPit_False проверь это утверждение.");
 
         world.set(0, LEVEL - 1, 0, Cell.SOLID).set(0, LEVEL - 2, 0, Cell.SOLID);
         assertTrue(
                 MineReach.canReach(from, new BlockCoord(0, LEVEL, 0), world),
                 "Спуск на допустимую глубину " + DropPolicy.MAX_DROP
-                        + " остаётся достижимым: иначе шахта не спускается по ступеням");
+                        + " остаётся достижимым: иначе шахта не спускается по ступеням"
+                        + " При смене canReach_FallOfThreeIntoDeadEndPit_False проверь это утверждение.");
     }
 
     private static CellWorld ground() {

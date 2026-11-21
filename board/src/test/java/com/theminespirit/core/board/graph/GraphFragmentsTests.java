@@ -51,14 +51,28 @@ class GraphFragmentsTests {
                 "generated.json",
                 List.of(new GraphFragments.Fragment(FRAGMENT, "board/graph.d/rope.json")));
 
-        assertTrue(graph.items().containsKey("rope"), "Фрагмент добавляет новый предмет");
-        assertEquals(List.of("rope"), graph.groups().get("#ropes"), "Фрагмент добавляет новую группу");
-        assertTrue(graph.way("frag_rope").isPresent(), "Фрагмент добавляет новый путь");
+        assertTrue(
+                graph.items().containsKey("rope"),
+                "Фрагмент добавляет новый предмет"
+                        + " Иначе тест merge_Fragment_AddsOnlyNewNodes перестанет ловить эту поломку. При смене merge_Fragment_AddsOnlyNewNodes проверь это утверждение.");
+        assertEquals(
+                List.of("rope"),
+                graph.groups().get("#ropes"),
+                "Фрагмент добавляет новую группу"
+                        + " Иначе тест merge_Fragment_AddsOnlyNewNodes перестанет ловить эту поломку. При смене merge_Fragment_AddsOnlyNewNodes проверь это утверждение.");
+        assertTrue(
+                graph.way("frag_rope").isPresent(),
+                "Фрагмент добавляет новый путь"
+                        + " Иначе тест merge_Fragment_AddsOnlyNewNodes перестанет ловить эту поломку. При смене merge_Fragment_AddsOnlyNewNodes проверь это утверждение.");
         assertEquals(
                 List.of(new SupplyGraph.Trigger("rope", "stick")),
                 graph.triggers(),
-                "Фрагмент добавляет новый триггер");
-        assertTrue(graph.way("auto_coal").isPresent(), "Слияние с рецептами не теряется");
+                "Фрагмент добавляет новый триггер"
+                        + " Иначе тест merge_Fragment_AddsOnlyNewNodes перестанет ловить эту поломку. При смене merge_Fragment_AddsOnlyNewNodes проверь это утверждение.");
+        assertTrue(
+                graph.way("auto_coal").isPresent(),
+                "Слияние с рецептами не теряется"
+                        + " Иначе тест merge_Fragment_AddsOnlyNewNodes перестанет ловить эту поломку. При смене merge_Fragment_AddsOnlyNewNodes проверь это утверждение.");
     }
 
     @Test
@@ -77,13 +91,17 @@ class GraphFragmentsTests {
                         GENERATED,
                         "generated.json",
                         List.of(new GraphFragments.Fragment(duplicate, "board/graph.d/broken.json"))),
-                "Повтор id во фрагменте обязан отклоняться: иначе два файла спорят за один узел");
+                "Повтор id во фрагменте обязан отклоняться: иначе два файла спорят за один узел"
+                        + " При смене merge_FragmentRepeatsExistingId_NamesFile проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("board/graph.d/broken.json"),
-                "Ошибка обязана назвать файл фрагмента: " + error.getMessage());
+                "Ошибка обязана назвать файл фрагмента: " + error.getMessage()
+                        + " Иначе тест merge_FragmentRepeatsExistingId_NamesFile перестанет ловить эту поломку. При смене merge_FragmentRepeatsExistingId_NamesFile проверь это утверждение.");
         assertTrue(
-                error.getMessage().contains("stick"), "Ошибка обязана назвать повторённый id: " + error.getMessage());
+                error.getMessage().contains("stick"),
+                "Ошибка обязана назвать повторённый id: " + error.getMessage()
+                        + " Иначе тест merge_FragmentRepeatsExistingId_NamesFile перестанет ловить эту поломку. При смене merge_FragmentRepeatsExistingId_NamesFile проверь это утверждение.");
     }
 
     @Test
@@ -94,11 +112,13 @@ class GraphFragmentsTests {
         IllegalStateException error = assertThrows(
                 IllegalStateException.class,
                 () -> SupplyGraph.merge(MANUAL, "manual.json", GENERATED, "generated.json", List.of(first, second)),
-                "Два фрагмента не имеют права добавить один и тот же id");
+                "Два фрагмента не имеют права добавить один и тот же id"
+                        + " Иначе тест merge_FragmentsRepeatIdAcrossFiles_NamesSecondFile перестанет ловить эту поломку. При смене merge_FragmentsRepeatIdAcrossFiles_NamesSecondFile проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("board/graph.d/second.json"),
-                "Ошибка обязана назвать второй файл: " + error.getMessage());
+                "Ошибка обязана назвать второй файл: " + error.getMessage()
+                        + " Иначе тест merge_FragmentsRepeatIdAcrossFiles_NamesSecondFile перестанет ловить эту поломку. При смене merge_FragmentsRepeatIdAcrossFiles_NamesSecondFile проверь это утверждение.");
     }
 
     @Test
@@ -115,7 +135,8 @@ class GraphFragmentsTests {
                         .map(fragment ->
                                 Path.of(fragment.origin()).getFileName().toString())
                         .toList(),
-                "Фрагменты читаются по имени: порядок слияния не зависит от файловой системы");
+                "Фрагменты читаются по имени: порядок слияния не зависит от файловой системы"
+                        + " Иначе тест fromDirectory_JsonFiles_AreSortedAndRead перестанет ловить эту поломку. При смене fromDirectory_JsonFiles_AreSortedAndRead проверь это утверждение.");
     }
 
     @Test
@@ -126,15 +147,27 @@ class GraphFragmentsTests {
                 JsonResource.readClasspath(SupplyGraph.RECIPES),
                 SupplyGraph.RECIPES);
 
-        assertTrue(graph.events().containsKey("danger_spot"), "Загрузка таблицы графа читает фрагменты областей");
-        assertTrue(graph.events().containsKey("crop_ready"), "Фрагменты других областей тоже не теряются");
+        assertTrue(
+                graph.events().containsKey("danger_spot"),
+                "Загрузка таблицы графа читает фрагменты областей"
+                        + " Иначе тест mergeWithFragments_ProductionResources_LoadsFragmentNodes перестанет ловить эту поломку. При смене mergeWithFragments_ProductionResources_LoadsFragmentNodes проверь это утверждение.");
+        assertTrue(
+                graph.events().containsKey("crop_ready"),
+                "Фрагменты других областей тоже не теряются"
+                        + " Иначе тест mergeWithFragments_ProductionResources_LoadsFragmentNodes перестанет ловить эту поломку. При смене mergeWithFragments_ProductionResources_LoadsFragmentNodes проверь это утверждение.");
     }
 
     @Test
     void loadDefault_ProductionFragments_LoadWithoutConflict() {
         SupplyGraph graph = SupplyGraph.loadDefault();
 
-        assertTrue(graph.items().containsKey("stick"), "Слияние рецептов работает вместе с каталогом фрагментов");
-        assertTrue(!graph.ways().isEmpty(), "Граф по умолчанию не пуст: каталог фрагментов прочитан");
+        assertTrue(
+                graph.items().containsKey("stick"),
+                "Слияние рецептов работает вместе с каталогом фрагментов"
+                        + " Иначе тест loadDefault_ProductionFragments_LoadWithoutConflict перестанет ловить эту поломку. При смене loadDefault_ProductionFragments_LoadWithoutConflict проверь это утверждение.");
+        assertTrue(
+                !graph.ways().isEmpty(),
+                "Граф по умолчанию не пуст: каталог фрагментов прочитан"
+                        + " Иначе тест loadDefault_ProductionFragments_LoadWithoutConflict перестанет ловить эту поломку. При смене loadDefault_ProductionFragments_LoadWithoutConflict проверь это утверждение.");
     }
 }

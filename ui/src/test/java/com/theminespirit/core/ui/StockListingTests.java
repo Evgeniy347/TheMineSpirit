@@ -17,7 +17,8 @@ class StockListingTests {
         assertEquals(
                 List.of(1, 3, 0, 2),
                 keys(StockListing.view(ALL, "", StockListing.Sort.COUNT, false)),
-                "По количеству — больше сверху, при равенстве по имени: порядок списка не прыгает между запросами");
+                "По количеству — больше сверху, при равенстве по имени: порядок списка не прыгает между запросами"
+                        + " Иначе тест view_CountSort_MostFirstThenName перестанет ловить эту поломку. При смене view_CountSort_MostFirstThenName проверь это утверждение.");
     }
 
     @Test
@@ -25,7 +26,8 @@ class StockListingTests {
         assertEquals(
                 List.of(3, 0),
                 keys(StockListing.view(ALL, "БРЕВНО", StockListing.Sort.NAME, false)),
-                "Поиск по имени без учёта регистра, как в Storage Network и JEI");
+                "Поиск по имени без учёта регистра, как в Storage Network и JEI"
+                        + " Иначе тест view_NameQuery_FiltersCaseInsensitive перестанет ловить эту поломку. При смене view_NameQuery_FiltersCaseInsensitive проверь это утверждение.");
     }
 
     @Test
@@ -33,7 +35,8 @@ class StockListingTests {
         assertEquals(
                 List.of(2),
                 keys(StockListing.view(ALL, "@create", StockListing.Sort.NAME, false)),
-                "«@мод» отбирает предметы мода, как в JEI: иначе синхронизация поиска с JEI даёт разные списки");
+                "«@мод» отбирает предметы мода, как в JEI: иначе синхронизация поиска с JEI даёт разные списки"
+                        + " При смене view_ModPrefix_FiltersByNamespace проверь это утверждение.");
     }
 
     @Test
@@ -41,12 +44,17 @@ class StockListingTests {
         assertEquals(
                 List.of(2, 0, 3, 1),
                 keys(StockListing.view(ALL, "", StockListing.Sort.COUNT, true)),
-                "Обратный порядок — точное зеркало прямого");
+                "Обратный порядок — точное зеркало прямого"
+                        + " Иначе тест view_Reversed_InvertsOrder перестанет ловить эту поломку. При смене view_Reversed_InvertsOrder проверь это утверждение.");
     }
 
     @Test
     void next_LastSort_WrapsToFirst() {
-        assertEquals(StockListing.Sort.COUNT, StockListing.Sort.MOD.next(), "Кнопка сортировки ходит по кругу");
+        assertEquals(
+                StockListing.Sort.COUNT,
+                StockListing.Sort.MOD.next(),
+                "Кнопка сортировки ходит по кругу"
+                        + " Иначе тест next_LastSort_WrapsToFirst перестанет ловить эту поломку. При смене next_LastSort_WrapsToFirst проверь это утверждение.");
     }
 
     private static List<Integer> keys(List<StockListing.Entry> entries) {

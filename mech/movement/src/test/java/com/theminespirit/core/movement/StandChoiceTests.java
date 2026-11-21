@@ -23,7 +23,8 @@ class StandChoiceTests {
                 Optional.of(new BlockCoord(3, 1, 0)),
                 stand,
                 "На ровной земле лучшая стоянка — (3, 1, 0): ближайшая к духу из достижимых от цели, "
-                        + "иначе дух идёт к дальней стоянке вместо ближней");
+                        + "иначе дух идёт к дальней стоянке вместо ближней"
+                        + " При смене choose_OpenGround_PicksCheapestReachableStand проверь это утверждение.");
     }
 
     @Test
@@ -36,7 +37,8 @@ class StandChoiceTests {
                 Optional.of(new BlockCoord(3, 1, -1)),
                 stand,
                 "Стоянка (3, 1, 0) рядом с лавой обязана отвергаться кольцом безопасности: дух иначе "
-                        + "встанет у лавы и сгорит; следующая дешёвая — (3, 1, -1)");
+                        + "встанет у лавы и сгорит; следующая дешёвая — (3, 1, -1)"
+                        + " При смене choose_LavaRingAroundBest_PicksNextBest проверь это утверждение.");
     }
 
     @Test
@@ -54,7 +56,8 @@ class StandChoiceTests {
                 Optional.empty(),
                 StandChoice.choose(TARGET, SPIRIT, world),
                 "Замурованная цель не даёт стоянок: духу подойти некуда, скрипт обязан вернуть FAILED, "
-                        + "а не вести духа в стену");
+                        + "а не вести духа в стену"
+                        + " Иначе тест choose_SealedTarget_ReturnsEmpty перестанет ловить эту поломку. При смене choose_SealedTarget_ReturnsEmpty проверь это утверждение.");
     }
 
     @Test
@@ -65,13 +68,16 @@ class StandChoiceTests {
                 96,
                 candidates.size(),
                 "Кандидатов обязано быть 96 = 2 уровня × (7 × 7 − столбец цели): иначе часть стоянок "
-                        + "не рассматривается и дух пропускает ближний подход");
+                        + "не рассматривается и дух пропускает ближний подход"
+                        + " При смене candidates_TargetColumn_ExcludedAndLevelsMatch проверь это утверждение.");
         assertTrue(
                 candidates.stream().noneMatch(c -> c.x() == 0 && c.z() == 0),
-                "Столбец цели исключён из кандидатов: стоянка внутри цели невозможна");
+                "Столбец цели исключён из кандидатов: стоянка внутри цели невозможна"
+                        + " Иначе тест candidates_TargetColumn_ExcludedAndLevelsMatch перестанет ловить эту поломку. При смене candidates_TargetColumn_ExcludedAndLevelsMatch проверь это утверждение.");
         assertTrue(
                 candidates.stream().allMatch(c -> c.y() == 1 || c.y() == 2),
-                "Кандидаты — только на уровнях ног y+1 и y+2: иначе дух пытается встать внутрь цели или в небо");
+                "Кандидаты — только на уровнях ног y+1 и y+2: иначе дух пытается встать внутрь цели или в небо"
+                        + " При смене candidates_TargetColumn_ExcludedAndLevelsMatch проверь это утверждение.");
     }
 
     @Test
@@ -83,7 +89,8 @@ class StandChoiceTests {
         assertTrue(
                 world.reads() <= 19 * StandChoice.candidates(TARGET).size(),
                 "Выбор стоянки читает не более 19 клеток на кандидата (ноги, голова, пол и два кольца по 8): "
-                        + "иначе планирование цели кладёт серверный тик. Чтений: " + world.reads());
+                        + "иначе планирование цели кладёт серверный тик. Чтений: " + world.reads()
+                        + " При смене choose_OpenGround_SafetyReadsBounded проверь это утверждение.");
     }
 
     @Test
@@ -92,7 +99,8 @@ class StandChoiceTests {
                 1.62,
                 StandChoice.EYE_HEIGHT,
                 "Высота глаз духа — 1.62: от неё считается досягаемость цели, неверная высота либо "
-                        + "отвергнет близкую цель, либо примет недостижимую");
+                        + "отвергнет близкую цель, либо примет недостижимую"
+                        + " Иначе тест eyeHeight_ValueCheck_EqualsEyeLevel перестанет ловить эту поломку. При смене eyeHeight_ValueCheck_EqualsEyeLevel проверь это утверждение.");
     }
 
     @Test
@@ -101,7 +109,8 @@ class StandChoiceTests {
                 4.5,
                 StandChoice.REACH_DISTANCE,
                 "Досягаемость стоянки — 4.5 от глаз до центра цели: как досягаемость ломки, иначе дух "
-                        + "встанет там, откуда цель не достать");
+                        + "встанет там, откуда цель не достать"
+                        + " При смене reachDistance_ValueCheck_EqualsBreakReach проверь это утверждение.");
     }
 
     @Test
@@ -110,7 +119,8 @@ class StandChoiceTests {
                 3,
                 StandChoice.HORIZONTAL_SPREAD,
                 "Разлёт кандидатов — 3 клетки по горизонтали: шире — лишние чтения безопасности, "
-                        + "уже — пропущенные ближние стоянки");
+                        + "уже — пропущенные ближние стоянки"
+                        + " Иначе тест horizontalSpread_ValueCheck_EqualsThree перестанет ловить эту поломку. При смене horizontalSpread_ValueCheck_EqualsThree проверь это утверждение.");
     }
 
     private static CountingSafety openGround() {

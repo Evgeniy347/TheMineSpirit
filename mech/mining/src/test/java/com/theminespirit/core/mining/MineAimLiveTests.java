@@ -32,12 +32,14 @@ class MineAimLiveTests {
                 MineCellPlan.Kind.WAIT,
                 plan.kind(),
                 "Живой вход шахты занят существом: тест обязан воспроизвести ожидание, а не подход — получили "
-                        + plan.kind() + ": " + plan.reason());
+                        + plan.kind() + ": " + plan.reason()
+                        + " Иначе тест aimNext_LiveEntranceOccupied_RequiresAim перестанет ловить эту поломку. При смене aimNext_LiveEntranceOccupied_RequiresAim проверь это утверждение.");
         assertEquals(
                 MineAimFlow.Next.AIM,
                 MineAimFlow.next(plan.kind()),
                 "Шахта стояла 3600 тиков на входе, потому что ожидание не переводило скрипт в фазу AIM: "
-                        + "она сбрасывалась каждым тиком и дух не двигался");
+                        + "она сбрасывалась каждым тиком и дух не двигался"
+                        + " При смене aimNext_LiveEntranceOccupied_RequiresAim проверь это утверждение.");
     }
 
     @Test
@@ -45,7 +47,8 @@ class MineAimLiveTests {
         Observe10Window window = Observe10Window.load("mine-wall.json");
         assertFalse(
                 MineDigOrder.visible(window.spirit(), window.cell(), List.of(), window),
-                "Тест обязан взять живой отказ видимости: клетка " + window.cell() + " обязана быть невидимой");
+                "Тест обязан взять живой отказ видимости: клетка " + window.cell() + " обязана быть невидимой"
+                        + " Иначе тест aimNext_LiveWallNotVisible_RequiresAim перестанет ловить эту поломку. При смене aimNext_LiveWallNotVisible_RequiresAim проверь это утверждение.");
         MineCellPlan.Plan plan = MineCellPlan.of(
                 window.cell(),
                 window.spirit(),
@@ -56,12 +59,14 @@ class MineAimLiveTests {
         assertEquals(
                 MineCellPlan.Kind.APPROACH,
                 plan.kind(),
-                "Невидимая клетка шахты требует подхода, а не отказа — получили " + plan.kind() + ": " + plan.reason());
+                "Невидимая клетка шахты требует подхода, а не отказа — получили " + plan.kind() + ": " + plan.reason()
+                        + " Иначе тест aimNext_LiveWallNotVisible_RequiresAim перестанет ловить эту поломку. При смене aimNext_LiveWallNotVisible_RequiresAim проверь это утверждение.");
         assertEquals(
                 MineAimFlow.Next.AIM,
                 MineAimFlow.next(plan.kind()),
                 "Шахта не подходила к невидимой клетке, потому что aimAt не включал фазу AIM: подход начинался "
-                        + "и сбрасывался в том же тике, дух стоял до отмены доской");
+                        + "и сбрасывался в том же тике, дух стоял до отмены доской"
+                        + " При смене aimNext_LiveWallNotVisible_RequiresAim проверь это утверждение.");
     }
 
     @Test
@@ -69,7 +74,8 @@ class MineAimLiveTests {
         assertEquals(
                 MineAimFlow.Next.READY,
                 MineAimFlow.next(MineCellPlan.Kind.READY),
-                "Готовая к ломке клетка не должна включать подход: это лишний тик ожидания на каждой клетке шахты");
+                "Готовая к ломке клетка не должна включать подход: это лишний тик ожидания на каждой клетке шахты"
+                        + " Иначе тест aimNext_ReadyCell_StaysReady перестанет ловить эту поломку. При смене aimNext_ReadyCell_StaysReady проверь это утверждение.");
     }
 
     @Test
@@ -77,20 +83,34 @@ class MineAimLiveTests {
         assertEquals(
                 MineAimFlow.Next.REFUSE,
                 MineAimFlow.next(MineCellPlan.Kind.REFUSE),
-                "Клетка без стоянки обязана проваливать проходку с причиной, а не стоять молча");
+                "Клетка без стоянки обязана проваливать проходку с причиной, а не стоять молча"
+                        + " Иначе тест aimNext_RefusedCell_Fails перестанет ловить эту поломку. При смене aimNext_RefusedCell_Fails проверь это утверждение.");
     }
 
     @Test
     void liveTicket_BuildMineLevelOne_RequiresCobblestone() throws IOException {
         JsonNode ticket = new ObjectMapper().readTree(Files.readString(TICKET, StandardCharsets.UTF_8));
 
-        assertEquals("first:build_mine", ticket.get("id").asText(), "Фикстура обязана быть живым тикетом шахты");
-        assertEquals("BUILD_MINE", ticket.get("case").asText(), "Кейс живой задачи — шахта");
-        assertEquals(1, ticket.get("level").asInt(), "Первая ступень шахты — уровень 1 спуска");
+        assertEquals(
+                "first:build_mine",
+                ticket.get("id").asText(),
+                "Фикстура обязана быть живым тикетом шахты"
+                        + " Иначе тест liveTicket_BuildMineLevelOne_RequiresCobblestone перестанет ловить эту поломку. При смене liveTicket_BuildMineLevelOne_RequiresCobblestone проверь это утверждение.");
+        assertEquals(
+                "BUILD_MINE",
+                ticket.get("case").asText(),
+                "Кейс живой задачи — шахта"
+                        + " Иначе тест liveTicket_BuildMineLevelOne_RequiresCobblestone перестанет ловить эту поломку. При смене liveTicket_BuildMineLevelOne_RequiresCobblestone проверь это утверждение.");
+        assertEquals(
+                1,
+                ticket.get("level").asInt(),
+                "Первая ступень шахты — уровень 1 спуска"
+                        + " Иначе тест liveTicket_BuildMineLevelOne_RequiresCobblestone перестанет ловить эту поломку. При смене liveTicket_BuildMineLevelOne_RequiresCobblestone проверь это утверждение.");
         assertTrue(
                 ticket.get("requiredItems").has("cobblestone"),
                 "Спуск в шахту требует булыжник на стенки и пол: без него живой тикет проваливался "
-                        + "на «нет булыжника на стенка»");
+                        + "на «нет булыжника на стенка»"
+                        + " Иначе тест liveTicket_BuildMineLevelOne_RequiresCobblestone перестанет ловить эту поломку. При смене liveTicket_BuildMineLevelOne_RequiresCobblestone проверь это утверждение.");
     }
 
     @Test
@@ -111,6 +131,7 @@ class MineAimLiveTests {
         assertTrue(
                 spots.contains(new BlockCoord(-193, 67, -515)),
                 "Живой столб из трёх блоков на тропе (clear: «без стоянки» на 70) достаётся с клетки "
-                        + "вплотную на три ниже: без неё clear бросает задачу, хотя стоянка есть. Стоянки: " + spots);
+                        + "вплотную на три ниже: без неё clear бросает задачу, хотя стоянка есть. Стоянки: " + spots
+                        + " Иначе тест standSpots_LiveClearPillar_StandThreeBelowFound перестанет ловить эту поломку. При смене standSpots_LiveClearPillar_StandThreeBelowFound проверь это утверждение.");
     }
 }

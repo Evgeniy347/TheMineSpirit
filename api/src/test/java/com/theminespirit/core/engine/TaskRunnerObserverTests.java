@@ -37,10 +37,12 @@ class TaskRunnerObserverTests {
 
         assertTrue(
                 observing.observesWhileTacticsOwns(),
-                "скрипт-наблюдатель обязан сообщать это через раннер: иначе тактика заморозит его и он не увидит мир");
+                "скрипт-наблюдатель обязан сообщать это через раннер: иначе тактика заморозит его и он не увидит мир"
+                        + " При смене observesWhileTacticsOwns_ScriptFlag_PropagatesToRunner проверь это утверждение.");
         assertFalse(
                 moving.observesWhileTacticsOwns(),
-                "обычный скрипт не наблюдатель: под управлением тактики он обязан оставаться приостановленным");
+                "обычный скрипт не наблюдатель: под управлением тактики он обязан оставаться приостановленным"
+                        + " Иначе тест observesWhileTacticsOwns_ScriptFlag_PropagatesToRunner перестанет ловить эту поломку. При смене observesWhileTacticsOwns_ScriptFlag_PropagatesToRunner проверь это утверждение.");
     }
 
     @Test
@@ -50,7 +52,8 @@ class TaskRunnerObserverTests {
 
         assertTrue(
                 runner.observesWhileTacticsOwns(),
-                "флаг обязан быть известен до первого тика: иначе при уже взятой тактикой инициативе скрипт не начнёт наблюдаться");
+                "флаг обязан быть известен до первого тика: иначе при уже взятой тактикой инициативе скрипт не начнёт наблюдаться"
+                        + " При смене observesWhileTacticsOwns_BeforeFirstTick_ReportsFromPlannedScript проверь это утверждение.");
     }
 
     @Test
@@ -63,7 +66,8 @@ class TaskRunnerObserverTests {
 
         assertFalse(
                 runner.observesWhileTacticsOwns(),
-                "завершённая задача не наблюдает: флаг обязан гаснуть вместе с задачей");
+                "завершённая задача не наблюдает: флаг обязан гаснуть вместе с задачей"
+                        + " Иначе тест observesWhileTacticsOwns_AfterTerminalStatus_ReportsFalse перестанет ловить эту поломку. При смене observesWhileTacticsOwns_AfterTerminalStatus_ReportsFalse проверь это утверждение.");
     }
 
     @Test
@@ -87,7 +91,8 @@ class TaskRunnerObserverTests {
                 0,
                 creations.get(),
                 "флаг обязан читаться без конструирования скрипта: фабрика вызвана " + creations.get()
-                        + " раз — конструирование имеет побочные эффекты и может упасть на невалидных параметрах");
+                        + " раз — конструирование имеет побочные эффекты и может упасть на невалидных параметрах"
+                        + " Иначе тест observesWhileTacticsOwns_BeforeFirstTick_DoesNotCreateScriptInstance перестанет ловить эту поломку. При смене observesWhileTacticsOwns_BeforeFirstTick_DoesNotCreateScriptInstance проверь это утверждение.");
     }
 
     @Test
@@ -98,12 +103,16 @@ class TaskRunnerObserverTests {
         runner.tick();
         assertTrue(
                 runner.observesWhileTacticsOwns(),
-                "внутри последовательности флаг обязан отражать текущий шаг-наблюдатель");
+                "внутри последовательности флаг обязан отражать текущий шаг-наблюдатель"
+                        + " Иначе тест observesWhileTacticsOwns_Sequence_ReportsCurrentStep перестанет ловить эту поломку. При смене observesWhileTacticsOwns_Sequence_ReportsCurrentStep проверь это утверждение.");
 
         runner.tick();
         runner.tick();
         runner.tick();
-        assertFalse(runner.observesWhileTacticsOwns(), "после перехода к шагу без наблюдения флаг обязан погаснуть");
+        assertFalse(
+                runner.observesWhileTacticsOwns(),
+                "после перехода к шагу без наблюдения флаг обязан погаснуть"
+                        + " Иначе тест observesWhileTacticsOwns_Sequence_ReportsCurrentStep перестанет ловить эту поломку. При смене observesWhileTacticsOwns_Sequence_ReportsCurrentStep проверь это утверждение.");
     }
 
     @Test
@@ -124,9 +133,11 @@ class TaskRunnerObserverTests {
 
         assertTrue(
                 allWatching.observesWhileTacticsOwns(),
-                "параллель из наблюдателей обязана наблюдаться: иначе ветки заморозятся под тактикой");
+                "параллель из наблюдателей обязана наблюдаться: иначе ветки заморозятся под тактикой"
+                        + " При смене observesWhileTacticsOwns_Parallel_RequiresEveryRunningStepToObserve проверь это утверждение.");
         assertFalse(
                 mixed.observesWhileTacticsOwns(),
-                "если хоть одна ветка параллели не наблюдатель, вся параллель обязана считаться управляемой");
+                "если хоть одна ветка параллели не наблюдатель, вся параллель обязана считаться управляемой"
+                        + " Иначе тест observesWhileTacticsOwns_Parallel_RequiresEveryRunningStepToObserve перестанет ловить эту поломку. При смене observesWhileTacticsOwns_Parallel_RequiresEveryRunningStepToObserve проверь это утверждение.");
     }
 }

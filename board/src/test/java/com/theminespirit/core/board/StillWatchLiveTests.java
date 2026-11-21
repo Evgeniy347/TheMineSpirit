@@ -27,14 +27,20 @@ class StillWatchLiveTests {
         BlockCoord feet = coord(live.get("feet"));
         StillWatch watch = new StillWatch();
 
-        assertFalse(watch.still(spirit, feet, 0, WINDOW), "Первый замер позиции не может сразу считаться застоем");
         assertFalse(
-                watch.still(spirit, feet, WINDOW - 1, WINDOW), "Окно " + WINDOW + " тиков ещё не прошло: спасать рано");
+                watch.still(spirit, feet, 0, WINDOW),
+                "Первый замер позиции не может сразу считаться застоем"
+                        + " Иначе тест still_LiveSpiritOneInWater_TriggersOnlyAfterWindow перестанет ловить эту поломку. При смене still_LiveSpiritOneInWater_TriggersOnlyAfterWindow проверь это утверждение.");
+        assertFalse(
+                watch.still(spirit, feet, WINDOW - 1, WINDOW),
+                "Окно " + WINDOW + " тиков ещё не прошло: спасать рано"
+                        + " Иначе тест still_LiveSpiritOneInWater_TriggersOnlyAfterWindow перестанет ловить эту поломку. При смене still_LiveSpiritOneInWater_TriggersOnlyAfterWindow проверь это утверждение.");
         assertTrue(
                 watch.still(spirit, feet, WINDOW, WINDOW),
                 "spirit-1 простоял в воде " + live.get("feet") + " больше " + live.get("still_ticks")
                         + " тиков (observe12), позиция не менялась: спасение обязано сработать по неподвижности, "
-                        + "а не ждать замурованности");
+                        + "а не ждать замурованности"
+                        + " Иначе тест still_LiveSpiritOneInWater_TriggersOnlyAfterWindow перестанет ловить эту поломку. При смене still_LiveSpiritOneInWater_TriggersOnlyAfterWindow проверь это утверждение.");
     }
 
     @Test
@@ -56,7 +62,8 @@ class StillWatchLiveTests {
                 "spirit-1 в observe13 колебался между " + live.get("positions").get(0) + " и "
                         + live.get("positions").get(1) + " (" + live.get("swim_stalled") + " SWIM_STALLED, спасений "
                         + live.get("rescue_events") + "): колебание в малом радиусе — это неподвижность, иначе "
-                        + "смена клетки навсегда сбрасывает окно спасения");
+                        + "смена клетки навсегда сбрасывает окно спасения"
+                        + " При смене still_LiveOscillationInSmallArea_CountsAsStill проверь это утверждение.");
     }
 
     @Test
@@ -77,7 +84,8 @@ class StillWatchLiveTests {
                 still,
                 "spirit-1 в observe15 ходил по кругу " + live.get("positions").get(0) + " ↔ "
                         + live.get("positions").get(1) + " (перепад " + live.get("cycle_span")
-                        + "): для воды это неподвижность в области 24, иначе спасение не срабатывает");
+                        + "): для воды это неподвижность в области 24, иначе спасение не срабатывает"
+                        + " При смене still_LiveVerticalCycle_CountsAsStillWithWaterRadius проверь это утверждение.");
     }
 
     @Test
@@ -88,16 +96,24 @@ class StillWatchLiveTests {
         BlockCoord first = coord(bots.get("bots").get(0).get("position"));
         BlockCoord moved = new BlockCoord(first.x() + BoardTuning.stillWatchRadius() + 1, first.y(), first.z());
 
-        assertFalse(watch.still(spirit, first, 0, WINDOW), "Первый замер не застой");
-        assertFalse(watch.still(spirit, first, WINDOW - 1, WINDOW), "До окна спасения нет");
+        assertFalse(
+                watch.still(spirit, first, 0, WINDOW),
+                "Первый замер не застой"
+                        + " Иначе тест still_SpiritLeavingArea_ResetsWindow перестанет ловить эту поломку. При смене still_SpiritLeavingArea_ResetsWindow проверь это утверждение.");
+        assertFalse(
+                watch.still(spirit, first, WINDOW - 1, WINDOW),
+                "До окна спасения нет"
+                        + " Иначе тест still_SpiritLeavingArea_ResetsWindow перестанет ловить эту поломку. При смене still_SpiritLeavingArea_ResetsWindow проверь это утверждение.");
         assertFalse(
                 watch.still(spirit, moved, WINDOW, WINDOW),
                 "Дух вышел из области " + BoardTuning.stillWatchRadius()
                         + " блоков: окно неподвижности начинается заново, "
-                        + "иначе спасение сработает на идущем духе");
+                        + "иначе спасение сработает на идущем духе"
+                        + " При смене still_SpiritLeavingArea_ResetsWindow проверь это утверждение.");
         assertTrue(
                 watch.still(spirit, moved, WINDOW * 2, WINDOW),
-                "После выхода дух снова стоит окно: спасение обязано помнить новую область");
+                "После выхода дух снова стоит окно: спасение обязано помнить новую область"
+                        + " Иначе тест still_SpiritLeavingArea_ResetsWindow перестанет ловить эту поломку. При смене still_SpiritLeavingArea_ResetsWindow проверь это утверждение.");
     }
 
     private static BlockCoord coord(JsonNode node) {
