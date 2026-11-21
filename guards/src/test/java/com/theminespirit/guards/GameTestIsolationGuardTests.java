@@ -48,7 +48,7 @@ class GameTestIsolationGuardTests {
                         + "защищает и от предшественников, и от соседей по сетке. Вызови GameTestFixtures.reset, "
                         + "GameTestFixtures.sweepEntities или сцену, которая их вызывает (TacticsScene.prepare, "
                         + "MovementScene.prepare), первой строкой метода — до первого спавна. Правило: todo.md → "
-                        + "«Изоляция сцен GameTest». Нарушители");
+                        + "«Изоляция сцен GameTest». Нарушители Иначе тест gameTestSpawn_WithoutStartCleanup_IsReported перестанет ловить эту поломку. При смене gameTestSpawn_WithoutStartCleanup_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -70,7 +70,7 @@ class GameTestIsolationGuardTests {
         assertEquals(
                 List.of(),
                 offendersOf(sample),
-                "Сторож ложно срабатывает: локальный помощник с зачисткой — законное начало сцены");
+                "Сторож ложно срабатывает: локальный помощник с зачисткой — законное начало сцены Иначе тест sceneAlias_CleanHelperBeforeSpawn_IsAccepted перестанет ловить эту поломку. При смене sceneAlias_CleanHelperBeforeSpawn_IsAccepted проверь это утверждение.");
     }
 
     @Test
@@ -92,7 +92,7 @@ class GameTestIsolationGuardTests {
         assertEquals(
                 List.of("till_WithoutHoe_FailsFast"),
                 offendersOf(sample),
-                "Сторож ослеп: помощник без зачистки не изолирует сцену, даже если вызван до спавна");
+                "Сторож ослеп: помощник без зачистки не изолирует сцену, даже если вызван до спавна Иначе тест sceneAlias_DirtyHelperBeforeSpawn_IsReported перестанет ловить эту поломку. При смене sceneAlias_DirtyHelperBeforeSpawn_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -110,7 +110,7 @@ class GameTestIsolationGuardTests {
         assertEquals(
                 List.of("zombie_NearSpirit_TakesTarget"),
                 offendersOf(sample),
-                "Сторож ослеп: спавн без стартовой зачистки должен попадать в нарушители");
+                "Сторож ослеп: спавн без стартовой зачистки должен попадать в нарушители Иначе тест gameTestSpawnPattern_SpawnWithoutCleanup_IsReported перестанет ловить эту поломку. При смене gameTestSpawnPattern_SpawnWithoutCleanup_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -129,7 +129,7 @@ class GameTestIsolationGuardTests {
         assertEquals(
                 List.of("zombie_NearSpirit_TakesTarget"),
                 offendersOf(sample),
-                "Сторож ослеп: зачистка после спавна не защищает от чужих сущностей — она обязана быть до спавна");
+                "Сторож ослеп: зачистка после спавна не защищает от чужих сущностей — она обязана быть до спавна Иначе тест gameTestSpawnPattern_CleanupAfterSpawn_IsReported перестанет ловить эту поломку. При смене gameTestSpawnPattern_CleanupAfterSpawn_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -146,7 +146,9 @@ class GameTestIsolationGuardTests {
                         """;
 
         assertEquals(
-                List.of(), offendersOf(sample), "Сторож ложно срабатывает: зачистка до спавна — законное начало сцены");
+                List.of(),
+                offendersOf(sample),
+                "Сторож ложно срабатывает: зачистка до спавна — законное начало сцены Иначе тест gameTestSpawnPattern_CleanupBeforeSpawn_IsAccepted перестанет ловить эту поломку. При смене gameTestSpawnPattern_CleanupBeforeSpawn_IsAccepted проверь это утверждение.");
     }
 
     @Test
@@ -168,7 +170,7 @@ class GameTestIsolationGuardTests {
                 List.of("fill_TwoCubeBottomUp_SpiritEndsOutside"),
                 finishOffendersOf(sample),
                 "Сторож ослеп: поздний reset в лямбде убивает давно бегущих соседей по пачке — там обязан "
-                        + "быть узкий finish");
+                        + "быть узкий finish Иначе тест gameTestBody_SecondResetCall_IsReported перестанет ловить эту поломку. При смене gameTestBody_SecondResetCall_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -185,18 +187,16 @@ class GameTestIsolationGuardTests {
                             }
                         }
                         """;
-
         assertEquals(
                 List.of(),
                 finishOffendersOf(sample),
-                "Сторож ложно срабатывает: стартовый reset плюс узкий finish в лямбде — законная сцена");
+                "Сторож ложно срабатывает: стартовый reset плюс узкий finish в лямбде — законная сцена При смене gameTestBody_ResetAndFinish_IsAccepted проверь это утверждение.");
     }
 
     @Test
     void gameTestFinish_NestedResets_UseFinishOnly() {
         List<String> offenders = new ArrayList<>();
         collectFinishOffenders(SourceFiles.javaUnder(SourceFiles.GAME_TESTS), offenders);
-
         assertEquals(
                 List.of(),
                 offenders,
@@ -204,7 +204,7 @@ class GameTestIsolationGuardTests {
                         + "GameTestFixtures.finish: широкая убивает давно бегущих соседей по пачке — тесты "
                         + "пачки идут одновременно, что доказал красный прогон after1 (20 падений, 5 тиков 0 "
                         + "за секунду в пачке build_result). Стартовая зачистка остаётся широкой reset. "
-                        + "Правило: todo.md → «Изоляция сцен GameTest». Нарушители");
+                        + "Правило: todo.md → «Изоляция сцен GameTest». Нарушители Иначе тест gameTestFinish_NestedResets_UseFinishOnly перестанет ловить эту поломку. При смене gameTestFinish_NestedResets_UseFinishOnly проверь это утверждение.");
     }
 
     private static void collectFinishOffenders(Map<Path, String> sources, List<String> offenders) {

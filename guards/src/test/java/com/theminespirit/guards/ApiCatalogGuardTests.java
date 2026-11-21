@@ -49,7 +49,7 @@ class ApiCatalogGuardTests {
                 "Скрипт каталога не упомянут в docs/api/README.md обратными кавычками: контракт и каталог разошлись, "
                         + "и клиент по документу не узнает скрипт, который /v1/capabilities уже отдаёт. "
                         + "Допишите строку с id и параметрами из ScriptSpec (docs/api/README.md → «GET /v1/capabilities»). "
-                        + "Правило: каталог и docs/api/README.md не расходятся. Не упомянуты");
+                        + "Правило: каталог и docs/api/README.md не расходятся. Не упомянуты Иначе тест catalog_EveryScript_MentionedInApiDoc перестанет ловить эту поломку. При смене catalog_EveryScript_MentionedInApiDoc проверь это утверждение.");
     }
 
     @Test
@@ -67,7 +67,7 @@ class ApiCatalogGuardTests {
                         + "а /v1/capabilities не отдаст — документ врёт клиенту. Уберите устаревшее упоминание "
                         + "или добавьте скрипт в CoreScripts. Параметры, значения enum и слова итога задачи "
                         + "(result/error/done/have/missing/null) скриптами не считаются. "
-                        + "Правило: docs/api/README.md → «GET /v1/capabilities». Лишние упоминания");
+                        + "Правило: docs/api/README.md → «GET /v1/capabilities». Лишние упоминания Иначе тест catalogSection_ScriptMissingFromCatalog_IsReported перестанет ловить эту поломку. При смене catalogSection_ScriptMissingFromCatalog_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -77,7 +77,7 @@ class ApiCatalogGuardTests {
         assertEquals(
                 List.of("feed"),
                 missingScripts(catalog, "тут только `scan`"),
-                "Сторож ослеп: id каталога, которого нет в документе в обратных кавычках, обязан попасть в пропажу");
+                "Сторож ослеп: id каталога, которого нет в документе в обратных кавычках, обязан попасть в пропажу Иначе тест missingScripts_ScriptAbsentFromDoc_IsReported перестанет ловить эту поломку. При смене missingScripts_ScriptAbsentFromDoc_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -87,7 +87,7 @@ class ApiCatalogGuardTests {
         assertEquals(
                 List.of(),
                 missingScripts(catalog, "тут `scan` и `feed`"),
-                "Сторож ложно срабатывает: упомянутые в кавычках скрипты — не пропажа");
+                "Сторож ложно срабатывает: упомянутые в кавычках скрипты — не пропажа Иначе тест missingScripts_AllMentioned_ReportsNothing перестанет ловить эту поломку. При смене missingScripts_AllMentioned_ReportsNothing проверь это утверждение.");
     }
 
     @Test
@@ -97,7 +97,7 @@ class ApiCatalogGuardTests {
         assertEquals(
                 List.of("dig_descent"),
                 unknownScriptMentions(section, Set.of("scan"), Set.of()),
-                "Сторож ослеп: упоминание скрипта, которого нет в каталоге, обязано попасть в лишние");
+                "Сторож ослеп: упоминание скрипта, которого нет в каталоге, обязано попасть в лишние Иначе тест unknownScriptMentions_IdMissingFromCatalog_IsReported перестанет ловить эту поломку. При смене unknownScriptMentions_IdMissingFromCatalog_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -107,7 +107,7 @@ class ApiCatalogGuardTests {
         assertEquals(
                 List.of(),
                 unknownScriptMentions(section, Set.of("scan"), Set.of("radius", "filter", "loop")),
-                "Сторож ложно срабатывает: параметры и значения enum — не имена скриптов");
+                "Сторож ложно срабатывает: параметры и значения enum — не имена скриптов Иначе тест unknownScriptMentions_ParamsAndEnums_NotReported перестанет ловить эту поломку. При смене unknownScriptMentions_ParamsAndEnums_NotReported проверь это утверждение.");
     }
 
     @Test
@@ -116,10 +116,10 @@ class ApiCatalogGuardTests {
 
         assertTrue(
                 section.contains("Скрипты"),
-                "Сторож ослеп: раздел каталога обязан находиться по заголовку и содержать текст до следующего заголовка");
+                "Сторож ослеп: раздел каталога обязан находиться по заголовку и содержать текст до следующего заголовка Иначе тест catalogSection_ApiDoc_IsFound перестанет ловить эту поломку. При смене catalogSection_ApiDoc_IsFound проверь это утверждение.");
         assertTrue(
                 !section.contains("/v1/bots"),
-                "Сторож слеп к границе: раздел каталога обязан кончаться на следующем заголовке `### `");
+                "Сторож слеп к границе: раздел каталога обязан кончаться на следующем заголовке `### ` Иначе тест catalogSection_ApiDoc_IsFound перестанет ловить эту поломку. При смене catalogSection_ApiDoc_IsFound проверь это утверждение.");
     }
 
     @Test
@@ -132,7 +132,7 @@ class ApiCatalogGuardTests {
                 missing,
                 "Маршрут /v1/policy/* объявлен в PolicyRoutes, но не описан в docs/api/README.md: клиент по документу "
                         + "не узнает конечную точку снятия защиты построек игрока. Допишите строку таблицы "
-                        + "«Конечные точки» и раздел с телом запроса. Не описаны");
+                        + "«Конечные точки» и раздел с телом запроса. Не описаны Иначе тест policyRoutes_DeclaredInController_AreDocumentedInApiDoc перестанет ловить эту поломку. При смене policyRoutes_DeclaredInController_AreDocumentedInApiDoc проверь это утверждение.");
     }
 
     @Test
@@ -144,7 +144,7 @@ class ApiCatalogGuardTests {
                 missing,
                 "Маршрут /v1/quarry/* объявлен в QuarryRoutes, но не описан в docs/api/README.md: стратег по "
                         + "документу не узнает, где искать и как ставить место добычи. Допишите строку таблицы "
-                        + "«Конечные точки» и раздел quarry.md. Не описаны");
+                        + "«Конечные точки» и раздел quarry.md. Не описаны Иначе тест quarryRoutes_DeclaredInController_AreDocumentedInApiDoc перестанет ловить эту поломку. При смене quarryRoutes_DeclaredInController_AreDocumentedInApiDoc проверь это утверждение.");
     }
 
     @Test
@@ -154,17 +154,16 @@ class ApiCatalogGuardTests {
         assertEquals(
                 List.of("GET /v1/policy/unprotect"),
                 undocumentedRoutes("тут нет ничего", routes),
-                "Сторож ослеп: маршрут, которого нет в тексте документа, обязан попасть в пропажу");
+                "Сторож ослеп: маршрут, которого нет в тексте документа, обязан попасть в пропажу Иначе тест undocumentedRoutes_MissingPath_IsReported перестанет ловить эту поломку. При смене undocumentedRoutes_MissingPath_IsReported проверь это утверждение.");
     }
 
     @Test
     void undocumentedRoutes_MethodAndPathPresent_ReportsNothing() {
         List<Route> routes = List.of(new Route("POST", "/v1/policy/unprotect", (request, params) -> null));
-
         assertEquals(
                 List.of(),
                 undocumentedRoutes("POST /v1/policy/unprotect", routes),
-                "Сторож ложно срабатывает: метод и путь, найденные в тексте, — не пропажа");
+                "Сторож ложно срабатывает: метод и путь, найденные в тексте, — не пропажа Иначе тест undocumentedRoutes_MethodAndPathPresent_ReportsNothing перестанет ловить эту поломку. При смене undocumentedRoutes_MethodAndPathPresent_ReportsNothing проверь это утверждение.");
     }
 
     private static List<String> undocumentedRoutes(String doc, List<Route> routes) {
@@ -219,7 +218,8 @@ class ApiCatalogGuardTests {
     private static String readApiDoc() throws IOException {
         assertTrue(
                 Files.isDirectory(API_DIR),
-                "Сторож не нашёл " + API_DIR + ": тесты запускаются из корня проекта (./gradlew test)");
+                "Сторож не нашёл " + API_DIR
+                        + ": тесты запускаются из корня проекта (./gradlew test) Иначе тест undocumentedRoutes_MethodAndPathPresent_ReportsNothing перестанет ловить эту поломку. При смене undocumentedRoutes_MethodAndPathPresent_ReportsNothing проверь это утверждение.");
         StringBuilder text = new StringBuilder();
         try (var files = Files.list(API_DIR)) {
             for (Path file : files.filter(path -> path.toString().endsWith(".md"))
@@ -276,7 +276,8 @@ class ApiCatalogGuardTests {
         int start = doc.indexOf(CATALOG_HEADING);
         assertTrue(
                 start >= 0,
-                "В docs/api/README.md нет раздела «" + CATALOG_HEADING + "»: заголовок переименован — поправь сторожа");
+                "В docs/api/README.md нет раздела «" + CATALOG_HEADING
+                        + "»: заголовок переименован — поправь сторожа Иначе тест undocumentedRoutes_MethodAndPathPresent_ReportsNothing перестанет ловить эту поломку. При смене undocumentedRoutes_MethodAndPathPresent_ReportsNothing проверь это утверждение.");
         int next = doc.indexOf("\n### ", start + CATALOG_HEADING.length());
         return next < 0 ? doc.substring(start) : doc.substring(start, next);
     }

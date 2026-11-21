@@ -51,13 +51,13 @@ class ProductionCommentGuardTests {
                 "Комментарий в коде пересказывает то, что говорит имя, или прячет причину, которая протухает после "
                         + "первой правки. Как надо: напиши поясняющий быстрый тест, а комментарий удали; причина-"
                         + "ограничение Minecraft/библиотеки — только с меткой `// mc:` или `// lib:` "
-                        + "(docs/CONVENTIONS.md → «Комментарии»). Нарушители (файл:строка)");
+                        + "(docs/CONVENTIONS.md → «Комментарии»). Нарушители (файл:строка) Иначе тест codeSources_CommentsRemain_AreAbsent перестанет ловить эту поломку. При смене codeSources_CommentsRemain_AreAbsent проверь это утверждение.");
         assertEquals(
                 List.of(),
                 stale,
                 "Список исключений config/comment-baseline.txt содержит записи, которых в коде уже нет: "
                         + "он только уменьшается. Удали названные строки — иначе исключение прикрывает будущий "
-                        + "комментарий с тем же текстом. Остаток списка");
+                        + "комментарий с тем же текстом. Остаток списка При смене codeSources_CommentsRemain_AreAbsent проверь это утверждение.");
     }
 
     @Test
@@ -70,7 +70,7 @@ class ProductionCommentGuardTests {
                 "Список исключений config/comment-baseline.txt только уменьшается, сейчас записей " + entries
                         + " при потолке " + BASELINE_LIMIT + " (docs/CONVENTIONS.md → «Комментарии»). "
                         + "Новый комментарий добавлением строки в список не легализуется: напиши поясняющий "
-                        + "быстрый тест, а комментарий удали. Список стал меньше — уменьши BASELINE_LIMIT.");
+                        + "быстрый тест, а комментарий удали. Список стал меньше — уменьши BASELINE_LIMIT. Иначе тест baseline_EntryCount_DoesNotGrow перестанет ловить эту поломку. При смене baseline_EntryCount_DoesNotGrow проверь это утверждение.");
     }
 
     @Test
@@ -88,7 +88,7 @@ class ProductionCommentGuardTests {
                 findings(scan(sample, Language.JAVA)).stream()
                         .map(comment -> comment.line() + " " + comment.kind())
                         .toList(),
-                "Сторож ослеп: строчный комментарий, блочный комментарий и Javadoc обязаны находиться");
+                "Сторож ослеп: строчный комментарий, блочный комментарий и Javadoc обязаны находиться Иначе тест commentScanner_JavaLineBlockAndJavadoc_AreReported перестанет ловить эту поломку. При смене commentScanner_JavaLineBlockAndJavadoc_AreReported проверь это утверждение.");
     }
 
     @Test
@@ -109,7 +109,7 @@ class ProductionCommentGuardTests {
                         .map(comment -> comment.line() + " " + comment.kind())
                         .toList(),
                 "Сторож ослеп или ложно срабатывает: метки mc:/lib: с продолжением разрешены, "
-                        + "а обычный хвостовой комментарий — нет");
+                        + "а обычный хвостовой комментарий — нет Иначе тест commentScanner_RestrictionLabelsAndTailComment_AreSeparated перестанет ловить эту поломку. При смене commentScanner_RestrictionLabelsAndTailComment_AreSeparated проверь это утверждение.");
     }
 
     @Test
@@ -133,7 +133,7 @@ class ProductionCommentGuardTests {
                         .map(comment -> comment.line() + " " + comment.kind())
                         .toList(),
                 "Сторож ложно срабатывает: `//`, `/*` и `#` внутри строки, текстового блока и символьного "
-                        + "литерала — не комментарии");
+                        + "литерала — не комментарии Иначе тест commentScanner_CommentsInsideStrings_AreIgnored перестанет ловить эту поломку. При смене commentScanner_CommentsInsideStrings_AreIgnored проверь это утверждение.");
     }
 
     @Test
@@ -157,7 +157,7 @@ class ProductionCommentGuardTests {
                         .map(comment -> comment.line() + " " + comment.kind())
                         .toList(),
                 "Сторож ослеп или ложно срабатывает: shebang и `#` в кавычках/подстановке — не комментарии, "
-                        + "а строковый и heredoc-комментарии обязаны находиться");
+                        + "а строковый и heredoc-комментарии обязаны находиться Иначе тест commentScanner_ShellCommentsAndShebang_AreReportedExceptShebang перестанет ловить эту поломку. При смене commentScanner_ShellCommentsAndShebang_AreReportedExceptShebang проверь это утверждение.");
     }
 
     @Test
@@ -179,7 +179,7 @@ class ProductionCommentGuardTests {
                         .map(comment -> comment.line() + " " + comment.kind())
                         .toList(),
                 "Сторож ослеп или ложно срабатывает: `#` в строке и тройной строке — не комментарий, "
-                        + "а строковый и хвостовой комментарии обязаны находиться");
+                        + "а строковый и хвостовой комментарии обязаны находиться Иначе тест commentScanner_PythonCommentsAndTripleStrings_AreReported перестанет ловить эту поломку. При смене commentScanner_PythonCommentsAndTripleStrings_AreReported проверь это утверждение.");
     }
 
     @Test
@@ -208,11 +208,11 @@ class ProductionCommentGuardTests {
                 List.of(),
                 skipped.stream().filter(path -> isScanned(Path.of(path))).toList(),
                 "Сторож придирается к данным, документации или сгенерированному коду: их правят руками, "
-                        + "а правило «комментариев нет» — только к исходникам кода");
+                        + "а правило «комментариев нет» — только к исходникам кода Иначе тест scannedPaths_DataDocsAndGenerated_AreSkipped перестанет ловить эту поломку. При смене scannedPaths_DataDocsAndGenerated_AreSkipped проверь это утверждение.");
         assertEquals(
                 List.of(),
                 scanned.stream().filter(path -> !isScanned(Path.of(path))).toList(),
-                "Сторож ослеп: исходники кода Java, Gradle, скриптов и Python обязаны попадать в проверку");
+                "Сторож ослеп: исходники кода Java, Gradle, скриптов и Python обязаны попадать в проверку Иначе тест scannedPaths_DataDocsAndGenerated_AreSkipped перестанет ловить эту поломку. При смене scannedPaths_DataDocsAndGenerated_AreSkipped проверь это утверждение.");
     }
 
     @Test
@@ -238,11 +238,11 @@ class ProductionCommentGuardTests {
         assertEquals(
                 List.of("A.java:2"),
                 offenders,
-                "Сторож ослеп: комментарий, которого нет в списке исключений, обязан быть нарушителем");
+                "Сторож ослеп: комментарий, которого нет в списке исключений, обязан быть нарушителем Иначе тест baseline_NewAndStaleEntries_AreReported перестанет ловить эту поломку. При смене baseline_NewAndStaleEntries_AreReported проверь это утверждение.");
         assertEquals(
                 List.of(1),
                 budget.values().stream().filter(left -> left > 0).toList(),
-                "Сторож ослеп: запись списка без комментария в коде обязана считаться устаревшей");
+                "Сторож ослеп: запись списка без комментария в коде обязана считаться устаревшей Иначе тест baseline_NewAndStaleEntries_AreReported перестанет ловить эту поломку. При смене baseline_NewAndStaleEntries_AreReported проверь это утверждение.");
     }
 
     private static List<Comment> allFindings() {

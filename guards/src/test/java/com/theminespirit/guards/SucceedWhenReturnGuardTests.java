@@ -29,7 +29,7 @@ class SucceedWhenReturnGuardTests {
                         + "же тике, и остальные проверки не выполняются никогда — тест зелёный при любом поведении. "
                         + "Как надо: условие ожидания — helper.assertTrue(готово, \"почему ещё не готово\"), оно бросает и "
                         + "succeedWhen повторит проверку на следующем тике (docs/TESTING.md → «Тест, который может упасть»). "
-                        + "Нарушители (файл:строка)");
+                        + "Нарушители (файл:строка) Иначе тест gameTestSources_SucceedWhenLambdas_HaveNoBareReturn перестанет ловить эту поломку. При смене gameTestSources_SucceedWhenLambdas_HaveNoBareReturn проверь это утверждение.");
     }
 
     @Test
@@ -46,7 +46,7 @@ class SucceedWhenReturnGuardTests {
         assertEquals(
                 List.of(3),
                 bareReturnLines(sample),
-                "Сторож ослеп: голый return внутри лямбды succeedWhen должен находиться");
+                "Сторож ослеп: голый return внутри лямбды succeedWhen должен находиться Иначе тест bareReturnPattern_ReturnInsideSucceedWhenLambda_IsReported перестанет ловить эту поломку. При смене bareReturnPattern_ReturnInsideSucceedWhenLambda_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -65,7 +65,7 @@ class SucceedWhenReturnGuardTests {
         assertEquals(
                 List.of(),
                 bareReturnLines(sample),
-                "Сторож ложно срабатывает: return в onEachTick и лямбда succeedWhen без return — не нарушение");
+                "Сторож ложно срабатывает: return в onEachTick и лямбда succeedWhen без return — не нарушение Иначе тест bareReturnPattern_ReturnOutsideSucceedWhen_IsIgnored перестанет ловить эту поломку. При смене bareReturnPattern_ReturnOutsideSucceedWhen_IsIgnored проверь это утверждение.");
     }
 
     @Test
@@ -85,7 +85,7 @@ class SucceedWhenReturnGuardTests {
                         + "тела метода-цели не видит, тест зелёный при любом поведении. Как надо: распиши условие "
                         + "лямбдой прямо в succeedWhen — helper.assertTrue(готово, \"почему ещё не готово\"), оно бросает и "
                         + "succeedWhen повторит проверку на следующем тике (docs/TESTING.md → «Тест, который может упасть»). "
-                        + "Нарушители (файл:строка)");
+                        + "Нарушители (файл:строка) Иначе тест gameTestSources_SucceedWhenMethodRefs_AreInlineLambdas перестанет ловить эту поломку. При смене gameTestSources_SucceedWhenMethodRefs_AreInlineLambdas проверь это утверждение.");
     }
 
     @Test
@@ -100,7 +100,7 @@ class SucceedWhenReturnGuardTests {
                 methodRefLines(sample),
                 "Сторож ослеп: ссылка на метод в succeedWhen (this::check, Class::check) должна находиться — "
                         + "тело метода-цели сторож не проверяет, голый return внутри него даст ложный успех. "
-                        + "Если ожидание поменяли осознанно, перепроверь, что условие осталось лямбдой с assertTrue");
+                        + "Если ожидание поменяли осознанно, перепроверь, что условие осталось лямбдой с assertTrue Иначе тест methodRef_ThisAndStaticRefsInSucceedWhen_AreReported перестанет ловить эту поломку. При смене methodRef_ThisAndStaticRefsInSucceedWhen_AreReported проверь это утверждение.");
     }
 
     @Test
@@ -113,7 +113,7 @@ class SucceedWhenReturnGuardTests {
         assertEquals(
                 List.of(),
                 methodRefLines(sample),
-                "Сторож ложно срабатывает: ссылка на метод вне succeedWhen — не нарушение, условие там не прячется");
+                "Сторож ложно срабатывает: ссылка на метод вне succeedWhen — не нарушение, условие там не прячется Иначе тест methodRef_OutsideSucceedWhen_IsIgnored перестанет ловить эту поломку. При смене methodRef_OutsideSucceedWhen_IsIgnored проверь это утверждение.");
     }
 
     @Test
@@ -127,13 +127,12 @@ class SucceedWhenReturnGuardTests {
                             helper.assertTrue(done, "готово");
                         });
                         """;
-
         assertEquals(
                 List.of(4),
                 bareReturnLines(sample),
                 "Сторож ослеп: скобка } внутри строкового литерала закрыла тело лямбды раньше времени, "
                         + "и настоящий return после неё не найден — тест с ложным успехом пройдёт мимо сторожа. "
-                        + "Если разбор меняли осознанно, перепроверь его на строке с экранированной кавычкой");
+                        + "Если разбор меняли осознанно, перепроверь его на строке с экранированной кавычкой Иначе тест bracesAndEscapedQuoteInString_RealReturnAfterwards_IsReported перестанет ловить эту поломку. При смене bracesAndEscapedQuoteInString_RealReturnAfterwards_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -148,7 +147,7 @@ class SucceedWhenReturnGuardTests {
                 List.of(),
                 bareReturnLines(sample),
                 "Сторож ложно срабатывает: слово return; внутри строкового литерала — текст сообщения, "
-                        + "а не выход из лямбды");
+                        + "а не выход из лямбды Иначе тест returnWordInStringLiteral_InsideMessage_IsIgnored перестанет ловить эту поломку. При смене returnWordInStringLiteral_InsideMessage_IsIgnored проверь это утверждение.");
     }
 
     @Test
@@ -169,7 +168,7 @@ class SucceedWhenReturnGuardTests {
                 bareReturnLines(sample),
                 "Сторож ослеп: скобка в комментарии закрыла тело лямбды раньше времени, и настоящий return "
                         + "после неё не найден. Если разбор меняли осознанно, перепроверь его на комментариях "
-                        + "со скобками");
+                        + "со скобками Иначе тест bracesInComments_RealReturnAfterwards_IsReported перестанет ловить эту поломку. При смене bracesInComments_RealReturnAfterwards_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -186,7 +185,8 @@ class SucceedWhenReturnGuardTests {
         assertEquals(
                 List.of(),
                 bareReturnLines(sample),
-                "Сторож ложно срабатывает: закомментированный succeedWhen с return — мёртвый код, " + "а не нарушение");
+                "Сторож ложно срабатывает: закомментированный succeedWhen с return — мёртвый код, "
+                        + "а не нарушение Иначе тест commentedOutSucceedWhen_InLineComments_IsIgnored перестанет ловить эту поломку. При смене commentedOutSucceedWhen_InLineComments_IsIgnored проверь это утверждение.");
     }
 
     @Test
@@ -205,7 +205,7 @@ class SucceedWhenReturnGuardTests {
                 List.of(4),
                 bareReturnLines(sample),
                 "Сторож ослеп: скобка в символьном литерале '}' закрыла тело лямбды раньше времени, "
-                        + "и настоящий return после неё не найден");
+                        + "и настоящий return после неё не найден Иначе тест braceInCharLiteral_RealReturnAfterwards_IsReported перестанет ловить эту поломку. При смене braceInCharLiteral_RealReturnAfterwards_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -224,7 +224,7 @@ class SucceedWhenReturnGuardTests {
                 List.of(6),
                 bareReturnLines(sample),
                 "Сторож ослеп: скобка в текстовом блоке закрыла тело лямбды раньше времени, "
-                        + "и настоящий return после неё не найден");
+                        + "и настоящий return после неё не найден Иначе тест braceInTextBlock_RealReturnAfterwards_IsReported перестанет ловить эту поломку. При смене braceInTextBlock_RealReturnAfterwards_IsReported проверь это утверждение.");
     }
 
     private static void collect(Map<Path, String> sources, List<String> offenders) {

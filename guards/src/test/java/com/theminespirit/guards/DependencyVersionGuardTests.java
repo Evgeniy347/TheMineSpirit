@@ -51,13 +51,15 @@ class DependencyVersionGuardTests {
         String settings = read(SETTINGS);
         String buildLogic = read(Path.of("build-logic", "settings.gradle"));
         int management = buildLogic.indexOf("pluginManagement");
-        assertTrue(management >= 0, "build-logic/settings.gradle без pluginManagement: плагины сборки не разрешатся");
+        assertTrue(
+                management >= 0,
+                "build-logic/settings.gradle без pluginManagement: плагины сборки не разрешатся Иначе тест buildLogicSettings_DeclareRepositories_ForCleanOfflineBuild перестанет ловить эту поломку. При смене buildLogicSettings_DeclareRepositories_ForCleanOfflineBuild проверь это утверждение.");
         String managed = blockBody(buildLogic.substring(management), Pattern.compile("pluginManagement\\s*\\{"));
         int resolution = buildLogic.indexOf("dependencyResolutionManagement");
         assertTrue(
                 resolution >= 0,
                 "build-logic/settings.gradle без dependencyResolutionManagement: spotless/moddev/errorprone/"
-                        + "spotbugs не найдут mavenCentral на чистом кэше");
+                        + "spotbugs не найдут mavenCentral на чистом кэше Иначе тест buildLogicSettings_DeclareRepositories_ForCleanOfflineBuild перестанет ловить эту поломку. При смене buildLogicSettings_DeclareRepositories_ForCleanOfflineBuild проверь это утверждение.");
         String declared =
                 blockBody(buildLogic.substring(resolution), Pattern.compile("dependencyResolutionManagement\\s*\\{"));
         for (String where : List.of("pluginManagement build-logic", "dependencyResolutionManagement build-logic")) {
@@ -65,20 +67,22 @@ class DependencyVersionGuardTests {
             assertTrue(
                     body.contains("mavenCentral()") && body.contains("gradlePluginPortal()"),
                     where + " без mavenCentral/gradlePluginPortal: чистая offline-сборка не найдёт "
-                            + "spotless/moddev/errorprone/spotbugs");
+                            + "spotless/moddev/errorprone/spotbugs При смене buildLogicSettings_DeclareRepositories_ForCleanOfflineBuild проверь это утверждение.");
         }
         String rootManagement = settings.substring(Math.max(0, settings.indexOf("pluginManagement")));
         rootManagement = blockBody(rootManagement, Pattern.compile("pluginManagement\\s*\\{"));
         assertTrue(
                 rootManagement.contains("mavenCentral()"),
-                "settings.gradle → pluginManagement без mavenCentral(): плагины корня не разрешатся на чистом кэше");
+                "settings.gradle → pluginManagement без mavenCentral(): плагины корня не разрешатся на чистом кэше Иначе тест buildLogicSettings_DeclareRepositories_ForCleanOfflineBuild перестанет ловить эту поломку. При смене buildLogicSettings_DeclareRepositories_ForCleanOfflineBuild проверь это утверждение.");
         Path warm = Path.of("scripts", "warm-gradle-cache.sh");
-        assertTrue(Files.isRegularFile(warm), "нет scripts/warm-gradle-cache.sh: чистый сервер не прогреет кэш");
+        assertTrue(
+                Files.isRegularFile(warm),
+                "нет scripts/warm-gradle-cache.sh: чистый сервер не прогреет кэш Иначе тест buildLogicSettings_DeclareRepositories_ForCleanOfflineBuild перестанет ловить эту поломку. При смене buildLogicSettings_DeclareRepositories_ForCleanOfflineBuild проверь это утверждение.");
         String warmText = read(warm);
         assertTrue(
                 warmText.contains("assemble") && warmText.contains("--offline"),
                 "scripts/warm-gradle-cache.sh не собирает assemble и не проверяет ту же сборку --offline: "
-                        + "прогрев не доказывает, что publish.sh соберётся без сети");
+                        + "прогрев не доказывает, что publish.sh соберётся без сети Иначе тест buildLogicSettings_DeclareRepositories_ForCleanOfflineBuild перестанет ловить эту поломку. При смене buildLogicSettings_DeclareRepositories_ForCleanOfflineBuild проверь это утверждение.");
     }
 
     @Test
@@ -93,7 +97,7 @@ class DependencyVersionGuardTests {
                         + "повторяет число и расходится с gradle.properties; библиотека без "
                         + "additionalRuntimeClasspath не находится в dev-запуске, без jarJar — на сервере игрока. "
                         + "Версию держи в gradle.properties, библиотеку объявляй в implementation, "
-                        + "additionalRuntimeClasspath и jarJar. Правило: docs/CONVENTIONS.md → «Сборка». Нарушители");
+                        + "additionalRuntimeClasspath и jarJar. Правило: docs/CONVENTIONS.md → «Сборка». Нарушители Иначе тест buildGradle_CurrentDependencies_KeepVersionsInPropertiesAndThreeConfigs перестанет ловить эту поломку. При смене buildGradle_CurrentDependencies_KeepVersionsInPropertiesAndThreeConfigs проверь это утверждение.");
     }
 
     @Test
@@ -104,7 +108,7 @@ class DependencyVersionGuardTests {
                 "Версии плагинов и инструментов сборки живут в gradle.properties: build.gradle объявляет плагин "
                         + "без версии, settings.gradle → pluginManagement подставляет ${…_version}, toolVersion "
                         + "и форматтер берут свойство. Литерал расходится с gradle.properties и обходит выбор "
-                        + "версий пользователем. Правило: docs/CONVENTIONS.md → «Сборка». Нарушители");
+                        + "версий пользователем. Правило: docs/CONVENTIONS.md → «Сборка». Нарушители Иначе тест buildScripts_PluginAndToolVersions_LiveInProperties перестанет ловить эту поломку. При смене buildScripts_PluginAndToolVersions_LiveInProperties проверь это утверждение.");
     }
 
     @Test
@@ -132,7 +136,8 @@ class DependencyVersionGuardTests {
                 4,
                 offenders.size(),
                 "Сторож ослеп: версия плагина в build.gradle, литерал в pluginManagement, несуществующее свойство "
-                        + "и литерал toolVersion — четыре нарушения: " + offenders);
+                        + "и литерал toolVersion — четыре нарушения:  Иначе тест pluginParser_LiteralVersions_AreReported перестанет ловить эту поломку. При смене pluginParser_LiteralVersions_AreReported проверь это утверждение."
+                        + offenders);
     }
 
     @Test
@@ -144,12 +149,11 @@ class DependencyVersionGuardTests {
                            jarJar("com.example:lib:1.2.3")
                        }
                        """;
-
         List<String> offenders = offendersOf(build, "");
-
         assertTrue(
                 offenders.stream().anyMatch(line -> line.contains("литерал версии")),
-                "Сторож ослеп: версия 1.2.3 в build.gradle должна попадать в нарушители: " + offenders);
+                "Сторож ослеп: версия 1.2.3 в build.gradle должна попадать в нарушители:  Иначе тест dependenciesParser_LiteralVersion_IsReported перестанет ловить эту поломку. При смене dependenciesParser_LiteralVersion_IsReported проверь это утверждение."
+                        + offenders);
     }
 
     @Test
@@ -160,16 +164,15 @@ class DependencyVersionGuardTests {
                        }
                        """;
         String properties = "lib_version=1.2.3\n";
-
         List<String> offenders = offendersOf(build, properties);
-
         assertTrue(
                 offenders.stream().anyMatch(line -> line.contains("additionalRuntimeClasspath")),
                 "Сторож ослеп: библиотека без additionalRuntimeClasspath не попадёт в dev-запуск, "
-                        + "но нарушение не найдено: " + offenders);
+                        + "но нарушение не найдено:  Иначе тест dependenciesParser_LibraryWithoutRuntimeAndJarJar_IsReported перестанет ловить эту поломку. При смене dependenciesParser_LibraryWithoutRuntimeAndJarJar_IsReported проверь это утверждение."
+                        + offenders);
         assertTrue(
                 offenders.stream().anyMatch(line -> line.contains("jarJar")),
-                "Сторож ослеп: библиотека без jarJar не попадёт на сервер игрока, но нарушение не найдено: "
+                "Сторож ослеп: библиотека без jarJar не попадёт на сервер игрока, но нарушение не найдено:  Иначе тест dependenciesParser_LibraryWithoutRuntimeAndJarJar_IsReported перестанет ловить эту поломку. При смене dependenciesParser_LibraryWithoutRuntimeAndJarJar_IsReported проверь это утверждение."
                         + offenders);
     }
 
@@ -184,12 +187,11 @@ class DependencyVersionGuardTests {
                        }
                        """;
         String properties = "jackson_version=2.18.2\n";
-
         assertEquals(
                 List.of(),
                 offendersOf(build, properties),
                 "Сторож ложно срабатывает: jackson-core приходит транзитивно и объявлен в jarJar рядом "
-                        + "с прямой библиотекой той же группы — это законное объявление");
+                        + "с прямой библиотекой той же группы — это законное объявление Иначе тест dependenciesParser_TransitiveCompanionInJarJar_IsAccepted перестанет ловить эту поломку. При смене dependenciesParser_TransitiveCompanionInJarJar_IsAccepted проверь это утверждение.");
     }
 
     @Test
@@ -201,12 +203,11 @@ class DependencyVersionGuardTests {
                            jarJar("com.example:lib:${missing_version}")
                        }
                        """;
-
         List<String> offenders = offendersOf(build, "");
-
         assertTrue(
                 offenders.stream().anyMatch(line -> line.contains("missing_version")),
-                "Сторож ослеп: версия из несуществующего свойства gradle.properties должна попадать " + "в нарушители: "
+                "Сторож ослеп: версия из несуществующего свойства gradle.properties должна попадать "
+                        + "в нарушители:  Иначе тест dependenciesParser_UnknownVersionProperty_IsReported перестанет ловить эту поломку. При смене dependenciesParser_UnknownVersionProperty_IsReported проверь это утверждение."
                         + offenders);
     }
 
@@ -223,7 +224,6 @@ class DependencyVersionGuardTests {
         }
         String body = build.substring(blockOpen + 1, blockEnd);
         int baseLine = SourceFiles.lineOf(build, blockOpen);
-
         Map<String, Set<String>> byConfig = new LinkedHashMap<>();
         Matcher matcher = DECLARATION.matcher(body);
         while (matcher.find()) {

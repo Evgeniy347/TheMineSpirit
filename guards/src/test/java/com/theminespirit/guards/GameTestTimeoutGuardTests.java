@@ -35,7 +35,7 @@ class GameTestTimeoutGuardTests {
                         + "перед аннотацией: иначе тайм-аут прячет зависший тест (docs/TESTING.md → "
                         + "«Время тестов»: timeoutTicks ≈ 2× фактических тиков). Сторож видит только литерал "
                         + "или static final int константу; любое другое выражение — нарушение с тем же "
-                        + "сообщением. Нарушители");
+                        + "сообщением. Нарушители При смене gameTestTimeout_Over400_NoJustification проверь это утверждение.");
     }
 
     @Test
@@ -51,7 +51,7 @@ class GameTestTimeoutGuardTests {
         assertEquals(
                 List.of("timeoutTicks=600"),
                 timeoutsOf(sample),
-                "Сторож ослеп: timeoutTicks = 600 без комментария должно попадать в нарушители");
+                "Сторож ослеп: timeoutTicks = 600 без комментария должно попадать в нарушители Иначе тест gameTestTimeoutPattern_Ticks600_NoComment перестанет ловить эту поломку. При смене gameTestTimeoutPattern_Ticks600_NoComment проверь это утверждение.");
     }
 
     @Test
@@ -68,7 +68,7 @@ class GameTestTimeoutGuardTests {
         assertEquals(
                 List.of(),
                 timeoutsOf(sample),
-                "Сторож ложно срабатывает: timeoutTicks = 600 с комментарием-обоснованием — законно");
+                "Сторож ложно срабатывает: timeoutTicks = 600 с комментарием-обоснованием — законно Иначе тест gameTestTimeoutPattern_Ticks600_WithFlakComment перестанет ловить эту поломку. При смене gameTestTimeoutPattern_Ticks600_WithFlakComment проверь это утверждение.");
     }
 
     @Test
@@ -84,7 +84,7 @@ class GameTestTimeoutGuardTests {
         assertEquals(
                 List.of(),
                 timeoutsOf(sample),
-                "Сторож ложно срабатывает: timeoutTicks = 400 — граница, комментарий не нужен");
+                "Сторож ложно срабатывает: timeoutTicks = 400 — граница, комментарий не нужен Иначе тест gameTestTimeoutPattern_Ticks400_NoComment перестанет ловить эту поломку. При смене gameTestTimeoutPattern_Ticks400_NoComment проверь это утверждение.");
     }
 
     @Test
@@ -101,7 +101,7 @@ class GameTestTimeoutGuardTests {
         assertEquals(
                 List.of("timeoutTicks=600"),
                 timeoutsOf(sample),
-                "Сторож ослеп: многострочная @GameTest( с timeoutTicks = 600 без комментария должна попадать в нарушители");
+                "Сторож ослеп: многострочная @GameTest( с timeoutTicks = 600 без комментария должна попадать в нарушители Иначе тест gameTestTimeoutPattern_MultilineAnnotation_IsReported перестанет ловить эту поломку. При смене gameTestTimeoutPattern_MultilineAnnotation_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -118,7 +118,7 @@ class GameTestTimeoutGuardTests {
         assertEquals(
                 List.of(),
                 timeoutsOf(sample),
-                "Сторож ложно срабатывает: timeoutTicks = 600 с меткой [флак] — законно");
+                "Сторож ложно срабатывает: timeoutTicks = 600 с меткой [флак] — законно Иначе тест gameTestTimeoutPattern_Ticks600_WithFlakMarker перестанет ловить эту поломку. При смене gameTestTimeoutPattern_Ticks600_WithFlakMarker проверь это утверждение.");
     }
 
     @Test
@@ -135,7 +135,7 @@ class GameTestTimeoutGuardTests {
                 List.of("timeoutTicks=600"),
                 timeoutsOf(sample),
                 "Сторож ослеп: бюджет шага укрупнённой сцены 600 без [флак] обязан попадать в нарушители — шаг "
-                        + "тот же бывший тест, и его тайм-аут так же прячет зависание");
+                        + "тот же бывший тест, и его тайм-аут так же прячет зависание Иначе тест gameTestTimeoutPattern_SceneStep600_NoComment перестанет ловить эту поломку. При смене gameTestTimeoutPattern_SceneStep600_NoComment проверь это утверждение.");
     }
 
     @Test
@@ -153,7 +153,7 @@ class GameTestTimeoutGuardTests {
                 List.of(),
                 timeoutsOf(sample),
                 "Сторож ложно срабатывает: тайм-аут укрупнённой сцены — сумма бюджетов шагов, его сверяет "
-                        + "SceneSteps при запуске");
+                        + "SceneSteps при запуске Иначе тест gameTestTimeoutPattern_SceneOfSteps_IsClean перестанет ловить эту поломку. При смене gameTestTimeoutPattern_SceneOfSteps_IsClean проверь это утверждение.");
     }
 
     @Test
@@ -166,7 +166,10 @@ class GameTestTimeoutGuardTests {
                         }
                         """;
 
-        assertEquals(List.of(), timeoutsOf(sample), "Сторож ложно срабатывает: литерал 300 ≤ 400 — законен без метки");
+        assertEquals(
+                List.of(),
+                timeoutsOf(sample),
+                "Сторож ложно срабатывает: литерал 300 ≤ 400 — законен без метки Иначе тест gameTestTimeoutPattern_Literal300_IsClean перестанет ловить эту поломку. При смене gameTestTimeoutPattern_Literal300_IsClean проверь это утверждение.");
     }
 
     @Test
@@ -184,7 +187,7 @@ class GameTestTimeoutGuardTests {
                 List.of("timeoutTicks=500 (TIMEOUT_TICKS)"),
                 timeoutsOf(sample),
                 "Сторож ослеп: константа 500 без метки [флак] должна попадать в нарушители — "
-                        + "иначе потолок прячется за именем и уходит от проверки");
+                        + "иначе потолок прячется за именем и уходит от проверки При смене gameTestTimeoutPattern_SameClassConstant500_NoComment проверь это утверждение.");
     }
 
     @Test
@@ -202,7 +205,7 @@ class GameTestTimeoutGuardTests {
         assertEquals(
                 List.of(),
                 timeoutsOf(sample),
-                "Сторож ложно срабатывает: константа 500 с меткой [флак] и обоснованием — законна");
+                "Сторож ложно срабатывает: константа 500 с меткой [флак] и обоснованием — законна Иначе тест gameTestTimeoutPattern_SameClassConstant500_WithFlakComment перестанет ловить эту поломку. При смене gameTestTimeoutPattern_SameClassConstant500_WithFlakComment проверь это утверждение.");
     }
 
     @Test
@@ -217,7 +220,9 @@ class GameTestTimeoutGuardTests {
                         """;
 
         assertEquals(
-                List.of(), timeoutsOf(sample), "Сторож ложно срабатывает: константа 300 ≤ 400 — законна без метки");
+                List.of(),
+                timeoutsOf(sample),
+                "Сторож ложно срабатывает: константа 300 ≤ 400 — законна без метки Иначе тест gameTestTimeoutPattern_SameClassConstant300_IsClean перестанет ловить эту поломку. При смене gameTestTimeoutPattern_SameClassConstant300_IsClean проверь это утверждение.");
     }
 
     @Test
@@ -231,12 +236,11 @@ class GameTestTimeoutGuardTests {
                             }
                         }
                         """;
-
         assertEquals(
                 List.of(),
                 timeoutsOf(sample),
                 "Сторож ложно срабатывает: обоснование стоит у объявления общей константы, "
-                        + "а не у каждого GameTest — иначе 45 сайтов REST дублировали бы один комментарий");
+                        + "а не у каждого GameTest — иначе 45 сайтов REST дублировали бы один комментарий При смене gameTestTimeout_ConstantJustifiedAtDeclaration_IsClean проверь это утверждение.");
     }
 
     @Test
@@ -252,12 +256,11 @@ class GameTestTimeoutGuardTests {
                             static final int TIMEOUT_TICKS = 500;
                         }
                         """;
-
         assertEquals(
                 List.of(),
                 timeoutsOf(sample),
                 "Сторож ложно срабатывает: обоснование у объявления константы по полному имени "
-                        + "закрывает все её использования");
+                        + "закрывает все её использования Иначе тест gameTestTimeout_QualifiedConstantJustifiedAtDeclaration_IsClean перестанет ловить эту поломку. При смене gameTestTimeout_QualifiedConstantJustifiedAtDeclaration_IsClean проверь это утверждение.");
     }
 
     @Test
@@ -269,12 +272,11 @@ class GameTestTimeoutGuardTests {
                             }
                         }
                         """;
-
         assertEquals(
                 List.of("timeoutTicks=LIMIT_TICKS"),
                 timeoutsOf(sample),
                 "Сторож ослеп: timeoutTicks именем, значение которого он не нашёл, — нарушение: "
-                        + "потолок уходит от проверки, сторож видит только литерал или static final int");
+                        + "потолок уходит от проверки, сторож видит только литерал или static final int Иначе тест gameTestTimeoutPattern_UnknownConstant_IsReported перестанет ловить эту поломку. При смене gameTestTimeoutPattern_UnknownConstant_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -286,12 +288,11 @@ class GameTestTimeoutGuardTests {
                             }
                         }
                         """;
-
         assertEquals(
                 List.of("timeoutTicks=400 + 200"),
                 timeoutsOf(sample),
                 "Сторож ослеп: timeoutTicks арифметикой, которую он не считает, — нарушение: "
-                        + "потолок уходит от проверки, сторож видит только литерал или static final int");
+                        + "потолок уходит от проверки, сторож видит только литерал или static final int Иначе тест gameTestTimeoutPattern_ArithmeticExpression_IsReported перестанет ловить эту поломку. При смене gameTestTimeoutPattern_ArithmeticExpression_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -306,11 +307,10 @@ class GameTestTimeoutGuardTests {
                             static final int TIMEOUT_TICKS = 500;
                         }
                         """;
-
         assertEquals(
                 List.of("timeoutTicks=500 (Limits.TIMEOUT_TICKS)"),
                 timeoutsOf(sample),
-                "Сторож ослеп: константа по полному имени без метки [флак] должна попадать в нарушители");
+                "Сторож ослеп: константа по полному имени без метки [флак] должна попадать в нарушители Иначе тест gameTestTimeoutPattern_QualifiedConstant500_IsReported перестанет ловить эту поломку. При смене gameTestTimeoutPattern_QualifiedConstant500_IsReported проверь это утверждение.");
     }
 
     private record Constant(int value, String text, int declarationOffset) {}
