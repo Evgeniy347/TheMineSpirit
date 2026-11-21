@@ -102,6 +102,10 @@ public final class WalkAscent {
         return step == Step.MOVE && !water && !floorBelow;
     }
 
+    public static boolean safeWithoutFloor(boolean sameCell, boolean onGround) {
+        return sameCell && onGround;
+    }
+
     private static boolean arrived(BlockCoord cell, Pose pose) {
         return pose.feet().equals(cell) && horizontal(pose, cell.x() + CENTER, cell.z() + CENTER) < ARRIVAL;
     }
