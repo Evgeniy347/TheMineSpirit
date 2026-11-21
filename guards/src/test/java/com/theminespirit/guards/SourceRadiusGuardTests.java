@@ -23,7 +23,8 @@ class SourceRadiusGuardTests {
                     source != null && source.contains(limiter),
                     path.getFileName() + " снова выбирает дерево/источник без общего ограничителя " + limiter
                             + ": рубка обязана идти в радиусе доски (100), а сбор у поселения — не дальше 32; "
-                            + "подмена одного предела другим даёт «ближайшее дерево 35 при пределе 32» (11.11)");
+                            + "подмена одного предела другим даёт «ближайшее дерево 35 при пределе 32» (11.11)"
+                            + " Иначе тест treeSourcePaths_CommonLimiter_IsUsedByEveryPath перестанет ловить эту поломку. При смене treeSourcePaths_CommonLimiter_IsUsedByEveryPath проверь это утверждение.");
         });
     }
 }

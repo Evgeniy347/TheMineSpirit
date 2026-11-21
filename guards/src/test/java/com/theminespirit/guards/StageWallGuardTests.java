@@ -19,13 +19,16 @@ class StageWallGuardTests {
                 StageSchemes.WALL,
                 StageSchemes.fence(2),
                 "этап 2 поднимает забор до каменной стены: тот же кейс BUILD_FENCE берёт фрагменты стены, а не "
-                        + "деревянного забора. Как надо: StageSchemes.fence(stage) для этапа 2 и выше — набор WALL");
+                        + "деревянного забора. Как надо: StageSchemes.fence(stage) для этапа 2 и выше — набор WALL"
+                        + " Иначе тест fenceStageTwo_LevelMapping_UsesWallAndGateFragments перестанет ловить эту поломку. При смене fenceStageTwo_LevelMapping_UsesWallAndGateFragments проверь это утверждение.");
         assertTrue(
                 StageSchemes.WALL.stream().anyMatch(id -> id.startsWith("wall_3")),
-                "у этапа 2 нет ни одного фрагмента каменной стены wall_3: строить финальную границу нечем");
+                "у этапа 2 нет ни одного фрагмента каменной стены wall_3: строить финальную границу нечем"
+                        + " Иначе тест fenceStageTwo_LevelMapping_UsesWallAndGateFragments перестанет ловить эту поломку. При смене fenceStageTwo_LevelMapping_UsesWallAndGateFragments проверь это утверждение.");
         assertTrue(
                 StageSchemes.WALL.stream().anyMatch(id -> id.startsWith("gate_3")),
-                "у этапа 2 нет фрагмента ворот gate_3: калитка забора не держит проход каменной стены");
+                "у этапа 2 нет фрагмента ворот gate_3: калитка забора не держит проход каменной стены"
+                        + " Иначе тест fenceStageTwo_LevelMapping_UsesWallAndGateFragments перестанет ловить эту поломку. При смене fenceStageTwo_LevelMapping_UsesWallAndGateFragments проверь это утверждение.");
         List<String> missing = StageSchemes.WALL.stream()
                 .filter(id -> PRESETS.byId(id).isEmpty())
                 .toList();
@@ -33,7 +36,8 @@ class StageWallGuardTests {
                 List.of(),
                 missing,
                 "фрагменты стены и ворот названы в StageSchemes, но отсутствуют в presets.json/схемах: "
-                        + "строитель упадёт на первой клетке линии. Нет схем");
+                        + "строитель упадёт на первой клетке линии. Нет схем"
+                        + " Иначе тест fenceStageTwo_LevelMapping_UsesWallAndGateFragments перестанет ловить эту поломку. При смене fenceStageTwo_LevelMapping_UsesWallAndGateFragments проверь это утверждение.");
     }
 
     @Test
@@ -42,6 +46,7 @@ class StageWallGuardTests {
                 "lamp_2",
                 YardScheme.lightScheme(2),
                 "свет этапа 2 — фонари уровня 2 (lamp_2), а не факел на земле: свет должен пережить дождь и "
-                        + "держаться на столбе. Как надо: YardScheme.lightScheme(stage)");
+                        + "держаться на столбе. Как надо: YardScheme.lightScheme(stage)"
+                        + " Иначе тест lightingStageTwo_LevelMapping_UsesSecondLamp перестанет ловить эту поломку. При смене lightingStageTwo_LevelMapping_UsesSecondLamp проверь это утверждение.");
     }
 }

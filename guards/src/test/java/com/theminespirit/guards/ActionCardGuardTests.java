@@ -23,7 +23,11 @@ class ActionCardGuardTests {
     @Test
     void spiritScripts_EveryRegisteredScript_HasBoardCard() {
         Set<String> scripts = registered();
-        assertEquals(List.of(), uncovered(scripts), RULE + " Найдено скриптов: " + scripts.size() + ". Без карточки:");
+        assertEquals(
+                List.of(),
+                uncovered(scripts),
+                RULE + " Найдено скриптов: " + scripts.size() + ". Без карточки:"
+                        + " Иначе тест spiritScripts_EveryRegisteredScript_HasBoardCard перестанет ловить эту поломку. При смене spiritScripts_EveryRegisteredScript_HasBoardCard проверь это утверждение.");
     }
 
     @Test
@@ -31,7 +35,8 @@ class ActionCardGuardTests {
         assertEquals(
                 List.of("new_script"),
                 uncovered(Set.of("new_script")),
-                "Сторож ослеп: новый скрипт без кейса карточки обязан попасть в нарушители");
+                "Сторож ослеп: новый скрипт без кейса карточки обязан попасть в нарушители"
+                        + " Иначе тест uncovered_NewScriptWithoutCard_IsReported перестанет ловить эту поломку. При смене uncovered_NewScriptWithoutCard_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -39,7 +44,8 @@ class ActionCardGuardTests {
         assertEquals(
                 List.of(),
                 uncovered(Set.of("chop_tree")),
-                "Сторож ложно срабатывает: у рубки есть карточка ACTIVITY_CHOP");
+                "Сторож ложно срабатывает: у рубки есть карточка ACTIVITY_CHOP"
+                        + " Иначе тест uncovered_MappedScript_IsAccepted перестанет ловить эту поломку. При смене uncovered_MappedScript_IsAccepted проверь это утверждение.");
     }
 
     private static List<String> uncovered(Set<String> scripts) {

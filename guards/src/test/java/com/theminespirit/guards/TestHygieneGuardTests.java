@@ -46,7 +46,8 @@ class TestHygieneGuardTests {
                 offenders,
                 "Тест помечен @Disabled: он не защищает поведение, о поломке узнают из игры, а не из прогона. "
                         + "Отключённый тест прячет регрессию и гниёт молча. Как надо: починить тест или удалить его — "
-                        + "если поведение больше не нужно. Правило: docs/TESTING.md → «Сторожа». Нарушители");
+                        + "если поведение больше не нужно. Правило: docs/TESTING.md → «Сторожа». Нарушители"
+                        + " Иначе тест testSources_Scanned_HaveNoDisabledTests перестанет ловить эту поломку. При смене testSources_Scanned_HaveNoDisabledTests проверь это утверждение.");
     }
 
     @Test
@@ -65,7 +66,8 @@ class TestHygieneGuardTests {
                 "Тест лезет рефлексией в private (setAccessible(true) или getDeclaredField/Method/Constructor): "
                         + "проверяется не контракт, а внутренняя деталь, которая ломает тест при любом рефакторинге. "
                         + "Как надо: проверяй публичное поведение; если private нельзя проверить иначе — вынеси логику "
-                        + "в тестируемый класс core. Правило: docs/TESTING.md → «Сторожа». Нарушители");
+                        + "в тестируемый класс core. Правило: docs/TESTING.md → «Сторожа». Нарушители"
+                        + " При смене testSources_Scanned_HaveNoReflectionIntoPrivateMembers проверь это утверждение.");
     }
 
     @Test
@@ -78,14 +80,19 @@ class TestHygieneGuardTests {
                 "В тестах изменяемое static-состояние: прогон тестов становится зависимым от порядка, а параллельные "
                         + "тесты затирают данные друг друга. Как надо: поле — локальная переменная, поле экземпляра "
                         + "или @BeforeEach; неизменяемые константы — static final с Map.of/List.of/Set.of. "
-                        + "Единственное исключение — guards.SourceFiles. Правило: docs/TESTING.md → «Сторожа». Нарушители");
+                        + "Единственное исключение — guards.SourceFiles. Правило: docs/TESTING.md → «Сторожа». Нарушители"
+                        + " Иначе тест testSources_Scanned_HaveNoMutableStaticState перестанет ловить эту поломку. При смене testSources_Scanned_HaveNoMutableStaticState проверь это утверждение.");
     }
 
     @Test
     void disabledPattern_AnnotatedTest_IsReported() {
         String sample = "class Sample {\n    @Disabled\n    @Test\n    void x() {\n    }\n}\n";
 
-        assertEquals(List.of(2), disabledLines(sample), "Сторож ослеп: @Disabled на тесте должен находиться");
+        assertEquals(
+                List.of(2),
+                disabledLines(sample),
+                "Сторож ослеп: @Disabled на тесте должен находиться"
+                        + " Иначе тест x перестанет ловить эту поломку. При смене x проверь это утверждение.");
     }
 
     @Test
@@ -99,7 +106,8 @@ class TestHygieneGuardTests {
         assertEquals(
                 3,
                 reflectionCount(sample),
-                "Сторож ослеп: рефлексия к private (setAccessible, getDeclaredField/Method) должна находиться");
+                "Сторож ослеп: рефлексия к private (setAccessible, getDeclaredField/Method) должна находиться"
+                        + " Иначе тест reflectionPattern_AccessingPrivateMember_IsReported перестанет ловить эту поломку. При смене reflectionPattern_AccessingPrivateMember_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -109,7 +117,8 @@ class TestHygieneGuardTests {
         assertEquals(
                 List.of("counter"),
                 staticFieldNames(sample),
-                "Сторож ослеп: неизменяемое static-поле без final должно попадать в нарушители");
+                "Сторож ослеп: неизменяемое static-поле без final должно попадать в нарушители"
+                        + " Иначе тест mutableStaticField_PlainDeclaration_IsReported перестанет ловить эту поломку. При смене mutableStaticField_PlainDeclaration_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -124,7 +133,8 @@ class TestHygieneGuardTests {
         assertEquals(
                 List.of("seen", "order"),
                 staticFieldNames(sample),
-                "Сторож ослеп: static final-коллекция, наполняемая через new HashMap/new ArrayList, изменяема");
+                "Сторож ослеп: static final-коллекция, наполняемая через new HashMap/new ArrayList, изменяема"
+                        + " Иначе тест mutableStaticCollection_ConstructorInitializer_IsReported перестанет ловить эту поломку. При смене mutableStaticCollection_ConstructorInitializer_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -147,7 +157,8 @@ class TestHygieneGuardTests {
                 List.of(),
                 staticFieldNames(sample),
                 "Сторож ложно срабатывает: неизменяемые константы (Map.of/List.of, статический конструктор), "
-                        + "static-метод и static-блок — не изменяемое состояние");
+                        + "static-метод и static-блок — не изменяемое состояние"
+                        + " Иначе тест helper перестанет ловить эту поломку. При смене helper проверь это утверждение.");
     }
 
     @Test
@@ -162,7 +173,8 @@ class TestHygieneGuardTests {
                 List.of("Sample.java:5 изменяемое static-поле real"),
                 offenders,
                 "Образец кода в текстовом блоке — данные теста, а не код: иначе сторож ловит собственные образцы; "
-                        + "вырезанный блок сохраняет переводы строк, иначе номер строки нарушителя съезжает");
+                        + "вырезанный блок сохраняет переводы строк, иначе номер строки нарушителя съезжает"
+                        + " При смене textBlockSample_InsideTestSource_IsNotCode проверь это утверждение.");
     }
 
     @Test
@@ -173,11 +185,13 @@ class TestHygieneGuardTests {
         assertEquals(
                 1,
                 offenders.size(),
-                "Устаревшее исключение обязано валить сторож, иначе список исключений гниёт и скрывает новые нарушения");
+                "Устаревшее исключение обязано валить сторож, иначе список исключений гниёт и скрывает новые нарушения"
+                        + " При смене run проверь это утверждение.");
         assertEquals(
                 true,
                 offenders.get(0).contains("устаревшее исключение"),
-                "Отчёт об устаревшем исключении должен называть его прямо, а получили: " + offenders);
+                "Отчёт об устаревшем исключении должен называть его прямо, а получили: " + offenders
+                        + " Иначе тест run перестанет ловить эту поломку. При смене run проверь это утверждение.");
     }
 
     private static Map<Path, String> testSources() {

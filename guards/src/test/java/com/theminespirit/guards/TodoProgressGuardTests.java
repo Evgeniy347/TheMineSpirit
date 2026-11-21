@@ -32,7 +32,8 @@ class TodoProgressGuardTests {
                         + "M обязано равняться N + число строк `- [ ]`, P = ⌊100·N/M⌋. Цена: счётчик и план "
                         + "расходятся, никто не знает реального прогресса. Как надо: поправить числа или удалить "
                         + "выполненные пункты. Правило: счётчик прогресса держит TodoProgressGuardTests. "
-                        + "Нарушения");
+                        + "Нарушения"
+                        + " При смене todo_ProgressLine_MatchesOpenAndDoneCounts проверь это утверждение.");
     }
 
     @Test
@@ -44,7 +45,8 @@ class TodoProgressGuardTests {
                 checked,
                 "В todo.md осталась строка `- [x]`: выполненный пункт должен быть удалён из плана, а не помечен. "
                         + "Цена: план пухнет закрытыми пунктами, счётчик врёт. Как надо: удалить строку, "
-                        + "счётчик «сделано» увеличить. Правило: todo.md — только открытые задачи. Нарушители");
+                        + "счётчик «сделано» увеличить. Правило: todo.md — только открытые задачи. Нарушители"
+                        + " При смене todo_CheckedItems_AreAbsent проверь это утверждение.");
     }
 
     @Test
@@ -52,7 +54,8 @@ class TodoProgressGuardTests {
         assertEquals(
                 List.of(),
                 progressProblems(List.of("Прогресс: сделано 3 из 5 (60 %).", "- [ ] a", "- [ ] b")),
-                "Сторож ложно срабатывает: 3 + 2 = 5, ⌊100·3/5⌋ = 60 — согласовано");
+                "Сторож ложно срабатывает: 3 + 2 = 5, ⌊100·3/5⌋ = 60 — согласовано"
+                        + " Иначе тест progressProblems_ConsistentLine_ReportsNothing перестанет ловить эту поломку. При смене progressProblems_ConsistentLine_ReportsNothing проверь это утверждение.");
     }
 
     @Test
@@ -60,7 +63,8 @@ class TodoProgressGuardTests {
         assertEquals(
                 List.of("Прогресс: сделано 3 из 9 (60 %)."),
                 progressProblems(List.of("Прогресс: сделано 3 из 9 (60 %).", "- [ ] a", "- [ ] b")),
-                "Сторож ослеп: итог M, не равный N + число открытых, обязан попасть в нарушения");
+                "Сторож ослеп: итог M, не равный N + число открытых, обязан попасть в нарушения"
+                        + " Иначе тест progressProblems_WrongTotal_IsReported перестанет ловить эту поломку. При смене progressProblems_WrongTotal_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -68,7 +72,8 @@ class TodoProgressGuardTests {
         assertEquals(
                 List.of("Прогресс: сделано 3 из 5 (59 %)."),
                 progressProblems(List.of("Прогресс: сделано 3 из 5 (59 %).", "- [ ] a", "- [ ] b")),
-                "Сторож ослеп: процент P, не равный ⌊100·N/M⌋, обязан попасть в нарушения");
+                "Сторож ослеп: процент P, не равный ⌊100·N/M⌋, обязан попасть в нарушения"
+                        + " Иначе тест progressProblems_WrongPercent_IsReported перестанет ловить эту поломку. При смене progressProblems_WrongPercent_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -78,7 +83,8 @@ class TodoProgressGuardTests {
         assertEquals(
                 List.of("Прогресс: сделано 3 из 5 (60 %)."),
                 violations,
-                "Сторож ослеп: помеченный пункт не считается открытым, и согласованность обязана упасть");
+                "Сторож ослеп: помеченный пункт не считается открытым, и согласованность обязана упасть"
+                        + " Иначе тест progressProblems_CheckedLine_IsReportedAsMissingOpenItem перестанет ловить эту поломку. При смене progressProblems_CheckedLine_IsReportedAsMissingOpenItem проверь это утверждение.");
     }
 
     @Test
@@ -86,7 +92,8 @@ class TodoProgressGuardTests {
         assertEquals(
                 List.of("- [x] готово"),
                 checkedItems(List.of("- [ ] ждёт", "- [x] готово")),
-                "Сторож ослеп: строка `- [x]` обязана находиться");
+                "Сторож ослеп: строка `- [x]` обязана находиться"
+                        + " Иначе тест checkedItems_CheckedBox_IsFound перестанет ловить эту поломку. При смене checkedItems_CheckedBox_IsFound проверь это утверждение.");
     }
 
     @Test
@@ -94,13 +101,15 @@ class TodoProgressGuardTests {
         assertEquals(
                 List.of(),
                 checkedItems(List.of("- [ ] ждёт", "  - [ ] вложенный")),
-                "Сторож ложно срабатывает: открытые пункты, в том числе вложенные, — не нарушение");
+                "Сторож ложно срабатывает: открытые пункты, в том числе вложенные, — не нарушение"
+                        + " Иначе тест checkedItems_OpenBox_IsAccepted перестанет ловить эту поломку. При смене checkedItems_OpenBox_IsAccepted проверь это утверждение.");
     }
 
     private static List<String> readTodo() {
         assertTrue(
                 Files.isRegularFile(TODO),
-                "Сторож не нашёл " + TODO + ": тесты запускаются из корня проекта (./gradlew test)");
+                "Сторож не нашёл " + TODO + ": тесты запускаются из корня проекта (./gradlew test)"
+                        + " Иначе тест checkedItems_OpenBox_IsAccepted перестанет ловить эту поломку. При смене checkedItems_OpenBox_IsAccepted проверь это утверждение.");
         try {
             return Files.readAllLines(TODO, StandardCharsets.UTF_8);
         } catch (IOException e) {

@@ -36,7 +36,8 @@ class OrderNotNumberGuardTests {
                         + "данных ломает десятки тестов, а число в допуске при неверном порядке даёт зелёный. Как "
                         + "надо: проверь порядок в ситуации теста — «A выбирается раньше B», «задача поднята» "
                         + "(GraphPlan.Task.raised()), «после события X A обгоняет B». Красный тест порядка — разбор "
-                        + "адекватности решения: веса под тест не подгонять. Нарушители (строка и выражение)");
+                        + "адекватности решения: веса под тест не подгонять. Нарушители (строка и выражение)"
+                        + " При смене testSources_PriorityComparedWithNumber_AreAbsent проверь это утверждение.");
     }
 
     @Test
@@ -49,7 +50,8 @@ class OrderNotNumberGuardTests {
                 List.of("1 priority() >= 85", "3 0.5 < half.weight()", "2 assert" + "Equals(100, defend.priority()"),
                 numericChecks(sample),
                 "Сторож ослеп: сравнение priority()/weight() с числом с любой стороны и assert" + "Equals(число, "
-                        + "…priority()) — нарушения: " + numericChecks(sample));
+                        + "…priority()) — нарушения: " + numericChecks(sample)
+                        + " Иначе тест parser_PriorityAgainstLiteral_IsReported перестанет ловить эту поломку. При смене parser_PriorityAgainstLiteral_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -61,7 +63,8 @@ class OrderNotNumberGuardTests {
         assertEquals(
                 List.of(),
                 numericChecks(sample),
-                "Сторож ложно срабатывает: сравнение задач между собой, raised() и числа внутри строк — не нарушение");
+                "Сторож ложно срабатывает: сравнение задач между собой, raised() и числа внутри строк — не нарушение"
+                        + " Иначе тест parser_TasksComparedWithEachOther_AreAccepted перестанет ловить эту поломку. При смене parser_TasksComparedWithEachOther_AreAccepted проверь это утверждение.");
     }
 
     private static List<String> numericChecks(String text) {

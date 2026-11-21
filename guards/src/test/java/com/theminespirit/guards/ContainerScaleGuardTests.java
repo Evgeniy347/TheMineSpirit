@@ -25,7 +25,8 @@ class ContainerScaleGuardTests {
                 offenders,
                 "Адаптер инвентаря сканирует сущности мира (getEntities): поиск контейнера идёт по срезам блоков "
                         + "порциями, а перенос — по слотам, обход сущностей в серверном тике на каждого духа "
-                        + "нагружает сервер зря. Сущности подбирает только DropCollector. Нарушители");
+                        + "нагружает сервер зря. Сущности подбирает только DropCollector. Нарушители"
+                        + " Иначе тест inventoryAdapter_NoEntityScans_KeepsTickBudget перестанет ловить эту поломку. При смене inventoryAdapter_NoEntityScans_KeepsTickBudget проверь это утверждение.");
     }
 
     @Test
@@ -35,7 +36,8 @@ class ContainerScaleGuardTests {
         assertEquals(
                 List.of("sample"),
                 scanned(List.of(Map.entry(Path.of("sample"), sample))),
-                "Сторож ослеп: вызов getEntities в адаптере инвентаря обязан находиться");
+                "Сторож ослеп: вызов getEntities в адаптере инвентаря обязан находиться"
+                        + " Иначе тест entityScanPattern_CallInAdapter_IsReported перестанет ловить эту поломку. При смене entityScanPattern_CallInAdapter_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -45,7 +47,8 @@ class ContainerScaleGuardTests {
         assertEquals(
                 List.of(),
                 scanned(List.of(Map.entry(Path.of("sample"), sample))),
-                "Сторож ложно срабатывает: поиск по срезам блоков — не скан сущностей");
+                "Сторож ложно срабатывает: поиск по срезам блоков — не скан сущностей"
+                        + " Иначе тест entityScanPattern_CleanAdapter_IsAccepted перестанет ловить эту поломку. При смене entityScanPattern_CleanAdapter_IsAccepted проверь это утверждение.");
     }
 
     private static List<String> scanned(List<Map.Entry<Path, String>> sources) {

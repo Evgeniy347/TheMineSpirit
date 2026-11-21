@@ -29,7 +29,8 @@ class QualifiedNameGuardTests {
                         + "com.mojang.brigadier.CommandDispatcher<...>) прячет зависимости файла: по импортам больше "
                         + "не видно, с чем он работает, а строки разрастаются. Импортируй тип. Если два типа с "
                         + "одинаковым именем нужны в одном файле — переименуй свой тип (как BlockPos → BlockCoord) "
-                        + "или вынеси работу с чужим типом в отдельный класс. Нарушители (файл:строка тип)");
+                        + "или вынеси работу с чужим типом в отдельный класс. Нарушители (файл:строка тип)"
+                        + " Иначе тест sources_Scanned_UseImportsInsteadOfQualifiedNames перестанет ловить эту поломку. При смене sources_Scanned_UseImportsInsteadOfQualifiedNames проверь это утверждение.");
     }
 
     @Test
@@ -39,7 +40,8 @@ class QualifiedNameGuardTests {
         assertEquals(
                 List.of("1 net.minecraft.world.entity.EntityType"),
                 qualifiedNames(sample),
-                "Сторож ослеп: полное имя типа в строке кода должно находиться");
+                "Сторож ослеп: полное имя типа в строке кода должно находиться"
+                        + " Иначе тест qualifiedNamePattern_TypeUsedInCode_IsReported перестанет ловить эту поломку. При смене qualifiedNamePattern_TypeUsedInCode_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -53,7 +55,8 @@ class QualifiedNameGuardTests {
         assertEquals(
                 List.of(),
                 qualifiedNames(sample),
-                "Сторож ложно срабатывает: импорт, строковый литерал и комментарий — не использование в коде");
+                "Сторож ложно срабатывает: импорт, строковый литерал и комментарий — не использование в коде"
+                        + " Иначе тест qualifiedNamePattern_ImportStringAndComment_AreIgnored перестанет ловить эту поломку. При смене qualifiedNamePattern_ImportStringAndComment_AreIgnored проверь это утверждение.");
     }
 
     private static void collect(Map<Path, String> sources, List<String> offenders) {

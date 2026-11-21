@@ -27,7 +27,8 @@ class TacticsModuleGuardTests {
         assertTrue(
                 Files.isDirectory(MAIN.resolve(PACKAGE).resolve("core/tactics")),
                 "Тактика не собрана отдельным модулем: tactics/src/main/java/com/theminespirit/core/tactics "
-                        + "отсутствует. Как надо: исходники тактики физически в :tactics, пакет прежний.");
+                        + "отсутствует. Как надо: исходники тактики физически в :tactics, пакет прежний."
+                        + " Иначе тест tacticsSources_LiveInTacticsModule_NotInRoot перестанет ловить эту поломку. При смене tacticsSources_LiveInTacticsModule_NotInRoot проверь это утверждение.");
         List<String> misplaced = new ArrayList<>();
         for (String logical : List.of(
                 "core/tactics/Orders.java",
@@ -56,7 +57,8 @@ class TacticsModuleGuardTests {
                 List.of(),
                 misplaced,
                 "Классы тактики обязаны лежать в :tactics (кроме контрактов :api): иначе правка тактики снова "
-                        + "гоняет все тесты корня, а модуль не собирается сам. Нарушители:");
+                        + "гоняет все тесты корня, а модуль не собирается сам. Нарушители:"
+                        + " При смене tacticsSources_LiveInTacticsModule_NotInRoot проверь это утверждение.");
     }
 
     @Test
@@ -64,11 +66,13 @@ class TacticsModuleGuardTests {
         assertTrue(
                 Files.isDirectory(TEST.resolve(PACKAGE).resolve("core/tactics")),
                 "У :tactics нет своих тестов (tactics/src/test/java): перенос тестов молча отключил проверки "
-                        + "тактики.");
+                        + "тактики."
+                        + " Иначе тест tacticsTests_LiveInTacticsModule_LocalTestsExist перестанет ловить эту поломку. При смене tacticsTests_LiveInTacticsModule_LocalTestsExist проверь это утверждение.");
         assertTrue(
                 Files.isRegularFile(TEST.resolve(PACKAGE).resolve("core/tactics/TacticsEngineTests.java")),
                 "Тест TacticsEngineTests обязан переехать в :tactics: иначе ./gradlew :tactics:test проверяет не "
-                        + "тактику.");
+                        + "тактику."
+                        + " При смене tacticsTests_LiveInTacticsModule_LocalTestsExist проверь это утверждение.");
         List<String> misplaced = new ArrayList<>();
         SourceFiles.allTests().forEach((file, text) -> {
             String logical = SourceFiles.logical(file);
@@ -84,7 +88,8 @@ class TacticsModuleGuardTests {
                 List.of(),
                 misplaced,
                 "Тесты тактики обязаны лежать в :tactics: иначе :tactics:test не проверяет модуль, а корень "
-                        + "гоняет чужие тесты на каждую правку. Нарушители:");
+                        + "гоняет чужие тесты на каждую правку. Нарушители:"
+                        + " При смене tacticsTests_LiveInTacticsModule_LocalTestsExist проверь это утверждение.");
     }
 
     @Test
@@ -93,7 +98,8 @@ class TacticsModuleGuardTests {
                 Files.isRegularFile(TEST.resolve(PACKAGE).resolve("core/tactics/TacticsRuleCoverageGuardTests.java")),
                 "Сторож покрытия правил обязан оставаться в :tactics: он читает scenarios.json модуля и движок "
                         + "тактики, которых нет в корне. Правило: сторож с данными модуля живёт в module/src/test, "
-                        + "остальные — в guards/. Иначе его перенос в корень требует :test-fixtures → :tactics.");
+                        + "остальные — в guards/. Иначе его перенос в корень требует :test-fixtures → :tactics."
+                        + " При смене tacticsRuleCoverageGuard_StaysInModule_BecauseItReadsModuleScenarios проверь это утверждение.");
     }
 
     @Test
@@ -106,7 +112,8 @@ class TacticsModuleGuardTests {
                 violations(SourceFiles.javaUnder(MAIN.resolve(PACKAGE)), apiClasses, visible),
                 "Тактика зависит только от :api, :policy, :mech:inventory, :mech:small, объявленных в "
                         + "build.gradle: импорт корня (reload/script) возвращает цикл и запрещает отдельную сборку "
-                        + ":tactics. Как надо: контракт — в :api, данные подставляет корень. Нарушители:");
+                        + ":tactics. Как надо: контракт — в :api, данные подставляет корень. Нарушители:"
+                        + " Иначе тест tacticsModule_Imports_OnlyApiAndDeclaredModules перестанет ловить эту поломку. При смене tacticsModule_Imports_OnlyApiAndDeclaredModules проверь это утверждение.");
     }
 
     @Test
@@ -119,6 +126,7 @@ class TacticsModuleGuardTests {
                 List.of(),
                 violations(SourceFiles.javaUnder(TEST.resolve(PACKAGE)), apiClasses, visible),
                 "Тест тактики компилируется только с :api, своими и объявленными модулями: импорт корня в тесте "
-                        + "скрывает, что :tactics без корня не собрать. Нарушители:");
+                        + "скрывает, что :tactics без корня не собрать. Нарушители:"
+                        + " Иначе тест tacticsTests_Imports_OnlyApiAndDeclaredModules перестанет ловить эту поломку. При смене tacticsTests_Imports_OnlyApiAndDeclaredModules проверь это утверждение.");
     }
 }

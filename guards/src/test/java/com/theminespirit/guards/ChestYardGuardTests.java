@@ -14,7 +14,11 @@ class ChestYardGuardTests {
 
     @Test
     void sources_ChestRulesHold_NoViolations() {
-        assertEquals(List.of(), violations(SourceFiles.allMain()), "Правило сундуков двора нарушено");
+        assertEquals(
+                List.of(),
+                violations(SourceFiles.allMain()),
+                "Правило сундуков двора нарушено"
+                        + " Иначе тест sources_ChestRulesHold_NoViolations перестанет ловить эту поломку. При смене sources_ChestRulesHold_NoViolations проверь это утверждение.");
     }
 
     @Test
@@ -25,7 +29,8 @@ class ChestYardGuardTests {
         assertEquals(
                 List.of("GraphTargets.java: сундук снова станция вместо верстака"),
                 violations(Map.of(TARGETS, bad)),
-                "Сторож ослеп: сундук как станция растит кучку сундуков");
+                "Сторож ослеп: сундук как станция растит кучку сундуков"
+                        + " Иначе тест patternSource_ChestAsStation_IsReported перестанет ловить эту поломку. При смене patternSource_ChestAsStation_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -35,7 +40,8 @@ class ChestYardGuardTests {
         assertEquals(
                 List.of("GraphTargets.java: станция ищется выше одного блока от земли"),
                 violations(Map.of(TARGETS, bad)),
-                "Сторож ослеп: станция над бугром снова поднимает базовую точку");
+                "Сторож ослеп: станция над бугром снова поднимает базовую точку"
+                        + " Иначе тест patternSource_StationHeightAboveGround_IsReported перестанет ловить эту поломку. При смене patternSource_StationHeightAboveGround_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -46,7 +52,8 @@ class ChestYardGuardTests {
         assertEquals(
                 List.of(),
                 violations(Map.of(Path.of("com/theminespirit/neoforge/board/ChestDemolition.java"), good)),
-                "Сторож ложно срабатывает: storeCells в других файлах — законно");
+                "Сторож ложно срабатывает: storeCells в других файлах — законно"
+                        + " Иначе тест patternSource_StoreCellsInOtherFiles_IsAccepted перестанет ловить эту поломку. При смене patternSource_StoreCellsInOtherFiles_IsAccepted проверь это утверждение.");
     }
 
     @Test
@@ -56,7 +63,8 @@ class ChestYardGuardTests {
         assertTrue(
                 source != null && source.contains("YardScheme.slots") && source.contains("YardScheme.overflowSlots"),
                 "WarehouseLocations.yardCells обязан брать клетки ряда двора из схемы двора (YardScheme.slots "
-                        + "+ overflowSlots), а не из сканирования рельефа: ряд один и задан планом");
+                        + "+ overflowSlots), а не из сканирования рельефа: ряд один и задан планом"
+                        + " Иначе тест warehouseYardCells_TakeFromYardScheme_IsRequired перестанет ловить эту поломку. При смене warehouseYardCells_TakeFromYardScheme_IsRequired проверь это утверждение.");
     }
 
     private static String byName(Map<Path, String> sources, String fileName) {

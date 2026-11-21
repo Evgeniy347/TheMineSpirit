@@ -36,7 +36,8 @@ class ScenarioSuiteGuardTests {
                 List.of("mech/building/com/theminespirit/core/building/NewTests.java"),
                 unjustified(files, Set.of("mech/building/com/theminespirit/core/building/OldTests.java")),
                 "Сторож ослеп: новый тестовый файл рядом с сюитой обязан попадать в нарушители, а baseline, "
-                        + "сюита (*ScenarioTests), сторож (*GuardTests) и helper — нет");
+                        + "сюита (*ScenarioTests), сторож (*GuardTests) и helper — нет"
+                        + " Иначе тест mechanicsWithScenario_NewTestFileWithoutJustification_IsReported перестанет ловить эту поломку. При смене mechanicsWithScenario_NewTestFileWithoutJustification_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -48,7 +49,8 @@ class ScenarioSuiteGuardTests {
         assertEquals(
                 List.of(),
                 unjustified(files, Set.of("mech/mining/com/theminespirit/core/mining/MinePlanTests.java")),
-                "Сторож ложно срабатывает: старый файл из baseline и сама сюита — не нарушение");
+                "Сторож ложно срабатывает: старый файл из baseline и сама сюита — не нарушение"
+                        + " Иначе тест mechanicsWithScenario_ExistingFilesFromBaseline_AreAccepted перестанет ловить эту поломку. При смене mechanicsWithScenario_ExistingFilesFromBaseline_AreAccepted проверь это утверждение.");
     }
 
     @Test
@@ -85,7 +87,8 @@ class ScenarioSuiteGuardTests {
                         + "обоснованием. Сначала укрупни сюиту (добавь духа, клетку, шаг, проверку), чтобы она "
                         + "краснела на баге (docs/TESTING.md → «Крупные сценарии»). Если без отдельного файла "
                         + "нельзя — допиши путь в guards/src/test/resources/scenario-baseline.txt с причиной. "
-                        + "Нарушители");
+                        + "Нарушители"
+                        + " При смене mechanicsWithScenario_NewTestFile_NeedsJustificationOrSuite проверь это утверждение.");
     }
 
     static List<String> unjustified(Map<String, String> files, Set<String> baseline) {

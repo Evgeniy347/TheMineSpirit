@@ -36,14 +36,16 @@ class SceneCountGuardTests {
                 "Сцена GameTest — это класс механики *ScenesGameTests с 1–" + MAX_SCENES_PER_MECHANIC
                         + " аренами: каждая лишняя арена — своя пачка и ~0,4 с прогона, а прогон ограничен 200 с. "
                         + "Новую проверку оформи шагом @SceneStep в классе механики (арена соберёт её сама) или "
-                        + "unit-тестом, если ей не нужен мир. Нарушители");
+                        + "unit-тестом, если ей не нужен мир. Нарушители"
+                        + " При смене scenes_PerMechanicAndTotal_DoNotGrow проверь это утверждение.");
         assertTrue(
                 total <= MAX_SCENES_TOTAL,
                 "Сцен общего прогона (шагов @SceneStep и отдельных @GameTest вне арен) " + total
                         + " больше потолка " + MAX_SCENES_TOTAL + ": GameTest — только крупные интеграционные прогоны "
                         + "(решение владельца 28.10), мелкая проверка стоит секунды прогона и ловит то, что ловит "
                         + "JUnit в core. Как надо: проверку без мира — JUnit в core, новую сцену — вместо старой; "
-                        + "потолок снижать, когда сцен стало меньше, а не поднимать");
+                        + "потолок снижать, когда сцен стало меньше, а не поднимать"
+                        + " Иначе тест scenes_PerMechanicAndTotal_DoNotGrow перестанет ловить эту поломку. При смене scenes_PerMechanicAndTotal_DoNotGrow проверь это утверждение.");
     }
 
     @Test
@@ -60,7 +62,8 @@ class SceneCountGuardTests {
         assertEquals(
                 List.of("FarmScenesGameTests: сцен 4 > " + MAX_SCENES_PER_MECHANIC),
                 offenders(Map.of("FarmScenesGameTests", count(GAME_TEST, sample))),
-                "Сторож ослеп: 4 арены в классе механики обязаны попадать в нарушители");
+                "Сторож ослеп: 4 арены в классе механики обязаны попадать в нарушители"
+                        + " Иначе тест d перестанет ловить эту поломку. При смене d проверь это утверждение.");
     }
 
     @Test
@@ -77,7 +80,8 @@ class SceneCountGuardTests {
                 List.of("FarmGameTests: сцен 1 вне класса *ScenesGameTests"),
                 offenders(Map.of("FarmGameTests", count(GAME_TEST, sample))),
                 "Сторож ослеп: @GameTest вне класса сцен механики обязан попадать в нарушители, а @GameTestHolder и "
-                        + "@SceneStep — нет");
+                        + "@SceneStep — нет"
+                        + " Иначе тест b перестанет ловить эту поломку. При смене b проверь это утверждение.");
     }
 
     @Test
@@ -113,7 +117,8 @@ class SceneCountGuardTests {
                 3,
                 total(sources),
                 "Сторож числа сцен ослеп или ложно считает: шаги @SceneStep и @GameTest вне арен — сцены, "
-                        + "обёртка-арена *ScenesGameTests и ручные демо-аудиты — нет");
+                        + "обёртка-арена *ScenesGameTests и ручные демо-аудиты — нет"
+                        + " Иначе тест audit перестанет ловить эту поломку. При смене audit проверь это утверждение.");
     }
 
     private static Map<String, Integer> countsOf(Map<Path, String> sources) {

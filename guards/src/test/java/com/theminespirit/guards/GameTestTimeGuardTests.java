@@ -26,7 +26,8 @@ class GameTestTimeGuardTests {
                         + "ставит нужное и возвращает его и при успехе, и при провале сцены. Прямой setDayTime в теле "
                         + "сцены при тайм-ауте не выполняется — ночь паука spider_NextToSpiritAtNight утекала "
                         + "в следующие сцены и ломала дневные тесты. Время/погоду держит хелпер, сцена только просит. "
-                        + "Правило: todo.md → «Изоляция сцен GameTest». Нарушители");
+                        + "Правило: todo.md → «Изоляция сцен GameTest». Нарушители"
+                        + " При смене dayTimeChange_OutsideHelper_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -42,7 +43,8 @@ class GameTestTimeGuardTests {
         assertEquals(
                 List.of("MobTargetsGameTests.java:3"),
                 offendersIn(sources),
-                "Сторож ослеп: прямой setDayTime вне хелпера должен попадать в нарушители");
+                "Сторож ослеп: прямой setDayTime вне хелпера должен попадать в нарушители"
+                        + " Иначе тест spider_NextToSpiritAtNight_TakesTarget перестанет ловить эту поломку. При смене spider_NextToSpiritAtNight_TakesTarget проверь это утверждение.");
     }
 
     @Test
@@ -58,7 +60,8 @@ class GameTestTimeGuardTests {
         assertEquals(
                 List.of(),
                 offendersIn(sources),
-                "Сторож ложно срабатывает: holdDayTime из сцены — законный способ держать ночь");
+                "Сторож ложно срабатывает: holdDayTime из сцены — законный способ держать ночь"
+                        + " Иначе тест spider_NextToSpiritAtNight_TakesTarget перестанет ловить эту поломку. При смене spider_NextToSpiritAtNight_TakesTarget проверь это утверждение.");
     }
 
     @Test
@@ -74,7 +77,8 @@ class GameTestTimeGuardTests {
         assertEquals(
                 List.of(),
                 offendersIn(sources),
-                "Сторож ложно срабатывает: сам хелпер менять время обязан — запрет только для сцен");
+                "Сторож ложно срабатывает: сам хелпер менять время обязан — запрет только для сцен"
+                        + " Иначе тест holdDayTime перестанет ловить эту поломку. При смене holdDayTime проверь это утверждение.");
     }
 
     private static void collectOffenders(Map<Path, String> sources, List<String> offenders) {

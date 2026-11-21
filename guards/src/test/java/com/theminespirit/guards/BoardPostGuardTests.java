@@ -69,7 +69,8 @@ class BoardPostGuardTests {
                         + "поэтому вес и приоритет не участвуют. Цена: дух получает работу, которую граф не "
                         + "выбирал, и следующий пересчёт спорит с ней. Как надо: источник отдаёт факт во вход "
                         + "графа, а билет ставит GraphPost; исполнитель билета получает GraphPost и зовёт его "
-                        + "submit. Нарушители");
+                        + "submit. Нарушители"
+                        + " При смене board_PostsOnlyThroughGraphPost_ExceptDocumentedExecutors проверь это утверждение.");
     }
 
     @Test
@@ -87,7 +88,8 @@ class BoardPostGuardTests {
                 found,
                 "Интеллект снова выбирает работу мимо графа: занятие идёт на доску без веса и узла, "
                         + "а следующий пересчёт спорит с ним. Как надо: интеллект отдаёт факты (idle/hungry/"
-                        + "угрозы/отдых) во вход графа, работу выбирает GraphPlanner. Нарушители");
+                        + "угрозы/отдых) во вход графа, работу выбирает GraphPlanner. Нарушители"
+                        + " Иначе тест intellect_OffersNoWork_OnlyFactsOfTheWorld перестанет ловить эту поломку. При смене intellect_OffersNoWork_OnlyFactsOfTheWorld проверь это утверждение.");
     }
 
     @Test
@@ -98,11 +100,13 @@ class BoardPostGuardTests {
         assertTrue(
                 factory.contains("request.priority()") && !factory.contains("Math.min(100"),
                 "Постановка не зажимает приоритет молча: потолок [0, 100] держит граф, а не доска. Иначе "
-                        + "ошибка графа прячется в GraphTicketFactory, а reprioritize получает не то же число");
+                        + "ошибка графа прячется в GraphTicketFactory, а reprioritize получает не то же число"
+                        + " При смене graphPostTicket_PriorityComesFromGraphInvariant_NotFromPostClamp проверь это утверждение.");
         assertTrue(
                 plan.contains("priority > BoardTuning.MAX_PRIORITY"),
                 "Задание графа обязано отклонять приоритет вне [0, 100]: одно правило для постановки и "
-                        + "reprioritize, без clamp в источнике");
+                        + "reprioritize, без clamp в источнике"
+                        + " Иначе тест graphPostTicket_PriorityComesFromGraphInvariant_NotFromPostClamp перестанет ловить эту поломку. При смене graphPostTicket_PriorityComesFromGraphInvariant_NotFromPostClamp проверь это утверждение.");
     }
 
     @Test
@@ -132,7 +136,8 @@ class BoardPostGuardTests {
                 "Задачи и приказы обороны стартуют мимо графа: контроллер/координатор сам выбирает работу или "
                         + "накладывает приказ поверх билета. Цена: вес и этап не участвуют, граф спорит с самим "
                         + "собой. Как надо: факт — во вход графа, билет ставит GraphPost, исполнитель работает по "
-                        + "билету. Нарушители");
+                        + "билету. Нарушители"
+                        + " При смене tasksAndDefenseOrders_OutsideGraph_StartNothing проверь это утверждение.");
     }
 
     @Test
@@ -143,10 +148,12 @@ class BoardPostGuardTests {
 
         assertTrue(
                 post.contains("DEMOLITION.contains(ticket.node())") && post.contains("PlanDemolition.tick("),
-                "Снос обязан исполняться по узлу графа demolish_stray/clear_floating через GraphPost");
+                "Снос обязан исполняться по узлу графа demolish_stray/clear_floating через GraphPost"
+                        + " Иначе тест demolition_IsExecutedByGraphNode_NotByScheduler перестанет ловить эту поломку. При смене demolition_IsExecutedByGraphNode_NotByScheduler проверь это утверждение.");
         assertFalse(
                 lifecycle.contains("PlanDemolition.tick("),
-                "Снос не выбирается расписанием: уборку запускает событие графа, иначе вес и этап не участвуют");
+                "Снос не выбирается расписанием: уборку запускает событие графа, иначе вес и этап не участвуют"
+                        + " При смене demolition_IsExecutedByGraphNode_NotByScheduler проверь это утверждение.");
     }
 
     @Test
@@ -156,17 +163,50 @@ class BoardPostGuardTests {
                 .keySet()
                 .forEach(path -> names.add(path.getFileName().toString()));
 
-        assertFalse(names.contains("RescueWatch.java"), "Спасение выбирает граф, а не RescueWatch");
-        assertFalse(names.contains("DigOutWatch.java"), "Замуровка входит в граф фактом trapped, а не сторожем");
-        assertFalse(names.contains("IdleWatch.java"), "Простой входит в граф как more6_spirit_idle");
-        assertFalse(names.contains("EvergreenWatch.java"), "Еда входит в граф событием hungry, а не сторожем");
-        assertFalse(names.contains("FishingWatch.java"), "Рыбалка — путь графа, а не порог сторожа");
-        assertFalse(names.contains("HerdWatch.java"), "Стадо входит в граф фактами, а не сторожем");
-        assertFalse(names.contains("HiveWatch.java"), "Пасека — узел графа, а не порог сторожа");
-        assertFalse(names.contains("HouseLevels.java"), "Уровень дома выбирает узел building:house");
-        assertFalse(names.contains("OldChests.java"), "Перенос старых сундуков выбирает узел store:transfer");
-        assertFalse(names.contains("PenBuild.java"), "Загон строит узел building:pen");
-        assertFalse(names.contains("WoolWatch.java"), "Шерсть и кровати — узлы графа, а не пороги сторожа");
+        assertFalse(
+                names.contains("RescueWatch.java"),
+                "Спасение выбирает граф, а не RescueWatch"
+                        + " Иначе тест removedBypassSources_AfterGraphMigration_DoNotComeBack перестанет ловить эту поломку. При смене removedBypassSources_AfterGraphMigration_DoNotComeBack проверь это утверждение.");
+        assertFalse(
+                names.contains("DigOutWatch.java"),
+                "Замуровка входит в граф фактом trapped, а не сторожем"
+                        + " Иначе тест removedBypassSources_AfterGraphMigration_DoNotComeBack перестанет ловить эту поломку. При смене removedBypassSources_AfterGraphMigration_DoNotComeBack проверь это утверждение.");
+        assertFalse(
+                names.contains("IdleWatch.java"),
+                "Простой входит в граф как more6_spirit_idle"
+                        + " Иначе тест removedBypassSources_AfterGraphMigration_DoNotComeBack перестанет ловить эту поломку. При смене removedBypassSources_AfterGraphMigration_DoNotComeBack проверь это утверждение.");
+        assertFalse(
+                names.contains("EvergreenWatch.java"),
+                "Еда входит в граф событием hungry, а не сторожем"
+                        + " Иначе тест removedBypassSources_AfterGraphMigration_DoNotComeBack перестанет ловить эту поломку. При смене removedBypassSources_AfterGraphMigration_DoNotComeBack проверь это утверждение.");
+        assertFalse(
+                names.contains("FishingWatch.java"),
+                "Рыбалка — путь графа, а не порог сторожа"
+                        + " Иначе тест removedBypassSources_AfterGraphMigration_DoNotComeBack перестанет ловить эту поломку. При смене removedBypassSources_AfterGraphMigration_DoNotComeBack проверь это утверждение.");
+        assertFalse(
+                names.contains("HerdWatch.java"),
+                "Стадо входит в граф фактами, а не сторожем"
+                        + " Иначе тест removedBypassSources_AfterGraphMigration_DoNotComeBack перестанет ловить эту поломку. При смене removedBypassSources_AfterGraphMigration_DoNotComeBack проверь это утверждение.");
+        assertFalse(
+                names.contains("HiveWatch.java"),
+                "Пасека — узел графа, а не порог сторожа"
+                        + " Иначе тест removedBypassSources_AfterGraphMigration_DoNotComeBack перестанет ловить эту поломку. При смене removedBypassSources_AfterGraphMigration_DoNotComeBack проверь это утверждение.");
+        assertFalse(
+                names.contains("HouseLevels.java"),
+                "Уровень дома выбирает узел building:house"
+                        + " Иначе тест removedBypassSources_AfterGraphMigration_DoNotComeBack перестанет ловить эту поломку. При смене removedBypassSources_AfterGraphMigration_DoNotComeBack проверь это утверждение.");
+        assertFalse(
+                names.contains("OldChests.java"),
+                "Перенос старых сундуков выбирает узел store:transfer"
+                        + " Иначе тест removedBypassSources_AfterGraphMigration_DoNotComeBack перестанет ловить эту поломку. При смене removedBypassSources_AfterGraphMigration_DoNotComeBack проверь это утверждение.");
+        assertFalse(
+                names.contains("PenBuild.java"),
+                "Загон строит узел building:pen"
+                        + " Иначе тест removedBypassSources_AfterGraphMigration_DoNotComeBack перестанет ловить эту поломку. При смене removedBypassSources_AfterGraphMigration_DoNotComeBack проверь это утверждение.");
+        assertFalse(
+                names.contains("WoolWatch.java"),
+                "Шерсть и кровати — узлы графа, а не пороги сторожа"
+                        + " Иначе тест removedBypassSources_AfterGraphMigration_DoNotComeBack перестанет ловить эту поломку. При смене removedBypassSources_AfterGraphMigration_DoNotComeBack проверь это утверждение.");
     }
 
     @Test
@@ -176,7 +216,8 @@ class BoardPostGuardTests {
         assertEquals(
                 List.of("RescueWatch.java: постановка мимо GraphPost"),
                 violations(Map.of(BOARD.resolve("RescueWatch.java"), old)),
-                "Сторож ослеп: прямой service.submit в стороже обязан ловиться");
+                "Сторож ослеп: прямой service.submit в стороже обязан ловиться"
+                        + " Иначе тест tick перестанет ловить эту поломку. При смене tick проверь это утверждение.");
     }
 
     @Test
@@ -187,7 +228,8 @@ class BoardPostGuardTests {
         assertEquals(
                 List.of("DropWatch.java: постановка мимо GraphPost"),
                 violations(Map.of(BOARD.resolve("DropWatch.java"), old)),
-                "Сторож ослеп: билет, собранный вручную мимо GraphPost, обязан ловиться");
+                "Сторож ослеп: билет, собранный вручную мимо GraphPost, обязан ловиться"
+                        + " Иначе тест patternSource_NewTicketOutsideGraphPost_IsReported перестанет ловить эту поломку. При смене patternSource_NewTicketOutsideGraphPost_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -198,7 +240,8 @@ class BoardPostGuardTests {
         assertEquals(
                 List.of("BoardService.java: постановка мимо GraphPost"),
                 violations(Map.of(BOARD.resolve("BoardService.java"), old)),
-                "Доска не выбирает работу: ручной билет внутри BoardService — тот же обход графа");
+                "Доска не выбирает работу: ручной билет внутри BoardService — тот же обход графа"
+                        + " Иначе тест post перестанет ловить эту поломку. При смене post проверь это утверждение.");
     }
 
     @Test
@@ -208,7 +251,8 @@ class BoardPostGuardTests {
         assertEquals(
                 List.of(),
                 violations(Map.of(BOARD.resolve("GraphPost.java"), fixed)),
-                "Сторож ложно срабатывает: единственный законный постановщик — GraphPost");
+                "Сторож ложно срабатывает: единственный законный постановщик — GraphPost"
+                        + " Иначе тест post перестанет ловить эту поломку. При смене post проверь это утверждение.");
     }
 
     private static List<String> violations(Map<Path, String> sources) {

@@ -24,7 +24,8 @@ class VitalGateGuardTests {
                 missingRows(vitalEvents(graph), needs),
                 "Событие графа жизненное, а строки в таблице нужд нет: VitalGate не знает, чем его закрывать, "
                         + "и дух с живой нуждой получит обычную работу. Как надо: добавьте нужду в "
-                        + "data/theminespirit/board/vital.json с путём allow и диагнозом blocked. Нарушения");
+                        + "data/theminespirit/board/vital.json с путём allow и диагнозом blocked. Нарушения"
+                        + " Иначе тест table_EveryVitalEvent_HasPathAndDiagnosis перестанет ловить эту поломку. При смене table_EveryVitalEvent_HasPathAndDiagnosis проверь это утверждение.");
 
         List<String> problems = new ArrayList<>();
         for (VitalNeeds.Need need : needs) {
@@ -51,7 +52,8 @@ class VitalGateGuardTests {
                 List.of(),
                 problems,
                 "Жизненная нужда без пути в таблице — это молчаливая шахта при живой нужде. Как надо: путь "
-                        + "удовлетворения в allow должен совпадать с билетом выполнимой задачи графа. Нарушения");
+                        + "удовлетворения в allow должен совпадать с билетом выполнимой задачи графа. Нарушения"
+                        + " Иначе тест table_EveryVitalEvent_HasPathAndDiagnosis перестанет ловить эту поломку. При смене table_EveryVitalEvent_HasPathAndDiagnosis проверь это утверждение.");
     }
 
     @Test
@@ -63,7 +65,8 @@ class VitalGateGuardTests {
 
         assertTrue(
                 found.stream().anyMatch(issue -> issue.contains("new_vital")),
-                "Сторож ослеп: новое жизненное событие без строки таблицы обязано стать красным: " + found);
+                "Сторож ослеп: новое жизненное событие без строки таблицы обязано стать красным: " + found
+                        + " Иначе тест table_NewVitalEventWithoutRow_IsReported перестанет ловить эту поломку. При смене table_NewVitalEventWithoutRow_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -74,7 +77,8 @@ class VitalGateGuardTests {
 
         assertTrue(
                 found.stream().anyMatch(issue -> issue.contains("не находит выполнимого пути")),
-                "Сторож ослеп: allow, не совпавший ни с одной задачей события, обязан стать красным: " + found);
+                "Сторож ослеп: allow, не совпавший ни с одной задачей события, обязан стать красным: " + found
+                        + " Иначе тест table_PathThatMatchesNoTask_IsReported перестанет ловить эту поломку. При смене table_PathThatMatchesNoTask_IsReported проверь это утверждение.");
     }
 
     static List<String> missingRows(Set<String> vitalEvents, List<VitalNeeds.Need> needs) {

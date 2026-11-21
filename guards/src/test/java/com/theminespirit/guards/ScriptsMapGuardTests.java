@@ -46,7 +46,8 @@ class ScriptsMapGuardTests {
                 problems,
                 "Карта scripts/README.md должна знать каждый скрипт и давать пример запуска: иначе исполнитель "
                         + "пишет разовый скрипт заново. Как надо: строка таблицы с ссылкой на файл, примером, "
-                        + "местом работы и ответом «меняет ли что-либо». Проблемы");
+                        + "местом работы и ответом «меняет ли что-либо». Проблемы"
+                        + " При смене scriptsMap_EveryScript_HasRowAndExample проверь это утверждение.");
     }
 
     @Test
@@ -56,7 +57,8 @@ class ScriptsMapGuardTests {
         assertEquals(
                 List.of("x.sh: нет примера запуска"),
                 problemsFor(List.of("x.sh"), List.of(row)),
-                "Сторож ослеп: строка без примера запуска обязана попасть в проблемы");
+                "Сторож ослеп: строка без примера запуска обязана попасть в проблемы"
+                        + " Иначе тест mapRows_RowWithoutExample_IsReported перестанет ловить эту поломку. При смене mapRows_RowWithoutExample_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -64,7 +66,8 @@ class ScriptsMapGuardTests {
         assertEquals(
                 List.of(),
                 problemsFor(List.of("lead/x.sh"), List.of(Row.parse("| [lead/](lead/) | каталог | — | ПК | нет |"))),
-                "Сторож ложно срабатывает: файл под названным каталогом не обязан иметь отдельную строку");
+                "Сторож ложно срабатывает: файл под названным каталогом не обязан иметь отдельную строку"
+                        + " Иначе тест mapRows_DirectoryRow_IsSkipped перестанет ловить эту поломку. При смене mapRows_DirectoryRow_IsSkipped проверь это утверждение.");
     }
 
     private static List<String> problemsFor(List<String> files, List<Row> rows) {

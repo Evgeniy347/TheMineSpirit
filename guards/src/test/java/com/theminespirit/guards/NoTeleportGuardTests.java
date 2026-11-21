@@ -31,7 +31,8 @@ class NoTeleportGuardTests {
                 found,
                 "Телепорт духа отключён решением владельца 02.11: позиция меняется только ходьбой. "
                         + "Для возврата используйте маршрут/хлебные крошки и расширенный поиск, "
-                        + "а не teleportTo/moveTo. Разрешены только спавн/команды/демо/gametest. Найдено: " + found);
+                        + "а не teleportTo/moveTo. Разрешены только спавн/команды/демо/gametest. Найдено: " + found
+                        + " Иначе тест production_TeleportOrMoveToCalls_AreAbsent перестанет ловить эту поломку. При смене production_TeleportOrMoveToCalls_AreAbsent проверь это утверждение.");
     }
 
     private static boolean allowed(String path) {

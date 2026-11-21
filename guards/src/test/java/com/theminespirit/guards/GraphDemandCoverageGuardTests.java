@@ -38,7 +38,8 @@ class GraphDemandCoverageGuardTests {
                 "Реестр цепочек спроса расходится с тестами: статус «покрыто/есть» без существующего теста "
                         + "или «очередь» с тестом делает покрытие выдумкой. Как надо: 50 строк, статус и "
                         + "существующий `Класс.метод`, у очереди — «—». Правило: docs/testing/GRAPH-DEMAND.md, "
-                        + "AGENTS.md → «Правило — это сторож или тест». Нарушения");
+                        + "AGENTS.md → «Правило — это сторож или тест». Нарушения"
+                        + " Иначе тест document_ChainsAndTests_AreConsistent перестанет ловить эту поломку. При смене document_ChainsAndTests_AreConsistent проверь это утверждение.");
     }
 
     @Test
@@ -46,7 +47,8 @@ class GraphDemandCoverageGuardTests {
         String text = table(1, QUEUE, "—");
         assertTrue(
                 issues(text, Map.of()).stream().anyMatch(issue -> issue.contains("меньше " + MIN_COVERED)),
-                "Сторож ослеп: документ без покрытых цепочек обязан сообщать о недоборе: " + issues(text, Map.of()));
+                "Сторож ослеп: документ без покрытых цепочек обязан сообщать о недоборе: " + issues(text, Map.of())
+                        + " Иначе тест document_TooFewCoveredChains_IsReported перестанет ловить эту поломку. При смене document_TooFewCoveredChains_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -54,7 +56,8 @@ class GraphDemandCoverageGuardTests {
         String text = table(1, "покрыто", "—");
         assertTrue(
                 issues(text, Map.of()).stream().anyMatch(issue -> issue.contains("без теста")),
-                "Сторож ослеп: «покрыто» без теста обязано попасть в нарушения");
+                "Сторож ослеп: «покрыто» без теста обязано попасть в нарушения"
+                        + " Иначе тест row_MissingTest_IsReported перестанет ловить эту поломку. При смене row_MissingTest_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -63,7 +66,8 @@ class GraphDemandCoverageGuardTests {
         assertTrue(
                 issues(text, Map.of("ATests", "class ATests { void ok() {} }")).stream()
                         .anyMatch(issue -> issue.contains("нет метода gone")),
-                "Сторож ослеп: ссылка на удалённый тест обязана попасть в нарушения");
+                "Сторож ослеп: ссылка на удалённый тест обязана попасть в нарушения"
+                        + " Иначе тест row_MissingMethod_IsReported перестанет ловить эту поломку. При смене row_MissingMethod_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -72,7 +76,8 @@ class GraphDemandCoverageGuardTests {
         assertTrue(
                 issues(text, Map.of("ATests", "class ATests { void ok() {} }")).stream()
                         .anyMatch(issue -> issue.contains("очередь") && issue.contains("тест")),
-                "Сторож ослеп: очередь с тестом обязана попасть в нарушения");
+                "Сторож ослеп: очередь с тестом обязана попасть в нарушения"
+                        + " Иначе тест row_QueueWithTest_IsReported перестанет ловить эту поломку. При смене row_QueueWithTest_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -80,10 +85,12 @@ class GraphDemandCoverageGuardTests {
         String text = table(1, QUEUE, "—").replace("| 50 |", "| 1 |");
         assertTrue(
                 issues(text, Map.of()).stream().anyMatch(issue -> issue.contains("повторяется")),
-                "Сторож ослеп: повтор номера цепочки обязан попасть в нарушения");
+                "Сторож ослеп: повтор номера цепочки обязан попасть в нарушения"
+                        + " Иначе тест rows_MissingAndDuplicateChain_AreReported перестанет ловить эту поломку. При смене rows_MissingAndDuplicateChain_AreReported проверь это утверждение.");
         assertTrue(
                 issues(text, Map.of()).stream().anyMatch(issue -> issue.contains("нет цепочки 50")),
-                "Сторож ослеп: пропущенная цепочка обязана попасть в нарушения");
+                "Сторож ослеп: пропущенная цепочка обязана попасть в нарушения"
+                        + " Иначе тест rows_MissingAndDuplicateChain_AreReported перестанет ловить эту поломку. При смене rows_MissingAndDuplicateChain_AreReported проверь это утверждение.");
     }
 
     @Test
@@ -91,7 +98,8 @@ class GraphDemandCoverageGuardTests {
         String text = table(1, "сделано", "—");
         assertTrue(
                 issues(text, Map.of()).stream().anyMatch(issue -> issue.contains("неизвестный статус")),
-                "Сторож ослеп: статус вне покрыто/есть/очередь обязан попасть в нарушения");
+                "Сторож ослеп: статус вне покрыто/есть/очередь обязан попасть в нарушения"
+                        + " Иначе тест row_UnknownStatus_IsReported перестанет ловить эту поломку. При смене row_UnknownStatus_IsReported проверь это утверждение.");
     }
 
     private static String table(int covered, String status, String test) {

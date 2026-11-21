@@ -35,7 +35,8 @@ class ChunkAccessGuardTests {
                 "В neoforge запрещено level.getChunk(x, z, ChunkStatus.*, ...) для чтения мира скриптами и сканом. "
                         + "На серверном потоке getChunk для чанка с билетом, ещё не FULL, может ждать генерации (managedBlock). "
                         + "Как надо: level.getChunkSource().getChunkNow(x, z) — вернёт чанк, если он уже загружен (любой статус), иначе null. "
-                        + "Скан/скрипты обязаны пропускать не-FULL чанки без догрузки. Нарушители:");
+                        + "Скан/скрипты обязаны пропускать не-FULL чанки без догрузки. Нарушители:"
+                        + " При смене neoforgeSources_GetChunkWithStatus_Forbidden проверь это утверждение.");
     }
 
     @Test
@@ -43,7 +44,8 @@ class ChunkAccessGuardTests {
         String valid = "level.getChunkSource().getChunkNow(chunkX, chunkZ);";
         assertTrue(
                 GET_CHUNK_SOURCE_CHUNK_NOW.matcher(valid).find(),
-                "Сторож ослеп: getChunkSource().getChunkNow должен находиться");
+                "Сторож ослеп: getChunkSource().getChunkNow должен находиться"
+                        + " Иначе тест getChunkNowPattern_ValidUsage_Detected перестанет ловить эту поломку. При смене getChunkNowPattern_ValidUsage_Detected проверь это утверждение.");
     }
 
     @Test
@@ -52,10 +54,12 @@ class ChunkAccessGuardTests {
         String invalid2 = "level.getChunk(chunkX, chunkZ, ChunkStatus.EMPTY, true)";
         assertTrue(
                 GET_CHUNK_WITH_STATUS.matcher(invalid1).find(),
-                "Сторож ослеп: getChunk с ChunkStatus.FULL должен находиться");
+                "Сторож ослеп: getChunk с ChunkStatus.FULL должен находиться"
+                        + " Иначе тест getChunkWithStatusPattern_InvalidUsage_Detected перестанет ловить эту поломку. При смене getChunkWithStatusPattern_InvalidUsage_Detected проверь это утверждение.");
         assertTrue(
                 GET_CHUNK_WITH_STATUS.matcher(invalid2).find(),
-                "Сторож ослеп: getChunk с ChunkStatus.EMPTY должен находиться");
+                "Сторож ослеп: getChunk с ChunkStatus.EMPTY должен находиться"
+                        + " Иначе тест getChunkWithStatusPattern_InvalidUsage_Detected перестанет ловить эту поломку. При смене getChunkWithStatusPattern_InvalidUsage_Detected проверь это утверждение.");
     }
 
     @Test
@@ -63,6 +67,7 @@ class ChunkAccessGuardTests {
         String other = "level.getChunk(x, z)";
         assertTrue(
                 !GET_CHUNK_WITH_STATUS.matcher(other).find(),
-                "Сторож ложно срабатывает: getChunk без ChunkStatus не нарушение");
+                "Сторож ложно срабатывает: getChunk без ChunkStatus не нарушение"
+                        + " Иначе тест getChunkWithStatusPattern_NonChunkStatus_Ignored перестанет ловить эту поломку. При смене getChunkWithStatusPattern_NonChunkStatus_Ignored проверь это утверждение.");
     }
 }

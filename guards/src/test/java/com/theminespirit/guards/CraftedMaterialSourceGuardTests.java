@@ -27,7 +27,8 @@ class CraftedMaterialSourceGuardTests {
                 "graph:make снова выдаёт добычу крафтового предмета: доски, факелы и сундуки ищутся блоками в мире "
                         + "(нет пути к блоку, пропущено защищённых), задание падает 5 раз и уводит духа от крафта. "
                         + "Как надо: ветка недостающих материалов постройки выдаёт gather только для природного "
-                        + "предмета, а крафтовый оставляет путям графа (auto_/craft_ рецепта). Нарушители");
+                        + "предмета, а крафтовый оставляет путям графа (auto_/craft_ рецепта). Нарушители"
+                        + " Иначе тест graphPost_MissingCraftedBuildingMaterial_IsNotGathered перестанет ловить эту поломку. При смене graphPost_MissingCraftedBuildingMaterial_IsNotGathered проверь это утверждение.");
     }
 
     @Test
@@ -43,7 +44,8 @@ class CraftedMaterialSourceGuardTests {
         assertEquals(
                 List.of(VIOLATION),
                 violations(Map.of(GRAPH_POST, old)),
-                "Сторож ослеп: старый graph:make, который добывает любой предмет постройки из мира, обязан ловиться");
+                "Сторож ослеп: старый graph:make, который добывает любой предмет постройки из мира, обязан ловиться"
+                        + " Иначе тест patternSource_UnfilteredMakeGather_IsReported перестанет ловить эту поломку. При смене patternSource_UnfilteredMakeGather_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -59,7 +61,8 @@ class CraftedMaterialSourceGuardTests {
         assertEquals(
                 List.of(),
                 violations(Map.of(GRAPH_POST, fixed)),
-                "Сторож ложно срабатывает: проверка крафтового предмета перед gather — правильный код");
+                "Сторож ложно срабатывает: проверка крафтового предмета перед gather — правильный код"
+                        + " Иначе тест patternSource_CraftedFilterBeforeGather_IsAccepted перестанет ловить эту поломку. При смене patternSource_CraftedFilterBeforeGather_IsAccepted проверь это утверждение.");
     }
 
     private static List<String> violations(Map<Path, String> sources) {

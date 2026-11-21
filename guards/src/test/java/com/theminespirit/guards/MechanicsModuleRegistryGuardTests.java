@@ -43,7 +43,8 @@ class MechanicsModuleRegistryGuardTests {
                 unclassified,
                 "Модуль не механика и не объявлен инфраструктурой: его импорты останутся без сторожа, а тесты — "
                         + "без тира. Как надо: механику положи в mech/ или в def mechanicsModules, инфраструктуру — "
-                        + "в def nonMechanicModules в settings.gradle. Нарушители:");
+                        + "в def nonMechanicModules в settings.gradle. Нарушители:"
+                        + " Иначе тест includedModules_WithoutType_AreReported перестанет ловить эту поломку. При смене includedModules_WithoutType_AreReported проверь это утверждение.");
     }
 
     @Test
@@ -66,7 +67,8 @@ class MechanicsModuleRegistryGuardTests {
                 List.of(),
                 unknown,
                 "Список типов называет модуль, которого нет в include: тип и сборка разъедутся. Как надо: убери "
-                        + "строку или добавь include. Нарушители:");
+                        + "строку или добавь include. Нарушители:"
+                        + " Иначе тест declaredTypes_NotIncluded_AreReported перестанет ловить эту поломку. При смене declaredTypes_NotIncluded_AreReported проверь это утверждение.");
     }
 
     private static String readSettings() {
@@ -85,7 +87,8 @@ class MechanicsModuleRegistryGuardTests {
         }
         assertTrue(
                 !included.isEmpty(),
-                "В settings.gradle не нашлось ни одного include: сторож проверяет нуль модулей и молча зелёный");
+                "В settings.gradle не нашлось ни одного include: сторож проверяет нуль модулей и молча зелёный"
+                        + " Иначе тест declaredTypes_NotIncluded_AreReported перестанет ловить эту поломку. При смене declaredTypes_NotIncluded_AreReported проверь это утверждение.");
         return included;
     }
 
@@ -94,7 +97,8 @@ class MechanicsModuleRegistryGuardTests {
         assertTrue(
                 list.find(),
                 "В settings.gradle нет def " + name + " = [...]: тип модуля не вывести. Как надо: перечисли "
-                        + "верхнеуровневые модули явно, чтобы сторож знал, что проверять.");
+                        + "верхнеуровневые модули явно, чтобы сторож знал, что проверять."
+                        + " Иначе тест declaredTypes_NotIncluded_AreReported перестанет ловить эту поломку. При смене declaredTypes_NotIncluded_AreReported проверь это утверждение.");
         Set<String> modules = new LinkedHashSet<>();
         Matcher id = MODULE_ID.matcher(list.group(1));
         while (id.find()) {

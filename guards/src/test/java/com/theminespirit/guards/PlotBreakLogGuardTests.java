@@ -25,7 +25,8 @@ class PlotBreakLogGuardTests {
                 "Ломка блока у постройки без записи в лог делает повреждение хижины нерасследуемым: в observe11 "
                         + "дом потерял 12% блоков, а в логе не было ни строки, кто и что сломал. Как надо: ломающий "
                         + "дух идёт через BreakNotice.broken, игрок и взрыв — через PlotBreakLog.brokenBy в PolicyEvents. "
-                        + "Нарушители");
+                        + "Нарушители"
+                        + " Иначе тест productionSources_BreakHooks_LogPlotEdits перестанет ловить эту поломку. При смене productionSources_BreakHooks_LogPlotEdits проверь это утверждение.");
     }
 
     @Test
@@ -35,7 +36,8 @@ class PlotBreakLogGuardTests {
         assertEquals(
                 List.of("a.java: нет BreakNotice.broken("),
                 offenders(required, Map.of("a.java", "level.destroyBlock(pos, false, spirit);")),
-                "Сторож ослеп: файл без вызова лога правок мира обязан попасть в нарушители");
+                "Сторож ослеп: файл без вызова лога правок мира обязан попасть в нарушители"
+                        + " Иначе тест hookScan_HookWithoutCall_IsReported перестанет ловить эту поломку. При смене hookScan_HookWithoutCall_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -45,7 +47,8 @@ class PlotBreakLogGuardTests {
         assertEquals(
                 List.of(),
                 offenders(required, Map.of("a.java", "BreakNotice.broken(level, pos, state, spirit);")),
-                "Сторож ложно срабатывает: вызов лога правок мира есть в файле");
+                "Сторож ложно срабатывает: вызов лога правок мира есть в файле"
+                        + " Иначе тест hookScan_HookWithCall_IsAccepted перестанет ловить эту поломку. При смене hookScan_HookWithCall_IsAccepted проверь это утверждение.");
     }
 
     private static List<String> offenders(Map<String, String> required, Map<String, String> texts) {

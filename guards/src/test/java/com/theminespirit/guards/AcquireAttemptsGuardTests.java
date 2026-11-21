@@ -38,7 +38,8 @@ class AcquireAttemptsGuardTests {
                 "Адаптер neoforge не задаёт свои константы попыток: предел пересборок acquire живёт в "
                         + "CatalogLimits.ACQUIRE_MAX_ATTEMPTS (core), и AcquireScript читает его оттуда. Цена "
                         + "дублирования: правка одного места оставит другое старым, acquire в мире и тесты в core "
-                        + "разойдутся в числе попыток. Нарушители");
+                        + "разойдутся в числе попыток. Нарушители"
+                        + " При смене neoforgeSources_AttemptConstants_DeclaredOnlyInCore проверь это утверждение.");
     }
 
     @Test
@@ -47,12 +48,14 @@ class AcquireAttemptsGuardTests {
                 1,
                 attemptConstants("X.java", "static final int ACQUIRE_ATTEMPTS = 3;")
                         .size(),
-                "Сторож ослеп: константа с ACQUIRE и ATTEMPT в имени должна находиться");
+                "Сторож ослеп: константа с ACQUIRE и ATTEMPT в имени должна находиться"
+                        + " Иначе тест attemptConstantPattern_AcquireConstantWithAttemptInName_IsDetected перестанет ловить эту поломку. При смене attemptConstantPattern_AcquireConstantWithAttemptInName_IsDetected проверь это утверждение.");
         assertEquals(
                 1,
                 attemptConstants("X.java", "static final int ACQUIRE_MAX_ATTEMPTS = 5;")
                         .size(),
-                "Сторож ослеп: константа ACQUIRE_MAX_ATTEMPTS должна находиться");
+                "Сторож ослеп: константа ACQUIRE_MAX_ATTEMPTS должна находиться"
+                        + " Иначе тест attemptConstantPattern_AcquireConstantWithAttemptInName_IsDetected перестанет ловить эту поломку. При смене attemptConstantPattern_AcquireConstantWithAttemptInName_IsDetected проверь это утверждение.");
     }
 
     @Test
@@ -60,12 +63,15 @@ class AcquireAttemptsGuardTests {
         assertTrue(
                 attemptConstants("X.java", "static final int CONTAINER_RADIUS_DEFAULT = 8;")
                         .isEmpty(),
-                "Сторож ложно срабатывает: константа без ATTEMPT в имени — не нарушение");
+                "Сторож ложно срабатывает: константа без ATTEMPT в имени — не нарушение"
+                        + " Иначе тест attemptConstantPattern_UnrelatedConstants_AreIgnored перестанет ловить эту поломку. При смене attemptConstantPattern_UnrelatedConstants_AreIgnored проверь это утверждение.");
         assertTrue(
                 attemptConstants("X.java", "int attempts = 0;").isEmpty(),
-                "Сторож ложно срабатывает: локальная переменная attempts — не константа предела");
+                "Сторож ложно срабатывает: локальная переменная attempts — не константа предела"
+                        + " Иначе тест attemptConstantPattern_UnrelatedConstants_AreIgnored перестанет ловить эту поломку. При смене attemptConstantPattern_UnrelatedConstants_AreIgnored проверь это утверждение.");
         assertTrue(
                 attemptConstants("X.java", "static final int MAX_ATTEMPTS = 3;").isEmpty(),
-                "Сторож ложно срабатывает: константа попыток StandWalker (движение) не относится к acquire");
+                "Сторож ложно срабатывает: константа попыток StandWalker (движение) не относится к acquire"
+                        + " Иначе тест attemptConstantPattern_UnrelatedConstants_AreIgnored перестанет ловить эту поломку. При смене attemptConstantPattern_UnrelatedConstants_AreIgnored проверь это утверждение.");
     }
 }

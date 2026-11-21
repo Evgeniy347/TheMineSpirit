@@ -13,7 +13,11 @@ class LeaseRestartGuardTests {
 
     @Test
     void sources_StartDoesNotOrphanLeases_NoViolations() {
-        assertEquals(List.of(), violations(SourceFiles.allMain()), "Рестарт сервера снова бросает аренды");
+        assertEquals(
+                List.of(),
+                violations(SourceFiles.allMain()),
+                "Рестарт сервера снова бросает аренды"
+                        + " Иначе тест sources_StartDoesNotOrphanLeases_NoViolations перестанет ловить эту поломку. При смене sources_StartDoesNotOrphanLeases_NoViolations проверь это утверждение.");
     }
 
     @Test
@@ -24,7 +28,8 @@ class LeaseRestartGuardTests {
         assertEquals(
                 List.of("LeaseLifecycle.java: старт сервера снова бросает активные аренды"),
                 violations(Map.of(LIFECYCLE, bad)),
-                "Сторож ослеп: возврат orphanAllActive при старте вернёт undo-шторм после каждой публикации");
+                "Сторож ослеп: возврат orphanAllActive при старте вернёт undo-шторм после каждой публикации"
+                        + " Иначе тест onStarted перестанет ловить эту поломку. При смене onStarted проверь это утверждение.");
     }
 
     @Test
@@ -34,7 +39,8 @@ class LeaseRestartGuardTests {
         assertEquals(
                 List.of(),
                 violations(Map.of(LIFECYCLE, good)),
-                "Сторож ложно срабатывает: смерть духа — законная причина бросить его аренды");
+                "Сторож ложно срабатывает: смерть духа — законная причина бросить его аренды"
+                        + " Иначе тест onDeath перестанет ловить эту поломку. При смене onDeath проверь это утверждение.");
     }
 
     private static List<String> violations(Map<Path, String> sources) {

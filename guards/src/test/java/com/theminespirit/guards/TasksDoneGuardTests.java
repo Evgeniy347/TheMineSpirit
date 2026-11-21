@@ -38,7 +38,8 @@ class TasksDoneGuardTests {
                 "В tasks/ лежит чеклист, где все пункты отмечены, но нет пометки «ждёт приёмки (ветка …)»: "
                         + "принятый чеклист обязан быть удалён, иначе папка задач превращается в архив закрытого "
                         + "и прячет открытую работу. Как надо: удалить чеклист или в статусе назвать ветку и то, "
-                        + "что он ждёт приёмки. Правило: выполненный чеклист не лежит в tasks/. Нарушители");
+                        + "что он ждёт приёмки. Правило: выполненный чеклист не лежит в tasks/. Нарушители"
+                        + " При смене tasks_FinishedChecklists_AreDeletedOrMarkedAsWaiting проверь это утверждение.");
     }
 
     @Test
@@ -48,7 +49,8 @@ class TasksDoneGuardTests {
         assertEquals(
                 List.of("tasks/9-x.md"),
                 offenders(files),
-                "Сторож ослеп: все пункты отмечены, пометки о приёмке нет — обязан попасть в нарушители");
+                "Сторож ослеп: все пункты отмечены, пометки о приёмке нет — обязан попасть в нарушители"
+                        + " Иначе тест finishedWithoutWait_AllCheckedNoNote_IsReported перестанет ловить эту поломку. При смене finishedWithoutWait_AllCheckedNoNote_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -59,7 +61,8 @@ class TasksDoneGuardTests {
         assertEquals(
                 List.of(),
                 offenders(files),
-                "Сторож ложно срабатывает: чеклист со статусом «ждёт приёмки» должен приниматься");
+                "Сторож ложно срабатывает: чеклист со статусом «ждёт приёмки» должен приниматься"
+                        + " Иначе тест finishedWithoutWait_AllCheckedWithWaitNote_IsAccepted перестанет ловить эту поломку. При смене finishedWithoutWait_AllCheckedWithWaitNote_IsAccepted проверь это утверждение.");
     }
 
     @Test
@@ -69,7 +72,8 @@ class TasksDoneGuardTests {
         assertEquals(
                 List.of("tasks/9-x.md"),
                 offenders(files),
-                "Сторож ослеп: пометка «ждёт приёмки» без названной ветки обязана попасть в нарушители");
+                "Сторож ослеп: пометка «ждёт приёмки» без названной ветки обязана попасть в нарушители"
+                        + " Иначе тест finishedWithoutWait_WaitNoteWithoutBranch_IsReported перестанет ловить эту поломку. При смене finishedWithoutWait_WaitNoteWithoutBranch_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -79,7 +83,8 @@ class TasksDoneGuardTests {
         assertEquals(
                 List.of(),
                 offenders(files),
-                "Сторож ложно срабатывает: чеклист с открытым пунктом — рабочий, не архив");
+                "Сторож ложно срабатывает: чеклист с открытым пунктом — рабочий, не архив"
+                        + " Иначе тест finishedWithoutWait_OpenItem_IsAccepted перестанет ловить эту поломку. При смене finishedWithoutWait_OpenItem_IsAccepted проверь это утверждение.");
     }
 
     @Test
@@ -89,15 +94,24 @@ class TasksDoneGuardTests {
         assertEquals(
                 List.of(),
                 offenders(files),
-                "Сторож ложно срабатывает: файл без пунктов чеклиста — не чеклист и не проверяется");
+                "Сторож ложно срабатывает: файл без пунктов чеклиста — не чеклист и не проверяется"
+                        + " Иначе тест finishedWithoutWait_NoItems_Skipped перестанет ловить эту поломку. При смене finishedWithoutWait_NoItems_Skipped проверь это утверждение.");
     }
 
     @Test
     void open_IndentedAndNumberedItems_AreFound() {
         String text = "  - [ ] вложенный\n7. [ ] номерной\n- [x] закрытый\n";
 
-        assertEquals(2, count(OPEN, text), "Сторож ослеп: открытые пункты в отступе и с номером обязаны считаться");
-        assertEquals(1, count(CHECKED, text), "Сторож ослеп: закрытый пункт в отступе обязан находиться");
+        assertEquals(
+                2,
+                count(OPEN, text),
+                "Сторож ослеп: открытые пункты в отступе и с номером обязаны считаться"
+                        + " Иначе тест open_IndentedAndNumberedItems_AreFound перестанет ловить эту поломку. При смене open_IndentedAndNumberedItems_AreFound проверь это утверждение.");
+        assertEquals(
+                1,
+                count(CHECKED, text),
+                "Сторож ослеп: закрытый пункт в отступе обязан находиться"
+                        + " Иначе тест open_IndentedAndNumberedItems_AreFound перестанет ловить эту поломку. При смене open_IndentedAndNumberedItems_AreFound проверь это утверждение.");
     }
 
     private static List<String> offenders(Map<String, String> files) {

@@ -235,7 +235,8 @@ public final class SourceFiles {
     public static Map<Path, String> javaUnder(Path root) {
         assertTrue(
                 Files.isDirectory(root),
-                "Сторож не нашёл каталог " + root + ": тесты запускаются из корня проекта (./gradlew test)");
+                "Сторож не нашёл каталог " + root + ": тесты запускаются из корня проекта (./gradlew test)"
+                        + " Иначе тест require перестанет ловить эту поломку. При смене require проверь это утверждение.");
         return CACHE.computeIfAbsent(root, SourceFiles::readJava);
     }
 

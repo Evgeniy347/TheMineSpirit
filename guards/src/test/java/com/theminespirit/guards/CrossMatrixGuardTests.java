@@ -24,7 +24,8 @@ class CrossMatrixGuardTests {
                         + "нельзя поручить доработку, а «есть» оказывается выдумкой. Как надо: реестр и шапка "
                         + "матрицы называют одни M01…M24, клетка Е имеет строку в таблице пар, тест — "
                         + "существующий класс и метод. Правило: docs/testing/CROSS-MATRIX.md, "
-                        + "AGENTS.md → «Правило — это сторож или тест». Нарушения");
+                        + "AGENTS.md → «Правило — это сторож или тест». Нарушения"
+                        + " Иначе тест document_MatrixAndTests_AreConsistent перестанет ловить эту поломку. При смене document_MatrixAndTests_AreConsistent проверь это утверждение.");
     }
 
     @Test
@@ -52,7 +53,8 @@ class CrossMatrixGuardTests {
                 List.of(),
                 CrossMatrixDocument.issues(text, Map.of("ATests", "class ATests { void ok() {} }")),
                 "Строка с несколькими парами через запятую закрывает все перечисленные клетки: иначе матрица "
-                        + "требует дублировать один сценарий отдельной строкой на каждую пару");
+                        + "требует дублировать один сценарий отдельной строкой на каждую пару"
+                        + " При смене matrix_MultiPairRow_CoversEveryPair проверь это утверждение.");
     }
 
     @Test
@@ -62,7 +64,8 @@ class CrossMatrixGuardTests {
         assertTrue(
                 CrossMatrixDocument.issues(text, Map.of("ATests", "class ATests { void ok() {} }")).stream()
                         .anyMatch(issue -> issue.contains("несимметрична")),
-                "Сторож ослеп: односторонняя пара (1,2)=Е и (2,1)=Н обязана попасть в нарушения");
+                "Сторож ослеп: односторонняя пара (1,2)=Е и (2,1)=Н обязана попасть в нарушения"
+                        + " Иначе тест matrix_AsymmetricCell_IsReported перестанет ловить эту поломку. При смене matrix_AsymmetricCell_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -72,7 +75,8 @@ class CrossMatrixGuardTests {
         assertTrue(
                 CrossMatrixDocument.issues(text, Map.of("ATests", "class ATests { void ok() {} }")).stream()
                         .anyMatch(issue -> issue.contains("нет метода gone")),
-                "Сторож ослеп: ссылка на удалённый метод теста обязана попасть в нарушения");
+                "Сторож ослеп: ссылка на удалённый метод теста обязана попасть в нарушения"
+                        + " Иначе тест detail_MissingMethod_IsReported перестанет ловить эту поломку. При смене detail_MissingMethod_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -85,7 +89,8 @@ class CrossMatrixGuardTests {
                 CrossMatrixDocument.issues(text, Map.of("ATests", "class ATests { void ok() {} }")).stream()
                         .anyMatch(issue -> issue.contains("клетка Е пары 1-2 без строки")),
                 "Сторож ослеп: клетка Е без строки «граф/механика» обязана попасть в нарушения: "
-                        + CrossMatrixDocument.issues(text, Map.of("ATests", "class ATests { void ok() {} }")));
+                        + CrossMatrixDocument.issues(text, Map.of("ATests", "class ATests { void ok() {} }"))
+                        + " Иначе тест matrix_MissingDetailRow_IsReported перестанет ловить эту поломку. При смене matrix_MissingDetailRow_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -97,7 +102,8 @@ class CrossMatrixGuardTests {
         assertTrue(
                 CrossMatrixNoPair.issues(text, "").stream()
                         .anyMatch(issue -> issue.contains("клетка н/п") && issue.contains("без обоснования")),
-                "Сторож ослеп: клетка н/п без строки обоснования обязана попасть в нарушения");
+                "Сторож ослеп: клетка н/п без строки обоснования обязана попасть в нарушения"
+                        + " Иначе тест matrix_NoPairWithoutReason_IsReported перестанет ловить эту поломку. При смене matrix_NoPairWithoutReason_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -107,7 +113,8 @@ class CrossMatrixGuardTests {
         assertTrue(
                 CrossMatrixNoPair.issues(text, "| 1-2 | причина достаточной длины |\n").stream()
                         .anyMatch(issue -> issue.contains("обоснование относится к другой паре")),
-                "Сторож ослеп: обоснование н/п для пары с общим тестом обязано попасть в нарушения");
+                "Сторож ослеп: обоснование н/п для пары с общим тестом обязано попасть в нарушения"
+                        + " Иначе тест matrix_NoPairReasonForTestedPair_IsReported перестанет ловить эту поломку. При смене matrix_NoPairReasonForTestedPair_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -117,7 +124,8 @@ class CrossMatrixGuardTests {
         assertTrue(
                 CrossMatrixDocument.issues(text, Map.of("ATests", "class ATests { void ok() {} }")).stream()
                         .anyMatch(issue -> issue.contains("не размечена силой")),
-                "Сторож ослеп: строка пары без силы полный/слабо обязана попасть в нарушения");
+                "Сторож ослеп: строка пары без силы полный/слабо обязана попасть в нарушения"
+                        + " Иначе тест detail_MissingStrength_IsReported перестанет ловить эту поломку. При смене detail_MissingStrength_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -127,7 +135,8 @@ class CrossMatrixGuardTests {
         assertTrue(
                 CrossMatrixDocument.issues(text, Map.of("ATests", "class ATests { void ok() {} }")).stream()
                         .noneMatch(issue -> issue.contains("силой")),
-                "Сторож ложно срабатывает: отметка «слабо» — законная сила пары");
+                "Сторож ложно срабатывает: отметка «слабо» — законная сила пары"
+                        + " Иначе тест detail_WeakStrength_IsAccepted перестанет ловить эту поломку. При смене detail_WeakStrength_IsAccepted проверь это утверждение.");
     }
 
     @Test
@@ -137,7 +146,8 @@ class CrossMatrixGuardTests {
         assertTrue(
                 CrossMatrixDocument.issues(text, Map.of("ATests", "class ATests { void ok() {} }")).stream()
                         .anyMatch(issue -> issue.contains("не говорит, что дал граф")),
-                "Сторож ослеп: строка пары без графа обязана попасть в нарушения");
+                "Сторож ослеп: строка пары без графа обязана попасть в нарушения"
+                        + " Иначе тест detail_MissingGraphFact_IsReported перестанет ловить эту поломку. При смене detail_MissingGraphFact_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -147,7 +157,8 @@ class CrossMatrixGuardTests {
         assertTrue(
                 CrossMatrixInterrupt.issues(text, Map.of("ATests", "class ATests { void ok() {} }")).stream()
                         .anyMatch(issue -> issue.contains("без существующего теста")),
-                "Сторож ослеп: отметка ОК без теста обязана попасть в нарушения оси прерывания");
+                "Сторож ослеп: отметка ОК без теста обязана попасть в нарушения оси прерывания"
+                        + " Иначе тест interrupt_OkWithoutTest_IsReported перестанет ловить эту поломку. При смене interrupt_OkWithoutTest_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -157,7 +168,8 @@ class CrossMatrixGuardTests {
         assertTrue(
                 CrossMatrixInterrupt.issues(text, Map.of("ATests", "class ATests { void ok() {} }")).stream()
                         .anyMatch(issue -> issue.contains("вне столб/мост/расчистка/шахта/dig_out/маршрут")),
-                "Сторож ослеп: механика вне пяти обязательных обязана попасть в нарушения");
+                "Сторож ослеп: механика вне пяти обязательных обязана попасть в нарушения"
+                        + " Иначе тест interrupt_UnknownMechanic_IsReported перестанет ловить эту поломку. При смене interrupt_UnknownMechanic_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -167,7 +179,8 @@ class CrossMatrixGuardTests {
         assertTrue(
                 CrossMatrixInterrupt.issues(text, Map.of("ATests", "class ATests { void ok() {} }")).stream()
                         .anyMatch(issue -> issue.contains("Н без задачи починки")),
-                "Сторож ослеп: клетка Н без задачи починки обязана попасть в нарушения");
+                "Сторож ослеп: клетка Н без задачи починки обязана попасть в нарушения"
+                        + " Иначе тест interrupt_BrokenPairWithoutTask_IsReported перестанет ловить эту поломку. При смене interrupt_BrokenPairWithoutTask_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -179,7 +192,8 @@ class CrossMatrixGuardTests {
                                 | I01 | столб | голод | след | да | ОК | `ATests.ok` |
                                 """, Map.of("ATests", "class ATests { void ok() {} }")).stream()
                         .anyMatch(issue -> issue.contains("меньше 25")),
-                "Сторож ослеп: недобор пар первой партии обязана попасть в нарушения");
+                "Сторож ослеп: недобор пар первой партии обязана попасть в нарушения"
+                        + " Иначе тест interrupt_FewerThanMinimumRows_IsReported перестанет ловить эту поломку. При смене interrupt_FewerThanMinimumRows_IsReported проверь это утверждение.");
     }
 
     private static String interruptDocument() {

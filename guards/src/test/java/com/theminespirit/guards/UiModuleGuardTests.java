@@ -26,7 +26,8 @@ class UiModuleGuardTests {
         assertTrue(
                 Files.isDirectory(MAIN.resolve(PACKAGE).resolve("core/ui")),
                 "UI не собран отдельным модулем: ui/src/main/java/com/theminespirit/core/ui отсутствует. "
-                        + "Как надо: исходники экранов физически в :ui, пакеты прежние.");
+                        + "Как надо: исходники экранов физически в :ui, пакеты прежние."
+                        + " Иначе тест uiSources_LiveInUiModule_NotInRoot перестанет ловить эту поломку. При смене uiSources_LiveInUiModule_NotInRoot проверь это утверждение.");
         List<String> misplaced = new ArrayList<>();
         for (String logical : List.of(
                 "core/ui/BoardSnapshot.java",
@@ -52,17 +53,20 @@ class UiModuleGuardTests {
                 List.of(),
                 misplaced,
                 "Классы экранов обязаны лежать в :ui (кроме контрактов :api): иначе правка модели экрана снова "
-                        + "гоняет все тесты корня, а модуль не собирается сам. Нарушители:");
+                        + "гоняет все тесты корня, а модуль не собирается сам. Нарушители:"
+                        + " При смене uiSources_LiveInUiModule_NotInRoot проверь это утверждение.");
     }
 
     @Test
     void uiTests_LiveInUiModule_LocalTestsExist() {
         assertTrue(
                 Files.isDirectory(TEST.resolve(PACKAGE).resolve("core/ui")),
-                "У :ui нет своих тестов (ui/src/test/java): перенос тестов молча отключил проверки экранов.");
+                "У :ui нет своих тестов (ui/src/test/java): перенос тестов молча отключил проверки экранов."
+                        + " Иначе тест uiTests_LiveInUiModule_LocalTestsExist перестанет ловить эту поломку. При смене uiTests_LiveInUiModule_LocalTestsExist проверь это утверждение.");
         assertTrue(
                 Files.isRegularFile(TEST.resolve(PACKAGE).resolve("core/ui/BoardSnapshotTests.java")),
-                "Тест BoardSnapshotTests обязан переехать в :ui: иначе ./gradlew :ui:test проверяет не экраны.");
+                "Тест BoardSnapshotTests обязан переехать в :ui: иначе ./gradlew :ui:test проверяет не экраны."
+                        + " При смене uiTests_LiveInUiModule_LocalTestsExist проверь это утверждение.");
         List<String> misplaced = new ArrayList<>();
         SourceFiles.allTests().forEach((file, text) -> {
             String logical = SourceFiles.logical(file);
@@ -78,7 +82,8 @@ class UiModuleGuardTests {
                 List.of(),
                 misplaced,
                 "Тесты экранов обязаны лежать в :ui: иначе :ui:test не проверяет модуль, а корень гоняет чужие "
-                        + "тесты на каждую правку. Нарушители:");
+                        + "тесты на каждую правку. Нарушители:"
+                        + " При смене uiTests_LiveInUiModule_LocalTestsExist проверь это утверждение.");
     }
 
     @Test
@@ -93,7 +98,8 @@ class UiModuleGuardTests {
                 violations(sources, apiClasses, visible),
                 "UI зависит только от :api, :rest, :board и объявленных механик: импорт корня (neoforge/client) "
                         + "возвращает цикл и запрещает отдельную сборку :ui. Как надо: экран — в :ui, обработчик "
-                        + "клиента — в корне. Нарушители:");
+                        + "клиента — в корне. Нарушители:"
+                        + " Иначе тест uiModule_Imports_OnlyApiAndDeclaredModules перестанет ловить эту поломку. При смене uiModule_Imports_OnlyApiAndDeclaredModules проверь это утверждение.");
     }
 
     @Test
@@ -107,6 +113,7 @@ class UiModuleGuardTests {
                 List.of(),
                 violations(sources, apiClasses, visible),
                 "Тест UI компилируется только с :api, своими и объявленными модулями: импорт корня в тесте "
-                        + "скрывает, что :ui без корня не собрать. Нарушители:");
+                        + "скрывает, что :ui без корня не собрать. Нарушители:"
+                        + " Иначе тест uiTests_Imports_OnlyApiAndDeclaredModules перестанет ловить эту поломку. При смене uiTests_Imports_OnlyApiAndDeclaredModules проверь это утверждение.");
     }
 }

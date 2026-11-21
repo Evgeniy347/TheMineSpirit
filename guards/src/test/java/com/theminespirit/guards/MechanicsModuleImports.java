@@ -31,7 +31,10 @@ final class MechanicsModuleImports {
         Set<String> classes = new LinkedHashSet<>();
         sources.forEach((file, text) -> {
             Matcher pkg = PACKAGE.matcher(text);
-            assertTrue(pkg.find(), "Файл " + file + " без package: :api не может быть частью пакета");
+            assertTrue(
+                    pkg.find(),
+                    "Файл " + file + " без package: :api не может быть частью пакета"
+                            + " Иначе тест механику перестанет ловить эту поломку. При смене механику проверь это утверждение.");
             classes.add(pkg.group(1) + "." + file.getFileName().toString().replace(".java", ""));
         });
         return classes;

@@ -30,7 +30,8 @@ class WeakAssertionGuardTests {
                         + "Проверяй само поведение: assertEquals с ожидаемым значением или состоянием, "
                         + "assertThrows с ожидаемым типом и текстом. Пример: вместо проверки, что план не null, — "
                         + "сравнить список скриптов плана с ожидаемым. Правило: docs/TESTING.md → «Тест, который "
-                        + "может упасть». Нарушители");
+                        + "может упасть». Нарушители"
+                        + " Иначе тест testSources_Scanned_UseNoNotNullOrDoesNotThrowChecks перестанет ловить эту поломку. При смене testSources_Scanned_UseNoNotNullOrDoesNotThrowChecks проверь это утверждение.");
     }
 
     @Test
@@ -39,7 +40,8 @@ class WeakAssertionGuardTests {
                 WEAK_ASSERTION
                         .matcher("        assert" + "NotNull(plan, \"сообщение\");")
                         .find(),
-                "Сторож ослеп: вызов проверки «не null» должен находиться");
+                "Сторож ослеп: вызов проверки «не null» должен находиться"
+                        + " Иначе тест weakAssertionPattern_NotNullCall_IsDetected перестанет ловить эту поломку. При смене weakAssertionPattern_NotNullCall_IsDetected проверь это утверждение.");
     }
 
     @Test
@@ -48,6 +50,7 @@ class WeakAssertionGuardTests {
                 !WEAK_ASSERTION
                         .matcher("import static org.junit.jupiter.api.Assertions.assert" + "NotNull;")
                         .find(),
-                "Сторож ложно срабатывает: строка импорта без вызова не нарушение, компилятор сам отметит лишний импорт");
+                "Сторож ложно срабатывает: строка импорта без вызова не нарушение, компилятор сам отметит лишний импорт"
+                        + " Иначе тест weakAssertionPattern_StaticImportLine_IsIgnored перестанет ловить эту поломку. При смене weakAssertionPattern_StaticImportLine_IsIgnored проверь это утверждение.");
     }
 }

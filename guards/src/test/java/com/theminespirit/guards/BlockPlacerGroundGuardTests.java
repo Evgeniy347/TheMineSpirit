@@ -23,11 +23,13 @@ class BlockPlacerGroundGuardTests {
                 DEFAULT_GROUND.matcher(text).find(),
                 "У BlockPlacer снова появился конструктор без основания — новый нестроительный код молча "
                         + "получает право ставить блоки в план. Как надо: передавай PlotProtection.Ground явно, "
-                        + "NONE для временного и нестроительного.");
+                        + "NONE для временного и нестроительного."
+                        + " Иначе тест blockPlacer_DefaultGroundConstructor_IsAbsent перестанет ловить эту поломку. При смене blockPlacer_DefaultGroundConstructor_IsAbsent проверь это утверждение.");
         assertTrue(
                 text.contains("public BlockPlacer(SpiritEntity spirit, PlotProtection.Ground ground)"),
                 "Основание постановки обязано быть аргументом BlockPlacer: по нему защита отличает стройку "
-                        + "от засыпки, моста и пахоты");
+                        + "от засыпки, моста и пахоты"
+                        + " Иначе тест blockPlacer_DefaultGroundConstructor_IsAbsent перестанет ловить эту поломку. При смене blockPlacer_DefaultGroundConstructor_IsAbsent проверь это утверждение.");
     }
 
     @Test
@@ -37,7 +39,8 @@ class BlockPlacerGroundGuardTests {
         assertEquals(
                 List.of("public BlockPlacer(SpiritEntity spirit)"),
                 found(sample),
-                "Сторож ослеп: конструктор BlockPlacer без основания обязан попасть в нарушители");
+                "Сторож ослеп: конструктор BlockPlacer без основания обязан попасть в нарушители"
+                        + " Иначе тест defaultGroundPattern_ConstructorWithoutGround_IsReported перестанет ловить эту поломку. При смене defaultGroundPattern_ConstructorWithoutGround_IsReported проверь это утверждение.");
     }
 
     private static List<String> found(String text) {

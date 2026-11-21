@@ -40,7 +40,8 @@ class FixtureVocabularyGuardTests {
                 List.of(),
                 problems,
                 "Живая фикстура — это словарь BlockKind: имена видов блоков задаёт только он (core/movement/"
-                        + "BlockKind.java). Второй словарь расходится с моделью ямы молча. Нарушители:");
+                        + "BlockKind.java). Второй словарь расходится с моделью ямы молча. Нарушители:"
+                        + " Иначе тест liveFixtures_UseOnlyBlockKindNames_AreReported перестанет ловить эту поломку. При смене liveFixtures_UseOnlyBlockKindNames_AreReported проверь это утверждение.");
     }
 
     @Test
@@ -50,7 +51,8 @@ class FixtureVocabularyGuardTests {
         assertEquals(
                 List.of("яма.live:2: вид блока NETHER не из BlockKind"),
                 problems,
-                "Сторож ослеп: неизвестное имя в фикстуре обязано попадать в нарушители");
+                "Сторож ослеп: неизвестное имя в фикстуре обязано попадать в нарушители"
+                        + " Иначе тест liveFixture_UnknownKind_IsReported перестанет ловить эту поломку. При смене liveFixture_UnknownKind_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -58,7 +60,8 @@ class FixtureVocabularyGuardTests {
         assertEquals(
                 List.of(),
                 problemsOf("яма.live", List.of("# снимок", "feet 0 0 0", "", "0 0 0 OBSTACLE")),
-                "Сторож ложно срабатывает: вид из BlockKind допустим, комментарии, feet и пустые строки не в счёт");
+                "Сторож ложно срабатывает: вид из BlockKind допустим, комментарии, feet и пустые строки не в счёт"
+                        + " Иначе тест liveFixture_KnownKind_IsAccepted перестанет ловить эту поломку. При смене liveFixture_KnownKind_IsAccepted проверь это утверждение.");
     }
 
     @Test
@@ -66,7 +69,8 @@ class FixtureVocabularyGuardTests {
         assertEquals(
                 BlockKind.class,
                 PitExitPlanner.World.class.getMethod("at", BlockCoord.class).getReturnType(),
-                "Мир ямы обязан возвращать общий BlockKind: свой Kind рядом с фикстурой — второй словарь");
+                "Мир ямы обязан возвращать общий BlockKind: свой Kind рядом с фикстурой — второй словарь"
+                        + " Иначе тест pitWorld_AtMethod_ReturnsBlockKind перестанет ловить эту поломку. При смене pitWorld_AtMethod_ReturnsBlockKind проверь это утверждение.");
     }
 
     private static List<String> problemsOf(String source, List<String> lines) {

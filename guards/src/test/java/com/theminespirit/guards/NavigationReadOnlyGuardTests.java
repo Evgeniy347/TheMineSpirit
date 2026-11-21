@@ -36,7 +36,8 @@ class NavigationReadOnlyGuardTests {
                 List.of(),
                 offenders,
                 "Навигация обязана только читать мир: ломать и ставить блоки по пути запрещено (ARCHITECTURE.md, "
-                        + "фундамент). Нарушители");
+                        + "фундамент). Нарушители"
+                        + " Иначе тест navigationSources_WorldMutationApis_AreAbsent перестанет ловить эту поломку. При смене navigationSources_WorldMutationApis_AreAbsent проверь это утверждение.");
     }
 
     private static List<Path> javaFiles(Path root) {

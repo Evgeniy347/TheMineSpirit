@@ -30,7 +30,8 @@ class SilentCatchGuardTests {
                 "Пустой catch прячет сбой: дух молча не выполняет задачу, а в логе нет ни строки, почему. "
                         + "Тихий fallback — авария, а не защита. Сделай одно из двух: пробрось исключение дальше "
                         + "с контекстом (что делали и с какими данными) или переведи задачу в FAILED с причиной "
-                        + "и запиши её в лог. Правило: docs/CONVENTIONS.md → «Ошибки». Нарушители");
+                        + "и запиши её в лог. Правило: docs/CONVENTIONS.md → «Ошибки». Нарушители"
+                        + " Иначе тест productionSources_Scanned_HaveNoEmptyCatchBlocks перестанет ловить эту поломку. При смене productionSources_Scanned_HaveNoEmptyCatchBlocks проверь это утверждение.");
     }
 
     @Test
@@ -49,7 +50,8 @@ class SilentCatchGuardTests {
                 "catch, который только пробрасывает то же исключение (catch (X e) { throw e; }), ничего не делает: "
                         + "исключение и так ушло бы дальше. Он только создаёт впечатление обработки и прячет, что "
                         + "обработки нет. Удали try/catch целиком или добавь в catch контекст: "
-                        + "throw new X(\"что делали и с какими данными\", e). Нарушители");
+                        + "throw new X(\"что делали и с какими данными\", e). Нарушители"
+                        + " Иначе тест productionSources_Scanned_HaveNoCatchThatOnlyRethrows перестанет ловить эту поломку. При смене productionSources_Scanned_HaveNoCatchThatOnlyRethrows проверь это утверждение.");
     }
 
     @Test
@@ -58,7 +60,8 @@ class SilentCatchGuardTests {
                 RETHROW_ONLY_CATCH
                         .matcher("} catch (PlanValidationException error) {\n    throw error;\n}")
                         .find(),
-                "Сторож ослеп: catch, пробрасывающий ту же переменную, должен находиться");
+                "Сторож ослеп: catch, пробрасывающий ту же переменную, должен находиться"
+                        + " Иначе тест rethrowOnlyPattern_SameVariableRethrown_IsDetected перестанет ловить эту поломку. При смене rethrowOnlyPattern_SameVariableRethrown_IsDetected проверь это утверждение.");
     }
 
     @Test
@@ -68,7 +71,8 @@ class SilentCatchGuardTests {
                         .matcher(
                                 "} catch (IOException error) {\n    throw new UncheckedIOException(\"чтение плана\", error);\n}")
                         .find(),
-                "Сторож ложно срабатывает: обёртка с контекстом — это обработка");
+                "Сторож ложно срабатывает: обёртка с контекстом — это обработка"
+                        + " Иначе тест rethrowOnlyPattern_WrappedWithContext_IsIgnored перестанет ловить эту поломку. При смене rethrowOnlyPattern_WrappedWithContext_IsIgnored проверь это утверждение.");
     }
 
     @Test
@@ -77,7 +81,8 @@ class SilentCatchGuardTests {
                 EMPTY_CATCH
                         .matcher("try {\n    run();\n} catch (IllegalStateException ignored) {\n}\n")
                         .find(),
-                "Сторож ослеп: пустой catch, разнесённый по строкам, должен находиться");
+                "Сторож ослеп: пустой catch, разнесённый по строкам, должен находиться"
+                        + " Иначе тест emptyCatchPattern_EmptyBlockAcrossLines_IsDetected перестанет ловить эту поломку. При смене emptyCatchPattern_EmptyBlockAcrossLines_IsDetected проверь это утверждение.");
     }
 
     @Test
@@ -86,6 +91,7 @@ class SilentCatchGuardTests {
                 !EMPTY_CATCH
                         .matcher("} catch (IOException e) {\n    throw new UncheckedIOException(e);\n}")
                         .find(),
-                "Сторож ложно срабатывает: catch с обработкой не нарушение");
+                "Сторож ложно срабатывает: catch с обработкой не нарушение"
+                        + " Иначе тест emptyCatchPattern_BlockWithStatement_IsIgnored перестанет ловить эту поломку. При смене emptyCatchPattern_BlockWithStatement_IsIgnored проверь это утверждение.");
     }
 }

@@ -37,7 +37,8 @@ class TestTimeLimitGuardTests {
                 limits(read(SCRIPT)),
                 "Пределы времени в scripts/test.sh разошлись с согласованными (секунды). Предел не поднимают, чтобы "
                         + "зеленел долгий прогон: ищут, что замедлило тесты. Поднять можно только с согласия владельца — "
-                        + "правкой таблицы AGREED в этом стороже с причиной. Правило: docs/TESTING.md → «Время»");
+                        + "правкой таблицы AGREED в этом стороже с причиной. Правило: docs/TESTING.md → «Время»"
+                        + " Иначе тест testScript_TimeLimits_EqualAgreedValues перестанет ловить эту поломку. При смене testScript_TimeLimits_EqualAgreedValues проверь это утверждение.");
     }
 
     @Test
@@ -51,7 +52,8 @@ class TestTimeLimitGuardTests {
                         GAMETEST_WARN="${THEMINESPIRIT_GAMETEST_WARN_SECONDS:-5}"
                         GAMETEST_FULL_STOP="${THEMINESPIRIT_GAMETEST_FULL_STOP_SECONDS:-1200}"
                         """),
-                "Сторож ослеп: строки пределов вида NAME=\"${THEMINESPIRIT_…_SECONDS:-N}\" обязаны разбираться");
+                "Сторож ослеп: строки пределов вида NAME=\"${THEMINESPIRIT_…_SECONDS:-N}\" обязаны разбираться"
+                        + " Иначе тест limits_ScriptDefaults_AreParsed перестанет ловить эту поломку. При смене limits_ScriptDefaults_AreParsed проверь это утверждение.");
     }
 
     private static Map<String, Integer> limits(String script) {

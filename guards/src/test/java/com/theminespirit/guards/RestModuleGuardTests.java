@@ -34,7 +34,8 @@ class RestModuleGuardTests {
         assertTrue(
                 Files.isDirectory(MAIN.resolve(PACKAGE).resolve("core/rest")),
                 "REST не собран отдельным модулем: rest/src/main/java/com/theminespirit/core/rest отсутствует. "
-                        + "Как надо: исходники rest физически в :rest, пакеты прежние.");
+                        + "Как надо: исходники rest физически в :rest, пакеты прежние."
+                        + " Иначе тест restSources_LiveInRestModule_NotInRoot перестанет ловить эту поломку. При смене restSources_LiveInRestModule_NotInRoot проверь это утверждение.");
         List<String> misplaced = new ArrayList<>();
         for (String logical : List.of(
                 "core/rest/Router.java",
@@ -60,17 +61,20 @@ class RestModuleGuardTests {
                 List.of(),
                 misplaced,
                 "Классы REST обязаны лежать в :rest (кроме контрактов :api): иначе правка транспорта снова гоняет "
-                        + "все тесты корня, а модуль не собирается сам. Нарушители:");
+                        + "все тесты корня, а модуль не собирается сам. Нарушители:"
+                        + " При смене restSources_LiveInRestModule_NotInRoot проверь это утверждение.");
     }
 
     @Test
     void restTests_LiveInRestModule_LocalTestsExist() {
         assertTrue(
                 Files.isDirectory(TEST.resolve(PACKAGE).resolve("core/rest")),
-                "У :rest нет своих тестов (rest/src/test/java): перенос тестов молча отключил проверки транспорта.");
+                "У :rest нет своих тестов (rest/src/test/java): перенос тестов молча отключил проверки транспорта."
+                        + " Иначе тест restTests_LiveInRestModule_LocalTestsExist перестанет ловить эту поломку. При смене restTests_LiveInRestModule_LocalTestsExist проверь это утверждение.");
         assertTrue(
                 Files.isRegularFile(TEST.resolve(PACKAGE).resolve("core/rest/RouterTests.java")),
-                "Тест RouterTests обязан переехать в :rest: иначе ./gradlew :rest:test проверяет не транспорт.");
+                "Тест RouterTests обязан переехать в :rest: иначе ./gradlew :rest:test проверяет не транспорт."
+                        + " При смене restTests_LiveInRestModule_LocalTestsExist проверь это утверждение.");
         List<String> misplaced = new ArrayList<>();
         SourceFiles.allTests().forEach((file, text) -> {
             String logical = SourceFiles.logical(file);
@@ -86,7 +90,8 @@ class RestModuleGuardTests {
                 List.of(),
                 misplaced,
                 "Тесты REST обязаны лежать в :rest: иначе :rest:test не проверяет модуль, а корень гоняет чужие "
-                        + "тесты на каждую правку. Нарушители:");
+                        + "тесты на каждую правку. Нарушители:"
+                        + " При смене restTests_LiveInRestModule_LocalTestsExist проверь это утверждение.");
     }
 
     @Test
@@ -101,7 +106,8 @@ class RestModuleGuardTests {
                 violations(sources, apiClasses, visible),
                 "REST зависит только от :api, :board, :tactics, :content и :policy, объявленных в build.gradle: "
                         + "импорт :ui возвращает цикл (ui → rest) и запрещает отдельную сборку :rest. Как надо: "
-                        + "общий тип — контракт в :api, экран — в :ui. Нарушители:");
+                        + "общий тип — контракт в :api, экран — в :ui. Нарушители:"
+                        + " Иначе тест restModule_Imports_OnlyApiAndDeclaredModules перестанет ловить эту поломку. При смене restModule_Imports_OnlyApiAndDeclaredModules проверь это утверждение.");
     }
 
     @Test
@@ -115,6 +121,7 @@ class RestModuleGuardTests {
                 List.of(),
                 violations(sources, apiClasses, visible),
                 "Тест REST компилируется только с :api, своими и объявленными модулями: импорт :ui в тесте "
-                        + "скрывает, что :rest без :ui не собрать, и возвращает цикл. Нарушители:");
+                        + "скрывает, что :rest без :ui не собрать, и возвращает цикл. Нарушители:"
+                        + " Иначе тест restTests_Imports_OnlyApiAndDeclaredModules перестанет ловить эту поломку. При смене restTests_Imports_OnlyApiAndDeclaredModules проверь это утверждение.");
     }
 }

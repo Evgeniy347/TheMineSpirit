@@ -21,21 +21,25 @@ class HangWatchGuardTests {
                 script.contains("console_stream_alive") && script.contains("console_lost"),
                 "hang-watch.sh не проверяет живой поток консоли: обновление JDK на месте (apt unattended) "
                         + "убивает stdin/stdout, REST и тик остаются живы, и сторож молчит, пока save-* и stop "
-                        + "не подтверждаются. Как надо: jcmd VM.version + перезапуск");
+                        + "не подтверждаются. Как надо: jcmd VM.version + перезапуск"
+                        + " Иначе тест hangWatch_DeadConsole_IsRestarted перестанет ловить эту поломку. При смене hangWatch_DeadConsole_IsRestarted проверь это утверждение.");
         assertTrue(
                 script.contains("VM.version"),
                 "Проверка консоли обязана быть прикреплением jcmd к живой JVM (VM.version): один kill -0 "
-                        + "показывает процесс, но не работающую консоль");
+                        + "показывает процесс, но не работающую консоль"
+                        + " Иначе тест hangWatch_DeadConsole_IsRestarted перестанет ловить эту поломку. При смене hangWatch_DeadConsole_IsRestarted проверь это утверждение.");
         assertTrue(
                 script.contains("нет jcmd") || script.contains("command -v \"$JCMD\""),
                 "Без jcmd (JRE вместо JDK) сторож не судит о консоли: иначе каждый прогон на JRE перезапускал "
-                        + "бы здоровый сервер");
+                        + "бы здоровый сервер"
+                        + " При смене hangWatch_DeadConsole_IsRestarted проверь это утверждение.");
         String check = read(CHECK);
         for (String scenario : List.of("консоль мертва", "нет-jcmd", "console-")) {
             assertTrue(
                     check.contains(scenario),
                     "Проверка check-hang-watch.sh потеряла опыт «" + scenario + "»: мёртвая консоль, отсутствие "
-                            + "jcmd и файл дампа не должны расходиться с исправлением");
+                            + "jcmd и файл дампа не должны расходиться с исправлением"
+                            + " Иначе тест hangWatch_DeadConsole_IsRestarted перестанет ловить эту поломку. При смене hangWatch_DeadConsole_IsRestarted проверь это утверждение.");
         }
     }
 

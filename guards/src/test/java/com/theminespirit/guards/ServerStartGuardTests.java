@@ -23,7 +23,8 @@ class ServerStartGuardTests {
                 common.contains("size=\"$(log_size)\"") && common.contains("offset=0"),
                 "wait_for_log обязан сбрасывать смещение в каждом тике ожидания, когда игра пересоздала "
                         + "latest.log позже первых секунд старта: иначе старый offset больше нового лога, строка "
-                        + "«Done (» не находится, start.sh возвращает 1 при уже живом сервере и той же версии");
+                        + "«Done (» не находится, start.sh возвращает 1 при уже живом сервере и той же версии"
+                        + " При смене readyWait_LateLogRotation_IsHandled проверь это утверждение.");
     }
 
     @Test
@@ -31,19 +32,22 @@ class ServerStartGuardTests {
         assertTrue(
                 read(START).contains("START_READY_TIMEOUT"),
                 "start.sh ждёт готовность в пределах START_READY_TIMEOUT: без переменной опыт ожидания не "
-                        + "уложить в тест, а подмена таймаута ради зелёного — костыль");
+                        + "уложить в тест, а подмена таймаута ради зелёного — костыль"
+                        + " Иначе тест readyWait_Timeout_IsOverridableForCheck перестанет ловить эту поломку. При смене readyWait_Timeout_IsOverridableForCheck проверь это утверждение.");
     }
 
     @Test
     void checkStart_LateRotationScenario_IsPresent() {
         assertTrue(
                 Files.isRegularFile(CHECK_START),
-                "Нет scripts/testing/check-start.sh: нечем проверить, что поздняя ротация лога не ломает запуск");
+                "Нет scripts/testing/check-start.sh: нечем проверить, что поздняя ротация лога не ломает запуск"
+                        + " При смене checkStart_LateRotationScenario_IsPresent проверь это утверждение.");
         String check = read(CHECK_START);
         assertTrue(
                 check.contains("rotate_late") && check.contains("FAKE_ROTATE_DELAY=5"),
                 "Опыт check-start.sh потерял сценарий поздней ротации latest.log: без него гонка проверки "
-                        + "готовности снова пройдёт незамеченной");
+                        + "готовности снова пройдёт незамеченной"
+                        + " При смене checkStart_LateRotationScenario_IsPresent проверь это утверждение.");
     }
 
     @Test
@@ -52,7 +56,8 @@ class ServerStartGuardTests {
                 read(CHKQ).contains("scripts/testing/check-start.sh"),
                 "Приёмка scripts/lead/chkq.sh перестала запускать scripts/testing/check-start.sh: опыт поздней "
                         + "ротации latest.log снова держится только текстовым сторожем, а не настоящим прогоном "
-                        + "на каждой принимаемой ветке (debtmisc21)");
+                        + "на каждой принимаемой ветке (debtmisc21)"
+                        + " Иначе тест acceptance_CheckStart_IsRun перестанет ловить эту поломку. При смене acceptance_CheckStart_IsRun проверь это утверждение.");
     }
 
     private static String read(Path path) {

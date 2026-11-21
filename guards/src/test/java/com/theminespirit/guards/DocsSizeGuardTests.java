@@ -26,7 +26,8 @@ class DocsSizeGuardTests {
                 "Документ длиннее " + LIMIT + " строк: такой файл не читают целиком, правила в нём теряются, "
                         + "а правка требует перечитывать всё. Как надо: раздробить по темам (каталог с README-картой) "
                         + "или сократить без потери смысла. Правило: docs/TESTING.md → «Сторожа», AGENTS.md → «Документы». "
-                        + "Нарушители (путь и число строк)");
+                        + "Нарушители (путь и число строк)"
+                        + " Иначе тест docs_FilesLongerThanLimit_AreReported перестанет ловить эту поломку. При смене docs_FilesLongerThanLimit_AreReported проверь это утверждение.");
     }
 
     @Test
@@ -34,7 +35,8 @@ class DocsSizeGuardTests {
         assertEquals(
                 List.of("docs/long.md (201)"),
                 oversized(Map.of("docs/long.md", "x\n".repeat(201))),
-                "Сторож ослеп: файл длиной 201 строка обязан попасть в нарушители");
+                "Сторож ослеп: файл длиной 201 строка обязан попасть в нарушители"
+                        + " Иначе тест oversized_FileOverLimit_IsReported перестанет ловить эту поломку. При смене oversized_FileOverLimit_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -42,7 +44,8 @@ class DocsSizeGuardTests {
         assertEquals(
                 List.of(),
                 oversized(Map.of("docs/ok.md", "x\n".repeat(LIMIT))),
-                "Сторож ложно срабатывает: файл ровно в предел " + LIMIT + " строк допустим");
+                "Сторож ложно срабатывает: файл ровно в предел " + LIMIT + " строк допустим"
+                        + " Иначе тест oversized_FileAtLimit_IsAccepted перестанет ловить эту поломку. При смене oversized_FileAtLimit_IsAccepted проверь это утверждение.");
     }
 
     private static Map<String, String> documents() {

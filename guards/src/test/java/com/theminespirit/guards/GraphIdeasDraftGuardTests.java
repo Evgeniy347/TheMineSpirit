@@ -21,13 +21,26 @@ class GraphIdeasDraftGuardTests {
     void draft_ValidJson_ParsesAsSelfContainedGraph() throws IOException {
         SupplyGraph graph = SupplyGraph.parse(Files.readString(DRAFT, StandardCharsets.UTF_8), DRAFT.toString());
 
-        assertTrue(graph.items().size() >= 50, "В черновике меньше 50 предметов: кандидаты узлов потерялись");
-        assertTrue(graph.buildings().size() >= 20, "В черновике меньше 20 построек: кандидаты потерялись");
-        assertTrue(graph.ways().size() >= 30, "В черновике меньше 30 путей: кандидаты потерялись");
-        assertTrue(graph.events().size() >= 20, "В черновике меньше 20 событий: кандидаты потерялись");
+        assertTrue(
+                graph.items().size() >= 50,
+                "В черновике меньше 50 предметов: кандидаты узлов потерялись"
+                        + " Иначе тест draft_ValidJson_ParsesAsSelfContainedGraph перестанет ловить эту поломку. При смене draft_ValidJson_ParsesAsSelfContainedGraph проверь это утверждение.");
+        assertTrue(
+                graph.buildings().size() >= 20,
+                "В черновике меньше 20 построек: кандидаты потерялись"
+                        + " Иначе тест draft_ValidJson_ParsesAsSelfContainedGraph перестанет ловить эту поломку. При смене draft_ValidJson_ParsesAsSelfContainedGraph проверь это утверждение.");
+        assertTrue(
+                graph.ways().size() >= 30,
+                "В черновике меньше 30 путей: кандидаты потерялись"
+                        + " Иначе тест draft_ValidJson_ParsesAsSelfContainedGraph перестанет ловить эту поломку. При смене draft_ValidJson_ParsesAsSelfContainedGraph проверь это утверждение.");
+        assertTrue(
+                graph.events().size() >= 20,
+                "В черновике меньше 20 событий: кандидаты потерялись"
+                        + " Иначе тест draft_ValidJson_ParsesAsSelfContainedGraph перестанет ловить эту поломку. При смене draft_ValidJson_ParsesAsSelfContainedGraph проверь это утверждение.");
         assertTrue(
                 graph.ways().stream().anyMatch(way -> !graph.implemented(way.id())),
-                "В черновике нет ни одной заглушки implemented=false: новые узлы не отличить от готовых");
+                "В черновике нет ни одной заглушки implemented=false: новые узлы не отличить от готовых"
+                        + " Иначе тест draft_ValidJson_ParsesAsSelfContainedGraph перестанет ловить эту поломку. При смене draft_ValidJson_ParsesAsSelfContainedGraph проверь это утверждение.");
     }
 
     @Test
@@ -57,7 +70,8 @@ class GraphIdeasDraftGuardTests {
                 List.of(),
                 broken,
                 "Событие черновика ссылается на узел, которого нет в графе: задание не соберётся, "
-                        + "а связь потеряется молча. Как надо: объявить предмет, группу или постройку в этом же файле");
+                        + "а связь потеряется молча. Как надо: объявить предмет, группу или постройку в этом же файле"
+                        + " При смене draft_EventReferences_AllKnownInGraph проверь это утверждение.");
     }
 
     @Test
@@ -68,11 +82,13 @@ class GraphIdeasDraftGuardTests {
         IllegalStateException error = assertThrows(
                 IllegalStateException.class,
                 () -> SupplyGraph.parse(broken, "broken-draft"),
-                "Черновик с неизвестным предметом обязан падать при разборе, а не проходить молча");
+                "Черновик с неизвестным предметом обязан падать при разборе, а не проходить молча"
+                        + " Иначе тест draft_BrokenWayReference_IsReported перестанет ловить эту поломку. При смене draft_BrokenWayReference_IsReported проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("rest_missing"),
-                "Сторож не назвал неизвестный предмет rest_missing: черновик с битой ссылкой прошёл бы молча");
+                "Сторож не назвал неизвестный предмет rest_missing: черновик с битой ссылкой прошёл бы молча"
+                        + " Иначе тест draft_BrokenWayReference_IsReported перестанет ловить эту поломку. При смене draft_BrokenWayReference_IsReported проверь это утверждение.");
     }
 
     private static boolean known(SupplyGraph graph, String node) {

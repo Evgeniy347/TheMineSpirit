@@ -55,7 +55,8 @@ class MechanicsModuleGuardTests {
                 missing,
                 "Механика обязана физически лежать в своём модуле (шаг 7): классы с прежним пакетом в "
                         + "module/src/main/java, тесты — в module/src/test/java. Иначе модуль не собирается сам "
-                        + "и правка механики гоняет все тесты корня. Нарушители:");
+                        + "и правка механики гоняет все тесты корня. Нарушители:"
+                        + " При смене moduleSources_LiveInTheirOwnSourceSet_NotInRoot проверь это утверждение.");
     }
 
     @Test
@@ -78,7 +79,8 @@ class MechanicsModuleGuardTests {
                 List.of(),
                 missing,
                 "У модуля обязаны быть свои тесты: иначе ./gradlew :module:test нечего проверять, а перенос "
-                        + "молча отключил покрытие. Нарушители:");
+                        + "молча отключил покрытие. Нарушители:"
+                        + " При смене moduleTests_DeclaredModules_HaveTheirOwnTests проверь это утверждение.");
     }
 
     @Test
@@ -102,7 +104,8 @@ class MechanicsModuleGuardTests {
                 "Механика зависит только от :api и объявленных в build.gradle механик: импорт корня "
                         + "(board/graph/reload/…), необъявленной механики или Minecraft возвращает циклическую "
                         + "зависимость и запрещает отдельную сборку. Как надо: нужный контракт — в :api, данные и "
-                        + "граф передаёт владелец (доска/граф знает механику, а не наоборот). Нарушители:");
+                        + "граф передаёт владелец (доска/граф знает механику, а не наоборот). Нарушители:"
+                        + " Иначе тест mechanicsModule_Imports_OnlyJdkJacksonApiAndOwnPackage перестанет ловить эту поломку. При смене mechanicsModule_Imports_OnlyJdkJacksonApiAndOwnPackage проверь это утверждение.");
     }
 
     @Test
@@ -129,7 +132,8 @@ class MechanicsModuleGuardTests {
                 "Тест механики компилируется только с :api, своим модулем, :test-fixtures и модулями, реально "
                         + "объявленными в testImplementation: импорт необъявленного модуля скрывает, что тест без "
                         + "него не собрать. Как надо: добавь testImplementation project(':модуль') в build.gradle "
-                        + "механики или убери импорт. Нарушители:");
+                        + "механики или убери импорт. Нарушители:"
+                        + " Иначе тест mechanicsModuleTests_Imports_OnlyJdkApiAndOwnModule перестанет ловить эту поломку. При смене mechanicsModuleTests_Imports_OnlyJdkApiAndOwnModule проверь это утверждение.");
     }
 
     @Test
@@ -150,11 +154,13 @@ class MechanicsModuleGuardTests {
         assertEquals(
                 List.of("core/policy/Example.java: com.theminespirit.core.reload.DataTables"),
                 violations(sample, apiClasses, List.of("core.policy")),
-                "Сторож ослеп: импорт класса корня обязан попадать в нарушители");
+                "Сторож ослеп: импорт класса корня обязан попадать в нарушители"
+                        + " Иначе тест forbiddenImport_IsReported_AndApiImportAllowed перестанет ловить эту поломку. При смене forbiddenImport_IsReported_AndApiImportAllowed проверь это утверждение.");
         assertEquals(
                 List.of(),
                 violations(neighbor, apiClasses, List.of("core.policy")),
-                "Сторож ложно срабатывает: импорт класса :api допустим");
+                "Сторож ложно срабатывает: импорт класса :api допустим"
+                        + " Иначе тест forbiddenImport_IsReported_AndApiImportAllowed перестанет ловить эту поломку. При смене forbiddenImport_IsReported_AndApiImportAllowed проверь это утверждение.");
         Map<Path, String> sibling = Map.of(Path.of("mech/small/src/main/java/core/night/Night.java"), """
                 package com.theminespirit.core.night;
                 import com.theminespirit.core.doors.DoorTuning;
@@ -163,7 +169,8 @@ class MechanicsModuleGuardTests {
         assertEquals(
                 List.of(),
                 violations(sibling, apiClasses, List.of("core.doors", "core.night")),
-                "Сторож ложно срабатывает: пакеты одного модуля (:mech:small) вправе знать друг друга");
+                "Сторож ложно срабатывает: пакеты одного модуля (:mech:small) вправе знать друг друга"
+                        + " Иначе тест forbiddenImport_IsReported_AndApiImportAllowed перестанет ловить эту поломку. При смене forbiddenImport_IsReported_AndApiImportAllowed проверь это утверждение.");
         Map<Path, String> dependent = Map.of(Path.of("mech/small/src/main/java/core/social/Transfer.java"), """
                 package com.theminespirit.core.social;
                 import com.theminespirit.core.inventory.Stack;
@@ -172,7 +179,8 @@ class MechanicsModuleGuardTests {
         assertEquals(
                 List.of(),
                 violations(dependent, apiClasses, List.of("core.social", "core.inventory")),
-                "Сторож ложно срабатывает: разрешённая механика (:mech:inventory) доступна модулю");
+                "Сторож ложно срабатывает: разрешённая механика (:mech:inventory) доступна модулю"
+                        + " Иначе тест forbiddenImport_IsReported_AndApiImportAllowed перестанет ловить эту поломку. При смене forbiddenImport_IsReported_AndApiImportAllowed проверь это утверждение.");
     }
 
     @Test
@@ -189,6 +197,7 @@ class MechanicsModuleGuardTests {
                 List.of("core/inventory/Forged.java: com.theminespirit.core.mining.ToolChoice"),
                 violations(sample, apiClasses, List.of("core.inventory")),
                 "Сторож обязан отличать модуль по физическому пути, а не по имени пакета: ToolChoice в :mech:mining "
-                        + "недоступен :mech:inventory");
+                        + "недоступен :mech:inventory"
+                        + " Иначе тест otherMechanicImport_IsReported_EvenWhenClassLivesInApiPackage перестанет ловить эту поломку. При смене otherMechanicImport_IsReported_EvenWhenClassLivesInApiPackage проверь это утверждение.");
     }
 }

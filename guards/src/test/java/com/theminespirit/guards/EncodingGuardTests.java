@@ -70,7 +70,8 @@ class EncodingGuardTests {
                 "Кодировка и переводы строк ломают сборку и запуск незаметно: BOM в начале исходника "
                         + "ломает javac и shebang, CR в *.sh — bash, не-ASCII или LF в *.bat — командную "
                         + "строку Windows. Исходники и данные — UTF-8 без BOM, *.sh — только LF, *.bat — "
-                        + "ASCII и CRLF. Правило: docs/CONVENTIONS.md → «Файлы». Нарушители");
+                        + "ASCII и CRLF. Правило: docs/CONVENTIONS.md → «Файлы». Нарушители"
+                        + " При смене repository_CurrentFiles_AreUtf8WithoutBomAndCorrectLineEndings проверь это утверждение.");
     }
 
     @Test
@@ -79,7 +80,8 @@ class EncodingGuardTests {
 
         assertTrue(
                 problemsOf("Sample.java", text.getBytes(StandardCharsets.UTF_8)).contains("BOM"),
-                "Сторож ослеп: BOM в начале файла должен попадать в нарушители");
+                "Сторож ослеп: BOM в начале файла должен попадать в нарушители"
+                        + " Иначе тест encoding_BomInSource_IsReported перестанет ловить эту поломку. При смене encoding_BomInSource_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -88,7 +90,8 @@ class EncodingGuardTests {
 
         assertTrue(
                 problemsOf("run.sh", text.getBytes(StandardCharsets.UTF_8)).contains("*.sh содержит CR"),
-                "Сторож ослеп: CR в *.sh ломает bash, но нарушение не найдено");
+                "Сторож ослеп: CR в *.sh ломает bash, но нарушение не найдено"
+                        + " При смене encoding_ShellWithCarriageReturn_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -97,7 +100,8 @@ class EncodingGuardTests {
 
         assertTrue(
                 problemsOf("run.bat", text.getBytes(StandardCharsets.UTF_8)).contains("*.bat не CRLF"),
-                "Сторож ослеп: *.bat с LF вместо CRLF ломает командную строку, но нарушение не найдено");
+                "Сторож ослеп: *.bat с LF вместо CRLF ломает командную строку, но нарушение не найдено"
+                        + " При смене encoding_BatchWithoutCrlf_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -106,7 +110,8 @@ class EncodingGuardTests {
 
         assertTrue(
                 problemsOf("run.bat", text.getBytes(StandardCharsets.UTF_8)).contains("*.bat не ASCII"),
-                "Сторож ослеп: не-ASCII в *.bat зависит от кодовой страницы Windows, но нарушение не найдено");
+                "Сторож ослеп: не-ASCII в *.bat зависит от кодовой страницы Windows, но нарушение не найдено"
+                        + " Иначе тест encoding_BatchWithNonAscii_IsReported перестанет ловить эту поломку. При смене encoding_BatchWithNonAscii_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -116,7 +121,8 @@ class EncodingGuardTests {
         assertEquals(
                 List.of(),
                 problemsOf("Sample.java", text.getBytes(StandardCharsets.UTF_8)),
-                "Сторож ложно срабатывает: UTF-8 без BOM и LF — законный исходник");
+                "Сторож ложно срабатывает: UTF-8 без BOM и LF — законный исходник"
+                        + " Иначе тест encoding_PlainUtf8WithLf_IsAccepted перестанет ловить эту поломку. При смене encoding_PlainUtf8WithLf_IsAccepted проверь это утверждение.");
     }
 
     private static List<String> problemsOf(String name, byte[] bytes) {

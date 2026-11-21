@@ -42,7 +42,8 @@ class ContentModuleGuardTests {
         assertTrue(
                 Files.isDirectory(MAIN.resolve(PACKAGE).resolve("core/reload")),
                 "Данные и каталог не собраны модулем :content: content/src/main/java/com/theminespirit/core/reload "
-                        + "отсутствует. Как надо: core.reload и core.script физически в :content, пакеты прежние.");
+                        + "отсутствует. Как надо: core.reload и core.script физически в :content, пакеты прежние."
+                        + " Иначе тест contentSources_LiveInContentModule_NotInRoot перестанет ловить эту поломку. При смене contentSources_LiveInContentModule_NotInRoot проверь это утверждение.");
         List<String> misplaced = new ArrayList<>();
         for (String logical : List.of(
                 "core/reload/DataTables.java",
@@ -68,7 +69,8 @@ class ContentModuleGuardTests {
                 List.of(),
                 misplaced,
                 "Таблицы и каталог скриптов обязаны лежать в :content (кроме контрактов :api): иначе правка данных "
-                        + "снова гоняет все тесты корня, а модуль не собирается сам. Нарушители:");
+                        + "снова гоняет все тесты корня, а модуль не собирается сам. Нарушители:"
+                        + " При смене contentSources_LiveInContentModule_NotInRoot проверь это утверждение.");
     }
 
     @Test
@@ -76,11 +78,13 @@ class ContentModuleGuardTests {
         assertTrue(
                 Files.isDirectory(TEST.resolve(PACKAGE).resolve("core/script")),
                 "У :content нет своих тестов (content/src/test/java/com/theminespirit/core/script): перенос тестов "
-                        + "молча отключил проверки каталога.");
+                        + "молча отключил проверки каталога."
+                        + " Иначе тест contentTests_LiveInContentModule_LocalTestsExist перестанет ловить эту поломку. При смене contentTests_LiveInContentModule_LocalTestsExist проверь это утверждение.");
         assertTrue(
                 Files.isRegularFile(TEST.resolve(PACKAGE).resolve("core/reload/TableRegistryTests.java")),
                 "Тест TableRegistryTests обязан переехать в :content: иначе ./gradlew :content:test проверяет не "
-                        + "таблицы.");
+                        + "таблицы."
+                        + " При смене contentTests_LiveInContentModule_LocalTestsExist проверь это утверждение.");
         List<String> misplaced = new ArrayList<>();
         SourceFiles.allTests().forEach((file, text) -> {
             String logical = SourceFiles.logical(file);
@@ -96,7 +100,8 @@ class ContentModuleGuardTests {
                 List.of(),
                 misplaced,
                 "Тесты таблиц и каталога обязаны лежать в :content: иначе :content:test не проверяет модуль, а "
-                        + "корень гоняет чужие тесты на каждую правку. Нарушители:");
+                        + "корень гоняет чужие тесты на каждую правку. Нарушители:"
+                        + " При смене contentTests_LiveInContentModule_LocalTestsExist проверь это утверждение.");
     }
 
     @Test
@@ -109,7 +114,8 @@ class ContentModuleGuardTests {
                 violations(SourceFiles.javaUnder(MAIN.resolve(PACKAGE)), apiClasses, visible),
                 "Контент зависит только от :api, :board, :tactics, :policy и объявленных механик: импорт корня "
                         + "(neoforge, gametest, rest) возвращает цикл и запрещает отдельную сборку :content. Как надо: "
-                        + "нужный контракт — в :api, данные — у владельца. Нарушители:");
+                        + "нужный контракт — в :api, данные — у владельца. Нарушители:"
+                        + " Иначе тест contentModule_Imports_OnlyApiAndDeclaredModules перестанет ловить эту поломку. При смене contentModule_Imports_OnlyApiAndDeclaredModules проверь это утверждение.");
     }
 
     @Test
@@ -121,6 +127,7 @@ class ContentModuleGuardTests {
                 List.of(),
                 violations(SourceFiles.javaUnder(TEST.resolve(PACKAGE)), apiClasses, visible),
                 "Тест контента компилируется только с :api, своим и объявленными модулями: импорт корня в тесте "
-                        + "скрывает, что :content без корня не собрать. Нарушители:");
+                        + "скрывает, что :content без корня не собрать. Нарушители:"
+                        + " Иначе тест contentTests_Imports_OnlyApiAndDeclaredModules перестанет ловить эту поломку. При смене contentTests_Imports_OnlyApiAndDeclaredModules проверь это утверждение.");
     }
 }

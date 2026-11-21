@@ -31,20 +31,24 @@ class SnapshotVersionGuardTests {
                     script.contains(ack),
                     "world-snapshot.sh не ждёт подтверждения «" + ack + "»: 10.11 поток консоли умер после "
                             + "обновления JDK, save-off остался включённым, а снимок сутки писал «сервер не подтвердил "
-                            + "сохранение мира» без причины. Как надо: wait_for_ack на каждую команду save-*");
+                            + "сохранение мира» без причины. Как надо: wait_for_ack на каждую команду save-*"
+                            + " Иначе тест worldSnapshot_WaitsForConsoleAcks_AndNamesTheCause перестанет ловить эту поломку. При смене worldSnapshot_WaitsForConsoleAcks_AndNamesTheCause проверь это утверждение.");
         }
         assertTrue(
                 script.contains("консоль не читает stdin") && script.contains("не пишет лог"),
                 "world-snapshot.sh обязан различать «сервер жив, консоль мертва» и «сервер завис»: без этого "
-                        + "дежурный не знает, перезапускать сервер или смотреть hang-watch.sh");
+                        + "дежурный не знает, перезапускать сервер или смотреть hang-watch.sh"
+                        + " При смене worldSnapshot_WaitsForConsoleAcks_AndNamesTheCause проверь это утверждение.");
         assertTrue(
                 script.contains("flock -w") && script.contains("exit 75"),
                 "world-snapshot.sh не ждёт идущий снимок и не называет занятый замок: публикация падала с "
-                        + "«уже идёт другой снимок» и кодом 0 у самого снимка (10.11, PUBLISH_EXIT=2)");
+                        + "«уже идёт другой снимок» и кодом 0 у самого снимка (10.11, PUBLISH_EXIT=2)"
+                        + " Иначе тест worldSnapshot_WaitsForConsoleAcks_AndNamesTheCause перестанет ловить эту поломку. При смене worldSnapshot_WaitsForConsoleAcks_AndNamesTheCause проверь это утверждение.");
         assertTrue(
                 Files.isRegularFile(SNAPSHOT_CHECK),
                 "Нет scripts/testing/check-world-snapshot.sh: нечем проверить, что мёртвая консоль не оставляет "
-                        + "мир без автосохранения");
+                        + "мир без автосохранения"
+                        + " Иначе тест worldSnapshot_WaitsForConsoleAcks_AndNamesTheCause перестанет ловить эту поломку. При смене worldSnapshot_WaitsForConsoleAcks_AndNamesTheCause проверь это утверждение.");
         String check = read(SNAPSHOT_CHECK);
         for (String scenario : List.of(
                 "запущенный сервер",
@@ -56,7 +60,8 @@ class SnapshotVersionGuardTests {
             assertTrue(
                     check.contains(scenario),
                     "Проверка check-world-snapshot.sh потеряла опыт «" + scenario + "»: подтверждения save-*, "
-                            + "возврат save-on, занятый замок и успешный архив не должны расходиться");
+                            + "возврат save-on, занятый замок и успешный архив не должны расходиться"
+                            + " Иначе тест worldSnapshot_WaitsForConsoleAcks_AndNamesTheCause перестанет ловить эту поломку. При смене worldSnapshot_WaitsForConsoleAcks_AndNamesTheCause проверь это утверждение.");
         }
     }
 
@@ -66,7 +71,8 @@ class SnapshotVersionGuardTests {
         assertTrue(
                 script.contains("SNAPSHOT_LOCK_WAIT"),
                 "publish.sh не передаёт снимку ожидание замка: снимок по cron каждые 10 минут занимал замок, и "
-                        + "выкладка падала, хотя могла подождать пару минут");
+                        + "выкладка падала, хотя могла подождать пару минут"
+                        + " Иначе тест publish_SnapshotBusy_WaitsForIt перестанет ловить эту поломку. При смене publish_SnapshotBusy_WaitsForIt проверь это утверждение.");
     }
 
     @Test
@@ -75,37 +81,45 @@ class SnapshotVersionGuardTests {
         assertTrue(
                 script.contains("mod_version.py") && script.contains("running_mod_version"),
                 "live.sh check не спрашивает, какую сборку загрузил сервер: «ОК» 10.11 стояло при моде 0.1.3454 "
-                        + "и новой сборке в mods/");
+                        + "и новой сборке в mods/"
+                        + " Иначе тест liveCheck_ModVersion_MustMatchBuilt перестанет ловить эту поломку. При смене liveCheck_ModVersion_MustMatchBuilt проверь это утверждение.");
         assertTrue(
                 script.contains("installed_mod_version") && script.contains("expected_mod_version"),
                 "live.sh check не сравнивает загруженную версию с mods/ и с собранной из дерева: без этого "
-                        + "проверка после выкладки пропускает невступившую в силу сборку");
+                        + "проверка после выкладки пропускает невступившую в силу сборку"
+                        + " При смене liveCheck_ModVersion_MustMatchBuilt проверь это утверждение.");
         assertTrue(
                 script.contains("--version") && script.contains("args.version"),
                 "live.sh check обязан давать явное ожидание версии (--version): иначе с дерева задачи он сравнивает "
-                        + "сервер с чужим main и пугает ложной ошибкой");
+                        + "сервер с чужим main и пугает ложной ошибкой"
+                        + " При смене liveCheck_ModVersion_MustMatchBuilt проверь это утверждение.");
         assertTrue(
                 Files.isRegularFile(MOD_VERSION),
                 "Нет scripts/mod_version.py: чтение версии из debug.log было бы третьей копией разбора в живых "
-                        + "скриптах и тестах");
+                        + "скриптах и тестах"
+                        + " Иначе тест liveCheck_ModVersion_MustMatchBuilt перестанет ловить эту поломку. При смене liveCheck_ModVersion_MustMatchBuilt проверь это утверждение.");
         String version = read(MOD_VERSION);
         assertTrue(
                 version.contains("Found valid mod file theminespirit-") && version.contains("DEBUG_SEARCH_LINES"),
                 "mod_version.py обязан брать последнюю запись NeoForge о загруженном mod-файле: иначе после "
-                        + "перезапуска вернётся старая сборка");
+                        + "перезапуска вернётся старая сборка"
+                        + " При смене liveCheck_ModVersion_MustMatchBuilt проверь это утверждение.");
         assertFalse(
                 script.contains("\"bash\"") || script.contains("'bash'"),
                 "live.py не зовёт bash за версией копии: на машине, где bash = WSL, пути Windows ему чужие "
-                        + "и проверка версии падает. Как надо: читать debug.log тем же mod_version.py на python");
+                        + "и проверка версии падает. Как надо: читать debug.log тем же mod_version.py на python"
+                        + " Иначе тест liveCheck_ModVersion_MustMatchBuilt перестанет ловить эту поломку. При смене liveCheck_ModVersion_MustMatchBuilt проверь это утверждение.");
         assertTrue(
                 Files.isRegularFile(VERSION_CHECK),
-                "Нет scripts/testing/check-mod-version.sh: разбор журнала NeoForge не проверен на живых строках");
+                "Нет scripts/testing/check-mod-version.sh: разбор журнала NeoForge не проверен на живых строках"
+                        + " Иначе тест liveCheck_ModVersion_MustMatchBuilt перестанет ловить эту поломку. При смене liveCheck_ModVersion_MustMatchBuilt проверь это утверждение.");
         String check = read(VERSION_CHECK);
         for (String scenario : List.of("0.1.3454", "последняя загрузка", "не выдумывается", "собранная версия")) {
             assertTrue(
                     check.contains(scenario),
                     "Проверка check-mod-version.sh потеряла опыт «" + scenario + "»: версия из журнала и из дерева "
-                            + "обязана оставаться проверенной");
+                            + "обязана оставаться проверенной"
+                            + " Иначе тест liveCheck_ModVersion_MustMatchBuilt перестанет ловить эту поломку. При смене liveCheck_ModVersion_MustMatchBuilt проверь это утверждение.");
         }
     }
 
@@ -115,12 +129,14 @@ class SnapshotVersionGuardTests {
         assertTrue(
                 wrapper.contains("mod_version.py") && wrapper.contains("python_bin"),
                 "mod-version.sh обязан делегировать разбор одному mod_version.py через scripts/python-bin.sh: "
-                        + "копия разбора в bash расходится с живым live.py и требует bash там, где он WSL");
+                        + "копия разбора в bash расходится с живым live.py и требует bash там, где он WSL"
+                        + " Иначе тест modVersionScript_AfterRestart_ReadsLastLoad перестанет ловить эту поломку. При смене modVersionScript_AfterRestart_ReadsLastLoad проверь это утверждение.");
         String script = read(MOD_VERSION);
         assertTrue(
                 script.contains("Found valid mod file theminespirit-") && script.contains("found = line"),
                 "mod_version.py обязан брать последнюю запись NeoForge о загруженном mod-файле: иначе после "
-                        + "перезапуска вернётся старая сборка");
+                        + "перезапуска вернётся старая сборка"
+                        + " При смене modVersionScript_AfterRestart_ReadsLastLoad проверь это утверждение.");
         List<String> problems = new ArrayList<>();
         try {
             for (String line : Files.readAllLines(MOD_VERSION, StandardCharsets.UTF_8)) {
@@ -135,7 +151,8 @@ class SnapshotVersionGuardTests {
                 List.of(),
                 problems,
                 "mod_version.py не угадывает версию по mods/ или latest.log: имя jar доказывает установку, а не "
-                        + "загрузку (10.11: сервер крутил 0.1.3454 при новой сборке на диске)");
+                        + "загрузку (10.11: сервер крутил 0.1.3454 при новой сборке на диске)"
+                        + " Иначе тест modVersionScript_AfterRestart_ReadsLastLoad перестанет ловить эту поломку. При смене modVersionScript_AfterRestart_ReadsLastLoad проверь это утверждение.");
     }
 
     private static String read(Path path) {

@@ -44,7 +44,8 @@ class SettlementLevelGuardTests {
                 "Высота поселения снова считается из рельефа мимо SettlementLevel: дом, забор, улицы, сад, шахта "
                         + "и грядка встают на разные y, и дом «повисает» над землёй. Цена: постройки не сходятся "
                         + "с планом, аудит не закрывает этап. Как надо: один раз при основании выбрать высоту в "
-                        + "SettlementLevel по площади финального этапа и брать её оттуда всем. Нарушители");
+                        + "SettlementLevel по площади финального этапа и брать её оттуда всем. Нарушители"
+                        + " При смене settlementLevel_HeightOutsideLevel_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -54,7 +55,8 @@ class SettlementLevelGuardTests {
         assertEquals(
                 List.of("FirstStepsRunner.java: высота поселения посчитана мимо SettlementLevel"),
                 violations(Map.of(Path.of("com/theminespirit/neoforge/board/FirstStepsRunner.java"), bad)),
-                "Сторож ослеп: выбор высоты из рельефа мимо SettlementLevel обязан ловиться");
+                "Сторож ослеп: выбор высоты из рельефа мимо SettlementLevel обязан ловиться"
+                        + " Иначе тест plot перестанет ловить эту поломку. При смене plot проверь это утверждение.");
     }
 
     @Test
@@ -64,7 +66,8 @@ class SettlementLevelGuardTests {
         assertEquals(
                 List.of(),
                 violations(Map.of(Path.of("com/theminespirit/neoforge/board/WorldAreaScan.java"), good)),
-                "Сторож ложно срабатывает: чтение готовой высоты из SettlementLevel — законно");
+                "Сторож ложно срабатывает: чтение готовой высоты из SettlementLevel — законно"
+                        + " Иначе тест scan перестанет ловить эту поломку. При смене scan проверь это утверждение.");
     }
 
     @Test
@@ -74,7 +77,8 @@ class SettlementLevelGuardTests {
         assertEquals(
                 List.of("FirstStepsRunner.java: высота поселения посчитана мимо SettlementLevel"),
                 violations(Map.of(Path.of("com/theminespirit/neoforge/board/FirstStepsRunner.java"), bad)),
-                "Сторож ослеп: чтение рельефа под высоту постройки мимо SettlementLevel обязано ловиться");
+                "Сторож ослеп: чтение рельефа под высоту постройки мимо SettlementLevel обязано ловиться"
+                        + " Иначе тест plot перестанет ловить эту поломку. При смене plot проверь это утверждение.");
     }
 
     @Test
@@ -84,7 +88,8 @@ class SettlementLevelGuardTests {
         assertEquals(
                 List.of(),
                 violations(Map.of(Path.of("com/theminespirit/neoforge/board/GraphTargets.java"), stand)),
-                "Сторож ложно срабатывает: стоянке и подходу рельеф читать можно");
+                "Сторож ложно срабатывает: стоянке и подходу рельеф читать можно"
+                        + " Иначе тест spot перестанет ловить эту поломку. При смене spot проверь это утверждение.");
     }
 
     @Test
@@ -94,7 +99,8 @@ class SettlementLevelGuardTests {
         assertEquals(
                 List.of("TownSurvey.java: высота поселения посчитана мимо SettlementLevel"),
                 violations(Map.of(Path.of("com/theminespirit/neoforge/board/TownSurvey.java"), bad)),
-                "Сторож ослеп: высота плана (медиана домов) снова стала вторым источником высоты поселения");
+                "Сторож ослеп: высота плана (медиана домов) снова стала вторым источником высоты поселения"
+                        + " Иначе тест town перестанет ловить эту поломку. При смене town проверь это утверждение.");
     }
 
     private static boolean fenceOriginFromSite(String text) {
@@ -163,7 +169,8 @@ class SettlementLevelGuardTests {
                 offenders,
                 "Основание забора берётся из SiteLevels.fenceOrigin (уровень ограды поселения), а не из точки "
                         + "опасности/портала: иначе забор встаёт на крышу склада (y=80), дух снизу «в яме», DigOut "
-                        + "ищет путь вверх полным перебором. Нарушители");
+                        + "ищет путь вверх полным перебором. Нарушители"
+                        + " При смене fenceOrigins_DangerAndPortal_UseSettlementLevel проверь это утверждение.");
     }
 
     @Test
@@ -182,17 +189,20 @@ class SettlementLevelGuardTests {
                 "Забор по событию — маленькая заглушка ограды этапа (FenceStubPlan → StageSchemes.fenceStub → "
                         + "fence_post/wall_3_post), а не кольцо 23×23: на уровне земли кольцо вокруг опасности "
                         + "перекрывает склад и требует сотен постановок. Кольцо («fence») остаётся для REST/демо "
-                        + "и задания без схемы. Нарушители");
+                        + "и задания без схемы. Нарушители"
+                        + " Иначе тест fenceEvents_UseSmallStageStub_NotWholeRing перестанет ловить эту поломку. При смене fenceEvents_UseSmallStageStub_NotWholeRing проверь это утверждение.");
     }
 
     @Test
     void fenceStubPattern_WholeRing_IsReported() {
         assertFalse(
                 fenceStubCheck("TicketTarget.at(origin)"),
-                "Сторож ослеп: забор по событию без своего малого фрагмента снова станет кольцом 23×23");
+                "Сторож ослеп: забор по событию без своего малого фрагмента снова станет кольцом 23×23"
+                        + " Иначе тест fenceStubPattern_WholeRing_IsReported перестанет ловить эту поломку. При смене fenceStubPattern_WholeRing_IsReported проверь это утверждение.");
         assertTrue(
                 fenceStubCheck("TicketTarget.at(origin).withPlan(FenceStubPlan.of(origin, stage, wood))"),
-                "Сторож ложно срабатывает: фрагмент ограды этапа в опасной колонке — это правило");
+                "Сторож ложно срабатывает: фрагмент ограды этапа в опасной колонке — это правило"
+                        + " Иначе тест fenceStubPattern_WholeRing_IsReported перестанет ловить эту поломку. При смене fenceStubPattern_WholeRing_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -202,27 +212,31 @@ class SettlementLevelGuardTests {
         assertTrue(
                 portal.indexOf("post.unreachable(origin)") >= 0
                         && portal.indexOf("post.unreachable(origin)") < portal.indexOf("post.submit("),
-                "Забор у портала пропускает недостижимую точку: иначе DigOut повторяет полный поиск каждый заход");
+                "Забор у портала пропускает недостижимую точку: иначе DigOut повторяет полный поиск каждый заход"
+                        + " При смене fenceFailure_UnreachableOrigin_IsSkippedBeforeSubmit проверь это утверждение.");
     }
 
     @Test
     void fenceOriginPattern_WithoutSettlementLevel_IsReported() {
         assertTrue(
                 !fenceOriginFromSite("TicketTarget.at(danger.position())"),
-                "Сторож ослеп: забор из точки опасности мимо SiteLevels.fenceOrigin обязан ловиться");
+                "Сторож ослеп: забор из точки опасности мимо SiteLevels.fenceOrigin обязан ловиться"
+                        + " Иначе тест fenceOriginPattern_WithoutSettlementLevel_IsReported перестанет ловить эту поломку. При смене fenceOriginPattern_WithoutSettlementLevel_IsReported проверь это утверждение.");
     }
 
     @Test
     void fenceOriginPattern_FromSettlementLevel_IsAccepted() {
         assertTrue(
                 fenceOriginFromSite("TicketTarget.at(SiteLevels.fenceOrigin(site, danger.position()))"),
-                "Сторож ложно срабатывает: забор на уровне ограды поселения — это правило");
+                "Сторож ложно срабатывает: забор на уровне ограды поселения — это правило"
+                        + " Иначе тест fenceOriginPattern_FromSettlementLevel_IsAccepted перестанет ловить эту поломку. При смене fenceOriginPattern_FromSettlementLevel_IsAccepted проверь это утверждение.");
     }
 
     @Test
     void settlementLevel_MissingFile_IsReported() {
         assertTrue(
                 SourceFiles.allMain().keySet().stream().anyMatch(path -> path.endsWith(LEVEL)),
-                "Нет SettlementLevel — единственного места выбора высоты поселения");
+                "Нет SettlementLevel — единственного места выбора высоты поселения"
+                        + " Иначе тест settlementLevel_MissingFile_IsReported перестанет ловить эту поломку. При смене settlementLevel_MissingFile_IsReported проверь это утверждение.");
     }
 }

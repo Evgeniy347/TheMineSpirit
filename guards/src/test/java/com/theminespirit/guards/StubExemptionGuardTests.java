@@ -30,7 +30,8 @@ class StubExemptionGuardTests {
         assertEquals(
                 List.of(),
                 problems(List.of(stub("a/B.java|method|B#x", "Строительство")), "## Строительство", Set.of()),
-                "Сторож ложно срабатывает: заготовка с живой задачей допустима");
+                "Сторож ложно срабатывает: заготовка с живой задачей допустима"
+                        + " Иначе тест stub_WithLiveTodoReference_IsAccepted перестанет ловить эту поломку. При смене stub_WithLiveTodoReference_IsAccepted проверь это утверждение.");
     }
 
     @Test
@@ -38,7 +39,8 @@ class StubExemptionGuardTests {
         assertEquals(
                 List.of("a/B.java|method|B#x → «Дети»: такой задачи нет в todo.md"),
                 problems(List.of(stub("a/B.java|method|B#x", "Дети")), "## Строительство", Set.of()),
-                "Сторож ослеп: заготовка на исчезнувшую задачу обязана попасть в нарушители");
+                "Сторож ослеп: заготовка на исчезнувшую задачу обязана попасть в нарушители"
+                        + " Иначе тест stub_WithoutTodoReference_IsReported перестанет ловить эту поломку. При смене stub_WithoutTodoReference_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -49,7 +51,8 @@ class StubExemptionGuardTests {
                         List.of(stub("a/B.java|method|B#x", "Дети")),
                         "## Строительство",
                         Set.of("a/B.java|method|B#x")),
-                "Сторож ложно срабатывает: известный сирота из ратчета допустим до удаления");
+                "Сторож ложно срабатывает: известный сирота из ратчета допустим до удаления"
+                        + " Иначе тест stub_KnownOrphan_IsAccepted перестанет ловить эту поломку. При смене stub_KnownOrphan_IsAccepted проверь это утверждение.");
     }
 
     @Test
@@ -58,7 +61,8 @@ class StubExemptionGuardTests {
                 List.of("a/B.java|method|B#x: запись устарела — заготовки нет или задача снова в todo.md;"
                         + " убери строку из списка"),
                 problems(List.of(), "## Строительство", Set.of("a/B.java|method|B#x")),
-                "Сторож ослеп: исправленная заготовка обязана уйти из списка исключений");
+                "Сторож ослеп: исправленная заготовка обязана уйти из списка исключений"
+                        + " Иначе тест baseline_FixedOrphan_IsReportedAsStale перестанет ловить эту поломку. При смене baseline_FixedOrphan_IsReportedAsStale проверь это утверждение.");
     }
 
     @Test
@@ -69,7 +73,8 @@ class StubExemptionGuardTests {
                         List.of(new DeadCodeExemptions.Exemption("a/B.java|method|B#x", PREFIX + "«Дети»")),
                         "## Дети",
                         Set.of()),
-                "Сторож ослеп: причина обязана называть пункт todo.md, иначе задачу не найти");
+                "Сторож ослеп: причина обязана называть пункт todo.md, иначе задачу не найти"
+                        + " При смене stub_ReasonWithoutTodoLink_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -77,7 +82,8 @@ class StubExemptionGuardTests {
         assertEquals(
                 List.of(),
                 problems(DeadCodeExemptions.OPEN_TASKS, read(Path.of("todo.md")), readLines(BASELINE)),
-                RULE + System.lineSeparator() + "Нарушители (цель: причина):");
+                RULE + System.lineSeparator() + "Нарушители (цель: причина):"
+                        + " Иначе тест stubs_RealExemptions_AreAnchored перестанет ловить эту поломку. При смене stubs_RealExemptions_AreAnchored проверь это утверждение.");
     }
 
     private static DeadCodeExemptions.Exemption stub(String key, String title) {

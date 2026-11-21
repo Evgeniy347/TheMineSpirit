@@ -36,7 +36,8 @@ class DocsMapGuardTests {
                         + "файл считается мусором и пропадает из поля зрения. Как надо: добавьте путь в README.md, "
                         + "в README своего каталога (docs/api/, docs/tactics/, docs/research/<тема>/) или, для "
                         + "скриптов, в строку каталога с косой чертой на конце (scripts/lead/). Правило: карта "
-                        + "README знает каждый документ и скрипт. Не упомянуты");
+                        + "README знает каждый документ и скрипт. Не упомянуты"
+                        + " Иначе тест docsAndScripts_ReadmeMap_KnowsEveryFile перестанет ловить эту поломку. При смене docsAndScripts_ReadmeMap_KnowsEveryFile проверь это утверждение.");
     }
 
     @Test
@@ -48,7 +49,8 @@ class DocsMapGuardTests {
                 broken,
                 "Ссылка `[..](путь)` в инструкции ведёт на несуществующий файл: читатель проваливается в пустоту, "
                         + "а инструкция обещает документ, которого нет. Как надо: починить путь или удалить ссылку. "
-                        + "Правило: ссылки AGENTS.md, README.md и docs ведут на существующие файлы. Битые ссылки");
+                        + "Правило: ссылки AGENTS.md, README.md и docs ведут на существующие файлы. Битые ссылки"
+                        + " Иначе тест links_RelativeTargetsInInstructions_Exist перестанет ловить эту поломку. При смене links_RelativeTargetsInInstructions_Exist проверь это утверждение.");
     }
 
     @Test
@@ -58,7 +60,8 @@ class DocsMapGuardTests {
         assertEquals(
                 List.of("docs/b.md"),
                 unmentioned(maps, List.of("docs/a.md", "docs/b.md")),
-                "Сторож ослеп: файл, пути которого нет в карте README, обязан попасть в пропажу");
+                "Сторож ослеп: файл, пути которого нет в карте README, обязан попасть в пропажу"
+                        + " Иначе тест unmentioned_FileMissingFromMap_IsReported перестанет ловить эту поломку. При смене unmentioned_FileMissingFromMap_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -68,7 +71,8 @@ class DocsMapGuardTests {
         assertEquals(
                 List.of("docs/api/plan.md"),
                 unmentioned(maps, List.of("scripts/lead/chkq.sh", "docs/api/plan.md")),
-                "Сторож ослеп: каталог закрывает скрипты, но не документ — документ обязан быть назван сам");
+                "Сторож ослеп: каталог закрывает скрипты, но не документ — документ обязан быть назван сам"
+                        + " Иначе тест unmentioned_ScriptsUnderMentionedDir_AreAccepted перестанет ловить эту поломку. При смене unmentioned_ScriptsUnderMentionedDir_AreAccepted проверь это утверждение.");
     }
 
     @Test
@@ -79,7 +83,8 @@ class DocsMapGuardTests {
                 List.of(),
                 brokenLinks(links, path -> "docs/a.md".equals(path)),
                 "Сторож ложно срабатывает: якорь, внешняя ссылка и локальный якорь не проверяются как пути, "
-                        + "а существующий путь не битый");
+                        + "а существующий путь не битый"
+                        + " Иначе тест brokenLinks_ExistingAndExternalTargets_AreAccepted перестанет ловить эту поломку. При смене brokenLinks_ExistingAndExternalTargets_AreAccepted проверь это утверждение.");
     }
 
     @Test
@@ -87,7 +92,8 @@ class DocsMapGuardTests {
         assertEquals(
                 List.of("docs/missing.md"),
                 brokenLinks(List.of("docs/missing.md"), path -> false),
-                "Сторож ослеп: относительная ссылка на несуществующий файл обязана попасть в битые");
+                "Сторож ослеп: относительная ссылка на несуществующий файл обязана попасть в битые"
+                        + " Иначе тест brokenLinks_MissingFile_IsReported перестанет ловить эту поломку. При смене brokenLinks_MissingFile_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -95,7 +101,8 @@ class DocsMapGuardTests {
         assertEquals(
                 List.of("docs/api/README.md"),
                 linksIn("[docs/api/README.md](docs/api/README.md)"),
-                "Сторож ослеп: ссылка в таблице обязана находиться");
+                "Сторож ослеп: ссылка в таблице обязана находиться"
+                        + " Иначе тест linksIn_TableLink_IsFound перестанет ловить эту поломку. При смене linksIn_TableLink_IsFound проверь это утверждение.");
     }
 
     private static Map<String, String> readmeMaps() {
