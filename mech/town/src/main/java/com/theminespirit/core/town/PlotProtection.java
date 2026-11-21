@@ -17,6 +17,7 @@ public final class PlotProtection {
     public enum Ground {
         NONE,
         PLAN_DEMOLISH,
+        CHEST_SALVAGE,
         REPAIR,
         PLAN_EXCAVATE,
         PLAN_BUILD,
@@ -71,6 +72,9 @@ public final class PlotProtection {
         }
         PlanBuilding building = site.protectionBuilding(cell.x(), cell.y(), cell.z());
         String area = site.protectionArea(cell.x(), cell.y(), cell.z());
+        if (ground == Ground.CHEST_SALVAGE) {
+            return new Allowed(ground, building, area);
+        }
         if (ground == Ground.SELF_RESCUE || ground == Ground.PLAYER_COMMAND || ground == Ground.TEMPORARY_MOVEMENT) {
             return new Allowed(ground, building, area);
         }
@@ -145,6 +149,7 @@ public final class PlotProtection {
         return switch (ground) {
             case NONE -> "без основания";
             case PLAN_DEMOLISH -> "снос/перестройка по плану";
+            case CHEST_SALVAGE -> "снос сундука с переносом вещей";
             case REPAIR -> "ремонт к схеме";
             case PLAN_EXCAVATE -> "прокоп шахты по плану";
             case PLAN_BUILD -> "стройка по плану";

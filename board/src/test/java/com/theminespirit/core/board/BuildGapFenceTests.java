@@ -98,6 +98,26 @@ class BuildGapFenceTests {
                         + " Иначе тест need_PartialFence_AsksOnlyRemainingCraft перестанет ловить эту поломку. При смене need_PartialFence_AsksOnlyRemainingCraft проверь это утверждение.");
     }
 
+    @Test
+    void need_MissingCellWithOpenChestSalvage_CountsDoneUntilChestGone() {
+        List<BlockCoord> absent = positions().subList(0, 3);
+        TaskNode plan = fencePlan();
+        BuildGap.Gap gap = BuildGap.trace(plan, "oak", probe(new HashSet<>(absent), Set.of(absent.get(1))), NONE);
+
+        assertEquals(
+                2,
+                gap.shortage(),
+                "Клетка с открытым заданием сноса сундука считается в работе и не попадает в недостачу: "
+                        + "иначе ремонт падает каждые 20 секунд, пока сундук ждёт переноса вещей; фактически "
+                        + gap.missing() + ". При смене проверки отсрочки ремонта проверь задание demolish_chest.");
+        assertEquals(
+                FENCES - 2,
+                gap.done(),
+                "Сделанными считаются пять столбов: три недостающих минус клетка, занятая сундуком под снос; "
+                        + "иначе аудит завышает недостачу, а дух повторяет обречённый заход; фактически "
+                        + gap.done() + ". При смене проверки отсрочки ремонта проверь задание demolish_chest.");
+    }
+
     private static TaskNode fencePlan() {
         List<PlannedBlock> blocks = new ArrayList<>();
         for (BlockCoord at : positions()) {
@@ -119,6 +139,10 @@ class BuildGapFenceTests {
     }
 
     private static BuildGap.Probe probe(Set<BlockCoord> absent) {
+        return probe(absent, Set.of());
+    }
+
+    private static BuildGap.Probe probe(Set<BlockCoord> absent, Set<BlockCoord> deferred) {
         return new BuildGap.Probe() {
             @Override
             public String block(BlockCoord at) {
@@ -128,6 +152,11 @@ class BuildGapFenceTests {
             @Override
             public boolean passable(BlockCoord at) {
                 return absent.contains(at);
+            }
+
+            @Override
+            public boolean deferred(BlockCoord at) {
+                return deferred.contains(at);
             }
         };
     }

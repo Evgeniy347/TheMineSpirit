@@ -145,8 +145,10 @@ final class ChestGraphScene {
         level.setBlockAndUpdate(new BlockPos(x, y, z), Blocks.CHEST.defaultBlockState());
         placed.mark(new BlockPos(x, y, z));
         helper.assertTrue(
-                !ChestDemolition.removable(level, new BlockCoord(x, y, z)),
-                "Сундук духа на высоте поселения +1 стоит на земле: разбирать его нельзя");
+                ChestDemolition.removable(level, new BlockCoord(x, y, z)),
+                "Сундук игрока на полу поселения уходит в задание переноса вещей: метка игрока не защищает, "
+                        + "иначе ремонт плановой клетки падает каждый цикл, а содержимое недоступно поселению; "
+                        + "при смене проверки сноса сундука проверь выдачу задания demolish_chest");
         level.setBlockAndUpdate(new BlockPos(x, y + 2, z), Blocks.CHEST.defaultBlockState());
         placed.mark(new BlockPos(x, y + 2, z));
         helper.assertTrue(
@@ -155,8 +157,9 @@ final class ChestGraphScene {
         level.setBlockAndUpdate(new BlockPos(x, y + 1, z), Blocks.STONE.defaultBlockState());
         helper.assertTrue(
                 ChestOpenScan.marks(level).stream()
-                        .anyMatch(mark -> coord(new BlockPos(x, y + 1, z)).equals(mark.cell())),
-                "Сундук на месте закрыт сверху — доступ к нему расчищают, иначе дух не откроет склад");
+                        .noneMatch(mark -> coord(new BlockPos(x, y + 1, z)).equals(mark.cell())),
+                "Крышу над сундуком под снос не расчищают: его разбирают заданием переноса целиком, иначе дух "
+                        + "тратит окно на лишнюю ломку; при смене проверки доступа к сундукам проверь ChestOpenScan");
         level.setBlockAndUpdate(new BlockPos(x, y + 3, z), Blocks.STONE.defaultBlockState());
         helper.assertTrue(
                 ChestOpenScan.marks(level).stream()

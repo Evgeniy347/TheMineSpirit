@@ -147,15 +147,8 @@ final class ChestSalvageScene {
     }
 
     private void checkProtection() {
+        ChestSalvageProtection.check(helper, spirit, left, right);
         ServerLevel level = helper.getLevel();
-        var placed = PlacedBlocksData.get(level);
-        placed.mark(right);
-        helper.assertTrue(
-                !ChestDemolition.removable(level, coord(left))
-                        && spirit.protectionGate().checkDemolish(left, level.getBlockState(left))
-                                instanceof BlockProtection.Refused,
-                "Защищённая игроком половина запрещает разбор всей пары");
-        placed.unmark(right);
         var second = (ChestBlockEntity) level.getBlockEntity(right);
         second.setLootTable(BuiltInLootTables.SIMPLE_DUNGEON);
         helper.assertTrue(

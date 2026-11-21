@@ -87,6 +87,37 @@ class PlotProtectionDismantleTests {
                         + " Иначе тест check_RepairHouse_Allowed перестанет ловить эту поломку. При смене check_RepairHouse_Allowed проверь это утверждение.");
     }
 
+    @Test
+    void check_ChestSalvageOnStreet_Allowed() {
+        BlockCoord cell = firstCell(SITE.streets());
+
+        PlotProtection.Allowed allowed = assertInstanceOf(
+                PlotProtection.Allowed.class,
+                decide(cell, PlotProtection.Action.BREAK, PlotProtection.Ground.CHEST_SALVAGE, PlanBuilding.NONE),
+                "Сундук с заданием переноса вещей снимают и на улице: без этого основания защита отвергает снос, "
+                        + "ремонт улицы падает каждый цикл, а содержимое сундука остаётся недоступным поселению; "
+                        + "при смене проверки сноса сундука проверь задание demolish_chest");
+        assertEquals(
+                PlotProtection.Ground.CHEST_SALVAGE,
+                allowed.basis(),
+                "Журнал обязан назвать основание «снос сундука с переносом вещей», иначе по логу не отличить "
+                        + "законный снос от разбора чужой постройки; при смене проверки сноса сундука проверь "
+                        + "задание demolish_chest");
+    }
+
+    private static BlockCoord firstCell(ColumnMask mask) {
+        for (int dx = 0; dx < mask.width(); dx++) {
+            for (int dz = 0; dz < mask.depth(); dz++) {
+                int x = mask.minX() + dx;
+                int z = mask.minZ() + dz;
+                if (mask.contains(x, z)) {
+                    return new BlockCoord(x, SITE.anchor().y(), z);
+                }
+            }
+        }
+        throw new IllegalStateException("у площадки нет клетки улицы: проверка сноса сундука не на чем идти");
+    }
+
     private static PlotProtection.Decision decide(
             BlockCoord cell, PlotProtection.Action action, PlotProtection.Ground ground, PlanBuilding own) {
         return PlotProtection.check(SITE, cell, action, ground, own);
