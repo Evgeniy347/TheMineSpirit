@@ -37,7 +37,7 @@ class ResourceResolverTests {
                 gather("oak_log", 5),
                 plan,
                 "Gatherable предмет обязан резолвиться в скрипт gather с block и count: иначе дух не соберёт "
-                        + "материал, доступный напрямую, и будет искать бесполезный рецепт");
+                        + "материал, доступный напрямую, и будет искать бесполезный рецепт При смене resolve_GatherableItem_ReturnsGatherCall проверь это утверждение.");
     }
 
     @Test
@@ -51,7 +51,7 @@ class ResourceResolverTests {
                 gather("iron_ore", 3),
                 plan,
                 "Дроп обязан резолвиться в сбор блока-источника: raw_iron не является блоком, gather block=raw_iron "
-                        + "не нашёл бы ни одного блока в мире и добыча завершилась бы провалом");
+                        + "не нашёл бы ни одного блока в мире и добыча завершилась бы провалом Иначе тест resolve_DropWithSourceBlock_GatherCallNamesSourceBlock перестанет ловить эту поломку. При смене resolve_DropWithSourceBlock_GatherCallNamesSourceBlock проверь это утверждение.");
     }
 
     @Test
@@ -70,7 +70,7 @@ class ResourceResolverTests {
                 "Предмет, который падает из блока-источника, обязан добываться сбором раньше плавки: иначе уголь "
                         + "план строит цепочкой плавки (добыча руды, своё топливо — сбор дров, — и плавка руды в "
                         + "уголь), и в мире без дерева дух проваливает цель вместо простой добычи руды. Меняя порядок "
-                        + "предпочтений резолвера, перепроверь, что добыча угольной руды даёт уголь без печи");
+                        + "предпочтений резолвера, перепроверь, что добыча угольной руды даёт уголь без печи При смене resolve_DropWithSourceAndSmeltable_UsesGatherInsteadOfSmelt проверь это утверждение.");
     }
 
     @Test
@@ -82,7 +82,7 @@ class ResourceResolverTests {
                 plan,
                 "Smeltable предмет обязан резолвиться в добычу входа, добычу топлива и переплавку: без шага топлива "
                         + "дух положит руду в холодную печь и цель не будет исполнена. 2 слитка углём (8 за штуку) "
-                        + "требуют 1 угля");
+                        + "требуют 1 угля Иначе тест resolve_SmeltableItem_ReturnsInputFuelAndSmeltSequence перестанет ловить эту поломку. При смене resolve_SmeltableItem_ReturnsInputFuelAndSmeltSequence проверь это утверждение.");
     }
 
     @Test
@@ -93,7 +93,7 @@ class ResourceResolverTests {
                 new SequenceNode(List.of(gather("oak_log", 2), craft("stick", 1))),
                 plan,
                 "Craftable предмет обязан резолвиться в получение ингредиентов и скрипт craft: без рекурсивного "
-                        + "разбора ингредиентов дух попробует скрафтить из ничего");
+                        + "разбора ингредиентов дух попробует скрафтить из ничего Иначе тест resolve_CraftableItem_ReturnsIngredientsAndCraft перестанет ловить эту поломку. При смене resolve_CraftableItem_ReturnsIngredientsAndCraft проверь это утверждение.");
     }
 
     @Test
@@ -130,7 +130,7 @@ class ResourceResolverTests {
                 new SequenceNode(List.of(new SequenceNode(List.of(withdraw, gather("oak_log", 1))), craft("stick", 3))),
                 plan,
                 "Ингредиент берётся из инвентаря (2) и сундука (3), добывается лишь остаток (1): acquire забора с "
-                        + "брёвнами на складе рубил деревья в 16 и падал (приёмка «джунгли»)");
+                        + "брёвнами на складе рубил деревья в 16 и падал (приёмка «джунгли») Иначе тест resolve_IngredientInInventoryAndChest_TakesThemBeforeGathering перестанет ловить эту поломку. При смене resolve_IngredientInInventoryAndChest_TakesThemBeforeGathering проверь это утверждение.");
     }
 
     @Test
@@ -147,7 +147,7 @@ class ResourceResolverTests {
                 new SequenceNode(List.of(gather("oak_log", 2), craft("oak_planks", 8))),
                 plan,
                 "Рецепт с выходом 4 предмета обязан требовать 2 крафта на 8 досок: иначе резолвер добывает "
-                        + "8 брёвен вместо 2 и заваливает духа лишним материалом");
+                        + "8 брёвен вместо 2 и заваливает духа лишним материалом При смене resolve_CraftableWithOutputCount_ResolvesIngredientsForCraftsNotItems проверь это утверждение.");
     }
 
     @Test
@@ -164,7 +164,7 @@ class ResourceResolverTests {
                 new SequenceNode(List.of(gather("oak_log", 1), craft("oak_planks", 1))),
                 plan,
                 "Одна доска из рецепта на 4 не может дать полкрафта: число крафтов округляется вверх до 1, "
-                        + "иначе план добывает 0 брёвен и крафт провалится");
+                        + "иначе план добывает 0 брёвен и крафт провалится При смене resolve_SingleItemFromMultiOutputRecipe_RoundsCraftsUp проверь это утверждение.");
     }
 
     @Test
@@ -176,12 +176,12 @@ class ResourceResolverTests {
                 UnplannableGoalException.class,
                 () -> CorePlanner.resolve("heavy", Integer.MAX_VALUE, heavy),
                 "Переполнение произведения количества ингредиента на число крафтов обязано отвергаться: "
-                        + "тихое переполнение int превратит план в отрицательную добычу");
+                        + "тихое переполнение int превратит план в отрицательную добычу Иначе тест resolve_IngredientCountOverflow_ThrowsUnplannableGoal перестанет ловить эту поломку. При смене resolve_IngredientCountOverflow_ThrowsUnplannableGoal проверь это утверждение.");
 
         assertEquals(
                 "heavy",
                 error.item(),
-                "Исключение о переполнении обязано нести предмет 'heavy' отдельным полем: по нему правят цель");
+                "Исключение о переполнении обязано нести предмет 'heavy' отдельным полем: по нему правят цель Иначе тест resolve_IngredientCountOverflow_ThrowsUnplannableGoal перестанет ловить эту поломку. При смене resolve_IngredientCountOverflow_ThrowsUnplannableGoal проверь это утверждение.");
     }
 
     @Test
@@ -195,7 +195,7 @@ class ResourceResolverTests {
                         craft("iron_pickaxe", 1))),
                 plan,
                 "Вложенный craft обязан рекурсивно резолвить каждый ингредиент с учётом количества: иначе план "
-                        + "пропустит добычу промежуточного предмета и кирка не скрафтится");
+                        + "пропустит добычу промежуточного предмета и кирка не скрафтится При смене resolve_NestedCraftableItem_ResolvesIngredientsRecursively проверь это утверждение.");
     }
 
     @Test
@@ -217,7 +217,7 @@ class ResourceResolverTests {
                         craft("a", 1))),
                 plan,
                 "Общий ингредиент в двух ветках — не цикл: он обязан резолвиться дважды. Если путь рекурсии "
-                        + "не освобождается после ветки, цепочка прервётся ложным UnplannableGoalException");
+                        + "не освобождается после ветки, цепочка прервётся ложным UnplannableGoalException Иначе тест resolve_SharedIngredientReusedInTwoBranches_DoesNotTriggerFalseCycle перестанет ловить эту поломку. При смене resolve_SharedIngredientReusedInTwoBranches_DoesNotTriggerFalseCycle проверь это утверждение.");
     }
 
     @Test
@@ -226,17 +226,18 @@ class ResourceResolverTests {
                 UnplannableGoalException.class,
                 () -> CorePlanner.resolve("diamond", 1, KNOWLEDGE),
                 "Предмет без способа добычи обязан давать UnplannableGoalException: молчаливый пропуск предмета "
-                        + "превратит цель в план, который ничего не добывает");
+                        + "превратит цель в план, который ничего не добывает Иначе тест resolve_UnknownItem_ThrowsUnplannableGoalNamingItem перестанет ловить эту поломку. При смене resolve_UnknownItem_ThrowsUnplannableGoalNamingItem проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("diamond"),
-                "Сообщение обязано называть недостижимый предмет 'diamond': по нему правят знания. " + "Фактическое: "
+                "Сообщение обязано называть недостижимый предмет 'diamond': по нему правят знания. "
+                        + "Фактическое:  Иначе тест resolve_UnknownItem_ThrowsUnplannableGoalNamingItem перестанет ловить эту поломку. При смене resolve_UnknownItem_ThrowsUnplannableGoalNamingItem проверь это утверждение."
                         + error.getMessage());
         assertEquals(
                 "diamond",
                 error.item(),
                 "Исключение обязано нести предмет 'diamond' отдельным полем: разбор кавычек из текста ломается "
-                        + "от любой правки формулировки");
+                        + "от любой правки формулировки При смене resolve_UnknownItem_ThrowsUnplannableGoalNamingItem проверь это утверждение.");
     }
 
     @Test
@@ -251,16 +252,17 @@ class ResourceResolverTests {
         UnplannableGoalException error = assertThrows(
                 UnplannableGoalException.class,
                 () -> CorePlanner.resolve("a", 1, cyclic),
-                "Зацикленный рецепт обязан прерываться: иначе рекурсия заполнит стек и уронит серверный тик");
+                "Зацикленный рецепт обязан прерываться: иначе рекурсия заполнит стек и уронит серверный тик При смене resolve_CyclicRecipe_ThrowsUnplannableGoal проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("a"),
-                "Сообщение о цикле обязано называть предмет 'a', на котором замкнулась цепочка. " + "Фактическое: "
+                "Сообщение о цикле обязано называть предмет 'a', на котором замкнулась цепочка. "
+                        + "Фактическое:  Иначе тест resolve_CyclicRecipe_ThrowsUnplannableGoal перестанет ловить эту поломку. При смене resolve_CyclicRecipe_ThrowsUnplannableGoal проверь это утверждение."
                         + error.getMessage());
         assertEquals(
                 "a",
                 error.item(),
-                "Исключение о цикле обязано нести предмет 'a' отдельным полем: цикл привязан к конкретному предмету");
+                "Исключение о цикле обязано нести предмет 'a' отдельным полем: цикл привязан к конкретному предмету Иначе тест resolve_CyclicRecipe_ThrowsUnplannableGoal перестанет ловить эту поломку. При смене resolve_CyclicRecipe_ThrowsUnplannableGoal проверь это утверждение.");
     }
 
     @Test
@@ -279,7 +281,7 @@ class ResourceResolverTests {
                         gather("stone", 1))),
                 plan,
                 "Перед сбором камня план обязан скрафтить деревянную кирку: без неё камень не отдаёт дроп, "
-                        + "и gather простоит без прогресса, не добыв ни одного блока");
+                        + "и gather простоит без прогресса, не добыв ни одного блока Иначе тест resolve_BlockWithRequiredTool_PlansToolBeforeGather перестанет ловить эту поломку. При смене resolve_BlockWithRequiredTool_PlansToolBeforeGather проверь это утверждение.");
     }
 
     @Test
@@ -295,7 +297,7 @@ class ResourceResolverTests {
         assertEquals(
                 gather("stone", 1),
                 plan,
-                "Кирка уже в инвентаре: лишний крафт не планируется, иначе дух потратит дерево на второй инструмент");
+                "Кирка уже в инвентаре: лишний крафт не планируется, иначе дух потратит дерево на второй инструмент При смене resolve_RequiredToolAlreadyInInventory_SkipsToolCraft проверь это утверждение.");
     }
 
     @Test
@@ -312,7 +314,7 @@ class ResourceResolverTests {
                 gather("stone", 1),
                 plan,
                 "Каменная кирка покрывает требование деревянной: план не крафтит слабый инструмент заново, "
-                        + "иначе дух тратит дерево и время на кирку, которая у него уже есть в лучшем виде");
+                        + "иначе дух тратит дерево и время на кирку, которая у него уже есть в лучшем виде При смене resolve_BetterPickaxeInInventory_DoesNotPlanWeakerTool проверь это утверждение.");
     }
 
     @Test
@@ -332,7 +334,7 @@ class ResourceResolverTests {
                         gather("stone", 1))),
                 plan,
                 "Дроп булыжника идёт сбором камня с киркой впереди: иначе acquire ищет блоки булыжника в мире "
-                        + "и проваливается на цели, ради которой достаточно сломать камень");
+                        + "и проваливается на цели, ради которой достаточно сломать камень При смене resolve_DropFromBlockWithRequiredTool_PlansToolAndNamesSourceBlock проверь это утверждение.");
     }
 
     @Test
@@ -341,7 +343,7 @@ class ResourceResolverTests {
                 IllegalArgumentException.class,
                 () -> CorePlanner.resolve("oak_log", 0, KNOWLEDGE),
                 "Количество 0 обязано отвергаться: скрипт gather со count=0 молча ничего не делает, "
-                        + "а цель выглядит исполненной");
+                        + "а цель выглядит исполненной Иначе тест resolve_CountZero_ThrowsIllegalArgumentException перестанет ловить эту поломку. При смене resolve_CountZero_ThrowsIllegalArgumentException проверь это утверждение.");
     }
 
     @Test
@@ -350,7 +352,7 @@ class ResourceResolverTests {
                 IllegalArgumentException.class,
                 () -> CorePlanner.resolve("oak_log", -1, KNOWLEDGE),
                 "Отрицательное количество обязано отвергаться: отрицательный count через умножение ингредиентов "
-                        + "превратит план в бессмысленные отрицательные добычи");
+                        + "превратит план в бессмысленные отрицательные добычи Иначе тест resolve_CountNegative_ThrowsIllegalArgumentException перестанет ловить эту поломку. При смене resolve_CountNegative_ThrowsIllegalArgumentException проверь это утверждение.");
     }
 
     @Test
@@ -358,7 +360,7 @@ class ResourceResolverTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new Ingredient("oak_log", 0),
-                "Ингредиент с count=0 обязан отвергаться: нулевое количество в рецепте даёт план с мёртвым шагом");
+                "Ингредиент с count=0 обязан отвергаться: нулевое количество в рецепте даёт план с мёртвым шагом Иначе тест ingredient_CountZero_ThrowsIllegalArgumentException перестанет ловить эту поломку. При смене ingredient_CountZero_ThrowsIllegalArgumentException проверь это утверждение.");
     }
 
     @Test
@@ -367,7 +369,7 @@ class ResourceResolverTests {
                 IllegalArgumentException.class,
                 () -> new Ingredient(" ", 1),
                 "Ингредиент с пустым именем обязан отвергаться: без имени резолвер не найдёт предмет, "
-                        + "и ошибка всплывёт далеко от места создания ингредиента");
+                        + "и ошибка всплывёт далеко от места создания ингредиента При смене ingredient_BlankItem_ThrowsIllegalArgumentException проверь это утверждение.");
     }
 
     @Test
@@ -376,7 +378,7 @@ class ResourceResolverTests {
         assertThrows(
                 PlanValidationException.class,
                 () -> CorePlanner.resolve("oak_log", 300, knowledge),
-                "Резолвер обязан валидировать итоговый план по границам count: count > 256 должен отклоняться");
+                "Резолвер обязан валидировать итоговый план по границам count: count > 256 должен отклоняться Иначе тест resolve_CountOutOfRange_ThrowsValidationException перестанет ловить эту поломку. При смене resolve_CountOutOfRange_ThrowsValidationException проверь это утверждение.");
     }
 
     @Test
@@ -387,7 +389,7 @@ class ResourceResolverTests {
                 new SequenceNode(List.of(gather("iron_ore", 8), gather("coal", 1), smelt("iron_ingot", 8))),
                 plan,
                 "8 слитков углём (8 предметов за уголь) требуют ровно 1 уголь: недобор остановит печь, перебор "
-                        + "оставит духа без топлива на следующую плавку");
+                        + "оставит духа без топлива на следующую плавку Иначе тест resolve_EightIngotsWithCoal_PlansSingleCoal перестанет ловить эту поломку. При смене resolve_EightIngotsWithCoal_PlansSingleCoal проверь это утверждение.");
     }
 
     @Test
@@ -401,7 +403,7 @@ class ResourceResolverTests {
                 new SequenceNode(List.of(gather("iron_ore", 8), gather("oak_log", 6), smelt("iron_ingot", 8))),
                 plan,
                 "Без угля резолвер обязан взять следующее доступное топливо — брёвна (1.5 предмета за бревно, "
-                        + "ceil(8 / 1.5) = 6): иначе плавка без угольной жилы не планируется вовсе");
+                        + "ceil(8 / 1.5) = 6): иначе плавка без угольной жилы не планируется вовсе При смене resolve_EightIngotsWithoutCoal_PlansSixLogs проверь это утверждение.");
     }
 
     @Test
@@ -418,7 +420,7 @@ class ResourceResolverTests {
                         smelt("iron_ingot", 8))),
                 plan,
                 "Топливо-древесный уголь планируется своей плавкой: вход (1 бревно) и топливо под него (1 бревно) — "
-                        + "два независимых шага, счёт не схлопывается. Иначе дух сожжёт входной запас вместо топлива");
+                        + "два независимых шага, счёт не схлопывается. Иначе дух сожжёт входной запас вместо топлива При смене resolve_SmeltedFuel_PlansInputAndFuelSeparately проверь это утверждение.");
     }
 
     @Test
@@ -429,15 +431,16 @@ class ResourceResolverTests {
                 UnplannableGoalException.class,
                 () -> CorePlanner.resolve("iron_ingot", 2, noFuel),
                 "Плавка без доступного топлива обязана отвергаться: молчаливый план без топлива выглядит готовым, "
-                        + "а печь встанет на первом же предмете");
+                        + "а печь встанет на первом же предмете Иначе тест resolve_SmeltWithoutObtainableFuel_ThrowsNamingSmelted перестанет ловить эту поломку. При смене resolve_SmeltWithoutObtainableFuel_ThrowsNamingSmelted проверь это утверждение.");
 
         assertEquals(
                 "iron_ingot",
                 error.item(),
-                "Исключение обязано нести плавимый предмет 'iron_ingot': по нему правят знания о топливе");
+                "Исключение обязано нести плавимый предмет 'iron_ingot': по нему правят знания о топливе Иначе тест resolve_SmeltWithoutObtainableFuel_ThrowsNamingSmelted перестанет ловить эту поломку. При смене resolve_SmeltWithoutObtainableFuel_ThrowsNamingSmelted проверь это утверждение.");
         assertTrue(
                 error.getMessage().contains("iron_ingot"),
-                "Сообщение обязано называть 'iron_ingot'. Фактическое: " + error.getMessage());
+                "Сообщение обязано называть 'iron_ingot'. Фактическое:  Иначе тест resolve_SmeltWithoutObtainableFuel_ThrowsNamingSmelted перестанет ловить эту поломку. При смене resolve_SmeltWithoutObtainableFuel_ThrowsNamingSmelted проверь это утверждение."
+                        + error.getMessage());
     }
 
     @Test
@@ -448,7 +451,7 @@ class ResourceResolverTests {
                 new SequenceNode(List.of(gather("iron_ore", 2), smelt("iron_ingot", 2))),
                 plan,
                 "Топливо из инвентаря (5 угля при нужде в 1) обязано гасить шаг добычи: иначе дух потащит лишний "
-                        + "уголь, хотя печь уже заправлена");
+                        + "уголь, хотя печь уже заправлена При смене resolve_InventoryCoversFuel_OmitsFuelGather проверь это утверждение.");
     }
 
     @Test
@@ -459,7 +462,7 @@ class ResourceResolverTests {
                 new SequenceNode(List.of(gather("iron_ore", 9), gather("coal", 1), smelt("iron_ingot", 9))),
                 plan,
                 "9 слитков требуют 2 угля, 1 уже в инвентаре — добыть надо ровно 1: полный недобор остановит печь, "
-                        + "полный перебор проигнорирует запас");
+                        + "полный перебор проигнорирует запас Иначе тест resolve_InventoryPartiallyCoversFuel_GathersRemainder перестанет ловить эту поломку. При смене resolve_InventoryPartiallyCoversFuel_GathersRemainder проверь это утверждение.");
     }
 
     @Test
@@ -470,7 +473,7 @@ class ResourceResolverTests {
                 new SequenceNode(List.of(gather("iron_ore", 8), gather("oak_log", 4), smelt("iron_ingot", 8))),
                 plan,
                 "При 2 брёвнах в инвентаре (нужно 6) резолвер обязан потратить имеющиеся и добрать 4 того же топлива, "
-                        + "а не переключаться на отсутствующий уголь: иначе дух бросит имеющееся топливо ради нового типа");
+                        + "а не переключаться на отсутствующий уголь: иначе дух бросит имеющееся топливо ради нового типа При смене resolve_InventoryHoldsLogs_SpendsThemAndGathersRemainder проверь это утверждение.");
     }
 
     @Test
@@ -496,7 +499,7 @@ class ResourceResolverTests {
                 plan,
                 "2 угля в инвентаре обязаны расходиться по плавкам: 1-й слиток тратит 1 (добычи нет), 9 медных тратят "
                         + "последний и добирают 1, золоту добирается 1. Без расхода между плавками вторая и третья "
-                        + "посчитают чужой уголь своим и печь встанет");
+                        + "посчитают чужой уголь своим и печь встанет Иначе тест resolve_ThreeSmeltsSharingInventoryFuel_EachConsumesItsShare перестанет ловить эту поломку. При смене resolve_ThreeSmeltsSharingInventoryFuel_EachConsumesItsShare проверь это утверждение.");
     }
 
     @Test
@@ -516,7 +519,7 @@ class ResourceResolverTests {
                 plan,
                 "Без угля резолвер обязан топить досками раньше древесного угля: из бревна выходят 4 доски по 300 "
                         + "тиков — в 4 раза больше горения, чем жечь бревно или плавить его в уголь. 8 слитков требуют "
-                        + "6 досок");
+                        + "6 досок Иначе тест resolve_PlanksAvailable_PlansPlanksBeforeCharcoal перестанет ловить эту поломку. При смене resolve_PlanksAvailable_PlansPlanksBeforeCharcoal проверь это утверждение.");
     }
 
     @Test
@@ -524,7 +527,7 @@ class ResourceResolverTests {
         assertThrows(
                 NullPointerException.class,
                 () -> CorePlanner.resolve("iron_ingot", 2, KNOWLEDGE, null),
-                "Null-инвентарь обязан отвергаться: молчаливое чтение null превратит выбор топлива в падение в тике");
+                "Null-инвентарь обязан отвергаться: молчаливое чтение null превратит выбор топлива в падение в тике Иначе тест resolve_NullInventory_ThrowsNullPointerException перестанет ловить эту поломку. При смене resolve_NullInventory_ThrowsNullPointerException проверь это утверждение.");
     }
 
     private static ScriptCall craft(String item, int count) {
@@ -539,16 +542,14 @@ class ResourceResolverTests {
     void resolve_IntermediateDemandOverLimit_BatchesIntoValidCalls() {
         ResourceKnowledge knowledge =
                 new StubKnowledge(Set.of("oak_log"), Map.of("stick", List.of(new Ingredient("oak_log", 40))), Map.of());
-
         TaskNode plan = CorePlanner.resolve("stick", 8, knowledge);
-
         assertEquals(
                 new SequenceNode(List.of(
                         new SequenceNode(List.of(gather("oak_log", 256), gather("oak_log", 64))), craft("stick", 8))),
                 plan,
                 "Промежуточное требование 320 (8 крафтов по 40 бревна) обязано разбиваться на вызовы в пределах "
                         + "лимита 256: иначе валидатор ронял бы весь план внутренней ошибкой, а дух оставался бы "
-                        + "без плана на достижимую цель. Финальный крафт при этом один, на 8");
+                        + "без плана на достижимую цель. Финальный крафт при этом один, на 8 При смене resolve_IntermediateDemandOverLimit_BatchesIntoValidCalls проверь это утверждение.");
     }
 
     private static ScriptCall gather(String block, int count) {
@@ -559,11 +560,10 @@ class ResourceResolverTests {
     @Test
     void resolve_Log_GathersInWideRadius() {
         TaskNode plan = CorePlanner.resolve("oak_log", 2, KNOWLEDGE);
-
         assertEquals(
                 new ScriptCall(
                         "gather", Map.of("block", "oak_log", "count", 2, "radius", CatalogLimits.HARVEST_RADIUS_MAX)),
                 plan,
-                "Брёвна — в радиусе 32: после расчистки участка деревья в 16 от дома вырублены (приёмка «джунгли»)");
+                "Брёвна — в радиусе 32: после расчистки участка деревья в 16 от дома вырублены (приёмка «джунгли») Иначе тест resolve_Log_GathersInWideRadius перестанет ловить эту поломку. При смене resolve_Log_GathersInWideRadius проверь это утверждение.");
     }
 }

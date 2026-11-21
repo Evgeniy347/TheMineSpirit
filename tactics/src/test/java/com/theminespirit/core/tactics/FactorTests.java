@@ -185,13 +185,14 @@ class FactorTests {
             String name, Situation situation, double leashLeft, Map<Factor, Double> expected) {
         Assessment assessment = assessment(situation, leashLeft);
 
-        expected.forEach((factor, wanted) -> assertEquals(
-                wanted,
-                factor.value(situation, assessment, Scales.defaults()),
-                TOLERANCE,
-                "Ситуация «" + name + "», фактор " + factor
-                        + ": значение считается по формуле из docs/tactics/README.md; "
-                        + "если формулу меняют осознанно, пересчитайте таблицу и веса сценариев"));
+        expected.forEach(
+                (factor, wanted) -> assertEquals(
+                        wanted,
+                        factor.value(situation, assessment, Scales.defaults()),
+                        TOLERANCE,
+                        "Ситуация «" + name + "», фактор " + factor
+                                + ": значение считается по формуле из docs/tactics/README.md; "
+                                + "если формулу меняют осознанно, пересчитайте таблицу и веса сценариев При смене value_KnownSituation_MatchesHandComputedFactor проверь это утверждение."));
     }
 
     static Stream<Arguments> escapeWays() {
@@ -229,7 +230,7 @@ class FactorTests {
                 TOLERANCE,
                 "Ситуация «" + name + "»: ESCAPE_ROUTE — наибольшая полезность способа из rules.json "
                         + "(бег AWAY 0.2, дом в 10 блоках 1 − 10 × 0.00625 = 0.9375), а не число способов: "
-                        + "иначе укрытие рядом и голое поле давали бы почти одинаковый вклад в отход");
+                        + "иначе укрытие рядом и голое поле давали бы почти одинаковый вклад в отход При смене escapeRoute_AvailableWays_EqualsBestUtility проверь это утверждение.");
     }
 
     @Test
@@ -248,12 +249,12 @@ class FactorTests {
                 0.9375,
                 straight,
                 TOLERANCE,
-                "Дом в 10 (0.9375) полезнее укрытия (0.4) и бега (0.2): фактор берёт наибольшую полезность");
+                "Дом в 10 (0.9375) полезнее укрытия (0.4) и бега (0.2): фактор берёт наибольшую полезность Иначе тест escapeRoute_TableOrder_DoesNotChangeValue перестанет ловить эту поломку. При смене escapeRoute_TableOrder_DoesNotChangeValue проверь это утверждение.");
         assertEquals(
                 straight,
                 back,
                 TOLERANCE,
-                "Порядок строк способов в rules.json не влияет на фактор: берётся максимум, а не первый подходящий");
+                "Порядок строк способов в rules.json не влияет на фактор: берётся максимум, а не первый подходящий Иначе тест escapeRoute_TableOrder_DoesNotChangeValue перестанет ловить эту поломку. При смене escapeRoute_TableOrder_DoesNotChangeValue проверь это утверждение.");
     }
 
     private static double escapeValue(Situation situation, RetreatTable table) {
@@ -298,7 +299,7 @@ class FactorTests {
                         "HEALING_AVAILABLE",
                         "URGENCY"),
                 Arrays.stream(Factor.values()).map(Enum::name).toList(),
-                "Порядок объявления факторов — порядок членов суммы: перестановка меняет округление счёта в последнем знаке");
+                "Порядок объявления факторов — порядок членов суммы: перестановка меняет округление счёта в последнем знаке Иначе тест factors_DeclarationOrder_IsFixed перестанет ловить эту поломку. При смене factors_DeclarationOrder_IsFixed проверь это утверждение.");
     }
 
     @Test
@@ -308,7 +309,7 @@ class FactorTests {
                 Scales.defaults().urgencyHorizon(),
                 0.0,
                 "Горизонт срочности 10 с — стартовое значение из задания: таблицы URGENCY ниже посчитаны от него; "
-                        + "меняете горизонт — пересчитайте таблицы и вес URGENCY в weights.json");
+                        + "меняете горизонт — пересчитайте таблицы и вес URGENCY в weights.json Иначе тест scales_UrgencyHorizon_IsTenSeconds перестанет ловить эту поломку. При смене scales_UrgencyHorizon_IsTenSeconds проверь это утверждение.");
     }
 
     static Stream<Arguments> urgencies() {
@@ -343,7 +344,7 @@ class FactorTests {
                 TOLERANCE,
                 "Ситуация «" + name + "»: URGENCY = clamp01(1 − timeToDie / 10 с) — абсолютное время до смерти, "
                         + "а не доля перевеса как у ENEMY_PRESSURE; «враг без урона» проверяет, что dps 0 "
-                        + "идёт через minDps и деления на ноль нет");
+                        + "идёт через minDps и деления на ноль нет Иначе тест urgency_KnownTimeToDie_MatchesAbsoluteUrgency перестанет ловить эту поломку. При смене urgency_KnownTimeToDie_MatchesAbsoluteUrgency проверь это утверждение.");
     }
 
     @Test
@@ -356,7 +357,7 @@ class FactorTests {
                 0.0,
                 WinMargin.of(situation.self(), metrics, Scales.defaults()),
                 0.0,
-                "Без врагов запас победы равен 0: «побеждать» нечего, решение принимают правила, а не знак отрицательного числа");
+                "Без врагов запас победы равен 0: «побеждать» нечего, решение принимают правила, а не знак отрицательного числа Иначе тест winMargin_NoEnemies_IsZero перестанет ловить эту поломку. При смене winMargin_NoEnemies_IsZero проверь это утверждение.");
     }
 
     @Test
@@ -369,7 +370,7 @@ class FactorTests {
                 -1.0,
                 WinMargin.of(situation.self(), metrics, Scales.defaults()),
                 0.0,
-                "Дух с нулевым HP проигрывает гарантированно: запас -1 без деления на ноль и NaN");
+                "Дух с нулевым HP проигрывает гарантированно: запас -1 без деления на ноль и NaN Иначе тест winMargin_ZeroHp_IsMinusOne перестанет ловить эту поломку. При смене winMargin_ZeroHp_IsMinusOne проверь это утверждение.");
     }
 
     @Test
@@ -380,23 +381,21 @@ class FactorTests {
 
         double bareMargin = margin(bare);
         double armoredMargin = margin(armored);
-
         assertTrue(
                 armoredMargin > bareMargin,
                 "Броня 10 (-40 % урона) повышает запас победы: " + bareMargin + " → " + armoredMargin
-                        + "; иначе дух не ценит доспехи при выборе боя");
+                        + "; иначе дух не ценит доспехи при выборе боя При смене winMargin_ArmorReducesDamage_ArmoredSelfFightsBetter проверь это утверждение.");
     }
 
     @Test
     void effectiveHp_ArmorBeyondCap_StopsGrowing() {
         ArmorModel steep = new ArmorModel(0.1, 0.8);
-
         assertEquals(
                 steep.effectiveHp(10, 8),
                 steep.effectiveHp(10, 20),
                 0.0,
                 "Снижение урона упирается в предел 0.8: без предела полный комплект брони делал бы духа бессмертным, "
-                        + "а делитель 1 - снижение уходил бы в ноль");
+                        + "а делитель 1 - снижение уходил бы в ноль Иначе тест effectiveHp_ArmorBeyondCap_StopsGrowing перестанет ловить эту поломку. При смене effectiveHp_ArmorBeyondCap_StopsGrowing проверь это утверждение.");
     }
 
     private static double margin(Situation situation) {
@@ -411,12 +410,13 @@ class FactorTests {
                 .enemies("zombie", 3, Situation.MAX_ENEMIES)
                 .build();
         Assessment assessment = assessment(crowd, 2);
-
         for (Factor factor : Factor.values()) {
             double value = factor.value(crowd, assessment, Scales.defaults());
             assertTrue(
                     value >= -1 && value <= 1,
-                    "Фактор " + factor + " вышел из [-1; 1] на MAX_ENEMIES врагах: " + value);
+                    "Фактор " + factor
+                            + " вышел из [-1; 1] на MAX_ENEMIES врагах:  Иначе тест factors_SixteenEnemies_StayWithinRange перестанет ловить эту поломку. При смене factors_SixteenEnemies_StayWithinRange проверь это утверждение."
+                            + value);
         }
     }
 }

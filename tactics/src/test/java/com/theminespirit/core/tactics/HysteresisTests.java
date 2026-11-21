@@ -46,7 +46,8 @@ class HysteresisTests {
         }
         assertTrue(
                 bestGap < 0.03,
-                "В тесте нет пограничной ситуации (разность FIGHT и RETREAT " + bestGap + "): подберите сетку заново");
+                "В тесте нет пограничной ситуации (разность FIGHT и RETREAT " + bestGap
+                        + "): подберите сетку заново Иначе тест механику перестанет ловить эту поломку. При смене механику проверь это утверждение.");
         return bestHp;
     }
 
@@ -87,11 +88,13 @@ class HysteresisTests {
         assertTrue(
                 withHysteresis <= 1,
                 "Шум фактов ±5 % на границе FIGHT/RETREAT не должен переключать решение чаще раза за окно удержания: "
-                        + withHysteresis + " переключений за 400 тиков");
+                        + withHysteresis
+                        + " переключений за 400 тиков Иначе тест decisions_NoiseOnBorderline_SwitchNoMoreOftenThanOncePerWindow перестанет ловить эту поломку. При смене decisions_NoiseOnBorderline_SwitchNoMoreOftenThanOncePerWindow проверь это утверждение.");
         assertTrue(
                 without >= 5,
                 "Без удержания и бонуса тот же шум дрожит решением (" + without
-                        + " переключений): иначе тест гистерезиса " + "не отличает его от отсутствия");
+                        + " переключений): иначе тест гистерезиса "
+                        + "не отличает его от отсутствия При смене decisions_NoiseOnBorderline_SwitchNoMoreOftenThanOncePerWindow проверь это утверждение.");
     }
 
     @Test
@@ -118,7 +121,7 @@ class HysteresisTests {
                         inside.hold(),
                         outside.option()),
                 "Через 39 тиков орда ещё не меняет решение (окно 40), через 40 — меняет. Орда без истории даёт RETREAT, значит "
-                        + "решение держит именно окно удержания");
+                        + "решение держит именно окно удержания Иначе тест decisions_ChangedFactsInsideWindow_KeepPreviousUntilWindowEnds перестанет ловить эту поломку. При смене decisions_ChangedFactsInsideWindow_KeepPreviousUntilWindowEnds проверь это утверждение.");
     }
 
     @Test
@@ -135,7 +138,7 @@ class HysteresisTests {
         assertEquals(
                 List.of(HoldStatus.RELEASED_HP_DROP, TacticalOption.RETREAT, HoldStatus.HELD, TacticalOption.FIGHT),
                 List.of(big.hold(), big.option(), small.hold(), small.option()),
-                "Потеря 35 % HP за окно снимает удержание, потеря 25 % — нет: порог hpDropRelease = 0.3");
+                "Потеря 35 % HP за окно снимает удержание, потеря 25 % — нет: порог hpDropRelease = 0.3 Иначе тест decisions_HpDropOverThreshold_ReleasesHoldInsideWindow перестанет ловить эту поломку. При смене decisions_HpDropOverThreshold_ReleasesHoldInsideWindow проверь это утверждение.");
     }
 
     @Test
@@ -149,7 +152,7 @@ class HysteresisTests {
         assertEquals(
                 List.of(TacticalOption.RETREAT, "critical_hp_retreat", HoldStatus.RELEASED_BY_RULE),
                 List.of(critical.option(), critical.rule(), critical.hold()),
-                "Жёсткое правило снимает удержание сразу: критическое HP не ждёт конца окна");
+                "Жёсткое правило снимает удержание сразу: критическое HP не ждёт конца окна Иначе тест decisions_HardRuleInsideWindow_OverridesHold перестанет ловить эту поломку. При смене decisions_HardRuleInsideWindow_OverridesHold проверь это утверждение.");
     }
 
     @Test
@@ -164,7 +167,7 @@ class HysteresisTests {
         assertEquals(
                 List.of(HoldStatus.RELEASED_EXCLUDED, true),
                 List.of(nearLava.hold(), nearLava.option() != TacticalOption.FIGHT),
-                "Удерживать вычеркнутый вариант нельзя: у лавы бой запрещён, даже если решение недавно принято");
+                "Удерживать вычеркнутый вариант нельзя: у лавы бой запрещён, даже если решение недавно принято Иначе тест decisions_PreviousBecomesExcluded_HoldIsReleased перестанет ловить эту поломку. При смене decisions_PreviousBecomesExcluded_HoldIsReleased проверь это утверждение.");
     }
 
     @Test
@@ -181,7 +184,7 @@ class HysteresisTests {
         assertEquals(
                 List.of(TacticalOption.FIGHT, TacticalOption.RETREAT),
                 List.of(keepsFight.option(), keepsRetreat.option()),
-                "После окна прежнее решение получает +stickiness (0.25) к счёту: на границе оно сохраняется в обе стороны");
+                "После окна прежнее решение получает +stickiness (0.25) к счёту: на границе оно сохраняется в обе стороны Иначе тест decisions_AfterWindowOnBorderline_PreviousOptionKeepsStickinessBonus перестанет ловить эту поломку. При смене decisions_AfterWindowOnBorderline_PreviousOptionKeepsStickinessBonus проверь это утверждение.");
     }
 
     @Test
@@ -208,7 +211,7 @@ class HysteresisTests {
                         attacked.trace().hold()),
                 "Решение жёсткого правила «врагов нет» не удерживается: гистерезис гасит дрожь оценки, а не переносит "
                         + "IGNORE на ситуацию, где появился зомби в 3 блоках и aggressive-дух обязан ответить. Если "
-                        + "ожидание меняют осознанно, пересмотрите Hysteresis.status и TacticsMemory.previousSource");
+                        + "ожидание меняют осознанно, пересмотрите Hysteresis.status и TacticsMemory.previousSource Иначе тест step_NewZombieTenTicksAfterNoEnemiesRule_FightsInsteadOfHoldingIgnore перестанет ловить эту поломку. При смене step_NewZombieTenTicksAfterNoEnemiesRule_FightsInsteadOfHoldingIgnore проверь это утверждение.");
     }
 
     @Test
@@ -227,7 +230,7 @@ class HysteresisTests {
                 List.of(withoutMemory.option(), withoutMemory.rule(), HoldStatus.NONE),
                 List.of(afterRule.option(), afterRule.rule(), afterRule.hold()),
                 "Прежнее решение принято правилом, а не счётом: удержание и бонус stickiness ему не положены, решение "
-                        + "равно решению без памяти");
+                        + "равно решению без памяти Иначе тест decide_PreviousFromRuleInsideWindow_EqualsDecisionWithoutMemory перестанет ловить эту поломку. При смене decide_PreviousFromRuleInsideWindow_EqualsDecisionWithoutMemory проверь это утверждение.");
     }
 
     @Test
@@ -250,7 +253,7 @@ class HysteresisTests {
                         afterScore.previousSource(),
                         afterScore.decidedAt()),
                 "Окно удержания отсчитывается от решения по счёту: тот же вариант, принятый счётом после правила, "
-                        + "начинает окно заново, иначе удержание кончится раньше времени");
+                        + "начинает окно заново, иначе удержание кончится раньше времени При смене remember_ScoreDecisionAfterRuleWithSameOption_StartsHoldWindowFromNow проверь это утверждение.");
     }
 
     @Test
@@ -264,23 +267,20 @@ class HysteresisTests {
 
         Decision first = decider.decide(facts, scores, 1, memory, 20);
         Decision second = decider.decide(facts, scores, 1, memory, 20);
-
         assertEquals(
                 first,
                 second,
-                "Память неизменяема, решение детерминировано: тот же вход и та же память дают то же решение");
+                "Память неизменяема, решение детерминировано: тот же вход и та же память дают то же решение Иначе тест decide_SameInputAndMemory_GivesSameOutput перестанет ловить эту поломку. При смене decide_SameInputAndMemory_GivesSameOutput проверь это утверждение.");
     }
 
     @Test
     void remember_SameOptionAgain_KeepsDecisionTimeAndRollsHpWindow() {
         TacticsMemory memory = TacticsMemory.initial(CombatMode.AGGRESSIVE, 0, 1.0);
         Hysteresis hysteresis = new Hysteresis(CONFIG.weights());
-
         TacticsMemory first = hysteresis.remember(memory, scored(TacticalOption.FIGHT), 10, 0.9);
         TacticsMemory same = hysteresis.remember(first, scored(TacticalOption.FIGHT), 30, 0.8);
         TacticsMemory rolled = hysteresis.remember(same, scored(TacticalOption.FIGHT), 40, 0.7);
         TacticsMemory changed = hysteresis.remember(rolled, scored(TacticalOption.RETREAT), 50, 0.7);
-
         assertEquals(
                 List.of(Optional.of(TacticalOption.FIGHT), 10L, 1.0, 0L, 0.7, 40L, 50L),
                 List.of(
@@ -291,7 +291,10 @@ class HysteresisTests {
                         rolled.hpWindowRef(),
                         rolled.hpWindowStart(),
                         changed.decidedAt()),
-                "Время решения обновляется только при смене варианта, окно HP перекатывается каждые holdTicks");
-        assertNotEquals(first, changed, "Память после смены решения отличается от прежней");
+                "Время решения обновляется только при смене варианта, окно HP перекатывается каждые holdTicks Иначе тест remember_SameOptionAgain_KeepsDecisionTimeAndRollsHpWindow перестанет ловить эту поломку. При смене remember_SameOptionAgain_KeepsDecisionTimeAndRollsHpWindow проверь это утверждение.");
+        assertNotEquals(
+                first,
+                changed,
+                "Память после смены решения отличается от прежней Иначе тест remember_SameOptionAgain_KeepsDecisionTimeAndRollsHpWindow перестанет ловить эту поломку. При смене remember_SameOptionAgain_KeepsDecisionTimeAndRollsHpWindow проверь это утверждение.");
     }
 }

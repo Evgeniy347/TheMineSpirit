@@ -32,7 +32,7 @@ class FallbackPlannerTests {
                 chopPlan(8, "any", 8),
                 plan,
                 "Цель со словом 'сруб' обязана дать scan с фильтром брёвен и chop_tree: иначе дух рубит "
-                        + "без предварительного скана и не находит деревья");
+                        + "без предварительного скана и не находит деревья При смене plan_ChopGoal_ReturnsScanAndChopSequence проверь это утверждение.");
     }
 
     @Test
@@ -43,7 +43,7 @@ class FallbackPlannerTests {
                 chopPlan(8, "any", 8),
                 plan,
                 "Слово 'дерев' обязано распознаваться как рубка: иначе синоним формулировки уводит в fallback "
-                        + "и дух не рубит то, что игрок просил");
+                        + "и дух не рубит то, что игрок просил При смене plan_TreeWordGoal_ReturnsScanAndChopSequence проверь это утверждение.");
     }
 
     @Test
@@ -54,7 +54,7 @@ class FallbackPlannerTests {
                 minePlan(8, "any", 1),
                 plan,
                 "Цель со словом 'руд' обязана дать scan с фильтром руды и mine_vein: иначе дух копает "
-                        + "вслепую и не находит жилу");
+                        + "вслепую и не находит жилу При смене plan_MineGoal_ReturnsScanAndMineSequence проверь это утверждение.");
     }
 
     @Test
@@ -65,7 +65,7 @@ class FallbackPlannerTests {
                 minePlan(8, "any", 1),
                 plan,
                 "Слово 'шахт' обязано распознаваться как добыча: иначе дух дойдёт до шахты и встанет, "
-                        + "не начав добычу ради которой пришёл");
+                        + "не начав добычу ради которой пришёл При смене plan_MineShaftGoal_ReturnsScanAndMineSequence проверь это утверждение.");
     }
 
     @Test
@@ -76,7 +76,7 @@ class FallbackPlannerTests {
                 new ScriptCall("follow", Map.of("target", "Steve", "radius", 3)),
                 plan,
                 "Цель со словом 'следу' обязана дать follow на игрока-источника: иначе дух не сопровождает "
-                        + "игрока и цель сопровождения не исполняется");
+                        + "игрока и цель сопровождения не исполняется При смене plan_FollowGoal_ReturnsFollowCall проверь это утверждение.");
     }
 
     @Test
@@ -85,7 +85,7 @@ class FallbackPlannerTests {
                 PlanValidationException.class,
                 () -> plan(new Goal("следуй за мной", Map.of())),
                 "Сопровождение без игрока-источника обязано отклоняться: заглушка 'player' в правилах fallback "
-                        + "указывала на несуществующего игрока и роняла задачу на первом тике");
+                        + "указывала на несуществующего игрока и роняла задачу на первом тике Иначе тест plan_FollowGoalWithoutSpeaker_ThrowsValidationException перестанет ловить эту поломку. При смене plan_FollowGoalWithoutSpeaker_ThrowsValidationException проверь это утверждение.");
     }
 
     @Test
@@ -93,7 +93,7 @@ class FallbackPlannerTests {
         assertTrue(
                 FallbackPlanner.requiresPlayerSource("следуй за мной"),
                 "Сопровождение без игрока-источника исполнить нечем: планировщик обязан сообщать, что цели нужен "
-                        + "игрок, чтобы команда ответила понятным отказом, а не общим текстом валидатора");
+                        + "игрок, чтобы команда ответила понятным отказом, а не общим текстом валидатора Иначе тест requiresPlayerSource_FollowGoal_ReturnsTrue перестанет ловить эту поломку. При смене requiresPlayerSource_FollowGoal_ReturnsTrue проверь это утверждение.");
     }
 
     @Test
@@ -101,7 +101,7 @@ class FallbackPlannerTests {
         assertFalse(
                 FallbackPlanner.requiresPlayerSource("убей зомби"),
                 "Атака не требует игрока-источника: иначе консоль или командный блок не смог бы приказать духу "
-                        + "бить враждебную цель");
+                        + "бить враждебную цель При смене requiresPlayerSource_AttackGoal_ReturnsFalse проверь это утверждение.");
     }
 
     @Test
@@ -112,7 +112,7 @@ class FallbackPlannerTests {
                 new ScriptCall("attack", Map.of("target", "hostile")),
                 plan,
                 "Игрок-источник не должен становиться целью атаки: иначе '/spirit goal ... убей' заставляет "
-                        + "духа бить собственного хозяина вместо враждебной цели");
+                        + "духа бить собственного хозяина вместо враждебной цели При смене plan_AttackGoalWithSpeaker_DoesNotTargetSpeaker проверь это утверждение.");
     }
 
     @Test
@@ -123,7 +123,7 @@ class FallbackPlannerTests {
                 new ScriptCall("follow", Map.of("target", "Steve", "radius", 3)),
                 plan,
                 "Фраза 'за мной' обязана распознаваться как сопровождение: иначе естественная формулировка "
-                        + "остаётся непонятой и дух теряет игрока");
+                        + "остаётся непонятой и дух теряет игрока При смене plan_FollowBehindPhrase_ReturnsFollowCall проверь это утверждение.");
     }
 
     @Test
@@ -134,7 +134,7 @@ class FallbackPlannerTests {
                 new ScriptCall("unload", Map.of("container", "auto", "radius", 8, "force", false)),
                 plan,
                 "Просьба разгрузиться обязана давать unload с container=auto: дух сам раскладывает "
-                        + "стакующиеся предметы к существующим стопкам, а не сваливает всё в ближайший сундук");
+                        + "стакующиеся предметы к существующим стопкам, а не сваливает всё в ближайший сундук Иначе тест plan_UnloadGoal_ReturnsUnloadCall перестанет ловить эту поломку. При смене plan_UnloadGoal_ReturnsUnloadCall проверь это утверждение.");
     }
 
     @Test
@@ -145,7 +145,7 @@ class FallbackPlannerTests {
                 new ScriptCall("return_home", Map.of()),
                 plan,
                 "Цель со словом 'домой' обязана дать return_home: иначе дух остаётся в шахте на ночь "
-                        + "и теряет точку возрождения");
+                        + "и теряет точку возрождения При смене plan_HomeGoal_ReturnsReturnHomeCall проверь это утверждение.");
     }
 
     @Test
@@ -156,7 +156,7 @@ class FallbackPlannerTests {
                 new ScriptCall("return_home", Map.of()),
                 plan,
                 "Слово 'верни' обязано распознаваться как возвращение домой: иначе приказ отступить "
-                        + "не исполняется и дух остаётся в опасной зоне");
+                        + "не исполняется и дух остаётся в опасной зоне При смене plan_ComeBackGoal_ReturnsReturnHomeCall проверь это утверждение.");
     }
 
     @Test
@@ -167,7 +167,7 @@ class FallbackPlannerTests {
                 new ScriptCall("attack", Map.of("target", "hostile")),
                 plan,
                 "Цель со словом 'атак' обязана дать attack на враждебную цель: иначе дух мирно стоит "
-                        + "перед зомби и погибает без защиты игрока");
+                        + "перед зомби и погибает без защиты игрока При смене plan_AttackGoal_ReturnsAttackCall проверь это утверждение.");
     }
 
     @Test
@@ -178,7 +178,7 @@ class FallbackPlannerTests {
                 new ScriptCall("attack", Map.of("target", "hostile")),
                 plan,
                 "Слово 'убей' обязано распознаваться как атака: иначе боевая команда трактуется как мирная "
-                        + "и дух не отгоняет угрозу");
+                        + "и дух не отгоняет угрозу При смене plan_KillGoal_ReturnsAttackCall проверь это утверждение.");
     }
 
     @Test
@@ -189,7 +189,7 @@ class FallbackPlannerTests {
                 chopPlan(16, "oak", 3),
                 plan,
                 "Параметры цели обязаны переопределять значения по умолчанию: иначе дух рубит любой вид "
-                        + "в полном радиусе, а игрок просил только дубы рядом");
+                        + "в полном радиусе, а игрок просил только дубы рядом При смене plan_ChopGoalWithParams_OverridesDefaults проверь это утверждение.");
     }
 
     @Test
@@ -200,7 +200,7 @@ class FallbackPlannerTests {
                 new ScriptCall("follow", Map.of("target", "villager", "radius", 5)),
                 plan,
                 "Параметры цели обязаны переопределять цель и дистанцию сопровождения: иначе дух сопровождает "
-                        + "игрока, а не торговца, которому нужна защита");
+                        + "игрока, а не торговца, которому нужна защита При смене plan_FollowGoalWithParams_OverridesDefaults проверь это утверждение.");
     }
 
     @Test
@@ -211,7 +211,7 @@ class FallbackPlannerTests {
                 chopPlan(8, "any", 8),
                 plan,
                 "Текст цели обязан нормализоваться (trim и нижний регистр) до поиска ключевых слов: иначе "
-                        + "одна и та же цель с лишними пробелами или заглавными буквами исполняется по-разному");
+                        + "одна и та же цель с лишними пробелами или заглавными буквами исполняется по-разному При смене plan_UppercaseGoalWithSpaces_IsNormalizedBeforeMatch проверь это утверждение.");
     }
 
     @Test
@@ -220,12 +220,13 @@ class FallbackPlannerTests {
                 UnplannableGoalException.class,
                 () -> plan(new Goal("полететь на луну", Map.of())),
                 "Незнакомая цель обязана давать UnplannableGoalException: молчаливый план-заглушка уронит "
-                        + "ожидания игрока и спрячет непонятые формулировки");
+                        + "ожидания игрока и спрячет непонятые формулировки Иначе тест plan_UnknownGoal_ThrowsUnplannableGoalNamingGoal перестанет ловить эту поломку. При смене plan_UnknownGoal_ThrowsUnplannableGoalNamingGoal проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("полететь на луну"),
                 "Сообщение обязано называть нераспознанную цель: по нему игрок видит, что планировщик не понял "
-                        + "его просьбу. Фактическое: " + error.getMessage());
+                        + "его просьбу. Фактическое:  Иначе тест plan_UnknownGoal_ThrowsUnplannableGoalNamingGoal перестанет ловить эту поломку. При смене plan_UnknownGoal_ThrowsUnplannableGoalNamingGoal проверь это утверждение."
+                        + error.getMessage());
     }
 
     @Test
@@ -234,7 +235,7 @@ class FallbackPlannerTests {
                 UnplannableGoalException.class,
                 () -> plan(new Goal("поверни налево", Map.of())),
                 "Слово 'поверни' не содержит отдельного слова 'верни': подстрочный поиск ошибочно гнал "
-                        + "разворот на месте в return_home, и дух шёл домой вместо поворота");
+                        + "разворот на месте в return_home, и дух шёл домой вместо поворота Иначе тест plan_TurnLeftGoal_ThrowsUnplannableGoal перестанет ловить эту поломку. При смене plan_TurnLeftGoal_ThrowsUnplannableGoal проверь это утверждение.");
     }
 
     @Test
@@ -243,7 +244,7 @@ class FallbackPlannerTests {
                 UnplannableGoalException.class,
                 () -> plan(new Goal("трудная задача", Map.of())),
                 "Слово 'трудная' начинается на 'труд', а не на отдельное слово 'руд': подстрочный поиск "
-                        + "ошибочно отправлял дух добывать руду вместо отказа");
+                        + "ошибочно отправлял дух добывать руду вместо отказа Иначе тест plan_HardTaskGoal_ThrowsUnplannableGoal перестанет ловить эту поломку. При смене plan_HardTaskGoal_ThrowsUnplannableGoal проверь это утверждение.");
     }
 
     @Test
@@ -254,7 +255,7 @@ class FallbackPlannerTests {
                 chopPlan(8, "any", 8),
                 plan,
                 "Слово 'дерево' обязано распознаваться как рубка по началу слова: иначе живая формулировка "
-                        + "игрока не превращается в план и дух бездельничает");
+                        + "игрока не превращается в план и дух бездельничает При смене plan_ChopWordGoal_ReturnsScanAndChopSequence проверь это утверждение.");
     }
 
     @Test
@@ -265,7 +266,7 @@ class FallbackPlannerTests {
                 new ScriptCall("follow", Map.of("target", "Steve", "radius", 3)),
                 plan,
                 "Фраза 'за мной' по словам обязана распознаваться как сопровождение: иначе игрок идёт один "
-                        + "и дух теряет его");
+                        + "и дух теряет его При смене plan_FollowWordGoal_ReturnsFollowCall проверь это утверждение.");
     }
 
     @Test
@@ -276,7 +277,7 @@ class FallbackPlannerTests {
                 new ScriptCall("attack", Map.of("target", "hostile")),
                 plan,
                 "При нескольких совпадениях побеждает правило, чьё слово раньше в тексте: иначе упоминание "
-                        + "дерева уводит боевую команду в рубку и дух не защищает игрока");
+                        + "дерева уводит боевую команду в рубку и дух не защищает игрока При смене plan_AttackWithTreeMentioned_AttackWins проверь это утверждение.");
     }
 
     @Test
@@ -287,18 +288,17 @@ class FallbackPlannerTests {
                 chopPlan(8, "any", 3),
                 plan,
                 "Число из текста цели обязано стать chop_tree.count: иначе просьба «сруби 3 дерева» рубит "
-                        + "восемь по умолчанию, а цель с нужным числом брёвен падает «не хватает N из 3»");
+                        + "восемь по умолчанию, а цель с нужным числом брёвен падает «не хватает N из 3» При смене plan_ChopGoalWithNumberInText_UsesThatCount проверь это утверждение.");
     }
 
     @Test
     void plan_ChopGoalWithoutNumber_AsksForBatchOfEight() {
         TaskNode plan = plan(new Goal("сруби деревья", Map.of()));
-
         assertEquals(
                 chopPlan(8, "any", 8),
                 plan,
                 "Цель «сруби деревья» без числа обязана рубить партию из 8 деревьев, а не одно: иначе дух "
-                        + "возвращается с одним бревном и цель «запас брёвен» снова требует работы (INC-7)");
+                        + "возвращается с одним бревном и цель «запас брёвен» снова требует работы (INC-7) При смене plan_ChopGoalWithoutNumber_AsksForBatchOfEight проверь это утверждение.");
     }
 
     @Test
@@ -306,7 +306,7 @@ class FallbackPlannerTests {
         assertThrows(
                 PlanValidationException.class,
                 () -> plan(new Goal("срубить деревья", Map.of("count", "пять"))),
-                "Цель с неверным типом count должна быть отклонена валидатором: иначе в план попадает невалидное значение");
+                "Цель с неверным типом count должна быть отклонена валидатором: иначе в план попадает невалидное значение При смене plan_ChopGoalWithInvalidCountType_ThrowsValidationException проверь это утверждение.");
     }
 
     private static TaskNode chopPlan(int radius, String species, int count) {

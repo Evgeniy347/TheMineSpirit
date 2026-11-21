@@ -41,7 +41,7 @@ class TacticsConfigTests {
                         config.weights().matrix().size(),
                         config.modes().params().size()),
                 "Стартовый набор: 13 жёстких правил, 7 действий, 6 смен режима, 9 переходов состояния, 7 способов отхода (без баррикады и столба — отход не строит), "
-                        + "16 факторов и 5 режимов; изменили файлы осознанно — обновите это число и docs/tactics/README.md");
+                        + "16 факторов и 5 режимов; изменили файлы осознанно — обновите это число и docs/tactics/README.md Иначе тест loadDefault_ShippedFiles_ParseWithAllSections перестанет ловить эту поломку. При смене loadDefault_ShippedFiles_ParseWithAllSections проверь это утверждение.");
     }
 
     @Test
@@ -52,7 +52,7 @@ class TacticsConfigTests {
                 new RallyTuning(16, 24, 2, 200, 32),
                 tuning,
                 "Числа сбора, зова и отклика читаются из rules.json → retreat.rally: радиус сбора 16, зов слышен "
-                        + "в 24, от врагов 2, не чаще 200 тиков, помощь в 32");
+                        + "в 24, от врагов 2, не чаще 200 тиков, помощь в 32 Иначе тест loadDefault_RallyTuning_MatchesRulesFile перестанет ловить эту поломку. При смене loadDefault_RallyTuning_MatchesRulesFile проверь это утверждение.");
     }
 
     @Test
@@ -61,7 +61,9 @@ class TacticsConfigTests {
         TacticsConfig second = TacticsConfig.loadDefault();
 
         assertSame(
-                first, second, "Конфигурация по умолчанию читается один раз и неизменяема: она общая для всех духов");
+                first,
+                second,
+                "Конфигурация по умолчанию читается один раз и неизменяема: она общая для всех духов Иначе тест loadDefault_CalledTwice_ReturnsSameInstanceAndReadsFilesOnce перестанет ловить эту поломку. При смене loadDefault_CalledTwice_ReturnsSameInstanceAndReadsFilesOnce проверь это утверждение.");
     }
 
     @Test
@@ -77,7 +79,7 @@ class TacticsConfigTests {
         assertEquals(
                 ids.size(),
                 ids.stream().distinct().count(),
-                "id правил уникальны во всём rules.json: по id сценарии и trace находят правило");
+                "id правил уникальны во всём rules.json: по id сценарии и trace находят правило При смене loadDefault_RuleIds_AreUniqueAcrossSections проверь это утверждение.");
     }
 
     @Test
@@ -85,11 +87,10 @@ class TacticsConfigTests {
         List<Integer> priorities = TacticsConfig.loadDefault().rules().hard().stream()
                 .map(HardRule::priority)
                 .toList();
-
         assertEquals(
                 priorities.stream().sorted(Comparator.reverseOrder()).toList(),
                 priorities,
-                "Жёсткие правила проверяются по убыванию приоритета: первое подходящее решает");
+                "Жёсткие правила проверяются по убыванию приоритета: первое подходящее решает Иначе тест loadDefault_HardRules_AreSortedByDescendingPriority перестанет ловить эту поломку. При смене loadDefault_HardRules_AreSortedByDescendingPriority проверь это утверждение.");
     }
 
     @Test
@@ -97,7 +98,7 @@ class TacticsConfigTests {
         assertEquals(
                 Scales.defaults(),
                 TacticsConfig.loadDefault().weights().scales(),
-                "Тесты факторов считают по тем же масштабам, что лежат в weights.json: расхождение скроет ошибку формул");
+                "Тесты факторов считают по тем же масштабам, что лежат в weights.json: расхождение скроет ошибку формул Иначе тест loadDefault_Scales_MatchTestScales перестанет ловить эту поломку. При смене loadDefault_Scales_MatchTestScales проверь это утверждение.");
     }
 
     static Stream<Arguments> brokenFiles() {
@@ -325,16 +326,15 @@ class TacticsConfigTests {
     void fromJson_ArmorCapAboveConstructorLimit_FailsWithFileAndScalePath() {
         String weights =
                 TacticsTexts.mutate(TacticsTexts.read("weights.json"), "\"armorCap\": 0.8", "\"armorCap\": 0.99");
-
         IllegalStateException error = assertThrows(
                 IllegalStateException.class,
                 () -> load("weights.json", weights),
-                "Предел брони 0.99 выше границы конструктора ArmorModel (0.95): загрузка обязана отклонить файл");
-
+                "Предел брони 0.99 выше границы конструктора ArmorModel (0.95): загрузка обязана отклонить файл Иначе тест fromJson_ArmorCapAboveConstructorLimit_FailsWithFileAndScalePath перестанет ловить эту поломку. При смене fromJson_ArmorCapAboveConstructorLimit_FailsWithFileAndScalePath проверь это утверждение.");
         assertTrue(
                 error.getMessage().contains("weights.json → scales.armorCap"),
                 "Границы чисел держит конструктор, а ошибку с путём в файле строит ConfigNode.build: сообщение называет "
-                        + "weights.json → scales.armorCap; получили: " + error.getMessage());
+                        + "weights.json → scales.armorCap; получили:  Иначе тест fromJson_ArmorCapAboveConstructorLimit_FailsWithFileAndScalePath перестанет ловить эту поломку. При смене fromJson_ArmorCapAboveConstructorLimit_FailsWithFileAndScalePath проверь это утверждение."
+                        + error.getMessage());
     }
 
     @Test
@@ -342,11 +342,11 @@ class TacticsConfigTests {
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,
                 () -> TacticsSensitivityTests.shifted(Factor.WIN_MARGIN, TacticalOption.FIGHT, 10),
-                "Вес 22 выше границы матрицы: границы весов держит конструктор ScoreWeights, а не парсер");
-
+                "Вес 22 выше границы матрицы: границы весов держит конструктор ScoreWeights, а не парсер Иначе тест scoreWeights_WeightAboveLimit_RejectedByConstructorWithCellName перестанет ловить эту поломку. При смене scoreWeights_WeightAboveLimit_RejectedByConstructorWithCellName проверь это утверждение.");
         assertTrue(
                 error.getMessage().contains("ScoreWeights.weights.WIN_MARGIN.FIGHT"),
-                "Сообщение называет ячейку матрицы, чтобы правка шла по подсказке; получили: " + error.getMessage());
+                "Сообщение называет ячейку матрицы, чтобы правка шла по подсказке; получили:  Иначе тест scoreWeights_WeightAboveLimit_RejectedByConstructorWithCellName перестанет ловить эту поломку. При смене scoreWeights_WeightAboveLimit_RejectedByConstructorWithCellName проверь это утверждение."
+                        + error.getMessage());
     }
 
     private static Arguments broken(String name, String file, String text, String path) {
@@ -360,11 +360,11 @@ class TacticsConfigTests {
                 IllegalStateException.class,
                 () -> load(file, text),
                 "Сломанная конфигурация («" + name
-                        + "») обязана отклоняться при загрузке: иначе ошибка всплывёт в бою");
-
+                        + "») обязана отклоняться при загрузке: иначе ошибка всплывёт в бою При смене fromJson_BrokenFile_FailsWithFileAndPath проверь это утверждение.");
         assertTrue(
                 error.getMessage().contains(file) && error.getMessage().contains(path),
-                "Сообщение называет файл " + file + " и путь " + path + " и подсказывает, что проверить; получили: "
+                "Сообщение называет файл " + file + " и путь " + path
+                        + " и подсказывает, что проверить; получили:  Иначе тест fromJson_BrokenFile_FailsWithFileAndPath перестанет ловить эту поломку. При смене fromJson_BrokenFile_FailsWithFileAndPath проверь это утверждение."
                         + error.getMessage());
     }
 }
