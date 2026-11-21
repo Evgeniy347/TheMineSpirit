@@ -50,12 +50,29 @@ public final class TreeCanopy {
                 }
             });
         }
+        found.addAll(orphanLeaves(box, view, tree, seen, foreign));
         found.sort(Comparator.comparingInt(BlockCoord::y)
                 .reversed()
                 .thenComparingLong(cell -> distanceSquared(cell, tree.base()))
                 .thenComparingInt(BlockCoord::x)
                 .thenComparingInt(BlockCoord::z));
         return List.copyOf(found);
+    }
+
+    private static List<BlockCoord> orphanLeaves(
+            Bounds box, TreeView view, Tree tree, Set<BlockCoord> seen, List<BlockCoord> foreign) {
+        List<BlockCoord> found = new ArrayList<>();
+        for (int x = box.minX(); x <= box.maxX(); x++) {
+            for (int y = box.minY(); y <= box.maxY(); y++) {
+                for (int z = box.minZ(); z <= box.maxZ(); z++) {
+                    BlockCoord cell = new BlockCoord(x, y, z);
+                    if (!seen.contains(cell) && view.isNaturalLeaves(cell) && ownedBy(cell, tree.logs(), foreign)) {
+                        found.add(cell);
+                    }
+                }
+            }
+        }
+        return found;
     }
 
     private static List<BlockCoord> foreignLogs(Bounds box, TreeView view, Set<BlockCoord> logs) {
