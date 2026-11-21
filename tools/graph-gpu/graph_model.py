@@ -1391,6 +1391,9 @@ class Planner:
 
     def audit_settles(self, building_id):
         """Аудит решает судьбу постройки: известный прогресс или неизвестность — не полная стройка."""
+        known = self.graph.buildings.get(building_id)
+        if known is not None and known.board_case == "CLEAR_GROUNDS":
+            return False
         if self.state.built(building_id) == BUILT:
             return False
         fact = self.state.building_facts.get(building_id)
