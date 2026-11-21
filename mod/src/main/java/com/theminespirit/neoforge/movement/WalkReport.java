@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.movement;
 
+import com.theminespirit.core.movement.DescentLane;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.BlockStates;
 import com.theminespirit.neoforge.SpiritEntity;
@@ -67,6 +68,15 @@ final class WalkReport {
     static boolean headBlocked(SpiritEntity spirit, BlockCoord cell) {
         BlockPos feet = spirit.blockPosition();
         return cell.y() > feet.getY() && (solid(spirit.level(), feet.above()) || solid(spirit.level(), feet.above(2)));
+    }
+
+    static boolean descentBlocked(SpiritEntity spirit, BlockCoord cell) {
+        BlockPos feet = spirit.blockPosition();
+        return cell.y() < feet.getY() - 1
+                && DescentLane.blocked(
+                        new BlockCoord(feet.getX(), feet.getY(), feet.getZ()),
+                        cell,
+                        c -> solid(spirit.level(), new BlockPos(c.x(), c.y(), c.z())));
     }
 
     private static boolean solid(Level level, BlockPos pos) {

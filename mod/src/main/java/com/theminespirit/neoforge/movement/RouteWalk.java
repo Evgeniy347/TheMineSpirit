@@ -264,9 +264,7 @@ public final class RouteWalk {
         BlockPos target = pos(cell);
         boolean water = spirit.level().getFluidState(target).is(FluidTags.WATER)
                 || spirit.level().getFluidState(target.below()).is(FluidTags.WATER);
-        Vec3 center = new Vec3(cell.x() + 0.5, cell.y() + 0.5, cell.z() + 0.5);
-        boolean blocked = cell.y() < Math.floor(spirit.getY()) - 1
-                && WalkReport.blocking(spirit.level(), spirit.position(), center) != null;
+        boolean blocked = WalkReport.descentBlocked(spirit, cell);
         return new WalkAscent.Body(
                 spirit.onGround(),
                 spirit.isInWater(),
