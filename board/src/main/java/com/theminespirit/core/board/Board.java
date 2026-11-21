@@ -112,7 +112,6 @@ public final class Board {
         blocked.clear();
         casePauses.clear();
         stuckSpirits.clear();
-        blocked.restore(state.blocked());
         casePauses.restore(state.pauses());
         stuckSpirits.restore(state.stuck(), nowTicks.getAsLong());
         ledger.clear();
@@ -126,6 +125,7 @@ public final class Board {
             if (entry.failedAt() != null) failTicks.put(ticket.id(), entry.failedAt());
             if (entry.failures() > 0) ticketFailures.put(ticket.id(), entry.failures());
         }
+        blocked.restore(state.blocked());
     }
 
     public BoardOutcome submit(BoardTicket ticket) {

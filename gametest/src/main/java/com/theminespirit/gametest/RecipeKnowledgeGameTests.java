@@ -1,5 +1,6 @@
 package com.theminespirit.gametest;
 
+import com.theminespirit.core.crafting.CraftPlan;
 import com.theminespirit.core.crafting.IngredientSpec;
 import com.theminespirit.core.crafting.RecipeSpec;
 import com.theminespirit.core.plan.TaskNode;
@@ -63,6 +64,14 @@ public final class RecipeKnowledgeGameTests {
                 recipe.isPresent() && recipe.get().outputCount() == 4,
                 "палки при пустом инвентаре обязаны выбирать рецепт из досок (4 за крафт), а не из бамбука (1 за "
                         + "крафт), выбран " + recipe);
+        Map<String, Integer> mixedPlanks = Map.of("oak_planks", 4, "jungle_planks", 4);
+        Optional<RecipeSpec> chest = knowledge.craftRecipe("chest", mixedPlanks);
+        helper.assertTrue(
+                chest.isPresent() && CraftPlan.of(chest.get(), 1, mixedPlanks).feasible(),
+                "Сундук обязан крафтиться из смешанных досок разных пород: ванильный рецепт использует тег "
+                        + "#planks, иначе задача на сундук не встанет при 4 oak + 4 jungle; выбран " + chest
+                        + ". При смене рецепта сундука или CraftPlan проверь ChestPlansTests и живую постановку "
+                        + "сундука после публикации");
     }
 
     private static void checkFurnace(GameTestHelper helper, RecipeKnowledge knowledge) {

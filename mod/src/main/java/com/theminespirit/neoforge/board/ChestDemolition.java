@@ -5,7 +5,6 @@ import com.theminespirit.core.board.BoardLedger;
 import com.theminespirit.core.board.BoardOutcome;
 import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardStatus;
-import com.theminespirit.core.board.CaseMaterials;
 import com.theminespirit.core.board.ChestClearance;
 import com.theminespirit.core.board.ChestPlans;
 import com.theminespirit.core.board.StateChangeLog;
@@ -39,7 +38,6 @@ public final class ChestDemolition {
     static final String EVENT = "demolish_chest";
     private static final String TICKET = "demolish_chest:";
     private static final String CHEST = "warehouse_chest:";
-    private static final String PLANKS = "_planks";
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final StateChangeLog CHANGES = new StateChangeLog();
 
@@ -177,8 +175,7 @@ public final class ChestDemolition {
     }
 
     private static void placeChest(GraphPost post, GraphTickets.Ticket ticket, BlockCoord cell) {
-        TaskNode plan = ChestPlans.placeOne(cell, post.scan.wood());
-        Map<String, Integer> required = CaseMaterials.need(plan, FirstStepsRunner.materialSource(post.level));
+        TaskNode plan = ChestPlans.placeOne(cell);
         String id = CHEST + cell.x() + "," + cell.y() + "," + cell.z();
         post.submit(
                 post.ticket(
@@ -187,7 +184,7 @@ public final class ChestDemolition {
                         Optional.empty(),
                         BoardRules.priorityOf(BoardCase.STOCK_CHESTS),
                         ticket.id(),
-                        required),
+                        Map.of()),
                 TicketTarget.at(cell).withPlan(plan));
         LOGGER.info("[warehouse] склад полон: новый сундук ставится в клетку склада {}", cell);
     }
@@ -245,13 +242,7 @@ public final class ChestDemolition {
     }
 
     private static int planks(GraphPost post) {
-        int planks = 0;
-        for (Map.Entry<String, Integer> entry : post.stock.available().entrySet()) {
-            if (entry.getKey().endsWith(PLANKS)) {
-                planks += entry.getValue();
-            }
-        }
-        return planks;
+        return ChestClearance.chestWood(post.stock.available());
     }
 
     private static long distance(BlockCoord from, BlockCoord to) {

@@ -9,6 +9,7 @@ import com.theminespirit.core.inventory.Stack;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 class ChestClearanceTests {
@@ -66,6 +67,40 @@ class ChestClearanceTests {
                 decision.breaks(),
                 "WAIT не даёт права ломать непустой сундук"
                         + " Иначе тест decide_NonEmptyAndWarehouseFull_WaitsInsteadOfBreaking перестанет ловить эту поломку. При смене decide_NonEmptyAndWarehouseFull_WaitsInsteadOfBreaking проверь это утверждение.");
+    }
+
+    @Test
+    void decide_NonEmptyFullWarehouseWithMixedPlanks_AddsChestFirst() {
+        BlockCoord cell = new BlockCoord(20, 64, 20);
+        int wood = ChestClearance.chestWood(Map.of("oak_planks", 4, "jungle_planks", 4));
+
+        ChestClearance.Decision decision =
+                ChestClearance.decide(snapshot(dirt(5)), false, List.of(full()), List.of(cell), wood);
+
+        assertEquals(
+                ChestClearance.Action.ADD_CHEST,
+                decision.action(),
+                "4 oak + 4 jungle доски — достаточно на сундук: порода не важна"
+                        + " Иначе тест decide_NonEmptyFullWarehouseWithMixedPlanks_AddsChestFirst перестанет ловить эту поломку. При смене decide_NonEmptyFullWarehouseWithMixedPlanks_AddsChestFirst проверь это утверждение.");
+    }
+
+    @Test
+    void chestWood_AnySpeciesAndLogs_AddsUpToCraftableMaterial() {
+        assertEquals(
+                8,
+                ChestClearance.chestWood(Map.of("oak_planks", 4, "jungle_planks", 4)),
+                "Смешанные доски разных пород складываются"
+                        + " Иначе тест chestWood_AnySpeciesAndLogs_AddsUpToCraftableMaterial перестанет ловить эту поломку. При смене chestWood_AnySpeciesAndLogs_AddsUpToCraftableMaterial проверь это утверждение.");
+        assertEquals(
+                16,
+                ChestClearance.chestWood(Map.of("oak_planks", 8, "spruce_log", 2)),
+                "2 бревна любой породы дают ещё 8 досок"
+                        + " Иначе тест chestWood_AnySpeciesAndLogs_AddsUpToCraftableMaterial перестанет ловить эту поломку. При смене chestWood_AnySpeciesAndLogs_AddsUpToCraftableMaterial проверь это утверждение.");
+        assertEquals(
+                4,
+                ChestClearance.chestWood(Map.of("oak_log", 1, "cobblestone", 64)),
+                "Одно бревно — только 4 доски: helper считает материал, а не решает, хватает ли его"
+                        + " Иначе тест chestWood_AnySpeciesAndLogs_AddsUpToCraftableMaterial перестанет ловить эту поломку. При смене chestWood_AnySpeciesAndLogs_AddsUpToCraftableMaterial проверь это утверждение.");
     }
 
     @Test

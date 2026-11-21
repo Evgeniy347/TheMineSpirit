@@ -27,7 +27,7 @@ import net.minecraft.server.level.ServerLevel;
 import org.jspecify.annotations.Nullable;
 
 final class GraphNeeds {
-    private static final String SCAFFOLD_MATERIAL = "minecraft:dirt";
+    private static final String SCAFFOLD_MATERIAL = "dirt";
 
     private GraphNeeds() {}
 

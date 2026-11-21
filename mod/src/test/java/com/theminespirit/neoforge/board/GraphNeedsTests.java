@@ -130,10 +130,10 @@ class GraphNeedsTests {
                 ask(ticket, TicketTarget.at(SITE), List.of("minecraft:stone_pickaxe"), FailureFact.NO_MATERIAL);
 
         assertEquals(
-                new GraphBlock.Item("minecraft:dirt", 1),
+                new GraphBlock.Item("dirt", 1),
                 need,
-                "Откат без земли/булыжника ждёт материал, а не путь: ключ материала снимается, когда земля "
-                        + "появилась, и задание выдаётся снова"
+                "Откат без земли/булыжника ждёт материал 'dirt' без неймспейса, а не путь: ключ материала "
+                        + "снимается, когда земля появилась, и задание выдаётся снова"
                         + " Иначе тест undoLease_NoScaffoldMaterial_NeedsMaterialNotPath перестанет ловить эту поломку. При смене undoLease_NoScaffoldMaterial_NeedsMaterialNotPath проверь это утверждение.");
     }
 

@@ -257,7 +257,7 @@ final class BlockedBook {
         since.clear();
         blocks.clear();
         for (BoardState.Blocked state : states) {
-            if (state.block() == null) {
+            if (state.block() == null || !tickets.containsKey(state.ticketId())) {
                 continue;
             }
             missing.put(state.ticketId(), state.missing());
@@ -273,7 +273,7 @@ final class BlockedBook {
                     .isEmpty();
         }
         if (block.need() instanceof GraphBlock.Item item) {
-            return stock.available().getOrDefault(item.item(), 0) >= item.count();
+            return stock.count(item.item()) >= item.count();
         }
         return false;
     }

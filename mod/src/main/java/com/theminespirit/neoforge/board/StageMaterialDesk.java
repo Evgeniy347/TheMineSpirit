@@ -83,6 +83,9 @@ final class StageMaterialDesk {
         String wood = step.wood();
         MaterialSource source = materialSource(level);
         Map<String, Integer> need = new HashMap<>();
+        if (caseValue == BoardCase.STOCK_CHESTS) {
+            return Map.of();
+        }
         if (caseValue == BoardCase.BUILD_MINE) {
             TaskNode plan = TicketPlans.plan(caseValue, 1, target);
             need.putAll(BuildGap.need(

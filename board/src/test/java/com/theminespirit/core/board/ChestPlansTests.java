@@ -178,13 +178,17 @@ class ChestPlansTests {
     void placeOne_CellInWarehouse_CraftsAndPlacesChest() {
         BlockCoord cell = new BlockCoord(20, 65, 20);
 
-        List<ScriptCall> calls = calls(ChestPlans.placeOne(cell, "oak"));
+        List<ScriptCall> calls = calls(ChestPlans.placeOne(cell));
 
         assertEquals(
-                List.of("withdraw", "wait", "craft", "place_block"),
+                List.of("withdraw", "craft", "acquire", "place_block"),
                 calls.stream().map(ScriptCall::script).toList(),
-                "Новый сундук делают из досок (с ожиданием досок) и ставят в клетку склада"
+                "Новый сундук берёт доски любой породы, крафтит его, при нехватке — acquire, и ставит в клетку"
                         + " Иначе тест placeOne_CellInWarehouse_CraftsAndPlacesChest перестанет ловить эту поломку. При смене placeOne_CellInWarehouse_CraftsAndPlacesChest проверь это утверждение.");
+        ScriptCall withdraw = calls.stream()
+                .filter(call -> "withdraw".equals(call.script()))
+                .findFirst()
+                .orElseThrow();
         ScriptCall craft = calls.stream()
                 .filter(call -> "craft".equals(call.script()))
                 .findFirst()
@@ -193,6 +197,11 @@ class ChestPlansTests {
                 .filter(call -> "place_block".equals(call.script()))
                 .findFirst()
                 .orElseThrow();
+        assertEquals(
+                "*_planks",
+                withdraw.params().get("item"),
+                "Доски забирают шаблоном любой породы, а не конкретной"
+                        + " Иначе тест placeOne_CellInWarehouse_CraftsAndPlacesChest перестанет ловить эту поломку. При смене placeOne_CellInWarehouse_CraftsAndPlacesChest проверь это утверждение.");
         assertEquals(
                 "minecraft:chest",
                 craft.params().get("item"),
@@ -203,6 +212,15 @@ class ChestPlansTests {
                 place.params().get("x"),
                 "Ставится в клетку склада по X"
                         + " Иначе тест placeOne_CellInWarehouse_CraftsAndPlacesChest перестанет ловить эту поломку. При смене placeOne_CellInWarehouse_CraftsAndPlacesChest проверь это утверждение.");
+        assertTrue(
+                calls.stream()
+                        .flatMap(call -> call.params().values().stream())
+                        .filter(String.class::isInstance)
+                        .noneMatch(value -> ((String) value).matches("[a-z_]+_planks")),
+                "В плане нет доски конкретной породы: иначе смешанный запас (4 oak + 4 jungle) считался бы готовым "
+                        + "к сундуку, а план ждал бы отсутствующую породу и задание повисло бы в WAITING_RESOURCES. "
+                        + "При смене шаблона забора досок в ChestPlans.placeOne проверь ChestPlansTests и живую "
+                        + "постановку сундука: " + calls);
     }
 
     @Test

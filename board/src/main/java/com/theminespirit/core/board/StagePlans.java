@@ -136,8 +136,7 @@ public final class StagePlans {
     private static TaskNode chests(TicketTarget target, StageSite site, List<SchemeBuild> builds) {
         List<TaskNode> steps = new ArrayList<>();
         steps.add(PlanSteps.gotoPoint(site.workYard()));
-        String wood = target.wood() == null ? WoodSpecies.OAK : target.wood();
-        steps.add(PlanSteps.withdraw(NamespacedId.MINECRAFT + wood + "_planks", CHEST_PLANKS));
+        steps.add(PlanSteps.withdraw("*_planks", CHEST_PLANKS));
         for (SchemeBuild build : builds) {
             steps.add(
                     build.only().contains(TABLE_BLOCK)

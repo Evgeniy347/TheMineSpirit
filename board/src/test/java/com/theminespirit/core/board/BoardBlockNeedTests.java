@@ -138,6 +138,55 @@ class BoardBlockNeedTests {
     }
 
     @Test
+    void claimable_NamespacedNeed_UnblocksWithShortStock() {
+        long[] now = {0};
+        Board board = new Board(() -> now[0]);
+        board.submit(ticket());
+        board.claim(ID, spirit(1), now[0]);
+        board.fail(ID, new StockView(Map.of("dirt", 9)), "нет подхода", new GraphBlock.Item("minecraft:dirt", 9));
+
+        assertEquals(
+                Optional.of(BoardStatus.BLOCKED),
+                board.statusOf(ID),
+                "Провал с именованной нуждой блокирует задание"
+                        + " Иначе тест claimable_NamespacedNeed_UnblocksWithShortStock перестанет ловить эту поломку. При смене claimable_NamespacedNeed_UnblocksWithShortStock проверь это утверждение.");
+
+        board.claimable(new StockView(Map.of("dirt", 9)), now[0]);
+
+        assertEquals(
+                Optional.of(BoardStatus.PENDING),
+                board.statusOf(ID),
+                "Запас 'dirt' снимает блокировку 'minecraft:dirt': имена с неймспейсом и без — один предмет"
+                        + " Иначе тест claimable_NamespacedNeed_UnblocksWithShortStock перестанет ловить эту поломку. При смене claimable_NamespacedNeed_UnblocksWithShortStock проверь это утверждение.");
+    }
+
+    @Test
+    void restore_BlockedWithoutTicket_IsPruned() {
+        long[] now = {0};
+        Board board = new Board(() -> now[0]);
+        BoardState stale = new BoardState(
+                List.of(),
+                Set.of(),
+                List.of(new BoardState.Blocked(
+                        "world:plan_breach:gone",
+                        Map.of("dirt", 1),
+                        Map.of(),
+                        now[0],
+                        new GraphBlock("world:plan_breach:gone", "", new GraphBlock.Item("minecraft:dirt", 1)))),
+                List.of(),
+                List.of());
+
+        board.restore(stale);
+
+        assertEquals(
+                List.of(),
+                board.snapshot().blocked(),
+                "Блокировка без билета не переживает восстановление: её некому снимать, а граф получал бы "
+                        + "вечную ложную нужду"
+                        + " Иначе тест restore_BlockedWithoutTicket_IsPruned перестанет ловить эту поломку. При смене restore_BlockedWithoutTicket_IsPruned проверь это утверждение.");
+    }
+
+    @Test
     void restore_LegacyBlockedWithoutNeed_ReturnsToPending() {
         long[] now = {0};
         Board board = new Board(() -> now[0]);

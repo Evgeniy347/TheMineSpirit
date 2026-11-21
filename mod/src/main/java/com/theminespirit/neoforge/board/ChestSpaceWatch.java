@@ -6,7 +6,6 @@ import com.theminespirit.core.board.BoardOutcome;
 import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
-import com.theminespirit.core.board.CaseMaterials;
 import com.theminespirit.core.board.ChestPlans;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.WarehouseRules;
@@ -95,7 +94,7 @@ final class ChestSpaceWatch {
         }
         BlockCoord cell = free.get(0);
         String id = WAREHOUSE_PREFIX + cell.x() + "," + cell.y() + "," + cell.z();
-        TaskNode plan = ChestPlans.placeOne(cell, post.scan.wood());
+        TaskNode plan = ChestPlans.placeOne(cell);
         BoardOutcome outcome = post.submit(
                 post.ticket(
                         id,
@@ -103,7 +102,7 @@ final class ChestSpaceWatch {
                         Optional.empty(),
                         BoardRules.priorityOf(BoardCase.STOCK_CHESTS),
                         BoardTicket.ALWAYS_CAUSE,
-                        CaseMaterials.need(plan, FirstStepsRunner.materialSource(level))),
+                        Map.of()),
                 TicketTarget.at(cell).withPlan(plan));
         if (outcome == BoardOutcome.ACCEPTED) {
             LOGGER.info("[chests] {}: новый сундук ставится в клетку склада {}", id, cell);

@@ -22,30 +22,29 @@ public final class ChestPlans {
     private static final String RADIUS = "radius";
     private static final String NEAREST = "nearest";
     private static final String WAREHOUSE = "warehouse";
-    private static final String WAIT = "wait";
-    private static final String TICKS = "ticks";
+    private static final String ANY_PLANKS = "*_planks";
+    private static final String ACQUIRE = "acquire";
     private static final String CHEST = "minecraft:chest";
 
     private ChestPlans() {}
 
-    public static TaskNode placeOne(BlockCoord at, String wood) {
+    public static TaskNode placeOne(BlockCoord at) {
         Objects.requireNonNull(at, "Клетка нового сундука не может быть null: без неё некуда ставить");
-        String planks = (wood == null || wood.isBlank() ? "oak" : wood) + "_planks";
-        List<TaskNode> steps = new ArrayList<>();
-        steps.add(new FallbackNode(List.of(
+        TaskNode planks = new SequenceNode(List.of(
                 new ScriptCall(
                         WITHDRAW,
                         Map.of(
                                 CONTAINER,
                                 NEAREST,
                                 ITEM,
-                                planks,
+                                ANY_PLANKS,
                                 COUNT,
                                 ChestClearance.CHEST_PLANKS,
                                 RADIUS,
                                 CatalogLimits.CONTAINER_RADIUS_DEFAULT)),
-                new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))));
-        steps.add(new ScriptCall("craft", Map.of(ITEM, CHEST, COUNT, 1, RADIUS, CatalogLimits.STATION_RADIUS_DEFAULT)));
+                new ScriptCall("craft", Map.of(ITEM, CHEST, COUNT, 1, RADIUS, CatalogLimits.STATION_RADIUS_DEFAULT))));
+        List<TaskNode> steps = new ArrayList<>();
+        steps.add(new FallbackNode(List.of(planks, new ScriptCall(ACQUIRE, Map.of(ITEM, CHEST, COUNT, 1)))));
         steps.add(new ScriptCall("place_block", Map.of("block", CHEST, "x", at.x(), "y", at.y(), "z", at.z())));
         return new SequenceNode(steps);
     }

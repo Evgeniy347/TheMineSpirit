@@ -36,16 +36,17 @@ final class GraphBlocks {
         }
         Map<String, Double> scores = flow.solve();
         for (GraphBlock block : state.blocks()) {
-            if (satisfied(block.need())) {
+            GraphBlock.Need need = normalized(block.need());
+            if (satisfied(need)) {
                 continue;
             }
-            String reason = text(block.need());
+            String reason = text(need);
             blocked.put(block.node(), reason);
-            if (block.need() instanceof GraphBlock.Impossible impossible) {
+            if (need instanceof GraphBlock.Impossible impossible) {
                 notice(impossible.node(), "невозможно: " + reason);
                 continue;
             }
-            if (block.need() instanceof GraphBlock.Item item
+            if (need instanceof GraphBlock.Item item
                     && !graph.isGroup(item.item())
                     && graph.producers(item.item()).isEmpty()) {
                 String missing = "нет источника " + item.item() + " в данных графа: нужда " + item.count()
@@ -56,9 +57,16 @@ final class GraphBlocks {
             }
             pushNeed(
                     block.node(),
-                    block.need(),
+                    need,
                     Math.max(1.0, scores.getOrDefault(block.node(), declared(block.node()))) * graph.decay());
         }
+    }
+
+    private static GraphBlock.Need normalized(GraphBlock.Need need) {
+        if (need instanceof GraphBlock.Item item) {
+            return new GraphBlock.Item(GraphNames.graphItem(item.item()), item.count());
+        }
+        return need;
     }
 
     @Nullable
