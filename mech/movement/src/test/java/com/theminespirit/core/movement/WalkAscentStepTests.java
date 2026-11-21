@@ -17,6 +17,35 @@ class WalkAscentStepTests {
     private static final int TICKS = 40;
 
     @Test
+    void next_DiveTwoCellsAway_IsImpossible() {
+        WalkAscent.Command command = WalkAscent.next(
+                new BlockCoord(0, 0, 2),
+                new WalkAscent.Pose(new BlockCoord(0, 3, 0), 0.5, 3.0, 0.5),
+                new WalkAscent.Body(true, false, false));
+        assertEquals(
+                WalkAscent.Step.IMPOSSIBLE,
+                command.step(),
+                "Спуск прыжком в далёкую клетку не берётся: дух на краю скользит вдоль стены по кругу вместо "
+                        + "спуска (окно 61, spirit-6 withdraw: 1008° за 123 тика, путь 4.50, сдвиг 0.50, "
+                        + "move=-179.5,68,-517.5 с высоты 74), иначе отказ не придёт и дух продолжит кружить. "
+                        + "При смене правила проверь спуск в соседнюю клетку: он остаётся DIVE");
+    }
+
+    @Test
+    void next_DiveNeighbourBelow_StaysDive() {
+        WalkAscent.Command command = WalkAscent.next(
+                new BlockCoord(0, 0, 1),
+                new WalkAscent.Pose(new BlockCoord(0, 3, 0), 0.5, 3.0, 0.5),
+                new WalkAscent.Body(true, false, false));
+        assertEquals(
+                WalkAscent.Step.DIVE,
+                command.step(),
+                "Спуск в соседнюю клетку на три ниже — законный DIVE: иначе дух перестанет сходить с уступов "
+                        + "шахты и лесов. При смене порога дальности проверь живой спуск с уступа: DIVE "
+                        + "выполняется");
+    }
+
+    @Test
     void next_WalkTwoCellsAway_IsImpossible() {
         WalkAscent.Command command = WalkAscent.next(
                 new BlockCoord(0, 0, 2),

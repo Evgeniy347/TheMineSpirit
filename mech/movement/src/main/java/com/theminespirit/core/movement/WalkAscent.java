@@ -81,7 +81,9 @@ public final class WalkAscent {
             return new Command(swim, targetX, cell.y(), targetZ);
         }
         if (!rising && pose.feet().y() - cell.y() > 1) {
-            Step descent = body.descentBlocked() ? Step.DESCENT_BLOCKED : Step.DIVE;
+            Step descent = horizontal(pose, targetX, targetZ) > MAX_JUMP_REACH
+                    ? Step.IMPOSSIBLE
+                    : body.descentBlocked() ? Step.DESCENT_BLOCKED : Step.DIVE;
             return new Command(descent, targetX, cell.y(), targetZ);
         }
         Step step = switch (lift(rising, body)) {
