@@ -82,11 +82,8 @@ public final class RouteWalk {
         }
         recorded = next;
         if (!mutations.busy() && ++stepTicks > STEP_TICKS) {
-            String details = step.action() == RouteStep.Action.WALK || step.action() == RouteStep.Action.SWIM
-                    ? WalkReport.describe(spirit, step.cell())
-                    : "";
             return fail("шаг " + step.action() + " в " + step.cell() + " не выполнен за " + STEP_TICKS + " тиков"
-                    + details);
+                    + WalkReport.describe(spirit, step.cell()));
         }
         Optional<String> refusal = switch (step.action()) {
             case SWIM -> swimmer.tick(step.cell()) ? advance() : Optional.<String>empty();
@@ -140,7 +137,8 @@ public final class RouteWalk {
         if (spirit.isInWater()) {
             return swimmer.exit(cell) ? advance() : Optional.<String>empty();
         }
-        WalkAscent.Command command = WalkAscent.next(cell, pose(), body(cell));
+        WalkAscent.Body body = body(cell);
+        WalkAscent.Command command = WalkAscent.next(cell, pose(), body);
         if (command.step() == WalkAscent.Step.ARRIVED) {
             advance();
             return Optional.empty();
@@ -231,9 +229,7 @@ public final class RouteWalk {
     }
 
     private boolean stand(BlockCoord cell) {
-        if (water(cell)) {
-            return true;
-        }
+        if (water(cell)) return true;
         BlockPos floor = pos(cell).below();
         return !spirit.level()
                 .getBlockState(floor)

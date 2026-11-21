@@ -2,6 +2,7 @@ package com.theminespirit.neoforge.movement;
 
 import com.theminespirit.core.movement.AscendRoom;
 import com.theminespirit.core.movement.DescentLane;
+import com.theminespirit.core.movement.WalkAscent;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.BlockStates;
 import com.theminespirit.neoforge.SpiritEntity;
@@ -30,6 +31,17 @@ final class WalkReport {
         boolean climbable = state.is(BlockTags.CLIMBABLE);
         boolean rising = cell.y() > spirit.blockPosition().getY();
         boolean noEscape = water && noDryExit(level, pos);
+        boolean descent = descentBlocked(spirit, cell);
+        boolean head = headBlocked(spirit, cell);
+        BlockPos feet = spirit.blockPosition();
+        WalkAscent.Command next = WalkAscent.next(
+                cell,
+                new WalkAscent.Pose(
+                        new BlockCoord(feet.getX(), feet.getY(), feet.getZ()),
+                        spirit.getX(),
+                        spirit.getY(),
+                        spirit.getZ()),
+                new WalkAscent.Body(spirit.onGround(), spirit.isInWater(), spirit.onClimbable(), water, descent, head));
         double distance = horizontal(spirit, new Vec3(cell.x() + CENTER, cell.y(), cell.z() + CENTER));
         String code = "NO_PROGRESS";
         if (collision) {
@@ -56,6 +68,9 @@ final class WalkReport {
                         spirit.getMoveControl().getWantedY(),
                         spirit.getMoveControl().getWantedZ())
                 + ", между=" + between(level, spirit, cell)
+                + ", ход=" + next.step()
+                + ", спуск=" + descent
+                + ", сверху=" + head
                 + ", no_escape=" + noEscape
                 + ", код=" + code;
     }
