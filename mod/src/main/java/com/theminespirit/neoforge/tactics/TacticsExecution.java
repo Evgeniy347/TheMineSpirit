@@ -43,7 +43,9 @@ final class TacticsExecution {
         }
         if (host.outcome.decision() == TacticalOption.IGNORE
                 && !host.orders.directives().held()
-                && ReturnGate.allowed(host.spirit.taskStatus().orElse(null))
+                && ReturnGate.allowed(
+                        host.spirit.taskStatus().orElse(null),
+                        host.spirit.currentTaskScript().isPresent())
                 && host.returnWalk.due(host.spirit.level().getGameTime())) {
             host.active = true;
             host.action = host.orders.zone().isPresent() ? TacticsAction.GUARD : TacticsAction.RETURN;
