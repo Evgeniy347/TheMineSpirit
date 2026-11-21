@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.movement;
 
+import com.theminespirit.core.movement.StandStill;
 import com.theminespirit.core.movement.WalkAscent;
 import com.theminespirit.core.movement.api.DropProfile;
 import com.theminespirit.core.observation.BlockCoord;
@@ -33,6 +34,7 @@ public final class RouteWalk {
     private final SwimStep swimmer;
     private final PassageWalk passages;
     private final RouteMutations mutations;
+    private final StandStill still = new StandStill();
     private int next;
     private int stepTicks;
     private @Nullable String failure;
@@ -61,6 +63,7 @@ public final class RouteWalk {
         }
         RouteStep step = steps.get(next);
         if (passages.openToward(step.cell())) {
+            still.reset();
             return State.RUNNING;
         }
         if ((step.action() == RouteStep.Action.WALK
@@ -127,6 +130,10 @@ public final class RouteWalk {
     }
 
     private Optional<String> walk(BlockCoord cell) {
+        BlockCoord here = pose().feet();
+        if (still.stuck(here)) {
+            return Optional.of("дух стоит " + still.limit() + " тиков — шаг в " + cell + " не начался");
+        }
         List<BlockPos> blocked = EmbeddedSpace.blocking(spirit);
         if (!blocked.isEmpty()) {
             BlockPos stuck = blocked.get(0);
@@ -273,13 +280,10 @@ public final class RouteWalk {
                 WalkReport.headBlocked(spirit, cell));
     }
 
-    Optional<String> advanceStep() {
-        return advance();
-    }
-
-    private Optional<String> advance() {
+    Optional<String> advance() {
         next++;
         stepTicks = 0;
+        still.reset();
         passages.settle();
         return Optional.<String>empty();
     }

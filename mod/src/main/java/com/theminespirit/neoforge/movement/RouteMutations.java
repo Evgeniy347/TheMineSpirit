@@ -56,7 +56,7 @@ final class RouteMutations {
         }
         if (level.getBlockState(cell).getCollisionShape(level, cell).isEmpty()) {
             breaking = active;
-            return walk.advanceStep();
+            return walk.advance();
         }
         Optional<String> result = switch (breaker.begin(cell)) {
             case BlockBreaker.Started ignored -> {
@@ -74,11 +74,11 @@ final class RouteMutations {
     Optional<String> placeCell(BlockPos cell) {
         Level level = spirit.level();
         if (!level.getBlockState(cell).getCollisionShape(level, cell).isEmpty()) {
-            return walk.advanceStep();
+            return walk.advance();
         }
         Optional<String> placed = place(cell);
         if (placed.isEmpty()) {
-            return walk.advanceStep();
+            return walk.advance();
         }
         return placed;
     }
@@ -88,7 +88,7 @@ final class RouteMutations {
         if (pillarPlaced) {
             if (spirit.onGround() && spirit.blockPosition().getY() == cell.y() + 1) {
                 pillarPlaced = false;
-                return walk.advanceStep();
+                return walk.advance();
             }
             return Optional.empty();
         }
