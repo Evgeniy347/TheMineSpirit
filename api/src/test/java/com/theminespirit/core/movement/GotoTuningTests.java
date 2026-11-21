@@ -7,6 +7,17 @@ import org.junit.jupiter.api.Test;
 
 class GotoTuningTests {
     @Test
+    void stallTicks_ThirtyTicks_TrimsSpinBelowDetector() {
+        assertEquals(
+                30,
+                GotoTuning.STALL_TICKS,
+                "Топтание подхода ловится через 30 тиков, а не 40: эпизод кружения требует 40 тиков "
+                        + "(окно 59, spirit-1/2: 284° и 574° за 40–42 тика при сдвиге 0.34–0.44, слой "
+                        + "ванильный). Иначе отказ приходит ровно на пороге и детектор успевает записать "
+                        + "эпизод. При смене окна проверь StuckWatcher: у него остаётся 40 тиков");
+    }
+
+    @Test
     void timeoutTicks_KnownDistance_AddsReserveToTicksPerBlock() {
         assertEquals(
                 280,

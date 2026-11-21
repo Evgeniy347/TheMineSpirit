@@ -35,7 +35,7 @@ public final class Approach {
     private PassageWalk passages;
     private PathRefreshPolicy pathRefresh;
     private StuckWatcher stuckWatcher;
-    private StallWatch stall = new StallWatch(GotoTuning.STUCK_TICKS);
+    private StallWatch stall = new StallWatch(GotoTuning.STALL_TICKS);
     private Vec3 targetPoint;
     private Entity targetEntity;
     private double arrival;
