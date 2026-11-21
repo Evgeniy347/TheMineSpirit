@@ -14,19 +14,31 @@ class GearInputsTests {
     @Test
     void settings_ProductionFile_RaisesTierByStage() {
         GearInputs.Settings settings = GearInputs.settings();
-
-        assertEquals("stone", settings.requiredAt(1).get("pickaxe"), "На первом этапе кирка каменная");
-        assertEquals("iron", settings.requiredAt(2).get("pickaxe"), "На втором этапе кирка железная");
-        assertEquals("diamond", settings.requiredAt(3).get("pickaxe"), "На третьем этапе кирка алмазная");
-        assertEquals(20, settings.wornPercent(), "Инструмент считается изношенным при 20 % прочности");
+        assertEquals(
+                "stone",
+                settings.requiredAt(1).get("pickaxe"),
+                "На первом этапе кирка каменная Иначе тест settings_ProductionFile_RaisesTierByStage перестанет ловить эту поломку. При смене settings_ProductionFile_RaisesTierByStage проверь это утверждение.");
+        assertEquals(
+                "iron",
+                settings.requiredAt(2).get("pickaxe"),
+                "На втором этапе кирка железная Иначе тест settings_ProductionFile_RaisesTierByStage перестанет ловить эту поломку. При смене settings_ProductionFile_RaisesTierByStage проверь это утверждение.");
+        assertEquals(
+                "diamond",
+                settings.requiredAt(3).get("pickaxe"),
+                "На третьем этапе кирка алмазная Иначе тест settings_ProductionFile_RaisesTierByStage перестанет ловить эту поломку. При смене settings_ProductionFile_RaisesTierByStage проверь это утверждение.");
+        assertEquals(
+                20,
+                settings.wornPercent(),
+                "Инструмент считается изношенным при 20 % прочности Иначе тест settings_ProductionFile_RaisesTierByStage перестанет ловить эту поломку. При смене settings_ProductionFile_RaisesTierByStage проверь это утверждение.");
     }
 
     @Test
     void events_WornPickaxe_AddsToolWorn() {
         Set<String> events = GearInputs.events(
                 facts(Map.of("spirit-1", spirit(null, List.of(tool("pickaxe", 2, 10, 250)), List.of())), List.of()), 2);
-
-        assertTrue(events.contains(GearInputs.TOOL_WORN), "Кирка с 4 % прочности обязана требовать замены");
+        assertTrue(
+                events.contains(GearInputs.TOOL_WORN),
+                "Кирка с 4 % прочности обязана требовать замены Иначе тест events_WornPickaxe_AddsToolWorn перестанет ловить эту поломку. При смене events_WornPickaxe_AddsToolWorn проверь это утверждение.");
     }
 
     @Test
@@ -34,8 +46,9 @@ class GearInputsTests {
         Set<String> events = GearInputs.events(
                 facts(Map.of("spirit-1", spirit(null, List.of(tool("pickaxe", 2, 200, 250)), List.of())), List.of()),
                 2);
-
-        assertFalse(events.contains(GearInputs.TOOL_WORN), "Кирка с 80 % прочности ещё не изношена");
+        assertFalse(
+                events.contains(GearInputs.TOOL_WORN),
+                "Кирка с 80 % прочности ещё не изношена Иначе тест events_FreshPickaxe_NoToolWorn перестанет ловить эту поломку. При смене events_FreshPickaxe_NoToolWorn проверь это утверждение.");
     }
 
     @Test
@@ -50,26 +63,33 @@ class GearInputsTests {
                                         List.of(new GraphFacts.Armor("HEAD", "minecraft:iron_helmet", 10, 165)))),
                         List.of()),
                 2);
-
-        assertTrue(events.contains(GearInputs.ARMOR_WORN), "Шлем с 6 % прочности обязан требовать ремонта");
+        assertTrue(
+                events.contains(GearInputs.ARMOR_WORN),
+                "Шлем с 6 % прочности обязан требовать ремонта Иначе тест events_WornHelmet_AddsArmorWorn перестанет ловить эту поломку. При смене events_WornHelmet_AddsArmorWorn проверь это утверждение.");
     }
 
     @Test
     void events_EmptySpirit_AddsCraftToolNodes() {
         Set<String> events =
                 GearInputs.events(facts(Map.of("spirit-1", spirit(null, List.of(), List.of())), List.of()), 1);
-
-        assertTrue(events.contains(GearInputs.CRAFT_TOOL + "pickaxe"), "Без кирки граф обязан просить кирку");
-        assertTrue(events.contains(GearInputs.CRAFT_TOOL + "axe"), "Без топора граф обязан просить топор");
-        assertTrue(events.contains(GearInputs.CRAFT_TOOL + "hoe"), "Без тяпки граф обязан просить тяпку");
+        assertTrue(
+                events.contains(GearInputs.CRAFT_TOOL + "pickaxe"),
+                "Без кирки граф обязан просить кирку Иначе тест events_EmptySpirit_AddsCraftToolNodes перестанет ловить эту поломку. При смене events_EmptySpirit_AddsCraftToolNodes проверь это утверждение.");
+        assertTrue(
+                events.contains(GearInputs.CRAFT_TOOL + "axe"),
+                "Без топора граф обязан просить топор Иначе тест events_EmptySpirit_AddsCraftToolNodes перестанет ловить эту поломку. При смене events_EmptySpirit_AddsCraftToolNodes проверь это утверждение.");
+        assertTrue(
+                events.contains(GearInputs.CRAFT_TOOL + "hoe"),
+                "Без тяпки граф обязан просить тяпку Иначе тест events_EmptySpirit_AddsCraftToolNodes перестанет ловить эту поломку. При смене events_EmptySpirit_AddsCraftToolNodes проверь это утверждение.");
     }
 
     @Test
     void events_StageTwoWithoutArmor_AddsCraftArmor() {
         Set<String> events =
                 GearInputs.events(facts(Map.of("spirit-1", spirit(null, List.of(), List.of())), List.of()), 2);
-
-        assertTrue(events.contains(GearInputs.CRAFT_ARMOR), "На втором этапе пустые слоты брони требуют набора");
+        assertTrue(
+                events.contains(GearInputs.CRAFT_ARMOR),
+                "На втором этапе пустые слоты брони требуют набора Иначе тест events_StageTwoWithoutArmor_AddsCraftArmor перестанет ловить эту поломку. При смене events_StageTwoWithoutArmor_AddsCraftArmor проверь это утверждение.");
     }
 
     @Test
@@ -79,7 +99,6 @@ class GearInputsTests {
                         Map.of("spirit-1", spirit(null, List.of(tool("pickaxe", 1, 131, 131)), List.of())),
                         List.of(chest(Map.of("minecraft:iron_pickaxe", 1)))),
                 2);
-
         assertTrue(events.contains(GearInputs.EQUIP_BEST), "Железная кирка в сундуке лучше каменной в руке");
     }
 
@@ -90,7 +109,6 @@ class GearInputsTests {
                         Map.of("spirit-1", spirit(null, List.of(tool("pickaxe", 2, 250, 250)), List.of())),
                         List.of(chest(Map.of("minecraft:stone_pickaxe", 1)))),
                 2);
-
         assertFalse(events.contains(GearInputs.EQUIP_BEST), "Каменная кирка в сундуке не лучше железной в руке");
     }
 
@@ -98,7 +116,6 @@ class GearInputsTests {
     void events_MiningWithoutPickaxe_AddsMiningKit() {
         Set<String> events =
                 GearInputs.events(facts(Map.of("spirit-1", spirit("mining", List.of(), List.of())), List.of()), 1);
-
         assertTrue(events.contains(GearInputs.KIT + "mining"), "Шахтёру без кирки нужен набор шахтёра");
     }
 
@@ -106,7 +123,6 @@ class GearInputsTests {
     void events_BuildingActivity_AddsBuildingKit() {
         Set<String> events =
                 GearInputs.events(facts(Map.of("spirit-1", spirit("building", List.of(), List.of())), List.of()), 1);
-
         assertTrue(events.contains(GearInputs.KIT + "building"), "Строителю нужен набор строителя");
     }
 
@@ -127,7 +143,6 @@ class GearInputsTests {
                                         allArmor())),
                         List.of()),
                 2);
-
         assertFalse(
                 events.contains(GearInputs.CRAFT_TOOL + "pickaxe"),
                 "Алмазная кирка закрывает железное требование второго этапа");
@@ -136,11 +151,9 @@ class GearInputsTests {
     @Test
     void equipUpgrade_BetterToolInChest_NamesItemAndChest() {
         GraphFacts.Spirit spirit = spirit(null, List.of(tool("pickaxe", 1, 131, 131)), List.of());
-
         var upgrade = GearRules.equipUpgrade(
                         spirit, List.of(chest(Map.of("minecraft:iron_pickaxe", 1))), GearInputs.settings())
                 .orElseThrow();
-
         assertEquals("minecraft:iron_pickaxe", upgrade.item(), "Надеть надо железную кирку из сундука");
         assertEquals(64, upgrade.chest().y(), "Сундук назван позицией: дух должен дойти до него");
     }
@@ -148,7 +161,6 @@ class GearInputsTests {
     @Test
     void equipUpgrade_NothingBetter_Empty() {
         GraphFacts.Spirit spirit = spirit(null, List.of(tool("pickaxe", 2, 250, 250)), List.of());
-
         assertTrue(
                 GearRules.equipUpgrade(
                                 spirit, List.of(chest(Map.of("minecraft:stone_pickaxe", 1))), GearInputs.settings())
@@ -160,14 +172,12 @@ class GearInputsTests {
     void equipTarget_FirstSpiritBusy_FreeSpiritTakesTool() {
         GraphFacts.Spirit busy = spiritWithId("spirit-1", List.of());
         GraphFacts.Spirit free = spiritWithId("spirit-2", List.of());
-
         GearRules.Equip target = GearRules.equipTarget(
                         List.of(busy, free),
                         id -> "spirit-1".equals(id),
                         List.of(chest(Map.of("minecraft:stone_pickaxe", 1))),
                         GearInputs.settings())
                 .orElseThrow();
-
         assertEquals(
                 "spirit-2",
                 target.spirit().id(),
@@ -178,7 +188,6 @@ class GearInputsTests {
     @Test
     void missingArmor_StageOne_LeatherHelmet() {
         GraphFacts.Spirit spirit = spirit(null, List.of(), List.of());
-
         assertEquals(
                 "leather_helmet",
                 GearRules.missingArmor(spirit, 1, GearInputs.settings()).orElseThrow(),
@@ -189,7 +198,6 @@ class GearInputsTests {
     void missingArmor_StageTwo_IronChestplateAfterHelmet() {
         GraphFacts.Spirit spirit =
                 spirit(null, List.of(), List.of(new GraphFacts.Armor("HEAD", "minecraft:iron_helmet", 165, 165)));
-
         assertEquals(
                 "iron_chestplate",
                 GearRules.missingArmor(spirit, 2, GearInputs.settings()).orElseThrow(),
@@ -207,7 +215,6 @@ class GearInputsTests {
     @Test
     void needsTool_StrongerTool_TrueAndFalse() {
         GearInputs.Settings settings = GearInputs.settings();
-
         assertTrue(
                 GearRules.needsTool(
                         spirit(null, List.of(tool("pickaxe", 1, 131, 131)), List.of()), "pickaxe", 2, settings),

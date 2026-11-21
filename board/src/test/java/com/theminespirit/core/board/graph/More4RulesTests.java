@@ -38,13 +38,19 @@ class More4RulesTests {
                         More4Rules.RARE_FOUND,
                         More4Rules.RARE_MIXED,
                         More4Rules.CAUTION)),
-                "Все входы области graphmore4 дают свои события: " + events);
-        assertFalse(events.contains(More4Rules.SPACE_TIGHT), "При достатке места тревога о тесноте не нужна");
+                "Все входы области graphmore4 дают свои события:  Иначе тест events_AllSignals_AddExpected перестанет ловить эту поломку. При смене events_AllSignals_AddExpected проверь это утверждение."
+                        + events);
+        assertFalse(
+                events.contains(More4Rules.SPACE_TIGHT),
+                "При достатке места тревога о тесноте не нужна Иначе тест events_AllSignals_AddExpected перестанет ловить эту поломку. При смене events_AllSignals_AddExpected проверь это утверждение.");
     }
 
     @Test
     void events_EmptySignals_AddNothing() {
-        assertEquals(Set.of(), More4Rules.events(More4Rules.empty()), "Пустой вход не ставит работ");
+        assertEquals(
+                Set.of(),
+                More4Rules.events(More4Rules.empty()),
+                "Пустой вход не ставит работ Иначе тест events_EmptySignals_AddNothing перестанет ловить эту поломку. При смене events_EmptySignals_AddNothing проверь это утверждение.");
     }
 
     @Test
@@ -54,11 +60,18 @@ class More4RulesTests {
         More4Rules.Signals broken =
                 signals(new More4Rules.Players(3, 0, 2), new More4Rules.Portal(false, false, false, false));
 
-        assertTrue(More4Rules.events(hungry).contains(More4Rules.PLAYER_HUNGRY), "Голодный игрок — принести еду");
-        assertFalse(More4Rules.events(hungry).contains(More4Rules.PLAYER_TOOL_BROKEN), "Целый инструмент не чинят");
         assertTrue(
-                More4Rules.events(broken).contains(More4Rules.PLAYER_TOOL_BROKEN), "Сломанный — предложить запасной");
-        assertFalse(More4Rules.events(broken).contains(More4Rules.PLAYER_HUNGRY), "Сытый игрок еды не просит");
+                More4Rules.events(hungry).contains(More4Rules.PLAYER_HUNGRY),
+                "Голодный игрок — принести еду Иначе тест players_HungryAndBrokenTool_AreCountedSeparately перестанет ловить эту поломку. При смене players_HungryAndBrokenTool_AreCountedSeparately проверь это утверждение.");
+        assertFalse(
+                More4Rules.events(hungry).contains(More4Rules.PLAYER_TOOL_BROKEN),
+                "Целый инструмент не чинят Иначе тест players_HungryAndBrokenTool_AreCountedSeparately перестанет ловить эту поломку. При смене players_HungryAndBrokenTool_AreCountedSeparately проверь это утверждение.");
+        assertTrue(
+                More4Rules.events(broken).contains(More4Rules.PLAYER_TOOL_BROKEN),
+                "Сломанный — предложить запасной Иначе тест players_HungryAndBrokenTool_AreCountedSeparately перестанет ловить эту поломку. При смене players_HungryAndBrokenTool_AreCountedSeparately проверь это утверждение.");
+        assertFalse(
+                More4Rules.events(broken).contains(More4Rules.PLAYER_HUNGRY),
+                "Сытый игрок еды не просит Иначе тест players_HungryAndBrokenTool_AreCountedSeparately перестанет ловить эту поломку. При смене players_HungryAndBrokenTool_AreCountedSeparately проверь это утверждение.");
     }
 
     @Test
@@ -66,15 +79,15 @@ class More4RulesTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new More4Rules.Players(-1, 0, 0),
-                "Отрицательное число игроков рядом невозможно");
+                "Отрицательное число игроков рядом невозможно Иначе тест players_ImpossibleCounts_Rejected перестанет ловить эту поломку. При смене players_ImpossibleCounts_Rejected проверь это утверждение.");
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new More4Rules.Players(1, 2, 0),
-                "Голодных больше, чем игроков рядом: так не бывает");
+                "Голодных больше, чем игроков рядом: так не бывает Иначе тест players_ImpossibleCounts_Rejected перестанет ловить эту поломку. При смене players_ImpossibleCounts_Rejected проверь это утверждение.");
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new More4Rules.Players(1, 0, 2),
-                "Сломанных инструментов больше, чем игроков рядом");
+                "Сломанных инструментов больше, чем игроков рядом Иначе тест players_ImpossibleCounts_Rejected перестанет ловить эту поломку. При смене players_ImpossibleCounts_Rejected проверь это утверждение.");
     }
 
     @Test
@@ -82,37 +95,42 @@ class More4RulesTests {
         More4Rules.Portal open = new More4Rules.Portal(true, true, false, false);
         More4Rules.Portal lava = new More4Rules.Portal(true, true, true, true);
         More4Rules.Portal safe = new More4Rules.Portal(true, true, true, false);
-
-        assertTrue(open.unsafe(), "Портал без ограды небезопасен");
-        assertTrue(lava.unsafe(), "Портал у лавы или огня небезопасен");
-        assertFalse(safe.unsafe(), "Огороженный портал без опасности — безопасен");
+        assertTrue(
+                open.unsafe(),
+                "Портал без ограды небезопасен Иначе тест portal_OpenOrHazard_IsUnsafe перестанет ловить эту поломку. При смене portal_OpenOrHazard_IsUnsafe проверь это утверждение.");
+        assertTrue(
+                lava.unsafe(),
+                "Портал у лавы или огня небезопасен Иначе тест portal_OpenOrHazard_IsUnsafe перестанет ловить эту поломку. При смене portal_OpenOrHazard_IsUnsafe проверь это утверждение.");
+        assertFalse(
+                safe.unsafe(),
+                "Огороженный портал без опасности — безопасен Иначе тест portal_OpenOrHazard_IsUnsafe перестанет ловить эту поломку. При смене portal_OpenOrHazard_IsUnsafe проверь это утверждение.");
         assertTrue(
                 More4Rules.events(signals(new More4Rules.Players(0, 0, 0), open))
                         .containsAll(Set.of(More4Rules.PORTAL_FOUND, More4Rules.PORTAL_UNSAFE)),
-                "Найденный небезопасный портал даёт и находку, и ограду");
+                "Найденный небезопасный портал даёт и находку, и ограду Иначе тест portal_OpenOrHazard_IsUnsafe перестанет ловить эту поломку. При смене portal_OpenOrHazard_IsUnsafe проверь это утверждение.");
     }
 
     @Test
     void lots_FreeAndTight_AreOpposite() {
         assertTrue(
                 More4Rules.events(signals(new More4Rules.Lots(true, 8))).contains(More4Rules.SPACE_FOUND),
-                "Восемь свободных мест — есть куда расширять план");
+                "Восемь свободных мест — есть куда расширять план Иначе тест lots_FreeAndTight_AreOpposite перестанет ловить эту поломку. При смене lots_FreeAndTight_AreOpposite проверь это утверждение.");
         assertTrue(
                 More4Rules.events(signals(new More4Rules.Lots(true, 7))).contains(More4Rules.SPACE_TIGHT),
-                "Меньше восьми мест — искать шире");
+                "Меньше восьми мест — искать шире Иначе тест lots_FreeAndTight_AreOpposite перестанет ловить эту поломку. При смене lots_FreeAndTight_AreOpposite проверь это утверждение.");
         assertFalse(
                 More4Rules.events(signals(new More4Rules.Lots(false, 0))).contains(More4Rules.SPACE_TIGHT),
-                "Неизвестное число мест не считается теснотой");
+                "Неизвестное число мест не считается теснотой Иначе тест lots_FreeAndTight_AreOpposite перестанет ловить эту поломку. При смене lots_FreeAndTight_AreOpposite проверь это утверждение.");
     }
 
     @Test
     void pets_TamedOnly_AskForGuard() {
         assertTrue(
                 More4Rules.events(signals(new More4Rules.Pets(1, 4))).contains(More4Rules.TAMED_PET),
-                "Приручённый волк или кошка идут в охрану");
+                "Приручённый волк или кошка идут в охрану Иначе тест pets_TamedOnly_AskForGuard перестанет ловить эту поломку. При смене pets_TamedOnly_AskForGuard проверь это утверждение.");
         assertFalse(
                 More4Rules.events(signals(new More4Rules.Pets(0, 4))).contains(More4Rules.TAMED_PET),
-                "Дикие животные не питомцы");
+                "Дикие животные не питомцы Иначе тест pets_TamedOnly_AskForGuard перестанет ловить эту поломку. При смене pets_TamedOnly_AskForGuard проверь это утверждение.");
     }
 
     @Test
@@ -120,20 +138,23 @@ class More4RulesTests {
         assertEquals(
                 3,
                 More4Rules.rare(GRAPH, Map.of("diamond", 2, "emerald", 1, "oak_log", 5)),
-                "Редкие считаются по группе #rare, обычные — нет");
+                "Редкие считаются по группе #rare, обычные — нет Иначе тест rare_CarriedOrMixed_IsAtRisk перестанет ловить эту поломку. При смене rare_CarriedOrMixed_IsAtRisk проверь это утверждение.");
         List<GraphFacts.Chest> chests = List.of(
                 chest(Map.of("diamond", 1, "oak_log", 4)), chest(Map.of("diamond", 2)), chest(Map.of("oak_log", 4)));
-        assertEquals(1, More4Rules.rareMixed(GRAPH, chests), "Редкое рядом с обычным требует отдельного сундука");
+        assertEquals(
+                1,
+                More4Rules.rareMixed(GRAPH, chests),
+                "Редкое рядом с обычным требует отдельного сундука Иначе тест rare_CarriedOrMixed_IsAtRisk перестанет ловить эту поломку. При смене rare_CarriedOrMixed_IsAtRisk проверь это утверждение.");
     }
 
     @Test
     void rare_SeparateChest_DoesNotMix() {
         assertFalse(
                 More4Rules.events(signals(new More4Rules.Rare(0, 0))).contains(More4Rules.RARE_FOUND),
-                "Редкое в своём сундуке не тревожит");
+                "Редкое в своём сундуке не тревожит Иначе тест rare_SeparateChest_DoesNotMix перестанет ловить эту поломку. При смене rare_SeparateChest_DoesNotMix проверь это утверждение.");
         assertTrue(
                 More4Rules.events(signals(new More4Rules.Rare(1, 0))).contains(More4Rules.RARE_FOUND),
-                "Редкое в руках духа — повод убрать отдельно");
+                "Редкое в руках духа — повод убрать отдельно Иначе тест rare_SeparateChest_DoesNotMix перестанет ловить эту поломку. При смене rare_SeparateChest_DoesNotMix проверь это утверждение.");
     }
 
     @Test
@@ -143,14 +164,18 @@ class More4RulesTests {
                 new More4Rules.Hand("pickaxe", "pickaxe", true),
                 new More4Rules.Hand("pickaxe", null, false),
                 new More4Rules.Hand(null, "axe", true));
-
         assertEquals(
-                1, More4Rules.wrongHands(hands), "Сменить нужно только когда нужный инструмент есть, но не в руке");
+                1,
+                More4Rules.wrongHands(hands),
+                "Сменить нужно только когда нужный инструмент есть, но не в руке Иначе тест wrongHands_OnlyOwnedMismatch_Counted перестанет ловить эту поломку. При смене wrongHands_OnlyOwnedMismatch_Counted проверь это утверждение.");
     }
 
     @Test
     void requiredKind_WorkActivities_MapToTool() {
-        assertEquals("pickaxe", More4Rules.requiredKind("mining"), "В шахте нужна кирка");
+        assertEquals(
+                "pickaxe",
+                More4Rules.requiredKind("mining"),
+                "В шахте нужна кирка Иначе тест requiredKind_WorkActivities_MapToTool перестанет ловить эту поломку. При смене requiredKind_WorkActivities_MapToTool проверь это утверждение.");
         assertEquals("axe", More4Rules.requiredKind("woodcutting"), "На рубке нужен топор");
         assertEquals("hoe", More4Rules.requiredKind("farming"), "На ферме нужна мотыга");
         assertNull(More4Rules.requiredKind("building"), "Стройке отдельный инструмент не обязателен");

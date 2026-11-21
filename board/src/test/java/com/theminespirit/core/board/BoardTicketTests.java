@@ -35,17 +35,22 @@ class BoardTicketTests {
                 "fence:1:64:2",
                 List.of("capture_1"),
                 Map.of("dirt", 9));
-
-        assertEquals("fence_1", ticket.id(), "id задания обязан читаться: по нему доска находит задание");
+        assertEquals(
+                "fence_1",
+                ticket.id(),
+                "id задания обязан читаться: по нему доска находит задание Иначе тест ticket_Fields_AreRead перестанет ловить эту поломку. При смене ticket_Fields_AreRead проверь это утверждение.");
         assertEquals(
                 BoardCase.REPAIR_FENCE,
                 ticket.boardCase(),
-                "Кейс обязан читаться: по нему доска берёт приоритет и план");
+                "Кейс обязан читаться: по нему доска берёт приоритет и план Иначе тест ticket_Fields_AreRead перестанет ловить эту поломку. При смене ticket_Fields_AreRead проверь это утверждение.");
         assertEquals(
                 Optional.of(SPIRIT),
                 ticket.assignee(),
-                "Владелец-дух обязан читаться: доска проверяет занятость владельца");
-        assertEquals(FENCE_PRIORITY, ticket.priority(), "Приоритет обязан читаться: им доска сортирует очередь");
+                "Владелец-дух обязан читаться: доска проверяет занятость владельца Иначе тест ticket_Fields_AreRead перестанет ловить эту поломку. При смене ticket_Fields_AreRead проверь это утверждение.");
+        assertEquals(
+                FENCE_PRIORITY,
+                ticket.priority(),
+                "Приоритет обязан читаться: им доска сортирует очередь Иначе тест ticket_Fields_AreRead перестанет ловить эту поломку. При смене ticket_Fields_AreRead проверь это утверждение.");
         assertEquals(500, ticket.createdAt(), "Момент постановки обязан читаться: им доска сортирует очередь");
         assertEquals(
                 2, ticket.level(), "Уровень обязан читаться: по нему доска отличает " + "расширение шахты от её входа");
@@ -73,7 +78,6 @@ class BoardTicketTests {
                 BoardTicket.ALWAYS_CAUSE,
                 List.of(),
                 Map.of());
-
         assertFalse(
                 ticket.assignee().isPresent(),
                 "Пустой владелец означает «любой свободный дух»: доска сама назначает "
@@ -201,7 +205,6 @@ class BoardTicketTests {
                 BoardTicket.ALWAYS_CAUSE,
                 List.of(),
                 Map.of());
-
         assertEquals(
                 "always",
                 ticket.cause(),
@@ -321,7 +324,6 @@ class BoardTicketTests {
                 requiredItems);
         dependsOn.add("other_1");
         requiredItems.put("stone", 5);
-
         assertEquals(
                 List.of("capture_1"),
                 ticket.dependsOn(),
@@ -347,7 +349,6 @@ class BoardTicketTests {
     void ticket_EmptyCollections_Normalized(@ForAll("ticketIds") String id, @ForAll("boardCases") BoardCase boardCase) {
         BoardTicket ticket = new BoardTicket(
                 id, boardCase, Optional.empty(), 0, 0, 1, BoardTicket.ALWAYS_CAUSE, List.of(), Map.of());
-
         assertTrue(
                 ticket.dependsOn().isEmpty(),
                 "Задание без зависимостей обязано читаться пустым списком: гейт и выдача "
@@ -372,7 +373,6 @@ class BoardTicketTests {
                 id, boardCase, Optional.empty(), safePriority, safeCreatedAt, level, cause, List.of(), Map.of());
         BoardTicket second = new BoardTicket(
                 id, boardCase, Optional.empty(), safePriority, safeCreatedAt, level, cause, List.of(), Map.of());
-
         assertEquals(
                 first,
                 second,

@@ -29,24 +29,35 @@ class RescuePlansTests {
         BlockCoord home = new BlockCoord(-171, 72, -489);
 
         TaskNode plan = RescuePlans.digToHome(home);
-
-        assertTrue(plan instanceof ScriptCall, "Выход с киркой — один вызов dig_out: лишний шаг сдвинул бы цель");
+        assertTrue(
+                plan instanceof ScriptCall,
+                "Выход с киркой — один вызов dig_out: лишний шаг сдвинул бы цель Иначе тест digToHome_TargetsHomePoint_NotRoofAboveColumn перестанет ловить эту поломку. При смене digToHome_TargetsHomePoint_NotRoofAboveColumn проверь это утверждение.");
         ScriptCall call = (ScriptCall) plan;
-        assertEquals("dig_out", call.script(), "Выход копает скриптом dig_out");
-        assertEquals(home.x(), intParam(call, "x"), "Цель dig_out по x — точка дома");
+        assertEquals(
+                "dig_out",
+                call.script(),
+                "Выход копает скриптом dig_out Иначе тест digToHome_TargetsHomePoint_NotRoofAboveColumn перестанет ловить эту поломку. При смене digToHome_TargetsHomePoint_NotRoofAboveColumn проверь это утверждение.");
+        assertEquals(
+                home.x(),
+                intParam(call, "x"),
+                "Цель dig_out по x — точка дома Иначе тест digToHome_TargetsHomePoint_NotRoofAboveColumn перестанет ловить эту поломку. При смене digToHome_TargetsHomePoint_NotRoofAboveColumn проверь это утверждение.");
         assertEquals(
                 home.y(),
                 intParam(call, "y"),
-                "Цель dig_out по y — точка дома, а не верх колонки: крыша склада над домом увела бы духа наверх");
-        assertEquals(home.z(), intParam(call, "z"), "Цель dig_out по z — точка дома");
+                "Цель dig_out по y — точка дома, а не верх колонки: крыша склада над домом увела бы духа наверх Иначе тест digToHome_TargetsHomePoint_NotRoofAboveColumn перестанет ловить эту поломку. При смене digToHome_TargetsHomePoint_NotRoofAboveColumn проверь это утверждение.");
+        assertEquals(
+                home.z(),
+                intParam(call, "z"),
+                "Цель dig_out по z — точка дома Иначе тест digToHome_TargetsHomePoint_NotRoofAboveColumn перестанет ловить эту поломку. При смене digToHome_TargetsHomePoint_NotRoofAboveColumn проверь это утверждение.");
     }
 
     @Test
     void plan_RescueCase_ReturnsPlan() {
         TaskNode plan = RescuePlans.plan(BoardCase.RESCUE_SPIRIT, TicketTarget.at(TRAPPED))
                 .orElseThrow();
-
-        assertTrue(plan instanceof SequenceNode, "спасение — последовательность: подойти, вскрыть клетку, подойти");
+        assertTrue(
+                plan instanceof SequenceNode,
+                "спасение — последовательность: подойти, вскрыть клетку, подойти Иначе тест plan_RescueCase_ReturnsPlan перестанет ловить эту поломку. При смене plan_RescueCase_ReturnsPlan проверь это утверждение.");
     }
 
     @Test
@@ -54,33 +65,38 @@ class RescuePlansTests {
         assertTrue(
                 RescuePlans.plan(BoardCase.REPAIR_FENCE, TicketTarget.at(TRAPPED))
                         .isEmpty(),
-                "чужой кейс не получает план спасения: иначе доска подменит ремонт ограды");
+                "чужой кейс не получает план спасения: иначе доска подменит ремонт ограды При смене plan_OtherCase_IsEmpty проверь это утверждение.");
     }
 
     @Test
     void plan_RescueCase_PassesCatalog() {
         TaskNode plan = RescuePlans.plan(BoardCase.RESCUE_SPIRIT, TicketTarget.at(TRAPPED))
                 .orElseThrow();
-
         PlanValidator.validate(plan, CoreScripts.defaultCatalog(), ConditionCatalog.empty());
-
         assertEquals(
                 List.of("goto", "wait", "clear_area"),
                 scripts(plan),
                 "план спасения проходит каталог: подойти и вскрыть клетку вокруг духа; копать вниз к духу "
-                        + "запрещено (observe24 B3)");
+                        + "запрещено (observe24 B3) Иначе тест plan_RescueCase_PassesCatalog перестанет ловить эту поломку. При смене plan_RescueCase_PassesCatalog проверь это утверждение.");
     }
 
     @Test
     void plan_RescueCase_OpensTwoHighBoxAroundTrapped() {
         TaskNode plan = RescuePlans.plan(BoardCase.RESCUE_SPIRIT, TicketTarget.at(TRAPPED))
                 .orElseThrow();
-
         Map<String, Object> params = clearArea(plan);
-
-        assertEquals(9, params.get("x1"), "слева от духа клетка вскрывается: стена не держит его");
-        assertEquals(40, params.get("y1"), "пол под духом не трогаем: нижняя граница на уровне ног");
-        assertEquals(-6, params.get("z1"), "по z клетка вокруг духа тоже вскрывается");
+        assertEquals(
+                9,
+                params.get("x1"),
+                "слева от духа клетка вскрывается: стена не держит его Иначе тест plan_RescueCase_OpensTwoHighBoxAroundTrapped перестанет ловить эту поломку. При смене plan_RescueCase_OpensTwoHighBoxAroundTrapped проверь это утверждение.");
+        assertEquals(
+                40,
+                params.get("y1"),
+                "пол под духом не трогаем: нижняя граница на уровне ног Иначе тест plan_RescueCase_OpensTwoHighBoxAroundTrapped перестанет ловить эту поломку. При смене plan_RescueCase_OpensTwoHighBoxAroundTrapped проверь это утверждение.");
+        assertEquals(
+                -6,
+                params.get("z1"),
+                "по z клетка вокруг духа тоже вскрывается Иначе тест plan_RescueCase_OpensTwoHighBoxAroundTrapped перестанет ловить эту поломку. При смене plan_RescueCase_OpensTwoHighBoxAroundTrapped проверь это утверждение.");
         assertEquals(11, params.get("x2"), "справа от духа клетка вскрывается");
         assertEquals(41, params.get("y2"), "потолок над духом вскрывается: проход высотой в два блока");
         assertEquals(-4, params.get("z2"), "по z с другой стороны клетка тоже вскрывается");
@@ -89,11 +105,9 @@ class RescuePlansTests {
     @Test
     void plan_SelfStep_PlacesStepsFirst() {
         SelfEscape.Plan self = new SelfEscape.Plan(SelfEscape.Method.STEP, new BlockCoord(10, 67, -5), 2, List.of());
-
         TaskNode plan = RescuePlans.plan(
                         BoardCase.RESCUE_SPIRIT, TicketTarget.at(TRAPPED).withRescue(self))
                 .orElseThrow();
-
         PlanValidator.validate(plan, CoreScripts.defaultCatalog(), ConditionCatalog.empty());
         assertEquals(
                 List.of("acquire", "pillar_up", "goto"),
@@ -105,12 +119,10 @@ class RescuePlansTests {
     void plan_SelfDescend_DigOutThenGoto() {
         SelfEscape.Plan self = new SelfEscape.Plan(SelfEscape.Method.DESCEND, new BlockCoord(10, 40, -5), 0, List.of());
         BlockCoord home = new BlockCoord(10, 39, -5);
-
         TaskNode plan = RescuePlans.plan(
                         BoardCase.RESCUE_SPIRIT,
                         TicketTarget.at(TRAPPED).withRescue(self).withRelocate(TRAPPED, home))
                 .orElseThrow();
-
         PlanValidator.validate(plan, CoreScripts.defaultCatalog(), ConditionCatalog.empty());
         assertEquals(
                 List.of("dig_out", "goto"),
@@ -127,11 +139,9 @@ class RescuePlansTests {
     @Test
     void plan_SelfGoto_WalksWithoutBreaking() {
         SelfEscape.Plan self = new SelfEscape.Plan(SelfEscape.Method.GOTO, new BlockCoord(10, 67, -5), 0, List.of());
-
         TaskNode plan = RescuePlans.plan(
                         BoardCase.RESCUE_SPIRIT, TicketTarget.at(TRAPPED).withRescue(self))
                 .orElseThrow();
-
         PlanValidator.validate(plan, CoreScripts.defaultCatalog(), ConditionCatalog.empty());
         assertEquals(
                 List.of("goto"),
@@ -143,12 +153,10 @@ class RescuePlansTests {
     void plan_SelfStep_ReturnsToSettlementAfterPit() {
         SelfEscape.Plan self = new SelfEscape.Plan(SelfEscape.Method.STEP, new BlockCoord(10, 67, -5), 2, List.of());
         BlockCoord home = new BlockCoord(10, 69, -5);
-
         TaskNode plan = RescuePlans.plan(
                         BoardCase.RESCUE_SPIRIT,
                         TicketTarget.at(TRAPPED).withRescue(self).withRelocate(TRAPPED, home))
                 .orElseThrow();
-
         PlanValidator.validate(plan, CoreScripts.defaultCatalog(), ConditionCatalog.empty());
         List<ScriptCall> calls = new ArrayList<>();
         collectCalls(plan, calls);
@@ -168,11 +176,9 @@ class RescuePlansTests {
                 new BlockCoord(11, 40, -5),
                 0,
                 List.of(new BlockCoord(11, 40, -5), new BlockCoord(11, 41, -5)));
-
         TaskNode plan = RescuePlans.plan(
                         BoardCase.RESCUE_SPIRIT, TicketTarget.at(TRAPPED).withRescue(self))
                 .orElseThrow();
-
         PlanValidator.validate(plan, CoreScripts.defaultCatalog(), ConditionCatalog.empty());
         assertEquals(
                 List.of("dig_area", "dig_area", "goto"),
@@ -183,7 +189,6 @@ class RescuePlansTests {
     @Test
     void walk_PathHome_IsWalkCarefulWithoutDigging() {
         TaskNode plan = RescuePlans.walk(TRAPPED);
-
         PlanValidator.validate(plan, CoreScripts.defaultCatalog(), ConditionCatalog.empty());
         assertEquals(
                 List.of("walk_careful"), scripts(plan), "Путь домой уже открыт: ведомый идёт по нему и не трогает мир");
@@ -201,12 +206,10 @@ class RescuePlansTests {
     @Test
     void helper_RestoredPlan_IsSameAsPostedPlan() {
         BlockCoord home = new BlockCoord(10, 64, -5);
-
         TaskNode posted = RescuePlans.helper(TRAPPED, home);
         TaskNode restored = RescuePlans.plan(
                         BoardCase.RESCUE_SPIRIT, TicketTarget.at(TRAPPED).withRelocate(TRAPPED, home))
                 .orElseThrow();
-
         PlanValidator.validate(posted, CoreScripts.defaultCatalog(), ConditionCatalog.empty());
         assertEquals(
                 scripts(restored),
@@ -224,7 +227,6 @@ class RescuePlansTests {
     @Test
     void helper_WithoutHome_StaysAtTrapped() {
         TaskNode plan = RescuePlans.helper(TRAPPED, null);
-
         PlanValidator.validate(plan, CoreScripts.defaultCatalog(), ConditionCatalog.empty());
         assertEquals(
                 List.of("goto", "wait", "clear_area"),
@@ -239,7 +241,6 @@ class RescuePlansTests {
     void claimNote_Helper_NamesHelperAndRescuee() {
         UUID helper = new UUID(0, 1);
         UUID rescuee = new UUID(0, 2);
-
         assertEquals(
                 "Айвенго назначен помощником Мирный",
                 RescuePlans.claimNote(helper, rescuee, "Айвенго", "Мирный"),
@@ -249,7 +250,6 @@ class RescuePlansTests {
     @Test
     void claimNote_Self_NamesRescueeOnly() {
         UUID rescuee = new UUID(0, 2);
-
         assertEquals(
                 "Мирный спасает себя",
                 RescuePlans.claimNote(rescuee, rescuee, "Мирный", "Мирный"),

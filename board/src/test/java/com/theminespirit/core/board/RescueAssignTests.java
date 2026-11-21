@@ -37,54 +37,63 @@ class RescueAssignTests {
         UUID stuck = UUID.randomUUID();
 
         RescuePlans.Assignment assignment = RescuePlans.assign(stuck, 140, null, Optional.empty());
-
-        assertEquals(RescuePlans.Mode.SELF, assignment.mode(), "Сам выходит, если у него есть план выхода");
-        assertEquals(Optional.of(stuck), assignment.assignee(), "Самоспасение выдаётся самому застрявшему");
+        assertEquals(
+                RescuePlans.Mode.SELF,
+                assignment.mode(),
+                "Сам выходит, если у него есть план выхода Иначе тест assign_SelfPlanExists_SelfAssignee перестанет ловить эту поломку. При смене assign_SelfPlanExists_SelfAssignee проверь это утверждение.");
+        assertEquals(
+                Optional.of(stuck),
+                assignment.assignee(),
+                "Самоспасение выдаётся самому застрявшему Иначе тест assign_SelfPlanExists_SelfAssignee перестанет ловить эту поломку. При смене assign_SelfPlanExists_SelfAssignee проверь это утверждение.");
         assertEquals(
                 "graph:rescue_spirit@140",
                 assignment.cause(),
-                "Причина несёт тик эпизода: по ней доска отличает новое застревание от закрытого");
+                "Причина несёт тик эпизода: по ней доска отличает новое застревание от закрытого Иначе тест assign_SelfPlanExists_SelfAssignee перестанет ловить эту поломку. При смене assign_SelfPlanExists_SelfAssignee проверь это утверждение.");
     }
 
     @Test
     void assign_SelfPlanExists_HelperNotSpent() {
         UUID stuck = UUID.randomUUID();
-
         RescuePlans.Assignment assignment = RescuePlans.assign(stuck, 140, null, Optional.of(HELPER));
-
         assertEquals(
                 RescuePlans.Mode.SELF,
                 assignment.mode(),
-                "Свой выход дешевле помощника: дух не ждёт чужую работу, когда может выбраться сам");
-        assertEquals(Optional.of(stuck), assignment.assignee(), "Самоспасение остаётся адресным застрявшему");
+                "Свой выход дешевле помощника: дух не ждёт чужую работу, когда может выбраться сам Иначе тест assign_SelfPlanExists_HelperNotSpent перестанет ловить эту поломку. При смене assign_SelfPlanExists_HelperNotSpent проверь это утверждение.");
+        assertEquals(
+                Optional.of(stuck),
+                assignment.assignee(),
+                "Самоспасение остаётся адресным застрявшему Иначе тест assign_SelfPlanExists_HelperNotSpent перестанет ловить эту поломку. При смене assign_SelfPlanExists_HelperNotSpent проверь это утверждение.");
     }
 
     @Test
     void assign_NoSelfPlanWithHelper_HelperAssigned() {
         RescuePlans.Assignment assignment =
                 RescuePlans.assign(UUID.randomUUID(), 140, "нет кирки", Optional.of(HELPER));
-
-        assertEquals(RescuePlans.Mode.HELPER, assignment.mode(), "Без своего плана выход ставит помощник");
+        assertEquals(
+                RescuePlans.Mode.HELPER,
+                assignment.mode(),
+                "Без своего плана выход ставит помощник Иначе тест assign_NoSelfPlanWithHelper_HelperAssigned перестанет ловить эту поломку. При смене assign_NoSelfPlanWithHelper_HelperAssigned проверь это утверждение.");
         assertEquals(
                 Optional.of(HELPER),
                 assignment.assignee(),
-                "Помощник назначен тот, до кого проверен достижимый путь: выдача не ищет его заново");
+                "Помощник назначен тот, до кого проверен достижимый путь: выдача не ищет его заново Иначе тест assign_NoSelfPlanWithHelper_HelperAssigned перестанет ловить эту поломку. При смене assign_NoSelfPlanWithHelper_HelperAssigned проверь это утверждение.");
         assertTrue(
                 assignment.why().contains("помощник") && assignment.why().contains("нет кирки"),
-                "Причина называет и помощника, и почему сам не выйдет: " + assignment.why());
+                "Причина называет и помощника, и почему сам не выйдет:  Иначе тест assign_NoSelfPlanWithHelper_HelperAssigned перестанет ловить эту поломку. При смене assign_NoSelfPlanWithHelper_HelperAssigned проверь это утверждение."
+                        + assignment.why());
     }
 
     @Test
     void assign_NoSelfPlanNoHelper_Impossible() {
         RescuePlans.Assignment assignment = RescuePlans.assign(UUID.randomUUID(), 140, "нет кирки", Optional.empty());
-
         assertEquals(
                 RescuePlans.Mode.IMPOSSIBLE,
                 assignment.mode(),
-                "Без плана и без помощника задание не ставится: иначе дух снова получит ложное спасение");
+                "Без плана и без помощника задание не ставится: иначе дух снова получит ложное спасение При смене assign_NoSelfPlanNoHelper_Impossible проверь это утверждение.");
         assertTrue(
                 assignment.why().contains("невозможно") && assignment.why().contains("нет кирки"),
-                "Отказ объясняет, почему спасти нельзя: " + assignment.why());
+                "Отказ объясняет, почему спасти нельзя:  Иначе тест assign_NoSelfPlanNoHelper_Impossible перестанет ловить эту поломку. При смене assign_NoSelfPlanNoHelper_Impossible проверь это утверждение."
+                        + assignment.why());
     }
 
     @Test
@@ -92,7 +101,7 @@ class RescueAssignTests {
         assertNotEquals(
                 RescuePlans.cause(140),
                 RescuePlans.cause(9000),
-                "Новый эпизод застревания даёт новую причину: DONE прошлого спасения не закрывает новое");
+                "Новый эпизод застревания даёт новую причину: DONE прошлого спасения не закрывает новое Иначе тест assign_NewStuckEpisode_DifferentCause перестанет ловить эту поломку. При смене assign_NewStuckEpisode_DifferentCause проверь это утверждение.");
     }
 
     @Test
@@ -100,7 +109,7 @@ class RescueAssignTests {
         assertEquals(
                 RescuePlans.Self.PIT,
                 RescuePlans.self(new RescuePlans.Situation(true, true, false, false, false)),
-                "Из ямы со ступенями дух поднимается сам, помощник не нужен");
+                "Из ямы со ступенями дух поднимается сам, помощник не нужен Иначе тест self_PitWithSteps_Pit перестанет ловить эту поломку. При смене self_PitWithSteps_Pit проверь это утверждение.");
     }
 
     @Test
@@ -108,7 +117,7 @@ class RescueAssignTests {
         assertEquals(
                 RescuePlans.Self.NONE,
                 RescuePlans.self(new RescuePlans.Situation(true, false, false, false, false)),
-                "Без ступеней и без кирки из ямы не выйти: нужен помощник");
+                "Без ступеней и без кирки из ямы не выйти: нужен помощник Иначе тест self_PitWithoutStepsOrTool_None перестанет ловить эту поломку. При смене self_PitWithoutStepsOrTool_None проверь это утверждение.");
     }
 
     @Test
@@ -116,7 +125,7 @@ class RescueAssignTests {
         assertEquals(
                 RescuePlans.Self.WALK,
                 RescuePlans.self(new RescuePlans.Situation(false, false, false, true, false)),
-                "На поверхности с известным путём домой дух идёт сам без ломки блоков");
+                "На поверхности с известным путём домой дух идёт сам без ломки блоков Иначе тест self_SurfaceWithKnownPath_Walk перестанет ловить эту поломку. При смене self_SurfaceWithKnownPath_Walk проверь это утверждение.");
     }
 
     @Test
@@ -124,7 +133,7 @@ class RescueAssignTests {
         assertEquals(
                 RescuePlans.Self.WALK,
                 RescuePlans.self(new RescuePlans.Situation(false, false, true, true, true)),
-                "На поверхности путь ищут заново другим маршрутом: кирка нужна под землёй, а не на земле");
+                "На поверхности путь ищут заново другим маршрутом: кирка нужна под землёй, а не на земле Иначе тест self_SurfaceNoPathWithTool_WalkOtherRoute перестанет ловить эту поломку. При смене self_SurfaceNoPathWithTool_WalkOtherRoute проверь это утверждение.");
     }
 
     @Test
@@ -133,7 +142,7 @@ class RescueAssignTests {
                 RescuePlans.Self.WALK,
                 RescuePlans.self(new RescuePlans.Situation(false, false, false, true, true)),
                 "Потерянный на поверхности дух без кирки возвращается другим маршрутом, а не объявляется "
-                        + "невозможным (observe25 B3)");
+                        + "невозможным (observe25 B3) Иначе тест self_SurfaceNoPathWithoutTool_WalkOtherRoute перестанет ловить эту поломку. При смене self_SurfaceNoPathWithoutTool_WalkOtherRoute проверь это утверждение.");
     }
 
     @Test
@@ -141,7 +150,7 @@ class RescueAssignTests {
         assertEquals(
                 RescuePlans.Self.NONE,
                 RescuePlans.self(new RescuePlans.Situation(false, false, false, false, false)),
-                "Под землёй без кирки выхода нет: повторять self-rescue бессмысленно (observe23 A)");
+                "Под землёй без кирки выхода нет: повторять self-rescue бессмысленно (observe23 A) Иначе тест self_SealedWithoutTool_None перестанет ловить эту поломку. При смене self_SealedWithoutTool_None проверь это утверждение.");
     }
 
     @Test
@@ -150,11 +159,11 @@ class RescueAssignTests {
                 RescuePlans.Self.DESCEND,
                 RescuePlans.self(new RescuePlans.Situation(false, false, true, true, true, 10, true)),
                 "Дух на своём столбе без пути домой обязан разобрать столб и спуститься: мост по воздуху "
-                        + "дороже и опаснее, даже когда блоки есть");
+                        + "дороже и опаснее, даже когда блоки есть Иначе тест self_SurfaceNoPathOnOwnPillar_DescendsBeforeBridge перестанет ловить эту поломку. При смене self_SurfaceNoPathOnOwnPillar_DescendsBeforeBridge проверь это утверждение.");
         assertEquals(
                 RescuePlans.Self.DESCEND,
                 RescuePlans.self(new RescuePlans.Situation(false, false, false, false, true, 0, true)),
-                "Свой столб разбирают и под крышей: небо — не условие спуска, иначе дух уходит в отказ");
+                "Свой столб разбирают и под крышей: небо — не условие спуска, иначе дух уходит в отказ При смене self_SurfaceNoPathOnOwnPillar_DescendsBeforeBridge проверь это утверждение.");
     }
 
     @Test
@@ -162,19 +171,18 @@ class RescueAssignTests {
         assertEquals(
                 RescuePlans.Self.DESCEND,
                 RescuePlans.self(new RescuePlans.Situation(false, false, true, true, true, 0, true)),
-                "Без блоков моста не построить: собственный столб — единственный честный спуск");
+                "Без блоков моста не построить: собственный столб — единственный честный спуск Иначе тест self_SurfaceNoPathOnOwnPillarWithoutBlocks_Descends перестанет ловить эту поломку. При смене self_SurfaceNoPathOnOwnPillarWithoutBlocks_Descends проверь это утверждение.");
     }
 
     @Test
     void descent_Plan_RunsPillarDownThenReturnsHome() {
         TaskNode plan = RescuePlans.descent(TRAPPED);
-
         PlanValidator.validate(plan, CoreScripts.defaultCatalog(), ConditionCatalog.empty());
         assertEquals(
                 List.of("pillar_down", "dig_out", "goto"),
                 scripts(plan),
                 "Спуск со своего столба: сначала пошаговый разбор под собой, затем дорога к дому; "
-                        + "мост не строится");
+                        + "мост не строится Иначе тест descent_Plan_RunsPillarDownThenReturnsHome перестанет ловить эту поломку. При смене descent_Plan_RunsPillarDownThenReturnsHome проверь это утверждение.");
     }
 
     @Test
@@ -187,17 +195,16 @@ class RescueAssignTests {
         BlockCoord home = coord(lost.get("home"));
         int blocks = lost.get("cheap_blocks").asInt();
         int span = Math.max(Math.abs(home.x() - feet.x()), Math.abs(home.z() - feet.z()));
-
         assertTrue(
                 lost.get("inventory").get("minecraft:dirt").asInt() < span,
                 "живая фикстура: у spirit-4 "
                         + lost.get("inventory").get("minecraft:dirt").asInt() + " земли при разрыве " + span
-                        + " — одного вида не хватает, мост обязан смешивать блоки");
+                        + " — одного вида не хватает, мост обязан смешивать блоки Иначе тест self_LiveObserve25LostSpiritWithBlocks_BridgesHome перестанет ловить эту поломку. При смене self_LiveObserve25LostSpiritWithBlocks_BridgesHome проверь это утверждение.");
         assertEquals(
                 RescuePlans.Self.BRIDGE,
                 RescuePlans.self(new RescuePlans.Situation(false, false, false, true, true, blocks)),
                 "spirit-4 observe25 стоял в 36 блоках от поселения без пути и без кирки, но с 38 дешёвыми "
-                        + "блоками: он обязан мостить дорогу домой, а не объявлять спасение невозможным");
+                        + "блоками: он обязан мостить дорогу домой, а не объявлять спасение невозможным Иначе тест self_LiveObserve25LostSpiritWithBlocks_BridgesHome перестанет ловить эту поломку. При смене self_LiveObserve25LostSpiritWithBlocks_BridgesHome проверь это утверждение.");
         assertEquals(
                 RescuePlans.Mode.SELF,
                 RescuePlans.assign(
@@ -206,8 +213,7 @@ class RescueAssignTests {
                                 null,
                                 Optional.empty())
                         .mode(),
-                "Мост из своих блоков — свой выход: застрявший не ждёт помощника, которого нет");
-
+                "Мост из своих блоков — свой выход: застрявший не ждёт помощника, которого нет Иначе тест self_LiveObserve25LostSpiritWithBlocks_BridgesHome перестанет ловить эту поломку. При смене self_LiveObserve25LostSpiritWithBlocks_BridgesHome проверь это утверждение.");
         TaskNode plan = RescuePlans.bridge(feet, home, blocks);
         PlanValidator.validate(plan, CoreScripts.defaultCatalog(), ConditionCatalog.empty());
         ScriptCall call = assertInstanceOf(ScriptCall.class, plan, "Переправа к дому — один скрипт bridge");
@@ -239,7 +245,6 @@ class RescueAssignTests {
     @Test
     void bridge_NoBlocks_Rejected() {
         BlockCoord feet = new BlockCoord(0, 64, 0);
-
         assertThrows(
                 IllegalArgumentException.class,
                 () -> RescuePlans.bridge(feet, new BlockCoord(10, 64, 0), 0),
@@ -253,7 +258,6 @@ class RescueAssignTests {
                 ScriptCall.class,
                 RescuePlans.bridge(feet, new BlockCoord(30, 64, 0), 5),
                 "мост к дому остаётся одним скриптом bridge");
-
         assertEquals(
                 5,
                 call.params().get("length"),
@@ -267,7 +271,6 @@ class RescueAssignTests {
                 ScriptCall.class,
                 RescuePlans.bridge(feet, new BlockCoord(200, 64, 0), 500),
                 "дальний дом тоже получает bridge-план, а не отказ");
-
         assertEquals(
                 CatalogLimits.BRIDGE_LENGTH_MAX,
                 call.params().get("length"),

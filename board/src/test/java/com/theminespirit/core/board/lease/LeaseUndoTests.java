@@ -30,7 +30,7 @@ class LeaseUndoTests {
                 LeaseUndo.order(book.require(lease.id())).stream()
                         .map(LeaseUndo.Step::pos)
                         .toList(),
-                "Откат идёт сверху вниз: нижний блок столба держит духа, его убирают последним");
+                "Откат идёт сверху вниз: нижний блок столба держит духа, его убирают последним Иначе тест order_TopDownAndReverseRecord_ReturnsTopFirst перестанет ловить эту поломку. При смене order_TopDownAndReverseRecord_ReturnsTopFirst проверь это утверждение.");
     }
 
     @Test
@@ -46,7 +46,7 @@ class LeaseUndoTests {
                 LeaseUndo.order(book.require(lease.id())).stream()
                         .map(LeaseUndo.Step::pos)
                         .toList(),
-                "В одной высоте порядок обратный записи: настил разбирается с дальнего конца");
+                "В одной высоте порядок обратный записи: настил разбирается с дальнего конца Иначе тест order_EqualHeight_KeepsReverseRecordOrder перестанет ловить эту поломку. При смене order_EqualHeight_KeepsReverseRecordOrder проверь это утверждение.");
     }
 
     @Test
@@ -62,7 +62,7 @@ class LeaseUndoTests {
         assertFalse(
                 LeaseUndo.key(book.require(first.id())).equals(LeaseUndo.key(book.require(second.id()))),
                 "Тот же верх и число клеток, но разный порядок отката — разные ключи: иначе редкое совпадение "
-                        + "заперло бы повтор отката");
+                        + "заперло бы повтор отката При смене key_SameTopAndCountDifferentCells_Differs проверь это утверждение.");
     }
 
     @Test
@@ -79,7 +79,7 @@ class LeaseUndoTests {
         assertEquals(
                 LeaseUndo.key(firstBook.require(one.id())),
                 LeaseUndo.key(secondBook.require(two.id())),
-                "Одинаковый порядок отката даёт один ключ: неизменная аренда не выдаётся заново");
+                "Одинаковый порядок отката даёт один ключ: неизменная аренда не выдаётся заново Иначе тест key_SameCells_Stable перестанет ловить эту поломку. При смене key_SameCells_Stable проверь это утверждение.");
     }
 
     @Test
@@ -89,9 +89,15 @@ class LeaseUndoTests {
         LeaseUndo.Step restored = new LeaseUndo.Step(new BlockCoord(0, 69, 0), LeaseKind.BROKEN, "minecraft:stone");
         LeaseUndo.Step sameLevel = new LeaseUndo.Step(new BlockCoord(1, 70, 0), LeaseKind.PLACED, null);
 
-        assertTrue(LeaseUndo.supportsBody(support, feet), "Блок прямо под ногами — опора тела");
-        assertFalse(LeaseUndo.supportsBody(restored, feet), "Возврат сломанного блока не опора, его возвращают");
-        assertFalse(LeaseUndo.supportsBody(sameLevel, feet), "Блок в стороне от тела можно ломать сразу");
+        assertTrue(
+                LeaseUndo.supportsBody(support, feet),
+                "Блок прямо под ногами — опора тела Иначе тест supportsBody_PlacedCellDirectlyBelow_IsBodySupport перестанет ловить эту поломку. При смене supportsBody_PlacedCellDirectlyBelow_IsBodySupport проверь это утверждение.");
+        assertFalse(
+                LeaseUndo.supportsBody(restored, feet),
+                "Возврат сломанного блока не опора, его возвращают Иначе тест supportsBody_PlacedCellDirectlyBelow_IsBodySupport перестанет ловить эту поломку. При смене supportsBody_PlacedCellDirectlyBelow_IsBodySupport проверь это утверждение.");
+        assertFalse(
+                LeaseUndo.supportsBody(sameLevel, feet),
+                "Блок в стороне от тела можно ломать сразу Иначе тест supportsBody_PlacedCellDirectlyBelow_IsBodySupport перестанет ловить эту поломку. При смене supportsBody_PlacedCellDirectlyBelow_IsBodySupport проверь это утверждение.");
     }
 
     @Test
@@ -102,7 +108,7 @@ class LeaseUndoTests {
 
         assertTrue(
                 LeaseUndo.breaksNow(top, feet, column, Set.of()),
-                "Верх столба ломается: дух падает на одну клетку на следующий блок столба, а не в пропасть");
+                "Верх столба ломается: дух падает на одну клетку на следующий блок столба, а не в пропасть При смене breaksNow_PillarTop_DropsOneCellOntoNextBlock проверь это утверждение.");
     }
 
     @Test
@@ -113,7 +119,7 @@ class LeaseUndoTests {
 
         assertFalse(
                 LeaseUndo.breaksNow(lone, feet, floating, Set.of()),
-                "Единственный блок над пропастью не ломают под собой: дух упал бы с высоты — нужен спуск");
+                "Единственный блок над пропастью не ломают под собой: дух упал бы с высоты — нужен спуск Иначе тест breaksNow_SingleBlockOverVoid_IsRefused перестанет ловить эту поломку. При смене breaksNow_SingleBlockOverVoid_IsRefused проверь это утверждение.");
     }
 
     @Test
@@ -130,13 +136,18 @@ class LeaseUndoTests {
         assertEquals(
                 LeaseStatus.ORPHANED,
                 book.require(lease.id()).status(),
-                "Пока осталась хоть одна клетка, аренда ещё брошена и скан её видит");
-        assertFalse(book.isOrphaned(second), "Откатанная клетка больше не ждёт уборки");
-
+                "Пока осталась хоть одна клетка, аренда ещё брошена и скан её видит Иначе тест rollback_CellByCell_FreesCellsAndClosesLease перестанет ловить эту поломку. При смене rollback_CellByCell_FreesCellsAndClosesLease проверь это утверждение.");
+        assertFalse(
+                book.isOrphaned(second),
+                "Откатанная клетка больше не ждёт уборки Иначе тест rollback_CellByCell_FreesCellsAndClosesLease перестанет ловить эту поломку. При смене rollback_CellByCell_FreesCellsAndClosesLease проверь это утверждение.");
         book.rollback(lease.id(), first);
-
-        assertEquals(LeaseStatus.DONE, book.require(lease.id()).status(), "Последняя клетка закрывает аренду DONE");
-        assertTrue(book.orphanedCells().isEmpty(), "Уборке нечего делать: все клетки откатаны");
+        assertEquals(
+                LeaseStatus.DONE,
+                book.require(lease.id()).status(),
+                "Последняя клетка закрывает аренду DONE Иначе тест rollback_CellByCell_FreesCellsAndClosesLease перестанет ловить эту поломку. При смене rollback_CellByCell_FreesCellsAndClosesLease проверь это утверждение.");
+        assertTrue(
+                book.orphanedCells().isEmpty(),
+                "Уборке нечего делать: все клетки откатаны Иначе тест rollback_CellByCell_FreesCellsAndClosesLease перестанет ловить эту поломку. При смене rollback_CellByCell_FreesCellsAndClosesLease проверь это утверждение.");
     }
 
     @Test
@@ -145,17 +156,15 @@ class LeaseUndoTests {
         Lease active = book.open(OWNER, null, "scaffold", 10);
         BlockCoord cell = new BlockCoord(0, 70, 0);
         book.record(active.id(), LeaseCell.placed(cell));
-
         assertThrows(
                 IllegalStateException.class,
                 () -> book.rollback(active.id(), cell),
-                "Действующую правку нельзя закрыть откатом: владелец ещё работает");
-
+                "Действующую правку нельзя закрыть откатом: владелец ещё работает Иначе тест rollback_ActiveOrForeignCell_IsRefused перестанет ловить эту поломку. При смене rollback_ActiveOrForeignCell_IsRefused проверь это утверждение.");
         book.orphan(active.id());
         assertThrows(
                 IllegalArgumentException.class,
                 () -> book.rollback(active.id(), new BlockCoord(9, 70, 0)),
-                "Откат не закрывает клетку, которой в аренде нет");
+                "Откат не закрывает клетку, которой в аренде нет Иначе тест rollback_ActiveOrForeignCell_IsRefused перестанет ловить эту поломку. При смене rollback_ActiveOrForeignCell_IsRefused проверь это утверждение.");
     }
 
     @Test
@@ -165,23 +174,28 @@ class LeaseUndoTests {
         BlockCoord gate = new BlockCoord(5, 65, 5);
         book.record(
                 door.id(), LeaseCell.state(gate, "minecraft:oak_door[open=false]", "minecraft:oak_door[open=true]"));
-
         book.orphanSpirit(OWNER);
-
         assertTrue(
                 book.isOrphaned(gate),
-                "Открытая духом дверь после смерти — брошенная аренда STATE, а не открытая навсегда створка");
+                "Открытая духом дверь после смерти — брошенная аренда STATE, а не открытая навсегда створка Иначе тест door_StateLease_DeathOrphansAndUndoClosesIt перестанет ловить эту поломку. При смене door_StateLease_DeathOrphansAndUndoClosesIt проверь это утверждение.");
         List<LeaseUndo.Step> steps = LeaseUndo.order(book.require(door.id()));
-        assertEquals(1, steps.size(), "У отката одна клетка: сама створка");
-        assertEquals(LeaseKind.STATE, steps.get(0).kind(), "Дверь откатывается возвратом состояния, а не сломом");
+        assertEquals(
+                1,
+                steps.size(),
+                "У отката одна клетка: сама створка Иначе тест door_StateLease_DeathOrphansAndUndoClosesIt перестанет ловить эту поломку. При смене door_StateLease_DeathOrphansAndUndoClosesIt проверь это утверждение.");
+        assertEquals(
+                LeaseKind.STATE,
+                steps.get(0).kind(),
+                "Дверь откатывается возвратом состояния, а не сломом Иначе тест door_StateLease_DeathOrphansAndUndoClosesIt перестанет ловить эту поломку. При смене door_StateLease_DeathOrphansAndUndoClosesIt проверь это утверждение.");
         assertEquals(
                 "minecraft:oak_door[open=false]",
                 steps.get(0).before(),
-                "Откат помнит закрытое состояние: дверь закроется, а не исчезнет");
-
+                "Откат помнит закрытое состояние: дверь закроется, а не исчезнет Иначе тест door_StateLease_DeathOrphansAndUndoClosesIt перестанет ловить эту поломку. При смене door_StateLease_DeathOrphansAndUndoClosesIt проверь это утверждение.");
         book.rollback(door.id(), gate);
-
-        assertEquals(LeaseStatus.DONE, book.require(door.id()).status(), "Закрытие двери завершает аренду DONE");
+        assertEquals(
+                LeaseStatus.DONE,
+                book.require(door.id()).status(),
+                "Закрытие двери завершает аренду DONE Иначе тест door_StateLease_DeathOrphansAndUndoClosesIt перестанет ловить эту поломку. При смене door_StateLease_DeathOrphansAndUndoClosesIt проверь это утверждение.");
     }
 
     @Test
@@ -189,19 +203,19 @@ class LeaseUndoTests {
         assertEquals(
                 new RollbackReach.Step(RollbackReach.Action.CLIMB, 9),
                 RollbackReach.next(9, false),
-                "Клетка выше духа добирается своими подмостями: отдельной ветки «если высоко» нет");
+                "Клетка выше духа добирается своими подмостями: отдельной ветки «если высоко» нет Иначе тест reach_HighAndLowCells_ChooseClimbOrDig перестанет ловить эту поломку. При смене reach_HighAndLowCells_ChooseClimbOrDig проверь это утверждение.");
         assertEquals(
                 RollbackReach.Action.DIG,
                 RollbackReach.next(0, false).action(),
-                "Клетка на уровне духа без стоянки вскрывается подходом копкой: рядом нет места для ног");
+                "Клетка на уровне духа без стоянки вскрывается подходом копкой: рядом нет места для ног Иначе тест reach_HighAndLowCells_ChooseClimbOrDig перестанет ловить эту поломку. При смене reach_HighAndLowCells_ChooseClimbOrDig проверь это утверждение.");
         assertEquals(
                 RollbackReach.Action.STEP_DOWN,
                 RollbackReach.next(-1, true).action(),
-                "Клетка ниже, а под духом свои подмости — шаг вниз по ним, а не прыжок в шахту");
+                "Клетка ниже, а под духом свои подмости — шаг вниз по ним, а не прыжок в шахту Иначе тест reach_HighAndLowCells_ChooseClimbOrDig перестанет ловить эту поломку. При смене reach_HighAndLowCells_ChooseClimbOrDig проверь это утверждение.");
         assertEquals(
                 RollbackReach.Action.DIG,
                 RollbackReach.next(-4, false).action(),
-                "Клетка ниже без своих подмостей — подход копкой; спускаться не по чему");
+                "Клетка ниже без своих подмостей — подход копкой; спускаться не по чему Иначе тест reach_HighAndLowCells_ChooseClimbOrDig перестанет ловить эту поломку. При смене reach_HighAndLowCells_ChooseClimbOrDig проверь это утверждение.");
     }
 
     @Test
@@ -210,28 +224,30 @@ class LeaseUndoTests {
         LeaseUndo.Step broken = new LeaseUndo.Step(new BlockCoord(1, 70, 0), LeaseKind.BROKEN, "minecraft:dirt");
         LeaseUndo.Step door = new LeaseUndo.Step(
                 new BlockCoord(2, 70, 0), LeaseKind.STATE, "minecraft:oak_door[open=false,half=lower]");
-
-        assertTrue(LeaseUndo.nothingToDo(placed, true, "minecraft:air"), "Своего блока уже нет — ломать нечего");
+        assertTrue(
+                LeaseUndo.nothingToDo(placed, true, "minecraft:air"),
+                "Своего блока уже нет — ломать нечего Иначе тест nothingToDo_SameBlockOrGone_SkipsTheCell перестанет ловить эту поломку. При смене nothingToDo_SameBlockOrGone_SkipsTheCell проверь это утверждение.");
         assertFalse(
                 LeaseUndo.nothingToDo(placed, false, "minecraft:dirt"),
-                "Свой блок на месте — его ломают, а не пропускают");
+                "Свой блок на месте — его ломают, а не пропускают Иначе тест nothingToDo_SameBlockOrGone_SkipsTheCell перестанет ловить эту поломку. При смене nothingToDo_SameBlockOrGone_SkipsTheCell проверь это утверждение.");
         assertTrue(
                 LeaseUndo.nothingToDo(broken, false, "minecraft:dirt"),
-                "Сломанный блок уже вернули — второй раз ставить нечего");
+                "Сломанный блок уже вернули — второй раз ставить нечего Иначе тест nothingToDo_SameBlockOrGone_SkipsTheCell перестанет ловить эту поломку. При смене nothingToDo_SameBlockOrGone_SkipsTheCell проверь это утверждение.");
         assertTrue(
                 LeaseUndo.nothingToDo(broken, false, "minecraft:grass_block"),
-                "Дёрн на месте прежней земли — та же земля: откат не заменяет траву землёй");
+                "Дёрн на месте прежней земли — та же земля: откат не заменяет траву землёй Иначе тест nothingToDo_SameBlockOrGone_SkipsTheCell перестанет ловить эту поломку. При смене nothingToDo_SameBlockOrGone_SkipsTheCell проверь это утверждение.");
         assertFalse(
-                LeaseUndo.nothingToDo(broken, false, "minecraft:stone"), "Камень — не земля: чужой блок не пропускают");
+                LeaseUndo.nothingToDo(broken, false, "minecraft:stone"),
+                "Камень — не земля: чужой блок не пропускают Иначе тест nothingToDo_SameBlockOrGone_SkipsTheCell перестанет ловить эту поломку. При смене nothingToDo_SameBlockOrGone_SkipsTheCell проверь это утверждение.");
         assertFalse(
                 LeaseUndo.nothingToDo(broken, true, "minecraft:air"),
-                "Сломанную клетку ещё не вернули: воздух не равен прежнему блоку");
+                "Сломанную клетку ещё не вернули: воздух не равен прежнему блоку Иначе тест nothingToDo_SameBlockOrGone_SkipsTheCell перестанет ловить эту поломку. При смене nothingToDo_SameBlockOrGone_SkipsTheCell проверь это утверждение.");
         assertTrue(
                 LeaseUndo.nothingToDo(door, false, "minecraft:oak_door[open=false,half=lower]"),
-                "Дверь уже закрыта — состояние возвращать нечего");
+                "Дверь уже закрыта — состояние возвращать нечего Иначе тест nothingToDo_SameBlockOrGone_SkipsTheCell перестанет ловить эту поломку. При смене nothingToDo_SameBlockOrGone_SkipsTheCell проверь это утверждение.");
         assertFalse(
                 LeaseUndo.nothingToDo(door, false, "minecraft:oak_door[open=true,half=lower]"),
-                "Открытую дверь закрывают: другое состояние — не повод пропускать клетку");
+                "Открытую дверь закрывают: другое состояние — не повод пропускать клетку Иначе тест nothingToDo_SameBlockOrGone_SkipsTheCell перестанет ловить эту поломку. При смене nothingToDo_SameBlockOrGone_SkipsTheCell проверь это утверждение.");
     }
 
     @Test
@@ -241,19 +257,19 @@ class LeaseUndoTests {
                 LeaseUndo.blocked(broken, false, "minecraft:grass_block"),
                 "Клетку брошенной аренды занял чужой блок (живой сервер 16.11: grass_block на месте отката): "
                         + "вернуть прежний блок некуда — клетку закрывают, а не роняют весь откат, иначе граф "
-                        + "ставит undo_lease снова и снова и духи вечно откатывают чужую работу");
+                        + "ставит undo_lease снова и снова и духи вечно откатывают чужую работу При смене blocked_CellHoldsForeignBlock_SkipsInsteadOfFailingUndo проверь это утверждение.");
         assertFalse(
                 LeaseUndo.blocked(
                         new LeaseUndo.Step(new BlockCoord(0, 70, 0), LeaseKind.BROKEN, "minecraft:dirt"),
                         true,
                         "minecraft:air"),
-                "Пустая клетка не чужая: прежний блок ставят обратно");
+                "Пустая клетка не чужая: прежний блок ставят обратно Иначе тест blocked_CellHoldsForeignBlock_SkipsInsteadOfFailingUndo перестанет ловить эту поломку. При смене blocked_CellHoldsForeignBlock_SkipsInsteadOfFailingUndo проверь это утверждение.");
         assertFalse(
                 LeaseUndo.blocked(
                         new LeaseUndo.Step(new BlockCoord(0, 70, 0), LeaseKind.PLACED, "minecraft:air"),
                         false,
                         "minecraft:cobblestone"),
-                "Свою поставленную клетку откат ломает: чужой её не называют, даже если состояние не совпало");
+                "Свою поставленную клетку откат ломает: чужой её не называют, даже если состояние не совпало При смене blocked_CellHoldsForeignBlock_SkipsInsteadOfFailingUndo проверь это утверждение.");
         assertFalse(
                 LeaseUndo.blocked(
                         new LeaseUndo.Step(
@@ -261,7 +277,7 @@ class LeaseUndoTests {
                         false,
                         "minecraft:oak_door[open=true,half=lower]"),
                 "Клетку STATE занял собственный след аренды: откат обязан вернуть прежнее состояние, "
-                        + "а не пропустить её как чужую — брошенная аренда иначе закрывается неоткаченной");
+                        + "а не пропустить её как чужую — брошенная аренда иначе закрывается неоткаченной При смене blocked_CellHoldsForeignBlock_SkipsInsteadOfFailingUndo проверь это утверждение.");
     }
 
     @Test
@@ -270,11 +286,15 @@ class LeaseUndoTests {
         BlockCoord cell = new BlockCoord(0, 70, 0);
         Lease scaffold = book.open(OWNER, "scaffold-1", "scaffold", 100);
         book.record(scaffold.id(), LeaseCell.placed(cell));
-
         book.commit(scaffold.id());
-
-        assertFalse(book.isActive(cell), "После успешного спуска столб перестал быть действующей арендой");
-        assertFalse(book.isOrphaned(cell), "Успешно убранная правка не попадает в уборку графа");
-        assertTrue(book.orphanedCells().isEmpty(), "Уборке нечего делать: механика закрыла аренду сама");
+        assertFalse(
+                book.isActive(cell),
+                "После успешного спуска столб перестал быть действующей арендой Иначе тест activeLease_AfterCommit_StopsCleanup перестанет ловить эту поломку. При смене activeLease_AfterCommit_StopsCleanup проверь это утверждение.");
+        assertFalse(
+                book.isOrphaned(cell),
+                "Успешно убранная правка не попадает в уборку графа Иначе тест activeLease_AfterCommit_StopsCleanup перестанет ловить эту поломку. При смене activeLease_AfterCommit_StopsCleanup проверь это утверждение.");
+        assertTrue(
+                book.orphanedCells().isEmpty(),
+                "Уборке нечего делать: механика закрыла аренду сама Иначе тест activeLease_AfterCommit_StopsCleanup перестанет ловить эту поломку. При смене activeLease_AfterCommit_StopsCleanup проверь это утверждение.");
     }
 }

@@ -74,27 +74,46 @@ class CrossFarmSupplyScenarioTests {
         GraphPlan.Task repairFence = task(plan, "event:repair_fence:repair:fence");
         GraphPlan.Task defend = task(plan, "event:life_threat:defend");
 
-        assertTrue(shear.feasible(), "Овцы в овчарне — стрижка выполнима: " + ids(plan));
-        assertTrue(repairTool.feasible(), "Наковальня и слиток — изношенные ножницы чинятся: " + ids(plan));
-        assertTrue(repairFence.feasible(), "Побитый забор чинится рядом со стрижкой и ремонтом: " + ids(plan));
-        assertTrue(defend.feasible(), "Волк у стада поднимает защиту: " + ids(plan));
+        assertTrue(
+                shear.feasible(),
+                "Овцы в овчарне — стрижка выполнима:  Иначе тест husbandry_ShearingAndWornShears_RepairAndFenceStayPosted перестанет ловить эту поломку. При смене husbandry_ShearingAndWornShears_RepairAndFenceStayPosted проверь это утверждение."
+                        + ids(plan));
+        assertTrue(
+                repairTool.feasible(),
+                "Наковальня и слиток — изношенные ножницы чинятся:  Иначе тест husbandry_ShearingAndWornShears_RepairAndFenceStayPosted перестанет ловить эту поломку. При смене husbandry_ShearingAndWornShears_RepairAndFenceStayPosted проверь это утверждение."
+                        + ids(plan));
+        assertTrue(
+                repairFence.feasible(),
+                "Побитый забор чинится рядом со стрижкой и ремонтом:  Иначе тест husbandry_ShearingAndWornShears_RepairAndFenceStayPosted перестанет ловить эту поломку. При смене husbandry_ShearingAndWornShears_RepairAndFenceStayPosted проверь это утверждение."
+                        + ids(plan));
+        assertTrue(
+                defend.feasible(),
+                "Волк у стада поднимает защиту:  Иначе тест husbandry_ShearingAndWornShears_RepairAndFenceStayPosted перестанет ловить эту поломку. При смене husbandry_ShearingAndWornShears_RepairAndFenceStayPosted проверь это утверждение."
+                        + ids(plan));
         assertEquals(
                 BoardCase.ACTIVITY_DEFEND,
                 defend.boardCase(),
-                "Защита стада — бой, а стрижка остаётся работой: " + ids(plan));
+                "Защита стада — бой, а стрижка остаётся работой:  Иначе тест husbandry_ShearingAndWornShears_RepairAndFenceStayPosted перестанет ловить эту поломку. При смене husbandry_ShearingAndWornShears_RepairAndFenceStayPosted проверь это утверждение."
+                        + ids(plan));
         assertEquals(
                 BoardCase.ACTIVITY_FARM,
                 BoardActivities.caseOfScript("shear").orElseThrow(),
-                "Стрижка овец — занятие фермы, а не бой");
+                "Стрижка овец — занятие фермы, а не бой Иначе тест husbandry_ShearingAndWornShears_RepairAndFenceStayPosted перестанет ловить эту поломку. При смене husbandry_ShearingAndWornShears_RepairAndFenceStayPosted проверь это утверждение.");
         assertTrue(
                 scripts(BoardCase.REPAIR_TOOL).contains("repair_tool"),
-                "Инструмент чинится действием repair_tool: " + scripts(BoardCase.REPAIR_TOOL));
+                "Инструмент чинится действием repair_tool:  Иначе тест husbandry_ShearingAndWornShears_RepairAndFenceStayPosted перестанет ловить эту поломку. При смене husbandry_ShearingAndWornShears_RepairAndFenceStayPosted проверь это утверждение."
+                        + scripts(BoardCase.REPAIR_TOOL));
         assertTrue(
                 scripts(BoardCase.SHEAR_SHEEP, supplyTarget("white_wool")).contains("shear"),
-                "Стрижка идёт скриптом shear: " + scripts(BoardCase.SHEAR_SHEEP, supplyTarget("white_wool")));
+                "Стрижка идёт скриптом shear: "
+                        + scripts(
+                                BoardCase.SHEAR_SHEEP,
+                                supplyTarget(
+                                        "white_wool Иначе тест husbandry_ShearingAndWornShears_RepairAndFenceStayPosted перестанет ловить эту поломку. При смене husbandry_ShearingAndWornShears_RepairAndFenceStayPosted проверь это утверждение.")));
         assertTrue(
                 scripts(BoardCase.BUILD_FENCE).contains("build_schematic"),
-                "Загон и забор строятся схемой build_schematic: " + scripts(BoardCase.BUILD_FENCE));
+                "Загон и забор строятся схемой build_schematic:  Иначе тест husbandry_ShearingAndWornShears_RepairAndFenceStayPosted перестанет ловить эту поломку. При смене husbandry_ShearingAndWornShears_RepairAndFenceStayPosted проверь это утверждение."
+                        + scripts(BoardCase.BUILD_FENCE));
     }
 
     @Test
@@ -105,22 +124,28 @@ class CrossFarmSupplyScenarioTests {
         world.event("hungry").event("expedition_ready");
         GraphFacts facts = facts(named(spirit("spirit-1", 20, 4), spirit("spirit-2")));
         GraphPlan plan = plan(world, facts);
-
         GraphPlan.Task expedition = task(plan, "event:expedition_ready:expedition");
         GraphPlan.Task eat = task(plan, "event:hungry:eat");
         GraphPlan.Task craftFood = task(plan, "craft_food");
-
-        assertTrue(expedition.feasible(), "Поход ставится на доску: " + ids(plan));
-        assertFalse(eat.feasible(), "Еды нет — поесть нечем: " + ids(plan));
-        assertFalse(craftFood.feasible(), "Пшеницы нет — еда не появляется крафтом из воздуха: " + ids(plan));
+        assertTrue(
+                expedition.feasible(),
+                "Поход ставится на доску:  Иначе тест hunger_NoFoodButExpeditionReady_HungrySpiritDoesNotLeave перестанет ловить эту поломку. При смене hunger_NoFoodButExpeditionReady_HungrySpiritDoesNotLeave проверь это утверждение."
+                        + ids(plan));
+        assertFalse(
+                eat.feasible(),
+                "Еды нет — поесть нечем:  Иначе тест hunger_NoFoodButExpeditionReady_HungrySpiritDoesNotLeave перестанет ловить эту поломку. При смене hunger_NoFoodButExpeditionReady_HungrySpiritDoesNotLeave проверь это утверждение."
+                        + ids(plan));
+        assertFalse(
+                craftFood.feasible(),
+                "Пшеницы нет — еда не появляется крафтом из воздуха:  Иначе тест hunger_NoFoodButExpeditionReady_HungrySpiritDoesNotLeave перестанет ловить эту поломку. При смене hunger_NoFoodButExpeditionReady_HungrySpiritDoesNotLeave проверь это утверждение."
+                        + ids(plan));
         assertTrue(
                 SpiritHunger.of(4, 0, 0).foodLevel() < HungerRules.defaults().eatFoodThreshold(),
-                "Сытость 4 ниже порога обеда: дух голоден");
+                "Сытость 4 ниже порога обеда: дух голоден Иначе тест hunger_NoFoodButExpeditionReady_HungrySpiritDoesNotLeave перестанет ловить эту поломку. При смене hunger_NoFoodButExpeditionReady_HungrySpiritDoesNotLeave проверь это утверждение.");
         assertEquals(
                 BoardCase.ACTIVITY_EXPEDITION,
                 expedition.boardCase(),
-                "Поход остаётся отдельным кейсом, а не подменяет еду");
-
+                "Поход остаётся отдельным кейсом, а не подменяет еду Иначе тест hunger_NoFoodButExpeditionReady_HungrySpiritDoesNotLeave перестанет ловить эту поломку. При смене hunger_NoFoodButExpeditionReady_HungrySpiritDoesNotLeave проверь это утверждение.");
         GraphTickets.Result result = tickets(world, facts);
         DispatchRound round = new DispatchRound(board(world, result), 0);
         List<DispatchRound.Candidate> candidates = candidates(
@@ -132,7 +157,7 @@ class CrossFarmSupplyScenarioTests {
                 round.choose(boardTicket(ticketFor(result, GraphTickets.id(expedition))), candidates)
                         .map(DispatchRound.Candidate::name)
                         .orElse(""),
-                "Голодный дух не уходит в поход, пока нужда жива: поход достаётся сытому, а голодный ждёт еду");
+                "Голодный дух не уходит в поход, пока нужда жива: поход достаётся сытому, а голодный ждёт еду Иначе тест hunger_NoFoodButExpeditionReady_HungrySpiritDoesNotLeave перестанет ловить эту поломку. При смене hunger_NoFoodButExpeditionReady_HungrySpiritDoesNotLeave проверь это утверждение.");
     }
 
     @Test
@@ -151,15 +176,19 @@ class CrossFarmSupplyScenarioTests {
                 GraphSiteFacts.Terrain.empty(),
                 Map.of());
         GraphPlan plan = plan(world, facts);
-
         GraphPlan.Task defend = task(plan, "event:life_threat:defend");
         GraphPlan.Task eat = task(plan, "event:hungry:eat");
         GraphPlan.Task repair = task(plan, "event:tool_worn:repair_tool");
         GraphPlan.Task store = task(plan, "store_space");
-
         assertEquals(
-                List.of(), ahead(plan, defend), "Набег на голодного духа поднимает защиту на потолок: " + ids(plan));
-        assertTrue(eat.feasible(), "Еда на складе делает обед выполнимым: " + ids(plan));
+                List.of(),
+                ahead(plan, defend),
+                "Набег на голодного духа поднимает защиту на потолок:  Иначе тест supply_FullChestFoodIron_FeedRepairAndSpaceStayPosted перестанет ловить эту поломку. При смене supply_FullChestFoodIron_FeedRepairAndSpaceStayPosted проверь это утверждение."
+                        + ids(plan));
+        assertTrue(
+                eat.feasible(),
+                "Еда на складе делает обед выполнимым:  Иначе тест supply_FullChestFoodIron_FeedRepairAndSpaceStayPosted перестанет ловить эту поломку. При смене supply_FullChestFoodIron_FeedRepairAndSpaceStayPosted проверь это утверждение."
+                        + ids(plan));
         assertTrue(repair.feasible(), "Наковальня и слиток на складе чинят кирку: " + ids(plan));
         assertTrue(store.feasible(), "Переполненный склад ставит задачу места: " + ids(plan));
         assertTrue(defend.priority() > store.priority(), "Сначала бой, потом раскладка по сундукам: " + ids(plan));
@@ -184,10 +213,8 @@ class CrossFarmSupplyScenarioTests {
                 GraphSiteFacts.Terrain.empty(),
                 Map.of());
         GraphPlan plan = plan(world, facts);
-
         GraphPlan.Task retreat = task(plan, "event:life_threat:retreat");
         GraphPlan.Task craft = task(plan, "event:gear_craft_pickaxe:craft_tool:pickaxe");
-
         assertTrue(craft.feasible(), "Ночью граф всё равно заказывает кирку: " + ids(plan));
         assertTrue(retreat.priority() > craft.priority(), "Отход от мобов выше ночного крафта: " + ids(plan));
         assertTrue(
@@ -227,11 +254,9 @@ class CrossFarmSupplyScenarioTests {
                 List.of(),
                 List.of());
         GraphPlan plan = plan(world, facts);
-
         GraphPlan.Task repairHut = task(plan, "event:repair_hut:repair:hut");
         GraphPlan.Task repairFence = task(plan, "event:repair_fence:repair:fence");
         GraphPlan.Task demolish = task(plan, "event:demolish_stray:demolish_stray");
-
         assertTrue(repairHut.feasible(), "Повреждённая хижина получает ремонт: " + ids(plan));
         assertTrue(repairFence.feasible(), "Побитый забор чинится рядом: " + ids(plan));
         assertTrue(demolish.feasible(), "Лишний забор получает снос: " + ids(plan));
@@ -249,7 +274,6 @@ class CrossFarmSupplyScenarioTests {
         assertTrue(
                 scripts(BoardCase.REPAIR_BUILDING).contains("build_schematic"),
                 "Ремонт хижины идёт схемой build_schematic: " + scripts(BoardCase.REPAIR_BUILDING));
-
         GraphFacts repaired = new GraphFacts(
                 facts.spirits(),
                 facts.threats(),

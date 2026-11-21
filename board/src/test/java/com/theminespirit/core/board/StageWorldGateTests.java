@@ -36,30 +36,41 @@ class StageWorldGateTests {
 
         StageGate gate = SettlementStage.gate(world);
 
-        assertEquals(2, SettlementStage.of(ledger), "Журнал observe18 считает этап 1 закрытым");
+        assertEquals(
+                2,
+                SettlementStage.of(ledger),
+                "Журнал observe18 считает этап 1 закрытым Иначе тест gate_LiveObserve18JournalTwo_WorldKeepsFirstStage перестанет ловить эту поломку. При смене gate_LiveObserve18JournalTwo_WorldKeepsFirstStage проверь это утверждение.");
         assertEquals(
                 1,
                 gate.stage(),
-                "В мире шахта 96% и двор 91%: этап 1 закрыт не целиком, гейт обязан оставить его открытым");
+                "В мире шахта 96% и двор 91%: этап 1 закрыт не целиком, гейт обязан оставить его открытым Иначе тест gate_LiveObserve18JournalTwo_WorldKeepsFirstStage перестанет ловить эту поломку. При смене gate_LiveObserve18JournalTwo_WorldKeepsFirstStage проверь это утверждение.");
         assertEquals(
                 Map.of("BUILD_MINE", 1, "STOCK_CHESTS", 1),
                 gate.missing(),
-                "Причина на доске называет неготовые части мира: шахту и двор");
+                "Причина на доске называет неготовые части мира: шахту и двор Иначе тест gate_LiveObserve18JournalTwo_WorldKeepsFirstStage перестанет ловить эту поломку. При смене gate_LiveObserve18JournalTwo_WorldKeepsFirstStage проверь это утверждение.");
         assertFalse(
                 SettlementStage.allows(BoardCase.BUILD_MINE, 2, gate.stage()),
-                "Пока этап 1 не закрыт целиком, шахта уровня 2 не открывается");
+                "Пока этап 1 не закрыт целиком, шахта уровня 2 не открывается Иначе тест gate_LiveObserve18JournalTwo_WorldKeepsFirstStage перестанет ловить эту поломку. При смене gate_LiveObserve18JournalTwo_WorldKeepsFirstStage проверь это утверждение.");
         assertTrue(
                 SettlementStage.allows(BoardCase.BUILD_MINE, 2, SettlementStage.of(ledger)),
-                "Журнальный гейт без мира по-прежнему открыл бы шахту 2 — его и заменяет гейт мира");
+                "Журнальный гейт без мира по-прежнему открыл бы шахту 2 — его и заменяет гейт мира Иначе тест gate_LiveObserve18JournalTwo_WorldKeepsFirstStage перестанет ловить эту поломку. При смене gate_LiveObserve18JournalTwo_WorldKeepsFirstStage проверь это утверждение.");
     }
 
     @Test
     void gate_WorldComplete_OpensSecondStage() throws IOException {
         StageGate gate = SettlementStage.gate(world(complete(live())));
 
-        assertEquals(2, gate.stage(), "Все части этапа 1 стоят в мире — этап 2 открыт");
-        assertTrue(gate.missing().containsKey("BUILD_WAREHOUSE"), "Остаток этапа 2 считает склад уровня 2");
-        assertEquals(2, gate.missing().get("BUILD_WAREHOUSE"), "Склад этапа 2 — второго уровня");
+        assertEquals(
+                2,
+                gate.stage(),
+                "Все части этапа 1 стоят в мире — этап 2 открыт Иначе тест gate_WorldComplete_OpensSecondStage перестанет ловить эту поломку. При смене gate_WorldComplete_OpensSecondStage проверь это утверждение.");
+        assertTrue(
+                gate.missing().containsKey("BUILD_WAREHOUSE"),
+                "Остаток этапа 2 считает склад уровня 2 Иначе тест gate_WorldComplete_OpensSecondStage перестанет ловить эту поломку. При смене gate_WorldComplete_OpensSecondStage проверь это утверждение.");
+        assertEquals(
+                2,
+                gate.missing().get("BUILD_WAREHOUSE"),
+                "Склад этапа 2 — второго уровня Иначе тест gate_WorldComplete_OpensSecondStage перестанет ловить эту поломку. При смене gate_WorldComplete_OpensSecondStage проверь это утверждение.");
     }
 
     @Test
@@ -70,10 +81,11 @@ class StageWorldGateTests {
                 1,
                 gate.stage(),
                 "Журнал observe18 считает этап 1 закрытым, но в мире ничего нет — этап остаётся первым: "
-                        + "отметки журнала этап не закрывают");
+                        + "отметки журнала этап не закрывают Иначе тест gate_WorldEmpty_JournalStillFirst перестанет ловить эту поломку. При смене gate_WorldEmpty_JournalStillFirst проверь это утверждение.");
         assertTrue(
                 gate.missing().containsKey("BUILD_MINE"),
-                "Причина видна на доске: шахта в мире не подтверждена. Остаток: " + gate.missing());
+                "Причина видна на доске: шахта в мире не подтверждена. Остаток:  Иначе тест gate_WorldEmpty_JournalStillFirst перестанет ловить эту поломку. При смене gate_WorldEmpty_JournalStillFirst проверь это утверждение."
+                        + gate.missing());
     }
 
     @Test
@@ -83,14 +95,17 @@ class StageWorldGateTests {
         assertEquals(
                 BoardOutcome.ACCEPTED,
                 board.submit(mine(2, "mine_level_2")),
-                "По журналу этап 2 открыт и задание шахты 2 принимается");
+                "По журналу этап 2 открыт и задание шахты 2 принимается Иначе тест submit_StageGateOverride_LocksNextStage перестанет ловить эту поломку. При смене submit_StageGateOverride_LocksNextStage проверь это утверждение.");
         board.ledger().gate(new StageGate(1, Map.of("BUILD_MINE", 1)));
 
         assertEquals(
                 BoardOutcome.STAGE_LOCKED,
                 board.submit(mine(2, "mine_level_2_again")),
-                "Гейт мира запирает уровень 2, пока этап 1 не закрыт целиком");
-        assertEquals(1, board.ledger().stage(), "Доска показывает этап мира, а не журнала");
+                "Гейт мира запирает уровень 2, пока этап 1 не закрыт целиком Иначе тест submit_StageGateOverride_LocksNextStage перестанет ловить эту поломку. При смене submit_StageGateOverride_LocksNextStage проверь это утверждение.");
+        assertEquals(
+                1,
+                board.ledger().stage(),
+                "Доска показывает этап мира, а не журнала Иначе тест submit_StageGateOverride_LocksNextStage перестанет ловить эту поломку. При смене submit_StageGateOverride_LocksNextStage проверь это утверждение.");
     }
 
     @Test
@@ -103,7 +118,8 @@ class StageWorldGateTests {
             assertEquals(
                     number,
                     SettlementStage.of(world),
-                    "Этап " + number + " открыт только после аудита всех предыдущих этапов");
+                    "Этап " + number
+                            + " открыт только после аудита всех предыдущих этапов Иначе тест stages_MandatoryAuditsOfEveryStage_OpenNextOnlyByWorld перестанет ловить эту поломку. При смене stages_MandatoryAuditsOfEveryStage_OpenNextOnlyByWorld проверь это утверждение.");
             assertEquals(
                     number, confirmation.gate(world).stage(), "Гейт стоит на подтверждённом аудите этапа " + number);
 

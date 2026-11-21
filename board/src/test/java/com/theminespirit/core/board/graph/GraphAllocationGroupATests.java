@@ -38,8 +38,12 @@ class GraphAllocationGroupATests {
         assertEquals(
                 1,
                 chop.size(),
-                "Нужда во брёвнах — одна заявка на рубку дуба, а не по заявке на духа: " + result.post());
-        assertEquals(1, dispatch(world, chop).size(), "Одну заявку на рубку берёт ровно один дух, а не все трое");
+                "Нужда во брёвнах — одна заявка на рубку дуба, а не по заявке на духа:  Иначе тест case01_LogsNeeded_ChopGivenToOneSpirit перестанет ловить эту поломку. При смене case01_LogsNeeded_ChopGivenToOneSpirit проверь это утверждение."
+                        + result.post());
+        assertEquals(
+                1,
+                dispatch(world, chop).size(),
+                "Одну заявку на рубку берёт ровно один дух, а не все трое Иначе тест case01_LogsNeeded_ChopGivenToOneSpirit перестанет ловить эту поломку. При смене case01_LogsNeeded_ChopGivenToOneSpirit проверь это утверждение.");
     }
 
     @Test
@@ -50,13 +54,21 @@ class GraphAllocationGroupATests {
         List<GraphTickets.Ticket> works = new ArrayList<>(only(result, "chop_oak_log"));
         works.addAll(only(result, "mine_cobble"));
         List<Pair> pairs = dispatch(world, works);
-
-        assertEquals(2, pairs.size(), "Две нужды и два духа — обе работы выданы: " + pairs);
+        assertEquals(
+                2,
+                pairs.size(),
+                "Две нужды и два духа — обе работы выданы:  Иначе тест case02_TwoNeedsTwoSpirits_DifferentWork перестанет ловить эту поломку. При смене case02_TwoNeedsTwoSpirits_DifferentWork проверь это утверждение."
+                        + pairs);
         assertEquals(
                 2,
                 pairs.stream().map(Pair::ticket).distinct().count(),
-                "Духи получили две разные работы, а не одну на двоих: " + pairs);
-        assertEquals(2, pairs.stream().map(Pair::spirit).distinct().count(), "Работы у разных духов: " + pairs);
+                "Духи получили две разные работы, а не одну на двоих:  Иначе тест case02_TwoNeedsTwoSpirits_DifferentWork перестанет ловить эту поломку. При смене case02_TwoNeedsTwoSpirits_DifferentWork проверь это утверждение."
+                        + pairs);
+        assertEquals(
+                2,
+                pairs.stream().map(Pair::spirit).distinct().count(),
+                "Работы у разных духов:  Иначе тест case02_TwoNeedsTwoSpirits_DifferentWork перестанет ловить эту поломку. При смене case02_TwoNeedsTwoSpirits_DifferentWork проверь это утверждение."
+                        + pairs);
     }
 
     @Test
@@ -67,16 +79,18 @@ class GraphAllocationGroupATests {
         BoardTicket ticket = boardTicket(chop);
         board.submit(ticket);
         board.claim(ticket.id(), id("spirit-1"), 0);
-
         assertFalse(
                 board.claimable(new StockView(world.stock), 0).stream()
                         .anyMatch(open -> open.id().equals(ticket.id())),
-                "Занятая работа не попадает в очередь выдачи: второй дух её не получит");
+                "Занятая работа не попадает в очередь выдачи: второй дух её не получит Иначе тест case03_AssignedWork_NotGivenToSecondSpirit перестанет ловить эту поломку. При смене case03_AssignedWork_NotGivenToSecondSpirit проверь это утверждение.");
         assertEquals(
                 BoardOutcome.TAKEN_BY_OTHER,
                 board.claim(ticket.id(), id("spirit-2"), 0),
-                "Прямая заявка второго духа на занятую работу отклонена с причиной: её держит spirit-1");
-        assertTrue(dispatch(board, world).isEmpty(), "Повторный раунд не выдаёт занятую работу никому: " + ticket);
+                "Прямая заявка второго духа на занятую работу отклонена с причиной: её держит spirit-1 Иначе тест case03_AssignedWork_NotGivenToSecondSpirit перестанет ловить эту поломку. При смене case03_AssignedWork_NotGivenToSecondSpirit проверь это утверждение.");
+        assertTrue(
+                dispatch(board, world).isEmpty(),
+                "Повторный раунд не выдаёт занятую работу никому:  Иначе тест case03_AssignedWork_NotGivenToSecondSpirit перестанет ловить эту поломку. При смене case03_AssignedWork_NotGivenToSecondSpirit проверь это утверждение."
+                        + ticket);
     }
 
     @Test
@@ -89,14 +103,13 @@ class GraphAllocationGroupATests {
         board.submit(boardTicket(chop));
         DispatchRound round = new DispatchRound(board, 0);
         List<DispatchRound.Candidate> spirits = candidates(world);
-
         Optional<DispatchRound.Candidate> chosen =
                 round.choose(boardTicket(chop), List.of(spirits.get(1), spirits.get(0)));
-
         assertEquals(
                 "spirit-1",
                 chosen.orElseThrow().name(),
-                "Рубку получает дух с топором, даже если второй в списке выдачи раньше: " + chosen);
+                "Рубку получает дух с топором, даже если второй в списке выдачи раньше:  Иначе тест case04_ToolWork_GoesToAxeHolder перестанет ловить эту поломку. При смене case04_ToolWork_GoesToAxeHolder проверь это утверждение."
+                        + chosen);
     }
 
     @Test
@@ -110,13 +123,12 @@ class GraphAllocationGroupATests {
         board.submit(ticket);
         DispatchRound round = new DispatchRound(board, 0);
         List<DispatchRound.Candidate> spirits = candidates(world);
-
         assertTrue(
                 round.refusal(ticket, spirits.get(1)).isEmpty(),
-                "Дух без топора тоже берёт рубку и рубит руками: инструмент — предпочтение, не запрет (владелец 05.11)");
+                "Дух без топора тоже берёт рубку и рубит руками: инструмент — предпочтение, не запрет (владелец 05.11) Иначе тест case05_NoTool_GivenToBareHandsWhenToolHolderBusy перестанет ловить эту поломку. При смене case05_NoTool_GivenToBareHandsWhenToolHolderBusy проверь это утверждение.");
         assertTrue(
                 round.refusal(ticket, spirits.get(0)).isEmpty(),
-                "Дух с топором берёт рубку быстрее: топор остаётся предпочтением");
+                "Дух с топором берёт рубку быстрее: топор остаётся предпочтением Иначе тест case05_NoTool_GivenToBareHandsWhenToolHolderBusy перестанет ловить эту поломку. При смене case05_NoTool_GivenToBareHandsWhenToolHolderBusy проверь это утверждение.");
     }
 
     @Test
@@ -133,26 +145,28 @@ class GraphAllocationGroupATests {
         world.buildings.put("clearing", Built.PLANNED);
         world.noWorld("tree:oak").noWorld("tree:jungle");
         GraphTickets.Result result = tickets(world);
-
         assertTrue(
                 result.post().stream().anyMatch(ticket -> "graph:building:clearing".equals(ticket.id())),
-                "Нужды закрыты — на доске полезная расчистка: " + result.post());
+                "Нужды закрыты — на доске полезная расчистка:  Иначе тест case06_AllNeedsClosed_ClearingNotChopping перестанет ловить эту поломку. При смене case06_AllNeedsClosed_ClearingNotChopping проверь это утверждение."
+                        + result.post());
         assertTrue(
                 result.post().stream().noneMatch(ticket -> ticket.node().startsWith("chop_")),
-                "Нужды закрыты — общей рубки на доске нет: " + result.post());
+                "Нужды закрыты — общей рубки на доске нет:  Иначе тест case06_AllNeedsClosed_ClearingNotChopping перестанет ловить эту поломку. При смене case06_AllNeedsClosed_ClearingNotChopping проверь это утверждение."
+                        + result.post());
     }
 
     @Test
     void case07_LogsCollected_ChopRemoved() {
         GraphWorld empty = community(2).with("oak_log", 0);
         GraphWorld stocked = community(2).with("oak_log", 64);
-
         assertFalse(
                 only(tickets(empty), "chop_oak_log").isEmpty(),
-                "Брёвен нет — рубка стоит: " + tickets(empty).post());
+                "Брёвен нет — рубка стоит:  Иначе тест case07_LogsCollected_ChopRemoved перестанет ловить эту поломку. При смене case07_LogsCollected_ChopRemoved проверь это утверждение."
+                        + tickets(empty).post());
         assertTrue(
                 only(tickets(stocked), "chop_oak_log").isEmpty(),
-                "Брёвна набраны — рубка снимается со всех: " + tickets(stocked).post());
+                "Брёвна набраны — рубка снимается со всех:  Иначе тест case07_LogsCollected_ChopRemoved перестанет ловить эту поломку. При смене case07_LogsCollected_ChopRemoved проверь это утверждение."
+                        + tickets(stocked).post());
     }
 
     @Test
@@ -161,10 +175,12 @@ class GraphAllocationGroupATests {
         GraphTickets.Result result = tickets(world);
         List<GraphTickets.Ticket> works = new ArrayList<>(only(result, "chop_oak_log"));
         works.addAll(only(result, "mine_cobble"));
-
         List<Pair> pairs = dispatch(world, works);
-
-        assertEquals(2, pairs.size(), "Работ две — заняты двое, лишние не получают дублей: " + pairs);
+        assertEquals(
+                2,
+                pairs.size(),
+                "Работ две — заняты двое, лишние не получают дублей:  Иначе тест case08_MoreSpiritsThanWorks_NoDuplicateWork перестанет ловить эту поломку. При смене case08_MoreSpiritsThanWorks_NoDuplicateWork проверь это утверждение."
+                        + pairs);
         assertEquals(
                 2, pairs.stream().map(Pair::ticket).distinct().count(), "Ни одна работа не выдана дважды: " + pairs);
         assertEquals(2, pairs.stream().map(Pair::spirit).distinct().count(), "Дубли духов тоже недопустимы");
@@ -188,9 +204,7 @@ class GraphAllocationGroupATests {
                 Map.of());
         board.submit(rescue);
         board.stuck().mark(id("spirit-1"), 140, "не двигается с тика 100");
-
         List<Pair> pairs = dispatch(board, world);
-
         assertTrue(
                 pairs.stream()
                         .anyMatch(pair -> "spirit-1".equals(pair.spirit())
@@ -245,9 +259,7 @@ class GraphAllocationGroupATests {
             board.fail(repeat.id(), new StockView(Map.of()), "провал движения");
         }
         board.submit(clearing);
-
         List<Pair> pairs = dispatch(board, community(1));
-
         assertTrue(
                 board.casePauseTicks(id("spirit-1"), BoardCase.GATHER_MATERIALS) > 0,
                 "Серия провалов поставила кейс добычи на паузу");
@@ -280,7 +292,6 @@ class GraphAllocationGroupATests {
             round.take(spirit.id());
             pairs.add(new Pair(spirit.name(), ticket.id()));
         }
-
         assertEquals(
                 pairs.size(),
                 pairs.stream().map(Pair::spirit).distinct().count(),

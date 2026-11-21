@@ -25,21 +25,26 @@ class BoardRescueTests {
         Board board = new Board(() -> now[0]);
         stuck(board, RESCUEE, "маршрут не найден: цель BlockCoord[x=-171, y=71, z=-489]");
         BoardTicket rescue = rescue(RESCUEE, "graph:rescue_spirit@1000");
-        assertEquals(BoardOutcome.ACCEPTED, board.submit(rescue), "Помощнику ставится задание спасения застрявшего");
+        assertEquals(
+                BoardOutcome.ACCEPTED,
+                board.submit(rescue),
+                "Помощнику ставится задание спасения застрявшего Иначе тест rescue_HelperCompletes_KeepsRescueeMarkUntilEscapeSeen перестанет ловить эту поломку. При смене rescue_HelperCompletes_KeepsRescueeMarkUntilEscapeSeen проверь это утверждение.");
         assertEquals(
                 BoardOutcome.CLAIMED,
                 board.claim(rescue.id(), HELPER, now[0]),
-                "Свободный помощник берёт спасение: сам застрявший выйти не может");
-        assertTrue(board.complete(rescue.id()), "Выполненное спасение закрывает задание");
+                "Свободный помощник берёт спасение: сам застрявший выйти не может Иначе тест rescue_HelperCompletes_KeepsRescueeMarkUntilEscapeSeen перестанет ловить эту поломку. При смене rescue_HelperCompletes_KeepsRescueeMarkUntilEscapeSeen проверь это утверждение.");
+        assertTrue(
+                board.complete(rescue.id()),
+                "Выполненное спасение закрывает задание Иначе тест rescue_HelperCompletes_KeepsRescueeMarkUntilEscapeSeen перестанет ловить эту поломку. При смене rescue_HelperCompletes_KeepsRescueeMarkUntilEscapeSeen проверь это утверждение.");
 
         assertTrue(
                 board.stuck().isStuck(RESCUEE, now[0] + 1),
                 "Закрытие задания само по себе не подтверждает выход: метка спасённого держится, пока "
-                        + "наблюдение не покажет его на поверхности (observe25 B6)");
+                        + "наблюдение не покажет его на поверхности (observe25 B6) Иначе тест rescue_HelperCompletes_KeepsRescueeMarkUntilEscapeSeen перестанет ловить эту поломку. При смене rescue_HelperCompletes_KeepsRescueeMarkUntilEscapeSeen проверь это утверждение.");
         board.stuck().see(RESCUEE, new BlockCoord(AT.x() + 3, AT.y() + 4, AT.z()), now[0] + 2, true);
         assertFalse(
                 board.stuck().isStuck(RESCUEE, now[0] + 2),
-                "Наблюдённый выход снимает метку: иначе спасённый навсегда остаётся без работы (observe23 A)");
+                "Наблюдённый выход снимает метку: иначе спасённый навсегда остаётся без работы (observe23 A) При смене rescue_HelperCompletes_KeepsRescueeMarkUntilEscapeSeen проверь это утверждение.");
     }
 
     @Test
@@ -57,14 +62,14 @@ class BoardRescueTests {
         assertTrue(
                 chosen.isEmpty(),
                 "Застрявший дух не может быть помощником: он сам не двигается и повторит провал "
-                        + "спасения (observe23 A)");
+                        + "спасения (observe23 A) Иначе тест dispatch_HelperRescue_StuckSpiritRefused перестанет ловить эту поломку. При смене dispatch_HelperRescue_StuckSpiritRefused проверь это утверждение.");
         assertTrue(
                 round.why(rescue, List.of(candidate(HELPER, "spirit-5"))).contains("не двигается"),
-                "Причина отказа называет застревание помощника, а не молчит");
+                "Причина отказа называет застревание помощника, а не молчит Иначе тест dispatch_HelperRescue_StuckSpiritRefused перестанет ловить эту поломку. При смене dispatch_HelperRescue_StuckSpiritRefused проверь это утверждение.");
         assertTrue(
                 round.choose(rescue, List.of(candidate(UUID.randomUUID(), "spirit-1")))
                         .isPresent(),
-                "Свободный дух по-прежнему берёт спасение: запрет адресный, а не на весь кейс");
+                "Свободный дух по-прежнему берёт спасение: запрет адресный, а не на весь кейс Иначе тест dispatch_HelperRescue_StuckSpiritRefused перестанет ловить эту поломку. При смене dispatch_HelperRescue_StuckSpiritRefused проверь это утверждение.");
     }
 
     @Test
@@ -91,10 +96,10 @@ class BoardRescueTests {
         assertTrue(
                 chosen.isPresent(),
                 "Устаревшая метка «пути нет» не держит духа вечно: после срока он снова берёт работу, "
-                        + "а повторный провал поставит свежую метку (observe25 B1)");
+                        + "а повторный провал поставит свежую метку (observe25 B1) Иначе тест dispatch_NoPathSpiritAfterTtl_TakesWorkAgain перестанет ловить эту поломку. При смене dispatch_NoPathSpiritAfterTtl_TakesWorkAgain проверь это утверждение.");
         assertFalse(
                 round.why(gather, List.of(candidate(RESCUEE, "spirit-2"))).contains("не двигается"),
-                "Причина выбора больше не называет духа недвижимым: метка истекла");
+                "Причина выбора больше не называет духа недвижимым: метка истекла Иначе тест dispatch_NoPathSpiritAfterTtl_TakesWorkAgain перестанет ловить эту поломку. При смене dispatch_NoPathSpiritAfterTtl_TakesWorkAgain проверь это утверждение.");
     }
 
     @Test
@@ -104,7 +109,7 @@ class BoardRescueTests {
         assertTrue(
                 SupplyGate.retains(rescue, Set.of("graph:rescue_spirit")),
                 "Причина с тиком эпизода — та же причина графа: иначе доска снимет живое спасение как "
-                        + "оторванное (observe23 A)");
+                        + "оторванное (observe23 A) При смене retain_RescueCauseWithEpisode_StaysOnBoard проверь это утверждение.");
     }
 
     @Test
@@ -115,21 +120,23 @@ class BoardRescueTests {
         BoardTicket first = rescue(RESCUEE, "graph:rescue_spirit@1000");
         board.submit(first);
         board.claim(first.id(), RESCUEE, now[0]);
-        assertTrue(board.complete(first.id()), "Первый выход выполнен и закрыт");
+        assertTrue(
+                board.complete(first.id()),
+                "Первый выход выполнен и закрыт Иначе тест rescue_DoneThenNewStuckEpisode_Reopens перестанет ловить эту поломку. При смене rescue_DoneThenNewStuckEpisode_Reopens проверь это утверждение.");
 
         assertEquals(
                 BoardOutcome.DUPLICATE,
                 board.submit(rescue(RESCUEE, "graph:rescue_spirit@1000")),
-                "Повторная постановка того же эпизода не переоткрывает закрытое спасение");
+                "Повторная постановка того же эпизода не переоткрывает закрытое спасение Иначе тест rescue_DoneThenNewStuckEpisode_Reopens перестанет ловить эту поломку. При смене rescue_DoneThenNewStuckEpisode_Reopens проверь это утверждение.");
         assertEquals(
                 BoardOutcome.ACCEPTED,
                 board.submit(rescue(RESCUEE, "graph:rescue_spirit@9000")),
                 "Новое застревание — новый rescue: причина несёт тик эпизода, иначе DONE навсегда "
-                        + "закрывает спасение (observe23 A)");
+                        + "закрывает спасение (observe23 A) При смене rescue_DoneThenNewStuckEpisode_Reopens проверь это утверждение.");
         assertEquals(
                 Optional.of(BoardStatus.PENDING),
                 board.statusOf(first.id()),
-                "Переоткрытое спасение снова стоит в очереди доски");
+                "Переоткрытое спасение снова стоит в очереди доски Иначе тест rescue_DoneThenNewStuckEpisode_Reopens перестанет ловить эту поломку. При смене rescue_DoneThenNewStuckEpisode_Reopens проверь это утверждение.");
     }
 
     @Test
@@ -141,23 +148,25 @@ class BoardRescueTests {
         board.submit(rescue);
         board.claim(rescue.id(), RESCUEE, now[0]);
 
-        assertTrue(board.complete(rescue.id()), "Спасение закрылось по отчёту задачи, но выход не наблюдён");
+        assertTrue(
+                board.complete(rescue.id()),
+                "Спасение закрылось по отчёту задачи, но выход не наблюдён Иначе тест rescue_PrematureCompletion_KeepsMarkAndReopensForRetry перестанет ловить эту поломку. При смене rescue_PrematureCompletion_KeepsMarkAndReopensForRetry проверь это утверждение.");
         assertTrue(
                 board.stuck().isStuck(RESCUEE, now[0]),
                 "Пока дух не показан на поверхности, метка держится: иначе он снова берёт обычную "
-                        + "работу из пещеры и падает обратно (observe25 B6)");
+                        + "работу из пещеры и падает обратно (observe25 B6) При смене rescue_PrematureCompletion_KeepsMarkAndReopensForRetry проверь это утверждение.");
         assertTrue(
                 board.reopen(rescue.id()),
-                "Граф переоткрывает закрытое спасение, пока метка жива: выход повторяется, а не бросается");
+                "Граф переоткрывает закрытое спасение, пока метка жива: выход повторяется, а не бросается Иначе тест rescue_PrematureCompletion_KeepsMarkAndReopensForRetry перестанет ловить эту поломку. При смене rescue_PrematureCompletion_KeepsMarkAndReopensForRetry проверь это утверждение.");
 
         assertEquals(
                 BoardOutcome.ACCEPTED,
                 board.submit(rescue(RESCUEE, "graph:rescue_spirit@1000")),
-                "Тот же эпизод снова ставится на доску после переоткрытия");
+                "Тот же эпизод снова ставится на доску после переоткрытия Иначе тест rescue_PrematureCompletion_KeepsMarkAndReopensForRetry перестанет ловить эту поломку. При смене rescue_PrematureCompletion_KeepsMarkAndReopensForRetry проверь это утверждение.");
         assertEquals(
                 BoardOutcome.CLAIMED,
                 board.claim(rescue.id(), RESCUEE, now[0]),
-                "Дух снова берёт собственное спасение: обычная работа ему по-прежнему закрыта");
+                "Дух снова берёт собственное спасение: обычная работа ему по-прежнему закрыта Иначе тест rescue_PrematureCompletion_KeepsMarkAndReopensForRetry перестанет ловить эту поломку. При смене rescue_PrematureCompletion_KeepsMarkAndReopensForRetry проверь это утверждение.");
     }
 
     @Test
@@ -185,9 +194,13 @@ class BoardRescueTests {
 
         assertTrue(
                 why.contains(moved.toString()),
-                "waitReason называет текущее место духа, а не устаревшую точку постановки метки " + "(observe25 B15): "
+                "waitReason называет текущее место духа, а не устаревшую точку постановки метки "
+                        + "(observe25 B15):  Иначе тест waitReason_MovedInsidePit_NamesCurrentPosition перестанет ловить эту поломку. При смене waitReason_MovedInsidePit_NamesCurrentPosition проверь это утверждение."
                         + why);
-        assertFalse(why.contains(AT.toString()), "Старые координаты в причине ожидания не показываются: " + why);
+        assertFalse(
+                why.contains(AT.toString()),
+                "Старые координаты в причине ожидания не показываются:  Иначе тест waitReason_MovedInsidePit_NamesCurrentPosition перестанет ловить эту поломку. При смене waitReason_MovedInsidePit_NamesCurrentPosition проверь это утверждение."
+                        + why);
     }
 
     @Test
@@ -197,7 +210,10 @@ class BoardRescueTests {
         stuck(board, RESCUEE, "провал движения");
         BoardTicket rescue = rescue(RESCUEE, "graph:rescue_spirit@1000");
         board.submit(rescue);
-        assertEquals(BoardOutcome.CLAIMED, board.claim(rescue.id(), RESCUEE, now[0]), "Дух берёт своё спасение");
+        assertEquals(
+                BoardOutcome.CLAIMED,
+                board.claim(rescue.id(), RESCUEE, now[0]),
+                "Дух берёт своё спасение Иначе тест claimable_OwnRescueOfStuckSpirit_StaysAssignedToIt перестанет ловить эту поломку. При смене claimable_OwnRescueOfStuckSpirit_StaysAssignedToIt проверь это утверждение.");
 
         board.claimable(new StockView(Map.of()), now[0] + 1);
 
@@ -206,10 +222,10 @@ class BoardRescueTests {
                 board.statusOf(rescue.id()),
                 "Своё спасение нельзя отбирать у застрявшего: claimable снимал задание с него каждый тик и тут же "
                         + "выдавал обратно — dig_out перезапускался 20 раз в секунду и каждый раз искал путь заново "
-                        + "(сервер 0.1.3595, тик 3,4 с; rescue:f58b83b6 ASSIGNED 100 раз за 25 с)");
+                        + "(сервер 0.1.3595, тик 3,4 с; rescue:f58b83b6 ASSIGNED 100 раз за 25 с) Иначе тест claimable_OwnRescueOfStuckSpirit_StaysAssignedToIt перестанет ловить эту поломку. При смене claimable_OwnRescueOfStuckSpirit_StaysAssignedToIt проверь это утверждение.");
         assertTrue(
                 board.assignedTo(RESCUEE).contains(rescue),
-                "Задание спасения остаётся за спасённым: снятие возвращает его тому же духу и крутит пересборку");
+                "Задание спасения остаётся за спасённым: снятие возвращает его тому же духу и крутит пересборку Иначе тест claimable_OwnRescueOfStuckSpirit_StaysAssignedToIt перестанет ловить эту поломку. При смене claimable_OwnRescueOfStuckSpirit_StaysAssignedToIt проверь это утверждение.");
     }
 
     @Test
@@ -227,7 +243,7 @@ class BoardRescueTests {
         assertEquals(
                 Optional.of(BoardStatus.PENDING),
                 board.statusOf(rescue.id()),
-                "Застрявшего помощника спасение не держит: задание возвращается доске и достаётся свободному духу");
+                "Застрявшего помощника спасение не держит: задание возвращается доске и достаётся свободному духу Иначе тест claimable_RescueHeldByStuckHelper_ReleasedToFreeSpirit перестанет ловить эту поломку. При смене claimable_RescueHeldByStuckHelper_ReleasedToFreeSpirit проверь это утверждение.");
     }
 
     @Test
@@ -253,7 +269,7 @@ class BoardRescueTests {
         assertEquals(
                 Optional.of(BoardStatus.PENDING),
                 board.statusOf(gather.id()),
-                "Обычная работа застрявшего возвращается доске: иначе она ждёт духа, который не двигается");
+                "Обычная работа застрявшего возвращается доске: иначе она ждёт духа, который не двигается При смене claimable_NormalTicketOfStuckSpirit_ReleasedToFreeSpirit проверь это утверждение.");
     }
 
     private static BoardTicket rescue(UUID spirit, String cause) {

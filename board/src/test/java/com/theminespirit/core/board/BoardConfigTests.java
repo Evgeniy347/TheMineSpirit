@@ -36,7 +36,7 @@ class BoardConfigTests {
                         + "лишний ключ в файле без теста и забытый ключ в тесте красят прогон, "
                         + "а молчаливое расхождение пересортирует выдачу. RESTOCK_FOOD — 70 "
                         + "(решение владельца 16.10 дало число только для 48 единиц, порядок "
-                        + "«ниже поимки, выше загона» — из таблицы п. 3)");
+                        + "«ниже поимки, выше загона» — из таблицы п. 3) Иначе тест defaults_FromClasspath_PrioritiesMatchLiterals перестанет ловить эту поломку. При смене defaults_FromClasspath_PrioritiesMatchLiterals проверь это утверждение.");
     }
 
     @Test
@@ -55,15 +55,15 @@ class BoardConfigTests {
                 config.hive(),
                 "Таблица пчёл обязана совпадать с литералами: радиус ульев, глубина дыма, "
                         + "радиус цветов и их минимум, цена улья. Лишний ключ в файле без теста "
-                        + "и забытый ключ в тесте красят прогон");
+                        + "и забытый ключ в тесте красят прогон При смене defaults_FromClasspath_HiveMatchesLiterals проверь это утверждение.");
         assertEquals(
                 5,
                 config.hive().get("smoke_depth"),
-                "Предел в тесте, факт из production: дым костра достаёт улей на 5 блоков вниз");
+                "Предел в тесте, факт из production: дым костра достаёт улей на 5 блоков вниз Иначе тест defaults_FromClasspath_HiveMatchesLiterals перестанет ловить эту поломку. При смене defaults_FromClasspath_HiveMatchesLiterals проверь это утверждение.");
         assertEquals(
                 3,
                 config.hive().get("flowers_min"),
-                "Предел в тесте, факт из production: улей ставят, когда рядом минимум 3 цвета");
+                "Предел в тесте, факт из production: улей ставят, когда рядом минимум 3 цвета Иначе тест defaults_FromClasspath_HiveMatchesLiterals перестанет ловить эту поломку. При смене defaults_FromClasspath_HiveMatchesLiterals проверь это утверждение.");
     }
 
     @Test
@@ -75,11 +75,11 @@ class BoardConfigTests {
                 config.herd(),
                 "Таблица стада обязана совпадать с литералами слово в слово: лимит 4 на вид "
                         + "(ответ владельца 16.10) и минимум пара для разведения. Лишний ключ в "
-                        + "файле без теста и забытый ключ в тесте красят прогон");
+                        + "файле без теста и забытый ключ в тесте красят прогон Иначе тест defaults_FromClasspath_HerdMatchesLiterals перестанет ловить эту поломку. При смене defaults_FromClasspath_HerdMatchesLiterals проверь это утверждение.");
         assertEquals(
                 4,
                 config.herd().get("maxPerSpecies"),
-                "Предел в тесте, факт из production: не больше 4 животных каждого вида");
+                "Предел в тесте, факт из production: не больше 4 животных каждого вида Иначе тест defaults_FromClasspath_HerdMatchesLiterals перестанет ловить эту поломку. При смене defaults_FromClasspath_HerdMatchesLiterals проверь это утверждение.");
     }
 
     @Test
@@ -91,15 +91,15 @@ class BoardConfigTests {
                 config.tools(),
                 "Таблица набора инструментов обязана совпадать с литералами: кирка, топор и лопата "
                         + "до камня, чинят железо и алмаз. Лишний ключ в файле без теста и забытый "
-                        + "ключ в тесте красят прогон");
+                        + "ключ в тесте красят прогон Иначе тест defaults_FromClasspath_ToolsMatchLiterals перестанет ловить эту поломку. При смене defaults_FromClasspath_ToolsMatchLiterals проверь это утверждение.");
         assertEquals(
                 List.of("pickaxe", "axe", "shovel"),
                 config.tools().set(),
-                "Предел в тесте, факт из production: набор духа — кирка, топор и лопата");
+                "Предел в тесте, факт из production: набор духа — кирка, топор и лопата Иначе тест defaults_FromClasspath_ToolsMatchLiterals перестанет ловить эту поломку. При смене defaults_FromClasspath_ToolsMatchLiterals проверь это утверждение.");
         assertEquals(
                 List.of("iron", "diamond"),
                 config.tools().repairTiers(),
-                "Предел в тесте, факт из production: чинят только железный и алмазный инструмент");
+                "Предел в тесте, факт из production: чинят только железный и алмазный инструмент Иначе тест defaults_FromClasspath_ToolsMatchLiterals перестанет ловить эту поломку. При смене defaults_FromClasspath_ToolsMatchLiterals проверь это утверждение.");
     }
 
     @Test
@@ -111,7 +111,8 @@ class BoardConfigTests {
         assertEquals(
                 new ToolsConfig(List.of("pickaxe", "sword"), "iron", List.of("diamond")),
                 config.tools(),
-                "Датапак обязан задавать набор, уровень и уровни ремонта: иначе /reload не поменяет " + "набор духа");
+                "Датапак обязан задавать набор, уровень и уровни ремонта: иначе /reload не поменяет "
+                        + "набор духа При смене fromJson_NewTools_ParsesSetTierAndRepairTiers проверь это утверждение.");
     }
 
     @Test
@@ -120,10 +121,12 @@ class BoardConfigTests {
             IllegalStateException failure = assertThrows(
                     IllegalStateException.class,
                     () -> BoardConfig.fromJson("{\"tools\":{\"" + key + "\":1}}", "board.json"),
-                    "Старый ключ '" + key + "' обязан падать: общий запас поселения больше не считается");
+                    "Старый ключ '" + key
+                            + "' обязан падать: общий запас поселения больше не считается Иначе тест fromJson_OldToolKeys_Fail перестанет ловить эту поломку. При смене fromJson_OldToolKeys_Fail проверь это утверждение.");
             assertTrue(
                     failure.getMessage().contains(key),
-                    "Сообщение обязано называть неверный ключ: " + failure.getMessage());
+                    "Сообщение обязано называть неверный ключ:  Иначе тест fromJson_OldToolKeys_Fail перестанет ловить эту поломку. При смене fromJson_OldToolKeys_Fail проверь это утверждение."
+                            + failure.getMessage());
         }
     }
 
@@ -145,11 +148,11 @@ class BoardConfigTests {
                 config.wool(),
                 "Числа шерсти и кроватей обязаны совпадать с литералами слово в слово: гейт отары, "
                         + "радиус и суточный лимит диких овец, порог и запас нитей, цена ножниц и "
-                        + "кровати. Лишний ключ в файле без теста и забытый ключ в тесте красят прогон");
+                        + "кровати. Лишний ключ в файле без теста и забытый ключ в тесте красят прогон При смене defaults_FromClasspath_WoolMatchesLiterals проверь это утверждение.");
         assertEquals(
                 48,
                 config.wool().get("wild_sheep_radius"),
-                "Предел в тесте, факт из production: диких овец ищут в радиусе 48 от дома");
+                "Предел в тесте, факт из production: диких овец ищут в радиусе 48 от дома Иначе тест defaults_FromClasspath_WoolMatchesLiterals перестанет ловить эту поломку. При смене defaults_FromClasspath_WoolMatchesLiterals проверь это утверждение.");
     }
 
     @Test
@@ -160,71 +163,72 @@ class BoardConfigTests {
                 IllegalStateException.class,
                 () -> BoardConfig.fromJson(json, "board.json"),
                 "Опечатка в ключе шерсти обязана падать: молча потерянный ключ оставил бы гейт "
-                        + "отары без ведома настройщика");
+                        + "отары без ведома настройщика Иначе тест fromJson_UnknownWoolKey_FailsNamingKey перестанет ловить эту поломку. При смене fromJson_UnknownWoolKey_FailsNamingKey проверь это утверждение.");
         assertTrue(
                 failure.getMessage().contains("min_pen_ships"),
-                "Сообщение обязано называть неверный ключ: " + failure.getMessage());
+                "Сообщение обязано называть неверный ключ:  Иначе тест fromJson_UnknownWoolKey_FailsNamingKey перестанет ловить эту поломку. При смене fromJson_UnknownWoolKey_FailsNamingKey проверь это утверждение."
+                        + failure.getMessage());
     }
 
     @Test
     void fromJson_UnknownHerdKey_FailsNamingKey() {
         String json = "{\"herd\":{\"maxPerSpecie\":4}}";
-
         IllegalStateException failure = assertThrows(
                 IllegalStateException.class,
                 () -> BoardConfig.fromJson(json, "board.json"),
                 "Опечатка в ключе стада обязана падать: молча потерянный ключ оставил бы лимит "
-                        + "по умолчанию без ведома настройщика");
+                        + "по умолчанию без ведома настройщика Иначе тест fromJson_UnknownHerdKey_FailsNamingKey перестанет ловить эту поломку. При смене fromJson_UnknownHerdKey_FailsNamingKey проверь это утверждение.");
         assertTrue(
                 failure.getMessage().contains("maxPerSpecie"),
-                "Сообщение обязано называть неверный ключ: " + failure.getMessage());
+                "Сообщение обязано называть неверный ключ:  Иначе тест fromJson_UnknownHerdKey_FailsNamingKey перестанет ловить эту поломку. При смене fromJson_UnknownHerdKey_FailsNamingKey проверь это утверждение."
+                        + failure.getMessage());
     }
 
     @Test
     void fromJson_UnknownToolKey_FailsNamingKey() {
         String json = "{\"tools\":{\"perSpirits\":1}}";
-
         IllegalStateException failure = assertThrows(
                 IllegalStateException.class,
                 () -> BoardConfig.fromJson(json, "board.json"),
                 "Опечатка в ключе таблицы инструментов обязана падать: молча потерянный ключ "
-                        + "оставил бы число комплектов по умолчанию без ведома настройщика");
+                        + "оставил бы число комплектов по умолчанию без ведома настройщика Иначе тест fromJson_UnknownToolKey_FailsNamingKey перестанет ловить эту поломку. При смене fromJson_UnknownToolKey_FailsNamingKey проверь это утверждение.");
         assertTrue(
                 failure.getMessage().contains("perSpirits"),
-                "Сообщение обязано называть неверный ключ: " + failure.getMessage());
+                "Сообщение обязано называть неверный ключ:  Иначе тест fromJson_UnknownToolKey_FailsNamingKey перестанет ловить эту поломку. При смене fromJson_UnknownToolKey_FailsNamingKey проверь это утверждение."
+                        + failure.getMessage());
     }
 
     @Test
     void defaults_FromClasspath_ImmovableMatchesLiterals() {
         BoardConfig config = DataTables.INSTANCE.board().current();
-
         assertEquals(
                 List.of("BUILD_MINE"),
                 config.immovable(),
                 "Неподвижные постройки обязаны совпадать с литералами: пока только вход в шахту "
                         + "(ответ владельца 16.10). Лишний кейс в файле без теста и забытый ключ в "
-                        + "тесте красят прогон");
-        assertTrue(config.immovable().contains("BUILD_MINE"), "Вход в шахту неподвижен: его нельзя переносить");
+                        + "тесте красят прогон Иначе тест defaults_FromClasspath_ImmovableMatchesLiterals перестанет ловить эту поломку. При смене defaults_FromClasspath_ImmovableMatchesLiterals проверь это утверждение.");
+        assertTrue(
+                config.immovable().contains("BUILD_MINE"),
+                "Вход в шахту неподвижен: его нельзя переносить Иначе тест defaults_FromClasspath_ImmovableMatchesLiterals перестанет ловить эту поломку. При смене defaults_FromClasspath_ImmovableMatchesLiterals проверь это утверждение.");
     }
 
     @Test
     void fromJson_UnknownImmovableCase_FailsNamingCase() {
         String json = "{\"immovable\":[\"BUILD_MINES\"]}";
-
         IllegalStateException failure = assertThrows(
                 IllegalStateException.class,
                 () -> BoardConfig.fromJson(json, "board.json"),
                 "Опечатка в имени неподвижного кейса обязана падать: молча потерянная строка "
-                        + "оставила бы постройку переносимой без ведома настройщика");
+                        + "оставила бы постройку переносимой без ведома настройщика Иначе тест fromJson_UnknownImmovableCase_FailsNamingCase перестанет ловить эту поломку. При смене fromJson_UnknownImmovableCase_FailsNamingCase проверь это утверждение.");
         assertTrue(
                 failure.getMessage().contains("BUILD_MINES"),
-                "Сообщение обязано называть неверный кейс: " + failure.getMessage());
+                "Сообщение обязано называть неверный кейс:  Иначе тест fromJson_UnknownImmovableCase_FailsNamingCase перестанет ловить эту поломку. При смене fromJson_UnknownImmovableCase_FailsNamingCase проверь это утверждение."
+                        + failure.getMessage());
     }
 
     @Test
     void defaults_FromClasspath_ProductsMatchLiterals() {
         BoardConfig config = DataTables.INSTANCE.board().current();
-
         assertEquals(
                 Map.of(
                         "cow", Map.of("minecraft:beef", 1, "minecraft:leather", 1),
@@ -233,147 +237,144 @@ class BoardConfigTests {
                         "chicken", Map.of("minecraft:chicken", 1, "minecraft:egg", 1)),
                 config.products(),
                 "Нормы продуктов на душу обязаны совпадать с литералами: мясо/шерсть/яйца по виду. "
-                        + "Лишний ключ в файле без теста и забытый ключ в тесте красят прогон");
+                        + "Лишний ключ в файле без теста и забытый ключ в тесте красят прогон Иначе тест defaults_FromClasspath_ProductsMatchLiterals перестанет ловить эту поломку. При смене defaults_FromClasspath_ProductsMatchLiterals проверь это утверждение.");
         assertEquals(
                 1,
                 config.products().get("cow").get("minecraft:leather"),
-                "Предел в тесте, факт из production: с коровы — одна шкура на душу");
+                "Предел в тесте, факт из production: с коровы — одна шкура на душу Иначе тест defaults_FromClasspath_ProductsMatchLiterals перестанет ловить эту поломку. При смене defaults_FromClasspath_ProductsMatchLiterals проверь это утверждение.");
     }
 
     @Test
     void fromJson_UnknownProductSpecies_FailsNamingSpecies() {
         String json = "{\"products\":{\"cows\":{\"minecraft:beef\":1}}}";
-
         IllegalStateException failure = assertThrows(
                 IllegalStateException.class,
                 () -> BoardConfig.fromJson(json, "board.json"),
                 "Опечатка в имени вида продуктов обязана падать: молча потерянная норма оставила бы "
-                        + "вид без запаса продуктов");
+                        + "вид без запаса продуктов Иначе тест fromJson_UnknownProductSpecies_FailsNamingSpecies перестанет ловить эту поломку. При смене fromJson_UnknownProductSpecies_FailsNamingSpecies проверь это утверждение.");
         assertTrue(
                 failure.getMessage().contains("cows"),
-                "Сообщение обязано называть неверный вид: " + failure.getMessage());
+                "Сообщение обязано называть неверный вид:  Иначе тест fromJson_UnknownProductSpecies_FailsNamingSpecies перестанет ловить эту поломку. При смене fromJson_UnknownProductSpecies_FailsNamingSpecies проверь это утверждение."
+                        + failure.getMessage());
     }
 
     @Test
     void defaults_FromClasspath_ModifiersMatchLiterals() {
         BoardConfig config = DataTables.INSTANCE.board().current();
-
         assertEquals(
                 expectedModifiers(),
                 config.modifiers(),
                 "Таблица модификаторов обязана совпадать с литералами слово в слово: поменянное "
-                        + "число в файле без правки теста пересортирует выдачу молча");
+                        + "число в файле без правки теста пересортирует выдачу молча Иначе тест defaults_FromClasspath_ModifiersMatchLiterals перестанет ловить эту поломку. При смене defaults_FromClasspath_ModifiersMatchLiterals проверь это утверждение.");
         assertEquals(
                 15,
                 config.modifiers().get("pen_caught_animal"),
-                "Предел в тесте, факт из production: дельта пойманного животного — 15");
+                "Предел в тесте, факт из production: дельта пойманного животного — 15 Иначе тест defaults_FromClasspath_ModifiersMatchLiterals перестанет ловить эту поломку. При смене defaults_FromClasspath_ModifiersMatchLiterals проверь это утверждение.");
         assertEquals(
                 -65,
                 config.modifiers().get("pen_species_full"),
-                "Предел в тесте, факт из production: полный загон гасит BUILD_PEN (65 − 65 = 0)");
+                "Предел в тесте, факт из production: полный загон гасит BUILD_PEN (65 − 65 = 0) Иначе тест defaults_FromClasspath_ModifiersMatchLiterals перестанет ловить эту поломку. При смене defaults_FromClasspath_ModifiersMatchLiterals проверь это утверждение.");
     }
 
     @Test
     void defaults_FromClasspath_PriorityMatchesRules() {
         BoardConfig config = DataTables.INSTANCE.board().current();
-
         assertEquals(
                 100,
                 config.priorities().get("REPAIR_FENCE"),
                 "Приоритет ремонта ограждений в таблице — 100: первый из источника (п. 4), "
-                        + "иначе доска отсортирует выдачу не так, как принято в поселении");
+                        + "иначе доска отсортирует выдачу не так, как принято в поселении При смене defaults_FromClasspath_PriorityMatchesRules проверь это утверждение.");
         assertEquals(
                 30,
                 config.priorities().get("ENCHANT_SHELVES"),
-                "Приоритет полок — 30: самый низкий, иначе чаровальня перебьёт стройки");
+                "Приоритет полок — 30: самый низкий, иначе чаровальня перебьёт стройки При смене defaults_FromClasspath_PriorityMatchesRules проверь это утверждение.");
         assertTrue(
                 config.priorities().size() >= BoardCase.values().length,
-                "Каждый кейс обязан иметь строку в таблице: кейс-сирота роняет сортировку выдачи");
+                "Каждый кейс обязан иметь строку в таблице: кейс-сирота роняет сортировку выдачи Иначе тест defaults_FromClasspath_PriorityMatchesRules перестанет ловить эту поломку. При смене defaults_FromClasspath_PriorityMatchesRules проверь это утверждение.");
     }
 
     @Test
     void defaults_FromClasspath_IntervalsMatchTuning() {
         BoardConfig config = DataTables.INSTANCE.board().current();
-
         assertEquals(
                 100,
                 config.intervals().get("boardIntervalTicks"),
                 "Пересборка раз в 100 тиков — образец DEMAND_INTERVAL_TICKS: число живёт в таблице, "
-                        + "а не в константе, иначе /reload его не поменяет");
+                        + "а не в константе, иначе /reload его не поменяет При смене defaults_FromClasspath_IntervalsMatchTuning проверь это утверждение.");
         assertEquals(
                 200,
                 config.intervals().get("herdScanIntervalTicks"),
-                "Опрос животных раз в 200 тиков: каждый тик scan_entities грузил бы тик сервера");
+                "Опрос животных раз в 200 тиков: каждый тик scan_entities грузил бы тик сервера Иначе тест defaults_FromClasspath_IntervalsMatchTuning перестанет ловить эту поломку. При смене defaults_FromClasspath_IntervalsMatchTuning проверь это утверждение.");
     }
 
     @Test
     void fromJson_UnknownPriorityKey_FailsNamingCase() {
         String json = "{\"priorities\":{\"CLEAR_GROUNXYZ\":50}}";
-
         IllegalStateException failure = assertThrows(
                 IllegalStateException.class,
                 () -> BoardConfig.fromJson(json, "board.json"),
                 "Опечатка в имени кейса обязана падать: молча потерянная строка превратила бы "
-                        + "кейс в сироту, а сирота роняет сортировку выдачи");
+                        + "кейс в сироту, а сирота роняет сортировку выдачи Иначе тест fromJson_UnknownPriorityKey_FailsNamingCase перестанет ловить эту поломку. При смене fromJson_UnknownPriorityKey_FailsNamingCase проверь это утверждение.");
         assertTrue(
                 failure.getMessage().contains("CLEAR_GROUNXYZ"),
-                "Сообщение обязано называть неверный ключ: " + failure.getMessage());
+                "Сообщение обязано называть неверный ключ:  Иначе тест fromJson_UnknownPriorityKey_FailsNamingCase перестанет ловить эту поломку. При смене fromJson_UnknownPriorityKey_FailsNamingCase проверь это утверждение."
+                        + failure.getMessage());
     }
 
     @Test
     void fromJson_UnknownModifierKey_FailsNamingKey() {
         String json = "{\"modifiers\":{\"pen_caught_animals\":15}}";
-
         IllegalStateException failure = assertThrows(
                 IllegalStateException.class,
                 () -> BoardConfig.fromJson(json, "board.json"),
                 "Опечатка в имени модификатора обязана падать: молча потерянная дельта "
-                        + "оставила бы задание без повышения, а сирота не провалилась бы молча");
+                        + "оставила бы задание без повышения, а сирота не провалилась бы молча Иначе тест fromJson_UnknownModifierKey_FailsNamingKey перестанет ловить эту поломку. При смене fromJson_UnknownModifierKey_FailsNamingKey проверь это утверждение.");
         assertTrue(
                 failure.getMessage().contains("pen_caught_animals"),
-                "Сообщение обязано называть неверный ключ: " + failure.getMessage());
+                "Сообщение обязано называть неверный ключ:  Иначе тест fromJson_UnknownModifierKey_FailsNamingKey перестанет ловить эту поломку. При смене fromJson_UnknownModifierKey_FailsNamingKey проверь это утверждение."
+                        + failure.getMessage());
     }
 
     @Test
     void fromJson_UnknownLevelKey_FailsNamingCase() {
         String json = "{\"levels\":{\"BUILD_MINES\":4}}";
-
         IllegalStateException failure = assertThrows(
                 IllegalStateException.class,
                 () -> BoardConfig.fromJson(json, "board.json"),
                 "Опечатка в имени кейса уровней обязана падать: молча потерянная строка оставила "
-                        + "бы постройку без развития, а сирота не провалилась бы молча");
+                        + "бы постройку без развития, а сирота не провалилась бы молча Иначе тест fromJson_UnknownLevelKey_FailsNamingCase перестанет ловить эту поломку. При смене fromJson_UnknownLevelKey_FailsNamingCase проверь это утверждение.");
         assertTrue(
                 failure.getMessage().contains("BUILD_MINES"),
-                "Сообщение обязано называть неверный ключ: " + failure.getMessage());
+                "Сообщение обязано называть неверный ключ:  Иначе тест fromJson_UnknownLevelKey_FailsNamingCase перестанет ловить эту поломку. При смене fromJson_UnknownLevelKey_FailsNamingCase проверь это утверждение."
+                        + failure.getMessage());
     }
 
     @Test
     void fromJson_UnknownIntervalKey_FailsNamingKey() {
         String json = "{\"intervals\":{\"boardIntervalMillis\":100}}";
-
         IllegalStateException failure = assertThrows(
                 IllegalStateException.class,
                 () -> BoardConfig.fromJson(json, "board.json"),
                 "Опечатка в имени интервала обязана падать: молча потерянный ключ оставил бы "
-                        + "доску на значениях по умолчанию без ведома настройщика");
+                        + "доску на значениях по умолчанию без ведома настройщика Иначе тест fromJson_UnknownIntervalKey_FailsNamingKey перестанет ловить эту поломку. При смене fromJson_UnknownIntervalKey_FailsNamingKey проверь это утверждение.");
         assertTrue(
                 failure.getMessage().contains("boardIntervalMillis"),
-                "Сообщение обязано называть неверный ключ: " + failure.getMessage());
+                "Сообщение обязано называть неверный ключ:  Иначе тест fromJson_UnknownIntervalKey_FailsNamingKey перестанет ловить эту поломку. При смене fromJson_UnknownIntervalKey_FailsNamingKey проверь это утверждение."
+                        + failure.getMessage());
     }
 
     @Test
     void fromJson_NegativeValue_FailsNamingField() {
         String json = "{\"priorities\":{\"REPAIR_FENCE\":-5}}";
-
         IllegalStateException failure = assertThrows(
                 IllegalStateException.class,
                 () -> BoardConfig.fromJson(json, "board.json"),
                 "Отрицательный приоритет обязан падать: сортировка выдачи сравнивает приоритеты "
-                        + "числом, отрицательное значение перевернёт порядок ремонта и стройки");
+                        + "числом, отрицательное значение перевернёт порядок ремонта и стройки Иначе тест fromJson_NegativeValue_FailsNamingField перестанет ловить эту поломку. При смене fromJson_NegativeValue_FailsNamingField проверь это утверждение.");
         assertTrue(
                 failure.getMessage().contains("REPAIR_FENCE"),
-                "Сообщение обязано называть ключ: " + failure.getMessage());
+                "Сообщение обязано называть ключ:  Иначе тест fromJson_NegativeValue_FailsNamingField перестанет ловить эту поломку. При смене fromJson_NegativeValue_FailsNamingField проверь это утверждение."
+                        + failure.getMessage());
     }
 
     @Test
@@ -382,22 +383,21 @@ class BoardConfigTests {
                 IllegalStateException.class,
                 () -> BoardConfig.fromJson("{", "data/custom.json"),
                 "Битый JSON обязан падать с путём файла: настройщик обязан увидеть, какой файл "
-                        + "исправить, а не гадать");
+                        + "исправить, а не гадать Иначе тест fromJson_BrokenJson_FailsNamingOrigin перестанет ловить эту поломку. При смене fromJson_BrokenJson_FailsNamingOrigin проверь это утверждение.");
     }
 
     @Test
     void fromJson_EmptyTables_AreAllowed() {
         BoardConfig config = BoardConfig.fromJson("{}", "board.json");
-
         assertTrue(
                 config.priorities().isEmpty()
                         && config.modifiers().isEmpty()
                         && config.intervals().isEmpty(),
                 "Пустые таблицы допустимы: недостающее добирают значения по умолчанию из "
-                        + "BoardRules, BoardPriorities и BoardTuning");
+                        + "BoardRules, BoardPriorities и BoardTuning Иначе тест fromJson_EmptyTables_AreAllowed перестанет ловить эту поломку. При смене fromJson_EmptyTables_AreAllowed проверь это утверждение.");
         assertTrue(
                 BoardRules.priorityOf(BoardCase.REPAIR_FENCE) > BoardRules.priorityOf(BoardCase.ENCHANT_SHELVES),
                 "Без строки в таблице работает порядок по умолчанию: ремонт ограждения раньше полок, доска не "
-                        + "падает на пустом файле");
+                        + "падает на пустом файле Иначе тест fromJson_EmptyTables_AreAllowed перестанет ловить эту поломку. При смене fromJson_EmptyTables_AreAllowed проверь это утверждение.");
     }
 }

@@ -58,13 +58,11 @@ class CrossBattleWorkScenarioTests {
                 calmTickets, ticket -> ticket.id().startsWith("graph:building:hut"), "В сцене нет стройки хижины");
         GraphTickets.Ticket chop =
                 ticket(calmTickets, ticket -> ticket.node().startsWith("chop_"), "В сцене нет рубки");
-
         Board board = new Board(() -> 0);
         board.submit(boardTicket(build));
         board.submit(boardTicket(chop));
         board.claim(build.id(), id("spirit-1"), 0);
         board.claim(chop.id(), id("spirit-2"), 0);
-
         GraphFacts danger = facts(
                 named(spirit("spirit-1", 4, 20), spirit("spirit-2")),
                 List.of(
@@ -82,52 +80,62 @@ class CrossBattleWorkScenarioTests {
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("Нет бегства в графе: " + dangerTickets.post()));
         board.submit(boardTicket(retreat));
-
-        assertEquals(List.of(), ahead(plan, defend), "Раненый дух под мобами получает защиту на потолке: " + ids(plan));
+        assertEquals(
+                List.of(),
+                ahead(plan, defend),
+                "Раненый дух под мобами получает защиту на потолке:  Иначе тест combat_MobsAtBuilderAndChopper_RetreatPreemptsWork перестанет ловить эту поломку. При смене combat_MobsAtBuilderAndChopper_RetreatPreemptsWork проверь это утверждение."
+                        + ids(plan));
         assertTrue(
                 plan.task("building:hut").filter(GraphPlan.Task::feasible).isPresent(),
-                "Стройка не исчезает из графа при угрозе: " + ids(plan));
+                "Стройка не исчезает из графа при угрозе:  Иначе тест combat_MobsAtBuilderAndChopper_RetreatPreemptsWork перестанет ловить эту поломку. При смене combat_MobsAtBuilderAndChopper_RetreatPreemptsWork проверь это утверждение."
+                        + ids(plan));
         assertTrue(
                 plan.task(chop.node()).filter(GraphPlan.Task::feasible).isPresent(),
-                "Рубка не исчезает из графа при угрозе: " + ids(plan));
+                "Рубка не исчезает из графа при угрозе:  Иначе тест combat_MobsAtBuilderAndChopper_RetreatPreemptsWork перестанет ловить эту поломку. При смене combat_MobsAtBuilderAndChopper_RetreatPreemptsWork проверь это утверждение."
+                        + ids(plan));
         DispatchRound round = new DispatchRound(board, 0);
         DispatchRound.Candidate builder = new DispatchRound.Candidate(
                 id("spirit-1"), "spirit-1", "build_schematic", List.of(), FED, SpiritView.free(), false, List.of());
         DispatchRound.Candidate chopper = new DispatchRound.Candidate(
                 id("spirit-2"), "spirit-2", "chop_tree", List.of(), FED, SpiritView.free(), false, List.of());
-
         assertTrue(
                 round.choose(boardTicket(retreat), List.of(builder)).isPresent(),
-                "Раненый строитель бросает хижину и уходит от мобов");
+                "Раненый строитель бросает хижину и уходит от мобов Иначе тест combat_MobsAtBuilderAndChopper_RetreatPreemptsWork перестанет ловить эту поломку. При смене combat_MobsAtBuilderAndChopper_RetreatPreemptsWork проверь это утверждение.");
         assertEquals(
                 BoardStatus.PENDING,
                 board.statusOf(build.id()).orElseThrow(),
-                "Вытесненная стройка возвращается на доску, а не держится за бегущим духом");
+                "Вытесненная стройка возвращается на доску, а не держится за бегущим духом Иначе тест combat_MobsAtBuilderAndChopper_RetreatPreemptsWork перестанет ловить эту поломку. При смене combat_MobsAtBuilderAndChopper_RetreatPreemptsWork проверь это утверждение.");
         assertEquals(
                 List.of(build.id()),
                 round.drainDisplaced(id("spirit-1")).stream()
                         .map(BoardTicket::id)
                         .toList(),
-                "Мод получает снятую стройку, чтобы остановить действие духа");
+                "Мод получает снятую стройку, чтобы остановить действие духа Иначе тест combat_MobsAtBuilderAndChopper_RetreatPreemptsWork перестанет ловить эту поломку. При смене combat_MobsAtBuilderAndChopper_RetreatPreemptsWork проверь это утверждение.");
         assertTrue(
                 round.refusal(boardTicket(retreat), builder).isEmpty(),
-                "После вытеснения строитель свободен для бегства: " + round.refusal(boardTicket(retreat), builder));
+                "После вытеснения строитель свободен для бегства:  Иначе тест combat_MobsAtBuilderAndChopper_RetreatPreemptsWork перестанет ловить эту поломку. При смене combat_MobsAtBuilderAndChopper_RetreatPreemptsWork проверь это утверждение."
+                        + round.refusal(boardTicket(retreat), builder));
         assertEquals(
                 BoardStatus.ASSIGNED,
                 board.statusOf(chop.id()).orElseThrow(),
-                "Рубка второго духа не снята: он не цель бегства");
+                "Рубка второго духа не снята: он не цель бегства Иначе тест combat_MobsAtBuilderAndChopper_RetreatPreemptsWork перестанет ловить эту поломку. При смене combat_MobsAtBuilderAndChopper_RetreatPreemptsWork проверь это утверждение.");
         Optional<String> chopperRefusal = round.refusal(boardTicket(retreat), chopper);
-        assertTrue(chopperRefusal.isPresent(), "Рубящий без выбора бегства остаётся занят: " + chopperRefusal);
+        assertTrue(
+                chopperRefusal.isPresent(),
+                "Рубящий без выбора бегства остаётся занят:  Иначе тест combat_MobsAtBuilderAndChopper_RetreatPreemptsWork перестанет ловить эту поломку. При смене combat_MobsAtBuilderAndChopper_RetreatPreemptsWork проверь это утверждение."
+                        + chopperRefusal);
         assertTrue(
                 chopperRefusal.orElseThrow().contains("занят"),
-                "Отказ рубящему называет занятость рубкой: " + chopperRefusal);
+                "Отказ рубящему называет занятость рубкой:  Иначе тест combat_MobsAtBuilderAndChopper_RetreatPreemptsWork перестанет ловить эту поломку. При смене combat_MobsAtBuilderAndChopper_RetreatPreemptsWork проверь это утверждение."
+                        + chopperRefusal);
         assertEquals(
                 BoardCase.ACTIVITY_DEFEND,
                 BoardActivities.caseOfScript("defend").orElseThrow(),
-                "Защита выполняется скриптом defend");
+                "Защита выполняется скриптом defend Иначе тест combat_MobsAtBuilderAndChopper_RetreatPreemptsWork перестанет ловить эту поломку. При смене combat_MobsAtBuilderAndChopper_RetreatPreemptsWork проверь это утверждение.");
         assertTrue(
                 scripts(BoardCase.BUILD_HOUSE).contains("build_schematic"),
-                "Стройка под мобами остаётся схемой build_schematic: " + scripts(BoardCase.BUILD_HOUSE));
+                "Стройка под мобами остаётся схемой build_schematic:  Иначе тест combat_MobsAtBuilderAndChopper_RetreatPreemptsWork перестанет ловить эту поломку. При смене combat_MobsAtBuilderAndChopper_RetreatPreemptsWork проверь это утверждение."
+                        + scripts(BoardCase.BUILD_HOUSE));
     }
 
     @Test
@@ -146,13 +154,18 @@ class CrossBattleWorkScenarioTests {
                 new GraphSiteFacts.Terrain(2, 0, 0, 2, 0, Map.of(), Map.of("minecraft:dirt", 4), Map.of()),
                 Map.of());
         GraphPlan plan = plan(world, facts);
-
         GraphPlan.Task defend = task(plan, "event:life_threat:defend");
         GraphPlan.Task rescue = task(plan, "rescue_spirit");
         GraphPlan.Task retreat = task(plan, "event:life_threat:retreat");
-
-        assertEquals(List.of(), ahead(plan, defend), "Мобы у раненого духа поднимают защиту на потолок: " + ids(plan));
-        assertTrue(rescue.feasible(), "Застрявший в яме дух получает спасение: " + ids(plan));
+        assertEquals(
+                List.of(),
+                ahead(plan, defend),
+                "Мобы у раненого духа поднимают защиту на потолок:  Иначе тест combat_PitTrappedSpiritUnderMobs_RescueWaitsForDefend перестанет ловить эту поломку. При смене combat_PitTrappedSpiritUnderMobs_RescueWaitsForDefend проверь это утверждение."
+                        + ids(plan));
+        assertTrue(
+                rescue.feasible(),
+                "Застрявший в яме дух получает спасение:  Иначе тест combat_PitTrappedSpiritUnderMobs_RescueWaitsForDefend перестанет ловить эту поломку. При смене combat_PitTrappedSpiritUnderMobs_RescueWaitsForDefend проверь это утверждение."
+                        + ids(plan));
         assertTrue(retreat.feasible(), "Бегство из-под мобов тоже на доске: " + ids(plan));
         assertTrue(defend.priority() > rescue.priority(), "Сначала бой, потом спасение из ямы: " + ids(plan));
         assertEquals(
@@ -182,11 +195,9 @@ class CrossBattleWorkScenarioTests {
                 GraphSiteFacts.Terrain.empty(),
                 Map.of());
         GraphPlan plan = plan(world, facts);
-
         GraphPlan.Task defend = task(plan, "event:life_threat:defend");
         GraphPlan.Task eat = task(plan, "event:life_threat:eat");
         GraphPlan.Task mine = task(plan, "mine_coal");
-
         assertEquals(
                 List.of(),
                 ahead(plan, defend),
@@ -219,12 +230,10 @@ class CrossBattleWorkScenarioTests {
                 GraphSiteFacts.Terrain.empty(),
                 Map.of("fence", damaged("fence", 40, 3, Map.of("oak_fence", 5))));
         GraphPlan plan = plan(world, facts);
-
         GraphPlan.Task defend = task(plan, "event:life_threat:defend");
         GraphPlan.Task expedition = task(plan, "event:expedition_ready:expedition");
         GraphPlan.Task repair = task(plan, "event:repair_fence:repair:fence");
         GraphPlan.Task guard = task(plan, "event:more4_player_near:more4_guard_settlement");
-
         assertEquals(List.of(), ahead(plan, defend), "Набег поднимает защиту на потолок: " + ids(plan));
         assertTrue(expedition.feasible(), "Готовый поход не отменяется набегом: " + ids(plan));
         assertTrue(repair.feasible(), "Побитый забор остаётся выполнимым ремонтом: " + ids(plan));
@@ -241,7 +250,6 @@ class CrossBattleWorkScenarioTests {
                 BoardCase.ACTIVITY_EXPEDITION,
                 BoardActivities.caseOfScript("follow").orElseThrow(),
                 "Поход выполняется действием follow/escort");
-
         GateCrossing gate = new GateCrossing(new BlockCoord(5, 64, 0), new BlockCoord(0, 64, 0));
         assertEquals(
                 GateCrossing.Phase.INSIDE,
@@ -271,11 +279,9 @@ class CrossBattleWorkScenarioTests {
                 GraphSiteFacts.Terrain.empty(),
                 Map.of());
         GraphPlan plan = plan(world, facts);
-
         GraphPlan.Task rescue = task(plan, "rescue_spirit");
         GraphPlan.Task expedition = task(plan, "event:expedition_ready:expedition");
         GraphPlan.Task hut = task(plan, "building:hut");
-
         assertTrue(rescue.feasible(), "Застрявший дух получает спасение: " + ids(plan));
         assertTrue(rescue.priority() > expedition.priority(), "Спасение жизни выше похода: " + ids(plan));
         assertTrue(hut.feasible(), "Стройка хижины остаётся на доске рядом со спасением: " + ids(plan));

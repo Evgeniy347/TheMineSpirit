@@ -21,14 +21,30 @@ class StuckSpiritsTests {
         stuck.mark(SPIRIT, 140, "застрял (-188.5, 67.0, -516) у двора");
 
         List<StuckSpirits.Change> changes = stuck.drainChanges();
-        assertEquals(1, changes.size(), "Постановка метки пишется в лог изменений ровно один раз: " + changes);
-        assertEquals(SPIRIT, changes.get(0).spirit(), "Запись метки принадлежит застрявшему духу");
-        assertEquals(140, changes.get(0).tick(), "Запись называет тик постановки");
-        assertEquals(AT, changes.get(0).at(), "Запись называет место застревания");
-        assertTrue(changes.get(0).marked(), "Запись говорит, что метка поставлена");
+        assertEquals(
+                1,
+                changes.size(),
+                "Постановка метки пишется в лог изменений ровно один раз:  Иначе тест mark_WithReason_RecordsChangeAndTick перестанет ловить эту поломку. При смене mark_WithReason_RecordsChangeAndTick проверь это утверждение."
+                        + changes);
+        assertEquals(
+                SPIRIT,
+                changes.get(0).spirit(),
+                "Запись метки принадлежит застрявшему духу Иначе тест mark_WithReason_RecordsChangeAndTick перестанет ловить эту поломку. При смене mark_WithReason_RecordsChangeAndTick проверь это утверждение.");
+        assertEquals(
+                140,
+                changes.get(0).tick(),
+                "Запись называет тик постановки Иначе тест mark_WithReason_RecordsChangeAndTick перестанет ловить эту поломку. При смене mark_WithReason_RecordsChangeAndTick проверь это утверждение.");
+        assertEquals(
+                AT,
+                changes.get(0).at(),
+                "Запись называет место застревания Иначе тест mark_WithReason_RecordsChangeAndTick перестанет ловить эту поломку. При смене mark_WithReason_RecordsChangeAndTick проверь это утверждение.");
+        assertTrue(
+                changes.get(0).marked(),
+                "Запись говорит, что метка поставлена Иначе тест mark_WithReason_RecordsChangeAndTick перестанет ловить эту поломку. При смене mark_WithReason_RecordsChangeAndTick проверь это утверждение.");
         assertTrue(
                 changes.get(0).reason().contains("двор"),
-                "Причина постановки сохраняется целиком: " + changes.get(0).reason());
+                "Причина постановки сохраняется целиком:  Иначе тест mark_WithReason_RecordsChangeAndTick перестанет ловить эту поломку. При смене mark_WithReason_RecordsChangeAndTick проверь это утверждение."
+                        + changes.get(0).reason());
     }
 
     @Test
@@ -40,8 +56,15 @@ class StuckSpiritsTests {
         stuck.mark(SPIRIT, 300, "второй провал");
 
         List<StuckSpirits.Change> changes = stuck.drainChanges();
-        assertEquals(1, changes.size(), "Повторный провал не переставляет метку и не заливает лог: " + changes);
-        assertEquals(140, stuck.of(SPIRIT, 300).orElseThrow().since(), "Тик застревания остаётся первым");
+        assertEquals(
+                1,
+                changes.size(),
+                "Повторный провал не переставляет метку и не заливает лог:  Иначе тест mark_Repeated_DoesNotDuplicateLog перестанет ловить эту поломку. При смене mark_Repeated_DoesNotDuplicateLog проверь это утверждение."
+                        + changes);
+        assertEquals(
+                140,
+                stuck.of(SPIRIT, 300).orElseThrow().since(),
+                "Тик застревания остаётся первым Иначе тест mark_Repeated_DoesNotDuplicateLog перестанет ловить эту поломку. При смене mark_Repeated_DoesNotDuplicateLog проверь это утверждение.");
     }
 
     @Test
@@ -57,10 +80,10 @@ class StuckSpiritsTests {
         assertTrue(
                 stuck.isStuck(SPIRIT, 240),
                 "Блуждание по яме глубже порога — не выход: метка держится, иначе rescue закрывается без спасения "
-                        + "(observe24 B1)");
+                        + "(observe24 B1) При смене see_WanderingInsideDeepPit_KeepsMark проверь это утверждение.");
         assertTrue(
                 stuck.drainChanges().isEmpty(),
-                "Сдвиг внутри ловушки не пишется как снятие метки: лог обязан показывать реальный выход");
+                "Сдвиг внутри ловушки не пишется как снятие метки: лог обязан показывать реальный выход Иначе тест see_WanderingInsideDeepPit_KeepsMark перестанет ловить эту поломку. При смене see_WanderingInsideDeepPit_KeepsMark проверь это утверждение.");
     }
 
     @Test
@@ -72,14 +95,25 @@ class StuckSpiritsTests {
 
         stuck.see(SPIRIT, new BlockCoord(AT.x() + 7, AT.y(), AT.z()), 220, true);
 
-        assertFalse(stuck.isStuck(SPIRIT, 220), "Выход на поверхность снимает метку: дух больше не в ловушке");
+        assertFalse(
+                stuck.isStuck(SPIRIT, 220),
+                "Выход на поверхность снимает метку: дух больше не в ловушке Иначе тест see_ReachedSurface_ReleasesWithEscapeReason перестанет ловить эту поломку. При смене see_ReachedSurface_ReleasesWithEscapeReason проверь это утверждение.");
         List<StuckSpirits.Change> changes = stuck.drainChanges();
-        assertEquals(1, changes.size(), "Снятие метки пишется в лог: " + changes);
-        assertFalse(changes.get(0).marked(), "Запись говорит, что метка снята");
-        assertEquals(220, changes.get(0).tick(), "Запись называет тик снятия");
+        assertEquals(
+                1,
+                changes.size(),
+                "Снятие метки пишется в лог:  Иначе тест see_ReachedSurface_ReleasesWithEscapeReason перестанет ловить эту поломку. При смене see_ReachedSurface_ReleasesWithEscapeReason проверь это утверждение."
+                        + changes);
+        assertFalse(
+                changes.get(0).marked(),
+                "Запись говорит, что метка снята Иначе тест see_ReachedSurface_ReleasesWithEscapeReason перестанет ловить эту поломку. При смене see_ReachedSurface_ReleasesWithEscapeReason проверь это утверждение.");
+        assertEquals(
+                220,
+                changes.get(0).tick(),
+                "Запись называет тик снятия Иначе тест see_ReachedSurface_ReleasesWithEscapeReason перестанет ловить эту поломку. При смене see_ReachedSurface_ReleasesWithEscapeReason проверь это утверждение.");
         assertTrue(
                 changes.get(0).reason().startsWith("вышел на поверхность"),
-                "Причина снятия — выход на поверхность, а не сдвиг: "
+                "Причина снятия — выход на поверхность, а не сдвиг:  Иначе тест see_ReachedSurface_ReleasesWithEscapeReason перестанет ловить эту поломку. При смене see_ReachedSurface_ReleasesWithEscapeReason проверь это утверждение."
                         + changes.get(0).reason());
     }
 
@@ -92,12 +126,19 @@ class StuckSpiritsTests {
 
         stuck.release(SPIRIT, 400, "выход выполнен заданием rescue:" + SPIRIT);
 
-        assertFalse(stuck.isStuck(SPIRIT, 400), "Явное освобождение снимает метку");
+        assertFalse(
+                stuck.isStuck(SPIRIT, 400),
+                "Явное освобождение снимает метку Иначе тест release_WithReason_RecordsChange перестанет ловить эту поломку. При смене release_WithReason_RecordsChange проверь это утверждение.");
         List<StuckSpirits.Change> changes = stuck.drainChanges();
-        assertEquals(1, changes.size(), "Явное освобождение пишется в лог: " + changes);
+        assertEquals(
+                1,
+                changes.size(),
+                "Явное освобождение пишется в лог:  Иначе тест release_WithReason_RecordsChange перестанет ловить эту поломку. При смене release_WithReason_RecordsChange проверь это утверждение."
+                        + changes);
         assertTrue(
                 changes.get(0).reason().contains("rescue:" + SPIRIT),
-                "Причина снятия называет выполненный выход: " + changes.get(0).reason());
+                "Причина снятия называет выполненный выход:  Иначе тест release_WithReason_RecordsChange перестанет ловить эту поломку. При смене release_WithReason_RecordsChange проверь это утверждение."
+                        + changes.get(0).reason());
     }
 
     @Test
@@ -109,20 +150,25 @@ class StuckSpiritsTests {
 
         assertTrue(
                 stuck.isStuck(SPIRIT, 140 + BoardTuning.STUCK_TTL_TICKS - 1),
-                "До предела метка «пути нет» держится: выход ещё можно поставить");
+                "До предела метка «пути нет» держится: выход ещё можно поставить Иначе тест of_NoPathMarkExpired_SpiritGetsWorkAgain перестанет ловить эту поломку. При смене of_NoPathMarkExpired_SpiritGetsWorkAgain проверь это утверждение.");
         assertFalse(
                 stuck.isStuck(SPIRIT, 140 + BoardTuning.STUCK_TTL_TICKS),
                 "«Пути нет» истекает, как и обычная метка: иначе idle-дух навсегда выпадает из раздачи "
-                        + "(observe25 B1, 4 из 6 духов стояли 20 минут)");
+                        + "(observe25 B1, 4 из 6 духов стояли 20 минут) При смене of_NoPathMarkExpired_SpiritGetsWorkAgain проверь это утверждение.");
         List<StuckSpirits.Change> changes = stuck.drainChanges();
-        assertEquals(1, changes.size(), "Истечение метки «пути нет» пишется в лог: " + changes);
+        assertEquals(
+                1,
+                changes.size(),
+                "Истечение метки «пути нет» пишется в лог:  Иначе тест of_NoPathMarkExpired_SpiritGetsWorkAgain перестанет ловить эту поломку. При смене of_NoPathMarkExpired_SpiritGetsWorkAgain проверь это утверждение."
+                        + changes);
         assertTrue(
                 changes.get(0).reason().startsWith("истекла"),
-                "Причина истечения названа честно: " + changes.get(0).reason());
+                "Причина истечения названа честно:  Иначе тест of_NoPathMarkExpired_SpiritGetsWorkAgain перестанет ловить эту поломку. При смене of_NoPathMarkExpired_SpiritGetsWorkAgain проверь это утверждение."
+                        + changes.get(0).reason());
         stuck.see(SPIRIT, new BlockCoord(AT.x() + 7, AT.y(), AT.z()), 141 + BoardTuning.STUCK_TTL_TICKS, true);
         assertFalse(
                 stuck.isStuck(SPIRIT, 141 + BoardTuning.STUCK_TTL_TICKS),
-                "Выход на поверхность после истечения метки не заводит её заново");
+                "Выход на поверхность после истечения метки не заводит её заново Иначе тест of_NoPathMarkExpired_SpiritGetsWorkAgain перестанет ловить эту поломку. При смене of_NoPathMarkExpired_SpiritGetsWorkAgain проверь это утверждение.");
     }
 
     @Test
@@ -136,11 +182,11 @@ class StuckSpiritsTests {
                 stuck.of(SPIRIT, 140 + BoardTuning.STUCK_TTL_TICKS - 1)
                         .orElseThrow()
                         .noPath(),
-                "Поздний провал «маршрут не найден» делает метку фактом «пути нет» для rescue");
+                "Поздний провал «маршрут не найден» делает метку фактом «пути нет» для rescue Иначе тест mark_MovementThenNoPath_UpgradesButExpiresFromFirstTick перестанет ловить эту поломку. При смене mark_MovementThenNoPath_UpgradesButExpiresFromFirstTick проверь это утверждение.");
         assertFalse(
                 stuck.isStuck(SPIRIT, 140 + BoardTuning.STUCK_TTL_TICKS),
                 "Срок считается от первого застревания, а не продлевается каждым поздним провалом: "
-                        + "иначе карусель провалов держит духа в ловушке вечно (observe25 B1)");
+                        + "иначе карусель провалов держит духа в ловушке вечно (observe25 B1) При смене mark_MovementThenNoPath_UpgradesButExpiresFromFirstTick проверь это утверждение.");
     }
 
     @Test
@@ -158,9 +204,14 @@ class StuckSpiritsTests {
                 moved,
                 current.at(),
                 "Метка называет текущее место духа: waitReason обязан показывать живые координаты, "
-                        + "а не точку первой постановки (observe25 B15)");
-        assertEquals(140, current.since(), "Тик эпизода остаётся первым: сдвиг внутри ямы не выход");
-        assertTrue(stuck.drainChanges().isEmpty(), "Сдвиг внутри ямы не пишется как снятие метки");
+                        + "а не точку первой постановки (observe25 B15) Иначе тест see_MovedInsidePit_UpdatesCoordinatesForWaitReason перестанет ловить эту поломку. При смене see_MovedInsidePit_UpdatesCoordinatesForWaitReason проверь это утверждение.");
+        assertEquals(
+                140,
+                current.since(),
+                "Тик эпизода остаётся первым: сдвиг внутри ямы не выход Иначе тест see_MovedInsidePit_UpdatesCoordinatesForWaitReason перестанет ловить эту поломку. При смене see_MovedInsidePit_UpdatesCoordinatesForWaitReason проверь это утверждение.");
+        assertTrue(
+                stuck.drainChanges().isEmpty(),
+                "Сдвиг внутри ямы не пишется как снятие метки Иначе тест see_MovedInsidePit_UpdatesCoordinatesForWaitReason перестанет ловить эту поломку. При смене see_MovedInsidePit_UpdatesCoordinatesForWaitReason проверь это утверждение.");
     }
 
     @Test
@@ -176,12 +227,13 @@ class StuckSpiritsTests {
         assertFalse(
                 restored.isStuck(SPIRIT, loaded),
                 "Метка «пути нет», пережившая свой срок до загрузки, снимается: иначе после рестарта дух "
-                        + "снова стоит без работы (observe25 B1)");
+                        + "снова стоит без работы (observe25 B1) При смене restore_StaleNoPathMark_DroppedAtLoad проверь это утверждение.");
         List<StuckSpirits.Change> changes = restored.drainChanges();
         assertTrue(
                 changes.stream()
                         .anyMatch(change -> !change.marked() && change.reason().contains("до загрузки")),
-                "Снятие устаревшей метки при загрузке попадает в лог: " + changes);
+                "Снятие устаревшей метки при загрузке попадает в лог:  Иначе тест restore_StaleNoPathMark_DroppedAtLoad перестанет ловить эту поломку. При смене restore_StaleNoPathMark_DroppedAtLoad проверь это утверждение."
+                        + changes);
     }
 
     @Test
@@ -196,11 +248,11 @@ class StuckSpiritsTests {
 
         assertTrue(
                 restored.isStuck(SPIRIT, 140 + BoardTuning.STUCK_TTL_TICKS - 1),
-                "Свежая метка переживает загрузку: выход ещё можно поставить");
+                "Свежая метка переживает загрузку: выход ещё можно поставить Иначе тест restore_FreshNoPathMark_ExpiresByOriginalTickNotLoadTick перестанет ловить эту поломку. При смене restore_FreshNoPathMark_ExpiresByOriginalTickNotLoadTick проверь это утверждение.");
         assertFalse(
                 restored.isStuck(SPIRIT, 140 + BoardTuning.STUCK_TTL_TICKS),
                 "Загрузка не переносит срок метки на свой тик: иначе каждый рестарт продлевал бы запрет "
-                        + "навсегда (observe25 B1)");
+                        + "навсегда (observe25 B1) При смене restore_FreshNoPathMark_ExpiresByOriginalTickNotLoadTick проверь это утверждение.");
     }
 
     @Test
@@ -213,7 +265,7 @@ class StuckSpiritsTests {
         assertTrue(
                 stuck.relapsed(SPIRIT, new BlockCoord(AT.x() + 2, AT.y(), AT.z()), 400),
                 "Дух снова в той же ловушке после спасения: память неудач не даёт крутить self-rescue "
-                        + "по кругу (observe25 B6)");
+                        + "по кругу (observe25 B6) Иначе тест rescued_ReturnToSamePit_Relapses перестанет ловить эту поломку. При смене rescued_ReturnToSamePit_Relapses проверь это утверждение.");
     }
 
     @Test
@@ -225,7 +277,7 @@ class StuckSpiritsTests {
 
         assertFalse(
                 stuck.relapsed(SPIRIT, new BlockCoord(AT.x() + 40, AT.y(), AT.z()), 400),
-                "Издалека это новый случай, а не возврат в ту же ловушку: память не запирает духа навсегда");
+                "Издалека это новый случай, а не возврат в ту же ловушку: память не запирает духа навсегда Иначе тест rescued_FarFromPit_NoRelapse перестанет ловить эту поломку. При смене rescued_FarFromPit_NoRelapse проверь это утверждение.");
     }
 
     @Test
@@ -237,6 +289,6 @@ class StuckSpiritsTests {
 
         assertFalse(
                 stuck.relapsed(SPIRIT, AT, 200 + 12_001),
-                "Окно памяти конечно: спустя время попытку спасения можно повторить");
+                "Окно памяти конечно: спустя время попытку спасения можно повторить Иначе тест rescued_AfterWindow_NoRelapse перестанет ловить эту поломку. При смене rescued_AfterWindow_NoRelapse проверь это утверждение.");
     }
 }

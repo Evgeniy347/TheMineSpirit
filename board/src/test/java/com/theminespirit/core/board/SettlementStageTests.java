@@ -31,7 +31,10 @@ class SettlementStageTests {
 
     @Test
     void of_NothingBuilt_FirstStage() {
-        assertEquals(1, SettlementStage.of(new BoardLedger()), "До построек поселение на первом этапе");
+        assertEquals(
+                1,
+                SettlementStage.of(new BoardLedger()),
+                "До построек поселение на первом этапе Иначе тест of_NothingBuilt_FirstStage перестанет ловить эту поломку. При смене of_NothingBuilt_FirstStage проверь это утверждение.");
     }
 
     @Test
@@ -39,18 +42,19 @@ class SettlementStageTests {
         BoardLedger ledger = new BoardLedger();
         ledger.note(BoardCase.BUILD_HOUSE, 1);
         ledger.note(BoardCase.BUILD_HOUSE, 2);
-
-        assertEquals(1, SettlementStage.of(ledger), "Этап — по всем постройкам этапа, а не по уровню дома");
+        assertEquals(
+                1,
+                SettlementStage.of(ledger),
+                "Этап — по всем постройкам этапа, а не по уровню дома Иначе тест of_HouseLevelTwoAlone_StaysFirstStage перестанет ловить эту поломку. При смене of_HouseLevelTwoAlone_StaysFirstStage проверь это утверждение.");
     }
 
     @Test
     void of_AllFirstStageBuilt_SecondStage() {
         BoardLedger ledger = firstStageBuilt();
-
         assertEquals(
                 2,
                 SettlementStage.of(ledger),
-                "Расчистка, шахта, забор, сад, дом, склад и улицы 1 — переход на этап 2");
+                "Расчистка, шахта, забор, сад, дом, склад и улицы 1 — переход на этап 2 Иначе тест of_AllFirstStageBuilt_SecondStage перестанет ловить эту поломку. При смене of_AllFirstStageBuilt_SecondStage проверь это утверждение.");
         assertEquals(
                 Map.ofEntries(
                         Map.entry("BUILD_MINE", 2),
@@ -69,7 +73,7 @@ class SettlementStageTests {
                         Map.entry("well", 1),
                         Map.entry("workshop", 1)),
                 SettlementStage.missing(ledger),
-                "Остаток этапа 2 — постройки уровня 2 и весь план этапа из stages.json");
+                "Остаток этапа 2 — постройки уровня 2 и весь план этапа из stages.json Иначе тест of_AllFirstStageBuilt_SecondStage перестанет ловить эту поломку. При смене of_AllFirstStageBuilt_SecondStage проверь это утверждение.");
     }
 
     @Test
@@ -90,12 +94,19 @@ class SettlementStageTests {
                 "building:well:1",
                 "building:lumber_yard:1",
                 "building:workshop:1"));
-
         Map<?, ?> missing = SettlementStage.missing(ledger);
-
-        assertEquals(2, SettlementStage.of(ledger), "Без амбара этап 2 не закрыт: состав этапа — план поселения");
-        assertEquals(Set.of("barn"), missing.keySet(), "Остаток этапа 2 называет амбар, а не три кейса доски");
-        assertEquals(1, missing.get("barn"), "Амбар этапа 2 — уровень 1");
+        assertEquals(
+                2,
+                SettlementStage.of(ledger),
+                "Без амбара этап 2 не закрыт: состав этапа — план поселения Иначе тест missing_SecondStageWithoutBarn_StageTwo перестанет ловить эту поломку. При смене missing_SecondStageWithoutBarn_StageTwo проверь это утверждение.");
+        assertEquals(
+                Set.of("barn"),
+                missing.keySet(),
+                "Остаток этапа 2 называет амбар, а не три кейса доски Иначе тест missing_SecondStageWithoutBarn_StageTwo перестанет ловить эту поломку. При смене missing_SecondStageWithoutBarn_StageTwo проверь это утверждение.");
+        assertEquals(
+                1,
+                missing.get("barn"),
+                "Амбар этапа 2 — уровень 1 Иначе тест missing_SecondStageWithoutBarn_StageTwo перестанет ловить эту поломку. При смене missing_SecondStageWithoutBarn_StageTwo проверь это утверждение.");
     }
 
     @Test
@@ -106,28 +117,44 @@ class SettlementStageTests {
                 ledger.note(boardCase, 1);
             }
         }
-
-        assertEquals(1, SettlementStage.of(ledger), "Без забора первый этап не пройден");
-        assertEquals(Map.of("BUILD_FENCE", 1), SettlementStage.missing(ledger), "Остаток — забор");
+        assertEquals(
+                1,
+                SettlementStage.of(ledger),
+                "Без забора первый этап не пройден Иначе тест missing_FirstStageWithoutFence_ListsFence перестанет ловить эту поломку. При смене missing_FirstStageWithoutFence_ListsFence проверь это утверждение.");
+        assertEquals(
+                Map.of("BUILD_FENCE", 1),
+                SettlementStage.missing(ledger),
+                "Остаток — забор Иначе тест missing_FirstStageWithoutFence_ListsFence перестанет ловить эту поломку. При смене missing_FirstStageWithoutFence_ListsFence проверь это утверждение.");
     }
 
     @Test
     void allows_LevelAboveStage_Locked() {
         BoardLedger ledger = new BoardLedger();
-
-        assertTrue(SettlementStage.allows(BoardCase.BUILD_MINE, 1, ledger), "Уровень 1 открыт с первого этапа");
-        assertFalse(SettlementStage.allows(BoardCase.BUILD_MINE, 2, ledger), "Шахта 2 — только с этапа 2");
-        assertFalse(SettlementStage.allows(BoardCase.BUILD_HOUSE, 2, ledger), "Дом 2 до этапа 2 не строится");
-        assertTrue(SettlementStage.allows(BoardCase.BUILD_MINE, 2, firstStageBuilt()), "Этап 2 открыл шахту 2");
+        assertTrue(
+                SettlementStage.allows(BoardCase.BUILD_MINE, 1, ledger),
+                "Уровень 1 открыт с первого этапа Иначе тест allows_LevelAboveStage_Locked перестанет ловить эту поломку. При смене allows_LevelAboveStage_Locked проверь это утверждение.");
+        assertFalse(
+                SettlementStage.allows(BoardCase.BUILD_MINE, 2, ledger),
+                "Шахта 2 — только с этапа 2 Иначе тест allows_LevelAboveStage_Locked перестанет ловить эту поломку. При смене allows_LevelAboveStage_Locked проверь это утверждение.");
+        assertFalse(
+                SettlementStage.allows(BoardCase.BUILD_HOUSE, 2, ledger),
+                "Дом 2 до этапа 2 не строится Иначе тест allows_LevelAboveStage_Locked перестанет ловить эту поломку. При смене allows_LevelAboveStage_Locked проверь это утверждение.");
+        assertTrue(
+                SettlementStage.allows(BoardCase.BUILD_MINE, 2, firstStageBuilt()),
+                "Этап 2 открыл шахту 2 Иначе тест allows_LevelAboveStage_Locked перестанет ловить эту поломку. При смене allows_LevelAboveStage_Locked проверь это утверждение.");
     }
 
     @Test
     void submit_LevelAboveStage_StageLocked() {
         Board board = new Board(() -> 0L);
         BoardOutcome outcome = board.submit(mine(2));
-
-        assertEquals(BoardOutcome.STAGE_LOCKED, outcome, "Доска не ставит постройку уровня выше этапа");
-        assertTrue(board.find("mine_level_2").isEmpty(), "Запертая постройка не попадает в очередь");
+        assertEquals(
+                BoardOutcome.STAGE_LOCKED,
+                outcome,
+                "Доска не ставит постройку уровня выше этапа Иначе тест submit_LevelAboveStage_StageLocked перестанет ловить эту поломку. При смене submit_LevelAboveStage_StageLocked проверь это утверждение.");
+        assertTrue(
+                board.find("mine_level_2").isEmpty(),
+                "Запертая постройка не попадает в очередь Иначе тест submit_LevelAboveStage_StageLocked перестанет ловить эту поломку. При смене submit_LevelAboveStage_StageLocked проверь это утверждение.");
     }
 
     @Test
@@ -136,25 +163,31 @@ class SettlementStageTests {
         for (BoardCase boardCase : FIRST_STAGE) {
             board.ledger().note(boardCase, 1);
         }
-
-        assertEquals(BoardOutcome.ACCEPTED, board.submit(mine(2)), "Этап 2 открывает шахту 2");
+        assertEquals(
+                BoardOutcome.ACCEPTED,
+                board.submit(mine(2)),
+                "Этап 2 открывает шахту 2 Иначе тест submit_StageReached_Accepted перестанет ловить эту поломку. При смене submit_StageReached_Accepted проверь это утверждение.");
     }
 
     @Test
     void rules_StagesOutOfOrder_Rejected() {
         String json = "{\"stages\":[{\"stage\":2,\"buildings\":{}}]}";
-
-        assertThrows(IllegalStateException.class, () -> StageRules.parse(json, "test"), "Этапы — подряд с 1");
+        assertThrows(
+                IllegalStateException.class,
+                () -> StageRules.parse(json, "test"),
+                "Этапы — подряд с 1 Иначе тест rules_StagesOutOfOrder_Rejected перестанет ловить эту поломку. При смене rules_StagesOutOfOrder_Rejected проверь это утверждение.");
     }
 
     @Test
     void rules_Classpath_LevelsWithinCatalog() {
         for (StageRules.Stage stage : StageRules.load().stages()) {
             stage.buildings()
-                    .forEach((boardCase, level) -> assertTrue(
-                            level <= BuildingLevels.maxLevel(boardCase),
-                            "Этап " + stage.stage() + ": " + boardCase + " " + level + " выше уровней board.json — "
-                                    + "этап не пройти"));
+                    .forEach(
+                            (boardCase, level) -> assertTrue(
+                                    level <= BuildingLevels.maxLevel(boardCase),
+                                    "Этап " + stage.stage() + ": " + boardCase + " " + level
+                                            + " выше уровней board.json — "
+                                            + "этап не пройти Иначе тест rules_Classpath_LevelsWithinCatalog перестанет ловить эту поломку. При смене rules_Classpath_LevelsWithinCatalog проверь это утверждение."));
         }
     }
 
@@ -162,7 +195,6 @@ class SettlementStageTests {
     void rules_Classpath_HouseLevelSchemeOfItsStage() throws IOException {
         StageRules rules = StageRules.load();
         Path root = Path.of("mod/src/main/resources/" + PresetLibrary.SCHEMATICS_ROOT);
-
         for (int level = 1; level <= 2; level++) {
             String scheme = rules.scheme(BoardCase.BUILD_HOUSE, level).orElseThrow();
             Path file = root.resolve(scheme + ".txt");
@@ -173,32 +205,34 @@ class SettlementStageTests {
                     Optional.of(level),
                     stage,
                     "Дом уровня " + level + " (" + scheme + ") — схема этапа " + level + ": хижина этапа 1 строится из"
-                            + " дерева рядом, каменный дом — следующий этап (решение 54b п.1)");
+                            + " дерева рядом, каменный дом — следующий этап (решение 54b п.1) Иначе тест rules_Classpath_HouseLevelSchemeOfItsStage перестанет ловить эту поломку. При смене rules_Classpath_HouseLevelSchemeOfItsStage проверь это утверждение.");
         }
-        assertEquals(Optional.of("hut_1"), rules.scheme(BoardCase.BUILD_HOUSE, 1), "Дом этапа 1 — хижина");
+        assertEquals(
+                Optional.of("hut_1"),
+                rules.scheme(BoardCase.BUILD_HOUSE, 1),
+                "Дом этапа 1 — хижина Иначе тест rules_Classpath_HouseLevelSchemeOfItsStage перестанет ловить эту поломку. При смене rules_Classpath_HouseLevelSchemeOfItsStage проверь это утверждение.");
     }
 
     @Test
     void rules_ClasspathStagesThreeAndFour_SplitMandatoryAndOptional() {
         StageRules rules = StageRules.load();
-
         assertEquals(
                 Set.of("player_house", "forge", "bakery", "barracks"),
                 rules.stages().get(2).requires().keySet(),
-                "Третий этап держат жильё, кузница, пекарня и казарма: жильё, ремесло, еда, оборона");
+                "Третий этап держат жильё, кузница, пекарня и казарма: жильё, ремесло, еда, оборона Иначе тест rules_ClasspathStagesThreeAndFour_SplitMandatoryAndOptional перестанет ловить эту поломку. При смене rules_ClasspathStagesThreeAndFour_SplitMandatoryAndOptional проверь это утверждение.");
         assertEquals(
                 Set.of("kennel", "stable", "weaver"),
                 rules.stages().get(2).optional().keySet(),
                 "Псарня, конюшня и ткацкая — желательные: переход не держат. Пасека не в списке: её узел графа "
-                        + "ставит улей, а не схему постройки плана");
+                        + "ставит улей, а не схему постройки плана Иначе тест rules_ClasspathStagesThreeAndFour_SplitMandatoryAndOptional перестанет ловить эту поломку. При смене rules_ClasspathStagesThreeAndFour_SplitMandatoryAndOptional проверь это утверждение.");
         assertEquals(
                 Set.of("town_hall", "tavern", "infirmary", "training_yard"),
                 rules.stages().get(3).requires().keySet(),
-                "Четвёртый этап держат ратуша, таверна, лазарет и плац");
+                "Четвёртый этап держат ратуша, таверна, лазарет и плац Иначе тест rules_ClasspathStagesThreeAndFour_SplitMandatoryAndOptional перестанет ловить эту поломку. При смене rules_ClasspathStagesThreeAndFour_SplitMandatoryAndOptional проверь это утверждение.");
         assertEquals(
                 Set.of("enchant_room", "alchemy", "library"),
                 rules.stages().get(3).optional().keySet(),
-                "Чаровальня, алхимия и библиотека — желательные: переход не держат");
+                "Чаровальня, алхимия и библиотека — желательные: переход не держат Иначе тест rules_ClasspathStagesThreeAndFour_SplitMandatoryAndOptional перестанет ловить эту поломку. При смене rules_ClasspathStagesThreeAndFour_SplitMandatoryAndOptional проверь это утверждение.");
         for (int number = 3; number <= 4; number++) {
             int stage = number;
             rules.stages()
@@ -218,9 +252,7 @@ class SettlementStageTests {
     void parse_StageOptional_ParsedSeparately() {
         String json = "{\"stages\":[{\"stage\":1,\"buildings\":{},\"requires\":{\"barn\":1},"
                 + "\"optional\":{\"apiary\":1}}]}";
-
         StageRules rules = StageRules.parse(json, "тест");
-
         assertEquals(Map.of("barn", 1), rules.stages().get(0).requires(), "Обязательная постройка остаётся в requires");
         assertEquals(
                 Map.of("apiary", 1),
@@ -232,7 +264,6 @@ class SettlementStageTests {
     void parse_OptionalAlsoMandatory_Rejected() {
         String json = "{\"stages\":[{\"stage\":1,\"buildings\":{},\"requires\":{\"barn\":1},"
                 + "\"optional\":{\"barn\":1}}]}";
-
         assertThrows(
                 IllegalStateException.class,
                 () -> StageRules.parse(json, "тест"),
@@ -242,7 +273,6 @@ class SettlementStageTests {
     @Test
     void parse_SchemeOfUnknownCase_Rejected() {
         String json = "{\"stages\": [{\"stage\": 1, \"buildings\": {}}], \"schemes\": {\"NO_SUCH\": [\"hut_1\"]}}";
-
         assertThrows(
                 IllegalStateException.class,
                 () -> StageRules.parse(json, "тест"),

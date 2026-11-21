@@ -52,24 +52,33 @@ class CrossSettlementScenarioTests {
         GraphPlan.Task backfill = task(plan, "event:backfill:backfill");
         GraphPlan.Task house = task(plan, "building:hut");
 
-        assertTrue(backfill.feasible(), "Яма на участке дома засыпается: " + ids(plan));
-        assertTrue(house.feasible(), "Стройка дома не исчезает из-за ямы на участке: " + ids(plan));
+        assertTrue(
+                backfill.feasible(),
+                "Яма на участке дома засыпается:  Иначе тест fill_PitOnHouseLot_FillAndBuildStayPostedTogether перестанет ловить эту поломку. При смене fill_PitOnHouseLot_FillAndBuildStayPostedTogether проверь это утверждение."
+                        + ids(plan));
+        assertTrue(
+                house.feasible(),
+                "Стройка дома не исчезает из-за ямы на участке:  Иначе тест fill_PitOnHouseLot_FillAndBuildStayPostedTogether перестанет ловить эту поломку. При смене fill_PitOnHouseLot_FillAndBuildStayPostedTogether проверь это утверждение."
+                        + ids(plan));
         assertTrue(
                 scripts(BoardCase.FILL_CRATER).contains("fill"),
-                "Засыпка выполняется скриптом fill, а не выравниванием руками: " + scripts(BoardCase.FILL_CRATER));
+                "Засыпка выполняется скриптом fill, а не выравниванием руками:  Иначе тест fill_PitOnHouseLot_FillAndBuildStayPostedTogether перестанет ловить эту поломку. При смене fill_PitOnHouseLot_FillAndBuildStayPostedTogether проверь это утверждение."
+                        + scripts(BoardCase.FILL_CRATER));
         assertTrue(
                 scripts(BoardCase.BUILD_HOUSE).contains("build_schematic"),
-                "Дом строится схемой build_schematic: " + scripts(BoardCase.BUILD_HOUSE));
+                "Дом строится схемой build_schematic:  Иначе тест fill_PitOnHouseLot_FillAndBuildStayPostedTogether перестанет ловить эту поломку. При смене fill_PitOnHouseLot_FillAndBuildStayPostedTogether проверь это утверждение."
+                        + scripts(BoardCase.BUILD_HOUSE));
         assertTrue(
                 plan.tasks().stream().noneMatch(task -> "dirt".equals(task.makes()) && task.feasible()),
-                "Земли в сундуках хватает — граф не ставит новую добычу земли: " + ids(plan));
-
+                "Земли в сундуках хватает — граф не ставит новую добычу земли:  Иначе тест fill_PitOnHouseLot_FillAndBuildStayPostedTogether перестанет ловить эту поломку. При смене fill_PitOnHouseLot_FillAndBuildStayPostedTogether проверь это утверждение."
+                        + ids(plan));
         GraphPlan flat = plan(
                 world,
                 facts(named(spirit("spirit-1")), List.of(), List.of(), GraphSiteFacts.Terrain.empty(), Map.of()));
         assertTrue(
                 flat.task("building:hut").filter(GraphPlan.Task::feasible).isPresent(),
-                "После засыпки дом остаётся выполнимой работой: " + ids(flat));
+                "После засыпки дом остаётся выполнимой работой:  Иначе тест fill_PitOnHouseLot_FillAndBuildStayPostedTogether перестанет ловить эту поломку. При смене fill_PitOnHouseLot_FillAndBuildStayPostedTogether проверь это утверждение."
+                        + ids(flat));
     }
 
     @Test
@@ -96,21 +105,24 @@ class CrossSettlementScenarioTests {
                 List.of(),
                 List.of());
         GraphPlan plan = plan(world, facts);
-
         GraphPlan.Task demolition = task(plan, "event:demolish_stray:demolish_stray");
-        assertTrue(demolition.feasible(), "Лишний сундук получает задание сноса: " + ids(plan));
+        assertTrue(
+                demolition.feasible(),
+                "Лишний сундук получает задание сноса:  Иначе тест demolish_NonEmptyStrayChest_DrainsToWarehouseBeforeBreaking перестанет ловить эту поломку. При смене demolish_NonEmptyStrayChest_DrainsToWarehouseBeforeBreaking проверь это утверждение."
+                        + ids(plan));
         GraphPlan.Task salvage = task(plan, "event:demolish_chest:demolish_chest");
-        assertTrue(salvage.feasible(), "Разбор сундука с подбором выполним через штатное событие графа");
+        assertTrue(
+                salvage.feasible(),
+                "Разбор сундука с подбором выполним через штатное событие графа Иначе тест demolish_NonEmptyStrayChest_DrainsToWarehouseBeforeBreaking перестанет ловить эту поломку. При смене demolish_NonEmptyStrayChest_DrainsToWarehouseBeforeBreaking проверь это утверждение.");
         assertTrue(
                 salvage.priority()
                         > task(plan, "event:drops_nearby:collect_drops").priority(),
-                "Содержимое разбираемого сундука важнее обычного фонового подбора");
+                "Содержимое разбираемого сундука важнее обычного фонового подбора Иначе тест demolish_NonEmptyStrayChest_DrainsToWarehouseBeforeBreaking перестанет ловить эту поломку. При смене demolish_NonEmptyStrayChest_DrainsToWarehouseBeforeBreaking проверь это утверждение.");
         assertTrue(
                 salvage.priority()
                         < task(plan, "event:inventory_overloaded:unload_overloaded")
                                 .priority(),
-                "Высокий приоритет разбора не должен мешать необходимой разгрузке");
-
+                "Высокий приоритет разбора не должен мешать необходимой разгрузке Иначе тест demolish_NonEmptyStrayChest_DrainsToWarehouseBeforeBreaking перестанет ловить эту поломку. При смене demolish_NonEmptyStrayChest_DrainsToWarehouseBeforeBreaking проверь это утверждение.");
         List<Stack> slots = new ArrayList<>(List.of(new Stack("minecraft:bread", 0, 32, 64)));
         ContainerSnapshot chest = new ContainerSnapshot(new BlockCoord(1, 64, 1), slots);
         List<ScriptCall> calls = new ArrayList<>();
@@ -118,9 +130,14 @@ class CrossSettlementScenarioTests {
         int withdraw = index(calls, "withdraw");
         int deposit = index(calls, "deposit");
         int clear = index(calls, "clear_area");
-
-        assertTrue(withdraw >= 0, "Сундук сначала вынимают скриптом withdraw: " + scriptsOf(calls));
-        assertTrue(deposit > withdraw, "Вынутое относят на склад до сноса: " + scriptsOf(calls));
+        assertTrue(
+                withdraw >= 0,
+                "Сундук сначала вынимают скриптом withdraw:  Иначе тест demolish_NonEmptyStrayChest_DrainsToWarehouseBeforeBreaking перестанет ловить эту поломку. При смене demolish_NonEmptyStrayChest_DrainsToWarehouseBeforeBreaking проверь это утверждение."
+                        + scriptsOf(calls));
+        assertTrue(
+                deposit > withdraw,
+                "Вынутое относят на склад до сноса:  Иначе тест demolish_NonEmptyStrayChest_DrainsToWarehouseBeforeBreaking перестанет ловить эту поломку. При смене demolish_NonEmptyStrayChest_DrainsToWarehouseBeforeBreaking проверь это утверждение."
+                        + scriptsOf(calls));
         assertTrue(clear > deposit, "Ломают сундук только после выноса: " + scriptsOf(calls));
         assertEquals(
                 "minecraft:bread",
@@ -144,11 +161,9 @@ class CrossSettlementScenarioTests {
         world.event("animal_starving").event("field_empty").event("more2_food_low");
         GraphFacts facts = facts(named(spirit("spirit-1"), spirit("spirit-2")));
         GraphPlan plan = plan(world, facts);
-
         GraphPlan.Task seeds = task(plan, "gather_seeds");
         GraphPlan.Task feed = task(plan, "event:animal_starving:feed_animals");
         GraphPlan.Task plant = task(plan, "event:field_empty:plant_crop");
-
         assertTrue(seeds.feasible(), "Без урожая граф идёт за семенами, а не кормит скот воздухом: " + ids(plan));
         assertFalse(feed.feasible(), "Кормить животных нечем: feed_animals ждёт урожай: " + ids(plan));
         assertFalse(plant.feasible(), "Сеять нечем: plant_crop ждёт семена: " + ids(plan));
@@ -172,15 +187,12 @@ class CrossSettlementScenarioTests {
         world.event("more5_mine_dark");
         GraphFacts facts = facts(named(spirit("spirit-1"), spirit("spirit-2")));
         GraphPlan first = plan(world, facts);
-
         GraphPlan.Task coal = task(first, "mine_coal");
         GraphPlan.Task light = task(first, "event:more5_mine_dark:more5_light_mine");
         GraphPlan.Task torch = task(first, "event:more5_mine_dark:more5_craft_mine_torch");
-
         assertTrue(coal.feasible(), "Тьма в шахте сначала ведёт к углю: " + ids(first));
         assertFalse(light.feasible(), "Свет без факела не ставится: " + ids(first));
         assertFalse(torch.feasible(), "Факел без угля не крафтится: " + ids(first));
-
         world.with("coal", 8);
         GraphPlan second = plan(world, facts);
         assertTrue(
@@ -189,7 +201,6 @@ class CrossSettlementScenarioTests {
         assertFalse(
                 task(second, "event:more5_mine_dark:more5_light_mine").feasible(),
                 "Пока факела нет, свет не ставится: " + ids(second));
-
         world.with("torch", 8);
         GraphPlan third = plan(world, facts);
         assertTrue(
@@ -215,17 +226,14 @@ class CrossSettlementScenarioTests {
                 "spirit-1", 20, 20, false, false, null, List.of(tool("pickaxe", 1, 1, 100)), List.of()))));
         GraphPlan first = plan(stageOneWorld, worn);
         GraphPlan.Task repair = task(first, "event:tool_worn:repair_tool");
-
         assertFalse(repair.feasible(), "Без наковальни и слитка инструмент не чинится: " + ids(first));
         assertTrue(
                 first.task("mine_coal").filter(GraphPlan.Task::feasible).isPresent(),
                 "Изношенная кирка не останавливает шахту: " + ids(first));
-
         GraphWorld stageTwoWorld = stageTwo();
         stageTwoWorld.built("anvil", Built.BUILT).with("iron_ingot", 8);
         GraphPlan second = plan(stageTwoWorld, worn);
         GraphPlan.Task repaired = task(second, "event:tool_worn:repair_tool");
-
         assertTrue(repaired.feasible(), "Наковальня и слиток есть — граф ставит ремонт кирки: " + ids(second));
         assertTrue(repaired.raised(), "Ремонт инструмента имеет свой вес, а не ноль");
         assertFalse(
@@ -250,10 +258,8 @@ class CrossSettlementScenarioTests {
                 GraphSiteFacts.Terrain.empty(),
                 Map.of("fence", damaged("fence", 40, 3, Map.of("oak_fence", 5))));
         GraphPlan plan = plan(world, facts);
-
         GraphPlan.Task defend = task(plan, "event:life_threat:defend");
         GraphPlan.Task repair = task(plan, "event:repair_fence:repair:fence");
-
         assertEquals(List.of(), ahead(plan, defend), "Мобы у раненого духа — защита на потолке: " + ids(plan));
         assertTrue(repair.feasible(), "Побитый забор остаётся выполнимым ремонтом: " + ids(plan));
         assertTrue(defend.priority() > repair.priority(), "Сначала бой, потом забор: " + ids(plan));

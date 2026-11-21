@@ -27,14 +27,12 @@ class LeaseScenarioTests {
         BlockCoord bridgeB = new BlockCoord(11, 64, 0);
         BlockCoord graveA = new BlockCoord(20, 40, 0);
         BlockCoord graveB = new BlockCoord(20, 41, 0);
-
         Lease scaffold = book.open(BUILDER, "scaffold-1", "scaffold", 100);
         book.record(
                 scaffold.id(),
                 List.of(
                         LeaseCell.placed(scaffoldLow, "minecraft:dirt"),
                         LeaseCell.placed(scaffoldHigh, "minecraft:dirt")));
-
         Lease bridge = book.open(WALKER, "bridge-1", "bridge", 110);
         book.record(
                 bridge.id(),
@@ -42,7 +40,6 @@ class LeaseScenarioTests {
                         LeaseCell.placed(bridgeA, "minecraft:oak_planks"),
                         LeaseCell.placed(bridgeB, "minecraft:oak_planks")));
         book.orphan(bridge.id());
-
         Lease grave = book.open(DIGGER, "digout-1", "dig_out", 120);
         book.record(
                 grave.id(),
@@ -50,36 +47,36 @@ class LeaseScenarioTests {
                         LeaseCell.broken(graveA, "minecraft:stone"),
                         LeaseCell.placed(graveB, "minecraft:cobblestone")));
         Lease graveLease = book.require(grave.id());
-
         Map<UUID, LeaseSupervisor.SpiritState> alive = new HashMap<>();
         alive.put(BUILDER, new LeaseSupervisor.SpiritState(false, Set.of("scaffold-1")));
         alive.put(WALKER, new LeaseSupervisor.SpiritState(false, Set.of("bridge-1")));
         List<Lease> due = LeaseSupervisor.due(book, alive, new HashMap<>(), 200, 600);
-
         assertEquals(
                 List.of(graveLease),
                 due,
-                "Среди трёх духов только третий пропал: его аренда бросается, чужие действующие — нет");
+                "Среди трёх духов только третий пропал: его аренда бросается, чужие действующие — нет Иначе тест threeSpirits_OneDead_CleansOnlyAbandonedAndDead перестанет ловить эту поломку. При смене threeSpirits_OneDead_CleansOnlyAbandonedAndDead проверь это утверждение.");
         for (Lease lease : due) {
             book.orphan(lease.id());
         }
-
         List<BlockCoord> cleanup =
                 book.orphanedCells().stream().map(LeaseCell::pos).toList();
-
         assertEquals(
                 List.of(graveB, graveA, bridgeB, bridgeA),
                 cleanup,
-                "Скан даёт уборку только брошенного моста и аренды умершего, сверху вниз внутри каждой аренды");
-        assertFalse(cleanup.contains(scaffoldLow), "Действующие подмости первого духа скан не трогает");
-        assertFalse(cleanup.contains(scaffoldHigh), "Действующие подмости первого духа скан не трогает");
+                "Скан даёт уборку только брошенного моста и аренды умершего, сверху вниз внутри каждой аренды Иначе тест threeSpirits_OneDead_CleansOnlyAbandonedAndDead перестанет ловить эту поломку. При смене threeSpirits_OneDead_CleansOnlyAbandonedAndDead проверь это утверждение.");
+        assertFalse(
+                cleanup.contains(scaffoldLow),
+                "Действующие подмости первого духа скан не трогает Иначе тест threeSpirits_OneDead_CleansOnlyAbandonedAndDead перестанет ловить эту поломку. При смене threeSpirits_OneDead_CleansOnlyAbandonedAndDead проверь это утверждение.");
+        assertFalse(
+                cleanup.contains(scaffoldHigh),
+                "Действующие подмости первого духа скан не трогает Иначе тест threeSpirits_OneDead_CleansOnlyAbandonedAndDead перестанет ловить эту поломку. При смене threeSpirits_OneDead_CleansOnlyAbandonedAndDead проверь это утверждение.");
         assertTrue(
                 book.activeOwner(scaffoldLow).isPresent(),
-                "Клетка подмостей остаётся за живым владельцем: чужой дух её не разберёт");
+                "Клетка подмостей остаётся за живым владельцем: чужой дух её не разберёт Иначе тест threeSpirits_OneDead_CleansOnlyAbandonedAndDead перестанет ловить эту поломку. При смене threeSpirits_OneDead_CleansOnlyAbandonedAndDead проверь это утверждение.");
         assertEquals(
                 List.of("dig_out", "bridge"),
                 book.orphaned().stream().map(Lease::purpose).toList(),
-                "В уборке две брошенные аренды: мост отменён, аренда умершего снята событием смерти");
+                "В уборке две брошенные аренды: мост отменён, аренда умершего снята событием смерти Иначе тест threeSpirits_OneDead_CleansOnlyAbandonedAndDead перестанет ловить эту поломку. При смене threeSpirits_OneDead_CleansOnlyAbandonedAndDead проверь это утверждение.");
     }
 
     @Test
@@ -90,20 +87,16 @@ class LeaseScenarioTests {
         BlockCoord high = new BlockCoord(0, 71, 0);
         column.placed(low, "minecraft:dirt");
         column.placed(high, "minecraft:dirt");
-
         column.orphan();
-
         assertOrphaned(book, column.id(), List.of(low, high), "cancel посреди столба");
         assertEquals(
                 List.of(high, low),
                 book.orphanedCells().stream().map(LeaseCell::pos).toList(),
-                "Скан видит обе клетки брошенного столба и разбирает его сверху вниз");
-
+                "Скан видит обе клетки брошенного столба и разбирает его сверху вниз Иначе тест pillarAndScaffold_CancelDeathRestart_LeaveCellsInOrphanedLease перестанет ловить эту поломку. При смене pillarAndScaffold_CancelDeathRestart_LeaveCellsInOrphanedLease проверь это утверждение.");
         LeaseSession death = LeaseSession.open(book, BUILDER, null, "scaffold", 110);
         death.placed(new BlockCoord(2, 70, 0), "minecraft:dirt");
         book.orphanSpirit(BUILDER);
         assertOrphaned(book, death.id(), List.of(new BlockCoord(2, 70, 0)), "смерть духа");
-
         LeaseSession restart = LeaseSession.open(book, WALKER, null, "scaffold", 120);
         restart.placed(new BlockCoord(4, 70, 0), "minecraft:dirt");
         LeaseSession displaced = LeaseSession.open(book, WALKER, null, "pillar_up", 130);
@@ -115,7 +108,7 @@ class LeaseScenarioTests {
                 "Рестарт сервера (публикация) не бросает аренды — бросает их вытеснение/смерть владельца: "
                         + "orphanSpirit берёт обе аренды WALKER, включая столб pillar_up, который без задачи "
                         + "обязан уйти в разбор (живой сервер 14.11: undo-шторм «ломает и тут же ставит» и "
-                        + "вечный столб spirit-5 у бугра)");
+                        + "вечный столб spirit-5 у бугра) При смене pillarAndScaffold_CancelDeathRestart_LeaveCellsInOrphanedLease проверь это утверждение.");
     }
 
     @Test
@@ -126,14 +119,19 @@ class LeaseScenarioTests {
         BlockCoord second = new BlockCoord(0, 71, 0);
         column.placed(first, "minecraft:dirt");
         column.placed(second, "minecraft:dirt");
-
         column.forget(second);
         column.forget(first);
         column.commit();
-
-        assertEquals(LeaseStatus.DONE, column.status(), "Успешный разбор закрывает аренду столба");
-        assertTrue(book.orphanedCells().isEmpty(), "После успешного разбора уборке нечего делать");
-        assertFalse(book.isActive(first), "Разобранная клетка больше не держится арендой");
+        assertEquals(
+                LeaseStatus.DONE,
+                column.status(),
+                "Успешный разбор закрывает аренду столба Иначе тест pillarDown_Success_RollsBackOwnCellsAndCommits перестанет ловить эту поломку. При смене pillarDown_Success_RollsBackOwnCellsAndCommits проверь это утверждение.");
+        assertTrue(
+                book.orphanedCells().isEmpty(),
+                "После успешного разбора уборке нечего делать Иначе тест pillarDown_Success_RollsBackOwnCellsAndCommits перестанет ловить эту поломку. При смене pillarDown_Success_RollsBackOwnCellsAndCommits проверь это утверждение.");
+        assertFalse(
+                book.isActive(first),
+                "Разобранная клетка больше не держится арендой Иначе тест pillarDown_Success_RollsBackOwnCellsAndCommits перестанет ловить эту поломку. При смене pillarDown_Success_RollsBackOwnCellsAndCommits проверь это утверждение.");
     }
 
     @Test
@@ -144,11 +142,8 @@ class LeaseScenarioTests {
         BlockCoord second = new BlockCoord(11, 64, 0);
         deck.placed(first, "minecraft:oak_planks");
         deck.placed(second, "minecraft:oak_planks");
-
         deck.orphan();
-
         assertOrphaned(book, deck.id(), List.of(first, second), "cancel посреди моста");
-
         LeaseSession crossed = LeaseSession.open(book, DIGGER, null, "bridge", 120);
         BlockCoord cell = new BlockCoord(20, 64, 0);
         crossed.placed(cell, "minecraft:oak_planks");
@@ -156,10 +151,10 @@ class LeaseScenarioTests {
         assertEquals(
                 LeaseStatus.ORPHANED,
                 crossed.status(),
-                "Перейдённый мост не становится постоянным: успешное использование — не план постройки");
+                "Перейдённый мост не становится постоянным: успешное использование — не план постройки Иначе тест bridge_CancelAndSuccess_DifferByStatusAndCleanup перестанет ловить эту поломку. При смене bridge_CancelAndSuccess_DifferByStatusAndCleanup проверь это утверждение.");
         assertTrue(
                 book.isOrphaned(cell),
-                "Настил после переправы уходит в узел отката: внутри поселения мосты и столбы убираются");
+                "Настил после переправы уходит в узел отката: внутри поселения мосты и столбы убираются Иначе тест bridge_CancelAndSuccess_DifferByStatusAndCleanup перестанет ловить эту поломку. При смене bridge_CancelAndSuccess_DifferByStatusAndCleanup проверь это утверждение.");
     }
 
     @Test
@@ -171,24 +166,25 @@ class LeaseScenarioTests {
         passed.placed(placed, "minecraft:dirt");
         passed.broken(broken, "minecraft:stone");
         passed.orphan();
-
         assertEquals(
                 LeaseStatus.ORPHANED,
                 passed.status(),
-                "Пройденный маршрут не становится постоянным: его клетки откатывает узел undo_lease");
-        assertTrue(book.isOrphaned(placed), "Поставленная клетка маршрута ждёт отката");
-        assertTrue(book.isOrphaned(broken), "Сломанная клетка маршрута ждёт возврата before");
-
+                "Пройденный маршрут не становится постоянным: его клетки откатывает узел undo_lease Иначе тест route_PassOrphansCells_BreakAndCancelOrphans перестанет ловить эту поломку. При смене route_PassOrphansCells_BreakAndCancelOrphans проверь это утверждение.");
+        assertTrue(
+                book.isOrphaned(placed),
+                "Поставленная клетка маршрута ждёт отката Иначе тест route_PassOrphansCells_BreakAndCancelOrphans перестанет ловить эту поломку. При смене route_PassOrphansCells_BreakAndCancelOrphans проверь это утверждение.");
+        assertTrue(
+                book.isOrphaned(broken),
+                "Сломанная клетка маршрута ждёт возврата before Иначе тест route_PassOrphansCells_BreakAndCancelOrphans перестанет ловить эту поломку. При смене route_PassOrphansCells_BreakAndCancelOrphans проверь это утверждение.");
         LeaseSession abandoned = LeaseSession.open(book, BUILDER, null, "route", 120);
         BlockCoord hole = new BlockCoord(40, 70, 0);
         abandoned.broken(hole, "minecraft:stone");
         abandoned.orphan();
-
         assertOrphaned(book, abandoned.id(), List.of(hole), "cancel посреди маршрута");
         assertEquals(
                 "minecraft:stone",
                 book.require(abandoned.id()).cells().get(0).before(),
-                "Пролом маршрута помнит прежний блок: брошенная аренда вернёт его по before");
+                "Пролом маршрута помнит прежний блок: брошенная аренда вернёт его по before Иначе тест route_PassOrphansCells_BreakAndCancelOrphans перестанет ловить эту поломку. При смене route_PassOrphansCells_BreakAndCancelOrphans проверь это утверждение.");
     }
 
     @Test
@@ -199,31 +195,31 @@ class LeaseScenarioTests {
         BlockCoord floor = new BlockCoord(51, 51, 0);
         escape.broken(broken, "minecraft:stone");
         escape.placed(floor, "minecraft:dirt");
-
         escape.forget(broken);
         escape.orphan();
-
         assertEquals(
                 LeaseStatus.ORPHANED,
                 escape.status(),
-                "Успешный выход убирает spoil, но оставшийся пол ступени — временная правка, а не план");
-        assertTrue(book.isOrphaned(floor), "Пол ступени после выхода ждёт отката, а не остаётся навсегда");
-        assertFalse(book.isOrphaned(broken), "Возвращённый spoil уже не ждёт откат: клетка забыта механикой");
-
+                "Успешный выход убирает spoil, но оставшийся пол ступени — временная правка, а не план Иначе тест digOut_SuccessOrphansRemainingCells_InterruptOrphansEverything перестанет ловить эту поломку. При смене digOut_SuccessOrphansRemainingCells_InterruptOrphansEverything проверь это утверждение.");
+        assertTrue(
+                book.isOrphaned(floor),
+                "Пол ступени после выхода ждёт отката, а не остаётся навсегда Иначе тест digOut_SuccessOrphansRemainingCells_InterruptOrphansEverything перестанет ловить эту поломку. При смене digOut_SuccessOrphansRemainingCells_InterruptOrphansEverything проверь это утверждение.");
+        assertFalse(
+                book.isOrphaned(broken),
+                "Возвращённый spoil уже не ждёт откат: клетка забыта механикой Иначе тест digOut_SuccessOrphansRemainingCells_InterruptOrphansEverything перестанет ловить эту поломку. При смене digOut_SuccessOrphansRemainingCells_InterruptOrphansEverything проверь это утверждение.");
         LeaseSession interrupted = LeaseSession.open(book, BUILDER, null, "dig_out", 120);
         BlockCoord hole = new BlockCoord(60, 50, 0);
         BlockCoord step = new BlockCoord(61, 51, 0);
         interrupted.broken(hole, "minecraft:dirt");
         interrupted.placed(step, "minecraft:cobblestone");
         interrupted.orphan();
-
         assertOrphaned(book, interrupted.id(), List.of(hole, step), "cancel посреди dig_out");
         assertEquals(
                 List.of(step, hole),
                 book.require(interrupted.id()).rollbackOrder().stream()
                         .map(LeaseCell::pos)
                         .toList(),
-                "Брошенный dig_out откатывается сверху вниз: сначала свой пол, потом возврат spoil");
+                "Брошенный dig_out откатывается сверху вниз: сначала свой пол, потом возврат spoil Иначе тест digOut_SuccessOrphansRemainingCells_InterruptOrphansEverything перестанет ловить эту поломку. При смене digOut_SuccessOrphansRemainingCells_InterruptOrphansEverything проверь это утверждение.");
     }
 
     @Test
@@ -239,33 +235,43 @@ class LeaseScenarioTests {
         pillar.placed(columnHigh, "minecraft:dirt");
         bridge.placed(deckA, "minecraft:oak_planks");
         bridge.placed(deckB, "minecraft:oak_planks");
-
         Map<UUID, LeaseSupervisor.SpiritState> hungry = new HashMap<>();
         hungry.put(BUILDER, new LeaseSupervisor.SpiritState(true, Set.of("pillar-ticket")));
         hungry.put(WALKER, new LeaseSupervisor.SpiritState(true, Set.of("bridge-ticket")));
         Map<String, Long> suspendedSince = new HashMap<>();
         assertTrue(
                 LeaseSupervisor.due(book, hungry, suspendedSince, 200, 100).isEmpty(),
-                "Сразу после прерывания аренда ещё действует: пауза начинается с этого тика");
+                "Сразу после прерывания аренда ещё действует: пауза начинается с этого тика Иначе тест twoSpirits_Hunger_LeavesBothLeasesOrphaned перестанет ловить эту поломку. При смене twoSpirits_Hunger_LeavesBothLeasesOrphaned проверь это утверждение.");
         List<Lease> due = LeaseSupervisor.due(book, hungry, suspendedSince, 400, 100);
-        assertEquals(2, due.size(), "Оба духа прерваны голодом: обе аренды ждут уборки, а не только одна");
+        assertEquals(
+                2,
+                due.size(),
+                "Оба духа прерваны голодом: обе аренды ждут уборки, а не только одна Иначе тест twoSpirits_Hunger_LeavesBothLeasesOrphaned перестанет ловить эту поломку. При смене twoSpirits_Hunger_LeavesBothLeasesOrphaned проверь это утверждение.");
         for (Lease lease : due) {
             book.orphan(lease.id());
         }
-
         List<BlockCoord> cleanup =
                 book.orphanedCells().stream().map(LeaseCell::pos).toList();
         assertEquals(
                 List.of(deckB, deckA, columnHigh, columnLow),
                 cleanup,
-                "Скан видит обе брошенные правки: настил второго духа и столб первого, сверху вниз");
-        assertTrue(book.active().isEmpty(), "Действующих аренд после голода нет: активные клетки скан не трогает");
+                "Скан видит обе брошенные правки: настил второго духа и столб первого, сверху вниз Иначе тест twoSpirits_Hunger_LeavesBothLeasesOrphaned перестанет ловить эту поломку. При смене twoSpirits_Hunger_LeavesBothLeasesOrphaned проверь это утверждение.");
+        assertTrue(
+                book.active().isEmpty(),
+                "Действующих аренд после голода нет: активные клетки скан не трогает Иначе тест twoSpirits_Hunger_LeavesBothLeasesOrphaned перестанет ловить эту поломку. При смене twoSpirits_Hunger_LeavesBothLeasesOrphaned проверь это утверждение.");
     }
 
     private static void assertOrphaned(LeaseBook book, String id, List<BlockCoord> cells, String reason) {
-        assertEquals(LeaseStatus.ORPHANED, book.require(id).status(), reason + ": аренда обязана быть брошена");
+        assertEquals(
+                LeaseStatus.ORPHANED,
+                book.require(id).status(),
+                reason
+                        + ": аренда обязана быть брошена Иначе тест twoSpirits_Hunger_LeavesBothLeasesOrphaned перестанет ловить эту поломку. При смене twoSpirits_Hunger_LeavesBothLeasesOrphaned проверь это утверждение.");
         for (BlockCoord cell : cells) {
-            assertTrue(book.isOrphaned(cell), reason + ": клетка " + cell + " обязана быть видна скану как брошенная");
+            assertTrue(
+                    book.isOrphaned(cell),
+                    reason + ": клетка " + cell
+                            + " обязана быть видна скану как брошенная Иначе тест twoSpirits_Hunger_LeavesBothLeasesOrphaned перестанет ловить эту поломку. При смене twoSpirits_Hunger_LeavesBothLeasesOrphaned проверь это утверждение.");
             assertFalse(book.isActive(cell), reason + ": брошенная клетка не считается действующей");
         }
     }
@@ -276,17 +282,14 @@ class LeaseScenarioTests {
         BlockCoord shared = new BlockCoord(70, 50, 0);
         LeaseSession dig = LeaseSession.open(book, DIGGER, "dig-1", "dig_out", 100);
         assertTrue(dig.broken(shared, "minecraft:stone"), "Тоннель записывает пролом первым");
-
         LeaseSession bridge = LeaseSession.open(book, WALKER, "bridge-1", "bridge", 110);
         assertFalse(
                 bridge.placed(shared, "minecraft:oak_planks"),
                 "Мост не забирает клетку тоннеля: откат остаётся за первым владельцем, а перекрытие не роняет стройку");
         assertEquals(dig.id(), book.owner(shared).orElseThrow().id(), "Владелец клетки не сменился");
         assertTrue(bridge.cells().isEmpty(), "Вторая аренда не записала чужую клетку");
-
         BlockCoord deck = new BlockCoord(71, 64, 0);
         assertTrue(bridge.placed(deck, "minecraft:oak_planks"), "Свои клетки мост по-прежнему записывает");
-
         dig.orphan();
         assertEquals(
                 List.of(shared),

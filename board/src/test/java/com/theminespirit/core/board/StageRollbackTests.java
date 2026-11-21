@@ -55,16 +55,16 @@ class StageRollbackTests {
         StageRollback.World world = world(Map.of(
                 "BUILD_HOUSE:1", StageRollback.Readiness.READY,
                 "BUILD_MINE:1", StageRollback.Readiness.READY));
-
         StageView view = StageRollback.view(rules(), BUILDING_STAGES, ledger, world);
-
         assertNull(
                 view.missing().get("BUILD_HOUSE"),
                 "Дом закрыт журналом и готов по миру — его нет в нехватке: снимок гейта не выдаётся за "
-                        + "текущий аудит (observe25 B13). Нехватка: " + view.missing());
+                        + "текущий аудит (observe25 B13). Нехватка:  Иначе тест view_ConfirmedGateSnapshot_ReportsLiveWorldMissing перестанет ловить эту поломку. При смене view_ConfirmedGateSnapshot_ReportsLiveWorldMissing проверь это утверждение."
+                        + view.missing());
         assertNull(
                 view.missing().get("BUILD_MINE"),
-                "Шахта закрыта и готова по миру — её тоже нет в нехватке: " + view.missing());
+                "Шахта закрыта и готова по миру — её тоже нет в нехватке:  Иначе тест view_ConfirmedGateSnapshot_ReportsLiveWorldMissing перестанет ловить эту поломку. При смене view_ConfirmedGateSnapshot_ReportsLiveWorldMissing проверь это утверждение."
+                        + view.missing());
     }
 
     @Test
@@ -76,13 +76,12 @@ class StageRollbackTests {
         StageRollback.World world = world(Map.of(
                 "BUILD_HOUSE:1", StageRollback.Readiness.READY,
                 "BUILD_MINE:1", StageRollback.Readiness.NOT_READY));
-
         StageView view = StageRollback.view(rules(), BUILDING_STAGES, ledger, world);
-
         assertEquals(
                 1,
                 view.missing().get("BUILD_MINE"),
-                "Журнал закрыл шахту, но мир не готов — это текущая нехватка, а не закрытая строка: " + view.missing());
+                "Журнал закрыл шахту, но мир не готов — это текущая нехватка, а не закрытая строка:  Иначе тест view_ClosedButWorldNotReady_StaysInMissing перестанет ловить эту поломку. При смене view_ClosedButWorldNotReady_StaysInMissing проверь это утверждение."
+                        + view.missing());
     }
 
     @Test
@@ -91,10 +90,11 @@ class StageRollbackTests {
         StageRollback.World world = world(Map.of(
                 "BUILD_MINE:1", StageRollback.Readiness.NOT_READY,
                 "BUILD_HOUSE:1", StageRollback.Readiness.READY));
-
         StageView view = StageRollback.view(rules(), BUILDING_STAGES, ledger, world);
-
-        assertEquals(2, view.stage(), "Этап считается по закрытым отметкам: все постройки первого этапа отмечены");
+        assertEquals(
+                2,
+                view.stage(),
+                "Этап считается по закрытым отметкам: все постройки первого этапа отмечены Иначе тест view_StageTwo_ListsEarlierStageDriftAndCurrentStageMissing перестанет ловить эту поломку. При смене view_StageTwo_ListsEarlierStageDriftAndCurrentStageMissing проверь это утверждение.");
         assertTrue(
                 view.requirements().stream()
                         .anyMatch(requirement -> requirement.stage() == 1
@@ -102,11 +102,11 @@ class StageRollbackTests {
                                 && requirement.closed()
                                 && requirement.world() == StageRollback.Readiness.NOT_READY),
                 "GET обязан показать шахту первого этапа закрытой журналом, но не готовой по миру: "
-                        + "иначе владелец не увидит, почему этап открылся при 96% шахты. Требования: "
+                        + "иначе владелец не увидит, почему этап открылся при 96% шахты. Требования:  При смене view_StageTwo_ListsEarlierStageDriftAndCurrentStageMissing проверь это утверждение."
                         + view.requirements());
         assertTrue(
                 view.missing().containsKey("BUILD_MINE"),
-                "Остаток второго этапа обязан включать шахту уровня 2: без неё этап не закрыт. Остаток: "
+                "Остаток второго этапа обязан включать шахту уровня 2: без неё этап не закрыт. Остаток:  Иначе тест view_StageTwo_ListsEarlierStageDriftAndCurrentStageMissing перестанет ловить эту поломку. При смене view_StageTwo_ListsEarlierStageDriftAndCurrentStageMissing проверь это утверждение."
                         + view.missing());
         assertEquals(
                 3,
@@ -114,7 +114,8 @@ class StageRollbackTests {
                         .filter(requirement -> requirement.stage() == 2)
                         .count(),
                 "GET обязан перечислить все постройки второго этапа: две постройки доски и площадь плана — "
-                        + "по списку видно, что именно открыто. Требования: " + view.requirements());
+                        + "по списку видно, что именно открыто. Требования:  Иначе тест view_StageTwo_ListsEarlierStageDriftAndCurrentStageMissing перестанет ловить эту поломку. При смене view_StageTwo_ListsEarlierStageDriftAndCurrentStageMissing проверь это утверждение."
+                        + view.requirements());
     }
 
     @Test
@@ -135,19 +136,21 @@ class StageRollbackTests {
         ledger.complete(BoardCase.BUILD_MINE, 1);
         ledger.complete(BoardCase.BUILD_HOUSE, 1);
         StageRollback.World world = (boardCase, planId, level) -> StageRollback.Readiness.READY;
-
         StageView view = StageRollback.view(rules, BUILDING_STAGES, ledger, world);
-
-        assertEquals(3, view.stage(), "Третий этап открыт: первые два подтверждены");
+        assertEquals(
+                3,
+                view.stage(),
+                "Третий этап открыт: первые два подтверждены Иначе тест view_StageThreeOptional_ListedButNotInMissing перестанет ловить эту поломку. При смене view_StageThreeOptional_ListedButNotInMissing проверь это утверждение.");
         assertTrue(
                 view.requirements().stream()
                         .anyMatch(requirement -> "library".equals(requirement.id())
                                 && requirement.stage() == 3
                                 && requirement.optional()),
-                "Желательная библиотека показывается отдельно: " + view.requirements());
+                "Желательная библиотека показывается отдельно:  Иначе тест view_StageThreeOptional_ListedButNotInMissing перестанет ловить эту поломку. При смене view_StageThreeOptional_ListedButNotInMissing проверь это утверждение."
+                        + view.requirements());
         assertTrue(
                 !view.missing().containsKey("library"),
-                "Желательная постройка не держит этап: остаток не должен называть библиотеку. Остаток: "
+                "Желательная постройка не держит этап: остаток не должен называть библиотеку. Остаток:  Иначе тест view_StageThreeOptional_ListedButNotInMissing перестанет ловить эту поломку. При смене view_StageThreeOptional_ListedButNotInMissing проверь это утверждение."
                         + view.missing());
     }
 
@@ -161,18 +164,22 @@ class StageRollbackTests {
                 "BUILD_HOUSE:1", StageRollback.Readiness.READY,
                 "BUILD_WAREHOUSE:2", StageRollback.Readiness.READY,
                 "plaza:1", StageRollback.Readiness.READY));
-
         StageRollback.Plan plan = StageRollback.plan(1, rules(), BUILDING_STAGES, ledger, world);
-
         assertNull(
                 plan.refusal(),
-                "Откат 2→1 обязан приниматься: шахта первого этапа не готова по миру. " + "Отказ: " + plan.refusal());
-        assertEquals(2, plan.previous(), "Откат обязан назвать прежний этап 2: карточка пишет «откат 2→1»");
+                "Откат 2→1 обязан приниматься: шахта первого этапа не готова по миру. "
+                        + "Отказ:  Иначе тест plan_RollbackToFirst_ForgetsHigherMarksAndWorldDrift перестанет ловить эту поломку. При смене plan_RollbackToFirst_ForgetsHigherMarksAndWorldDrift проверь это утверждение."
+                        + plan.refusal());
+        assertEquals(
+                2,
+                plan.previous(),
+                "Откат обязан назвать прежний этап 2: карточка пишет «откат 2→1» Иначе тест plan_RollbackToFirst_ForgetsHigherMarksAndWorldDrift перестанет ловить эту поломку. При смене plan_RollbackToFirst_ForgetsHigherMarksAndWorldDrift проверь это утверждение.");
         assertEquals(
                 Set.of("building:BUILD_MINE:1", "building:BUILD_WAREHOUSE:2", "building:plaza:1"),
                 Set.copyOf(keys(plan)),
                 "Откат на первый этап обязан снять отметки второго этапа и неготовую по миру шахту первого, "
-                        + "но оставить готовый дом: мир не ломаем, готовое не перестраиваем. Снятые: " + keys(plan));
+                        + "но оставить готовый дом: мир не ломаем, готовое не перестраиваем. Снятые:  Иначе тест plan_RollbackToFirst_ForgetsHigherMarksAndWorldDrift перестанет ловить эту поломку. При смене plan_RollbackToFirst_ForgetsHigherMarksAndWorldDrift проверь это утверждение."
+                        + keys(plan));
     }
 
     @Test
@@ -182,45 +189,48 @@ class StageRollbackTests {
         StageRollback.World world = world(Map.of(
                 "BUILD_MINE:1", StageRollback.Readiness.READY,
                 "BUILD_HOUSE:1", StageRollback.Readiness.READY));
-
         StageRollback.Plan plan = StageRollback.plan(1, rules(), BUILDING_STAGES, ledger, world);
-
         assertTrue(
                 plan.refused(),
                 "Откат обязан отказать, когда весь первый этап готов по миру: иначе журнал разойдётся с миром. "
-                        + "Снятые: " + keys(plan));
+                        + "Снятые:  При смене plan_FirstStageReady_RefusesWithoutForgetting проверь это утверждение."
+                        + keys(plan));
         assertEquals(
                 List.of(),
                 plan.forget(),
-                "Отказ не имеет права трогать отметки: мир остаётся целым, повтор с исправленным миром не нужен");
+                "Отказ не имеет права трогать отметки: мир остаётся целым, повтор с исправленным миром не нужен Иначе тест plan_FirstStageReady_RefusesWithoutForgetting перестанет ловить эту поломку. При смене plan_FirstStageReady_RefusesWithoutForgetting проверь это утверждение.");
     }
 
     @Test
     void plan_ForwardStage_Refuses() {
         BoardLedger ledger = new BoardLedger();
-
         StageRollback.Plan plan = StageRollback.plan(2, rules(), BUILDING_STAGES, ledger, world(Map.of()));
-
         assertTrue(
-                plan.refused(), "Этап вперёд не ставится: он закрывается постройкой целиком, а не запросом владельца");
-        assertEquals(1, plan.previous(), "Отказ обязан показать, где поселение стоит сейчас");
-        assertEquals(List.of(), plan.forget(), "Отказ вперёд не меняет отметки");
+                plan.refused(),
+                "Этап вперёд не ставится: он закрывается постройкой целиком, а не запросом владельца Иначе тест plan_ForwardStage_Refuses перестанет ловить эту поломку. При смене plan_ForwardStage_Refuses проверь это утверждение.");
+        assertEquals(
+                1,
+                plan.previous(),
+                "Отказ обязан показать, где поселение стоит сейчас Иначе тест plan_ForwardStage_Refuses перестанет ловить эту поломку. При смене plan_ForwardStage_Refuses проверь это утверждение.");
+        assertEquals(
+                List.of(),
+                plan.forget(),
+                "Отказ вперёд не меняет отметки Иначе тест plan_ForwardStage_Refuses перестанет ловить эту поломку. При смене plan_ForwardStage_Refuses проверь это утверждение.");
     }
 
     @Test
     void plan_SameStage_ChangesNothing() {
         BoardLedger ledger = new BoardLedger();
-
         StageRollback.Plan plan = StageRollback.plan(1, rules(), BUILDING_STAGES, ledger, world(Map.of()));
-
-        assertNull(plan.refusal(), "Повтор отката на текущий этап — успешный идемпотентный вызов");
+        assertNull(
+                plan.refusal(),
+                "Повтор отката на текущий этап — успешный идемпотентный вызов Иначе тест plan_SameStage_ChangesNothing перестанет ловить эту поломку. При смене plan_SameStage_ChangesNothing проверь это утверждение.");
         assertEquals(List.of(), plan.forget(), "Повтор отката на текущий этап не снимает ни одной отметки");
     }
 
     @Test
     void plan_TargetOutsideStages_Throws() {
         BoardLedger ledger = new BoardLedger();
-
         assertThrows(
                 IllegalArgumentException.class,
                 () -> StageRollback.plan(3, rules(), BUILDING_STAGES, ledger, world(Map.of())),
@@ -237,9 +247,7 @@ class StageRollbackTests {
         ledger.complete(BoardCase.CRAFT_FURNACE, 1);
         ledger.notePlan("mystery", 1);
         StageRollback.World world = world(Map.of("BUILD_MINE:1", StageRollback.Readiness.NOT_READY));
-
         StageRollback.Plan plan = StageRollback.plan(1, rules(), BUILDING_STAGES, ledger, world);
-
         assertTrue(
                 !keys(plan).contains("building:CRAFT_FURNACE:1"),
                 "Отметка кейса вне этапов обязана пережить откат: печь не принадлежит ни одному этапу, и её снятие "
@@ -253,7 +261,6 @@ class StageRollbackTests {
     @Test
     void ticketStage_PlanIdOfGraph_MapsToItsStage() {
         StageRules rules = rules();
-
         assertEquals(
                 2,
                 stage("graph:building:plaza", BoardCase.BUILD_PLACED, rules),
@@ -281,7 +288,6 @@ class StageRollbackTests {
     void ticketStage_UnstagedTicket_IsUnknown() {
         OptionalInt stage = StageRollback.ticketStage(
                 "repair:build_house:1", BoardCase.REPAIR_BUILDING, 1, rules(), BUILDING_STAGES);
-
         assertTrue(
                 stage.isEmpty(),
                 "Ремонт вне этапов не привязан к этапу: откат не имеет права снимать общепоселковый ремонт");

@@ -61,7 +61,7 @@ class AnimalLifecycleTests {
 
         assertTrue(
                 hasActive(board, BoardCase.BUILD_PEN),
-                "После отлова на доске загон: цикл «отлов → загон» идёт строго по порядку");
+                "После отлова на доске загон: цикл «отлов → загон» идёт строго по порядку Иначе тест captured_Submits_BuildPen перестанет ловить эту поломку. При смене captured_Submits_BuildPen проверь это утверждение.");
     }
 
     @Test
@@ -74,18 +74,21 @@ class AnimalLifecycleTests {
         lifecycle.penBuilt("capture_1");
 
         assertTrue(
-                hasActive(board, BoardCase.LURE_ANIMAL), "Загон построен — на доске «приманить»: второе звено цикла");
+                hasActive(board, BoardCase.LURE_ANIMAL),
+                "Загон построен — на доске «приманить»: второе звено цикла Иначе тест penBuilt_Submits_LureWithGate перестанет ловить эту поломку. При смене penBuilt_Submits_LureWithGate проверь это утверждение.");
         BoardTicket lure = board.all().stream()
                 .filter(ticket -> ticket.boardCase() == BoardCase.LURE_ANIMAL)
                 .findFirst()
                 .orElseThrow();
         assertEquals(
-                List.of("capture_1"), lure.dependsOn(), "«Приманить» зависит от отлова: без загона приманка не нужна");
+                List.of("capture_1"),
+                lure.dependsOn(),
+                "«Приманить» зависит от отлова: без загона приманка не нужна Иначе тест penBuilt_Submits_LureWithGate перестанет ловить эту поломку. При смене penBuilt_Submits_LureWithGate проверь это утверждение.");
         assertEquals(
                 Map.of("wheat", 1),
                 lure.requiredItems(),
                 "Гейт «приманить» — приманка: без приманки в запасах задание ждёт, "
-                        + "а не тянет духа в пустой загон");
+                        + "а не тянет духа в пустой загон Иначе тест penBuilt_Submits_LureWithGate перестанет ловить эту поломку. При смене penBuilt_Submits_LureWithGate проверь это утверждение.");
     }
 
     @Test
@@ -101,11 +104,11 @@ class AnimalLifecycleTests {
                 board.claimable(new StockView(Map.of()), 0).stream()
                         .filter(ticket -> ticket.boardCase() == BoardCase.LURE_ANIMAL)
                         .toList(),
-                "Без приманки «приманить» не выдаётся: гейт держит задание в очереди");
+                "Без приманки «приманить» не выдаётся: гейт держит задание в очереди Иначе тест lure_Gate_Holds перестанет ловить эту поломку. При смене lure_Gate_Holds проверь это утверждение.");
         assertEquals(
                 Optional.of(BoardStatus.WAITING_RESOURCES),
                 board.statusOf("animal_lure"),
-                "Задание видит наблюдатель как ждущее ресурс, а не потерянное");
+                "Задание видит наблюдатель как ждущее ресурс, а не потерянное Иначе тест lure_Gate_Holds перестанет ловить эту поломку. При смене lure_Gate_Holds проверь это утверждение.");
         assertEquals(
                 List.of(board.all().stream()
                         .filter(ticket -> ticket.boardCase() == BoardCase.LURE_ANIMAL)
@@ -114,7 +117,7 @@ class AnimalLifecycleTests {
                 board.claimable(new StockView(Map.of("wheat", 1)), 0).stream()
                         .filter(ticket -> ticket.boardCase() == BoardCase.LURE_ANIMAL)
                         .toList(),
-                "С приманкой в запасах задание выдаётся: доска сама снимает гейт");
+                "С приманкой в запасах задание выдаётся: доска сама снимает гейт Иначе тест lure_Gate_Holds перестанет ловить эту поломку. При смене lure_Gate_Holds проверь это утверждение.");
     }
 
     @Test
@@ -132,7 +135,7 @@ class AnimalLifecycleTests {
 
         assertFalse(
                 hasActive(board, BoardCase.DISMANTLE_SHELTER),
-                "Животное в загоне — цикл завершён: укрытия из блоков нет (упрощение 44.4), разбирать нечего");
+                "Животное в загоне — цикл завершён: укрытия из блоков нет (упрощение 44.4), разбирать нечего Иначе тест lured_AnimalInPen_SubmitsNoShelterDismantling перестанет ловить эту поломку. При смене lured_AnimalInPen_SubmitsNoShelterDismantling проверь это утверждение.");
     }
 
     @Test
@@ -148,10 +151,10 @@ class AnimalLifecycleTests {
         assertEquals(
                 Optional.of(BoardStatus.CANCELLED),
                 board.statusOf("animal_lure"),
-                "Гибель снимает «приманить»: приманка больше не нужна");
+                "Гибель снимает «приманить»: приманка больше не нужна Иначе тест animalDied_Cancels_Lure перестанет ловить эту поломку. При смене animalDied_Cancels_Lure проверь это утверждение.");
         assertFalse(
                 hasActive(board, BoardCase.DISMANTLE_SHELTER),
-                "После гибели разбирать нечего: отлов приманкой не ставит укрытия (упрощение 44.4)");
+                "После гибели разбирать нечего: отлов приманкой не ставит укрытия (упрощение 44.4) Иначе тест animalDied_Cancels_Lure перестанет ловить эту поломку. При смене animalDied_Cancels_Lure проверь это утверждение.");
     }
 
     @Test
@@ -161,7 +164,9 @@ class AnimalLifecycleTests {
 
         lifecycle.animalDied();
 
-        assertTrue(board.all().isEmpty(), "Гибель до отлова ничего не ставит: укрытия нет, разбирать нечего");
+        assertTrue(
+                board.all().isEmpty(),
+                "Гибель до отлова ничего не ставит: укрытия нет, разбирать нечего Иначе тест animalDied_BeforeCapture_SubmitsNothing перестанет ловить эту поломку. При смене animalDied_BeforeCapture_SubmitsNothing проверь это утверждение.");
     }
 
     @Test
@@ -171,7 +176,9 @@ class AnimalLifecycleTests {
 
         lifecycle.penBuilt("capture_1");
 
-        assertTrue(board.all().isEmpty(), "«Приманить» без отлова не ставится: загон без животного не нужен");
+        assertTrue(
+                board.all().isEmpty(),
+                "«Приманить» без отлова не ставится: загон без животного не нужен Иначе тест penBuilt_WithoutCapture_SubmitsNothing перестанет ловить эту поломку. При смене penBuilt_WithoutCapture_SubmitsNothing проверь это утверждение.");
     }
 
     @Test
@@ -188,10 +195,10 @@ class AnimalLifecycleTests {
                 Optional.of(BoardStatus.CANCELLED),
                 board.statusOf("animal_lure"),
                 "Снятое «приманить» не возвращается без нового отлова: гибель закрыла цикл, "
-                        + "повторный penBuilt не оживляет мёртвое задание");
+                        + "повторный penBuilt не оживляет мёртвое задание Иначе тест penBuilt_AfterDeath_DoesNotReturnLure перестанет ловить эту поломку. При смене penBuilt_AfterDeath_DoesNotReturnLure проверь это утверждение.");
         assertFalse(
                 hasActive(board, BoardCase.LURE_ANIMAL),
-                "После гибели цикла новых заданий «приманить» нет: сначала новый отлов");
+                "После гибели цикла новых заданий «приманить» нет: сначала новый отлов Иначе тест penBuilt_AfterDeath_DoesNotReturnLure перестанет ловить эту поломку. При смене penBuilt_AfterDeath_DoesNotReturnLure проверь это утверждение.");
     }
 
     @Test
@@ -206,7 +213,7 @@ class AnimalLifecycleTests {
                 hasActive(board, BoardCase.BUILD_PEN),
                 "Отлов ставит загон временем доски, а не нулевым createdAt: иначе через 5 минут "
                         + "работы сервера (тик " + clock.get() + ") задание просрочено уже при постановке "
-                        + "и цикл животного молча не идёт");
+                        + "и цикл животного молча не идёт При смене captured_LateClock_SubmitsPen проверь это утверждение.");
     }
 
     @Test
@@ -217,11 +224,11 @@ class AnimalLifecycleTests {
         assertThrows(
                 NullPointerException.class,
                 () -> lifecycle.captured(null),
-                "captureId=null обязан отвергаться: без id зависимость «приманить» потеряна");
+                "captureId=null обязан отвергаться: без id зависимость «приманить» потеряна Иначе тест lifecycle_NullArgs_AreRejected перестанет ловить эту поломку. При смене lifecycle_NullArgs_AreRejected проверь это утверждение.");
         assertThrows(
                 NullPointerException.class,
                 () -> lifecycle.penBuilt(null),
-                "captureId=null обязан отвергаться: без id зависимость потеряна");
+                "captureId=null обязан отвергаться: без id зависимость потеряна Иначе тест lifecycle_NullArgs_AreRejected перестанет ловить эту поломку. При смене lifecycle_NullArgs_AreRejected проверь это утверждение.");
     }
 
     @Test
@@ -229,7 +236,7 @@ class AnimalLifecycleTests {
         assertThrows(
                 NullPointerException.class,
                 () -> new AnimalLifecycle(null, "wheat"),
-                "Доска обязана быть задана: без неё цикл не может ставить и снимать задания");
+                "Доска обязана быть задана: без неё цикл не может ставить и снимать задания Иначе тест lifecycle_NullBoard_IsRejected перестанет ловить эту поломку. При смене lifecycle_NullBoard_IsRejected проверь это утверждение.");
     }
 
     @Property
@@ -246,7 +253,6 @@ class AnimalLifecycleTests {
                 default -> throw new IllegalArgumentException("Неизвестное событие: " + event);
             }
         }
-
         for (BoardCase boardCase : List.of(BoardCase.BUILD_PEN, BoardCase.LURE_ANIMAL, BoardCase.DISMANTLE_SHELTER)) {
             long active = board.all().stream()
                     .filter(ticket -> ticket.boardCase() == boardCase)
@@ -258,7 +264,8 @@ class AnimalLifecycleTests {
                     .count();
             assertTrue(
                     active <= 1,
-                    "Из любого состояния цикл не порождает двух активных заданий кейса " + boardCase + ": получено "
+                    "Из любого состояния цикл не порождает двух активных заданий кейса " + boardCase
+                            + ": получено  Иначе тест anyEventSequence_Distinct_Actives перестанет ловить эту поломку. При смене anyEventSequence_Distinct_Actives проверь это утверждение."
                             + active);
         }
     }
@@ -271,17 +278,15 @@ class AnimalLifecycleTests {
         Board second = new Board(() -> 0);
         AnimalLifecycle secondLifecycle = new AnimalLifecycle(second, "wheat");
         secondLifecycle.captured("capture_1");
-
         for (String event : events) {
             AnimalLifecycleFixtures.apply(firstLifecycle, event);
             AnimalLifecycleFixtures.apply(secondLifecycle, event);
         }
-
         assertEquals(
                 first.all(),
                 second.all(),
                 "Переходы цикла детерминированы: один вход — один состав доски, иначе "
-                        + "наблюдатель видит разное состояние при тех же событиях мира");
+                        + "наблюдатель видит разное состояние при тех же событиях мира При смене sameSequence_Is_Deterministic проверь это утверждение.");
         for (String event : events) {
             AnimalLifecycleFixtures.apply(firstLifecycle, event);
             AnimalLifecycleFixtures.apply(secondLifecycle, event);
@@ -290,6 +295,6 @@ class AnimalLifecycleTests {
                 first.all(),
                 second.all(),
                 "Детерминизм сохраняется на второй прогон: состояние автомата зависит "
-                        + "только от последовательности событий");
+                        + "только от последовательности событий Иначе тест sameSequence_Is_Deterministic перестанет ловить эту поломку. При смене sameSequence_Is_Deterministic проверь это утверждение.");
     }
 }

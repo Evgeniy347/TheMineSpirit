@@ -37,17 +37,20 @@ class StuckStageLiveTests {
         BoardTicket house = ticket(task(boardJson, "first:build_house"));
         BoardTicket mine = ticket(task(boardJson, "first:build_mine"));
         StockView stock = stock(boardJson, "first:build_house", "first:build_mine");
-        assertEquals(BoardOutcome.ACCEPTED, board.submit(house), "Живая хижина принимается доской");
+        assertEquals(
+                BoardOutcome.ACCEPTED,
+                board.submit(house),
+                "Живая хижина принимается доской Иначе тест stuckSpirit_IdleWithoutTask_ReturnsToBoardByTimeout перестанет ловить эту поломку. При смене stuckSpirit_IdleWithoutTask_ReturnsToBoardByTimeout проверь это утверждение.");
         assertEquals(
                 BoardOutcome.ACCEPTED,
                 board.submit(mine),
-                "Живая шахта принимается доской и ждёт освобождения spirit-3");
+                "Живая шахта принимается доской и ждёт освобождения spirit-3 Иначе тест stuckSpirit_IdleWithoutTask_ReturnsToBoardByTimeout перестанет ловить эту поломку. При смене stuckSpirit_IdleWithoutTask_ReturnsToBoardByTimeout проверь это утверждение.");
 
         board.stuck().see(spirit, at);
         assertEquals(
                 BoardOutcome.CLAIMED,
                 board.claim(house.id(), spirit, clock[0]),
-                "spirit-3 получает first:build_house, как в observe13");
+                "spirit-3 получает first:build_house, как в observe13 Иначе тест stuckSpirit_IdleWithoutTask_ReturnsToBoardByTimeout перестанет ловить эту поломку. При смене stuckSpirit_IdleWithoutTask_ReturnsToBoardByTimeout проверь это утверждение.");
         board.fail(
                 house.id(),
                 stock,
@@ -58,24 +61,22 @@ class StuckStageLiveTests {
         Optional<DispatchRound.Candidate> immediate = new DispatchRound(board, clock[0]).choose(mine, candidates);
         assertTrue(
                 immediate.isEmpty(),
-                "Сразу после провала дух ещё застрял: новое задание ему не выдаётся, иначе он снова упадёт");
-
+                "Сразу после провала дух ещё застрял: новое задание ему не выдаётся, иначе он снова упадёт При смене stuckSpirit_IdleWithoutTask_ReturnsToBoardByTimeout проверь это утверждение.");
         clock[0] += BoardTuning.caseFailPauseTicks();
         board.stuck().see(spirit, at);
         Optional<DispatchRound.Candidate> afterIdle = new DispatchRound(board, clock[0]).choose(mine, candidates);
-
         assertTrue(
                 afterIdle.isEmpty(),
                 "Стоящий дух не получает заданий и после паузы: пока он не сдвинулся и не спасён, доска "
-                        + "держит запрет (observe15 B1/A11)");
+                        + "держит запрет (observe15 B1/A11) Иначе тест stuckSpirit_IdleWithoutTask_ReturnsToBoardByTimeout перестанет ловить эту поломку. При смене stuckSpirit_IdleWithoutTask_ReturnsToBoardByTimeout проверь это утверждение.");
         board.stuck().see(spirit, new BlockCoord(at.x() + 7, at.y(), at.z()), clock[0], true);
         assertTrue(
                 new DispatchRound(board, clock[0]).choose(mine, candidates).isPresent(),
-                "Дух вышел на поверхность — запрет снимается, и задание снова выдаётся");
+                "Дух вышел на поверхность — запрет снимается, и задание снова выдаётся Иначе тест stuckSpirit_IdleWithoutTask_ReturnsToBoardByTimeout перестанет ловить эту поломку. При смене stuckSpirit_IdleWithoutTask_ReturnsToBoardByTimeout проверь это утверждение.");
         assertEquals(
                 BoardOutcome.CLAIMED,
                 board.claim(mine.id(), spirit, clock[0]),
-                "Тот же путь, что в игре: раздача -> claim выдаёт задание освободившемуся духу");
+                "Тот же путь, что в игре: раздача -> claim выдаёт задание освободившемуся духу Иначе тест stuckSpirit_IdleWithoutTask_ReturnsToBoardByTimeout перестанет ловить эту поломку. При смене stuckSpirit_IdleWithoutTask_ReturnsToBoardByTimeout проверь это утверждение.");
     }
 
     @Test
@@ -95,23 +96,26 @@ class StuckStageLiveTests {
             assertEquals(
                     BoardOutcome.ACCEPTED,
                     board.submit(house),
-                    "Живая first:build_house ставится на попытку " + (attempt + 1));
+                    "Живая first:build_house ставится на попытку  Иначе тест blockedStageTicket_PlanRecalculated_KeepsPauseAndReason перестанет ловить эту поломку. При смене blockedStageTicket_PlanRecalculated_KeepsPauseAndReason проверь это утверждение."
+                            + (attempt + 1));
             assertEquals(
                     BoardOutcome.CLAIMED,
                     board.claim(house.id(), UUID.randomUUID(), clock[0]),
-                    "Попытка " + (attempt + 1) + " выдана духу");
+                    "Попытка " + (attempt + 1)
+                            + " выдана духу Иначе тест blockedStageTicket_PlanRecalculated_KeepsPauseAndReason перестанет ловить эту поломку. При смене blockedStageTicket_PlanRecalculated_KeepsPauseAndReason проверь это утверждение.");
             GraphBlock.Need need =
                     attempt + 1 == BoardTuning.ticketFailLimit() ? new GraphBlock.Item("netherite_ingot", 1) : null;
             assertTrue(
                     board.fail(house.id(), stock, reasons.get(attempt), need),
-                    "Попытка " + (attempt + 1) + " провалена");
+                    "Попытка " + (attempt + 1)
+                            + " провалена Иначе тест blockedStageTicket_PlanRecalculated_KeepsPauseAndReason перестанет ловить эту поломку. При смене blockedStageTicket_PlanRecalculated_KeepsPauseAndReason проверь это утверждение.");
             clock[0] += BoardTuning.caseFailPauseCapTicks();
         }
         assertEquals(
                 BoardStatus.BLOCKED,
                 board.statusOf(house.id()).orElse(null),
-                "После " + BoardTuning.ticketFailLimit() + " провалов живая хижина заблокирована, как в observe13");
-
+                "После " + BoardTuning.ticketFailLimit()
+                        + " провалов живая хижина заблокирована, как в observe13 Иначе тест blockedStageTicket_PlanRecalculated_KeepsPauseAndReason перестанет ловить эту поломку. При смене blockedStageTicket_PlanRecalculated_KeepsPauseAndReason проверь это утверждение.");
         BoardTicket recalculated = new BoardTicket(
                 house.id(),
                 house.boardCase(),
@@ -122,24 +126,24 @@ class StuckStageLiveTests {
                 house.cause(),
                 house.dependsOn(),
                 Map.of("jungle_log", 2));
-
         assertEquals(
                 BoardStatus.BLOCKED,
                 board.statusOf(house.id()).orElse(null),
-                "Пересчёт плана не снимает блокировку: иначе BLOCKED -> ASSIGNED за 0.34 с (N25)");
+                "Пересчёт плана не снимает блокировку: иначе BLOCKED -> ASSIGNED за 0.34 с (N25) При смене blockedStageTicket_PlanRecalculated_KeepsPauseAndReason проверь это утверждение.");
         board.submit(recalculated);
         assertEquals(
                 BoardStatus.BLOCKED,
                 board.statusOf(house.id()).orElse(null),
-                "Пересчитанное задание с другой нехваткой остаётся BLOCKED до паузы, а не сбрасывает провалы");
+                "Пересчитанное задание с другой нехваткой остаётся BLOCKED до паузы, а не сбрасывает провалы Иначе тест blockedStageTicket_PlanRecalculated_KeepsPauseAndReason перестанет ловить эту поломку. При смене blockedStageTicket_PlanRecalculated_KeepsPauseAndReason проверь это утверждение.");
         assertEquals(
                 BoardOutcome.BLOCKED,
                 board.claim(house.id(), UUID.randomUUID(), clock[0]),
-                "Заблокированное задание не выдаётся после пересчёта плана");
+                "Заблокированное задание не выдаётся после пересчёта плана Иначе тест blockedStageTicket_PlanRecalculated_KeepsPauseAndReason перестанет ловить эту поломку. При смене blockedStageTicket_PlanRecalculated_KeepsPauseAndReason проверь это утверждение.");
         String card = BoardWhy.waitReason(board, recalculated, stock, clock[0]).orElse(null);
         assertTrue(
                 card != null && card.contains("заблокировано"),
-                "Карточка доски называет причину паузы после серии провалов: " + card);
+                "Карточка доски называет причину паузы после серии провалов:  Иначе тест blockedStageTicket_PlanRecalculated_KeepsPauseAndReason перестанет ловить эту поломку. При смене blockedStageTicket_PlanRecalculated_KeepsPauseAndReason проверь это утверждение."
+                        + card);
     }
 
     @Test
@@ -159,29 +163,32 @@ class StuckStageLiveTests {
                 "rescue:" + spirit,
                 List.of(),
                 Map.of());
-        assertEquals(BoardOutcome.ACCEPTED, board.submit(rescue), "Живое задание спасения принимается доской");
+        assertEquals(
+                BoardOutcome.ACCEPTED,
+                board.submit(rescue),
+                "Живое задание спасения принимается доской Иначе тест rescueTicket_StuckSpirit_IssuedThroughBoard перестанет ловить эту поломку. При смене rescueTicket_StuckSpirit_IssuedThroughBoard проверь это утверждение.");
         board.stuck().mark(spirit, now);
-
         Optional<DispatchRound.Candidate> chosen =
                 new DispatchRound(board, now).choose(rescue, List.of(candidate(spirit, "spirit-3")));
-
         assertTrue(
                 chosen.isPresent(),
                 "Задание спасения выдаётся самому застрявшему духу: иначе метка «застрял» запрещает "
-                        + "единственный способ сдвинуться (observe15 B1)");
+                        + "единственный способ сдвинуться (observe15 B1) При смене rescueTicket_StuckSpirit_IssuedThroughBoard проверь это утверждение.");
         assertEquals(
                 BoardOutcome.CLAIMED,
                 board.claim(rescue.id(), spirit, now),
-                "Claim спасения проходит через путь доски, несмотря на метку застревания");
-        assertTrue(board.complete(rescue.id()), "Успешное спасение закрывает задание");
+                "Claim спасения проходит через путь доски, несмотря на метку застревания Иначе тест rescueTicket_StuckSpirit_IssuedThroughBoard перестанет ловить эту поломку. При смене rescueTicket_StuckSpirit_IssuedThroughBoard проверь это утверждение.");
+        assertTrue(
+                board.complete(rescue.id()),
+                "Успешное спасение закрывает задание Иначе тест rescueTicket_StuckSpirit_IssuedThroughBoard перестанет ловить эту поломку. При смене rescueTicket_StuckSpirit_IssuedThroughBoard проверь это утверждение.");
         assertTrue(
                 board.stuck().isStuck(spirit, now),
                 "Закрытие задания не выдаёт себя за выход: метка держится до наблюдённой поверхности "
-                        + "(observe25 B6)");
+                        + "(observe25 B6) Иначе тест rescueTicket_StuckSpirit_IssuedThroughBoard перестанет ловить эту поломку. При смене rescueTicket_StuckSpirit_IssuedThroughBoard проверь это утверждение.");
         board.stuck().see(spirit, new BlockCoord(at.x() + 4, at.y() + 6, at.z()), now + 1, true);
         assertFalse(
                 board.stuck().isStuck(spirit, now + 1),
-                "Наблюдённый выход снимает метку «застрял»: дух снова получает обычные задания (observe15 B1)");
+                "Наблюдённый выход снимает метку «застрял»: дух снова получает обычные задания (observe15 B1) Иначе тест rescueTicket_StuckSpirit_IssuedThroughBoard перестанет ловить эту поломку. При смене rescueTicket_StuckSpirit_IssuedThroughBoard проверь это утверждение.");
     }
 
     @Test
@@ -202,14 +209,15 @@ class StuckStageLiveTests {
                 "graph:rescue_spirit",
                 List.of(),
                 Map.of());
-        assertEquals(BoardOutcome.ACCEPTED, board.submit(mine), "Живое обычное задание принимается доской");
+        assertEquals(
+                BoardOutcome.ACCEPTED,
+                board.submit(mine),
+                "Живое обычное задание принимается доской Иначе тест stuckSpirit_RescueWorkClaimable_OrdinaryWorkRefused перестанет ловить эту поломку. При смене stuckSpirit_RescueWorkClaimable_OrdinaryWorkRefused проверь это утверждение.");
         assertEquals(BoardOutcome.ACCEPTED, board.submit(rescue), "Задание выхода принимается доской");
         board.stuck().see(spirit, point(bot.get("position")), now);
         board.stuck().mark(spirit, now, "застрял (-188.5, 67.0, -516) у двора");
-
         List<DispatchRound.Candidate> candidates = List.of(candidate(spirit, "spirit-3"));
         DispatchRound round = new DispatchRound(board, now);
-
         assertTrue(
                 round.choose(mine, candidates).isEmpty(),
                 "Пока дух не двигается, обычное задание ему не выдают: иначе он снова упадёт");

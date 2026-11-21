@@ -14,17 +14,39 @@ class StoreGraphTests {
     void productionFragment_DefaultLoad_DeclaresStoreNodesAndStubs() {
         SupplyGraph graph = SupplyGraph.loadDefault();
 
-        assertTrue(graph.items().containsKey("store:minimum"), "Фрагмент склада объявляет узел минимума");
-        assertTrue(graph.items().containsKey("store:transfer"), "Фрагмент склада объявляет узел переноса");
-        assertTrue(graph.items().containsKey("store:smelt"), "Фрагмент склада объявляет узел печи");
-        assertTrue(graph.items().containsKey("store:space"), "Фрагмент склада объявляет узел места");
-        assertTrue(graph.items().containsKey("store:sort"), "Фрагмент склада объявляет узел сортировки");
-        assertTrue(graph.way("store_carry_deliver").isPresent(), "Путь сдать несомое объявлен");
-        assertTrue(graph.way("store_carry_transfer").isPresent(), "Путь переноса из сундука A в B объявлен");
-        assertTrue(graph.way("store_smelt_load").isPresent(), "Путь загрузки печи объявлен");
-        assertTrue(graph.way("store_smelt_take").isPresent(), "Путь выемки из печи объявлен");
-        assertTrue(graph.way("store_space").isPresent(), "Путь новой пары сундуков объявлен");
-        assertTrue(graph.way("store_sort").isPresent(), "Путь сортировки сундуков объявлен");
+        assertTrue(
+                graph.items().containsKey("store:minimum"),
+                "Фрагмент склада объявляет узел минимума Иначе тест productionFragment_DefaultLoad_DeclaresStoreNodesAndStubs перестанет ловить эту поломку. При смене productionFragment_DefaultLoad_DeclaresStoreNodesAndStubs проверь это утверждение.");
+        assertTrue(
+                graph.items().containsKey("store:transfer"),
+                "Фрагмент склада объявляет узел переноса Иначе тест productionFragment_DefaultLoad_DeclaresStoreNodesAndStubs перестанет ловить эту поломку. При смене productionFragment_DefaultLoad_DeclaresStoreNodesAndStubs проверь это утверждение.");
+        assertTrue(
+                graph.items().containsKey("store:smelt"),
+                "Фрагмент склада объявляет узел печи Иначе тест productionFragment_DefaultLoad_DeclaresStoreNodesAndStubs перестанет ловить эту поломку. При смене productionFragment_DefaultLoad_DeclaresStoreNodesAndStubs проверь это утверждение.");
+        assertTrue(
+                graph.items().containsKey("store:space"),
+                "Фрагмент склада объявляет узел места Иначе тест productionFragment_DefaultLoad_DeclaresStoreNodesAndStubs перестанет ловить эту поломку. При смене productionFragment_DefaultLoad_DeclaresStoreNodesAndStubs проверь это утверждение.");
+        assertTrue(
+                graph.items().containsKey("store:sort"),
+                "Фрагмент склада объявляет узел сортировки Иначе тест productionFragment_DefaultLoad_DeclaresStoreNodesAndStubs перестанет ловить эту поломку. При смене productionFragment_DefaultLoad_DeclaresStoreNodesAndStubs проверь это утверждение.");
+        assertTrue(
+                graph.way("store_carry_deliver").isPresent(),
+                "Путь сдать несомое объявлен Иначе тест productionFragment_DefaultLoad_DeclaresStoreNodesAndStubs перестанет ловить эту поломку. При смене productionFragment_DefaultLoad_DeclaresStoreNodesAndStubs проверь это утверждение.");
+        assertTrue(
+                graph.way("store_carry_transfer").isPresent(),
+                "Путь переноса из сундука A в B объявлен Иначе тест productionFragment_DefaultLoad_DeclaresStoreNodesAndStubs перестанет ловить эту поломку. При смене productionFragment_DefaultLoad_DeclaresStoreNodesAndStubs проверь это утверждение.");
+        assertTrue(
+                graph.way("store_smelt_load").isPresent(),
+                "Путь загрузки печи объявлен Иначе тест productionFragment_DefaultLoad_DeclaresStoreNodesAndStubs перестанет ловить эту поломку. При смене productionFragment_DefaultLoad_DeclaresStoreNodesAndStubs проверь это утверждение.");
+        assertTrue(
+                graph.way("store_smelt_take").isPresent(),
+                "Путь выемки из печи объявлен Иначе тест productionFragment_DefaultLoad_DeclaresStoreNodesAndStubs перестанет ловить эту поломку. При смене productionFragment_DefaultLoad_DeclaresStoreNodesAndStubs проверь это утверждение.");
+        assertTrue(
+                graph.way("store_space").isPresent(),
+                "Путь новой пары сундуков объявлен Иначе тест productionFragment_DefaultLoad_DeclaresStoreNodesAndStubs перестанет ловить эту поломку. При смене productionFragment_DefaultLoad_DeclaresStoreNodesAndStubs проверь это утверждение.");
+        assertTrue(
+                graph.way("store_sort").isPresent(),
+                "Путь сортировки сундуков объявлен Иначе тест productionFragment_DefaultLoad_DeclaresStoreNodesAndStubs перестанет ловить эту поломку. При смене productionFragment_DefaultLoad_DeclaresStoreNodesAndStubs проверь это утверждение.");
         assertTrue(graph.implemented("store_carry_deliver"), "Сдать несомое исполняется действием склада");
         assertTrue(graph.implemented("store_smelt_load"), "Загрузка печи исполняется выплавкой угля");
         assertTrue(graph.implemented("store_sort"), "Сортировка исполняется действием склада");

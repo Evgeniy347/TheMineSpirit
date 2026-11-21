@@ -23,14 +23,20 @@ class LifeGraphPlannerTests {
         GraphEvent life =
                 graph.events().getOrDefault("life_threat", new GraphEvent("", List.of(), Map.of(), List.of()));
 
-        assertEquals("life_threat", life.name(), "Фрагмент life.json обязан добавить событие life_threat");
-        assertTrue(life.life(), "Событие жизни помечено фактами жизни: иначе потолок 100 не отличить от работы");
+        assertEquals(
+                "life_threat",
+                life.name(),
+                "Фрагмент life.json обязан добавить событие life_threat Иначе тест fragment_LifeThreat_LivesInOwnFileWithLifeFacts перестанет ловить эту поломку. При смене fragment_LifeThreat_LivesInOwnFileWithLifeFacts проверь это утверждение.");
+        assertTrue(
+                life.life(),
+                "Событие жизни помечено фактами жизни: иначе потолок 100 не отличить от работы При смене fragment_LifeThreat_LivesInOwnFileWithLifeFacts проверь это утверждение.");
         assertTrue(
                 life.tasks().stream()
                         .map(GraphEvent.Task::id)
                         .toList()
                         .containsAll(List.of("defend", "retreat", "arm", "heal", "eat", "sleep")),
-                "В событии жизни есть пути защищаться, отходить, вооружаться, лечиться, есть и спать: " + life.tasks());
+                "В событии жизни есть пути защищаться, отходить, вооружаться, лечиться, есть и спать:  Иначе тест fragment_LifeThreat_LivesInOwnFileWithLifeFacts перестанет ловить эту поломку. При смене fragment_LifeThreat_LivesInOwnFileWithLifeFacts проверь это утверждение."
+                        + life.tasks());
     }
 
     @Test
@@ -39,21 +45,23 @@ class LifeGraphPlannerTests {
                 .event("life_threat")
                 .facts(danger("spirit-1", 4, 20, GraphFacts.TargetKind.SPIRIT, 2, 2));
         GraphPlan plan = world.plan();
-
         assertEquals(
                 GraphWorld.GRAPH.maxPriority(),
                 plan.priority(DEFEND),
-                "Раненый дух и два сагренных моба дают защите потолок графа, а не константу: " + plan.tasks());
+                "Раненый дух и два сагренных моба дают защите потолок графа, а не константу:  Иначе тест plan_WoundedSpiritTwoMobs_DefendAtCeilingAboveEveryWork перестанет ловить эту поломку. При смене plan_WoundedSpiritTwoMobs_DefendAtCeilingAboveEveryWork проверь это утверждение."
+                        + plan.tasks());
         assertTrue(
                 plan.tasks().stream()
                         .filter(task -> !task.id().startsWith("event:life_"))
                         .allMatch(task -> task.priority() <= GraphPriorities.work(GraphWorld.GRAPH)),
-                "Полоса жизни не поднимает обычные работы выше потолка 99: " + plan.tasks());
+                "Полоса жизни не поднимает обычные работы выше потолка 99:  Иначе тест plan_WoundedSpiritTwoMobs_DefendAtCeilingAboveEveryWork перестанет ловить эту поломку. При смене plan_WoundedSpiritTwoMobs_DefendAtCeilingAboveEveryWork проверь это утверждение."
+                        + plan.tasks());
         assertTrue(
                 plan.tasks().stream()
                         .filter(task -> !DEFEND.equals(task.id()))
                         .allMatch(task -> task.priority() <= plan.priority(DEFEND)),
-                "Защита жизни выше остальных заданий: " + plan.tasks());
+                "Защита жизни выше остальных заданий:  Иначе тест plan_WoundedSpiritTwoMobs_DefendAtCeilingAboveEveryWork перестанет ловить эту поломку. При смене plan_WoundedSpiritTwoMobs_DefendAtCeilingAboveEveryWork проверь это утверждение."
+                        + plan.tasks());
     }
 
     @Test
@@ -62,11 +70,11 @@ class LifeGraphPlannerTests {
                 .event("life_threat_spirit")
                 .facts(danger("spirit-1", 4, 20, GraphFacts.TargetKind.SPIRIT, 2, 2));
         GraphPlan plan = world.plan();
-
         assertEquals(
                 GraphWorld.GRAPH.maxPriority(),
                 plan.priority("event:life_threat_spirit:protect_spirit"),
-                "Есть угроза духу — защита духа на потолке: " + plan.tasks());
+                "Есть угроза духу — защита духа на потолке:  Иначе тест plan_ThreatToSpirit_ProtectSpiritAtCeiling перестанет ловить эту поломку. При смене plan_ThreatToSpirit_ProtectSpiritAtCeiling проверь это утверждение."
+                        + plan.tasks());
     }
 
     @Test
@@ -75,19 +83,21 @@ class LifeGraphPlannerTests {
                 .event("life_threat_player")
                 .facts(danger("spirit-1", 20, 20, GraphFacts.TargetKind.PLAYER, 2, 2));
         GraphPlan plan = world.plan();
-
         assertEquals(
                 GraphWorld.GRAPH.maxPriority(),
                 plan.priority("event:life_threat_player:life_protect_player"),
-                "Два моба у игрока — защита игрока на потолке: " + plan.tasks());
+                "Два моба у игрока — защита игрока на потолке:  Иначе тест plan_ThreatToPlayer_ProtectPlayerAtCeiling перестанет ловить эту поломку. При смене plan_ThreatToPlayer_ProtectPlayerAtCeiling проверь это утверждение."
+                        + plan.tasks());
     }
 
     @Test
     void plan_HealthySpiritWithoutThreat_DoesNotRaiseLife() {
         GraphWorld world = GraphWorld.settled().event("life_threat").facts(healthy("spirit-1", 20, 20));
         GraphPlan plan = world.plan();
-
-        assertFalse(plan.raised(DEFEND), "Здоровый дух без угроз не поднимает жизнь: " + plan.tasks());
+        assertFalse(
+                plan.raised(DEFEND),
+                "Здоровый дух без угроз не поднимает жизнь:  Иначе тест plan_HealthySpiritWithoutThreat_DoesNotRaiseLife перестанет ловить эту поломку. При смене plan_HealthySpiritWithoutThreat_DoesNotRaiseLife проверь это утверждение."
+                        + plan.tasks());
     }
 
     @Test
@@ -100,10 +110,17 @@ class LifeGraphPlannerTests {
                 .withThreats(List.of(
                         threat("threat-b", "spirit-b", GraphFacts.TargetKind.SPIRIT, 2),
                         threat("threat-player", "player", GraphFacts.TargetKind.PLAYER, 5)));
-
-        assertEquals(0, LifeThreats.risk(facts, "spirit-a"), "Моб на другого духа не поднимает риск раненого духа");
-        assertTrue(LifeThreats.risk(facts, "spirit-b") > 0.2, "Моб, сагренный на духа, поднимает риск именно его");
-        assertEquals(0, LifeThreats.risk(facts, "spirit-c"), "Здоровый дух вне агра не получает чужую угрозу");
+        assertEquals(
+                0,
+                LifeThreats.risk(facts, "spirit-a"),
+                "Моб на другого духа не поднимает риск раненого духа Иначе тест risk_MobAggroedToOtherSpirit_RaisesOnlyItsTarget перестанет ловить эту поломку. При смене risk_MobAggroedToOtherSpirit_RaisesOnlyItsTarget проверь это утверждение.");
+        assertTrue(
+                LifeThreats.risk(facts, "spirit-b") > 0.2,
+                "Моб, сагренный на духа, поднимает риск именно его Иначе тест risk_MobAggroedToOtherSpirit_RaisesOnlyItsTarget перестанет ловить эту поломку. При смене risk_MobAggroedToOtherSpirit_RaisesOnlyItsTarget проверь это утверждение.");
+        assertEquals(
+                0,
+                LifeThreats.risk(facts, "spirit-c"),
+                "Здоровый дух вне агра не получает чужую угрозу Иначе тест risk_MobAggroedToOtherSpirit_RaisesOnlyItsTarget перестанет ловить эту поломку. При смене risk_MobAggroedToOtherSpirit_RaisesOnlyItsTarget проверь это утверждение.");
     }
 
     @Test
@@ -126,19 +143,20 @@ class LifeGraphPlannerTests {
                 .event("hungry")
                 .facts(facts);
         GraphPlan plan = world.plan();
-
         assertEquals(
                 List.of(),
                 CrossScene.ahead(plan, plan.task(DEFEND).orElseThrow()),
-                "Раненый дух под двумя мобами — защита выбирается раньше всего, в том числе еды: " + plan.tasks());
+                "Раненый дух под двумя мобами — защита выбирается раньше всего, в том числе еды:  Иначе тест plan_ManySpiritsAndMobs_LifeAtCeilingOnlyForAggroTargets перестанет ловить эту поломку. При смене plan_ManySpiritsAndMobs_LifeAtCeilingOnlyForAggroTargets проверь это утверждение."
+                        + plan.tasks());
         assertTrue(
                 plan.tasks().stream()
                         .filter(task -> !task.id().startsWith("event:life_"))
                         .allMatch(task -> task.priority() <= GraphPriorities.need(GraphWorld.GRAPH)),
-                "Обычные задания и потребности не выше полосы потребности: " + plan.tasks());
+                "Обычные задания и потребности не выше полосы потребности:  Иначе тест plan_ManySpiritsAndMobs_LifeAtCeilingOnlyForAggroTargets перестанет ловить эту поломку. При смене plan_ManySpiritsAndMobs_LifeAtCeilingOnlyForAggroTargets проверь это утверждение."
+                        + plan.tasks());
         assertTrue(
                 LifeThreats.risk(facts, "spirit-a") > LifeThreats.risk(facts, "spirit-c"),
-                "Два моба у духа опаснее одного дальнего");
+                "Два моба у духа опаснее одного дальнего Иначе тест plan_ManySpiritsAndMobs_LifeAtCeilingOnlyForAggroTargets перестанет ловить эту поломку. При смене plan_ManySpiritsAndMobs_LifeAtCeilingOnlyForAggroTargets проверь это утверждение.");
         assertEquals(0, LifeThreats.risk(facts, "spirit-b"), "Моб на другого духа не поднимает здорового духа");
     }
 
@@ -153,7 +171,6 @@ class LifeGraphPlannerTests {
                 .with("oak_planks", 0)
                 .with("stick", 0);
         GraphPlan plan = world.plan();
-
         assertTrue(
                 plan.tasks().stream().allMatch(task -> task.priority() <= GraphPriorities.need(GraphWorld.GRAPH)),
                 "Цепочка бревно → доски → палки не выходит за полосу потребности: " + plan.tasks());
@@ -190,7 +207,6 @@ class LifeGraphPlannerTests {
                 .event("hungry")
                 .facts(facts)
                 .plan();
-
         assertTrue(
                 plan.tasks().stream()
                         .filter(task -> !task.id().startsWith("event:life_"))

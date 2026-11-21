@@ -17,7 +17,7 @@ class GraphChoiceTests {
         assertEquals(
                 GraphChoice.NEUTRAL,
                 GRAPH.costs().choice(),
-                "Веса по умолчанию нейтральны: поведение графа не меняется");
+                "Веса по умолчанию нейтральны: поведение графа не меняется Иначе тест choice_DefaultGraph_IsNeutral перестанет ловить эту поломку. При смене choice_DefaultGraph_IsNeutral проверь это утверждение.");
     }
 
     @Test
@@ -25,7 +25,7 @@ class GraphChoiceTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> tuned("{\"farTrip\": -1}"),
-                "Отрицательная поправка ломает сравнение весов: её отвергают с объяснением");
+                "Отрицательная поправка ломает сравнение весов: её отвергают с объяснением При смене choice_NegativeParameter_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -37,16 +37,20 @@ class GraphChoiceTests {
         GraphWorld storm = dusk();
         storm.world.add(MoreRules.BAD_TRIP_CONDITIONS);
         GraphPlan harsh = GraphPlanner.plan(bad, storm.state());
-
         assertEquals(
-                600, neutral.task("more_return_before_night").orElseThrow().ticks(), "Дорога 40 блоков: 2·40·5 + 200");
+                600,
+                neutral.task("more_return_before_night").orElseThrow().ticks(),
+                "Дорога 40 блоков: 2·40·5 + 200 Иначе тест farTrip_BadConditions_SeasonTravel перестанет ловить эту поломку. При смене farTrip_BadConditions_SeasonTravel проверь это утверждение.");
         assertEquals(
-                2200, harsh.task("more_return_before_night").orElseThrow().ticks(), "Непогода впятеро удлиняет дорогу");
+                2200,
+                harsh.task("more_return_before_night").orElseThrow().ticks(),
+                "Непогода впятеро удлиняет дорогу Иначе тест farTrip_BadConditions_SeasonTravel перестанет ловить эту поломку. При смене farTrip_BadConditions_SeasonTravel проверь это утверждение.");
         GraphPlan far = GraphPlanner.plan(tuned("{\"farTrip\": 10}"), storm.state());
         assertTrue(
                 far.priority("more_return_before_night") < neutral.priority("more_return_before_night"),
                 "Дальняя вылазка в непогоду ниже по весу: " + far.priority("more_return_before_night") + " против "
-                        + neutral.priority("more_return_before_night"));
+                        + neutral.priority(
+                                "more_return_before_night Иначе тест farTrip_BadConditions_SeasonTravel перестанет ловить эту поломку. При смене farTrip_BadConditions_SeasonTravel проверь это утверждение."));
     }
 
     @Test
@@ -55,12 +59,14 @@ class GraphChoiceTests {
         world.event(More3Rules.WORK_YIELD_LOW);
         GraphPlan neutral = GraphPlanner.plan(GRAPH, world.state());
         GraphPlan retuned = GraphPlanner.plan(tuned("{\"slowWork\": 2}"), world.state());
-
-        assertEquals(200, neutral.task("more_return_before_night").orElseThrow().ticks(), "Срок пути из costs");
+        assertEquals(
+                200,
+                neutral.task("more_return_before_night").orElseThrow().ticks(),
+                "Срок пути из costs Иначе тест slowWork_MeasuredSlowdown_RaisesCost перестанет ловить эту поломку. При смене slowWork_MeasuredSlowdown_RaisesCost проверь это утверждение.");
         assertEquals(
                 400,
                 retuned.task("more_return_before_night").orElseThrow().ticks(),
-                "Замеренная медленная работа удваивает срок, а не получает отдельный путь");
+                "Замеренная медленная работа удваивает срок, а не получает отдельный путь Иначе тест slowWork_MeasuredSlowdown_RaisesCost перестанет ловить эту поломку. При смене slowWork_MeasuredSlowdown_RaisesCost проверь это утверждение.");
     }
 
     @Test
@@ -69,8 +75,11 @@ class GraphChoiceTests {
         int neutral = lowestSecure(GraphPlanner.plan(GRAPH, world.state()));
         world.world.add(MoreRules.WORK_DUPLICATE);
         int penalized = lowestSecure(GraphPlanner.plan(tuned("{\"duplicate\": 0.5}"), world.state()));
-
-        assertTrue(penalized < neutral, "Вторая работа на тот же узел дешевле: " + penalized + " против " + neutral);
+        assertTrue(
+                penalized < neutral,
+                "Вторая работа на тот же узел дешевле: " + penalized
+                        + " против  Иначе тест duplicate_SameWork_TakesPenalty перестанет ловить эту поломку. При смене duplicate_SameWork_TakesPenalty проверь это утверждение."
+                        + neutral);
     }
 
     @Test
@@ -79,8 +88,11 @@ class GraphChoiceTests {
         int neutral = lowestSecure(GraphPlanner.plan(GRAPH, world.state()));
         world.event(More3Rules.WORK_CONFLICT);
         int spread = lowestSecure(GraphPlanner.plan(tuned("{\"conflict\": 0.5}"), world.state()));
-
-        assertTrue(spread < neutral, "Конфликт работ разводит духов весом: " + spread + " против " + neutral);
+        assertTrue(
+                spread < neutral,
+                "Конфликт работ разводит духов весом: " + spread
+                        + " против  Иначе тест conflict_NearWorks_SpreadByWeight перестанет ловить эту поломку. При смене conflict_NearWorks_SpreadByWeight проверь это утверждение."
+                        + neutral);
     }
 
     @Test
@@ -89,7 +101,6 @@ class GraphChoiceTests {
         int neutral = lowestSecure(GraphPlanner.plan(GRAPH, world.state()));
         world.event(More7Rules.WORK_PILEUP);
         int spread = lowestSecure(GraphPlanner.plan(tuned("{\"pileup\": 0.5}"), world.state()));
-
         assertTrue(spread < neutral, "Скопление работ снижает вес дубля: " + spread + " против " + neutral);
     }
 
@@ -101,7 +112,6 @@ class GraphChoiceTests {
         int neutral = GraphPlanner.plan(GRAPH, world.state()).priority("more_help_player");
         int boosted = GraphPlanner.plan(tuned("{\"strategicBoost\": 10}"), world.state())
                 .priority("more_help_player");
-
         assertTrue(boosted > neutral, "Стратегическая цель поднимает вес работы: " + boosted + " против " + neutral);
     }
 
@@ -113,7 +123,6 @@ class GraphChoiceTests {
         int neutral = GraphPlanner.plan(GRAPH, world.state()).priority("more_help_player");
         int boosted = GraphPlanner.plan(tuned("{\"bottleneckBoost\": 10}"), world.state())
                 .priority("more_help_player");
-
         assertTrue(boosted > neutral, "Отстающий этап поднимает свою работу: " + boosted + " против " + neutral);
     }
 
@@ -125,7 +134,6 @@ class GraphChoiceTests {
         int neutral = GraphPlanner.plan(GRAPH, world.state()).priority("store_smelt_load");
         int boosted = GraphPlanner.plan(tuned("{\"idleStationBoost\": 10}"), world.state())
                 .priority("store_smelt_load");
-
         assertTrue(boosted > neutral, "Простаивающая станция поднимает свою работу: " + boosted + " против " + neutral);
     }
 
@@ -136,7 +144,6 @@ class GraphChoiceTests {
         int neutral = GraphPlanner.plan(GRAPH, world.state()).priority("more_return_before_night");
         int home =
                 GraphPlanner.plan(tuned("{\"nightHome\": 0.5}"), world.state()).priority("more_return_before_night");
-
         assertTrue(home < neutral, "Ночью дальняя работа дешевле домашней: " + home + " против " + neutral);
     }
 
@@ -147,7 +154,6 @@ class GraphChoiceTests {
         int neutral = GraphPlanner.plan(GRAPH, world.state()).priority("building:fence");
         int boosted = GraphPlanner.plan(tuned("{\"spaceFoundBoost\": 50}"), world.state())
                 .priority("building:fence");
-
         assertTrue(boosted > neutral, "Свободное место поднимает стройку: " + boosted + " против " + neutral);
     }
 
@@ -158,7 +164,6 @@ class GraphChoiceTests {
         int neutral = GraphPlanner.plan(GRAPH, world.state()).priority("building:fence");
         int tight =
                 GraphPlanner.plan(tuned("{\"spaceTight\": 0.3}"), world.state()).priority("building:fence");
-
         assertTrue(tight < neutral, "Тесное место снижает вес стройки: " + tight + " против " + neutral);
     }
 
@@ -170,7 +175,6 @@ class GraphChoiceTests {
         int neutral = GraphPlanner.plan(GRAPH, world.state()).priority(guard);
         int alone =
                 GraphPlanner.plan(tuned("{\"petAlone\": 0.5}"), world.state()).priority(guard);
-
         assertTrue(alone < neutral, "Приручённого питомца не тревожат лишней охраной: " + alone + " против " + neutral);
     }
 
@@ -181,7 +185,6 @@ class GraphChoiceTests {
         int neutral = GraphPlanner.plan(GRAPH, world.state()).priority("breed_cow");
         int held =
                 GraphPlanner.plan(tuned("{\"herdFull\": 0.5}"), world.state()).priority("breed_cow");
-
         assertTrue(held < neutral, "Полный загон сдерживает разведение: " + held + " против " + neutral);
     }
 
@@ -192,7 +195,6 @@ class GraphChoiceTests {
         world.event(More7Rules.FIELD_FULL);
         GraphPlan neutral = GraphPlanner.plan(GRAPH, world.state());
         GraphPlan held = GraphPlanner.plan(tuned("{\"fieldFull\": 0.5}"), world.state());
-
         String sow = "event:" + More2Rules.FOOD_LOW + ":more2_sow_food";
         String breed = "event:" + More2Rules.FOOD_LOW + ":more2_breed_food";
         assertTrue(

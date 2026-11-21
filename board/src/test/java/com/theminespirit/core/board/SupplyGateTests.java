@@ -34,11 +34,11 @@ class SupplyGateTests {
                 12,
                 merged.supplyCount(),
                 "Повторная заявка обязана поднять количество, а не остаться старой: "
-                        + "иначе дух несёт 4 камня при нехватке 12 и доска ставит заявку снова и снова");
+                        + "иначе дух несёт 4 камня при нехватке 12 и доска ставит заявку снова и снова При смене merge_GrownDemand_KeepsSingleRequestWithNewCount проверь это утверждение.");
         assertEquals(
                 new BlockCoord(1, 64, 0),
                 merged.deposit(),
-                "Точка сдачи не теряется, если в новой заявке её не нашли: консолидация не ломает маршрут");
+                "Точка сдачи не теряется, если в новой заявке её не нашли: консолидация не ломает маршрут При смене merge_GrownDemand_KeepsSingleRequestWithNewCount проверь это утверждение.");
     }
 
     @Test
@@ -49,14 +49,20 @@ class SupplyGateTests {
         assertEquals(
                 before,
                 SupplyGate.merge(before, next),
-                "Меньшая заявка не откатывает уже заказанное количество: иначе снабжение топчется на месте");
+                "Меньшая заявка не откатывает уже заказанное количество: иначе снабжение топчется на месте При смене merge_SmallerDemand_KeepsExistingRequest проверь это утверждение.");
     }
 
     @Test
     void isSupply_SupplyPrefixes_OnlySupplyTickets() {
-        assertTrue(SupplyGate.isSupply("supply:cobblestone"), "Снабжение со склада — заявка снабжения");
-        assertTrue(SupplyGate.isSupply("supply_gather:coal"), "Сбор на склад — та же заявка снабжения");
-        assertFalse(SupplyGate.isSupply("graph:make:coal"), "Графовая работа не сливается как снабжение");
+        assertTrue(
+                SupplyGate.isSupply("supply:cobblestone"),
+                "Снабжение со склада — заявка снабжения Иначе тест isSupply_SupplyPrefixes_OnlySupplyTickets перестанет ловить эту поломку. При смене isSupply_SupplyPrefixes_OnlySupplyTickets проверь это утверждение.");
+        assertTrue(
+                SupplyGate.isSupply("supply_gather:coal"),
+                "Сбор на склад — та же заявка снабжения Иначе тест isSupply_SupplyPrefixes_OnlySupplyTickets перестанет ловить эту поломку. При смене isSupply_SupplyPrefixes_OnlySupplyTickets проверь это утверждение.");
+        assertFalse(
+                SupplyGate.isSupply("graph:make:coal"),
+                "Графовая работа не сливается как снабжение Иначе тест isSupply_SupplyPrefixes_OnlySupplyTickets перестанет ловить эту поломку. При смене isSupply_SupplyPrefixes_OnlySupplyTickets проверь это утверждение.");
     }
 
     @Test
@@ -64,14 +70,14 @@ class SupplyGateTests {
         assertFalse(
                 SupplyGate.needsDepositPoint(BoardCase.GATHER_MATERIALS),
                 "Добыча не сдаёт сразу и умеет идти без точки сдачи: при пустом складе задание всё равно "
-                        + "выходит на доску, а не ждёт сундук бесконечно");
+                        + "выходит на доску, а не ждёт сундук бесконечно Иначе тест needsDepositPoint_GatherMaterials_StartsWithoutContainer перестанет ловить эту поломку. При смене needsDepositPoint_GatherMaterials_StartsWithoutContainer проверь это утверждение.");
     }
 
     @Test
     void needsDepositPoint_SupplySite_RequiresContainer() {
         assertTrue(
                 SupplyGate.needsDepositPoint(BoardCase.SUPPLY_SITE),
-                "Снабжение со склада без контейнера сдавать некуда: задание не ставится, доска ставит сундук");
+                "Снабжение со склада без контейнера сдавать некуда: задание не ставится, доска ставит сундук Иначе тест needsDepositPoint_SupplySite_RequiresContainer перестанет ловить эту поломку. При смене needsDepositPoint_SupplySite_RequiresContainer проверь это утверждение.");
     }
 
     @Test
@@ -82,11 +88,11 @@ class SupplyGateTests {
         assertTrue(
                 decision.supply().isEmpty(),
                 "Снабжение со склада не ставится, когда весь запас держится минимумом: дух шёл бы к сундуку, "
-                        + "брал 0 и закрывал задание без доставки, а нехватка оставалась бы");
+                        + "брал 0 и закрывал задание без доставки, а нехватка оставалась бы Иначе тест decide_StockInsideMinimum_GathersInsteadOfSupply перестанет ловить эту поломку. При смене decide_StockInsideMinimum_GathersInsteadOfSupply проверь это утверждение.");
         assertEquals(
                 List.of(new SupplyGate.Request("dirt", 59)),
                 decision.gather(),
-                "Нехватку сверх неприкосновенного минимума закрывает добыча, а не снабжение со склада");
+                "Нехватку сверх неприкосновенного минимума закрывает добыча, а не снабжение со склада Иначе тест decide_StockInsideMinimum_GathersInsteadOfSupply перестанет ловить эту поломку. При смене decide_StockInsideMinimum_GathersInsteadOfSupply проверь это утверждение.");
     }
 
     @Test
@@ -97,8 +103,10 @@ class SupplyGateTests {
         assertEquals(
                 List.of(new SupplyGate.Request("cobblestone", 141)),
                 decision.supply(),
-                "Материал выше минимума берётся со склада: снабжение разрешено");
-        assertTrue(decision.gather().isEmpty(), "Добыча не нужна, пока склад отдаёт материал");
+                "Материал выше минимума берётся со склада: снабжение разрешено Иначе тест decide_StockAboveMinimum_SuppliesFromStock перестанет ловить эту поломку. При смене decide_StockAboveMinimum_SuppliesFromStock проверь это утверждение.");
+        assertTrue(
+                decision.gather().isEmpty(),
+                "Добыча не нужна, пока склад отдаёт материал Иначе тест decide_StockAboveMinimum_SuppliesFromStock перестанет ловить эту поломку. При смене decide_StockAboveMinimum_SuppliesFromStock проверь это утверждение.");
     }
 
     @Test
@@ -110,14 +118,14 @@ class SupplyGateTests {
         assertTrue(
                 waiting.isEmpty(),
                 "Снабжение, только что закрытое без доставки, не пересоздаётся сразу: доска не выдаёт "
-                        + "его каждую пересборку");
+                        + "его каждую пересборку Иначе тест decide_RecentlyClosedSupply_WaitsForBackoff перестанет ловить эту поломку. При смене decide_RecentlyClosedSupply_WaitsForBackoff проверь это утверждение.");
 
         SupplyGate.Decision after = SupplyGate.decide(
                 Map.of("cobblestone", 141), Map.of("cobblestone", 96), 64, closedAt, 100 + BACKOFF, BACKOFF);
         assertEquals(
                 List.of(new SupplyGate.Request("cobblestone", 141)),
                 after.supply(),
-                "После отката снабжение ставится снова: пауза не запрещает задание навсегда");
+                "После отката снабжение ставится снова: пауза не запрещает задание навсегда Иначе тест decide_RecentlyClosedSupply_WaitsForBackoff перестанет ловить эту поломку. При смене decide_RecentlyClosedSupply_WaitsForBackoff проверь это утверждение.");
     }
 
     @Test
@@ -135,7 +143,7 @@ class SupplyGateTests {
 
         assertFalse(
                 SupplyGate.retains(stale, Set.of()),
-                "Старое задание добычи маркера кирки снимается с доски, а не живёт вечно по причине always");
+                "Старое задание добычи маркера кирки снимается с доски, а не живёт вечно по причине always Иначе тест retains_ToolTierSupply_False перестанет ловить эту поломку. При смене retains_ToolTierSupply_False проверь это утверждение.");
     }
 
     @Test
@@ -153,27 +161,27 @@ class SupplyGateTests {
 
         assertTrue(
                 SupplyGate.retains(ordinary, Set.of()),
-                "Обычное задание с причиной always остаётся на доске: фильтр трогает только маркеры кирки");
+                "Обычное задание с причиной always остаётся на доске: фильтр трогает только маркеры кирки Иначе тест retains_OrdinaryAlwaysTicket_True перестанет ловить эту поломку. При смене retains_OrdinaryAlwaysTicket_True проверь это утверждение.");
     }
 
     @Test
     void isToolTierSupply_SupplyTicketWithMarker_True() {
         assertTrue(
                 SupplyGate.isToolTierSupply("supply_gather:pickaxe_luck"),
-                "Старый тикет добычи маркера кирки обязан сниматься с доски: предмета 'pickaxe_luck' не существует");
+                "Старый тикет добычи маркера кирки обязан сниматься с доски: предмета 'pickaxe_luck' не существует Иначе тест isToolTierSupply_SupplyTicketWithMarker_True перестанет ловить эту поломку. При смене isToolTierSupply_SupplyTicketWithMarker_True проверь это утверждение.");
         assertTrue(
                 SupplyGate.isToolTierSupply("supply:pickaxe_stone_tier"),
-                "Снабжение маркером кирки — та же ошибка: его тоже снимают");
+                "Снабжение маркером кирки — та же ошибка: его тоже снимают Иначе тест isToolTierSupply_SupplyTicketWithMarker_True перестанет ловить эту поломку. При смене isToolTierSupply_SupplyTicketWithMarker_True проверь это утверждение.");
     }
 
     @Test
     void isToolTierSupply_OtherTickets_False() {
         assertFalse(
                 SupplyGate.isToolTierSupply("supply_gather:dirt"),
-                "Обычная добыча не снимается: фильтр трогает только маркеры инструмента");
+                "Обычная добыча не снимается: фильтр трогает только маркеры инструмента Иначе тест isToolTierSupply_OtherTickets_False перестанет ловить эту поломку. При смене isToolTierSupply_OtherTickets_False проверь это утверждение.");
         assertFalse(
                 SupplyGate.isToolTierSupply("left_ore:-188,-2,-448"),
-                "Тикет оставленной руды не supply: его гейт по маркеру кирки сохраняется");
+                "Тикет оставленной руды не supply: его гейт по маркеру кирки сохраняется Иначе тест isToolTierSupply_OtherTickets_False перестанет ловить эту поломку. При смене isToolTierSupply_OtherTickets_False проверь это утверждение.");
     }
 
     @Test
@@ -188,12 +196,12 @@ class SupplyGateTests {
 
         assertTrue(
                 decision.supply().isEmpty(),
-                "Маркер кирки — требование инструмента, а не предмет склада: снабжение по нему не ставится");
+                "Маркер кирки — требование инструмента, а не предмет склада: снабжение по нему не ставится Иначе тест decide_ToolTierMarker_NotGatheredAsItem перестанет ловить эту поломку. При смене decide_ToolTierMarker_NotGatheredAsItem проверь это утверждение.");
         assertEquals(
                 List.of(new SupplyGate.Request("dirt", 2)),
                 decision.gather(),
                 "Добыча маркера кирки даёт «не найден способ добычи pickaxe_*»: нехватка инструмента ждёт "
-                        + "подходящую кирку, а обычные материалы добываются как раньше");
+                        + "подходящую кирку, а обычные материалы добываются как раньше Иначе тест decide_ToolTierMarker_NotGatheredAsItem перестанет ловить эту поломку. При смене decide_ToolTierMarker_NotGatheredAsItem проверь это утверждение.");
     }
 
     @Test
@@ -204,7 +212,7 @@ class SupplyGateTests {
         assertEquals(
                 List.of(new SupplyGate.Request("dirt", 59)),
                 decision.gather(),
-                "Минимум не даёт взять материал со склада: добычу нельзя откладывать из-за отката снабжения");
+                "Минимум не даёт взять материал со склада: добычу нельзя откладывать из-за отката снабжения Иначе тест decide_GatherHeldByMinimum_StillGathers перестанет ловить эту поломку. При смене decide_GatherHeldByMinimum_StillGathers проверь это утверждение.");
     }
 
     @Test
@@ -218,12 +226,12 @@ class SupplyGateTests {
         assertTrue(
                 SupplyGate.hasActiveSupply(board, targets, "cobblestone"),
                 "Открытая заявка снабжения держит предмет: иначе доска ставит вторую такую же каждый пересбор, "
-                        + "и духи носят один материал двумя маршрутами");
+                        + "и духи носят один материал двумя маршрутами При смене hasActiveSupply_OpenOrAssigned_True проверь это утверждение.");
 
         board.claim(pending.id(), SPIRIT, 100);
         assertTrue(
                 SupplyGate.hasActiveSupply(board, targets, "cobblestone"),
-                "Выданная духу заявка тоже активна: пока её несут, новую на тот же предмет не ставят");
+                "Выданная духу заявка тоже активна: пока её несут, новую на тот же предмет не ставят Иначе тест hasActiveSupply_OpenOrAssigned_True перестанет ловить эту поломку. При смене hasActiveSupply_OpenOrAssigned_True проверь это утверждение.");
     }
 
     @Test
@@ -237,7 +245,7 @@ class SupplyGateTests {
         board.cancel(pending.id());
         assertFalse(
                 SupplyGate.hasActiveSupply(board, targets, "cobblestone"),
-                "Закрытая заявка не держит предмет: иначе нехватка после отмены не закрывалась бы никогда");
+                "Закрытая заявка не держит предмет: иначе нехватка после отмены не закрывалась бы никогда При смене hasActiveSupply_ClosedOrForeign_False проверь это утверждение.");
     }
 
     @Test
@@ -265,10 +273,10 @@ class SupplyGateTests {
         assertFalse(
                 SupplyGate.hasActiveSupply(board, targets, "cobblestone"),
                 "Заявка на уголь не держит камень, а графовая работа — не заявка снабжения: иначе камень "
-                        + "ждал бы чужого задания");
+                        + "ждал бы чужого задания При смене hasActiveSupply_OtherItemOrNonSupplyTicket_False проверь это утверждение.");
         assertFalse(
                 SupplyGate.hasActiveSupply(board, targets, "dirt"),
-                "Заявка без цели-предмета не держит ничего: сравнивать нечего, нужды в добыче это не отменяет");
+                "Заявка без цели-предмета не держит ничего: сравнивать нечего, нужды в добыче это не отменяет Иначе тест hasActiveSupply_OtherItemOrNonSupplyTicket_False перестанет ловить эту поломку. При смене hasActiveSupply_OtherItemOrNonSupplyTicket_False проверь это утверждение.");
     }
 
     private static BoardTicket supplyTicket(String id) {

@@ -133,7 +133,7 @@ class TicketPlansTests {
             assertTrue(
                     collectScripts(plan).contains(CASE_SCRIPTS.get(boardCase)),
                     "План кейса " + boardCase + " обязан содержать целевой скрипт " + CASE_SCRIPTS.get(boardCase)
-                            + ": без него задание не делает свою работу");
+                            + ": без него задание не делает свою работу Иначе тест plan_EveryCase_ContainsCaseScript перестанет ловить эту поломку. При смене plan_EveryCase_ContainsCaseScript проверь это утверждение.");
         }
     }
 
@@ -148,7 +148,7 @@ class TicketPlansTests {
                     collectScripts(plan),
                     collectScripts(validated),
                     "План случая " + boardCase + " обязан проходить каталог скриптов теми же шагами: иначе доска "
-                            + "выдаст духу задание, которое валидатор отвергнет или перестроит при запуске");
+                            + "выдаст духу задание, которое валидатор отвергнет или перестроит при запуске При смене plan_EveryCase_PassesCatalog проверь это утверждение.");
         }
     }
 
@@ -163,12 +163,12 @@ class TicketPlansTests {
             assertTrue(
                     plan != null && !collectScripts(plan).isEmpty(),
                     "Каждый не внешний кейс обязан иметь план: кейс " + boardCase
-                            + " без плана не выдавался бы духу, а выдача без плана — задание в пустоту");
+                            + " без плана не выдавался бы духу, а выдача без плана — задание в пустоту Иначе тест plan_EveryCase_HasPlan перестанет ловить эту поломку. При смене plan_EveryCase_HasPlan проверь это утверждение.");
         }
         assertTrue(
                 TicketPlans.EXTERNAL_CASES.contains(BoardCase.EAT_TO_FULL),
                 "Внешний список обязан называть EAT_TO_FULL: дух ест сам скриптом eat, "
-                        + "план доски ему не нужен, а пустой список спрятал бы кейс без плана");
+                        + "план доски ему не нужен, а пустой список спрятал бы кейс без плана Иначе тест plan_EveryCase_HasPlan перестанет ловить эту поломку. При смене plan_EveryCase_HasPlan проверь это утверждение.");
     }
 
     @Test
@@ -180,24 +180,24 @@ class TicketPlansTests {
         assertTrue(
                 plan instanceof SequenceNode sequence && sequence.steps().size() == 2,
                 "План сбора выкинутого — переход в точку и подбор: без перехода дух ищет вещи "
-                        + "вокруг себя, а не там, где их выкинули");
+                        + "вокруг себя, а не там, где их выкинули Иначе тест plan_CollectDrops_DropsFilterAndTargetPoint перестанет ловить эту поломку. При смене plan_CollectDrops_DropsFilterAndTargetPoint проверь это утверждение.");
         ScriptCall collect = (ScriptCall) ((SequenceNode) plan).steps().get(1);
         assertEquals(
                 "collect_drops",
                 collect.script(),
-                "Второй шаг плана — collect_drops: без него задание не подбирает вещи");
+                "Второй шаг плана — collect_drops: без него задание не подбирает вещи Иначе тест plan_CollectDrops_DropsFilterAndTargetPoint перестанет ловить эту поломку. При смене plan_CollectDrops_DropsFilterAndTargetPoint проверь это утверждение.");
         assertEquals(
                 List.of("minecraft:cobblestone"),
                 collect.params().get("filter"),
-                "Фильтр плана называет именно выкинутый предмет: иначе дух соберёт чужой мусор");
+                "Фильтр плана называет именно выкинутый предмет: иначе дух соберёт чужой мусор При смене plan_CollectDrops_DropsFilterAndTargetPoint проверь это утверждение.");
         assertEquals(
                 point.x(),
                 ((ScriptCall) ((SequenceNode) plan).steps().get(0)).params().get("x"),
-                "Переход идёт в координаты выкидывания по X");
+                "Переход идёт в координаты выкидывания по X Иначе тест plan_CollectDrops_DropsFilterAndTargetPoint перестанет ловить эту поломку. При смене plan_CollectDrops_DropsFilterAndTargetPoint проверь это утверждение.");
         assertEquals(
                 point.z(),
                 ((ScriptCall) ((SequenceNode) plan).steps().get(0)).params().get("z"),
-                "Переход идёт в координаты выкидывания по Z");
+                "Переход идёт в координаты выкидывания по Z Иначе тест plan_CollectDrops_DropsFilterAndTargetPoint перестанет ловить эту поломку. При смене plan_CollectDrops_DropsFilterAndTargetPoint проверь это утверждение.");
     }
 
     @Test
@@ -210,7 +210,7 @@ class TicketPlansTests {
                 4,
                 torches,
                 "Освещение — четыре факела по углам: один факел не освещает территорию, "
-                        + "а больше — перерасход ресурсов доски");
+                        + "а больше — перерасход ресурсов доски Иначе тест plan_Lighting_PlacesFourTorches перестанет ловить эту поломку. При смене plan_Lighting_PlacesFourTorches проверь это утверждение.");
     }
 
     @Test
@@ -226,7 +226,7 @@ class TicketPlansTests {
                 List.of(home.target().y()),
                 heights,
                 "Дом — клетка ног духа (над землёй): факел на y+1 висел в воздухе, «нет опоры (ниже air)», "
-                        + "LIGHTING уходил в BLOCKED (приёмка «джунгли»)");
+                        + "LIGHTING уходил в BLOCKED (приёмка «джунгли») Иначе тест plan_Lighting_TorchesAtFeetLevelOfHome перестанет ловить эту поломку. При смене plan_Lighting_TorchesAtFeetLevelOfHome проверь это утверждение.");
     }
 
     @Test
@@ -243,7 +243,7 @@ class TicketPlansTests {
                 List.of(home.y()),
                 bottoms,
                 "Дом — клетка ног: слой y−1 — земля участка; расчистка с y−1 обходила 33×33 блоков земли по одному "
-                        + "и не кончалась до конца дня (приёмка «джунгли»)");
+                        + "и не кончалась до конца дня (приёмка «джунгли») Иначе тест plan_ClearGrounds_StartsAtFeetLevelAndKeepsGround перестанет ловить эту поломку. При смене plan_ClearGrounds_StartsAtFeetLevelAndKeepsGround проверь это утверждение.");
     }
 
     @Test
@@ -270,10 +270,10 @@ class TicketPlansTests {
         assertEquals(
                 5,
                 torches.stream().distinct().count(),
-                "Свет этапа — клетки схем: факел двора, два у шахты и два у крыльца хижины, без пропусков");
+                "Свет этапа — клетки схем: факел двора, два у шахты и два у крыльца хижины, без пропусков Иначе тест plan_LightingOnPlan_EveryPlannedTorchOffHouse перестанет ловить эту поломку. При смене plan_LightingOnPlan_EveryPlannedTorchOffHouse проверь это утверждение.");
         assertTrue(
                 torches.stream().noneMatch(torch -> site.houseColumn(torch.x(), torch.z())),
-                "Факел в габарите хижины ломал её сверку (приёмка «джунгли»)");
+                "Факел в габарите хижины ломал её сверку (приёмка «джунгли») Иначе тест plan_LightingOnPlan_EveryPlannedTorchOffHouse перестанет ловить эту поломку. При смене plan_LightingOnPlan_EveryPlannedTorchOffHouse проверь это утверждение.");
     }
 
     @Test
@@ -282,7 +282,8 @@ class TicketPlansTests {
 
         assertTrue(
                 collectScripts(plan).contains("build_schematic"),
-                "Забор строится схемой-кольцом fence: новый скрипт не заводим, кольцо " + "описано файлом схемы");
+                "Забор строится схемой-кольцом fence: новый скрипт не заводим, кольцо "
+                        + "описано файлом схемы Иначе тест plan_BuildFence_UsesFenceScheme перестанет ловить эту поломку. При смене plan_BuildFence_UsesFenceScheme проверь это утверждение.");
     }
 
     @Test
@@ -291,7 +292,8 @@ class TicketPlansTests {
 
         assertTrue(
                 collectScripts(plan).contains("craft"),
-                "Полки достраиваются крафтом книжных полок: книги гейтят задание, " + "а план их собирает в полки");
+                "Полки достраиваются крафтом книжных полок: книги гейтят задание, "
+                        + "а план их собирает в полки Иначе тест plan_EnchantShelves_CraftsBookshelves перестанет ловить эту поломку. При смене plan_EnchantShelves_CraftsBookshelves проверь это утверждение.");
     }
 
     @Test
@@ -302,7 +304,7 @@ class TicketPlansTests {
         assertEquals(
                 "minecraft:smoker",
                 craft.params().get("item"),
-                "Кейс коптильни крафтит именно коптильню: без этого улов негде коптить");
+                "Кейс коптильни крафтит именно коптильню: без этого улов негде коптить При смене plan_CraftSmoker_CraftsSmoker проверь это утверждение.");
     }
 
     @Test
@@ -313,9 +315,12 @@ class TicketPlansTests {
         assertTrue(
                 plan instanceof SequenceNode sequence && sequence.steps().size() == 2,
                 "Рыбалка как занятие — переход на рабочую точку и ловля: без перехода дух рыбачит "
-                        + "у случайной воды");
+                        + "у случайной воды Иначе тест plan_Fish_GoesToPointAndFishes перестанет ловить эту поломку. При смене plan_Fish_GoesToPointAndFishes проверь это утверждение.");
         ScriptCall fish = (ScriptCall) ((SequenceNode) plan).steps().get(1);
-        assertEquals("fish", fish.script(), "Второй шаг плана рыбалки — скрипт fish: без него занятие ничего не ловит");
+        assertEquals(
+                "fish",
+                fish.script(),
+                "Второй шаг плана рыбалки — скрипт fish: без него занятие ничего не ловит Иначе тест plan_Fish_GoesToPointAndFishes перестанет ловить эту поломку. При смене plan_Fish_GoesToPointAndFishes проверь это утверждение.");
     }
 
     @Test
@@ -324,7 +329,8 @@ class TicketPlansTests {
 
         assertTrue(
                 collectScripts(plan).contains("clear_area"),
-                "Разбор укрытия — существующий clear_area: второй разборочный скрипт " + "не заводим");
+                "Разбор укрытия — существующий clear_area: второй разборочный скрипт "
+                        + "не заводим Иначе тест plan_DismantleShelter_ClearsShelter перестанет ловить эту поломку. При смене plan_DismantleShelter_ClearsShelter проверь это утверждение.");
     }
 
     @Test
@@ -348,12 +354,12 @@ class TicketPlansTests {
                 calls.size() > 1,
                 "Расчистка участка 33×33×4 = 4356 больше предела clear_area 4096: одним вызовом "
                         + "скрипт падает, поэтому план обязан разбить участок на части, а не "
-                        + "оставлять духа в цикле провалов");
+                        + "оставлять духа в цикле провалов Иначе тест plan_ClearGrounds_EachCallFitsVolumeLimitAndCoversWholeSite перестанет ловить эту поломку. При смене plan_ClearGrounds_EachCallFitsVolumeLimitAndCoversWholeSite проверь это утверждение.");
         assertEquals(
                 33 * 33 * 4,
                 cells.size(),
                 "Куски расчистки обязаны покрыть весь участок радиуса 16 без дыр: иначе "
-                        + "факты поселения снова увидят деревья и переоткроют кейс");
+                        + "факты поселения снова увидят деревья и переоткроют кейс При смене plan_ClearGrounds_EachCallFitsVolumeLimitAndCoversWholeSite проверь это утверждение.");
     }
 
     @Test
@@ -363,11 +369,11 @@ class TicketPlansTests {
         assertEquals(
                 HiveRules.hiveRadius(),
                 harvest.params().get("radius"),
-                "Сбор улья ищет полный улей в радиусе доски: иначе задание не нашло бы цель");
+                "Сбор улья ищет полный улей в радиусе доски: иначе задание не нашло бы цель При смене plan_HarvestHive_UsesBoardRadius проверь это утверждение.");
         assertEquals(
                 1,
                 harvest.params().get("count"),
-                "Задание собирает один улей: несколько за раз оставили бы духа без отчёта по каждому");
+                "Задание собирает один улей: несколько за раз оставили бы духа без отчёта по каждому Иначе тест plan_HarvestHive_UsesBoardRadius перестанет ловить эту поломку. При смене plan_HarvestHive_UsesBoardRadius проверь это утверждение.");
     }
 
     @Test
@@ -378,17 +384,17 @@ class TicketPlansTests {
 
         assertTrue(
                 scripts.contains("craft") && scripts.contains("place_block"),
-                "Постановка улья — крафт улья и установка: без крафта духу нечего ставить");
+                "Постановка улья — крафт улья и установка: без крафта духу нечего ставить Иначе тест plan_PlaceBeehive_CraftsAndPlacesAboveSupport перестанет ловить эту поломку. При смене plan_PlaceBeehive_CraftsAndPlacesAboveSupport проверь это утверждение.");
         ScriptCall craft = findCall(plan, "craft");
         assertEquals(
                 "minecraft:beehive",
                 craft.params().get("item"),
-                "Крафтится именно улей: другой предмет не даст улей у цветов");
+                "Крафтится именно улей: другой предмет не даст улей у цветов Иначе тест plan_PlaceBeehive_CraftsAndPlacesAboveSupport перестанет ловить эту поломку. При смене plan_PlaceBeehive_CraftsAndPlacesAboveSupport проверь это утверждение.");
         ScriptCall place = findCall(plan, "place_block");
         assertEquals(
                 support.y() + 1,
                 place.params().get("y"),
-                "Улей ставится на опору из заявки, а не в её клетку: иначе блок заменил бы землю");
+                "Улей ставится на опору из заявки, а не в её клетку: иначе блок заменил бы землю При смене plan_PlaceBeehive_CraftsAndPlacesAboveSupport проверь это утверждение.");
     }
 
     @Test
@@ -400,7 +406,7 @@ class TicketPlansTests {
                 first,
                 second,
                 "План обязан быть детерминирован: доска выдаёт план духу, и пересборка "
-                        + "не должна менять задание на лету");
+                        + "не должна менять задание на лету Иначе тест plan_Is_Deterministic перестанет ловить эту поломку. При смене plan_Is_Deterministic проверь это утверждение.");
     }
 
     @Test
@@ -410,11 +416,11 @@ class TicketPlansTests {
         assertTrue(
                 collectScripts(plan).contains("acquire"),
                 "Воронка обязана брать землю через acquire: гейт уже проверил склад, "
-                        + "и план берёт из запаса, а не копает заново");
+                        + "и план берёт из запаса, а не копает заново Иначе тест plan_FillCrater_AcquiresDirtFromStock перестанет ловить эту поломку. При смене plan_FillCrater_AcquiresDirtFromStock проверь это утверждение.");
         assertTrue(
                 !collectScripts(plan).contains("gather"),
                 "План воронки не копает вслепую: gather игнорирует склад и проваливается "
-                        + "там, где земли рядом нет, хотя гейт её уже нашёл");
+                        + "там, где земли рядом нет, хотя гейт её уже нашёл Иначе тест plan_FillCrater_AcquiresDirtFromStock перестанет ловить эту поломку. При смене plan_FillCrater_AcquiresDirtFromStock проверь это утверждение.");
     }
 
     @Test
@@ -428,7 +434,7 @@ class TicketPlansTests {
                 "Снабжение режет партию пределом каталога: AcquireParams принимает не больше "
                         + "COUNT_MAX, без нарезки дух падает на выдаче ("
                         + acquire.params().get("count")
-                        + "), а остаток доска дозакажет следующим заданием");
+                        + "), а остаток доска дозакажет следующим заданием Иначе тест plan_SupplySite_ClampsHugeCount перестанет ловить эту поломку. При смене plan_SupplySite_ClampsHugeCount проверь это утверждение.");
     }
 
     @Test
@@ -441,7 +447,7 @@ class TicketPlansTests {
                 List.of("goto", "acquire", "goto", "deposit"),
                 scripts,
                 "Добыча уводит духа от места; сдача ищет сундук рядом с духом — сначала вернуться к месту, иначе "
-                        + "«рядом нет допустимого контейнера» (INC-30)");
+                        + "«рядом нет допустимого контейнера» (INC-30) При смене plan_SupplySite_ReturnsToSiteBeforeDeposit проверь это утверждение.");
     }
 
     @Test
@@ -453,8 +459,11 @@ class TicketPlansTests {
                 32,
                 fill.params().get("y1"),
                 "Воронка глубиной 29 блоков засыпается с её дна (60 - 29 + 1 = 32), а не одной верхней клеткой: "
-                        + "верхний блок без опоры FillSession откладывает и задание падает «поставлено 0 из 27»");
-        assertEquals(60, fill.params().get("y2"), "Верх засыпки — уровень земли воронки");
+                        + "верхний блок без опоры FillSession откладывает и задание падает «поставлено 0 из 27» Иначе тест plan_FillCrater_FillsWholePitDepthFromBottomUp перестанет ловить эту поломку. При смене plan_FillCrater_FillsWholePitDepthFromBottomUp проверь это утверждение.");
+        assertEquals(
+                60,
+                fill.params().get("y2"),
+                "Верх засыпки — уровень земли воронки Иначе тест plan_FillCrater_FillsWholePitDepthFromBottomUp перестанет ловить эту поломку. При смене plan_FillCrater_FillsWholePitDepthFromBottomUp проверь это утверждение.");
     }
 
     @Test
@@ -466,7 +475,8 @@ class TicketPlansTests {
                 256,
                 acquire.params().get("count"),
                 "Оценка большой воронки тоже режется пределом каталога: иначе acquire " + "падает на выдаче ("
-                        + acquire.params().get("count") + ")");
+                        + acquire.params().get("count")
+                        + ") При смене plan_FillCrater_ClampsHugeEstimate проверь это утверждение.");
     }
 
     @Test
@@ -476,16 +486,16 @@ class TicketPlansTests {
         assertTrue(
                 collectScripts(plan).contains("capture"),
                 "Отлов обязан идти скриптом capture: сам отлов — существующий механизм "
-                        + " husbandry (25), план только его вызывает");
+                        + " husbandry (25), план только его вызывает Иначе тест plan_CaptureAnimal_UsesSpecies перестанет ловить эту поломку. При смене plan_CaptureAnimal_UsesSpecies проверь это утверждение.");
         assertEquals(
                 "minecraft:wheat_seeds",
                 findCall(plan, "withdraw").params().get("item"),
-                "Перед отловом курицы дух берёт её корм со склада: capture ведёт животное приманкой");
+                "Перед отловом курицы дух берёт её корм со склада: capture ведёт животное приманкой Иначе тест plan_CaptureAnimal_UsesSpecies перестанет ловить эту поломку. При смене plan_CaptureAnimal_UsesSpecies проверь это утверждение.");
         assertEquals(
                 CatalogLimits.CONTAINER_RADIUS_DEFAULT,
                 findCall(plan, "withdraw").params().get("radius"),
                 "Внутренний withdraw обязан нести radius: доска запускает план мимо валидатора, и без радиуса "
-                        + "скрипт падает «Не задан обязательный параметр 'radius'» (INC-6)");
+                        + "скрипт падает «Не задан обязательный параметр 'radius'» (INC-6) Иначе тест plan_CaptureAnimal_UsesSpecies перестанет ловить эту поломку. При смене plan_CaptureAnimal_UsesSpecies проверь это утверждение.");
     }
 
     @Test
@@ -495,7 +505,7 @@ class TicketPlansTests {
         assertTrue(
                 collectScripts(plan).contains("build_schematic"),
                 "Згон строится схемой-пресетом кольца из блоков (поправка 8): отдельный "
-                        + "файл схемы описывает кольцо, новый скрипт не заводим");
+                        + "файл схемы описывает кольцо, новый скрипт не заводим Иначе тест plan_BuildPen_UsesRingScheme перестанет ловить эту поломку. При смене plan_BuildPen_UsesRingScheme проверь это утверждение.");
     }
 
     @Test
@@ -505,11 +515,11 @@ class TicketPlansTests {
         assertTrue(
                 collectScripts(plan).contains("withdraw"),
                 "Приманить — сначала взять приманку: гейт требует приманку в запасах, "
-                        + "а план — сначала вынуть её со склада");
+                        + "а план — сначала вынуть её со склада Иначе тест plan_LureAnimal_WithdrawsLure перестанет ловить эту поломку. При смене plan_LureAnimal_WithdrawsLure проверь это утверждение.");
         assertTrue(
                 collectScripts(plan).contains("capture"),
                 "Приманить — затем привести животное в загон скриптом capture (упрощение 44.4: приманка вместо "
-                        + "кольца); без него дух взял бы пшеницу и встал на месте");
+                        + "кольца); без него дух взял бы пшеницу и встал на месте Иначе тест plan_LureAnimal_WithdrawsLure перестанет ловить эту поломку. При смене plan_LureAnimal_WithdrawsLure проверь это утверждение.");
     }
 
     @Test
@@ -521,11 +531,11 @@ class TicketPlansTests {
                 "mine_descent_v1",
                 descent.params().get("file"),
                 "Уровень 1 шахты — спуск по схеме владельца mine_descent_v1 (ступени 1×3, выход пешком), "
-                        + "а не dig_descent, после которого духи не выходили наверх (INC-14)");
+                        + "а не dig_descent, после которого духи не выходили наверх (INC-14) Иначе тест plan_MineLevelOne_BuildsDescentBySchematic перестанет ловить эту поломку. При смене plan_MineLevelOne_BuildsDescentBySchematic проверь это утверждение.");
         assertEquals(
                 "clockwise_90",
                 descent.params().get("rotation"),
-                "Спуск идёт на юг (+z): поворот схемы на 90° по часовой, как прежний dig_descent south");
+                "Спуск идёт на юг (+z): поворот схемы на 90° по часовой, как прежний dig_descent south Иначе тест plan_MineLevelOne_BuildsDescentBySchematic перестанет ловить эту поломку. При смене plan_MineLevelOne_BuildsDescentBySchematic проверь это утверждение.");
     }
 
     @Test
@@ -534,7 +544,7 @@ class TicketPlansTests {
 
         assertTrue(
                 collectScripts(plan).contains("dig_area"),
-                "Уровень 2 шахты — расширение тоннеля dig_area: шире и выше прохода уровня 1");
+                "Уровень 2 шахты — расширение тоннеля dig_area: шире и выше прохода уровня 1 Иначе тест plan_MineLevelTwo_ExpandsTunnel перестанет ловить эту поломку. При смене plan_MineLevelTwo_ExpandsTunnel проверь это утверждение.");
     }
 
     @Test
@@ -544,7 +554,7 @@ class TicketPlansTests {
         assertTrue(
                 collectScripts(plan).contains("dig_area")
                         && collectScripts(plan).contains("fill"),
-                "Уровень 3 шахты — ступеньки: выкопать уступ и заполнить ступень");
+                "Уровень 3 шахты — ступеньки: выкопать уступ и заполнить ступень Иначе тест plan_MineLevelThree_BuildsSteps перестанет ловить эту поломку. При смене plan_MineLevelThree_BuildsSteps проверь это утверждение.");
     }
 
     @Test
@@ -554,7 +564,7 @@ class TicketPlansTests {
         assertTrue(
                 collectScripts(plan).contains("dig_area"),
                 "Уровень 4 шахты — рельсы и вагонетка: скрипта рельсов в каталоге нет, план — "
-                        + "заглушка dig_area минимальной длины до появления скрипта");
+                        + "заглушка dig_area минимальной длины до появления скрипта Иначе тест plan_MineLevelFour_WaitsForRails перестанет ловить эту поломку. При смене plan_MineLevelFour_WaitsForRails проверь это утверждение.");
     }
 
     @Test
@@ -563,7 +573,7 @@ class TicketPlansTests {
                 IllegalArgumentException.class,
                 () -> TicketPlans.plan(BoardCase.BUILD_MINE, 5, target()),
                 "Уровень выше максимума обязан падать: выдача несуществующего уровня оставила бы "
-                        + "духа без настоящей работы");
+                        + "духа без настоящей работы Иначе тест plan_MineAboveMax_Throws перестанет ловить эту поломку. При смене plan_MineAboveMax_Throws проверь это утверждение.");
     }
 
     @Test
@@ -575,13 +585,15 @@ class TicketPlansTests {
         assertEquals(
                 "pen_4x5",
                 one.params().get("file"),
-                "Уровень 1 загона — схема pen_4x5: ограда в 1 блок с калиткой, минимум 4×5");
+                "Уровень 1 загона — схема pen_4x5: ограда в 1 блок с калиткой, минимум 4×5 Иначе тест plan_BuildPen_LevelsUseGrowingSchemes перестанет ловить эту поломку. При смене plan_BuildPen_LevelsUseGrowingSchemes проверь это утверждение.");
         assertEquals(
-                "pen_7x7", two.params().get("file"), "Уровень 2 загона — схема pen_7x7: загон из библиотеки пресетов");
+                "pen_7x7",
+                two.params().get("file"),
+                "Уровень 2 загона — схема pen_7x7: загон из библиотеки пресетов Иначе тест plan_BuildPen_LevelsUseGrowingSchemes перестанет ловить эту поломку. При смене plan_BuildPen_LevelsUseGrowingSchemes проверь это утверждение.");
         assertEquals(
                 "pen_9x9",
                 three.params().get("file"),
-                "Уровень 3 загона — схема больше 7×7: рост данными без правки кода");
+                "Уровень 3 загона — схема больше 7×7: рост данными без правки кода Иначе тест plan_BuildPen_LevelsUseGrowingSchemes перестанет ловить эту поломку. При смене plan_BuildPen_LevelsUseGrowingSchemes проверь это утверждение.");
     }
 
     @Test
@@ -594,15 +606,15 @@ class TicketPlansTests {
                 "enchant_room_v1",
                 one.params().get("file"),
                 "Уровень 1 чаровальни — пресет enchant_room_v1 (решение владельца 18.10: доска строит настоящие "
-                        + "пресеты, а не заготовку из четырёх столбов): деревянная изба со столом и пятью полками");
+                        + "пресеты, а не заготовку из четырёх столбов): деревянная изба со столом и пятью полками Иначе тест plan_EnchantRoom_LevelsUseGrowingSchemes перестанет ловить эту поломку. При смене plan_EnchantRoom_LevelsUseGrowingSchemes проверь это утверждение.");
         assertEquals(
                 "enchant_room_v2",
                 two.params().get("file"),
-                "Уровень 2 чаровальни — пресет enchant_room_v2: каменный зал и кольцо на десять полок");
+                "Уровень 2 чаровальни — пресет enchant_room_v2: каменный зал и кольцо на десять полок Иначе тест plan_EnchantRoom_LevelsUseGrowingSchemes перестанет ловить эту поломку. При смене plan_EnchantRoom_LevelsUseGrowingSchemes проверь это утверждение.");
         assertEquals(
                 "enchant_room_v3",
                 three.params().get("file"),
-                "Уровень 3 чаровальни — пресет enchant_room_v3: большой зал с полным кольцом 15 полок (максимум стола)");
+                "Уровень 3 чаровальни — пресет enchant_room_v3: большой зал с полным кольцом 15 полок (максимум стола) Иначе тест plan_EnchantRoom_LevelsUseGrowingSchemes перестанет ловить эту поломку. При смене plan_EnchantRoom_LevelsUseGrowingSchemes проверь это утверждение.");
     }
 
     @Test
@@ -614,7 +626,7 @@ class TicketPlansTests {
                 byLevel,
                 byCase,
                 "plan(case, target) — это plan(case, 1, target): старый вызов выдаёт первый уровень, "
-                        + "иначе адаптер и тесты разошлись бы в плане одного задания");
+                        + "иначе адаптер и тесты разошлись бы в плане одного задания При смене plan_DefaultLevel_UsesFirst проверь это утверждение.");
     }
 
     @Test
@@ -622,7 +634,7 @@ class TicketPlansTests {
         assertEquals(
                 TicketPlans.plan(BoardCase.FILL_CRATER, 1, target()),
                 TicketPlans.plan(BoardCase.FILL_CRATER, 1, target()),
-                "У кейса без уровней план не зависит от уровня: он всегда один");
+                "У кейса без уровней план не зависит от уровня: он всегда один Иначе тест plan_NonLeveledLevel_UsesSamePlan перестанет ловить эту поломку. При смене plan_NonLeveledLevel_UsesSamePlan проверь это утверждение.");
     }
 
     @Test
@@ -630,7 +642,7 @@ class TicketPlansTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> TicketPlans.plan(BoardCase.BUILD_MINE, 0, target()),
-                "Уровень 0 обязан падать: первая постройка ставится уровнем 1");
+                "Уровень 0 обязан падать: первая постройка ставится уровнем 1 Иначе тест plan_ZeroLevel_Throws перестанет ловить эту поломку. При смене plan_ZeroLevel_Throws проверь это утверждение.");
     }
 
     @Property
@@ -650,7 +662,8 @@ class TicketPlansTests {
         for (String script : collectScripts(plan)) {
             assertTrue(
                     catalogScripts.contains(script),
-                    "План уровня " + level + " кейса " + boardCase + " ссылается на скрипт вне " + "каталога: "
+                    "План уровня " + level + " кейса " + boardCase + " ссылается на скрипт вне "
+                            + "каталога:  Иначе тест plan_LeveledLevel_OnlyCatalogScripts перестанет ловить эту поломку. При смене plan_LeveledLevel_OnlyCatalogScripts проверь это утверждение."
                             + script);
         }
     }
@@ -677,7 +690,7 @@ class TicketPlansTests {
                     Optional.of(ToolSet.itemId(boardCase)),
                     TicketPlans.craftItem(boardCase),
                     "Кейс " + boardCase + " обязан назвать предмет своего инструмента: по нему "
-                            + "TransferWatch ищет ингредиенты и передачу");
+                            + "TransferWatch ищет ингредиенты и передачу Иначе тест craftItem_ToolCases_ReturnToolSetItem перестанет ловить эту поломку. При смене craftItem_ToolCases_ReturnToolSetItem проверь это утверждение.");
         }
     }
 
@@ -689,7 +702,7 @@ class TicketPlansTests {
                 "minecraft:white_bed",
                 repair.params().get("item"),
                 "План ремонта инструмента обязан нести в repair_tool тот же предмет, что задание доски: "
-                        + "без имени скрипт не знает, какой изношенный предмет чинить");
+                        + "без имени скрипт не знает, какой изношенный предмет чинить Иначе тест plan_RepairTool_CarriesItem перестанет ловить эту поломку. При смене plan_RepairTool_CarriesItem проверь это утверждение.");
     }
 
     @Test
@@ -701,7 +714,8 @@ class TicketPlansTests {
                         && sequence.steps().get(0) instanceof ScriptCall first
                         && "goto".equals(first.script()),
                 "Ремонт начинается с подхода к дому: скрипт ищет наковальню вокруг духа, а она стоит у дома "
-                        + "(INC-24); план " + plan);
+                        + "(INC-24); план  Иначе тест plan_RepairTool_GoesToTargetFirst перестанет ловить эту поломку. При смене plan_RepairTool_GoesToTargetFirst проверь это утверждение."
+                        + plan);
     }
 
     @Test
@@ -710,12 +724,12 @@ class TicketPlansTests {
                 Optional.of("minecraft:anvil"),
                 TicketPlans.craftItem(BoardCase.CRAFT_ANVIL),
                 "Кейс крафта наковальни обязан называть предмет наковальни: по нему гейт считает "
-                        + "железные блоки и слитки из рецепта");
+                        + "железные блоки и слитки из рецепта Иначе тест craftItem_SmithyCases_ReturnStationItem перестанет ловить эту поломку. При смене craftItem_SmithyCases_ReturnStationItem проверь это утверждение.");
         assertEquals(
                 Optional.of("minecraft:smithing_table"),
                 TicketPlans.craftItem(BoardCase.CRAFT_SMITHING_TABLE),
                 "Кейс крафта стола кузнеца обязан называть предмет стола: по нему гейт считает "
-                        + "материалы из рецепта");
+                        + "материалы из рецепта Иначе тест craftItem_SmithyCases_ReturnStationItem перестанет ловить эту поломку. При смене craftItem_SmithyCases_ReturnStationItem проверь это утверждение.");
     }
 
     @Test
@@ -723,7 +737,7 @@ class TicketPlansTests {
         assertEquals(
                 Optional.empty(),
                 TicketPlans.craftItem(BoardCase.BUILD_HOUSE),
-                "Строительный кейс не крафт: передача ингредиентов ему не назначается");
+                "Строительный кейс не крафт: передача ингредиентов ему не назначается Иначе тест craftItem_BuildHouse_Empty перестанет ловить эту поломку. При смене craftItem_BuildHouse_Empty проверь это утверждение.");
     }
 
     @Test
@@ -745,7 +759,8 @@ class TicketPlansTests {
                             && distance <= CatalogLimits.STATION_RADIUS_MAX,
                     "craft обязан нести радиус поиска станции в границах каталога: CraftParams.from "
                             + "читает radius обязательным, без него дух проваливает задание " + craftCase
-                            + " на выдаче (радиус " + radius + ")");
+                            + " на выдаче (радиус " + radius
+                            + ") Иначе тест plan_CraftCases_CarryStationRadius перестанет ловить эту поломку. При смене plan_CraftCases_CarryStationRadius проверь это утверждение.");
         }
     }
 
@@ -754,14 +769,14 @@ class TicketPlansTests {
         TaskNode plan = TicketPlans.plan(BoardCase.SUPPLY_SITE, target());
         ScriptCall deposit = findCall(plan, "deposit");
         Object radius = deposit.params().get("radius");
-
         assertTrue(
                 radius instanceof Integer distance
                         && distance >= CatalogLimits.CONTAINER_RADIUS_MIN
                         && distance <= CatalogLimits.CONTAINER_RADIUS_MAX,
                 "deposit обязан нести радиус поиска контейнера в границах каталога: TransferParams.from "
                         + "читает radius обязательным, без него план падает на выдаче и добыча не кладёт "
-                        + "предметы в склад (радиус " + radius + ")");
+                        + "предметы в склад (радиус " + radius
+                        + ") Иначе тест plan_SupplySite_DepositCarriesContainerRadius перестанет ловить эту поломку. При смене plan_SupplySite_DepositCarriesContainerRadius проверь это утверждение.");
     }
 
     @Test
@@ -770,13 +785,18 @@ class TicketPlansTests {
         UUID taker = UUID.fromString("00000000-0000-0000-0000-0000000000c2");
         TaskNode plan = TicketPlans.plan(BoardCase.TRANSFER_ITEM, target().withTransfer(giver, taker, "stick", 2));
         ScriptCall deliver = findCall(plan, "deliver");
-
-        assertEquals("stick", deliver.params().get("item"), "Передача везёт тот предмет, которого не хватает крафтеру");
-        assertEquals(2, deliver.params().get("count"), "Передача везёт ровно нехватку");
+        assertEquals(
+                "stick",
+                deliver.params().get("item"),
+                "Передача везёт тот предмет, которого не хватает крафтеру Иначе тест plan_TransferItemFromSpirit_DeliversToRecipient перестанет ловить эту поломку. При смене plan_TransferItemFromSpirit_DeliversToRecipient проверь это утверждение.");
+        assertEquals(
+                2,
+                deliver.params().get("count"),
+                "Передача везёт ровно нехватку Иначе тест plan_TransferItemFromSpirit_DeliversToRecipient перестанет ловить эту поломку. При смене plan_TransferItemFromSpirit_DeliversToRecipient проверь это утверждение.");
         assertEquals(
                 "spirit:" + taker,
                 deliver.params().get("to"),
-                "Адресат deliver — дух-крафтер по UUID: имя духа неоднозначно");
+                "Адресат deliver — дух-крафтер по UUID: имя духа неоднозначно Иначе тест plan_TransferItemFromSpirit_DeliversToRecipient перестанет ловить эту поломку. При смене plan_TransferItemFromSpirit_DeliversToRecipient проверь это утверждение.");
     }
 
     @Test
@@ -784,133 +804,126 @@ class TicketPlansTests {
         UUID taker = UUID.fromString("00000000-0000-0000-0000-0000000000c2");
         TaskNode plan = TicketPlans.plan(BoardCase.TRANSFER_ITEM, target().withTransfer(null, taker, "cobblestone", 3));
         ScriptCall withdraw = findCall(plan, "withdraw");
-
         assertEquals(
                 "cobblestone",
                 withdraw.params().get("item"),
-                "Со склада берут тот же предмет, которого не хватает крафтеру");
-        assertEquals(3, withdraw.params().get("count"), "Со склада берут ровно нехватку");
+                "Со склада берут тот же предмет, которого не хватает крафтеру Иначе тест plan_TransferItemFromWarehouse_WithdrawsToRecipient перестанет ловить эту поломку. При смене plan_TransferItemFromWarehouse_WithdrawsToRecipient проверь это утверждение.");
+        assertEquals(
+                3,
+                withdraw.params().get("count"),
+                "Со склада берут ровно нехватку Иначе тест plan_TransferItemFromWarehouse_WithdrawsToRecipient перестанет ловить эту поломку. При смене plan_TransferItemFromWarehouse_WithdrawsToRecipient проверь это утверждение.");
         assertEquals(
                 "auto",
                 withdraw.params().get("container"),
-                "Склад — ближайший сундук, где предмет есть: ближайший вообще часто пуст (два сундука во дворе)");
+                "Склад — ближайший сундук, где предмет есть: ближайший вообще часто пуст (два сундука во дворе) Иначе тест plan_TransferItemFromWarehouse_WithdrawsToRecipient перестанет ловить эту поломку. При смене plan_TransferItemFromWarehouse_WithdrawsToRecipient проверь это утверждение.");
     }
 
     @Test
     void plan_TransferItemFromWarehouseToSelf_IsPlainGotoThenWithdraw() {
         UUID self = UUID.fromString("00000000-0000-0000-0000-0000000000c3");
         TaskNode plan = TicketPlans.plan(BoardCase.TRANSFER_ITEM, target().withTransfer(null, self, "stick", 2));
-
         assertEquals(
                 List.of("goto", "withdraw", "wait"),
                 collectScripts(plan),
                 "Передача со склада самому себе (INC-85) — обычные goto к двору и withdraw из ближайшего сундука: "
-                        + "оба подхода строят маршрут с ломкой из-под земли, отдельного deliver-шага нет");
+                        + "оба подхода строят маршрут с ломкой из-под земли, отдельного deliver-шага нет Иначе тест plan_TransferItemFromWarehouseToSelf_IsPlainGotoThenWithdraw перестанет ловить эту поломку. При смене plan_TransferItemFromWarehouseToSelf_IsPlainGotoThenWithdraw проверь это утверждение.");
     }
 
     @Test
     void plan_BreedAnimals_BreedsSpeciesPair() {
         TaskNode plan = TicketPlans.plan(BoardCase.BREED_ANIMALS, target().withSpecies(Species.COW));
         ScriptCall breed = findCall(plan, "breed");
-
         assertEquals(
                 "cow",
                 breed.params().get("species"),
-                "Разведение сводит пару своего вида: чужой вид в загоне плодит помеси мимо плана");
+                "Разведение сводит пару своего вида: чужой вид в загоне плодит помеси мимо плана Иначе тест plan_BreedAnimals_BreedsSpeciesPair перестанет ловить эту поломку. При смене plan_BreedAnimals_BreedsSpeciesPair проверь это утверждение.");
         assertEquals(
                 CatalogLimits.HERD_PAIRS_DEFAULT,
                 breed.params().get("pairs"),
                 "Разведение сводит одну пару за запуск: приплод ограничен пределами каталога, "
-                        + "а не аппетитом доски");
+                        + "а не аппетитом доски Иначе тест plan_BreedAnimals_BreedsSpeciesPair перестанет ловить эту поломку. При смене plan_BreedAnimals_BreedsSpeciesPair проверь это утверждение.");
     }
 
     @Test
     void plan_HerdCull_CullsOwnSpecies() {
         TaskNode plan = TicketPlans.plan(BoardCase.HERD_CULL, target().withSpecies(Species.SHEEP));
-
         assertTrue(
                 collectScripts(plan).contains("cull"),
-                "Контроль численности идёт существующим скриптом cull: второй забойный " + "скрипт не заводим");
+                "Контроль численности идёт существующим скриптом cull: второй забойный "
+                        + "скрипт не заводим Иначе тест plan_HerdCull_CullsOwnSpecies перестанет ловить эту поломку. При смене plan_HerdCull_CullsOwnSpecies проверь это утверждение.");
         assertEquals(
                 "sheep",
                 findCall(plan, "cull").params().get("species"),
-                "Забивают лишний свой вид: чужой вид под нож пускать нельзя");
+                "Забивают лишний свой вид: чужой вид под нож пускать нельзя Иначе тест plan_HerdCull_CullsOwnSpecies перестанет ловить эту поломку. При смене plan_HerdCull_CullsOwnSpecies проверь это утверждение.");
     }
 
     @Test
     void plan_RestockFood_WithdrawsOwnerCount() {
         TaskNode plan = TicketPlans.plan(BoardCase.RESTOCK_FOOD, target().withSupply("bread", 1));
         ScriptCall withdraw = findCall(plan, "withdraw");
-
         assertEquals(
                 48,
                 withdraw.params().get("count"),
                 "Пополнение личной еды забирает со склада 48 единиц (ответы владельца 16.10): "
-                        + "меньше — дух снова голоден через день, больше — тащит лишний запас");
+                        + "меньше — дух снова голоден через день, больше — тащит лишний запас Иначе тест plan_RestockFood_WithdrawsOwnerCount перестанет ловить эту поломку. При смене plan_RestockFood_WithdrawsOwnerCount проверь это утверждение.");
         assertEquals(
                 "bread",
                 withdraw.params().get("item"),
-                "Забирают названный продукт: склад отдаёт конкретное, а не «еду вообще»");
+                "Забирают названный продукт: склад отдаёт конкретное, а не «еду вообще» Иначе тест plan_RestockFood_WithdrawsOwnerCount перестанет ловить эту поломку. При смене plan_RestockFood_WithdrawsOwnerCount проверь это утверждение.");
     }
 
     @Test
     void plan_Relocate_ClearsSourceAndBuildsDestination() {
         TaskNode plan = TicketPlans.plan(BoardCase.RELOCATE_BUILDING, fullTarget());
         List<String> scripts = collectScripts(plan);
-
         assertTrue(
                 scripts.contains("clear_area") && scripts.contains("build_schematic"),
                 "Перенос сносит постройку в from и строит ту же схему в to: перенос без сноса "
-                        + "удвоил бы постройку, а без стройки — снёс бы её");
+                        + "удвоил бы постройку, а без стройки — снёс бы её Иначе тест plan_Relocate_ClearsSourceAndBuildsDestination перестанет ловить эту поломку. При смене plan_Relocate_ClearsSourceAndBuildsDestination проверь это утверждение.");
         ScriptCall clear = findCall(plan, "clear_area");
         assertEquals(
                 true,
                 clear.params().get("demolish"),
                 "Снос при переносе идёт с demolish=true: свой забор и калитка стоят в списке "
-                        + "защищённых блоков, и обычный clear_area не убрал бы ни одного блока");
+                        + "защищённых блоков, и обычный clear_area не убрал бы ни одного блока Иначе тест plan_Relocate_ClearsSourceAndBuildsDestination перестанет ловить эту поломку. При смене plan_Relocate_ClearsSourceAndBuildsDestination проверь это утверждение.");
     }
 
     @Test
     void plan_RelocateSamePoint_IsRejected() {
         TicketTarget same =
                 target().withScheme("pen").withRelocate(new BlockCoord(10, 60, -5), new BlockCoord(10, 60, -5));
-
         assertThrows(
                 IllegalArgumentException.class,
                 () -> TicketPlans.plan(BoardCase.RELOCATE_BUILDING, same),
                 "Перенос в ту же точку обязан падать: сносить и строить на одном месте нечего, "
-                        + "а молча принятый перенос гонял бы духа вхолостую");
+                        + "а молча принятый перенос гонял бы духа вхолостую Иначе тест plan_RelocateSamePoint_IsRejected перестанет ловить эту поломку. При смене plan_RelocateSamePoint_IsRejected проверь это утверждение.");
     }
 
     @Test
     void plan_GatherCobblestone_GathersStoneInWideRadius() {
         TicketTarget target = TicketTarget.at(new BlockCoord(10, 60, -5)).withSupply("cobblestone", 8);
-
         ScriptCall gather = findCall(TicketPlans.plan(BoardCase.GATHER_MATERIALS, target), "gather");
-
         assertEquals(
                 Map.of("block", "stone", "count", 8, "radius", CatalogLimits.HARVEST_RADIUS_MAX),
                 gather.params(),
                 "Булыжник для печи ищется по камню в радиусе 32, как уголь: acquire искал в 16 от дома и "
-                        + "проваливал «подходящих блоков в радиусе 16 не осталось» (приёмка «джунгли»)");
+                        + "проваливал «подходящих блоков в радиусе 16 не осталось» (приёмка «джунгли») Иначе тест plan_GatherCobblestone_GathersStoneInWideRadius перестанет ловить эту поломку. При смене plan_GatherCobblestone_GathersStoneInWideRadius проверь это утверждение.");
     }
 
     @Test
     void plan_GatherJungleLogs_ChopsTreesThenAcquire() {
         TicketTarget target = TicketTarget.at(new BlockCoord(10, 60, -5)).withSupply("jungle_log", 32);
         TaskNode plan = TicketPlans.plan(BoardCase.GATHER_MATERIALS, target);
-
         ScriptCall chop = findCall(plan, "chop_tree");
-
         assertEquals(
                 Map.of("species", "jungle", "count", 8, "radius", CatalogLimits.CHOP_RADIUS_MAX, "replant", true),
                 chop.params(),
                 "Брёвна добываются рубкой деревьев с доступной стоянкой (32 бревна — 8 деревьев по 4): gather трижды "
-                        + "бился в одно недостижимое бревно и уходил в BLOCKED (INC-64)");
+                        + "бился в одно недостижимое бревно и уходил в BLOCKED (INC-64) Иначе тест plan_GatherJungleLogs_ChopsTreesThenAcquire перестанет ловить эту поломку. При смене plan_GatherJungleLogs_ChopsTreesThenAcquire проверь это утверждение.");
         assertEquals(
                 "acquire",
                 findCall(plan, "acquire").script(),
-                "Запасной путь без деревьев рядом — acquire, а не провал задания");
+                "Запасной путь без деревьев рядом — acquire, а не провал задания Иначе тест plan_GatherJungleLogs_ChopsTreesThenAcquire перестанет ловить эту поломку. При смене plan_GatherJungleLogs_ChopsTreesThenAcquire проверь это утверждение.");
     }
 
     @Test
@@ -923,9 +936,7 @@ class TicketPlansTests {
                 List.of(new PlotLeveling.Box(3, 60, 4, 4, 63, 4)),
                 "dirt");
         TicketTarget quarter = TicketTarget.at(anchor).withLeveling(leveling).withCount(3);
-
         List<ScriptCall> calls = calls(TicketPlans.plan(BoardCase.CLEAR_GROUNDS, quarter));
-
         assertEquals(
                 List.of(8),
                 calls.stream()
@@ -935,10 +946,10 @@ class TicketPlansTests {
                         .map(call -> call.params().get("x1"))
                         .toList(),
                 "Часть 3 (северо-восток) срезает только свой выступ: выравнивание делится между духами, а не идёт "
-                        + "одним духом в первой части (INC-64)");
+                        + "одним духом в первой части (INC-64) Иначе тест plan_ClearQuarter_OnlyItsLevelingBoxes перестанет ловить эту поломку. При смене plan_ClearQuarter_OnlyItsLevelingBoxes проверь это утверждение.");
         assertTrue(
                 calls.stream().noneMatch(call -> "fill".equals(call.script())),
-                "Подсыпка центральной части 5 не попадает в часть 3");
+                "Подсыпка центральной части 5 не попадает в часть 3 Иначе тест plan_ClearQuarter_OnlyItsLevelingBoxes перестанет ловить эту поломку. При смене plan_ClearQuarter_OnlyItsLevelingBoxes проверь это утверждение.");
     }
 
     @Test
@@ -946,14 +957,12 @@ class TicketPlansTests {
         BlockCoord anchor = new BlockCoord(0, 70, 0);
         PlotLeveling leveling = PlotLeveling.plan(anchor, square(anchor, 4), (x, z) -> x < 0 ? 64 : x > 2 ? 73 : 70);
         TicketTarget whole = TicketTarget.at(anchor).withLeveling(leveling);
-
         List<ScriptCall> clears = calls(TicketPlans.plan(BoardCase.CLEAR_GROUNDS, whole)).stream()
                 .filter(call -> "clear_area".equals(call.script()))
                 .toList();
-
         assertTrue(
                 clears.stream().anyMatch(call -> ((Integer) call.params().get("y1")) < anchor.y()),
-                "В плане есть расчистка ям под уровнем (ствол, кусты в яме): без неё проверка ниже ничего не доказывает");
+                "В плане есть расчистка ям под уровнем (ствол, кусты в яме): без неё проверка ниже ничего не доказывает Иначе тест plan_ClearWithFillAndCut_NoClearBelowLevelDigsGround перестанет ловить эту поломку. При смене plan_ClearWithFillAndCut_NoClearBelowLevelDigsGround проверь это утверждение.");
         for (ScriptCall clear : clears) {
             boolean below = ((Integer) clear.params().get("y1")) < anchor.y();
             assertEquals(
@@ -961,7 +970,8 @@ class TicketPlansTests {
                     Boolean.TRUE.equals(clear.params().get("keep_ground")),
                     "Расчистка ниже уровня участка " + anchor.y() + " — только яма подсыпки и только с keep_ground: "
                             + "иначе она снимает уже засыпанную землю, дух роет яму посреди участка и падает в неё "
-                            + "(INC-77); срезка выше уровня землю снимает: " + clear.params());
+                            + "(INC-77); срезка выше уровня землю снимает:  При смене plan_ClearWithFillAndCut_NoClearBelowLevelDigsGround проверь это утверждение."
+                            + clear.params());
         }
     }
 
@@ -969,7 +979,6 @@ class TicketPlansTests {
     void layers_PitRows_BottomUpLayersMerged() {
         List<PlotLeveling.Box> rows =
                 List.of(new PlotLeveling.Box(0, 64, 0, 2, 66, 0), new PlotLeveling.Box(0, 65, 1, 2, 66, 1));
-
         assertEquals(
                 List.of(
                         new FillOrder.Box(0, 64, 0, 2, 64, 0),
@@ -977,7 +986,7 @@ class TicketPlansTests {
                         new FillOrder.Box(0, 66, 0, 2, 66, 1)),
                 FillOrder.layers(rows),
                 "Подсыпка — слоями снизу вверх по всей яме, ряды слоя слиты: рядами на всю глубину дух выбирался на "
-                        + "край, и соседний ряд оставался траншеей без стоянки (INC-66)");
+                        + "край, и соседний ряд оставался траншеей без стоянки (INC-66) Иначе тест layers_PitRows_BottomUpLayersMerged перестанет ловить эту поломку. При смене layers_PitRows_BottomUpLayersMerged проверь это утверждение.");
     }
 
     @Test
@@ -985,31 +994,29 @@ class TicketPlansTests {
         BlockCoord anchor = new BlockCoord(0, 64, 0);
         PlotLeveling leveling = new PlotLeveling(List.of(), List.of(new PlotLeveling.Box(3, 60, 4, 4, 63, 4)), "dirt");
         TicketTarget quarter = TicketTarget.at(anchor).withLeveling(leveling).withCount(5);
-
         List<ScriptCall> dirt = calls(TicketPlans.plan(BoardCase.CLEAR_GROUNDS, quarter)).stream()
                 .filter(call -> List.of("acquire_at", "fill").contains(call.script()))
                 .toList();
-
         assertEquals(
                 List.of("acquire_at", "fill", "fill", "fill", "fill"),
                 dirt.stream().map(ScriptCall::script).toList(),
                 "Земля на всю яму (ящик 2×4 — четыре слоя) набирается одной партией до подсыпки, а не ходкой на "
-                        + "каждый слой по 2–3 блока (INC-73)");
+                        + "каждый слой по 2–3 блока (INC-73) Иначе тест plan_ClearQuarterWithFill_DirtAcquiredOutsideBeforeFill перестанет ловить эту поломку. При смене plan_ClearQuarterWithFill_DirtAcquiredOutsideBeforeFill проверь это утверждение.");
         assertEquals(
                 8,
                 dirt.get(0).params().get("count"),
-                "Партия земли — объём всей ямы части: 8 блоков за один заход (INC-73)");
+                "Партия земли — объём всей ямы части: 8 блоков за один заход (INC-73) Иначе тест plan_ClearQuarterWithFill_DirtAcquiredOutsideBeforeFill перестанет ловить эту поломку. При смене plan_ClearQuarterWithFill_DirtAcquiredOutsideBeforeFill проверь это утверждение.");
         assertEquals(
                 "acquire_at",
                 dirt.get(0).script(),
                 "Земля на подсыпку добывается до засыпки (своя со срезки или за оградой): иначе «не хватило dirt: нужно 4, "
-                        + "есть 0» (INC-68)");
+                        + "есть 0» (INC-68) При смене plan_ClearQuarterWithFill_DirtAcquiredOutsideBeforeFill проверь это утверждение.");
         assertTrue(
                 Math.max(
                                 Math.abs(GroundsPlan.dirtSource(quarter, 5).x()),
                                 Math.abs(GroundsPlan.dirtSource(quarter, 5).z()))
                         > LEGACY_FENCE_HALF,
-                "Землю добывают за оградой, а не из земли участка");
+                "Землю добывают за оградой, а не из земли участка Иначе тест plan_ClearQuarterWithFill_DirtAcquiredOutsideBeforeFill перестанет ловить эту поломку. При смене plan_ClearQuarterWithFill_DirtAcquiredOutsideBeforeFill проверь это утверждение.");
         assertTrue(
                 calls(TicketPlans.plan(BoardCase.CLEAR_GROUNDS, quarter)).stream()
                         .noneMatch(call -> "goto".equals(call.script())
@@ -1017,7 +1024,7 @@ class TicketPlansTests {
                                         .get("x")
                                         .equals(GroundsPlan.dirtSource(quarter, 4)
                                                 .x())),
-                "Отдельного выхода за ограду в плане нет: acquire идёт туда сам и только при нехватке");
+                "Отдельного выхода за ограду в плане нет: acquire идёт туда сам и только при нехватке Иначе тест plan_ClearQuarterWithFill_DirtAcquiredOutsideBeforeFill перестанет ловить эту поломку. При смене plan_ClearQuarterWithFill_DirtAcquiredOutsideBeforeFill проверь это утверждение.");
     }
 
     @Test
@@ -1026,26 +1033,24 @@ class TicketPlansTests {
         PlotLeveling leveling =
                 new PlotLeveling(List.of(), List.of(new PlotLeveling.Box(3, 60, 4, 4, 63, 4)), "cobblestone");
         TicketTarget whole = TicketTarget.at(anchor).withLeveling(leveling);
-
         List<ScriptCall> calls = calls(TicketPlans.plan(BoardCase.CLEAR_GROUNDS, whole));
         List<ScriptCall> fills =
                 calls.stream().filter(call -> "fill".equals(call.script())).toList();
-
         assertEquals(
                 List.of(60, 61, 62, 63),
                 fills.stream().map(call -> call.params().get("y1")).toList(),
-                "Подсыпка идёт слоями снизу вверх: верхний слой ставится последним");
+                "Подсыпка идёт слоями снизу вверх: верхний слой ставится последним Иначе тест plan_ClearWithCobblestoneFill_TopLayerDirtDeeperCobblestone перестанет ловить эту поломку. При смене plan_ClearWithCobblestoneFill_TopLayerDirtDeeperCobblestone проверь это утверждение.");
         assertEquals(
                 List.of("cobblestone", "cobblestone", "cobblestone", PlotLeveling.DEFAULT_BLOCK),
                 fills.stream().map(call -> call.params().get("block")).toList(),
-                "Булыжник — только в глубине: верхний блок участка всегда земля");
+                "Булыжник — только в глубине: верхний блок участка всегда земля Иначе тест plan_ClearWithCobblestoneFill_TopLayerDirtDeeperCobblestone перестанет ловить эту поломку. При смене plan_ClearWithCobblestoneFill_TopLayerDirtDeeperCobblestone проверь это утверждение.");
         List<ScriptCall> dirt = calls.stream()
                 .filter(call -> "acquire_at".equals(call.script()))
                 .toList();
         assertEquals(
                 List.of(2),
                 dirt.stream().map(call -> call.params().get("count")).toList(),
-                "Землю на верхний слой добывают за оградой, а не заменяют булыжником");
+                "Землю на верхний слой добывают за оградой, а не заменяют булыжником Иначе тест plan_ClearWithCobblestoneFill_TopLayerDirtDeeperCobblestone перестанет ловить эту поломку. При смене plan_ClearWithCobblestoneFill_TopLayerDirtDeeperCobblestone проверь это утверждение.");
         assertEquals(
                 6,
                 calls.stream()
@@ -1053,7 +1058,7 @@ class TicketPlansTests {
                         .map(call -> call.params().get("count"))
                         .findFirst()
                         .orElseThrow(() -> new AssertionError("Булыжник на глубину не заказан")),
-                "Булыжник берут на объём глубины без верхнего слоя");
+                "Булыжник берут на объём глубины без верхнего слоя Иначе тест plan_ClearWithCobblestoneFill_TopLayerDirtDeeperCobblestone перестанет ловить эту поломку. При смене plan_ClearWithCobblestoneFill_TopLayerDirtDeeperCobblestone проверь это утверждение.");
     }
 
     private static List<ScriptCall> calls(TaskNode root) {
@@ -1075,13 +1080,11 @@ class TicketPlansTests {
     @Test
     void plan_GatherCoal_MinesCoalVein() {
         TicketTarget target = TicketTarget.at(new BlockCoord(10, 60, -5)).withSupply("coal", 4);
-
         ScriptCall vein = findCall(TicketPlans.plan(BoardCase.GATHER_MATERIALS, target), "mine_vein");
-
         assertEquals(
                 Map.of("ore", "coal", "count", 4),
                 Map.of("ore", vein.params().get("ore"), "count", vein.params().get("count")),
-                "Уголь на факелы добывается из жилы: acquire уходил в древесный уголь и проваливался (журнал 05:49)");
+                "Уголь на факелы добывается из жилы: acquire уходил в древесный уголь и проваливался (журнал 05:49) Иначе тест plan_GatherCoal_MinesCoalVein перестанет ловить эту поломку. При смене plan_GatherCoal_MinesCoalVein проверь это утверждение.");
     }
 
     private static ScriptCall findCall(TaskNode root, String script) {
@@ -1113,7 +1116,6 @@ class TicketPlansTests {
     @Property
     void plan_AnyPlannedCase_ValidByCatalog(@ForAll("plannedCases") BoardCase boardCase) {
         TaskNode plan = TicketPlans.plan(boardCase, fullTarget().withCraterBlocks(29));
-
         PlanValidator.validate(plan, CoreScripts.defaultCatalog(), ConditionCatalog.empty());
     }
 
@@ -1122,12 +1124,11 @@ class TicketPlansTests {
         TaskNode plan = TicketPlans.plan(boardCase, fullTarget().withCraterBlocks(29));
         List<String> catalogScripts =
                 CoreScripts.defaultCatalog().all().stream().map(ScriptSpec::id).toList();
-
         for (String script : collectScripts(plan)) {
             assertTrue(
                     catalogScripts.contains(script),
                     "План не обязан ссылаться на скрипты вне каталога: " + script
-                            + " — иначе дух получит задание с неизвестным шагом");
+                            + " — иначе дух получит задание с неизвестным шагом При смене plan_AnyPlannedCase_OnlyCatalogScripts проверь это утверждение.");
         }
     }
 
@@ -1189,16 +1190,15 @@ class TicketPlansTests {
     @Test
     void plan_ClearGroundsQuarter_OnlyItsChunk() {
         TaskNode quarter = TicketPlans.plan(BoardCase.CLEAR_GROUNDS, target().withCount(2));
-
         assertEquals(
                 1,
                 collectCalls(quarter, "clear_area").size(),
-                "Часть расчистки — одна часть 3×3: духи чистят участок параллельно, а не один всё");
+                "Часть расчистки — одна часть 3×3: духи чистят участок параллельно, а не один всё Иначе тест plan_ClearGroundsQuarter_OnlyItsChunk перестанет ловить эту поломку. При смене plan_ClearGroundsQuarter_OnlyItsChunk проверь это утверждение.");
         assertEquals(
                 GroundsPlan.CLEAR_PARTS,
                 collectCalls(TicketPlans.plan(BoardCase.CLEAR_GROUNDS, target()), "clear_area")
                         .size(),
-                "Без номера четверти — вся расчистка одним заданием");
+                "Без номера четверти — вся расчистка одним заданием Иначе тест plan_ClearGroundsQuarter_OnlyItsChunk перестанет ловить эту поломку. При смене plan_ClearGroundsQuarter_OnlyItsChunk проверь это утверждение.");
     }
 
     @Test
@@ -1223,7 +1223,7 @@ class TicketPlansTests {
                 Set.of(64, 65, 66),
                 layers,
                 "Каждый слой срезки остатка выравнивания — в плане какой-то части: иначе холмик в пару колонок "
-                        + "остаётся и выравнивание идёт по кругу (сцена 56)");
+                        + "остаётся и выравнивание идёт по кругу (сцена 56) При смене plan_ClearPartsLevelingRemainder_EveryCutLayerInSomePart проверь это утверждение.");
     }
 
     private static ColumnMask square(BlockCoord center, int half) {

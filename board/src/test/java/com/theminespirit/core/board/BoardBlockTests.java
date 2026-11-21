@@ -45,40 +45,59 @@ class BoardBlockTests {
             assertEquals(
                     BoardOutcome.ACCEPTED,
                     board.submit(ticket()),
-                    "Задание " + ID + " ставится заново после провала: попытка " + attempt);
+                    "Задание " + ID
+                            + " ставится заново после провала: попытка  Иначе тест fail_LimitReached_BlocksTicketAndWritesReason перестанет ловить эту поломку. При смене fail_LimitReached_BlocksTicketAndWritesReason проверь это утверждение."
+                            + attempt);
             assertEquals(
                     BoardOutcome.CLAIMED,
                     board.claim(ID, spirit(attempt), now[0]),
-                    "Задание выдано духу " + attempt + ": провал принадлежит конкретному исполнителю");
-            assertTrue(board.fail(ID), "Провал " + attempt + " записан");
+                    "Задание выдано духу " + attempt
+                            + ": провал принадлежит конкретному исполнителю Иначе тест fail_LimitReached_BlocksTicketAndWritesReason перестанет ловить эту поломку. При смене fail_LimitReached_BlocksTicketAndWritesReason проверь это утверждение.");
+            assertTrue(
+                    board.fail(ID),
+                    "Провал " + attempt
+                            + " записан Иначе тест fail_LimitReached_BlocksTicketAndWritesReason перестанет ловить эту поломку. При смене fail_LimitReached_BlocksTicketAndWritesReason проверь это утверждение.");
             if (attempt < limit) {
-                assertFalse(board.blocked(ID), "До предела " + limit + " задание ещё не заблокировано");
+                assertFalse(
+                        board.blocked(ID),
+                        "До предела " + limit
+                                + " задание ещё не заблокировано Иначе тест fail_LimitReached_BlocksTicketAndWritesReason перестанет ловить эту поломку. При смене fail_LimitReached_BlocksTicketAndWritesReason проверь это утверждение.");
             }
         }
 
         assertTrue(
                 board.blocked(ID),
                 "После " + limit + " провалов подряд задание заблокировано: "
-                        + "иначе доска переиздаёт его бесконечно");
+                        + "иначе доска переиздаёт его бесконечно При смене fail_LimitReached_BlocksTicketAndWritesReason проверь это утверждение.");
         assertEquals(
                 Optional.of(BoardStatus.BLOCKED),
                 board.statusOf(ID),
-                "Статус задания — BLOCKED, а не PENDING: наблюдатель видит причину остановки");
+                "Статус задания — BLOCKED, а не PENDING: наблюдатель видит причину остановки Иначе тест fail_LimitReached_BlocksTicketAndWritesReason перестанет ловить эту поломку. При смене fail_LimitReached_BlocksTicketAndWritesReason проверь это утверждение.");
         assertEquals(
                 BoardOutcome.BLOCKED,
                 board.claim(ID, spirit(limit + 1), now[0]),
-                "Заблокированное задание не выдаётся даже другому духу: условие не изменилось");
+                "Заблокированное задание не выдаётся даже другому духу: условие не изменилось Иначе тест fail_LimitReached_BlocksTicketAndWritesReason перестанет ловить эту поломку. При смене fail_LimitReached_BlocksTicketAndWritesReason проверь это утверждение.");
 
         List<BoardLogEntry> journal = board.failures().drainBlocks();
-        assertEquals(1, journal.size(), "Блокировка пишется в журнал ровно один раз");
-        assertEquals(BoardLog.Event.BLOCKED, journal.get(0).event(), "Событие журнала — BLOCKED");
+        assertEquals(
+                1,
+                journal.size(),
+                "Блокировка пишется в журнал ровно один раз Иначе тест fail_LimitReached_BlocksTicketAndWritesReason перестанет ловить эту поломку. При смене fail_LimitReached_BlocksTicketAndWritesReason проверь это утверждение.");
+        assertEquals(
+                BoardLog.Event.BLOCKED,
+                journal.get(0).event(),
+                "Событие журнала — BLOCKED Иначе тест fail_LimitReached_BlocksTicketAndWritesReason перестанет ловить эту поломку. При смене fail_LimitReached_BlocksTicketAndWritesReason проверь это утверждение.");
         assertTrue(
                 journal.get(0).modifiers().contains("failures=" + limit),
-                "Причина в журнале называет число провалов: " + journal.get(0).modifiers());
+                "Причина в журнале называет число провалов:  Иначе тест fail_LimitReached_BlocksTicketAndWritesReason перестанет ловить эту поломку. При смене fail_LimitReached_BlocksTicketAndWritesReason проверь это утверждение."
+                        + journal.get(0).modifiers());
         assertTrue(
                 journal.get(0).modifiers().contains("missing=dirt:9"),
-                "Причина в журнале называет нехватку: " + journal.get(0).modifiers());
-        assertTrue(board.failures().drainBlocks().isEmpty(), "Запись отдаётся один раз: адаптер не пишет дубли");
+                "Причина в журнале называет нехватку:  Иначе тест fail_LimitReached_BlocksTicketAndWritesReason перестанет ловить эту поломку. При смене fail_LimitReached_BlocksTicketAndWritesReason проверь это утверждение."
+                        + journal.get(0).modifiers());
+        assertTrue(
+                board.failures().drainBlocks().isEmpty(),
+                "Запись отдаётся один раз: адаптер не пишет дубли Иначе тест fail_LimitReached_BlocksTicketAndWritesReason перестанет ловить эту поломку. При смене fail_LimitReached_BlocksTicketAndWritesReason проверь это утверждение.");
     }
 
     @Test
@@ -92,7 +111,7 @@ class BoardBlockTests {
         assertTrue(
                 board.blocked(ID),
                 "Типизированная нужда блокирует задание сразу, а не сжигает " + BoardTuning.ticketFailLimit()
-                        + " попыток");
+                        + " попыток Иначе тест fail_TypedItemNeed_BlocksImmediately перестанет ловить эту поломку. При смене fail_TypedItemNeed_BlocksImmediately проверь это утверждение.");
     }
 
     @Test
@@ -108,7 +127,9 @@ class BoardBlockTests {
         board.claim(ID, spirit(2), now[0]);
         board.fail(ID, new StockView(Map.of()), "нет материала");
 
-        assertFalse(board.blocked(ID), "Разные причины провала — обычный счёт до предела попыток");
+        assertFalse(
+                board.blocked(ID),
+                "Разные причины провала — обычный счёт до предела попыток Иначе тест fail_DifferentReasons_CountedToLimit перестанет ловить эту поломку. При смене fail_DifferentReasons_CountedToLimit проверь это утверждение.");
     }
 
     @Test
@@ -131,15 +152,18 @@ class BoardBlockTests {
         assertTrue(
                 blocked.modifiers().stream().anyMatch(modifier -> modifier.contains(stuck)),
                 "BLOCKED называет причину последнего провала: пустой waitReason не показывает, что чинить "
-                        + "(п.4 отчёта); модификаторы: " + blocked.modifiers());
+                        + "(п.4 отчёта); модификаторы:  Иначе тест fail_Blocked_KeepsReasonAndAttemptHistoryInJournal перестанет ловить эту поломку. При смене fail_Blocked_KeepsReasonAndAttemptHistoryInJournal проверь это утверждение."
+                        + blocked.modifiers());
         assertTrue(
                 blocked.modifiers().stream().anyMatch(modifier -> modifier.startsWith("history=")),
                 "BLOCKED хранит историю попыток, а не только счётчик: по ней видно, один и тот же тупик "
-                        + "или разные причины; модификаторы: " + blocked.modifiers());
+                        + "или разные причины; модификаторы:  Иначе тест fail_Blocked_KeepsReasonAndAttemptHistoryInJournal перестанет ловить эту поломку. При смене fail_Blocked_KeepsReasonAndAttemptHistoryInJournal проверь это утверждение."
+                        + blocked.modifiers());
         assertTrue(
                 blocked.modifiers().stream().anyMatch(modifier -> modifier.startsWith("failures=")),
                 "BLOCKED по-прежнему называет число провалов: история дополняет счётчик, а не заменяет его; "
-                        + "модификаторы: " + blocked.modifiers());
+                        + "модификаторы:  Иначе тест fail_Blocked_KeepsReasonAndAttemptHistoryInJournal перестанет ловить эту поломку. При смене fail_Blocked_KeepsReasonAndAttemptHistoryInJournal проверь это утверждение."
+                        + blocked.modifiers());
     }
 
     @Test
@@ -154,7 +178,9 @@ class BoardBlockTests {
             board.prune(now[0]);
             now[0] += Math.max(BoardTuning.failBackoffTicks(), board.casePauseTicks(holder, CASE));
         }
-        assertTrue(board.blocked(ID), "Сцена: задание заблокировано провалами подряд");
+        assertTrue(
+                board.blocked(ID),
+                "Сцена: задание заблокировано провалами подряд При смене prune_BlockedLongEnough_StaysBlockedWithoutConditionChange проверь это утверждение.");
         board.prune(now[0]);
         now[0] += 100_000;
 
@@ -164,11 +190,11 @@ class BoardBlockTests {
                 BoardStatus.BLOCKED,
                 board.statusOf(ID).orElse(null),
                 "BLOCKED не снимается по времени: без изменения условий доска снова выдаст тот же тупик "
-                        + "(N6: BLOCKED→UNBLOCKED без изменения условий)");
+                        + "(N6: BLOCKED→UNBLOCKED без изменения условий) Иначе тест prune_BlockedLongEnough_StaysBlockedWithoutConditionChange перестанет ловить эту поломку. При смене prune_BlockedLongEnough_StaysBlockedWithoutConditionChange проверь это утверждение.");
         assertEquals(
                 BoardOutcome.BLOCKED,
                 board.claim(ID, spirit(99), now[0]),
-                "Заблокированное задание не выдаётся и после паузы: разблокировка только при смене условий");
+                "Заблокированное задание не выдаётся и после паузы: разблокировка только при смене условий Иначе тест prune_BlockedLongEnough_StaysBlockedWithoutConditionChange перестанет ловить эту поломку. При смене prune_BlockedLongEnough_StaysBlockedWithoutConditionChange проверь это утверждение.");
     }
 
     @Test
@@ -191,7 +217,7 @@ class BoardBlockTests {
         assertEquals(
                 Optional.empty(),
                 board.holderOf(ID),
-                "Снова PENDING — без держателя: «PENDING с assignee» висел на доске, будто задание взято (INC-47)");
+                "Снова PENDING — без держателя: «PENDING с assignee» висел на доске, будто задание взято (INC-47) Иначе тест claimable_Unblocked_NoStaleHolder перестанет ловить эту поломку. При смене claimable_Unblocked_NoStaleHolder проверь это утверждение.");
     }
 
     @Test
@@ -208,19 +234,19 @@ class BoardBlockTests {
             board.claim(ID, spirit(attempt), now[0]);
             board.fail(ID, new StockView(Map.of("dirt", 5)), null);
         }
-        assertTrue(board.blocked(ID), "Подготовка: задание заблокировано пределом провалов");
+        assertTrue(
+                board.blocked(ID),
+                "Подготовка: задание заблокировано пределом провалов Иначе тест claimable_ShortageWorsened_StaysBlockedWithoutConditionChange перестанет ловить эту поломку. При смене claimable_ShortageWorsened_StaysBlockedWithoutConditionChange проверь это утверждение.");
         board.failures().drainBlocks();
-
         board.claimable(new StockView(Map.of("dirt", 2)), now[0]);
-
         assertEquals(
                 BoardStatus.BLOCKED,
                 board.statusOf(ID).orElse(null),
                 "Нехватка выросла (4 → 7), а условия задания не изменились: разблокировка гнала духа в тот же "
-                        + "тупик, в отчёте это переиздание first:build_mine с новым createdAt и снова 5 провалов");
+                        + "тупик, в отчёте это переиздание first:build_mine с новым createdAt и снова 5 провалов Иначе тест claimable_ShortageWorsened_StaysBlockedWithoutConditionChange перестанет ловить эту поломку. При смене claimable_ShortageWorsened_StaysBlockedWithoutConditionChange проверь это утверждение.");
         assertTrue(
                 board.failures().drainBlocks().isEmpty(),
-                "Без улучшения запасов нет события UNBLOCKED: причина блокировки та же");
+                "Без улучшения запасов нет события UNBLOCKED: причина блокировки та же Иначе тест claimable_ShortageWorsened_StaysBlockedWithoutConditionChange перестанет ловить эту поломку. При смене claimable_ShortageWorsened_StaysBlockedWithoutConditionChange проверь это утверждение.");
     }
 
     @Test
@@ -237,29 +263,38 @@ class BoardBlockTests {
             board.claim(ID, spirit(attempt), now[0]);
             board.fail(ID);
         }
-        assertTrue(board.blocked(ID), "Подготовка: задание заблокировано пределом провалов");
+        assertTrue(
+                board.blocked(ID),
+                "Подготовка: задание заблокировано пределом провалов Иначе тест claimable_MaterialsAppeared_UnblocksAndWritesJournal перестанет ловить эту поломку. При смене claimable_MaterialsAppeared_UnblocksAndWritesJournal проверь это утверждение.");
         board.failures().drainBlocks();
-
         List<BoardTicket> ready = board.claimable(new StockView(Map.of("dirt", 9)), now[0]);
         assertTrue(
                 ready.stream().anyMatch(ticket -> ID.equals(ticket.id())),
-                "Появившийся материал снимает блокировку: задание снова готово к выдаче");
+                "Появившийся материал снимает блокировку: задание снова готово к выдаче Иначе тест claimable_MaterialsAppeared_UnblocksAndWritesJournal перестанет ловить эту поломку. При смене claimable_MaterialsAppeared_UnblocksAndWritesJournal проверь это утверждение.");
         assertEquals(
                 Optional.of(BoardStatus.PENDING),
                 board.statusOf(ID),
-                "Разблокированное задание ждёт исполнителя, а не остаётся BLOCKED");
-        assertEquals(0, board.ticketFailures(ID), "Разблокировка начинает серию провалов заново");
-
+                "Разблокированное задание ждёт исполнителя, а не остаётся BLOCKED Иначе тест claimable_MaterialsAppeared_UnblocksAndWritesJournal перестанет ловить эту поломку. При смене claimable_MaterialsAppeared_UnblocksAndWritesJournal проверь это утверждение.");
+        assertEquals(
+                0,
+                board.ticketFailures(ID),
+                "Разблокировка начинает серию провалов заново Иначе тест claimable_MaterialsAppeared_UnblocksAndWritesJournal перестанет ловить эту поломку. При смене claimable_MaterialsAppeared_UnblocksAndWritesJournal проверь это утверждение.");
         List<BoardLogEntry> journal = board.failures().drainBlocks();
-        assertEquals(1, journal.size(), "Снятие блокировки пишется в журнал ровно один раз");
-        assertEquals(BoardLog.Event.UNBLOCKED, journal.get(0).event(), "Событие журнала — UNBLOCKED");
+        assertEquals(
+                1,
+                journal.size(),
+                "Снятие блокировки пишется в журнал ровно один раз Иначе тест claimable_MaterialsAppeared_UnblocksAndWritesJournal перестанет ловить эту поломку. При смене claimable_MaterialsAppeared_UnblocksAndWritesJournal проверь это утверждение.");
+        assertEquals(
+                BoardLog.Event.UNBLOCKED,
+                journal.get(0).event(),
+                "Событие журнала — UNBLOCKED Иначе тест claimable_MaterialsAppeared_UnblocksAndWritesJournal перестанет ловить эту поломку. При смене claimable_MaterialsAppeared_UnblocksAndWritesJournal проверь это утверждение.");
         assertTrue(
                 journal.get(0).modifiers().contains("failures=0"),
-                "Снятие блокировки называет сброшенный счётчик: "
+                "Снятие блокировки называет сброшенный счётчик:  Иначе тест claimable_MaterialsAppeared_UnblocksAndWritesJournal перестанет ловить эту поломку. При смене claimable_MaterialsAppeared_UnblocksAndWritesJournal проверь это утверждение."
                         + journal.get(0).modifiers());
         assertEquals(
                 BoardOutcome.CLAIMED,
                 board.claim(ID, spirit(limit + 1), now[0]),
-                "После разблокировки задание снова выдаётся свободному духу");
+                "После разблокировки задание снова выдаётся свободному духу Иначе тест claimable_MaterialsAppeared_UnblocksAndWritesJournal перестанет ловить эту поломку. При смене claimable_MaterialsAppeared_UnblocksAndWritesJournal проверь это утверждение.");
     }
 }

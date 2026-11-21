@@ -65,11 +65,12 @@ class DispatchRoundTests {
                 Map.of(new UUID(0, 1), 1, new UUID(0, 2), 1, new UUID(0, 3), 1, new UUID(0, 4), 1),
                 board.assignedCounts(),
                 "4 свободных духа при 10 заданиях заняты все по одному (INC-83: 4 из 5 стояли при 10 заданиях); "
-                        + "проверь выбор свободного духа и счёт взятых в раунде");
+                        + "проверь выбор свободного духа и счёт взятых в раунде Иначе тест choose_FourFreeSpiritsTenTickets_EverySpiritBusy перестанет ловить эту поломку. При смене choose_FourFreeSpiritsTenTickets_EverySpiritBusy проверь это утверждение.");
         String why = round.why(tickets.get(9), spirits);
         assertTrue(
                 why.contains("spirit-1 — держит gather:") && why.contains("spirit-4 — держит gather:"),
-                "Причина ожидания называет каждого духа и чем он занят, а не «годные духи заняты»: " + why);
+                "Причина ожидания называет каждого духа и чем он занят, а не «годные духи заняты»:  Иначе тест choose_FourFreeSpiritsTenTickets_EverySpiritBusy перестанет ловить эту поломку. При смене choose_FourFreeSpiritsTenTickets_EverySpiritBusy проверь это утверждение."
+                        + why);
     }
 
     @Test
@@ -89,7 +90,7 @@ class DispatchRoundTests {
                 4,
                 board.assignedCounts().size(),
                 "Своё задание духа не выдано (ждёт передачу) — дух не простаивает «в ожидании своего», а берёт "
-                        + "другое по силам; иначе он стоит, пока висят задания");
+                        + "другое по силам; иначе он стоит, пока висят задания При смене choose_OwnTicketNotIssued_OwnerTakesOtherWork проверь это утверждение.");
     }
 
     @Test
@@ -113,9 +114,11 @@ class DispatchRoundTests {
         assertTrue(
                 round.refusal(chop, bareHands).isEmpty(),
                 "Рубка без топора выдаётся: инструмент — предпочтение и скорость, а не запрет (владелец 05.11); "
-                        + "иначе на пустом старте поселение ждёт топор без дерева");
+                        + "иначе на пустом старте поселение ждёт топор без дерева При смене refusal_ChopWithoutAxe_ToolIsPreferenceNotBan проверь это утверждение.");
         Optional<DispatchRound.Candidate> chosen = round.choose(chop, List.of(bareHands));
-        assertTrue(chosen.isPresent(), "Дух с пустыми руками получает рубку и рубит дерево руками");
+        assertTrue(
+                chosen.isPresent(),
+                "Дух с пустыми руками получает рубку и рубит дерево руками Иначе тест refusal_ChopWithoutAxe_ToolIsPreferenceNotBan перестанет ловить эту поломку. При смене refusal_ChopWithoutAxe_ToolIsPreferenceNotBan проверь это утверждение.");
     }
 
     @Test
@@ -140,23 +143,25 @@ class DispatchRoundTests {
         assertTrue(
                 round.refusal(cleanup, wet).isPresent(),
                 "Дух в воде не дойдёт до стоянки уборки (observe17: s1 в затопленной шахте, «не дошёл до»): "
-                        + "уборку надо отдать сухому духу, а не ближайшему по координате");
+                        + "уборку надо отдать сухому духу, а не ближайшему по координате При смене refusal_WetSpiritOnCleanup_IsRefusedUntilItDries проверь это утверждение.");
         DispatchRound.Candidate dry = new DispatchRound.Candidate(
                 id, "spirit-dry", null, List.of("minecraft:stone_pickaxe"), FED, SpiritView.free(), false);
-        assertTrue(round.refusal(cleanup, dry).isEmpty(), "Сухой дух уборку берёт: иначе висящее останется навсегда");
+        assertTrue(
+                round.refusal(cleanup, dry).isEmpty(),
+                "Сухой дух уборку берёт: иначе висящее останется навсегда При смене refusal_WetSpiritOnCleanup_IsRefusedUntilItDries проверь это утверждение.");
     }
 
     @Test
     void tooLowForCleanup_DeepSpirit_IsRefusedOnlyForCleanup() {
         assertTrue(
                 DispatchRound.tooLowForCleanup(BoardCase.DISMANTLE_SHELTER, 55, 69),
-                "Дух в затопленной шахте (y=55) не дойдёт до стоянки уборки на y=69: observe17 — 53 «не дошёл до»");
+                "Дух в затопленной шахте (y=55) не дойдёт до стоянки уборки на y=69: observe17 — 53 «не дошёл до» При смене tooLowForCleanup_DeepSpirit_IsRefusedOnlyForCleanup проверь это утверждение.");
         assertTrue(
                 !DispatchRound.tooLowForCleanup(BoardCase.DISMANTLE_SHELTER, 65, 69),
-                "Дух на четыре блока ниже стоянки ещё может подойти: порог не должен отсекать соседнюю клетку");
+                "Дух на четыре блока ниже стоянки ещё может подойти: порог не должен отсекать соседнюю клетку Иначе тест tooLowForCleanup_DeepSpirit_IsRefusedOnlyForCleanup перестанет ловить эту поломку. При смене tooLowForCleanup_DeepSpirit_IsRefusedOnlyForCleanup проверь это утверждение.");
         assertTrue(
                 !DispatchRound.tooLowForCleanup(BoardCase.GATHER_MATERIALS, 55, 69),
-                "Порог касается только уборки висящего, а не обычных заданий");
+                "Порог касается только уборки висящего, а не обычных заданий Иначе тест tooLowForCleanup_DeepSpirit_IsRefusedOnlyForCleanup перестанет ловить эту поломку. При смене tooLowForCleanup_DeepSpirit_IsRefusedOnlyForCleanup проверь это утверждение.");
     }
 
     @Test
@@ -168,11 +173,11 @@ class DispatchRoundTests {
                 "goto",
                 DispatchBusy.text(null, plan, DispatchBusy.Mode.WORK),
                 "Между шагами скрипт ещё не стартовал: причина ожидания обязана называть шаг плана (goto), "
-                        + "а не обезличенное «задача» — иначе видно только «занят: задача»");
+                        + "а не обезличенное «задача» — иначе видно только «занят: задача» При смене busyWith_NoCurrentScript_NamesPlanStepInsteadOfTask проверь это утверждение.");
         assertEquals(
                 "тактика держит (goto)",
                 DispatchBusy.text(null, plan, DispatchBusy.Mode.TACTICS),
-                "При управлении тактикой причина называет тот же шаг плана: «тактика держит (goto)»");
+                "При управлении тактикой причина называет тот же шаг плана: «тактика держит (goto)» Иначе тест busyWith_NoCurrentScript_NamesPlanStepInsteadOfTask перестанет ловить эту поломку. При смене busyWith_NoCurrentScript_NamesPlanStepInsteadOfTask проверь это утверждение.");
     }
 
     @Test
@@ -197,7 +202,7 @@ class DispatchRoundTests {
                 "ждёт духа: spirit-1 — на паузе кейса GATHER_MATERIALS после 1 провалов; ещё занято 1",
                 why,
                 "Причина ожидания называет конкретную помеху (пауза кейса с числом провалов) и число занятых, "
-                        + "а не дамп всех занятых духов: такой waitReason повторялся в каждой строке доски");
+                        + "а не дамп всех занятых духов: такой waitReason повторялся в каждой строке доски Иначе тест why_BusyAndPausedSpirits_NamesEachConcretely перестанет ловить эту поломку. При смене why_BusyAndPausedSpirits_NamesEachConcretely проверь это утверждение.");
     }
 
     @Test
@@ -222,7 +227,7 @@ class DispatchRoundTests {
                 "ждёт духа: в воде или под крышей: до стоянки уборки не дойдёт: spirit-1, spirit-2",
                 round.why(cleanup, spirits),
                 "Одна причина на нескольких духов называется один раз со списком имён: доска из 100 PENDING "
-                        + "не повторяет один и тот же текст");
+                        + "не повторяет один и тот же текст Иначе тест why_ManySpiritsWithSameBlocker_GroupsByNameNotDump перестанет ловить эту поломку. При смене why_ManySpiritsWithSameBlocker_GroupsByNameNotDump проверь это утверждение.");
     }
 
     @Test
@@ -240,7 +245,7 @@ class DispatchRoundTests {
                 "ждёт свободного духа: заняты 3 (chop_tree, build_schematic)",
                 round.why(waiting, spirits),
                 "Когда заняты все, причина конкретной задачи — «нет свободного духа» и чем заняты, без имён "
-                        + "каждого духа: доска из 100 PENDING не должна повторять один и тот же дамп");
+                        + "каждого духа: доска из 100 PENDING не должна повторять один и тот же дамп Иначе тест why_AllBusy_SummarizesJobsInsteadOfDump перестанет ловить эту поломку. При смене why_AllBusy_SummarizesJobsInsteadOfDump проверь это утверждение.");
     }
 
     @Test
@@ -251,7 +256,7 @@ class DispatchRoundTests {
         assertEquals(
                 "нет духов",
                 round.why(waiting, List.of()),
-                "Пустое поселение — честная причина «нет духов», а не пустая строка");
+                "Пустое поселение — честная причина «нет духов», а не пустая строка Иначе тест why_NoSpirits_NamesEmptySettlement перестанет ловить эту поломку. При смене why_NoSpirits_NamesEmptySettlement проверь это утверждение.");
     }
 
     @Test
@@ -282,9 +287,12 @@ class DispatchRoundTests {
         Optional<String> refusal = round.refusal(mine, worn);
         assertTrue(
                 refusal.isPresent() && refusal.orElseThrow().contains("изношен"),
-                "Изношенная кирка не уходит в работу: граф сначала чинит или меняет её: " + refusal);
+                "Изношенная кирка не уходит в работу: граф сначала чинит или меняет её:  Иначе тест refusal_WornPickaxe_RefusedUntilGraphRepairsIt перестанет ловить эту поломку. При смене refusal_WornPickaxe_RefusedUntilGraphRepairsIt проверь это утверждение."
+                        + refusal);
         DispatchRound.Candidate fresh = new DispatchRound.Candidate(
                 new UUID(0, 2), "spirit-2", null, List.of("minecraft:stone_pickaxe"), FED, SpiritView.free());
-        assertTrue(round.refusal(mine, fresh).isEmpty(), "Целая кирка работу берёт: износ — не запрет инструмента");
+        assertTrue(
+                round.refusal(mine, fresh).isEmpty(),
+                "Целая кирка работу берёт: износ — не запрет инструмента Иначе тест refusal_WornPickaxe_RefusedUntilGraphRepairsIt перестанет ловить эту поломку. При смене refusal_WornPickaxe_RefusedUntilGraphRepairsIt проверь это утверждение.");
     }
 }
