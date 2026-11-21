@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.movement.StallWatch;
 import com.theminespirit.core.movement.StuckWatcher;
 import com.theminespirit.core.movement.api.GotoTuning;
 import com.theminespirit.core.movement.api.PathRefreshPolicy;
@@ -34,6 +35,7 @@ public final class Approach {
     private PassageWalk passages;
     private PathRefreshPolicy pathRefresh;
     private StuckWatcher stuckWatcher;
+    private StallWatch stall = new StallWatch(GotoTuning.STUCK_TICKS);
     private Vec3 targetPoint;
     private Entity targetEntity;
     private double arrival;
@@ -95,9 +97,11 @@ public final class Approach {
             return State.MOVING;
         }
         boolean opened = passages.tick();
-        if (stuckWatcher.observe(spirit.getX(), spirit.getY(), spirit.getZ())) {
+        if (stuckWatcher.observe(spirit.getX(), spirit.getY(), spirit.getZ())
+                || stall.observe(spirit.getX(), spirit.getZ())) {
             if (opened || passages.openToward(blockCoord(target))) {
                 stuckWatcher = new StuckWatcher(GotoTuning.STUCK_MIN_MOVEMENT, GotoTuning.STUCK_TICKS);
+                stall.reset();
                 pathRefresh = new PathRefreshPolicy();
                 return State.MOVING;
             }
@@ -149,15 +153,11 @@ public final class Approach {
     }
 
     public void cancel() {
-        if (active) {
-            finish();
-        }
+        if (active) finish();
     }
 
     public void suspend() {
-        if (active) {
-            spirit.getNavigation().stop();
-        }
+        if (active) spirit.getNavigation().stop();
     }
 
     public boolean detouring() {
@@ -183,6 +183,7 @@ public final class Approach {
     private void start(Vec3 point, Entity entity, double arrivalDistance) {
         pathRefresh = new PathRefreshPolicy();
         stuckWatcher = new StuckWatcher(GotoTuning.STUCK_MIN_MOVEMENT, GotoTuning.STUCK_TICKS);
+        stall.reset();
         passages = new PassageWalk(spirit);
         targetPoint = point;
         targetEntity = entity;
@@ -280,6 +281,7 @@ public final class Approach {
         timeoutTicks = Math.max(timeoutTicks, elapsed + rescue.ticksBudget());
         stuckWatcher = new StuckWatcher(GotoTuning.STUCK_MIN_MOVEMENT, GotoTuning.STUCK_TICKS);
         pathRefresh = new PathRefreshPolicy();
+        stall.reset();
         return true;
     }
 
