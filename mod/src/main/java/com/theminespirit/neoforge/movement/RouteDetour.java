@@ -16,6 +16,7 @@ import com.theminespirit.core.route.Route;
 import com.theminespirit.core.route.RouteCell;
 import com.theminespirit.core.route.RouteFailures;
 import com.theminespirit.core.route.RouteThrottle;
+import com.theminespirit.core.route.StuckTargets;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.TickWatch;
 import com.theminespirit.neoforge.log.SpiritWorldLog;
@@ -30,6 +31,8 @@ public final class RouteDetour {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final RouteThrottle THROTTLE = new RouteThrottle();
     private static final RouteFailures FAILURES = new RouteFailures();
+    private static final StuckTargets STUCK = new StuckTargets();
+    private static final long STUCK_TTL_TICKS = 600;
     private static final long PLAN_TOTAL_MILLIS = 15000;
     private static final long FAIL_TTL_TICKS = 1200;
     private static final long LOG_TICKS = 1200;
@@ -96,6 +99,17 @@ public final class RouteDetour {
         BlockCoord from = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
         int blocks = RouteLevelView.blocks(spirit);
         RouteFailures.Key key = new RouteFailures.Key(spirit.getUUID(), from, target, radius, blocks);
+        if (!rescue && STUCK.recent(spirit.getUUID(), target, now, STUCK_TTL_TICKS)) {
+            if (CACHE_LOGS.allow(spirit.getUUID(), now)) {
+                LOGGER.info(
+                        "[route] дух {} ({}): цель {} провалила шаг меньше {} тиков назад — маршрут не строю",
+                        spirit.displayName(),
+                        why,
+                        target,
+                        STUCK_TTL_TICKS);
+            }
+            return null;
+        }
         if (!rescue && FAILURES.recentlyFailed(key, now, FAIL_TTL_TICKS)) {
             if (CACHE_LOGS.allow(spirit.getUUID(), now)) {
                 LOGGER.info(
@@ -254,6 +268,7 @@ public final class RouteDetour {
     }
 
     public static void failed(SpiritEntity spirit, RouteWalk walk) {
+        STUCK.note(spirit.getUUID(), walk.target(), spirit.level().getGameTime());
         LOGGER.warn(
                 "[route] дух {} сошёл с маршрута в {}: {}",
                 spirit.displayName(),
