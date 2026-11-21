@@ -25,6 +25,7 @@ public final class SpinDetector {
     private static final int END_GRACE = 20;
     private static final int COOLDOWN = 600;
     private static final double TURN_DEGREES = 270.0;
+    private static final double CIRCLE_DEGREES = 540.0;
     private static final double TURN_SHIFT = 0.5;
     private static final double CIRCLE_PATH = 2.0;
     private static final double CIRCLE_SHIFT = 1.0;
@@ -65,7 +66,7 @@ public final class SpinDetector {
                 && circle.path >= CIRCLE_PATH
                 && circle.shift <= CIRCLE_SHIFT
                 && circle.rise < FLAT_RISE
-                && Math.abs(circle.turnSigned) >= TURN_DEGREES) {
+                && Math.abs(circle.turnSigned) >= CIRCLE_DEGREES) {
             hit = circle;
             hitKind = Kind.CIRCLE;
         }

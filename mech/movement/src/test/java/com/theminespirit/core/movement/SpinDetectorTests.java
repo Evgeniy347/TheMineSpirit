@@ -56,6 +56,20 @@ class SpinDetectorTests {
     }
 
     @Test
+    void walkingAroundOneBlock_SingleLoop_IsNotSpin() {
+        SpinDetector detector = new SpinDetector();
+        for (int tick = 0; tick < 90; tick++) {
+            double angle = Math.toRadians(tick * 6.0);
+            assertNull(
+                    detector.feed(tick, 0.5 * Math.cos(angle), 68.0, 0.5 * Math.sin(angle), tick * 6.0f),
+                    "Один оборот вокруг препятствия — рабочий обход, а не кружение: дух проходит мимо столба "
+                            + "или ствола и идёт дальше (окно 52, spirit-3: 364° за 47 тиков, путь 3.21, "
+                            + "shift 0.97, nav=идёт). Иначе каждый обход даёт ложный эпизод. При смене порога "
+                            + "проверь многократный витк: два оборота обязаны остаться эпизодом");
+        }
+    }
+
+    @Test
     void spiralStairs_RisingCircle_IsNotSpin() {
         SpinDetector detector = new SpinDetector();
         for (int tick = 0; tick < 200; tick++) {
@@ -73,8 +87,8 @@ class SpinDetectorTests {
     void flatCircle_OnLevelGround_ReportsCircleEpisode() {
         SpinDetector detector = new SpinDetector();
         for (int tick = 0; tick < 90; tick++) {
-            double angle = Math.toRadians(tick * 12.0);
-            detector.feed(tick, 0.3 * Math.cos(angle), 68.0, 0.3 * Math.sin(angle), tick * 12.0f);
+            double angle = Math.toRadians(tick * 15.0);
+            detector.feed(tick, 0.3 * Math.cos(angle), 68.0, 0.3 * Math.sin(angle), tick * 15.0f);
         }
         SpinDetector.Spin spin = null;
         for (int tick = 90; tick < 200 && spin == null; tick++) {
