@@ -101,7 +101,8 @@ class PlanValidatorRulesTests {
         assertThrows(
                 PlanValidationException.class,
                 () -> PlanParser.parse(json, CATALOG),
-                description + ": план должен быть отклонён валидатором");
+                description
+                        + ": план должен быть отклонён валидатором Иначе тест planValidation_InvalidInput_IsRejected перестанет ловить эту поломку. При смене planValidation_InvalidInput_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -110,15 +111,17 @@ class PlanValidatorRulesTests {
                 PlanValidationException.class,
                 () -> PlanParser.parse(
                         "{\"type\":\"script\",\"script\":\"mine_vein\",\"params\":{\"ore\":\"mithril\"}}", CATALOG),
-                "ore=\"mithril\" обязан отвергаться валидатором: enum из каталога обязан перечислять допустимые виды");
+                "ore=\"mithril\" обязан отвергаться валидатором: enum из каталога обязан перечислять допустимые виды Иначе тест mineVeinUnknownOre_Plan_IsRejectedWithAllowedList перестанет ловить эту поломку. При смене mineVeinUnknownOre_Plan_IsRejectedWithAllowedList проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("mithril"),
-                "Отказ обязан называть неизвестный вид 'mithril'. Фактическое: " + error.getMessage());
+                "Отказ обязан называть неизвестный вид 'mithril'. Фактическое:  Иначе тест mineVeinUnknownOre_Plan_IsRejectedWithAllowedList перестанет ловить эту поломку. При смене mineVeinUnknownOre_Plan_IsRejectedWithAllowedList проверь это утверждение."
+                        + error.getMessage());
         for (String allowed : OreKind.names()) {
             assertTrue(
                     error.getMessage().contains(allowed),
-                    "Отказ обязан перечислять допустимый вид '" + allowed + "': по списку правят план. Фактическое: "
+                    "Отказ обязан перечислять допустимый вид '" + allowed
+                            + "': по списку правят план. Фактическое:  Иначе тест mineVeinUnknownOre_Plan_IsRejectedWithAllowedList перестанет ловить эту поломку. При смене mineVeinUnknownOre_Plan_IsRejectedWithAllowedList проверь это утверждение."
                             + error.getMessage());
         }
     }
@@ -129,15 +132,16 @@ class PlanValidatorRulesTests {
                 PlanValidationException.class,
                 () -> PlanParser.parse(
                         "{\"type\":\"script\",\"script\":\"harvest_crop\",\"params\":{\"crop\":\"rice\"}}", CATALOG),
-                "crop=\"rice\" обязан отвергаться валидатором: enum из каталога обязан перечислять допустимые виды");
-
+                "crop=\"rice\" обязан отвергаться валидатором: enum из каталога обязан перечислять допустимые виды Иначе тест harvestCropUnknownCrop_Plan_IsRejectedWithAllowedList перестанет ловить эту поломку. При смене harvestCropUnknownCrop_Plan_IsRejectedWithAllowedList проверь это утверждение.");
         assertTrue(
                 error.getMessage().contains("rice"),
-                "Отказ обязан называть неизвестный вид 'rice'. Фактическое: " + error.getMessage());
+                "Отказ обязан называть неизвестный вид 'rice'. Фактическое:  Иначе тест harvestCropUnknownCrop_Plan_IsRejectedWithAllowedList перестанет ловить эту поломку. При смене harvestCropUnknownCrop_Plan_IsRejectedWithAllowedList проверь это утверждение."
+                        + error.getMessage());
         for (String allowed : CropKind.names()) {
             assertTrue(
                     error.getMessage().contains(allowed),
-                    "Отказ обязан перечислять допустимый вид '" + allowed + "': по списку правят план. Фактическое: "
+                    "Отказ обязан перечислять допустимый вид '" + allowed
+                            + "': по списку правят план. Фактическое:  Иначе тест harvestCropUnknownCrop_Plan_IsRejectedWithAllowedList перестанет ловить эту поломку. При смене harvestCropUnknownCrop_Plan_IsRejectedWithAllowedList проверь это утверждение."
                             + error.getMessage());
         }
     }
@@ -148,7 +152,7 @@ class PlanValidatorRulesTests {
                 PlanValidationException.class,
                 () -> PlanParser.parse(
                         "{\"type\":\"script\",\"script\":\"plant_crop\",\"params\":{\"radius\":8}}", CATALOG),
-                "plant_crop без crop обязан отвергаться: вид обязателен, без него неизвестно, какие семена тратить");
+                "plant_crop без crop обязан отвергаться: вид обязателен, без него неизвестно, какие семена тратить Иначе тест plantCropWithoutCrop_Plan_IsRejected перестанет ловить эту поломку. При смене plantCropWithoutCrop_Plan_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -157,53 +161,49 @@ class PlanValidatorRulesTests {
                 PlanValidationException.class,
                 () -> PlanParser.parse(
                         "{\"type\":\"script\",\"script\":\"plant_crop\",\"params\":{\"crop\":\"any\"}}", CATALOG),
-                "plant_crop с crop=any обязан отвергаться: каталог разрешает только сажаемые виды без any");
+                "plant_crop с crop=any обязан отвергаться: каталог разрешает только сажаемые виды без any Иначе тест plantCropAnyCrop_Plan_IsRejected перестанет ловить эту поломку. При смене plantCropAnyCrop_Plan_IsRejected проверь это утверждение.");
     }
 
     @Test
     void harvestCropWithoutParams_Plan_ContainsCatalogDefaults() {
         TaskNode plan = PlanParser.parse("{\"type\":\"script\",\"script\":\"harvest_crop\"}", CATALOG);
-
         assertEquals(
                 new ScriptCall("harvest_crop", Map.of("crop", "any", "radius", 8, "replant", true)),
                 plan,
                 "Валидатор обязан подставлять умолчания каталога для отсутствующих необязательных параметров: "
-                        + "иначе обещание default в /v1/capabilities остаётся неправдой, а маппинг получит план без вида");
+                        + "иначе обещание default в /v1/capabilities остаётся неправдой, а маппинг получит план без вида При смене harvestCropWithoutParams_Plan_ContainsCatalogDefaults проверь это утверждение.");
     }
 
     @Test
     void mineVeinWithoutOre_Plan_ContainsCatalogDefault() {
         TaskNode plan = PlanParser.parse(
                 "{\"type\":\"script\",\"script\":\"mine_vein\",\"params\":{\"count\":2,\"radius\":8}}", CATALOG);
-
         assertEquals(
                 new ScriptCall("mine_vein", Map.of("ore", "any", "count", 2, "radius", 8)),
                 plan,
                 "Валидатор обязан подставлять default 'any' для отсутствующего ore: иначе обещание default "
-                        + "в /v1/capabilities остаётся неправдой, а маппинг скрипта получит план без вида руды");
+                        + "в /v1/capabilities остаётся неправдой, а маппинг скрипта получит план без вида руды При смене mineVeinWithoutOre_Plan_ContainsCatalogDefault проверь это утверждение.");
     }
 
     @Test
     void followWithoutRadius_Plan_ContainsCatalogDefault() {
         TaskNode plan = PlanParser.parse(
                 "{\"type\":\"script\",\"script\":\"follow\",\"params\":{\"target\":\"player\"}}", CATALOG);
-
         assertEquals(
                 new ScriptCall("follow", Map.of("target", "player", "radius", 3)),
                 plan,
                 "Валидатор обязан подставлять default из каталога для отсутствующего необязательного параметра: "
-                        + "иначе обещание default в /v1/capabilities остаётся неправдой, а скрипт получает неполный план");
+                        + "иначе обещание default в /v1/capabilities остаётся неправдой, а скрипт получает неполный план При смене followWithoutRadius_Plan_ContainsCatalogDefault проверь это утверждение.");
     }
 
     @Test
     void waitScript_TicksInsideRange_IsAccepted() {
         String json = "{\"type\":\"script\",\"script\":\"wait\",\"params\":{\"ticks\":3000}}";
         TaskNode plan = PlanParser.parse(json, CATALOG);
-
         assertEquals(
                 3000,
                 ((ScriptCall) plan).params().get("ticks"),
-                "wait на 3000 тиков внутри предела 6000 обязан приниматься как есть: иначе стратег не может ждать");
+                "wait на 3000 тиков внутри предела 6000 обязан приниматься как есть: иначе стратег не может ждать При смене waitScript_TicksInsideRange_IsAccepted проверь это утверждение.");
     }
 
     @Test
@@ -215,11 +215,11 @@ class PlanValidatorRulesTests {
                                 + "\"radius\":16,\"replant\":false}}",
                         CATALOG),
                 "План с несуществующей породой обязан отклоняться: опечатка species иначе заставит духа "
-                        + "рубить любое дерево вместо берёзы");
-
+                        + "рубить любое дерево вместо берёзы При смене chopTree_UnknownSpecies_IsRejectedListingAllowed проверь это утверждение.");
         assertTrue(
                 error.getMessage().contains("oak") && error.getMessage().contains("any"),
-                "Сообщение обязано перечислить допустимые породы с 'any': по нему правят species. " + "Фактическое: "
+                "Сообщение обязано перечислить допустимые породы с 'any': по нему правят species. "
+                        + "Фактическое:  Иначе тест chopTree_UnknownSpecies_IsRejectedListingAllowed перестанет ловить эту поломку. При смене chopTree_UnknownSpecies_IsRejectedListingAllowed проверь это утверждение."
                         + error.getMessage());
     }
 
@@ -234,7 +234,7 @@ class PlanValidatorRulesTests {
         assertThrows(
                 PlanValidationException.class,
                 () -> PlanParser.parse(json, CATALOG),
-                "параметр wait.ticks за пределами допустимого диапазона: валидатор плана обязан отклонять значение");
+                "параметр wait.ticks за пределами допустимого диапазона: валидатор плана обязан отклонять значение Иначе тест waitScript_TicksOutsideRange_IsRejected перестанет ловить эту поломку. При смене waitScript_TicksOutsideRange_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -245,49 +245,47 @@ class PlanValidatorRulesTests {
                         "{\"type\":\"script\",\"script\":\"patrol\","
                                 + "\"params\":{\"points\":[\"0,64,0\"],\"mode\":\"circle\",\"loops\":1}}",
                         CATALOG),
-                "mode=\"circle\" обязан отвергаться валидатором: enum из каталога обязан перечислять допустимые режимы");
-
+                "mode=\"circle\" обязан отвергаться валидатором: enum из каталога обязан перечислять допустимые режимы Иначе тест patrolUnknownMode_Plan_IsRejectedWithAllowedList перестанет ловить эту поломку. При смене patrolUnknownMode_Plan_IsRejectedWithAllowedList проверь это утверждение.");
         assertTrue(
                 error.getMessage().contains("circle"),
-                "Отказ обязан называть неизвестный режим 'circle'. Фактическое: " + error.getMessage());
+                "Отказ обязан называть неизвестный режим 'circle'. Фактическое:  Иначе тест patrolUnknownMode_Plan_IsRejectedWithAllowedList перестанет ловить эту поломку. При смене patrolUnknownMode_Plan_IsRejectedWithAllowedList проверь это утверждение."
+                        + error.getMessage());
         assertTrue(
                 error.getMessage().contains("loop") && error.getMessage().contains("ping_pong"),
                 "Отказ обязан перечислять допустимые режимы 'loop' и 'ping_pong': по списку правят план. "
-                        + "Фактическое: " + error.getMessage());
+                        + "Фактическое:  Иначе тест patrolUnknownMode_Plan_IsRejectedWithAllowedList перестанет ловить эту поломку. При смене patrolUnknownMode_Plan_IsRejectedWithAllowedList проверь это утверждение."
+                        + error.getMessage());
     }
 
     @Test
     void patrolWithoutModeAndLoops_Plan_ContainsCatalogDefaults() {
         TaskNode plan = PlanParser.parse(
                 "{\"type\":\"script\",\"script\":\"patrol\",\"params\":{\"points\":[\"0,64,0\"]}}", CATALOG);
-
         assertEquals(
                 new ScriptCall("patrol", Map.of("points", List.of("0,64,0"), "mode", "loop", "loops", 1)),
                 plan,
                 "Валидатор обязан подставлять умолчания каталога для отсутствующих mode и loops: "
-                        + "иначе обещание default в /v1/capabilities остаётся неправдой, а маппинг получит план без режима");
+                        + "иначе обещание default в /v1/capabilities остаётся неправдой, а маппинг получит план без режима При смене patrolWithoutModeAndLoops_Plan_ContainsCatalogDefaults проверь это утверждение.");
     }
 
     @Test
     void comeToPlayerWithoutPlayer_Plan_ContainsNearestDefault() {
         TaskNode plan = PlanParser.parse("{\"type\":\"script\",\"script\":\"come_to_player\"}", CATALOG);
-
         assertEquals(
                 new ScriptCall("come_to_player", Map.of("player", "nearest")),
                 plan,
                 "Валидатор обязан подставлять default 'nearest' для отсутствующего player: без имени "
-                        + "дух идёт к ближайшему игроку, а не стоит");
+                        + "дух идёт к ближайшему игроку, а не стоит Иначе тест comeToPlayerWithoutPlayer_Plan_ContainsNearestDefault перестанет ловить эту поломку. При смене comeToPlayerWithoutPlayer_Plan_ContainsNearestDefault проверь это утверждение.");
     }
 
     @Test
     void booleanAndEnumDefaults_ParamsOmitted_AreSubstitutedIntoPlan() {
         TaskNode plan = PlanParser.parse("{\"type\":\"script\",\"script\":\"harvest_test\"}", DEFAULTS_CATALOG);
-
         assertEquals(
                 new ScriptCall("harvest_test", Map.of("replant", true, "species", "any")),
                 plan,
                 "Валидатор обязан подставить умолчания bool и enum из каталога: иначе скрипты рубки и добычи получат "
-                        + "неполную карту параметров, а ИИ не узнает, что делает план без явного значения");
+                        + "неполную карту параметров, а ИИ не узнает, что делает план без явного значения При смене booleanAndEnumDefaults_ParamsOmitted_AreSubstitutedIntoPlan проверь это утверждение.");
     }
 
     @Test
@@ -297,11 +295,11 @@ class PlanValidatorRulesTests {
                 () -> PlanParser.parse(
                         "{\"type\":\"script\",\"script\":\"harvest_test\"," + "\"params\":{\"species\":\"spruce\"}}",
                         DEFAULTS_CATALOG),
-                "Значение enum вне списка обязано отвергаться валидатором: скрипт не должен гадать, что такое spruce");
-
+                "Значение enum вне списка обязано отвергаться валидатором: скрипт не должен гадать, что такое spruce Иначе тест enumParam_ValueOutsideList_IsRejectedWithAllowedValuesNamed перестанет ловить эту поломку. При смене enumParam_ValueOutsideList_IsRejectedWithAllowedValuesNamed проверь это утверждение.");
         assertTrue(
                 error.getMessage().contains("oak") && error.getMessage().contains("spruce"),
-                "Сообщение обязано называть недопустимое значение и допустимые. Фактическое: " + error.getMessage());
+                "Сообщение обязано называть недопустимое значение и допустимые. Фактическое:  Иначе тест enumParam_ValueOutsideList_IsRejectedWithAllowedValuesNamed перестанет ловить эту поломку. При смене enumParam_ValueOutsideList_IsRejectedWithAllowedValuesNamed проверь это утверждение."
+                        + error.getMessage());
     }
 
     @Test
@@ -311,7 +309,7 @@ class PlanValidatorRulesTests {
                 () -> PlanParser.parse(
                         "{\"type\":\"script\",\"script\":\"harvest_test\"," + "\"params\":{\"replant\":\"yes\"}}",
                         DEFAULTS_CATALOG),
-                "Строка вместо boolean обязана отвергаться валидатором: скрипт читает значение через requireBoolean");
+                "Строка вместо boolean обязана отвергаться валидатором: скрипт читает значение через requireBoolean Иначе тест booleanParam_StringValue_IsRejected перестанет ловить эту поломку. При смене booleanParam_StringValue_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -320,11 +318,10 @@ class PlanValidatorRulesTests {
                 "{\"type\":\"script\",\"script\":\"harvest_test\","
                         + "\"params\":{\"replant\":false,\"species\":\"oak\"}}",
                 DEFAULTS_CATALOG);
-
         assertEquals(
                 new ScriptCall("harvest_test", Map.of("replant", false, "species", "oak")),
                 plan,
-                "Явное значение плана обязано побеждать умолчание каталога: иначе ИИ не сможет отключить replant");
+                "Явное значение плана обязано побеждать умолчание каталога: иначе ИИ не сможет отключить replant При смене booleanParam_ExplicitFalse_OverridesDefault проверь это утверждение.");
     }
 
     @Provide
@@ -342,18 +339,21 @@ class PlanValidatorRulesTests {
                     first,
                     second,
                     "одинаковый вход обязан давать одинаковый план: если валидатор зависит от порядка или "
-                            + "состояния, один и тот же план в разное время выполнит разные действия. JSON=" + json);
+                            + "состояния, один и тот же план в разное время выполнит разные действия. JSON= Иначе тест parse_AnyJsonTree_SameInputSameOutputOrException перестанет ловить эту поломку. При смене parse_AnyJsonTree_SameInputSameOutputOrException проверь это утверждение."
+                            + json);
         } catch (PlanValidationException firstError) {
             PlanValidationException secondError = assertThrows(
                     PlanValidationException.class,
                     () -> PlanParser.parse(json, CATALOG),
                     "одинаковый вход обязан бросать одинаковое исключение: нестабильный валидатор то примет, "
-                            + "то отклонит один план. JSON=" + json);
+                            + "то отклонит один план. JSON= Иначе тест parse_AnyJsonTree_SameInputSameOutputOrException перестанет ловить эту поломку. При смене parse_AnyJsonTree_SameInputSameOutputOrException проверь это утверждение."
+                            + json);
             assertEquals(
                     firstError.getMessage(),
                     secondError.getMessage(),
                     "исключение должно быть тем же самым при том же входе: детерминизм валидатора — контракт, "
-                            + "иначе ИИ не сможет воспроизвести и починить сбой. JSON=" + json);
+                            + "иначе ИИ не сможет воспроизвести и починить сбой. JSON= При смене parse_AnyJsonTree_SameInputSameOutputOrException проверь это утверждение."
+                            + json);
         }
     }
 }

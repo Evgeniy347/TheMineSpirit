@@ -42,11 +42,11 @@ class ScriptCatalogTests {
         Optional<ScriptSpec> found = catalog.find("goto");
         assertTrue(
                 found.isPresent(),
-                "Каталог обязан находить скрипт по id: иначе планировщик не сможет вызвать известный скрипт");
+                "Каталог обязан находить скрипт по id: иначе планировщик не сможет вызвать известный скрипт При смене find_KnownId_ReturnsSpec проверь это утверждение.");
         assertEquals(
                 "пройти",
                 found.orElseThrow().summary(),
-                "find возвращает описание именно запрошенного скрипта: перепутанный id приводит к вызову чужого скрипта");
+                "find возвращает описание именно запрошенного скрипта: перепутанный id приводит к вызову чужого скрипта Иначе тест find_KnownId_ReturnsSpec перестанет ловить эту поломку. При смене find_KnownId_ReturnsSpec проверь это утверждение.");
     }
 
     @Test
@@ -63,7 +63,7 @@ class ScriptCatalogTests {
                 subset.all().stream().map(ScriptSpec::id).toList(),
                 "Скрипты подкаталога обязаны идти в порядке полного каталога, а не набора: /v1/capabilities "
                         + "перечисляет их в порядке каталога (docs/api/README.md), а IMPLEMENTED-таблица даёт другой порядок. "
-                        + "Проверьте, что restrictedTo идёт по каталогу и отбирает по набору");
+                        + "Проверьте, что restrictedTo идёт по каталогу и отбирает по набору Иначе тест restrictedTo_SetInDifferentOrder_KeepsCatalogOrder перестанет ловить эту поломку. При смене restrictedTo_SetInDifferentOrder_KeepsCatalogOrder проверь это утверждение.");
     }
 
     @Test
@@ -74,21 +74,23 @@ class ScriptCatalogTests {
                 assertTrue(
                         names.contains(requirement.param()),
                         "Требование скрипта " + spec.id() + " ссылается на параметр '" + requirement.param()
-                                + "', которого нет в каталоге: проверка плана не найдёт значение и пропустит шаг");
+                                + "', которого нет в каталоге: проверка плана не найдёт значение и пропустит шаг При смене defaultCatalog_Requirements_ReferenceExistingParamAndKnownTiers проверь это утверждение.");
                 requirement
                         .tiers()
                         .values()
                         .forEach(tier -> assertTrue(
                                 tier >= ScriptRequirement.MIN_TIER && tier <= ScriptRequirement.MAX_TIER,
                                 "Уровень инструмента " + tier + " в требовании скрипта " + spec.id() + " вне диапазона "
-                                        + ScriptRequirement.MIN_TIER + ".." + ScriptRequirement.MAX_TIER));
+                                        + ScriptRequirement.MIN_TIER
+                                        + ".. Иначе тест defaultCatalog_Requirements_ReferenceExistingParamAndKnownTiers перестанет ловить эту поломку. При смене defaultCatalog_Requirements_ReferenceExistingParamAndKnownTiers проверь это утверждение."
+                                        + ScriptRequirement.MAX_TIER));
             }
         }
         assertEquals(
                 OreKind.names(),
                 List.copyOf(PickaxeTiers.oreTiers().keySet()),
                 "Таблица уровней руды обязана покрывать ровно виды OreKind в их порядке: пропущенная руда "
-                        + "получала бы уровень по умолчанию, лишняя — никогда не срабатывала");
+                        + "получала бы уровень по умолчанию, лишняя — никогда не срабатывала Иначе тест defaultCatalog_Requirements_ReferenceExistingParamAndKnownTiers перестанет ловить эту поломку. При смене defaultCatalog_Requirements_ReferenceExistingParamAndKnownTiers проверь это утверждение.");
     }
 
     @Test
@@ -101,16 +103,19 @@ class ScriptCatalogTests {
                 false,
                 count.required(),
                 "count в chop_tree необязателен: без числа деревьев рубка берёт одно дерево по умолчанию из каталога, "
-                        + "а не из шаблона fallback");
+                        + "а не из шаблона fallback Иначе тест defaultCatalog_ChopTree_CountDefaultsToOneSpeciesIsOptional перестанет ловить эту поломку. При смене defaultCatalog_ChopTree_CountDefaultsToOneSpeciesIsOptional проверь это утверждение.");
         assertEquals(
                 1,
                 count.defaultValue(),
-                "count в chop_tree по умолчанию 1: значение задаёт каталог, чтобы шаблон fallback не дублировал умолчание");
-        assertEquals(ParamType.INT, count.type(), "count в chop_tree — целое: дробное число деревьев невозможно");
+                "count в chop_tree по умолчанию 1: значение задаёт каталог, чтобы шаблон fallback не дублировал умолчание Иначе тест defaultCatalog_ChopTree_CountDefaultsToOneSpeciesIsOptional перестанет ловить эту поломку. При смене defaultCatalog_ChopTree_CountDefaultsToOneSpeciesIsOptional проверь это утверждение.");
+        assertEquals(
+                ParamType.INT,
+                count.type(),
+                "count в chop_tree — целое: дробное число деревьев невозможно Иначе тест defaultCatalog_ChopTree_CountDefaultsToOneSpeciesIsOptional перестанет ловить эту поломку. При смене defaultCatalog_ChopTree_CountDefaultsToOneSpeciesIsOptional проверь это утверждение.");
         assertEquals(
                 false,
                 species.required(),
-                "species в chop_tree необязателен: без него рубят любое дерево (default any)");
+                "species в chop_tree необязателен: без него рубят любое дерево (default any) Иначе тест defaultCatalog_ChopTree_CountDefaultsToOneSpeciesIsOptional перестанет ловить эту поломку. При смене defaultCatalog_ChopTree_CountDefaultsToOneSpeciesIsOptional проверь это утверждение.");
     }
 
     @Test
@@ -125,43 +130,46 @@ class ScriptCatalogTests {
                 ParamType.ENUM,
                 species.type(),
                 "species в chop_tree — enum: список пород объявляется из TreeSpecies один раз, "
-                        + "иначе каталог и ядро разойдутся при добавлении новой породы");
+                        + "иначе каталог и ядро разойдутся при добавлении новой породы При смене defaultCatalog_ChopTree_SpeciesIsEnumRadiusAndReplantHaveDefaults проверь это утверждение.");
         assertEquals(
                 TreeSpecies.names(),
                 species.values(),
                 "Список допустимых пород enum обязан браться из TreeSpecies, а не копироваться: "
-                        + "копия лишней породы молча принимает несуществующую");
+                        + "копия лишней породы молча принимает несуществующую Иначе тест defaultCatalog_ChopTree_SpeciesIsEnumRadiusAndReplantHaveDefaults перестанет ловить эту поломку. При смене defaultCatalog_ChopTree_SpeciesIsEnumRadiusAndReplantHaveDefaults проверь это утверждение.");
         assertEquals(
                 "any",
                 species.defaultValue(),
                 "species в chop_tree по умолчанию any: рубить без указания породы можно, а вот несуществующую "
-                        + "породу нельзя");
-        assertEquals(ParamType.INT, radius.type(), "radius в chop_tree — целое: дробный радиус бессмыслен");
+                        + "породу нельзя Иначе тест defaultCatalog_ChopTree_SpeciesIsEnumRadiusAndReplantHaveDefaults перестанет ловить эту поломку. При смене defaultCatalog_ChopTree_SpeciesIsEnumRadiusAndReplantHaveDefaults проверь это утверждение.");
+        assertEquals(
+                ParamType.INT,
+                radius.type(),
+                "radius в chop_tree — целое: дробный радиус бессмыслен Иначе тест defaultCatalog_ChopTree_SpeciesIsEnumRadiusAndReplantHaveDefaults перестанет ловить эту поломку. При смене defaultCatalog_ChopTree_SpeciesIsEnumRadiusAndReplantHaveDefaults проверь это утверждение.");
         assertEquals(
                 false,
                 radius.required(),
-                "radius в chop_tree необязателен: умолчание 16 из каталога достаточно для обычной рубки");
+                "radius в chop_tree необязателен: умолчание 16 из каталога достаточно для обычной рубки Иначе тест defaultCatalog_ChopTree_SpeciesIsEnumRadiusAndReplantHaveDefaults перестанет ловить эту поломку. При смене defaultCatalog_ChopTree_SpeciesIsEnumRadiusAndReplantHaveDefaults проверь это утверждение.");
         assertEquals(
                 16,
                 radius.defaultValue(),
-                "radius в chop_tree по умолчанию 16: каталог задаёт умолчание, чтобы шаблон fallback его не дублировал");
+                "radius в chop_tree по умолчанию 16: каталог задаёт умолчание, чтобы шаблон fallback его не дублировал Иначе тест defaultCatalog_ChopTree_SpeciesIsEnumRadiusAndReplantHaveDefaults перестанет ловить эту поломку. При смене defaultCatalog_ChopTree_SpeciesIsEnumRadiusAndReplantHaveDefaults проверь это утверждение.");
         assertEquals(
                 (double) CatalogLimits.CHOP_RADIUS_MIN,
                 radius.min(),
-                "radius в chop_tree не может быть ниже минимума каталога: под духом всегда есть хоть одна клетка поиска");
+                "radius в chop_tree не может быть ниже минимума каталога: под духом всегда есть хоть одна клетка поиска Иначе тест defaultCatalog_ChopTree_SpeciesIsEnumRadiusAndReplantHaveDefaults перестанет ловить эту поломку. При смене defaultCatalog_ChopTree_SpeciesIsEnumRadiusAndReplantHaveDefaults проверь это утверждение.");
         assertEquals(
                 (double) CatalogLimits.CHOP_RADIUS_MAX,
                 radius.max(),
                 "radius в chop_tree не может быть выше максимума каталога: границы заданы в одном месте "
-                        + "и ядро и каталог читают их вместе");
+                        + "и ядро и каталог читают их вместе Иначе тест defaultCatalog_ChopTree_SpeciesIsEnumRadiusAndReplantHaveDefaults перестанет ловить эту поломку. При смене defaultCatalog_ChopTree_SpeciesIsEnumRadiusAndReplantHaveDefaults проверь это утверждение.");
         assertEquals(
                 ParamType.BOOL,
                 replant.type(),
-                "replant в chop_tree — булев флаг: посадить саженец или нет, третьего не дано");
+                "replant в chop_tree — булев флаг: посадить саженец или нет, третьего не дано Иначе тест defaultCatalog_ChopTree_SpeciesIsEnumRadiusAndReplantHaveDefaults перестанет ловить эту поломку. При смене defaultCatalog_ChopTree_SpeciesIsEnumRadiusAndReplantHaveDefaults проверь это утверждение.");
         assertEquals(
                 false,
                 replant.defaultValue(),
-                "replant в chop_tree по умолчанию false: посадка — явное желание игрока, а не случайность");
+                "replant в chop_tree по умолчанию false: посадка — явное желание игрока, а не случайность Иначе тест defaultCatalog_ChopTree_SpeciesIsEnumRadiusAndReplantHaveDefaults перестанет ловить эту поломку. При смене defaultCatalog_ChopTree_SpeciesIsEnumRadiusAndReplantHaveDefaults проверь это утверждение.");
     }
 
     @Test
@@ -173,12 +181,15 @@ class ScriptCatalogTests {
         assertEquals(
                 ParamType.BOOL,
                 down.type(),
-                "down в pillar_up — булев флаг: разобрать столб или оставить, третьего не дано");
-        assertEquals(false, down.required(), "down в pillar_up необязателен: обычный подъём оставляет столб стоять");
+                "down в pillar_up — булев флаг: разобрать столб или оставить, третьего не дано Иначе тест defaultCatalog_PillarUp_DownIsOptionalFalse перестанет ловить эту поломку. При смене defaultCatalog_PillarUp_DownIsOptionalFalse проверь это утверждение.");
+        assertEquals(
+                false,
+                down.required(),
+                "down в pillar_up необязателен: обычный подъём оставляет столб стоять Иначе тест defaultCatalog_PillarUp_DownIsOptionalFalse перестанет ловить эту поломку. При смене defaultCatalog_PillarUp_DownIsOptionalFalse проверь это утверждение.");
         assertEquals(
                 false,
                 down.defaultValue(),
-                "down по умолчанию false: разбор столба — явное намерение, а не побочный эффект подъёма");
+                "down по умолчанию false: разбор столба — явное намерение, а не побочный эффект подъёма Иначе тест defaultCatalog_PillarUp_DownIsOptionalFalse перестанет ловить эту поломку. При смене defaultCatalog_PillarUp_DownIsOptionalFalse проверь это утверждение.");
     }
 
     @Test
@@ -194,7 +205,7 @@ class ScriptCatalogTests {
                 List.of(),
                 required,
                 "pillar_down не требует параметров: столб ищется по своим помеченным блокам под духом, "
-                        + "а лишний обязательный параметр отверг бы легитимный план");
+                        + "а лишний обязательный параметр отверг бы легитимный план Иначе тест defaultCatalog_PillarDown_HasNoRequiredParams перестанет ловить эту поломку. При смене defaultCatalog_PillarDown_HasNoRequiredParams проверь это утверждение.");
     }
 
     @Test
@@ -208,22 +219,22 @@ class ScriptCatalogTests {
                         .map(ParamSpec::name)
                         .toList(),
                 "У chop_target координаты ствола обязательны, а replant — нет: без клетки дерево не определить, "
-                        + "а посадка саженца необязательна");
+                        + "а посадка саженца необязательна Иначе тест defaultCatalog_ChopTarget_CoordinatesRequiredReplantOptional перестанет ловить эту поломку. При смене defaultCatalog_ChopTarget_CoordinatesRequiredReplantOptional проверь это утверждение.");
 
         ParamSpec replant = param(chopTarget, "replant");
         assertEquals(
                 ParamType.BOOL,
                 replant.type(),
-                "replant в chop_target — булев флаг: посадить саженец или нет, третьего не дано");
+                "replant в chop_target — булев флаг: посадить саженец или нет, третьего не дано Иначе тест defaultCatalog_ChopTarget_CoordinatesRequiredReplantOptional перестанет ловить эту поломку. При смене defaultCatalog_ChopTarget_CoordinatesRequiredReplantOptional проверь это утверждение.");
         assertEquals(
                 false,
                 replant.defaultValue(),
-                "replant в chop_target по умолчанию false, как у chop_tree: посадка — явное желание, а не случайность");
+                "replant в chop_target по умолчанию false, как у chop_tree: посадка — явное желание, а не случайность Иначе тест defaultCatalog_ChopTarget_CoordinatesRequiredReplantOptional перестанет ловить эту поломку. При смене defaultCatalog_ChopTarget_CoordinatesRequiredReplantOptional проверь это утверждение.");
         assertEquals(
                 5,
                 chopTarget.params().size(),
                 "У chop_target ровно пять параметров: x, y, z, replant и orchard. Лишний попал бы в capabilities, "
-                        + "а забытый не подставил бы умолчание");
+                        + "а забытый не подставил бы умолчание Иначе тест defaultCatalog_ChopTarget_CoordinatesRequiredReplantOptional перестанет ловить эту поломку. При смене defaultCatalog_ChopTarget_CoordinatesRequiredReplantOptional проверь это утверждение.");
     }
 
     static Stream<Arguments> scriptSpecRows() {
@@ -523,7 +534,6 @@ class ScriptCatalogTests {
                 spec("report", List.of(), Map.of()),
                 spec("swap_tool", List.of("block"), Map.of()),
                 spec("drink_potion", List.of("type"), Map.of()));
-
         return Stream.of(rows, GatherScriptSpecRows.rows(), BrewScriptSpecsRows.rows())
                 .flatMap(List::stream)
                 .map(Arguments::of);
@@ -535,7 +545,6 @@ class ScriptCatalogTests {
         ScriptSpec spec = CoreScripts.defaultCatalog()
                 .find(expected.id())
                 .orElseThrow(() -> new AssertionError("В каталоге нет скрипта " + expected.id()));
-
         List<String> required = spec.params().stream()
                 .filter(ParamSpec::required)
                 .map(ParamSpec::name)
@@ -545,20 +554,19 @@ class ScriptCatalogTests {
                 required,
                 "Набор обязательных параметров скрипта " + expected.id() + " обязан совпадать с таблицей: "
                         + "варианты плана без обязательного параметра валидатор должен отклонять, а лишний "
-                        + "обязательный параметр отвергнет легитимный план");
-
+                        + "обязательный параметр отвергнет легитимный план Иначе тест catalog_ScriptTable_RowMatchesSpec перестанет ловить эту поломку. При смене catalog_ScriptTable_RowMatchesSpec проверь это утверждение.");
         expected.bounds().forEach((name, minMax) -> {
             ParamSpec param = param(spec, name);
             assertEquals(
                     (double) minMax[0],
                     param.min(),
                     "Нижняя граница параметра " + name + " скрипта " + expected.id() + " обязана совпадать с "
-                            + "таблицей: отклонённый план между границами или принятый за границами ломает лимиты плана");
+                            + "таблицей: отклонённый план между границами или принятый за границами ломает лимиты плана При смене catalog_ScriptTable_RowMatchesSpec проверь это утверждение.");
             assertEquals(
                     (double) minMax[1],
                     param.max(),
                     "Верхняя граница параметра " + name + " скрипта " + expected.id() + " обязана совпадать с "
-                            + "таблицей: отклонённый план между границами или принятый за границами ломает лимиты плана");
+                            + "таблицей: отклонённый план между границами или принятый за границами ломает лимиты плана При смене catalog_ScriptTable_RowMatchesSpec проверь это утверждение.");
         });
     }
 
@@ -568,12 +576,11 @@ class ScriptCatalogTests {
         List<String> tableIds = scriptSpecRows()
                 .map(arguments -> ((ScriptExpectation) arguments.get()[0]).id())
                 .toList();
-
         assertEquals(
                 tableIds,
                 catalog.all().stream().map(ScriptSpec::id).toList(),
                 "Таблица каталога обязана покрывать ровно все скрипты defaultCatalog: пропущенный скрипт "
-                        + "планировщик не найдёт, лишний разойдётся с /v1/capabilities");
+                        + "планировщик не найдёт, лишний разойдётся с /v1/capabilities При смене defaultCatalog_ScriptTable_CoversExactlyAllIds проверь это утверждение.");
     }
 
     private static ScriptExpectation spec(String id, List<String> required, Map<String, long[]> bounds) {
@@ -584,91 +591,103 @@ class ScriptCatalogTests {
     void defaultCatalog_ClearArea_DemolishOptionalFalse() {
         ScriptSpec clearArea = CoreScripts.defaultCatalog().find("clear_area").orElseThrow();
         ParamSpec demolish = param(clearArea, "demolish");
-
         assertEquals(
                 ParamType.BOOL,
                 demolish.type(),
-                "demolish в clear_area — флаг: перенос сносит свою постройку, обычный разбор — нет");
+                "demolish в clear_area — флаг: перенос сносит свою постройку, обычный разбор — нет Иначе тест defaultCatalog_ClearArea_DemolishOptionalFalse перестанет ловить эту поломку. При смене defaultCatalog_ClearArea_DemolishOptionalFalse проверь это утверждение.");
         assertEquals(
                 false,
                 demolish.required(),
-                "demolish необязателен: старые планы clear_area без флага остаются валидными");
+                "demolish необязателен: старые планы clear_area без флага остаются валидными Иначе тест defaultCatalog_ClearArea_DemolishOptionalFalse перестанет ловить эту поломку. При смене defaultCatalog_ClearArea_DemolishOptionalFalse проверь это утверждение.");
         assertEquals(
                 false,
                 demolish.defaultValue(),
-                "По умолчанию demolish=false: защита от сноса чужого не должна отключаться молча");
+                "По умолчанию demolish=false: защита от сноса чужого не должна отключаться молча Иначе тест defaultCatalog_ClearArea_DemolishOptionalFalse перестанет ловить эту поломку. При смене defaultCatalog_ClearArea_DemolishOptionalFalse проверь это утверждение.");
     }
 
     @Test
     void defaultCatalog_ClearArea_KeepGroundOptionalFalse() {
         ParamSpec keepGround =
                 param(CoreScripts.defaultCatalog().find("clear_area").orElseThrow(), "keep_ground");
-
-        assertEquals(ParamType.BOOL, keepGround.type(), "keep_ground в clear_area — флаг ямы подсыпки");
-        assertEquals(false, keepGround.required(), "keep_ground необязателен: старые планы остаются валидными");
         assertEquals(
-                false, keepGround.defaultValue(), "По умолчанию keep_ground=false: срезка холма обязана снимать землю");
+                ParamType.BOOL,
+                keepGround.type(),
+                "keep_ground в clear_area — флаг ямы подсыпки Иначе тест defaultCatalog_ClearArea_KeepGroundOptionalFalse перестанет ловить эту поломку. При смене defaultCatalog_ClearArea_KeepGroundOptionalFalse проверь это утверждение.");
+        assertEquals(
+                false,
+                keepGround.required(),
+                "keep_ground необязателен: старые планы остаются валидными Иначе тест defaultCatalog_ClearArea_KeepGroundOptionalFalse перестанет ловить эту поломку. При смене defaultCatalog_ClearArea_KeepGroundOptionalFalse проверь это утверждение.");
+        assertEquals(
+                false,
+                keepGround.defaultValue(),
+                "По умолчанию keep_ground=false: срезка холма обязана снимать землю Иначе тест defaultCatalog_ClearArea_KeepGroundOptionalFalse перестанет ловить эту поломку. При смене defaultCatalog_ClearArea_KeepGroundOptionalFalse проверь это утверждение.");
     }
 
     @Test
     void defaultCatalog_MineVein_OreEnumAndDefaults() {
         ScriptSpec mineVein = CoreScripts.defaultCatalog().find("mine_vein").orElseThrow();
-
         ParamSpec ore = param(mineVein, "ore");
         ParamSpec count = param(mineVein, "count");
         ParamSpec radius = param(mineVein, "radius");
-
         assertEquals(
                 ParamType.ENUM,
                 ore.type(),
-                "ore в mine_vein — enum: валидатор обязан ловить опечатку до запуска, а не искать несуществующую жилу");
+                "ore в mine_vein — enum: валидатор обязан ловить опечатку до запуска, а не искать несуществующую жилу Иначе тест defaultCatalog_MineVein_OreEnumAndDefaults перестанет ловить эту поломку. При смене defaultCatalog_MineVein_OreEnumAndDefaults проверь это утверждение.");
         assertEquals(
                 OreKind.names(),
                 ore.values(),
-                "Список допустимых ore обязан совпадать с видами OreKind: иначе каталог обещает один набор, а ядро знает другой");
-        assertEquals(false, ore.required(), "ore в mine_vein необязателен: без него добывается любая руда");
+                "Список допустимых ore обязан совпадать с видами OreKind: иначе каталог обещает один набор, а ядро знает другой При смене defaultCatalog_MineVein_OreEnumAndDefaults проверь это утверждение.");
+        assertEquals(
+                false,
+                ore.required(),
+                "ore в mine_vein необязателен: без него добывается любая руда Иначе тест defaultCatalog_MineVein_OreEnumAndDefaults перестанет ловить эту поломку. При смене defaultCatalog_MineVein_OreEnumAndDefaults проверь это утверждение.");
         assertEquals(
                 "any",
                 ore.defaultValue(),
                 "enum ore по умолчанию 'any': умолчание живёт в каталоге, а не в маппинге — его видит "
-                        + "/v1/capabilities и подставляет валидатор");
-        assertEquals(1, count.defaultValue(), "count в mine_vein по умолчанию 1: без числа добывается один блок руды");
+                        + "/v1/capabilities и подставляет валидатор Иначе тест defaultCatalog_MineVein_OreEnumAndDefaults перестанет ловить эту поломку. При смене defaultCatalog_MineVein_OreEnumAndDefaults проверь это утверждение.");
+        assertEquals(
+                1,
+                count.defaultValue(),
+                "count в mine_vein по умолчанию 1: без числа добывается один блок руды Иначе тест defaultCatalog_MineVein_OreEnumAndDefaults перестанет ловить эту поломку. При смене defaultCatalog_MineVein_OreEnumAndDefaults проверь это утверждение.");
         assertEquals(
                 CatalogLimits.HARVEST_RADIUS_DEFAULT,
                 radius.defaultValue(),
                 "radius в mine_vein по умолчанию " + CatalogLimits.HARVEST_RADIUS_DEFAULT
-                        + ": значение задаёт каталог, чтобы шаблон не дублировал умолчание");
+                        + ": значение задаёт каталог, чтобы шаблон не дублировал умолчание Иначе тест defaultCatalog_MineVein_OreEnumAndDefaults перестанет ловить эту поломку. При смене defaultCatalog_MineVein_OreEnumAndDefaults проверь это утверждение.");
     }
 
     @Test
     void defaultCatalog_DigDescent_DirectionRequiredYOptionalWithDefaultFromData() {
         ScriptSpec digDescent = CoreScripts.defaultCatalog().find("dig_descent").orElseThrow();
-
         ParamSpec direction = param(digDescent, "direction");
         assertEquals(
                 ParamType.ENUM,
                 direction.type(),
-                "direction в dig_descent — enum: валидатор обязан ловить опечатку до запуска, а не копать в никуда");
+                "direction в dig_descent — enum: валидатор обязан ловить опечатку до запуска, а не копать в никуда Иначе тест defaultCatalog_DigDescent_DirectionRequiredYOptionalWithDefaultFromData перестанет ловить эту поломку. При смене defaultCatalog_DigDescent_DirectionRequiredYOptionalWithDefaultFromData проверь это утверждение.");
         assertEquals(
                 DescentDirection.names(),
                 direction.values(),
                 "Список direction обязан совпадать с осями DescentDirection: иначе каталог обещает направление, "
-                        + "которое ядро не знает");
+                        + "которое ядро не знает При смене defaultCatalog_DigDescent_DirectionRequiredYOptionalWithDefaultFromData проверь это утверждение.");
         assertEquals(
                 true,
                 direction.required(),
-                "direction в dig_descent обязателен: без направления неизвестно, в какую сторону копать тоннель");
-
+                "direction в dig_descent обязателен: без направления неизвестно, в какую сторону копать тоннель Иначе тест defaultCatalog_DigDescent_DirectionRequiredYOptionalWithDefaultFromData перестанет ловить эту поломку. При смене defaultCatalog_DigDescent_DirectionRequiredYOptionalWithDefaultFromData проверь это утверждение.");
         ParamSpec y = param(digDescent, "y");
         assertEquals(
-                false, y.required(), "y в dig_descent необязателен: без него спуск идёт до целевого этажа из данных");
+                false,
+                y.required(),
+                "y в dig_descent необязателен: без него спуск идёт до целевого этажа из данных Иначе тест defaultCatalog_DigDescent_DirectionRequiredYOptionalWithDefaultFromData перестанет ловить эту поломку. При смене defaultCatalog_DigDescent_DirectionRequiredYOptionalWithDefaultFromData проверь это утверждение.");
         assertEquals(
                 DescentData.defaults().targetY(),
                 y.defaultValue(),
                 "Default y обязан совпадать с данными спуска: PlanValidator подставляет его в план, "
-                        + "а игрок видит умолчание в /v1/capabilities");
+                        + "а игрок видит умолчание в /v1/capabilities Иначе тест defaultCatalog_DigDescent_DirectionRequiredYOptionalWithDefaultFromData перестанет ловить эту поломку. При смене defaultCatalog_DigDescent_DirectionRequiredYOptionalWithDefaultFromData проверь это утверждение.");
         assertEquals(
-                (double) CatalogLimits.WORLD_Y_MIN, y.min(), "Нижняя граница y обязана совпадать с дном мира каталога");
+                (double) CatalogLimits.WORLD_Y_MIN,
+                y.min(),
+                "Нижняя граница y обязана совпадать с дном мира каталога Иначе тест defaultCatalog_DigDescent_DirectionRequiredYOptionalWithDefaultFromData перестанет ловить эту поломку. При смене defaultCatalog_DigDescent_DirectionRequiredYOptionalWithDefaultFromData проверь это утверждение.");
         assertEquals(
                 (double) CatalogLimits.WORLD_Y_MAX,
                 y.max(),
@@ -678,10 +697,8 @@ class ScriptCatalogTests {
     @Test
     void defaultCatalog_Gather_CountRequiredRadiusDefaults() {
         ScriptSpec gather = CoreScripts.defaultCatalog().find("gather").orElseThrow();
-
         ParamSpec count = param(gather, "count");
         ParamSpec radius = param(gather, "radius");
-
         assertEquals(
                 true,
                 count.required(),
@@ -701,7 +718,6 @@ class ScriptCatalogTests {
     void defaultCatalog_CraftAndSmelt_StationRadiusIsOptionalIntWithDefaultSixteen() {
         for (String id : List.of("craft", "smelt")) {
             ParamSpec radius = param(CoreScripts.defaultCatalog().find(id).orElseThrow(), "radius");
-
             assertEquals(
                     false,
                     radius.required(),
@@ -729,10 +745,8 @@ class ScriptCatalogTests {
     void defaultCatalog_CollectDrops_RadiusHasBoundsAndDefaultFilterIsOptionalList() {
         ScriptSpec collectDrops =
                 CoreScripts.defaultCatalog().find("collect_drops").orElseThrow();
-
         ParamSpec radius = param(collectDrops, "radius");
         ParamSpec filter = param(collectDrops, "filter");
-
         assertEquals(
                 1.0,
                 radius.min(),
@@ -755,9 +769,7 @@ class ScriptCatalogTests {
     @Test
     void defaultCatalog_Scan_RadiusUsesScanRadiusLimitsAndFilterIsOptionalList() {
         ScriptSpec scan = CoreScripts.defaultCatalog().find("scan").orElseThrow();
-
         ParamSpec radius = param(scan, "radius");
-
         assertEquals(
                 (double) ScanRadius.MAX,
                 radius.max(),
@@ -770,11 +782,9 @@ class ScriptCatalogTests {
     void defaultCatalog_HarvestCrop_CropEnumDefaultsToAnyWithReplant() {
         ScriptSpec harvestCrop =
                 CoreScripts.defaultCatalog().find("harvest_crop").orElseThrow();
-
         ParamSpec crop = param(harvestCrop, "crop");
         ParamSpec radius = param(harvestCrop, "radius");
         ParamSpec replant = param(harvestCrop, "replant");
-
         assertEquals(
                 ParamType.ENUM,
                 crop.type(),
@@ -811,10 +821,8 @@ class ScriptCatalogTests {
     @Test
     void defaultCatalog_PlantCrop_CropRequiredWithoutAny() {
         ScriptSpec plantCrop = CoreScripts.defaultCatalog().find("plant_crop").orElseThrow();
-
         ParamSpec crop = param(plantCrop, "crop");
         ParamSpec count = param(plantCrop, "count");
-
         assertEquals(
                 ParamType.ENUM,
                 crop.type(),
@@ -839,7 +847,6 @@ class ScriptCatalogTests {
     void defaultCatalog_TillAndBoneMeal_RadiusAndCountDefaults() {
         ScriptSpec till = CoreScripts.defaultCatalog().find("till").orElseThrow();
         ScriptSpec boneMeal = CoreScripts.defaultCatalog().find("bone_meal").orElseThrow();
-
         assertEquals(
                 CatalogLimits.FARM_RADIUS_DEFAULT,
                 param(till, "radius").defaultValue(),
@@ -867,7 +874,6 @@ class ScriptCatalogTests {
     void defaultCatalog_DepositAndWithdraw_ContainerIsOptionalNearest() {
         ScriptSpec deposit = CoreScripts.defaultCatalog().find("deposit").orElseThrow();
         ParamSpec container = param(deposit, "container");
-
         assertEquals(
                 false,
                 container.required(),
@@ -884,7 +890,6 @@ class ScriptCatalogTests {
     void defaultCatalog_Unload_ContainerDefaultsToAuto() {
         ScriptSpec unload = CoreScripts.defaultCatalog().find("unload").orElseThrow();
         ParamSpec container = param(unload, "container");
-
         assertEquals(
                 false,
                 container.required(),
@@ -903,7 +908,6 @@ class ScriptCatalogTests {
         for (String id : List.of("deposit", "withdraw", "sort_chest", "unload")) {
             ScriptSpec script = catalog.find(id).orElseThrow();
             ParamSpec radius = param(script, "radius");
-
             assertEquals(
                     false,
                     radius.required(),
@@ -934,7 +938,6 @@ class ScriptCatalogTests {
     void defaultCatalog_Unload_ForceDefaultsToFalseAndTriggerSlotsDefined() {
         ScriptSpec unload = CoreScripts.defaultCatalog().find("unload").orElseThrow();
         ParamSpec force = param(unload, "force");
-
         assertEquals(
                 false,
                 force.required(),
@@ -957,7 +960,6 @@ class ScriptCatalogTests {
         ScriptSpec collectDrops =
                 CoreScripts.defaultCatalog().find("collect_drops").orElseThrow();
         ParamSpec overflow = param(collectDrops, "overflow");
-
         assertEquals(
                 false,
                 overflow.required(),
@@ -977,7 +979,6 @@ class ScriptCatalogTests {
     @Test
     void defaultCatalog_Equip_TakesOnlyItemPattern() {
         ScriptSpec equip = CoreScripts.defaultCatalog().find("equip").orElseThrow();
-
         assertEquals(
                 List.of("item"),
                 equip.params().stream().map(ParamSpec::name).toList(),
@@ -994,7 +995,6 @@ class ScriptCatalogTests {
         ScriptSpec wander = CoreScripts.defaultCatalog().find("wander").orElseThrow();
         ScriptSpec keepDistance =
                 CoreScripts.defaultCatalog().find("keep_distance").orElseThrow();
-
         assertEquals(
                 16,
                 param(gotoBlock, "radius").defaultValue(),
