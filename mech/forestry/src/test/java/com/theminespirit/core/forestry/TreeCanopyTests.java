@@ -96,4 +96,32 @@ class TreeCanopyTests {
                 "Руками ломается только листва: доски игрока в кроне не трогаются, иначе рубка сносит стройку. При "
                         + "смене проверки искусственных блоков проверь строку выше в тесте");
     }
+
+    @Test
+    void plan_OrphanLeavesAboveStump_InPlan() {
+        Tree stump = new Tree(new BlockCoord(0, 64, 0), List.of(new BlockCoord(0, 64, 0), new BlockCoord(0, 68, 0)));
+        TreeGrid grid = new TreeGrid().log(0, 64, 0).log(0, 68, 0).leaves(2, 68, 0);
+
+        assertTrue(
+                TreeCanopy.plan(stump, grid).contains(new BlockCoord(2, 68, 0)),
+                "Висящая листва над пнем снимается вместе с остатком ствола: иначе кусок старой кроны висит над "
+                        + "новой посадкой и листва падает духу на голову. При смене добора сиротской листвы "
+                        + "проверь строку листвы у чужого дерева ниже в тесте");
+    }
+
+    @Test
+    void plan_LeavesNearForeignTree_Kept() {
+        Tree stump = new Tree(new BlockCoord(0, 64, 0), List.of(new BlockCoord(0, 64, 0), new BlockCoord(0, 68, 0)));
+        TreeGrid grid = new TreeGrid()
+                .log(0, 64, 0)
+                .log(0, 68, 0)
+                .log(6, 68, 0)
+                .leaves(5, 68, 0)
+                .leaves(6, 69, 0);
+
+        assertFalse(
+                TreeCanopy.plan(stump, grid).contains(new BlockCoord(5, 68, 0)),
+                "Листва, ближняя к чужому стволу, не трогается: иначе добор сирот обездоливает соседнее дерево и "
+                        + "оголяет сад. При смене правила ownedBy проверь строку без чужого ствола выше в тесте");
+    }
 }

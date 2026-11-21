@@ -66,7 +66,18 @@ public final class TreeShape {
             return new NotATree(NotATree.Reason.NOT_A_TRUNK, Set.copyOf(logs));
         }
         BlockCoord base = base(logs);
-        if (!allowNoSoil && !view.isSoil(new BlockCoord(base.x(), base.y() - 1, base.z()))) {
+        boolean stump = orchardCare && logs.size() < ChopTuning.MIN_TRUNK_LOGS;
+        if (stump) {
+            addRemnantColumns(logs, view, base.y());
+            if (logs.size() > ChopTuning.MAX_LOGS) {
+                return new NotATree(NotATree.Reason.TOO_BIG, Set.copyOf(logs));
+            }
+            if (!groundNear(view, base)) {
+                // lib: одиночное бревно высоко в кроне — обломок чужого дерева, а не пень: ствол ниже его снимет.
+                return new NotATree(NotATree.Reason.NOT_A_TRUNK, Set.copyOf(logs));
+            }
+        }
+        if (!allowNoSoil && !stump && !view.isSoil(new BlockCoord(base.x(), base.y() - 1, base.z()))) {
             return new NotATree(NotATree.Reason.NO_SOIL, Set.copyOf(logs));
         }
         if (leaves.size() < ChopTuning.MIN_NATURAL_LEAVES && orchardCare) {
@@ -77,10 +88,37 @@ public final class TreeShape {
         if (leaves.size() < ChopTuning.MIN_NATURAL_LEAVES && !orchardCare) {
             return new NotATree(NotATree.Reason.NO_LEAVES, Set.copyOf(logs));
         }
-        if (logs.size() < ChopTuning.MIN_TRUNK_LOGS) {
+        if (logs.size() < ChopTuning.MIN_TRUNK_LOGS && !orchardCare) {
             return new NotATree(NotATree.Reason.NOT_A_TRUNK, Set.copyOf(logs));
         }
         return new Tree(base, List.copyOf(logs));
+    }
+
+    private static void addRemnantColumns(Set<BlockCoord> logs, TreeView view, int baseY) {
+        Set<BlockCoord> columns = new HashSet<>();
+        for (BlockCoord log : List.copyOf(logs)) {
+            if (log.y() != baseY) {
+                continue;
+            }
+            if (!columns.add(new BlockCoord(log.x(), 0, log.z()))) {
+                continue;
+            }
+            for (int y = baseY + 1; y <= baseY + ChopTuning.ORCHARD_REMNANT_HEIGHT; y++) {
+                BlockCoord cell = new BlockCoord(log.x(), y, log.z());
+                if (view.isLog(cell)) {
+                    logs.add(cell);
+                }
+            }
+        }
+    }
+
+    private static boolean groundNear(TreeView view, BlockCoord base) {
+        for (int y = base.y() - 1; y >= base.y() - ChopTuning.ORCHARD_STUMP_GROUND_DEPTH; y--) {
+            if (view.isSoil(new BlockCoord(base.x(), y, base.z()))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static BlockCoord base(Set<BlockCoord> logs) {
