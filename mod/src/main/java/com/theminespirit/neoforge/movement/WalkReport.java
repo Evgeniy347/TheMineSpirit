@@ -52,8 +52,24 @@ final class WalkReport {
                         spirit.getMoveControl().getWantedX(),
                         spirit.getMoveControl().getWantedY(),
                         spirit.getMoveControl().getWantedZ())
+                + ", между=" + between(level, spirit, cell)
                 + ", no_escape=" + noEscape
                 + ", код=" + code;
+    }
+
+    private static String between(Level level, SpiritEntity spirit, BlockCoord cell) {
+        Vec3 from = spirit.position();
+        Vec3 to = new Vec3(cell.x() + CENTER, cell.y() + CENTER, cell.z() + CENTER);
+        Vec3 delta = to.subtract(from);
+        int steps = (int) Math.ceil(delta.length() / 0.25);
+        for (int i = 1; i < steps; i++) {
+            Vec3 point = from.add(delta.scale(i / (double) steps));
+            BlockPos pos = BlockPos.containing(point);
+            if (!level.getBlockState(pos).getCollisionShape(level, pos).isEmpty()) {
+                return BlockStates.idOf(level.getBlockState(pos)) + "@" + pos.toShortString();
+            }
+        }
+        return "-";
     }
 
     private static boolean noDryExit(Level level, BlockPos pos) {
