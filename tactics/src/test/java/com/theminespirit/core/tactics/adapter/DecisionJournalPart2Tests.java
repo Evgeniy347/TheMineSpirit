@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
-class DecisionJournalTestsPart2 {
+class DecisionJournalPart2Tests {
     private static final Clock CLOCK = Clock.fixed(Instant.parse("2026-10-16T12:00:00Z"), ZoneOffset.UTC);
     private static final String SPIRIT_ID = "6f1c2d3e-0000-4000-8000-000000000001";
     private static final String HUSK = "minecraft:husk";

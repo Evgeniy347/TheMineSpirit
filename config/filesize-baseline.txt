@@ -3,7 +3,6 @@ core/board/BoardConfigTests.java	403
 core/board/BoardTests.java	967
 core/board/TicketPlansTests.java	1232
 core/plan/PlanValidatorRulesTests.java	359
-core/planner/AcquireScriptTests.java	1000
 core/planner/FallbackPlannerTests.java	326
 core/planner/ResourceResolverTests.java	569
 core/tactics/FactorTests.java	422
@@ -18,3 +17,4 @@ guards/SucceedWhenReturnGuardTests.java	343
 neoforge/SpiritEntity.java	752
 core/building/BuildPlanner.java	838
 core/script/ScriptCatalogTestsSupport.java	319
+core/planner/AcquireScriptTestsSupport.java	337
