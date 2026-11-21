@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge;
 
 import com.mojang.logging.LogUtils;
+import com.theminespirit.neoforge.movement.BodyTurnWatch;
 import com.theminespirit.neoforge.movement.WalkGaze;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -56,6 +57,7 @@ public final class MoveTrace {
                 spirit,
                 spirit instanceof SpiritTaskView view
                         && view.currentTaskScript().isPresent());
+        BodyTurnWatch.tick(spirit);
         SpinWatch.tick(spirit, owner, tick);
         Vec3 pos = spirit.position();
         var navigation = spirit.getNavigation();
