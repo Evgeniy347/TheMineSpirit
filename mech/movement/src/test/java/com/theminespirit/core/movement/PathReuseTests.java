@@ -71,7 +71,7 @@ class PathReuseTests {
     @Test
     void futile_OneNodeNotReached_IsTrue() {
         assertTrue(
-                PathReuse.futile(1, false),
+                PathReuse.futile(1, false, false),
                 "Путь из одной клетки без достижения цели бесполезен: дух уже стоит в ней, навигация считает шаг "
                         + "выполненным и запрашивает путь заново — иначе получается 4–5 расчётов в секунду "
                         + "(1352 за 5 минут, окно 13). При смене SpiritNavigation.reuseOrRebuild проверь "
@@ -79,9 +79,19 @@ class PathReuseTests {
     }
 
     @Test
+    void futile_TwoNodesEndingHere_IsTrue() {
+        assertTrue(
+                PathReuse.futile(2, false, true),
+                "Путь из двух узлов с концом в своей же клетке бесполезен: иначе дух у недостижимой цели "
+                        + "каждые 40 тиков строит путь в никуда и дёргается (окно 35, spirit-3 у -177,71,-516, "
+                        + "цель -176,71,-518, узлов 2, конец -177,71,-516). При смене futile проверь частичный "
+                        + "путь из 24 узлов: его идти можно, откладывать поиск нельзя");
+    }
+
+    @Test
     void futile_FullPath_IsFalse() {
         assertFalse(
-                PathReuse.futile(24, false),
+                PathReuse.futile(24, false, false),
                 "Длинный частичный путь остаётся рабочим: иначе дух бросит обход у края недостижимой цели "
                         + "и застрянет навсегда. При смене правила ничтожного пути проверь обход ямы: "
                         + "24 узла должны вести духа, а не откладывать поиск");
@@ -90,7 +100,7 @@ class PathReuseTests {
     @Test
     void futile_OneNodeReached_IsFalse() {
         assertFalse(
-                PathReuse.futile(1, true),
+                PathReuse.futile(1, true, false),
                 "Путь из одной клетки с достигнутой целью нормален: дух уже на месте, иначе отказ сломает приход "
                         + "и удержание точки. При смене canReach в пути проверь Approach к цели вплотную "
                         + "и живой goto в центр клетки");

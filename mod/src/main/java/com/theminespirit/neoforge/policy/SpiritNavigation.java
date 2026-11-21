@@ -96,7 +96,9 @@ public final class SpiritNavigation extends GroundPathNavigation {
             logNoPath(want, floorLevel);
             return false;
         }
-        if (PathReuse.futile(built.getNodeCount(), built.canReach())
+        boolean endsHere =
+                built.getEndNode() != null && built.getEndNode().asBlockPos().equals(mob.blockPosition());
+        if (PathReuse.futile(built.getNodeCount(), built.canReach(), endsHere)
                 && mob.blockPosition().distSqr(want) > FUTILE_MIN_DISTANCE_SQR) {
             futileTarget = want;
             futileUntil = now + FUTILE_BACKOFF_TICKS;

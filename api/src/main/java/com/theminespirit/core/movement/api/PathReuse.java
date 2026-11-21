@@ -15,8 +15,8 @@ public final class PathReuse {
         return hasTarget && pathActive && targetX == wantX && targetY == wantY && targetZ == wantZ;
     }
 
-    public static boolean futile(int nodes, boolean canReach) {
-        return nodes <= 1 && !canReach;
+    public static boolean futile(int nodes, boolean canReach, boolean endsHere) {
+        return !canReach && (nodes <= 1 || endsHere);
     }
 
     public static boolean waiting(long now, long until) {
