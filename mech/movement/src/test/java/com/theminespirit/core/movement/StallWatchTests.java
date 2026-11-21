@@ -69,4 +69,22 @@ class StallWatchTests {
                         + "ложный отказ сбросил бы рабочего духа с лестницы шахты. При смене StallWatch проверь "
                         + "живой подъём по лестнице: движения вперёд нет, отказа нет");
     }
+
+    @Test
+    void observe_SmallOrbit_ReportsStall() {
+        StallWatch watch = new StallWatch(30);
+        boolean stalled = false;
+        for (int tick = 0; tick < 120 && !stalled; tick++) {
+            double angle = Math.toRadians(tick * 12.0);
+            stalled = watch.observe(-150.5 + 0.6 * Math.cos(angle), -470.5 + 0.6 * Math.sin(angle));
+        }
+
+        assertTrue(
+                stalled,
+                "Орбита радиусом полблока — топтание, а не обход: дух проходит путь, но возвращается в точку "
+                        + "(окно 51, spirit-5: 1195° за 60 тиков, путь 6.35, сдвиг 0.66, nav=нет, move к "
+                        + "-150.5,66,-470.5). Иначе RouteWalk держит шаг все 60 тиков и детектор кружения "
+                        + "пишет CIRCLE. При смене окна проверь прямой проход мимо препятствия: дуга без "
+                        + "возврата не должна считаться топтанием");
+    }
 }

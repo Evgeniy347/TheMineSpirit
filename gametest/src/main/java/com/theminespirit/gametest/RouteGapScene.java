@@ -75,7 +75,7 @@ final class RouteGapScene {
                 planned != null && planned.status() == NavSearchStatus.FOUND,
                 "Через щель шириной блок существует прыжок: планировщик обязан найти его без постановки опор");
         Route route = NavRouteSteps.toRoute(planned, world, target);
-        crossings.add(new Crossing(spirit, new RouteWalk(spirit, route, target), spirit.getHealth(), target));
+        crossings.add(new Crossing(spirit, new RouteWalk(spirit, route, target, false), spirit.getHealth(), target));
     }
 
     private void addVoid() {
@@ -86,7 +86,7 @@ final class RouteGapScene {
         BlockCoord cell = MovementScene.coord(helper, new BlockPos(5, 5, 2));
         RouteStep step = new RouteStep(RouteStep.Action.WALK, cell);
         Route route = new Route(Route.Status.FOUND, List.of(step), 1, cell, 1, 0, 0, List.of());
-        voidWalk = new RouteWalk(voidSpirit, route, cell);
+        voidWalk = new RouteWalk(voidSpirit, route, cell, false);
     }
 
     private void tick() {
