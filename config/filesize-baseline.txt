@@ -1,10 +1,7 @@
 core/board/Board.java	507
 core/board/BoardConfigTests.java	403
-core/board/BoardLogTests.java	424
 core/board/BoardTests.java	967
-core/board/BoardTicketTests.java	402
 core/board/TicketPlansTests.java	1232
-core/board/graph/GraphPlannerTests.java	919
 core/engine/TaskRunnerRestoreTests.java	333
 core/engine/TaskRunnerTests.java	743
 core/observation/WorldObservationTests.java	463

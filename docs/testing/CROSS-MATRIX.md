@@ -89,13 +89,13 @@
 | 2-5 | `CrossLifeWorkScenarioTests.pit_InPlanCell_EscapeAndRescuePostedBesideRepairAndBackfill` | rescue 98, repair hut 78, backfill выполним | спасатель `clear_area`, ремонт `build_schematic` | ОК | полный |
 | 2-6 | `CrossLifeWorkScenarioTests.pit_InPlanCell_EscapeAndRescuePostedBesideRepairAndBackfill` | backfill выполним при застрявшем духе | засыпка `fill` не ждёт спасения | ОК | полный |
 | 2-8 | `CrossRouteStageScenarioTests.pit_WaterAtBottom_BridgeUsesPlanksAndTraceStaysPlanned` | мост тратит 8 досок сразу, restore_trace в плане | мост тратит доски, дом ждёт | ОК | полный |
-| 2-12 | `CrossBattleWorkScenarioTests.combat_PitTrappedSpiritUnderMobs_RescueWaitsForDefend` | defend 100 выше `rescue_spirit` | сначала бой, спасение из ямы ждёт | ОК | полный |
-| 2-13 | `CrossBattleWorkScenarioTests.combat_PitTrappedSpiritUnderMobs_RescueWaitsForDefend` | `retreat` и `rescue_spirit` рядом | механика ямы выбирает PIT, без ступеней NONE | ОК | полный |
+| 2-12 | `CrossBattleWorkScenarioPart3Tests.combat_PitTrappedSpiritUnderMobs_RescueWaitsForDefend` | defend 100 выше `rescue_spirit` | сначала бой, спасение из ямы ждёт | ОК | полный |
+| 2-13 | `CrossBattleWorkScenarioPart3Tests.combat_PitTrappedSpiritUnderMobs_RescueWaitsForDefend` | `retreat` и `rescue_spirit` рядом | механика ямы выбирает PIT, без ступеней NONE | ОК | полный |
 | 2-20 | `CrossLifeWorkScenarioTests.pit_InPlanCell_EscapeAndRescuePostedBesideRepairAndBackfill` | спасение выше ремонта хижины | граф ставит rescue первым | ОК | полный |
-| 2-22 | `CrossBattleWorkScenarioTests.rescue_TrappedSpiritAndExpedition_RescueOutranksFollow` | `rescue_spirit` выше похода | помощник разбирает клетку `clear_area` | ОК | полный |
+| 2-22 | `CrossBattleWorkScenarioPart3Tests.rescue_TrappedSpiritAndExpedition_RescueOutranksFollow` | `rescue_spirit` выше похода | помощник разбирает клетку `clear_area` | ОК | полный |
 | 2-24 | `BoardRestartStateLiveTests.restore_StuckMarkAndCasePause_SurviveServerRestart` | метка застревания и пауза кейса на доске | после рестарта дух не получает работу | ОК | полный |
 | 3-6 | `CrossRouteStageScenarioTests.chop_HangingCanopyAfterChop_ClearFloatingAndHouseStayPosted` | после рубки висят крона и яма | `clear_area` убирает крону, `fill` — яму | ОК | полный |
-| 3-8 | `StoreGraphTests.plan_GroupMinimumShortage_PostsChop` | минимум `#logs` 80 → `chop_oak_log` | рубка валит дерево, склад ждёт | ОК | слабо |
+| 3-8 | `StoreGraphPart2Tests.plan_GroupMinimumShortage_PostsChop` | минимум `#logs` 80 → `chop_oak_log` | рубка валит дерево, склад ждёт | ОК | слабо |
 | 3-9 | `ChopToolGraphTests.case68_LogsToPlanksTableAxe_ThenChopWithAxe` | доски → верстак → деревянный топор → chop | крафт идёт до рубки, рубит топором | ОК | слабо |
 | 3-12 | `CrossLifeWorkScenarioTests.chop_ThreatAtChopper_DefendAtCeilingAndChopStaysPosted` | defend 100 выше рубки, defend первым билетом | защита `defend`, затем `chop_tree` | ОК | полный |
 | 3-13 | `CrossFleeScenarioTests.flee_WhileChopping_RetreatPreemptsChopAndChopReturnsToBoard` | retreat 100 вытесняет рубку, рубка возвращается PENDING | рубящий дух уходит от мобов, дерево берёт другой | ОК | полный |
@@ -104,14 +104,14 @@
 | 4-6 | `CleanupCasesTests.cleanup_FillDirtInStock_DoesNotDigAgain` | засыпка берёт землю со склада | новая добыча земли не ставится | ОК | слабо |
 | 4-9 | `GraphPlannerTests.plan_NoIronPickaxe_LowersMineCoal` | железная кирка поднимает крафт и топит шахту | шахта ждёт инструмент, а не копает руками | ОК | слабо |
 | 4-14 | `CrossVitalScenarioTests.vital_HungryOrInjured_OrdinaryWorkIsBlockedAndVitalChainPreempts` | еды нет: охота в верхней полосе приоритетов выше шахты; VitalGate не отдаёт шахту голодному и вытесняет её ради еды; на этапе 2 с пустым углём сбор урожая тоже подключён (`vital_StageTwoCoalEmpty_GateKeepsFoodOverSaturatedMine`) | голодный дух охотится, собирает урожай или ждёт, сытый получает шахту | ОК | полный |
-| 4-16 | `CrossSettlementScenarioTests.repair_WornPickaxe_NeedsAnvilBeforeGraphRepairsTool` | tool_worn без наковальни невыполним | изношенная кирка продолжает шахту | ОК | полный |
-| 4-18 | `CrossSettlementScenarioTests.mining_DarkMine_CoalThenTorchThenLightInGraphOrder` | тьма шахты → mine_coal 82 первым | уголь добывается шахтой | ОК | полный |
+| 4-16 | `CrossSettlementScenarioPart3Tests.repair_WornPickaxe_NeedsAnvilBeforeGraphRepairsTool` | tool_worn без наковальни невыполним | изношенная кирка продолжает шахту | ОК | полный |
+| 4-18 | `CrossSettlementScenarioPart3Tests.mining_DarkMine_CoalThenTorchThenLightInGraphOrder` | тьма шахты → mine_coal 82 первым | уголь добывается шахтой | ОК | полный |
 | 4-20 | `GraphPlannerTests.plan_NoCoal_PostsMineAndCharcoal` | `mine_coal` и `smelt_charcoal` | уголь добывается, затем жжётся | ОК | слабо |
 | 5-6 | `CrossSettlementScenarioTests.fill_PitOnHouseLot_FillAndBuildStayPostedTogether` | backfill и building:hut выполнимы вместе | fill кладёт землю, build_schematic строит дом | ОК | полный |
 | 5-7 | `BuildPlanCasesTests.plan_StrayBesidePlannedHouse_DemolishesOnlyStray` | лишний забор → `demolish_stray` | снос убирает только чужое, дом не трогает | ОК | слабо |
 | 5-9 | `StageOneAcceptanceTests.plan_FencePart_CraftsFromOwnWoodInsteadOfWithdraw` | деталь забора крафтится из своего дерева | крафт закрывает нехватку без похода в сундук | ОК | полный |
 | 5-11 | `FarmGraphTests.plan_PenAbsentAtStageTwo_GraphDemandsPen` | на этапе 2 нет загона → стройка загона | животноводство ждёт постройку | ОК | слабо |
-| 5-12 | `CrossBattleWorkScenarioTests.combat_MobsAtBuilderAndChopper_RetreatPreemptsWork` | defend 100, retreat 96 вытесняет стройку | строитель бросает хижину, рубка второго ждёт | ОК | полный |
+| 5-12 | `CrossBattleWorkScenarioPart2Tests.combat_MobsAtBuilderAndChopper_RetreatPreemptsWork` | defend 100, retreat 96 вытесняет стройку | строитель бросает хижину, рубка второго ждёт | ОК | полный |
 | 5-13 | `CrossLifeWorkScenarioTests.flee_WhileBuilding_RetreatPreemptsBuildAndBuildReturnsToBoard` | retreat 100 вытесняет стройку, стройка возвращается PENDING | строитель уходит от мобов, хижину достраивает другой | ОК | полный |
 | 5-15 | `CrossLifeWorkScenarioTests.night_FarChopAndNearBuild_NoDistantChoppingButBuildStays` | ночью `building:hut` выполним | стройка на участке продолжается | ОК | полный |
 | 5-16 | `GraphRepairPlannerTests.repair_DamagedHut_ConsumesExactlyMissingItems` | ремонт заказывает ровно недостающее | ремонт строит схему из недостающих блоков | ОК | слабо |
@@ -123,57 +123,57 @@
 | 6-20 | `LevelRepairScenarioTests.progress_LevelingRepair_CountsCutAndFillCells` | `level_lot` и засыпка ямы на участке | срезка и засыпка считаются послойно | ОК | слабо |
 | 6-21 | `GraphStageGateTests.lots_CutOrFill_NotReady` | яма/насыпь на участке — этап не готов | выравнивание блокирует закрытие | ОК | полный |
 | 6-24 | `CrossPathScenarioTests.path_UnknownFieldAndTerrain_GraphWaitsInsteadOfGuessing` | неизвестный рельеф с ямами | граф всё равно ставит засыпку — НЕ ОК | НЕ ОК | полный |
-| 7-8 | `CrossSettlementScenarioTests.demolish_NonEmptyStrayChest_DrainsToWarehouseBeforeBreaking` | demolish_stray для непустого сундука | withdraw → deposit → clear_area | ОК | полный |
-| 7-17 | `CrossFarmSupplyScenarioTests.audit_DamagedHutExtraStray_RepairAndDemolitionBeforeStageClose` | снос лишнего забора и ремонт побитого | снос берёт только чужие постройки | ОК | полный |
+| 7-8 | `CrossSettlementScenarioPart2Tests.demolish_NonEmptyStrayChest_DrainsToWarehouseBeforeBreaking` | demolish_stray для непустого сундука | withdraw → deposit → clear_area | ОК | полный |
+| 7-17 | `CrossFarmSupplyScenarioPart2Tests.audit_DamagedHutExtraStray_RepairAndDemolitionBeforeStageClose` | снос лишнего забора и ремонт побитого | снос берёт только чужие постройки | ОК | полный |
 | 7-20 | `CleanupCasesTests.cleanup_StrayFence_PostsDemolition` | лишний забор → `demolish_stray` | кейс сноса разбирает забор | ОК | слабо |
-| 7-21 | `CrossFarmSupplyScenarioTests.audit_DamagedHutExtraStray_RepairAndDemolitionBeforeStageClose` | лишнее и чужие блоки в аудите | этап не закрыт, снос на доске | ОК | полный |
+| 7-21 | `CrossFarmSupplyScenarioPart2Tests.audit_DamagedHutExtraStray_RepairAndDemolitionBeforeStageClose` | лишнее и чужие блоки в аудите | этап не закрыт, снос на доске | ОК | полный |
 | 7-23 | `ChestClearanceTests.decide_NonEmptyFullWarehouseWithMaterials_AddsChestFirst` | задача сноса/выноса ждёт места | склад решает: сначала добавить сундук, потом нести | ОК | слабо |
-| 8-9 | `StoreGraphTests.plan_ToolMinimumShortage_PostsCraft` | минимум инструмента → крафт | крафт пополняет склад | ОК | слабо |
-| 8-12 | `CrossFarmSupplyScenarioTests.supply_FullChestFoodIron_FeedRepairAndSpaceStayPosted` | defend 100 и место на складе | бой выше раскладки, склад не мешает обороне | ОК | полный |
+| 8-9 | `StoreGraphPart2Tests.plan_ToolMinimumShortage_PostsCraft` | минимум инструмента → крафт | крафт пополняет склад | ОК | слабо |
+| 8-12 | `CrossFarmSupplyScenarioPart2Tests.supply_FullChestFoodIron_FeedRepairAndSpaceStayPosted` | defend 100 и место на складе | бой выше раскладки, склад не мешает обороне | ОК | полный |
 | 8-14 | `CrossHungerScenarioTests.hunger_FoodInChest_GateGivesEatNotMine` | еда в сундуке: обед голодного идёт в полосе потребности, а шахту VitalGate не отдаёт | поесть достаётся голодному | ОК | полный |
-| 8-16 | `CrossFarmSupplyScenarioTests.supply_FullChestFoodIron_FeedRepairAndSpaceStayPosted` | ремонт кирки и место на складе | ремонт выше раскладки, инструмент чинится | ОК | полный |
-| 8-19 | `StoreGraphTests.plan_CarriedItemsWithFreeChest_PostsDeliver` | несомое и свободный сундук → доставка | социальная доставка кладёт предмет | ОК | слабо |
-| 8-20 | `CrossFarmSupplyScenarioTests.supply_FullChestFoodIron_FeedRepairAndSpaceStayPosted` | склад переполнен — `store_space` | раскладка и место на доске | ОК | полный |
+| 8-16 | `CrossFarmSupplyScenarioPart2Tests.supply_FullChestFoodIron_FeedRepairAndSpaceStayPosted` | ремонт кирки и место на складе | ремонт выше раскладки, инструмент чинится | ОК | полный |
+| 8-19 | `StoreGraphPart2Tests.plan_CarriedItemsWithFreeChest_PostsDeliver` | несомое и свободный сундук → доставка | социальная доставка кладёт предмет | ОК | слабо |
+| 8-20 | `CrossFarmSupplyScenarioPart2Tests.supply_FullChestFoodIron_FeedRepairAndSpaceStayPosted` | склад переполнен — `store_space` | раскладка и место на доске | ОК | полный |
 | 8-23 | `CrossSupplyScenarioTests.storage_FullWarehouseNotBuilt_GraphBuildsStorageAndPostsSpace` | склад переполнен → building:warehouse и store_space | стройка склада и раскладка `deposit` | ОК | полный |
 | 9-11 | `FarmGraphTests.plan_SheepInSheepPen_ShearingIsWork` | овца в загоне → стрижка | инструмент стрижёт овцу | ОК | слабо |
 | 9-12 | `CrossSupplyScenarioTests.combat_WoundedWithoutArmor_FightsBeforeCraftingArmor` | craft_armor в графе | крафт брони идёт действием `craft` | ОК | полный |
-| 9-14 | `CrossFarmSupplyScenarioTests.hunger_NoFoodButExpeditionReady_HungrySpiritDoesNotLeave` | `craft_food` без пшеницы невыполним | еда не выдумывается крафтом | ОК | полный |
-| 9-15 | `CrossFarmSupplyScenarioTests.night_DangerAndThreat_CraftWaitsBehindRetreat` | ночной крафт кирки 39 | retreat выше крафта, сон под мобом не идёт | ОК | полный |
-| 9-16 | `CrossSettlementScenarioTests.repair_WornPickaxe_NeedsAnvilBeforeGraphRepairsTool` | наковальня + слиток → repair_tool выполним | ремонт идёт действием `repair_tool` | ОК | полный |
-| 9-18 | `CrossSettlementScenarioTests.mining_DarkMine_CoalThenTorchThenLightInGraphOrder` | уголь → craft_torch выполним | крафт факела идёт после угля | ОК | полный |
+| 9-14 | `CrossFarmSupplyScenarioPart2Tests.hunger_NoFoodButExpeditionReady_HungrySpiritDoesNotLeave` | `craft_food` без пшеницы невыполним | еда не выдумывается крафтом | ОК | полный |
+| 9-15 | `CrossFarmSupplyScenarioPart2Tests.night_DangerAndThreat_CraftWaitsBehindRetreat` | ночной крафт кирки 39 | retreat выше крафта, сон под мобом не идёт | ОК | полный |
+| 9-16 | `CrossSettlementScenarioPart3Tests.repair_WornPickaxe_NeedsAnvilBeforeGraphRepairsTool` | наковальня + слиток → repair_tool выполним | ремонт идёт действием `repair_tool` | ОК | полный |
+| 9-18 | `CrossSettlementScenarioPart3Tests.mining_DarkMine_CoalThenTorchThenLightInGraphOrder` | уголь → craft_torch выполним | крафт факела идёт после угля | ОК | полный |
 | 9-19 | `BrewGraphPlannerTests.ways_StageThreeBrewing_RequireGlassBottlesAndFuel` | варка требует бутылки и топливо | крафт бутылок и топлива идёт до варки | ОК | слабо |
 | 9-20 | `GraphPlannerTests.plan_NoTorches_RaisesCoalWays` | нет факелов → угольные пути | крафт тянет уголь и палки | ОК | слабо |
-| 10-11 | `CrossSettlementScenarioTests.husbandry_StarvingAnimalsNoCrops_SeedsOutrankFeedingAndSowing` | gather_seeds 97 выше feed 33 и plant 29 | сбор семян идёт до кормления и посева | ОК | полный |
-| 10-14 | `CrossSettlementScenarioTests.husbandry_StarvingAnimalsNoCrops_SeedsOutrankFeedingAndSowing` | plant_crop невыполним без семян | посев ждёт семена, а не выдумывает урожай | ОК | полный |
+| 10-11 | `CrossSettlementScenarioPart3Tests.husbandry_StarvingAnimalsNoCrops_SeedsOutrankFeedingAndSowing` | gather_seeds 97 выше feed 33 и plant 29 | сбор семян идёт до кормления и посева | ОК | полный |
+| 10-14 | `CrossSettlementScenarioPart3Tests.husbandry_StarvingAnimalsNoCrops_SeedsOutrankFeedingAndSowing` | plant_crop невыполним без семян | посев ждёт семена, а не выдумывает урожай | ОК | полный |
 | 10-20 | `FarmGraphTests.plan_StringsStocked_WeaveWoolIsWork` | нить есть → `weave_wool` | ферма/крафт делают шерсть | ОК | слабо |
 | 10-24 | `CrossPathScenarioTests.path_UnknownFieldAndTerrain_GraphWaitsInsteadOfGuessing` | поле в незагруженном чанке | посев невыполним, граф ждёт аудита | ОК | полный |
 | 11-12 | `CrossFarmSupplyScenarioTests.husbandry_ShearingAndWornShears_RepairAndFenceStayPosted` | defend у стада рядом со стрижкой | стрижка остаётся работой, бой — отдельный кейс | ОК | полный |
-| 11-14 | `CrossSettlementScenarioTests.husbandry_StarvingAnimalsNoCrops_SeedsOutrankFeedingAndSowing` | feed_animals невыполним без урожая | кормление ждёт еду, голод не растёт молча | ОК | полный |
+| 11-14 | `CrossSettlementScenarioPart3Tests.husbandry_StarvingAnimalsNoCrops_SeedsOutrankFeedingAndSowing` | feed_animals невыполним без урожая | кормление ждёт еду, голод не растёт молча | ОК | полный |
 | 11-16 | `CrossFarmSupplyScenarioTests.husbandry_ShearingAndWornShears_RepairAndFenceStayPosted` | ремонт ножниц и стрижка | `repair_tool` чинит, `shear` стрижёт овец | ОК | полный |
 | 11-17 | `CrossFarmSupplyScenarioTests.husbandry_ShearingAndWornShears_RepairAndFenceStayPosted` | ремонт забора и стрижка овец | забор строится схемой, стадо не ждёт | ОК | полный |
 | 11-20 | `HerdCapPlannerTests.plan_PerSpiritHerdCap_CaptureStopsAtSpiritShare` | потолок стада растёт от числа духов, сверх него не ловят и не разводят | граф не ловит и не разводит сверх потолка, забоя лишних нет | ОК | слабо |
-| 12-14 | `LifeGraphPlannerTests.plan_ManySpiritsAndMobs_LifeAtCeilingOnlyForAggroTargets` | голод и мобы → приоритеты жизни | еда и защита не выходят за потолок | ОК | слабо |
+| 12-14 | `LifeGraphPlannerPart2Tests.plan_ManySpiritsAndMobs_LifeAtCeilingOnlyForAggroTargets` | голод и мобы → приоритеты жизни | еда и защита не выходят за потолок | ОК | слабо |
 | 12-15 | `CrossLifeWorkScenarioTests.night_ThreatAtWounded_DefendAboveSleepAndGuard` | defend 100 > sleep 84 > guard 55 | ночью бой выше сна и охраны | ОК | полный |
 | 12-16 | `CrossSupplyScenarioTests.combat_WoundedWithoutArmor_FightsBeforeCraftingArmor` | defend 100 выше craft_armor 39 | раненый сначала отбивается | ОК | полный |
-| 12-17 | `CrossSettlementScenarioTests.combat_BrokenFenceUnderRaid_DefendOutranksFenceRepair` | defend 100 выше ремонта забора 61 | бой раньше забора | ОК | полный |
+| 12-17 | `CrossSettlementScenarioPart3Tests.combat_BrokenFenceUnderRaid_DefendOutranksFenceRepair` | defend 100 выше ремонта забора 61 | бой раньше забора | ОК | полный |
 | 12-20 | `CrossLifeWorkScenarioTests.chop_ThreatAtChopper_DefendAtCeilingAndChopStaysPosted` | защита жизни получает потолок 100 | механика боя выполняется скриптом `defend` | ОК | полный |
-| 12-22 | `CrossBattleWorkScenarioTests.combat_RaidAndStrategistOrder_DefendOutranksFenceAndWarehouse` | defend 100 выше похода 69 | поход ждёт конца боя | ОК | полный |
-| 12-23 | `CrossBattleWorkScenarioTests.combat_RaidAndStrategistOrder_DefendOutranksFenceAndWarehouse` | defend 100, заказ склада стратегу | заказ не отменяет бой | ОК | полный |
+| 12-22 | `CrossBattleWorkScenarioPart3Tests.combat_RaidAndStrategistOrder_DefendOutranksFenceAndWarehouse` | defend 100 выше похода 69 | поход ждёт конца боя | ОК | полный |
+| 12-23 | `CrossBattleWorkScenarioPart3Tests.combat_RaidAndStrategistOrder_DefendOutranksFenceAndWarehouse` | defend 100, заказ склада стратегу | заказ не отменяет бой | ОК | полный |
 | 13-15 | `CrossFleeScenarioTests.flee_NightMobsAndExpedition_RetreatBeatsSleepAndFollow` | retreat выше sleep | механика сна под мобом спать не даёт | ОК | полный |
 | 13-17 | `CrossFleeScenarioTests.flee_NightMobsAndExpedition_RetreatBeatsSleepAndFollow` | бегство через ворота | ворота закрываются после перехода | ОК | полный |
 | 13-20 | `CrossLifeWorkScenarioTests.flee_WhileBuilding_RetreatPreemptsBuildAndBuildReturnsToBoard` | retreat 100 вытесняет стройку, стройка возвращается PENDING | доска возвращает работу и отдаёт бегство | ОК | полный |
 | 13-22 | `CrossFleeScenarioTests.flee_NightMobsAndExpedition_RetreatBeatsSleepAndFollow` | retreat выше expedition | отход важнее похода | ОК | полный |
 | 14-20 | `CrossVitalScenarioTests.vital_HungryOrInjured_OrdinaryWorkIsBlockedAndVitalChainPreempts` | голодный дух: добыча еды выше шахты, без источника — ожидание выше шахты и диагноз стратегу; на этапе 2 VitalGate не отдаёт шахту, пока есть путь к еде (`vital_StageTwoCoalEmpty_GateKeepsFoodOverSaturatedMine`) | голодный дух не копает, сытый копает | ОК | полный |
-| 14-22 | `CrossFarmSupplyScenarioTests.hunger_NoFoodButExpeditionReady_HungrySpiritDoesNotLeave` | еды нет, поход выполним | голодному поход не выдаётся, его получает сытый дух | ОК | полный |
+| 14-22 | `CrossFarmSupplyScenarioPart2Tests.hunger_NoFoodButExpeditionReady_HungrySpiritDoesNotLeave` | еды нет, поход выполним | голодному поход не выдаётся, его получает сытый дух | ОК | полный |
 | 15-20 | `GraphNightDefenseTests.plan_NightAndFarTree_DoesNotGiveDistantGather` | ночью далёкая рубка не выдаётся | граф и NightLeash согласованы | ОК | слабо |
-| 16-17 | `CrossSettlementScenarioTests.combat_BrokenFenceUnderRaid_DefendOutranksFenceRepair` | repair_fence выполним рядом с боем | ремонт ставит схему забора | ОК | полный |
+| 16-17 | `CrossSettlementScenarioPart3Tests.combat_BrokenFenceUnderRaid_DefendOutranksFenceRepair` | repair_fence выполним рядом с боем | ремонт ставит схему забора | ОК | полный |
 | 16-20 | `GraphRepairPlannerTests.repair_MoreMissing_RaisesWeight` | больше недостачи — выше вес ремонта | ремонт поднимается в очереди графа | ОК | слабо |
-| 16-21 | `CrossFarmSupplyScenarioTests.audit_DamagedHutExtraStray_RepairAndDemolitionBeforeStageClose` | ремонт хижины 80 % выбран графом | после аудита 100 % этап видит готовую хижину | ОК | полный |
+| 16-21 | `CrossFarmSupplyScenarioPart2Tests.audit_DamagedHutExtraStray_RepairAndDemolitionBeforeStageClose` | ремонт хижины 80 % выбран графом | после аудита 100 % этап видит готовую хижину | ОК | полный |
 | 16-24 | `CrossRouteStageScenarioTests.chunks_UnknownLot_NoBlindRebuildButKnownRepairStays` | неизвестное не чинится, известный забор чинится | ремонт идёт только по известному аудиту | ОК | полный |
 | 17-20 | `BuildGapFenceTests.need_PartialFence_AsksOnlyRemainingCraft` | нехватка забора считается графом | крафт добирает только остаток | ОК | слабо |
-| 17-22 | `CrossBattleWorkScenarioTests.combat_RaidAndStrategistOrder_DefendOutranksFenceAndWarehouse` | ремонт забора и поход | ворота открыты, после перехода закрываются | ОК | полный |
-| 17-23 | `CrossBattleWorkScenarioTests.combat_RaidAndStrategistOrder_DefendOutranksFenceAndWarehouse` | ремонт забора рядом с заказом стратега | оба задания на доске, забор чинится схемой | ОК | полный |
-| 18-20 | `CrossSettlementScenarioTests.mining_DarkMine_CoalThenTorchThenLightInGraphOrder` | уголь → факел → свет по шагам | порядок графа совпадает с действиями | ОК | полный |
+| 17-22 | `CrossBattleWorkScenarioPart3Tests.combat_RaidAndStrategistOrder_DefendOutranksFenceAndWarehouse` | ремонт забора и поход | ворота открыты, после перехода закрываются | ОК | полный |
+| 17-23 | `CrossBattleWorkScenarioPart3Tests.combat_RaidAndStrategistOrder_DefendOutranksFenceAndWarehouse` | ремонт забора рядом с заказом стратега | оба задания на доске, забор чинится схемой | ОК | полный |
+| 18-20 | `CrossSettlementScenarioPart3Tests.mining_DarkMine_CoalThenTorchThenLightInGraphOrder` | уголь → факел → свет по шагам | порядок графа совпадает с действиями | ОК | полный |
 | 19-20 | `BrewGraphPlannerTests.plan_StageThreePotionFullLine_Feasible` | полная линия зелья на этапе 3 выполнима | алхимия варит по цепочке | ОК | слабо |
 | 19-22 | `CrossSupplyScenarioTests.social_PlayerNearAndExpedition_ExpeditionOutranksGuard` | expedition 69 выше guard 57 | поход `follow` раньше патруля | ОК | полный |
 | 20-21 | `GraphStageGateTests.simulate_StageTwoBaseline_ReachesStageThree` | симуляция графа проходит этап 2 | стройка и аудит закрывают этап | ОК | полный |
@@ -190,7 +190,7 @@
 
 Матрица M01…M24 сравнивает **состояние на входе**, а оси времени в ней нет. Прерывание в середине временной
 правки без аренды — дыра; с этапа 2 прерывание бросает аренду. Полная ось — [CROSS-MATRIX-INTERRUPT.md](CROSS-MATRIX-INTERRUPT.md).
-Крупный сценарий: `LeaseScenarioTests.twoSpirits_Hunger_LeavesBothLeasesOrphaned` (столб + мост, оба на голоде).
+Крупный сценарий: `LeaseScenarioPart2Tests.twoSpirits_Hunger_LeavesBothLeasesOrphaned` (столб + мост, оба на голоде).
 
 ## Итог
 

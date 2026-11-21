@@ -26,12 +26,12 @@
 | I04 | столб | задача выше | тикет уходит другому, столб остаётся брошенной арендой | аренда + perch | ОК | `LeaseScenarioTests.pillarAndScaffold_CancelDeathRestart_LeaveCellsInOrphanedLease` |
 | I05 | столб | смерть | смерть бросает аренды духа (`orphanSpirit`) | аренда в SavedData | ОК | `LeaseScenarioTests.pillarAndScaffold_CancelDeathRestart_LeaveCellsInOrphanedLease` |
 | I06 | столб | рестарт | все ACTIVE бросаются (`orphanAllActive`) | аренда в SavedData | ОК | `LeaseScenarioTests.pillarAndScaffold_CancelDeathRestart_LeaveCellsInOrphanedLease` |
-| I07 | мост | голод | недостроенный настил в брошенной аренде | аренда + скан | ОК | `LeaseScenarioTests.bridge_CancelAndSuccess_DifferByStatusAndCleanup` |
-| I08 | мост | угроза | настил стоит, аренда брошена | аренда + скан | ОК | `LeaseScenarioTests.bridge_CancelAndSuccess_DifferByStatusAndCleanup` |
-| I09 | мост | ночь | настил и дух на нём, аренда брошена | аренда + скан | ОК | `LeaseScenarioTests.bridge_CancelAndSuccess_DifferByStatusAndCleanup` |
-| I10 | мост | задача выше | настил остаётся, тикет уходит | аренда + скан | ОК | `LeaseScenarioTests.bridge_CancelAndSuccess_DifferByStatusAndCleanup` |
-| I11 | мост | смерть | настил без владельца, аренда брошена событием смерти | аренда в SavedData | ОК | `LeaseScenarioTests.twoSpirits_Hunger_LeavesBothLeasesOrphaned` |
-| I12 | мост | рестарт | все ACTIVE бросаются, настил виден скану | аренда в SavedData | ОК | `LeaseScenarioTests.twoSpirits_Hunger_LeavesBothLeasesOrphaned` |
+| I07 | мост | голод | недостроенный настил в брошенной аренде | аренда + скан | ОК | `LeaseScenarioPart2Tests.bridge_CancelAndSuccess_DifferByStatusAndCleanup` |
+| I08 | мост | угроза | настил стоит, аренда брошена | аренда + скан | ОК | `LeaseScenarioPart2Tests.bridge_CancelAndSuccess_DifferByStatusAndCleanup` |
+| I09 | мост | ночь | настил и дух на нём, аренда брошена | аренда + скан | ОК | `LeaseScenarioPart2Tests.bridge_CancelAndSuccess_DifferByStatusAndCleanup` |
+| I10 | мост | задача выше | настил остаётся, тикет уходит | аренда + скан | ОК | `LeaseScenarioPart2Tests.bridge_CancelAndSuccess_DifferByStatusAndCleanup` |
+| I11 | мост | смерть | настил без владельца, аренда брошена событием смерти | аренда в SavedData | ОК | `LeaseScenarioPart2Tests.twoSpirits_Hunger_LeavesBothLeasesOrphaned` |
+| I12 | мост | рестарт | все ACTIVE бросаются, настил виден скану | аренда в SavedData | ОК | `LeaseScenarioPart2Tests.twoSpirits_Hunger_LeavesBothLeasesOrphaned` |
 | I13 | расчистка | голод | подмости брошены, брони сняты | аренда + perch + скан | ОК | `LeaseScenarioTests.pillarAndScaffold_CancelDeathRestart_LeaveCellsInOrphanedLease` |
 | I14 | расчистка | угроза | retreat/defend, подмости в аренде | аренда + perch | ОК | `InterruptExitTests.clearArea_Interrupted_ReleasesReservationsAndKeepsScaffoldMarked` |
 | I15 | расчистка | ночь | сон ждёт спуска, подмости в аренде | аренда + perch + rescue | ОК | `InterruptExitTests.perchNeed_Night_SleepRefusedButRescueAllowed` |
@@ -44,21 +44,21 @@
 | I22 | шахта | задача выше | проход брошен на середине | то же | Н | задача 4 |
 | I23 | шахта | смерть | проход без владельца | то же | Н | задача 4 |
 | I24 | шахта | рестарт | шаги туннеля не в снимке | то же | Н | задача 4 |
-| I25 | dig_out | голод | spoil возвращён, пол — PLACED в брошенной аренде | аренда + яма/rescue | ОК | `LeaseScenarioTests.digOut_SuccessOrphansRemainingCells_InterruptOrphansEverything` |
-| I26 | dig_out | угроза | spoil возвращён, клетки тела не трогаются, пол в аренде | аренда + rescue | ОК | `LeaseScenarioTests.digOut_SuccessOrphansRemainingCells_InterruptOrphansEverything` |
-| I27 | dig_out | ночь | аренда брошена, spoil вернёт откат | аренда + rescue | ОК | `LeaseScenarioTests.digOut_SuccessOrphansRemainingCells_InterruptOrphansEverything` |
-| I28 | dig_out | задача выше | аренда брошена, rescue остаётся | аренда + rescue | ОК | `LeaseScenarioTests.digOut_SuccessOrphansRemainingCells_InterruptOrphansEverything` |
-| I29 | dig_out | смерть | смерть бросает аренды духа, spoil и пол видны скану | аренда в SavedData | ОК | `LeaseScenarioTests.digOut_SuccessOrphansRemainingCells_InterruptOrphansEverything` |
-| I30 | dig_out | рестарт | все ACTIVE бросаются, BROKEN помнит before | аренда в SavedData | ОК | `LeaseScenarioTests.digOut_SuccessOrphansRemainingCells_InterruptOrphansEverything` |
-| I31 | маршрут | голод | проломы и поставленные клетки в брошенной аренде | аренда + скан | ОК | `LeaseScenarioTests.route_PassOrphansCells_BreakAndCancelOrphans` |
-| I32 | маршрут | угроза | ломка прекращена, клетки в аренде | аренда + скан | ОК | `LeaseScenarioTests.route_PassOrphansCells_BreakAndCancelOrphans` |
-| I33 | маршрут | ночь | маршрут брошен, клетки видны скану | аренда + скан | ОК | `LeaseScenarioTests.route_PassOrphansCells_BreakAndCancelOrphans` |
-| I34 | маршрут | задача выше | тикет уходит, аренда брошена | аренда + тикет | ОК | `LeaseScenarioTests.route_PassOrphansCells_BreakAndCancelOrphans` |
-| I35 | маршрут | смерть | проломы BROKEN без владельца | аренда в SavedData | ОК | `LeaseScenarioTests.route_PassOrphansCells_BreakAndCancelOrphans` |
-| I36 | маршрут | рестарт | все ACTIVE бросаются, BROKEN помнит before | аренда в SavedData | ОК | `LeaseScenarioTests.route_PassOrphansCells_BreakAndCancelOrphans` |
+| I25 | dig_out | голод | spoil возвращён, пол — PLACED в брошенной аренде | аренда + яма/rescue | ОК | `LeaseScenarioPart2Tests.digOut_SuccessOrphansRemainingCells_InterruptOrphansEverything` |
+| I26 | dig_out | угроза | spoil возвращён, клетки тела не трогаются, пол в аренде | аренда + rescue | ОК | `LeaseScenarioPart2Tests.digOut_SuccessOrphansRemainingCells_InterruptOrphansEverything` |
+| I27 | dig_out | ночь | аренда брошена, spoil вернёт откат | аренда + rescue | ОК | `LeaseScenarioPart2Tests.digOut_SuccessOrphansRemainingCells_InterruptOrphansEverything` |
+| I28 | dig_out | задача выше | аренда брошена, rescue остаётся | аренда + rescue | ОК | `LeaseScenarioPart2Tests.digOut_SuccessOrphansRemainingCells_InterruptOrphansEverything` |
+| I29 | dig_out | смерть | смерть бросает аренды духа, spoil и пол видны скану | аренда в SavedData | ОК | `LeaseScenarioPart2Tests.digOut_SuccessOrphansRemainingCells_InterruptOrphansEverything` |
+| I30 | dig_out | рестарт | все ACTIVE бросаются, BROKEN помнит before | аренда в SavedData | ОК | `LeaseScenarioPart2Tests.digOut_SuccessOrphansRemainingCells_InterruptOrphansEverything` |
+| I31 | маршрут | голод | проломы и поставленные клетки в брошенной аренде | аренда + скан | ОК | `LeaseScenarioPart2Tests.route_PassOrphansCells_BreakAndCancelOrphans` |
+| I32 | маршрут | угроза | ломка прекращена, клетки в аренде | аренда + скан | ОК | `LeaseScenarioPart2Tests.route_PassOrphansCells_BreakAndCancelOrphans` |
+| I33 | маршрут | ночь | маршрут брошен, клетки видны скану | аренда + скан | ОК | `LeaseScenarioPart2Tests.route_PassOrphansCells_BreakAndCancelOrphans` |
+| I34 | маршрут | задача выше | тикет уходит, аренда брошена | аренда + тикет | ОК | `LeaseScenarioPart2Tests.route_PassOrphansCells_BreakAndCancelOrphans` |
+| I35 | маршрут | смерть | проломы BROKEN без владельца | аренда в SavedData | ОК | `LeaseScenarioPart2Tests.route_PassOrphansCells_BreakAndCancelOrphans` |
+| I36 | маршрут | рестарт | все ACTIVE бросаются, BROKEN помнит before | аренда в SavedData | ОК | `LeaseScenarioPart2Tests.route_PassOrphansCells_BreakAndCancelOrphans` |
 
 ## Крупный сценарий
 
-`LeaseScenarioTests.twoSpirits_Hunger_LeavesBothLeasesOrphaned`: два духа, один строит столб, другой мост,
+`LeaseScenarioPart2Tests.twoSpirits_Hunger_LeavesBothLeasesOrphaned`: два духа, один строит столб, другой мост,
 оба на паузе дольше `leaseSuspendTimeoutTicks` — обе аренды брошены, скан видит все клетки сверху вниз,
 действующих (`ACTIVE`) аренд не осталось.

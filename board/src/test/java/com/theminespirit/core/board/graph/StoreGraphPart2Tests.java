@@ -1,0 +1,241 @@
+package com.theminespirit.core.board.graph;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import org.junit.jupiter.api.Test;
+
+class StoreGraphPart2Tests {
+    private static GraphPlan plan(GraphWorld world, GraphFacts facts) {
+        return GraphPlanner.plan(
+                world.graph, world.state().withFacts(facts, world.graph.costs().life()));
+    }
+
+    private static GraphFacts facts(Map<String, Integer> minimum, Map<String, Integer> actual) {
+        return new Facts()
+                .stageReqs(new GraphSiteFacts.StageReqs(minimum, actual))
+                .build();
+    }
+
+    private static final class Facts {
+        private Map<String, GraphFacts.Spirit> spirits = Map.of();
+        private List<GraphFacts.Chest> chests = List.of();
+        private Map<String, GraphFacts.Station> stations = Map.of();
+        private GraphSiteFacts.StageReqs stageReqs = new GraphSiteFacts.StageReqs(Map.of(), Map.of());
+
+        Facts spirit(GraphFacts.Spirit spirit) {
+            spirits = Map.of(spirit.id(), spirit);
+            return this;
+        }
+
+        Facts chest(GraphFacts.Chest chest) {
+            chests = new ArrayList<>(chests);
+            chests.add(chest);
+            return this;
+        }
+
+        Facts station(GraphFacts.Station station) {
+            stations = Map.of(station.id(), station);
+            return this;
+        }
+
+        Facts stageReqs(GraphSiteFacts.StageReqs reqs) {
+            stageReqs = reqs;
+            return this;
+        }
+
+        GraphFacts build() {
+            return new GraphFacts(
+                    spirits,
+                    List.of(),
+                    chests,
+                    List.of(),
+                    stations,
+                    Map.of(
+                            "furnace",
+                            new GraphFacts.Building("furnace", 1, 100, 0, Map.of(), Map.of(), 0, null, false, true)),
+                    List.of(),
+                    GraphSiteFacts.Terrain.empty(),
+                    stageReqs,
+                    GraphFeedback.none(),
+                    List.of(),
+                    List.of(),
+                    List.of());
+        }
+    }
+
+    @Test
+    void plan_MinimumMet_NoStoreGather() {
+        GraphWorld world = GraphWorld.settled().with("cobblestone", 160);
+        GraphPlan plan = plan(world, facts(Map.of("cobblestone", 160), Map.of("cobblestone", 160)));
+
+        assertTrue(
+                plan.task("mine_cobble").isEmpty(),
+                "Минимум склада закрыт — лишней добычи нет:  Иначе тест plan_MinimumMet_NoStoreGather перестанет ловить эту поломку. При смене plan_MinimumMet_NoStoreGather проверь это утверждение."
+                        + plan.tasks());
+    }
+
+    @Test
+    void plan_GroupMinimumShortage_PostsChop() {
+        GraphWorld world = GraphWorld.settled().with("oak_log", 30);
+        GraphPlan plan = plan(world, facts(Map.of("#logs", 80), Map.of("#logs", 30)));
+
+        assertTrue(
+                plan.task("chop_oak_log").isPresent(),
+                "Минимум брёвен задан группой #logs — рубка обязана появиться:  Иначе тест plan_GroupMinimumShortage_PostsChop перестанет ловить эту поломку. При смене plan_GroupMinimumShortage_PostsChop проверь это утверждение."
+                        + plan.tasks());
+    }
+
+    @Test
+    void plan_ToolMinimumShortage_PostsCraft() {
+        GraphWorld world = GraphWorld.settled();
+        world.stage = 2;
+        GraphPlan plan = plan(world, facts(Map.of("iron_axe", 1), Map.of("iron_axe", 0)));
+
+        assertTrue(
+                plan.task("craft_iron_axe").isPresent(),
+                "Железного топора в запасе нет — крафт обязан появиться:  Иначе тест plan_ToolMinimumShortage_PostsCraft перестанет ловить эту поломку. При смене plan_ToolMinimumShortage_PostsCraft проверь это утверждение."
+                        + plan.tasks());
+    }
+
+    @Test
+    void plan_CarriedItemsWithFreeChest_PostsDeliver() {
+        GraphFacts facts = new Facts()
+                .spirit(new GraphFacts.Spirit(
+                        "spirit-1",
+                        new GraphFacts.Position(0, 64, 0),
+                        20,
+                        Math.max(20, 1f),
+                        null,
+                        20,
+                        300,
+                        false,
+                        false,
+                        false,
+                        null,
+                        Map.of("minecraft:oak_log", 5),
+                        List.of(),
+                        List.of(),
+                        null))
+                .chest(new GraphFacts.Chest(
+                        new GraphFacts.Position(1, 64, 1), Map.of(), 5, 27, GraphFacts.Reach.UNKNOWN))
+                .build();
+        GraphPlan plan = plan(GraphWorld.settled(), facts);
+
+        assertTrue(
+                plan.task("store_carry_deliver").isPresent(),
+                "Дух несёт вещи, в сундуке есть место — путь сдать несомое обязан появиться:  Иначе тест plan_CarriedItemsWithFreeChest_PostsDeliver перестанет ловить эту поломку. При смене plan_CarriedItemsWithFreeChest_PostsDeliver проверь это утверждение."
+                        + plan.tasks());
+    }
+
+    @Test
+    void plan_FullChestAndFreeChest_PostsTransfer() {
+        GraphFacts facts = new Facts()
+                .chest(new GraphFacts.Chest(
+                        new GraphFacts.Position(1, 64, 1),
+                        Map.of("minecraft:oak_log", 64),
+                        0,
+                        27,
+                        GraphFacts.Reach.UNKNOWN))
+                .chest(new GraphFacts.Chest(
+                        new GraphFacts.Position(2, 64, 1), Map.of(), 27, 27, GraphFacts.Reach.UNKNOWN))
+                .build();
+        GraphPlan plan = plan(GraphWorld.settled(), facts);
+
+        assertTrue(
+                plan.task("store_carry_transfer").isPresent(),
+                "Сундук A полон, у сундука B есть место — перенос обязан появиться:  Иначе тест plan_FullChestAndFreeChest_PostsTransfer перестанет ловить эту поломку. При смене plan_FullChestAndFreeChest_PostsTransfer проверь это утверждение."
+                        + plan.tasks());
+    }
+
+    @Test
+    void plan_FurnaceOutput_PostsTake() {
+        GraphFacts facts = new Facts()
+                .station(new GraphFacts.Station(
+                        "furnace",
+                        "furnace",
+                        new GraphFacts.Position(3, 64, 3),
+                        true,
+                        "coal",
+                        "raw_iron",
+                        "iron_ingot"))
+                .build();
+        GraphPlan plan = plan(GraphWorld.settled(), facts);
+
+        assertTrue(
+                plan.task("store_smelt_take").isPresent(),
+                "В печи есть готовое — путь забрать готовое обязан появиться:  Иначе тест plan_FurnaceOutput_PostsTake перестанет ловить эту поломку. При смене plan_FurnaceOutput_PostsTake проверь это утверждение."
+                        + plan.tasks());
+    }
+
+    @Test
+    void plan_FurnaceFree_PostsLoad() {
+        GraphFacts facts = new Facts()
+                .station(new GraphFacts.Station(
+                        "furnace", "furnace", new GraphFacts.Position(3, 64, 3), false, "coal", null, null))
+                .build();
+        GraphPlan plan = plan(GraphWorld.settled(), facts);
+
+        assertTrue(
+                plan.task("store_smelt_load").isPresent(),
+                "Печь свободна — путь загрузить печь обязан появиться:  Иначе тест plan_FurnaceFree_PostsLoad перестанет ловить эту поломку. При смене plan_FurnaceFree_PostsLoad проверь это утверждение."
+                        + plan.tasks());
+        assertTrue(
+                plan.task("store_smelt_take").isEmpty(),
+                "Забирать из свободной печи нечего:  Иначе тест plan_FurnaceFree_PostsLoad перестанет ловить эту поломку. При смене plan_FurnaceFree_PostsLoad проверь это утверждение."
+                        + plan.tasks());
+    }
+
+    @Test
+    void plan_StorageLow_PostsSpace() {
+        GraphWorld world = GraphWorld.settled();
+        world.storageFree = 5;
+        GraphPlan plan = plan(world, new Facts().build());
+
+        assertTrue(
+                plan.task("store_space").isPresent(),
+                "Свободно 5 % при пороге 20 % — новая пара сундуков обязана появиться:  Иначе тест plan_StorageLow_PostsSpace перестанет ловить эту поломку. При смене plan_StorageLow_PostsSpace проверь это утверждение."
+                        + plan.tasks());
+    }
+
+    @Test
+    void plan_MixedChest_PostsSort() {
+        GraphFacts facts = new Facts()
+                .chest(new GraphFacts.Chest(
+                        new GraphFacts.Position(1, 64, 1),
+                        Map.of("minecraft:oak_log", 10, "minecraft:cobblestone", 10),
+                        5,
+                        27,
+                        GraphFacts.Reach.UNKNOWN))
+                .build();
+        GraphPlan plan = plan(GraphWorld.settled(), facts);
+
+        assertTrue(
+                plan.task("store_sort").isPresent(),
+                "В сундуке дерево и камень вместе — сортировка обязана появиться:  Иначе тест plan_MixedChest_PostsSort перестанет ловить эту поломку. При смене plan_MixedChest_PostsSort проверь это утверждение."
+                        + plan.tasks());
+    }
+
+    @Test
+    void inventoryOverloaded_IsImplemented_PostedToBoard() {
+        SupplyGraph graph = SupplyGraph.loadDefault();
+        GraphWorld world = GraphWorld.empty().event("inventory_overloaded");
+        GraphState state = world.state();
+        GraphPlan plan = GraphPlanner.plan(graph, state);
+        String id = "event:inventory_overloaded:unload_overloaded";
+
+        GraphTickets.Result tickets = GraphTickets.of(graph, state, plan);
+
+        assertTrue(
+                plan.tasks().stream().anyMatch(task -> id.equals(task.id()) && task.implemented()),
+                "Перегруз инвентаря исполняется: дух сам уносит лишнее в сундук Иначе тест inventoryOverloaded_IsImplemented_PostedToBoard перестанет ловить эту поломку. При смене inventoryOverloaded_IsImplemented_PostedToBoard проверь это утверждение.");
+        assertTrue(
+                tickets.unimplemented().stream().noneMatch(task -> id.equals(task.id())),
+                "Реализованная разгрузка не попадает в список нереализованных Иначе тест inventoryOverloaded_IsImplemented_PostedToBoard перестанет ловить эту поломку. При смене inventoryOverloaded_IsImplemented_PostedToBoard проверь это утверждение.");
+        assertTrue(
+                tickets.post().stream().anyMatch(ticket -> (GraphTickets.PREFIX + id).equals(ticket.id())),
+                "Задача разгрузки ставится на доску, а не остаётся советом Иначе тест inventoryOverloaded_IsImplemented_PostedToBoard перестанет ловить эту поломку. При смене inventoryOverloaded_IsImplemented_PostedToBoard проверь это утверждение.");
+    }
+}
