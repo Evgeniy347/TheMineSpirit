@@ -35,11 +35,13 @@ class IdFilterProperties {
         assertEquals(
                 pattern.equals(other),
                 filter.matches(other),
-                "Шаблон без '*' обязан совпадать только с самим собой: '" + pattern + "' против '" + other + "'");
+                "Шаблон без '*' обязан совпадать только с самим собой: '" + pattern + "' против '" + other + "'"
+                        + " Иначе тест matches_PatternWithoutStar_MatchesOnlyItself перестанет ловить эту поломку. При смене matches_PatternWithoutStar_MatchesOnlyItself проверь это утверждение.");
         assertEquals(
                 true,
                 filter.matches(pattern),
-                "Шаблон без '*' обязан совпадать с собственным id: иначе точное имя в плане ничего не найдёт");
+                "Шаблон без '*' обязан совпадать с собственным id: иначе точное имя в плане ничего не найдёт"
+                        + " При смене matches_PatternWithoutStar_MatchesOnlyItself проверь это утверждение.");
     }
 
     @Property
@@ -47,7 +49,8 @@ class IdFilterProperties {
         assertEquals(
                 true,
                 IdFilter.of(List.of("*")).matches(id),
-                "Шаблон '*' обязан совпадать с любым id: '" + id + "' не прошёл");
+                "Шаблон '*' обязан совпадать с любым id: '" + id + "' не прошёл"
+                        + " Иначе тест matches_SingleStar_MatchesAnyId перестанет ловить эту поломку. При смене matches_SingleStar_MatchesAnyId проверь это утверждение.");
     }
 
     @Property
@@ -57,7 +60,8 @@ class IdFilterProperties {
         assertEquals(
                 id.startsWith(prefix),
                 filter.matches(id),
-                "Шаблон '" + prefix + "*' обязан совпадать ровно с id, начинающимися на префикс; id '" + id + "'");
+                "Шаблон '" + prefix + "*' обязан совпадать ровно с id, начинающимися на префикс; id '" + id + "'"
+                        + " Иначе тест matches_PrefixStar_MatchesExactlyIdsWithPrefix перестанет ловить эту поломку. При смене matches_PrefixStar_MatchesExactlyIdsWithPrefix проверь это утверждение.");
     }
 
     @Property
@@ -67,7 +71,7 @@ class IdFilterProperties {
         assertEquals(
                 true,
                 IdFilter.of(List.of(prefix + "*")).matches(id),
-                "Шаблон '" + prefix + "*' обязан совпадать с любым id, начинающимся на префикс: '" + id
-                        + "' не прошёл");
+                "Шаблон '" + prefix + "*' обязан совпадать с любым id, начинающимся на префикс: '" + id + "' не прошёл"
+                        + " Иначе тест matches_PrefixStar_MatchesIdBuiltFromPrefix перестанет ловить эту поломку. При смене matches_PrefixStar_MatchesIdBuiltFromPrefix проверь это утверждение.");
     }
 }

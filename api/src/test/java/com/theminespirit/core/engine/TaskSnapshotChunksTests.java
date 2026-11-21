@@ -24,26 +24,30 @@ class TaskSnapshotChunksTests {
                 UTFDataFormatException.class,
                 () -> writeNbtString(json),
                 "Снимок на " + json.length() + " символов обязан не влезать в одну строку NBT: иначе тест "
-                        + "не воспроизводит потерю задачи духа при автосейве и ничего не доказывает");
+                        + "не воспроизводит потерю задачи духа при автосейве и ничего не доказывает"
+                        + " При смене splitSnapshot_Large250Kb_ChunksFitNbtStringAndJoinBack проверь это утверждение.");
 
         List<String> chunks = TaskSnapshotChunks.split(json);
         assertTrue(
                 chunks.size() > 1,
                 "Снимок на " + json.length() + " символов разбит на " + chunks.size()
-                        + " кусков: без разбиения NBT-строка снова упадёт с UTFDataFormatException");
+                        + " кусков: без разбиения NBT-строка снова упадёт с UTFDataFormatException"
+                        + " Иначе тест splitSnapshot_Large250Kb_ChunksFitNbtStringAndJoinBack перестанет ловить эту поломку. При смене splitSnapshot_Large250Kb_ChunksFitNbtStringAndJoinBack проверь это утверждение.");
 
         List<String> readBack = new ArrayList<>(chunks.size());
         for (String chunk : chunks) {
             assertTrue(
                     !chunk.isEmpty(),
-                    "Пустой кусок снимка нечего записывать в NBT: список кусков обязан содержать только непустые строки");
+                    "Пустой кусок снимка нечего записывать в NBT: список кусков обязан содержать только непустые строки"
+                            + " Иначе тест splitSnapshot_Large250Kb_ChunksFitNbtStringAndJoinBack перестанет ловить эту поломку. При смене splitSnapshot_Large250Kb_ChunksFitNbtStringAndJoinBack проверь это утверждение.");
             readBack.add(readNbtString(writeNbtString(chunk)));
         }
         assertEquals(
                 json,
                 TaskSnapshotChunks.join(readBack),
                 "Склейка кусков после записи и чтения каждой NBT-строки обязана вернуть исходный JSON: иначе после "
-                        + "рестарта дух получит повреждённую задачу");
+                        + "рестарта дух получит повреждённую задачу"
+                        + " При смене splitSnapshot_Large250Kb_ChunksFitNbtStringAndJoinBack проверь это утверждение.");
     }
 
     @Test
@@ -52,11 +56,13 @@ class TaskSnapshotChunksTests {
         assertEquals(
                 TaskSnapshotChunks.MAX_CHUNK_CHARS,
                 json.length(),
-                "Подготовка теста сломана: снимок обязан быть ровно в один кусок, иначе граница не проверяется");
+                "Подготовка теста сломана: снимок обязан быть ровно в один кусок, иначе граница не проверяется"
+                        + " При смене split_ExactlyOneChunk_KeepsSnapshotWhole проверь это утверждение.");
         assertEquals(
                 List.of(json),
                 TaskSnapshotChunks.split(json),
-                "Снимок длиной ровно в предел куска обязан остаться одним куском: лишнее дробление тратит NBT-место");
+                "Снимок длиной ровно в предел куска обязан остаться одним куском: лишнее дробление тратит NBT-место"
+                        + " Иначе тест split_ExactlyOneChunk_KeepsSnapshotWhole перестанет ловить эту поломку. При смене split_ExactlyOneChunk_KeepsSnapshotWhole проверь это утверждение.");
     }
 
     @Test
@@ -66,11 +72,13 @@ class TaskSnapshotChunksTests {
         assertEquals(
                 2,
                 chunks.size(),
-                "Снимок на один символ длиннее предела обязан дать два куска: иначе последний символ теряется");
+                "Снимок на один символ длиннее предела обязан дать два куска: иначе последний символ теряется"
+                        + " При смене split_OneCharOverChunk_ReturnsSecondChunk проверь это утверждение.");
         assertEquals(
                 json,
                 TaskSnapshotChunks.join(chunks),
-                "Склейка кусков обязана вернуть исходный снимок без потери граничного символа");
+                "Склейка кусков обязана вернуть исходный снимок без потери граничного символа"
+                        + " Иначе тест split_OneCharOverChunk_ReturnsSecondChunk перестанет ловить эту поломку. При смене split_OneCharOverChunk_ReturnsSecondChunk проверь это утверждение.");
     }
 
     @Test
@@ -78,11 +86,13 @@ class TaskSnapshotChunksTests {
         assertEquals(
                 List.of(),
                 TaskSnapshotChunks.split(""),
-                "Пустой снимок обязан дать пустой список кусков: пустая строка NBT не должна появляться в сохранении");
+                "Пустой снимок обязан дать пустой список кусков: пустая строка NBT не должна появляться в сохранении"
+                        + " Иначе тест split_EmptySnapshot_ReturnsNoChunksAndJoinsEmpty перестанет ловить эту поломку. При смене split_EmptySnapshot_ReturnsNoChunksAndJoinsEmpty проверь это утверждение.");
         assertEquals(
                 "",
                 TaskSnapshotChunks.join(List.of()),
-                "Склейка пустого списка кусков обязана вернуть пустой снимок, а не null");
+                "Склейка пустого списка кусков обязана вернуть пустой снимок, а не null"
+                        + " Иначе тест split_EmptySnapshot_ReturnsNoChunksAndJoinsEmpty перестанет ловить эту поломку. При смене split_EmptySnapshot_ReturnsNoChunksAndJoinsEmpty проверь это утверждение.");
     }
 
     @Test
@@ -90,11 +100,13 @@ class TaskSnapshotChunksTests {
         NullPointerException error = assertThrows(
                 NullPointerException.class,
                 () -> TaskSnapshotChunks.split(null),
-                "Null-снимок нельзя молча превратить в пустой список: это стёрло бы задачу духа без следа в логе");
+                "Null-снимок нельзя молча превратить в пустой список: это стёрло бы задачу духа без следа в логе"
+                        + " Иначе тест split_NullSnapshot_ThrowsWithReason перестанет ловить эту поломку. При смене split_NullSnapshot_ThrowsWithReason проверь это утверждение.");
         assertEquals(
                 "Снимок задачи не может быть null: делить на куски нечего",
                 error.getMessage(),
-                "Исключение обязано называть, что делить нечего: иначе в логе автосейва не понять причину");
+                "Исключение обязано называть, что делить нечего: иначе в логе автосейва не понять причину"
+                        + " При смене split_NullSnapshot_ThrowsWithReason проверь это утверждение.");
     }
 
     private static String largeSnapshot(int minChars) {
@@ -121,7 +133,8 @@ class TaskSnapshotChunksTests {
             assertEquals(
                     0,
                     in.available(),
-                    "После чтения NBT-строки в буфере не осталось байт: иначе запись и чтение расходятся");
+                    "После чтения NBT-строки в буфере не осталось байт: иначе запись и чтение расходятся"
+                            + " При смене split_NullSnapshot_ThrowsWithReason проверь это утверждение.");
             return value;
         }
     }

@@ -34,11 +34,13 @@ class ScriptExecutorTests {
 
         assertTrue(
                 executor.observesWhileTacticsOwns(),
-                "флаг обязан читаться из фабрики: иначе движок не узнает, что скрипт наблюдает, пока тактика владеет");
+                "флаг обязан читаться из фабрики: иначе движок не узнает, что скрипт наблюдает, пока тактика владеет"
+                        + " При смене observesWhileTacticsOwns_FlagFromFactory_InstanceNotCreated проверь это утверждение.");
         assertEquals(
                 0,
                 creations.get(),
                 "чтение флага не имеет права конструировать скрипт: фабрика вызвана " + creations.get() + " раз"
-                        + " (ревью 30, п. 5)");
+                        + " (ревью 30, п. 5)"
+                        + " Иначе тест observesWhileTacticsOwns_FlagFromFactory_InstanceNotCreated перестанет ловить эту поломку. При смене observesWhileTacticsOwns_FlagFromFactory_InstanceNotCreated проверь это утверждение.");
     }
 }

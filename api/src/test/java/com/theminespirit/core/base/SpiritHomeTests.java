@@ -23,21 +23,27 @@ class SpiritHomeTests {
     void none_NoPoint_IsNotSet() {
         assertFalse(
                 SpiritHome.none().isSet(),
-                "Дом без точки обязан считаться незаданным: иначе дух пойдёт " + "в точку, которой нет");
+                "Дом без точки обязан считаться незаданным: иначе дух пойдёт " + "в точку, которой нет"
+                        + " При смене none_NoPoint_IsNotSet проверь это утверждение.");
         assertEquals(
                 Optional.empty(),
                 SpiritHome.none().point(),
-                "Дом без точки обязан отдавать пустой Optional: null вместо него сломал бы return_home");
+                "Дом без точки обязан отдавать пустой Optional: null вместо него сломал бы return_home"
+                        + " Иначе тест none_NoPoint_IsNotSet перестанет ловить эту поломку. При смене none_NoPoint_IsNotSet проверь это утверждение.");
     }
 
     @Test
     void at_Point_IsSetAndKeepsCoordinates() {
         SpiritHome home = SpiritHome.at(NEAR);
-        assertTrue(home.isSet(), "Дом с точкой обязан считаться заданным: иначе return_home откажется идти");
+        assertTrue(
+                home.isSet(),
+                "Дом с точкой обязан считаться заданным: иначе return_home откажется идти"
+                        + " При смене at_Point_IsSetAndKeepsCoordinates проверь это утверждение.");
         assertEquals(
                 NEAR,
                 home.point().orElseThrow(),
-                "Дом обязан сохранить координаты без подмены: иначе дух уйдёт не туда, куда его поставили");
+                "Дом обязан сохранить координаты без подмены: иначе дух уйдёт не туда, куда его поставили"
+                        + " При смене at_Point_IsSetAndKeepsCoordinates проверь это утверждение.");
     }
 
     @Test
@@ -45,7 +51,8 @@ class SpiritHomeTests {
         assertThrows(
                 NullPointerException.class,
                 () -> SpiritHome.at(null),
-                "Дом без координаты не ставится: null вместо точки увёл бы духа в никуда");
+                "Дом без координаты не ставится: null вместо точки увёл бы духа в никуда"
+                        + " Иначе тест at_NullPoint_Throws перестанет ловить эту поломку. При смене at_NullPoint_Throws проверь это утверждение.");
     }
 
     @Test
@@ -57,7 +64,8 @@ class SpiritHomeTests {
         assertEquals(
                 FAR,
                 resolved.point().orElseThrow(),
-                "Сохранённый дом — источник правды: легаси-память BASE не имеет права его перебить");
+                "Сохранённый дом — источник правды: легаси-память BASE не имеет права его перебить"
+                        + " Иначе тест resolve_SavedHomeAndLegacyBase_KeepsSavedWithoutMigration перестанет ловить эту поломку. При смене resolve_SavedHomeAndLegacyBase_KeepsSavedWithoutMigration проверь это утверждение.");
     }
 
     @Test
@@ -68,7 +76,8 @@ class SpiritHomeTests {
 
         assertFalse(
                 resolved.isSet(),
-                "Снятый дом не воскресает из легаси-памяти: иначе /spirit home clear отменялся бы при перезагрузке");
+                "Снятый дом не воскресает из легаси-памяти: иначе /spirit home clear отменялся бы при перезагрузке"
+                        + " При смене resolve_ExplicitlyClearedHomeAndLegacyBase_StaysCleared проверь это утверждение.");
     }
 
     @Test
@@ -82,7 +91,8 @@ class SpiritHomeTests {
                 NEAR,
                 resolved.point().orElseThrow(),
                 "Старое сохранение без SpiritHome читается: домом становится ближайшая база, как выбирал прежний "
-                        + "WorldFactCollector");
+                        + "WorldFactCollector"
+                        + " Иначе тест resolve_NoSavedHomeAndLegacyBase_MigratesNearestBase перестанет ловить эту поломку. При смене resolve_NoSavedHomeAndLegacyBase_MigratesNearestBase проверь это утверждение.");
     }
 
     @Test
@@ -93,7 +103,8 @@ class SpiritHomeTests {
 
         assertFalse(
                 resolved.isSet(),
-                "База чужого измерения домом не становится: иначе дух в Верхнем мире шёл бы к точке Нижнего");
+                "База чужого измерения домом не становится: иначе дух в Верхнем мире шёл бы к точке Нижнего"
+                        + " При смене resolve_LegacyBaseInOtherDimension_NotMigrated проверь это утверждение.");
     }
 
     @Test
@@ -104,7 +115,8 @@ class SpiritHomeTests {
 
         assertFalse(
                 resolved.isSet(),
-                "Домом становится только легаси-база (BASE): ресурс с именем home домом не считается");
+                "Домом становится только легаси-база (BASE): ресурс с именем home домом не считается"
+                        + " Иначе тест resolve_LegacyResourceNamedHome_NotMigrated перестанет ловить эту поломку. При смене resolve_LegacyResourceNamedHome_NotMigrated проверь это утверждение.");
     }
 
     @Test
@@ -113,7 +125,8 @@ class SpiritHomeTests {
 
         assertFalse(
                 resolved.isSet(),
-                "Без сохранённого дома и без BASE-памяти дома нет: иначе return_home " + "нашёл бы точку из воздуха");
+                "Без сохранённого дома и без BASE-памяти дома нет: иначе return_home " + "нашёл бы точку из воздуха"
+                        + " При смене resolve_NoLegacyBase_GivesNoHome проверь это утверждение.");
     }
 
     private static MemoryPoint memory(String name, BlockCoord pos, MemoryType type, String dimension) {

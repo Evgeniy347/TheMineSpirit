@@ -32,7 +32,8 @@ class MineOresTests {
                 MineOres.Kind.LUCK,
                 MineOres.kindOf(block),
                 "алмаз, лазурит и изумруд — руды на удачу: без Удачи их выход теряется навсегда; смена списка — "
-                        + "решение владельца 22.10");
+                        + "решение владельца 22.10"
+                        + " Иначе тест kindOf_LuckOre_IsLuck перестанет ловить эту поломку. При смене kindOf_LuckOre_IsLuck проверь это утверждение.");
     }
 
     @ParameterizedTest(name = "{0}")
@@ -49,12 +50,17 @@ class MineOresTests {
                 MineOres.Kind.ORDINARY,
                 MineOres.kindOf(block),
                 "уголь, железо, медь, золото и красный камень добываются сразу подходящей киркой — "
-                        + "иначе стройка шахты ждёт Удачи ради дешёвой руды");
+                        + "иначе стройка шахты ждёт Удачи ради дешёвой руды"
+                        + " При смене kindOf_CommonOre_IsOrdinary проверь это утверждение.");
     }
 
     @Test
     void kindOf_Stone_IsNone() {
-        assertEquals(MineOres.Kind.NONE, MineOres.kindOf("minecraft:stone"), "камень — порода, а не руда");
+        assertEquals(
+                MineOres.Kind.NONE,
+                MineOres.kindOf("minecraft:stone"),
+                "камень — порода, а не руда"
+                        + " Иначе тест kindOf_Stone_IsNone перестанет ловить эту поломку. При смене kindOf_Stone_IsNone проверь это утверждение.");
     }
 
     @Test
@@ -65,7 +71,8 @@ class MineOresTests {
                 MineOres.Leave.class,
                 decision,
                 "алмаз без кирки с Удачей и без Шёлкового касания обязан остаться в стене: простая кирка даёт один "
-                        + "алмаз вместо до четырёх, решение владельца 22.10; фактически " + decision);
+                        + "алмаз вместо до четырёх, решение владельца 22.10; фактически " + decision
+                        + " Иначе тест decide_LuckOreWithPlainPickOnly_LeavesBlock перестанет ловить эту поломку. При смене decide_LuckOreWithPlainPickOnly_LeavesBlock проверь это утверждение.");
     }
 
     @Test
@@ -76,7 +83,8 @@ class MineOresTests {
         assertEquals(
                 OptionalInt.of(FORTUNE_THREE.slot()),
                 ((MineOres.Mine) decision).slot(),
-                "лазурит добывается киркой с наибольшей Удачей — она даёт больше всего; фактически " + decision);
+                "лазурит добывается киркой с наибольшей Удачей — она даёт больше всего; фактически " + decision
+                        + " Иначе тест decide_LuckOreWithFortunePicks_MinesWithHighestFortune перестанет ловить эту поломку. При смене decide_LuckOreWithFortunePicks_MinesWithHighestFortune проверь это утверждение.");
     }
 
     @Test
@@ -87,7 +95,8 @@ class MineOresTests {
                 OptionalInt.of(SILK.slot()),
                 ((MineOres.Mine) decision).slot(),
                 "без Удачи алмаз берётся Шёлковым касанием целиком — блок на склад до кирки с Удачей; фактически "
-                        + decision);
+                        + decision
+                        + " Иначе тест decide_LuckOreWithSilkTouchOnly_MinesWithSilkTouch перестанет ловить эту поломку. При смене decide_LuckOreWithSilkTouchOnly_MinesWithSilkTouch проверь это утверждение.");
     }
 
     @Test
@@ -97,7 +106,8 @@ class MineOresTests {
         assertInstanceOf(
                 MineOres.Leave.class,
                 MineOres.decide("minecraft:diamond_ore", List.of(woodenSilk)),
-                "Шёлковое касание на деревянной кирке не снимает алмазную руду — ломка дала бы пустоту, руда остаётся");
+                "Шёлковое касание на деревянной кирке не снимает алмазную руду — ломка дала бы пустоту, руда остаётся"
+                        + " Иначе тест decide_LuckOreWithSilkTouchOfWrongTier_LeavesBlock перестанет ловить эту поломку. При смене decide_LuckOreWithSilkTouchOfWrongTier_LeavesBlock проверь это утверждение.");
     }
 
     @Test
@@ -107,7 +117,8 @@ class MineOresTests {
         assertEquals(
                 OptionalInt.empty(),
                 ((MineOres.Mine) decision).slot(),
-                "обычная руда добывается подходящей киркой, выбор инструмента — за ломкой; фактически " + decision);
+                "обычная руда добывается подходящей киркой, выбор инструмента — за ломкой; фактически " + decision
+                        + " Иначе тест decide_OrdinaryOreWithCorrectPick_MinesWithAnyTool перестанет ловить эту поломку. При смене decide_OrdinaryOreWithCorrectPick_MinesWithAnyTool проверь это утверждение.");
     }
 
     @Test
@@ -115,7 +126,8 @@ class MineOresTests {
         assertInstanceOf(
                 MineOres.Leave.class,
                 MineOres.decide("minecraft:iron_ore", List.of(WOODEN)),
-                "железо деревянной киркой не добывается — ломка уничтожила бы руду, её оставляют до каменной кирки");
+                "железо деревянной киркой не добывается — ломка уничтожила бы руду, её оставляют до каменной кирки"
+                        + " Иначе тест decide_OrdinaryOreWithoutCorrectPick_LeavesBlock перестанет ловить эту поломку. При смене decide_OrdinaryOreWithoutCorrectPick_LeavesBlock проверь это утверждение.");
     }
 
     @Test
@@ -123,7 +135,8 @@ class MineOresTests {
         assertInstanceOf(
                 MineOres.Mine.class,
                 MineOres.decide("minecraft:stone", List.of()),
-                "порода в проходе ломается всегда — решает только наличие инструмента у ломки");
+                "порода в проходе ломается всегда — решает только наличие инструмента у ломки"
+                        + " При смене decide_Stone_MinesWithAnyTool проверь это утверждение.");
     }
 
     @Test
@@ -134,7 +147,8 @@ class MineOresTests {
                 MineOres.Mine.class,
                 decision,
                 "спуск идёт насквозь через любую руду, кроме алмаза: обходы и остановки на меди оставлены "
-                        + "решением владельца 19.11; фактически " + decision);
+                        + "решением владельца 19.11; фактически " + decision
+                        + " Иначе тест decideDescent_OrdinaryOreWithoutCorrectPick_MinesThrough перестанет ловить эту поломку. При смене decideDescent_OrdinaryOreWithoutCorrectPick_MinesThrough проверь это утверждение.");
     }
 
     @Test
@@ -145,7 +159,8 @@ class MineOresTests {
                 MineOres.Mine.class,
                 decision,
                 "изумруд и лазурит в спуске прокапываются насквозь без Удачи: оставляют только алмаз; фактически "
-                        + decision);
+                        + decision
+                        + " Иначе тест decideDescent_LuckOreWithoutFortuneOtherThanDiamond_MinesThrough перестанет ловить эту поломку. При смене decideDescent_LuckOreWithoutFortuneOtherThanDiamond_MinesThrough проверь это утверждение.");
     }
 
     @Test
@@ -154,7 +169,8 @@ class MineOresTests {
                 MineOres.Leave.class,
                 MineOres.decideDescent("minecraft:deepslate_diamond_ore", List.of(PLAIN_IRON)),
                 "алмаз без Удачи и Шёлка остаётся в стене и в спуске: терять его выход запрещено; фактически "
-                        + MineOres.decideDescent("minecraft:deepslate_diamond_ore", List.of(PLAIN_IRON)));
+                        + MineOres.decideDescent("minecraft:deepslate_diamond_ore", List.of(PLAIN_IRON))
+                        + " Иначе тест decideDescent_DiamondWithoutFortune_LeavesBlock перестанет ловить эту поломку. При смене decideDescent_DiamondWithoutFortune_LeavesBlock проверь это утверждение.");
     }
 
     @Test
@@ -164,6 +180,7 @@ class MineOresTests {
         assertEquals(
                 OptionalInt.of(FORTUNE_TWO.slot()),
                 ((MineOres.Mine) decision).slot(),
-                "алмаз с Удачей в спуске берётся киркой с наибольшей Удачей; фактически " + decision);
+                "алмаз с Удачей в спуске берётся киркой с наибольшей Удачей; фактически " + decision
+                        + " Иначе тест decideDescent_DiamondWithFortune_MinesWithFortunePick перестанет ловить эту поломку. При смене decideDescent_DiamondWithFortune_MinesWithFortunePick проверь это утверждение.");
     }
 }

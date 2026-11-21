@@ -43,7 +43,8 @@ class CampProperties {
                 expected,
                 camp.contains(point),
                 "contains обязан совпадать с проверкой границы по координатам: иначе спокойная зона "
-                        + "расходится с заявленным радиусом и оборона кроет не ту точку");
+                        + "расходится с заявленным радиусом и оборона кроет не ту точку"
+                        + " При смене contains_AnyPoint_MatchesBoundaryComparison проверь это утверждение.");
     }
 
     @Property
@@ -51,6 +52,7 @@ class CampProperties {
         assertEquals(
                 camp.contains(point),
                 camp.contains(point),
-                "Тот же вход даёт тот же ответ: иначе граница лагеря мигает между тиками");
+                "Тот же вход даёт тот же ответ: иначе граница лагеря мигает между тиками"
+                        + " При смене contains_SameInput_TwiceSameResult проверь это утверждение.");
     }
 }

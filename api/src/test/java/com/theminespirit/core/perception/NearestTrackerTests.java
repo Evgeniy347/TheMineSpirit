@@ -39,6 +39,7 @@ class NearestTrackerTests {
                 expected,
                 tracker.best(),
                 scene + ": ближайший блок обязан выбираться по расстоянию, а при равенстве — по координате, иначе "
-                        + "locate_* отдаёт разные ответы при разном порядке срезов");
+                        + "locate_* отдаёт разные ответы при разном порядке срезов"
+                        + " При смене best_OfferedCandidates_IsNearestWithStableTieBreak проверь это утверждение.");
     }
 }

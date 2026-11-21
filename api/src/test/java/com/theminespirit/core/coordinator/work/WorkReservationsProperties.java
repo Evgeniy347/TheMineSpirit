@@ -65,7 +65,8 @@ class WorkReservationsProperties {
                         expected,
                         reservations.reserve(reserve.target(), reserve.spirit(), NOW, LEASE),
                         "Исхода брони обязан совпасть с моделью владения: иначе два духа оказались бы на одной цели "
-                                + "или бронь потеряла владельца");
+                                + "или бронь потеряла владельца"
+                                + " При смене reserveReleaseReleaseAll_AnyOpSequence_AgreesWithModel проверь это утверждение.");
                 if (expected == WorkReservations.Outcome.GRANTED) {
                     model.put(reserve.target(), reserve.spirit());
                 }
@@ -75,7 +76,8 @@ class WorkReservationsProperties {
                         expected,
                         reservations.release(release.target(), release.spirit()),
                         "Снятие брони обязано совпасть с моделью: иначе цель освободилась бы без владельца "
-                                + "или осталась занята после снятия");
+                                + "или осталась занята после снятия"
+                                + " При смене reserveReleaseReleaseAll_AnyOpSequence_AgreesWithModel проверь это утверждение.");
                 if (expected) {
                     model.remove(release.target());
                 }
@@ -88,7 +90,8 @@ class WorkReservationsProperties {
                         (int) expected,
                         reservations.releaseAll(releaseAll.spirit()),
                         "Число снятых броней обязано совпасть с моделью: иначе у духа осталась бы бронь или снялась "
-                                + "чужая");
+                                + "чужая"
+                                + " При смене reserveReleaseReleaseAll_AnyOpSequence_AgreesWithModel проверь это утверждение.");
                 model.values().removeIf(releaseAll.spirit()::equals);
             }
         }
@@ -97,7 +100,8 @@ class WorkReservationsProperties {
                     Optional.ofNullable(model.get(target)),
                     reservations.owner(target),
                     "Владелец цели обязан совпасть с моделью после всей последовательности: иначе два духа владеют "
-                            + "одной целью или бронь потерялась");
+                            + "одной целью или бронь потерялась"
+                            + " При смене reserveReleaseReleaseAll_AnyOpSequence_AgreesWithModel проверь это утверждение.");
         }
     }
 
@@ -114,7 +118,8 @@ class WorkReservationsProperties {
                     Optional.ofNullable(model.get(target)).filter(owner -> !owner.equals(chosen)),
                     reservations.owner(target),
                     "После снятия все брони духа сняты, а чужие владения целы: иначе выгрузка одного духа "
-                            + "освобождала бы цели других или оставляла свои");
+                            + "освобождала бы цели других или оставляла свои"
+                            + " При смене releaseAll_AfterAnyReservations_SpiritOwnsNothingAndOthersKeep проверь это утверждение.");
         }
     }
 
@@ -130,10 +135,23 @@ class WorkReservationsProperties {
         assertEquals(
                 0,
                 reservations.expire(now + lease - 1),
-                "Бронь не снимается раньше дедлайна: иначе цель перераспределялась бы под руками");
-        assertEquals(Optional.of(spirit), reservations.owner(target), "До дедлайна цель остаётся под бронью");
-        assertEquals(1, reservations.expire(now + lease), "На дедлайне бронь снимается");
-        assertEquals(Optional.empty(), reservations.owner(target), "После дедлайна цель свободна");
+                "Бронь не снимается раньше дедлайна: иначе цель перераспределялась бы под руками"
+                        + " При смене expire_AnyDeadline_KeepsThenRemoves проверь это утверждение.");
+        assertEquals(
+                Optional.of(spirit),
+                reservations.owner(target),
+                "До дедлайна цель остаётся под бронью"
+                        + " Иначе тест expire_AnyDeadline_KeepsThenRemoves перестанет ловить эту поломку. При смене expire_AnyDeadline_KeepsThenRemoves проверь это утверждение.");
+        assertEquals(
+                1,
+                reservations.expire(now + lease),
+                "На дедлайне бронь снимается"
+                        + " Иначе тест expire_AnyDeadline_KeepsThenRemoves перестанет ловить эту поломку. При смене expire_AnyDeadline_KeepsThenRemoves проверь это утверждение.");
+        assertEquals(
+                Optional.empty(),
+                reservations.owner(target),
+                "После дедлайна цель свободна"
+                        + " Иначе тест expire_AnyDeadline_KeepsThenRemoves перестанет ловить эту поломку. При смене expire_AnyDeadline_KeepsThenRemoves проверь это утверждение.");
     }
 
     @Provide

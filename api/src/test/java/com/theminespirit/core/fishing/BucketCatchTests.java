@@ -13,7 +13,8 @@ class BucketCatchTests {
         assertEquals(
                 8,
                 BucketCatch.limit(20, DATA),
-                "Просьба поймать больше предела режется числом из fishing.json: за заход берут не больше M");
+                "Просьба поймать больше предела режется числом из fishing.json: за заход берут не больше M"
+                        + " Иначе тест limit_RequestedAboveData_ClampsToData перестанет ловить эту поломку. При смене limit_RequestedAboveData_ClampsToData проверь это утверждение.");
     }
 
     @Test
@@ -21,7 +22,8 @@ class BucketCatchTests {
         assertEquals(
                 3,
                 BucketCatch.limit(3, DATA),
-                "Просьба ниже предела остаётся как есть: предел — верхняя граница, а не цель");
+                "Просьба ниже предела остаётся как есть: предел — верхняя граница, а не цель"
+                        + " Иначе тест limit_RequestedBelowData_KeepsRequested перестанет ловить эту поломку. При смене limit_RequestedBelowData_KeepsRequested проверь это утверждение.");
     }
 
     @Test
@@ -29,10 +31,12 @@ class BucketCatchTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> BucketCatch.limit(0, DATA),
-                "Заход с нулём рыб обязан отклоняться: ловить нечего, задача не ставится");
+                "Заход с нулём рыб обязан отклоняться: ловить нечего, задача не ставится"
+                        + " Иначе тест limit_NonPositiveRequested_IsRejected перестанет ловить эту поломку. При смене limit_NonPositiveRequested_IsRejected проверь это утверждение.");
         assertThrows(
                 IllegalArgumentException.class,
                 () -> BucketCatch.limit(1, null),
-                "Предел без данных рыбалки не считается: число живёт в fishing.json");
+                "Предел без данных рыбалки не считается: число живёт в fishing.json"
+                        + " Иначе тест limit_NonPositiveRequested_IsRejected перестанет ловить эту поломку. При смене limit_NonPositiveRequested_IsRejected проверь это утверждение.");
     }
 }

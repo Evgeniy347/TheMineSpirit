@@ -17,28 +17,47 @@ class PerfTests {
                 () -> Perf.time("spirit.broken", () -> {
                     throw new IllegalStateException("участок упал");
                 }),
-                "исключение участка проходит наружу: Perf.time не глотает ошибки вызывающего кода");
+                "исключение участка проходит наружу: Perf.time не глотает ошибки вызывающего кода"
+                        + " Иначе тест report_WindowOfSpans_SummedSortedAndDrained перестанет ловить эту поломку. При смене report_WindowOfSpans_SummedSortedAndDrained проверь это утверждение.");
         Perf.record("board.build.world", 5_000_000);
         Perf.record("board.build.world", 1_000_000);
 
         List<Perf.Line> first = Perf.report();
 
-        assertEquals("board.build.world", first.get(0).name(), "самый долгий по сумме участок — первый в сводке");
+        assertEquals(
+                "board.build.world",
+                first.get(0).name(),
+                "самый долгий по сумме участок — первый в сводке"
+                        + " Иначе тест report_WindowOfSpans_SummedSortedAndDrained перестанет ловить эту поломку. При смене report_WindowOfSpans_SummedSortedAndDrained проверь это утверждение.");
         assertEquals(
                 List.of("spirit.broken", "spirit.hunger", "spirit.tactics"),
                 first.stream().skip(1).map(Perf.Line::name).sorted().toList(),
                 "Сводка обязана учитывать каждый вызов time/record, включая участок, упавший исключением: без "
                         + "него потерянный тик остаётся невидимым в разборе «почему сервер лагает». Пропавший "
                         + "участок ломает диагностику по [perf]-строке в логе (порядок пустых участков по "
-                        + "наносекундам не проверяем — он неустойчив)");
+                        + "наносекундам не проверяем — он неустойчив)"
+                        + " При смене report_WindowOfSpans_SummedSortedAndDrained проверь это утверждение.");
         Perf.Line world = first.get(0);
-        assertEquals(2, world.count(), "оба вызова record посчитаны: без счётчика вызовов среднее время врёт");
-        assertEquals(6, world.totalNanos() / 1_000_000, "сумма окна — база для «топ по сумме»");
-        assertEquals(5, world.maxNanos() / 1_000_000, "худший вызов хранится отдельно: пики видны и в частых участках");
+        assertEquals(
+                2,
+                world.count(),
+                "оба вызова record посчитаны: без счётчика вызовов среднее время врёт"
+                        + " Иначе тест report_WindowOfSpans_SummedSortedAndDrained перестанет ловить эту поломку. При смене report_WindowOfSpans_SummedSortedAndDrained проверь это утверждение.");
+        assertEquals(
+                6,
+                world.totalNanos() / 1_000_000,
+                "сумма окна — база для «топ по сумме»"
+                        + " Иначе тест report_WindowOfSpans_SummedSortedAndDrained перестанет ловить эту поломку. При смене report_WindowOfSpans_SummedSortedAndDrained проверь это утверждение.");
+        assertEquals(
+                5,
+                world.maxNanos() / 1_000_000,
+                "худший вызов хранится отдельно: пики видны и в частых участках"
+                        + " Иначе тест report_WindowOfSpans_SummedSortedAndDrained перестанет ловить эту поломку. При смене report_WindowOfSpans_SummedSortedAndDrained проверь это утверждение.");
 
         assertTrue(
                 Perf.report().isEmpty(),
                 "report забирает окно целиком: следующая сводка без новых замеров пуста. Остаток прошлых "
-                        + "чисел смешивал бы окна и путал разбор «что изменилось после правки»");
+                        + "чисел смешивал бы окна и путал разбор «что изменилось после правки»"
+                        + " Иначе тест report_WindowOfSpans_SummedSortedAndDrained перестанет ловить эту поломку. При смене report_WindowOfSpans_SummedSortedAndDrained проверь это утверждение.");
     }
 }

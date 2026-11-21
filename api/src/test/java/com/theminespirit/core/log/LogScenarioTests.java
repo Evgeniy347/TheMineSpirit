@@ -46,15 +46,18 @@ class LogScenarioTests {
         for (LogType type : LogType.values()) {
             assertTrue(
                     counts.getOrDefault(type, 0) > 0,
-                    "Крупный сценарий обязан покрыть таблицу " + type.table() + ": иначе поиск по ней пуст");
+                    "Крупный сценарий обязан покрыть таблицу " + type.table() + ": иначе поиск по ней пуст"
+                            + " При смене scenario_ThreeSpiritsWholeDay_EveryTableGetsTypedRows проверь это утверждение.");
         }
         assertEquals(
                 3,
                 counts.get(LogType.SPIRIT_SAMPLE),
-                "Каждый из трёх духов обязан оставить выборку состояния: по ней отвечает команда where");
+                "Каждый из трёх духов обязан оставить выборку состояния: по ней отвечает команда where"
+                        + " Иначе тест scenario_ThreeSpiritsWholeDay_EveryTableGetsTypedRows перестанет ловить эту поломку. При смене scenario_ThreeSpiritsWholeDay_EveryTableGetsTypedRows проверь это утверждение.");
         assertTrue(
                 rows.stream().anyMatch(row -> "refuse".equals(row.get("action"))),
-                "Отказ в изменении блока обязан попасть в block_changes: без него вопрос «почему не сломал» не решается");
+                "Отказ в изменении блока обязан попасть в block_changes: без него вопрос «почему не сломал» не решается"
+                        + " Иначе тест scenario_ThreeSpiritsWholeDay_EveryTableGetsTypedRows перестанет ловить эту поломку. При смене scenario_ThreeSpiritsWholeDay_EveryTableGetsTypedRows проверь это утверждение.");
     }
 
     private static void appendBlock(EventLog log, String spirit, int index) {

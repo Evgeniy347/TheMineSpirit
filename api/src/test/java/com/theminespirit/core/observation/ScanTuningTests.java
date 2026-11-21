@@ -17,7 +17,8 @@ class ScanTuningTests {
                 "Порция скана из " + ScanTuning.SLICES_PER_TICK + " срезов читает до " + worstCaseReads
                         + " блоков за тик при бюджете " + READS_PER_TICK_BUDGET
                         + ": больший размер порции кладёт серверный тик на радиусе 32; "
-                        + "меняя число осознанно, пересмотри бюджет в чеклисте 10");
+                        + "меняя число осознанно, пересмотри бюджет в чеклисте 10"
+                        + " Иначе тест slicesPerTick_FullSections_StayWithinReadBudgetPerTick перестанет ловить эту поломку. При смене slicesPerTick_FullSections_StayWithinReadBudgetPerTick проверь это утверждение.");
     }
 
     @Test
@@ -28,6 +29,7 @@ class ScanTuningTests {
         assertTrue(
                 ticks <= 40,
                 "Скан радиуса 32 (до 125 срезов) обязан укладываться в ~32 тика, а получилось " + ticks
-                        + ": слишком малая порция делает ответ scan неприемлемо медленным для планировщика");
+                        + ": слишком малая порция делает ответ scan неприемлемо медленным для планировщика"
+                        + " Иначе тест slicesPerTick_Radius32Scan_FinishesWithinAFewDozenTicks перестанет ловить эту поломку. При смене slicesPerTick_Radius32Scan_FinishesWithinAFewDozenTicks проверь это утверждение.");
     }
 }

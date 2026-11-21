@@ -16,8 +16,16 @@ class PerceptionQueryProperties {
             @ForAll PerceptionType type, @ForAll @IntRange(min = ScanRadius.MIN, max = ScanRadius.MAX) int radius) {
         PerceptionQuery query = new PerceptionQuery(type, IdFilter.matchAll(), new ScanRadius(radius));
 
-        assertEquals(radius, query.radius().value(), "радиус запроса обязан остаться тем, что задан");
-        assertEquals(type, query.type(), "тип запроса обязан остаться тем, что задан");
+        assertEquals(
+                radius,
+                query.radius().value(),
+                "радиус запроса обязан остаться тем, что задан"
+                        + " Иначе тест radius_AnyValueInRange_QueryKeepsItUnchanged перестанет ловить эту поломку. При смене radius_AnyValueInRange_QueryKeepsItUnchanged проверь это утверждение.");
+        assertEquals(
+                type,
+                query.type(),
+                "тип запроса обязан остаться тем, что задан"
+                        + " Иначе тест radius_AnyValueInRange_QueryKeepsItUnchanged перестанет ловить эту поломку. При смене radius_AnyValueInRange_QueryKeepsItUnchanged проверь это утверждение.");
     }
 
     @Property
@@ -28,6 +36,7 @@ class PerceptionQueryProperties {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new PerceptionQuery(type, IdFilter.matchAll(), new ScanRadius(radius)),
-                "запрос с радиусом " + radius + " вне границ ScanRadius обязан отклоняться при построении");
+                "запрос с радиусом " + radius + " вне границ ScanRadius обязан отклоняться при построении"
+                        + " Иначе тест radius_OutsideRange_QueryCannotBeBuilt перестанет ловить эту поломку. При смене radius_OutsideRange_QueryCannotBeBuilt проверь это утверждение.");
     }
 }

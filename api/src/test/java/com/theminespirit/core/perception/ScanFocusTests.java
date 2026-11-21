@@ -41,32 +41,44 @@ class ScanFocusTests {
         assertEquals(
                 blocks,
                 focus.collectsBlocks(),
-                focus + " собирает блоки: " + blocks + ", иначе scan_blocks отдаёт лишнее или scan теряет блоки");
+                focus + " собирает блоки: " + blocks + ", иначе scan_blocks отдаёт лишнее или scan теряет блоки"
+                        + " При смене focus_Each_CollectsOnlyItsParts проверь это утверждение.");
         assertEquals(
                 entities,
                 focus.collectsEntities(),
                 focus + " собирает сущности: " + entities
-                        + ", иначе scan_entities не отличается от полного скана по стоимости");
-        assertEquals(containers, focus.collectsContainers(), focus + " собирает контейнеры: " + containers);
+                        + ", иначе scan_entities не отличается от полного скана по стоимости"
+                        + " При смене focus_Each_CollectsOnlyItsParts проверь это утверждение.");
+        assertEquals(
+                containers,
+                focus.collectsContainers(),
+                focus + " собирает контейнеры: " + containers
+                        + " Иначе тест focus_Each_CollectsOnlyItsParts перестанет ловить эту поломку. При смене focus_Each_CollectsOnlyItsParts проверь это утверждение.");
         assertEquals(
                 filtersEntities,
                 focus.filtersEntities(),
                 focus + ": фильтр применяется к сущностям: " + filtersEntities
-                        + ", иначе фильтр scan_entities отбирает блоки, которых нет в выдаче");
+                        + ", иначе фильтр scan_entities отбирает блоки, которых нет в выдаче"
+                        + " При смене focus_Each_CollectsOnlyItsParts проверь это утверждение.");
         assertEquals(
                 needsSlices,
                 focus.needsSlices(),
-                focus + " читает срезы блоков: " + needsSlices + ", иначе scan_entities тратит тики на пустой обход");
+                focus + " читает срезы блоков: " + needsSlices + ", иначе scan_entities тратит тики на пустой обход"
+                        + " При смене focus_Each_CollectsOnlyItsParts проверь это утверждение.");
     }
 
     @Test
     void of_BlocksAndEntitiesQueries_MapToSameNamedFocus() {
         assertEquals(
-                ScanFocus.BLOCKS, ScanFocus.of(PerceptionType.BLOCKS), "запрос блоков обязан собирать только блоки");
+                ScanFocus.BLOCKS,
+                ScanFocus.of(PerceptionType.BLOCKS),
+                "запрос блоков обязан собирать только блоки"
+                        + " Иначе тест of_BlocksAndEntitiesQueries_MapToSameNamedFocus перестанет ловить эту поломку. При смене of_BlocksAndEntitiesQueries_MapToSameNamedFocus проверь это утверждение.");
         assertEquals(
                 ScanFocus.ENTITIES,
                 ScanFocus.of(PerceptionType.ENTITIES),
-                "запрос сущностей обязан собирать только сущности");
+                "запрос сущностей обязан собирать только сущности"
+                        + " Иначе тест of_BlocksAndEntitiesQueries_MapToSameNamedFocus перестанет ловить эту поломку. При смене of_BlocksAndEntitiesQueries_MapToSameNamedFocus проверь это утверждение.");
     }
 
     @Test
@@ -74,11 +86,13 @@ class ScanFocusTests {
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,
                 () -> ScanFocus.of(PerceptionType.HAZARDS),
-                "опасности ищет sense_hazard, а не скан срезов: фокус для них обязан отклоняться");
+                "опасности ищет sense_hazard, а не скан срезов: фокус для них обязан отклоняться"
+                        + " Иначе тест of_HazardsQuery_IsRejectedBecauseHazardsAreNotSliceScanned перестанет ловить эту поломку. При смене of_HazardsQuery_IsRejectedBecauseHazardsAreNotSliceScanned проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("sense_hazard"),
-                "сообщение обязано назвать скрипт опасностей, сейчас: " + error.getMessage());
+                "сообщение обязано назвать скрипт опасностей, сейчас: " + error.getMessage()
+                        + " Иначе тест of_HazardsQuery_IsRejectedBecauseHazardsAreNotSliceScanned перестанет ловить эту поломку. При смене of_HazardsQuery_IsRejectedBecauseHazardsAreNotSliceScanned проверь это утверждение.");
     }
 
     @Test
@@ -89,7 +103,8 @@ class ScanFocusTests {
         assertEquals(
                 PerceptionResult.blocks(ScanRadius.of(8), List.of(new ItemCount("minecraft:iron_ore", 3))),
                 result,
-                "результат scan_blocks обязан содержать блоки наблюдения и ничего больше");
+                "результат scan_blocks обязан содержать блоки наблюдения и ничего больше"
+                        + " Иначе тест resultOf_BlocksFocus_KeepsOnlyBlocksOfObservation перестанет ловить эту поломку. При смене resultOf_BlocksFocus_KeepsOnlyBlocksOfObservation проверь это утверждение.");
     }
 
     @Test
@@ -100,7 +115,8 @@ class ScanFocusTests {
         assertEquals(
                 PerceptionResult.entities(ScanRadius.of(8), List.of(new EntityRef("minecraft:cow", ORIGIN, 2.0))),
                 result,
-                "результат scan_entities обязан содержать сущности наблюдения и ничего больше");
+                "результат scan_entities обязан содержать сущности наблюдения и ничего больше"
+                        + " Иначе тест resultOf_EntitiesFocus_KeepsOnlyEntitiesOfObservation перестанет ловить эту поломку. При смене resultOf_EntitiesFocus_KeepsOnlyEntitiesOfObservation проверь это утверждение.");
     }
 
     @Test
@@ -108,11 +124,13 @@ class ScanFocusTests {
         assertEquals(
                 Optional.empty(),
                 ScanFocus.ALL.resultOf(observation(), ScanRadius.of(8)),
-                "полный скан кладёт наблюдение, а не результат восприятия");
+                "полный скан кладёт наблюдение, а не результат восприятия"
+                        + " Иначе тест resultOf_AllAndContainersFocus_AreEmptyBecauseTheyFillObservation перестанет ловить эту поломку. При смене resultOf_AllAndContainersFocus_AreEmptyBecauseTheyFillObservation проверь это утверждение.");
         assertEquals(
                 Optional.empty(),
                 ScanFocus.CONTAINERS.resultOf(observation(), ScanRadius.of(8)),
-                "поиск контейнера читает наблюдение сам и результата восприятия не строит");
+                "поиск контейнера читает наблюдение сам и результата восприятия не строит"
+                        + " Иначе тест resultOf_AllAndContainersFocus_AreEmptyBecauseTheyFillObservation перестанет ловить эту поломку. При смене resultOf_AllAndContainersFocus_AreEmptyBecauseTheyFillObservation проверь это утверждение.");
     }
 
     private static WorldObservation observation() {

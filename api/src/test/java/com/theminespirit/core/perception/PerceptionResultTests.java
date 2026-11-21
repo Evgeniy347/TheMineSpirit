@@ -51,18 +51,36 @@ class PerceptionResultTests {
                     IllegalArgumentException.class,
                     () -> new PerceptionResult(type, blocks, entities, hazards, RADIUS),
                     "результат типа " + type + " с чужими списками обязан отклоняться: иначе непонятно, на какой "
-                            + "запрос отвечали");
+                            + "запрос отвечали"
+                            + " При смене constructor_TypeWithLists_AcceptedOnlyWhenListsBelongToType проверь это утверждение.");
             assertTrue(
                     error.getMessage().contains(type.name()),
-                    "отказ обязан называть тип результата " + type + ": " + error.getMessage());
+                    "отказ обязан называть тип результата " + type + ": " + error.getMessage()
+                            + " Иначе тест constructor_TypeWithLists_AcceptedOnlyWhenListsBelongToType перестанет ловить эту поломку. При смене constructor_TypeWithLists_AcceptedOnlyWhenListsBelongToType проверь это утверждение.");
             return;
         }
         PerceptionResult result = new PerceptionResult(type, blocks, entities, hazards, RADIUS);
 
-        assertEquals(blocks, result.blocks(), "блоки результата обязаны сохраняться как заданы");
-        assertEquals(entities, result.entities(), "сущности результата обязаны сохраняться как заданы");
-        assertEquals(hazards, result.hazards(), "опасности результата обязаны сохраняться как заданы");
-        assertEquals(RADIUS, result.radius(), "радиус результата обязан сохраняться как задан");
+        assertEquals(
+                blocks,
+                result.blocks(),
+                "блоки результата обязаны сохраняться как заданы"
+                        + " Иначе тест constructor_TypeWithLists_AcceptedOnlyWhenListsBelongToType перестанет ловить эту поломку. При смене constructor_TypeWithLists_AcceptedOnlyWhenListsBelongToType проверь это утверждение.");
+        assertEquals(
+                entities,
+                result.entities(),
+                "сущности результата обязаны сохраняться как заданы"
+                        + " Иначе тест constructor_TypeWithLists_AcceptedOnlyWhenListsBelongToType перестанет ловить эту поломку. При смене constructor_TypeWithLists_AcceptedOnlyWhenListsBelongToType проверь это утверждение.");
+        assertEquals(
+                hazards,
+                result.hazards(),
+                "опасности результата обязаны сохраняться как заданы"
+                        + " Иначе тест constructor_TypeWithLists_AcceptedOnlyWhenListsBelongToType перестанет ловить эту поломку. При смене constructor_TypeWithLists_AcceptedOnlyWhenListsBelongToType проверь это утверждение.");
+        assertEquals(
+                RADIUS,
+                result.radius(),
+                "радиус результата обязан сохраняться как задан"
+                        + " Иначе тест constructor_TypeWithLists_AcceptedOnlyWhenListsBelongToType перестанет ловить эту поломку. При смене constructor_TypeWithLists_AcceptedOnlyWhenListsBelongToType проверь это утверждение.");
     }
 
     @Test
@@ -70,15 +88,18 @@ class PerceptionResultTests {
         assertEquals(
                 new PerceptionResult(PerceptionType.BLOCKS, BLOCKS, List.of(), List.of(), RADIUS),
                 PerceptionResult.blocks(RADIUS, BLOCKS),
-                "фабрика blocks обязана класть данные в blocks");
+                "фабрика blocks обязана класть данные в blocks"
+                        + " Иначе тест factories_EachType_FillOnlyOwnList перестанет ловить эту поломку. При смене factories_EachType_FillOnlyOwnList проверь это утверждение.");
         assertEquals(
                 new PerceptionResult(PerceptionType.ENTITIES, List.of(), ENTITIES, List.of(), RADIUS),
                 PerceptionResult.entities(RADIUS, ENTITIES),
-                "фабрика entities обязана класть данные в entities");
+                "фабрика entities обязана класть данные в entities"
+                        + " Иначе тест factories_EachType_FillOnlyOwnList перестанет ловить эту поломку. При смене factories_EachType_FillOnlyOwnList проверь это утверждение.");
         assertEquals(
                 new PerceptionResult(PerceptionType.HAZARDS, List.of(), List.of(), HAZARDS, RADIUS),
                 PerceptionResult.hazards(RADIUS, HAZARDS),
-                "фабрика hazards обязана класть данные в hazards");
+                "фабрика hazards обязана класть данные в hazards"
+                        + " Иначе тест factories_EachType_FillOnlyOwnList перестанет ловить эту поломку. При смене factories_EachType_FillOnlyOwnList проверь это утверждение.");
     }
 
     @Test
@@ -88,8 +109,12 @@ class PerceptionResultTests {
         NullPointerException error = assertThrows(
                 NullPointerException.class,
                 () -> PerceptionResult.blocks(RADIUS, withNull),
-                "список блоков с null обязан отклоняться: потребитель результата обходит списки без проверок");
-        assertTrue(error.getMessage().contains("blocks"), "отказ обязан называть список: " + error.getMessage());
+                "список блоков с null обязан отклоняться: потребитель результата обходит списки без проверок"
+                        + " Иначе тест constructor_ListWithNull_IsRejected перестанет ловить эту поломку. При смене constructor_ListWithNull_IsRejected проверь это утверждение.");
+        assertTrue(
+                error.getMessage().contains("blocks"),
+                "отказ обязан называть список: " + error.getMessage()
+                        + " Иначе тест constructor_ListWithNull_IsRejected перестанет ловить эту поломку. При смене constructor_ListWithNull_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -103,7 +128,8 @@ class PerceptionResultTests {
                 BLOCKS,
                 result.blocks(),
                 "результат обязан хранить собственную копию списка: правка источника после тика сканера не должна "
-                        + "менять уже отданный результат");
+                        + "менять уже отданный результат"
+                        + " Иначе тест constructor_SourceListChangedAfterwards_ResultKeepsItsOwnCopy перестанет ловить эту поломку. При смене constructor_SourceListChangedAfterwards_ResultKeepsItsOwnCopy проверь это утверждение.");
     }
 
     @Test
@@ -113,18 +139,22 @@ class PerceptionResultTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new HazardRef(HazardType.WATER, pos, -0.5),
-                "отрицательное расстояние обязано отклоняться: расстояние — длина, а не смещение");
+                "отрицательное расстояние обязано отклоняться: расстояние — длина, а не смещение"
+                        + " Иначе тест hazardRef_BadDistance_IsRejected перестанет ловить эту поломку. При смене hazardRef_BadDistance_IsRejected проверь это утверждение.");
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new HazardRef(HazardType.WATER, pos, Double.NaN),
-                "NaN обязан отклоняться: с ним ломается сравнение опасностей по близости");
+                "NaN обязан отклоняться: с ним ломается сравнение опасностей по близости"
+                        + " При смене hazardRef_BadDistance_IsRejected проверь это утверждение.");
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new HazardRef(HazardType.WATER, pos, Double.POSITIVE_INFINITY),
-                "бесконечность обязана отклоняться: опасность в радиусе скана имеет конечное расстояние");
+                "бесконечность обязана отклоняться: опасность в радиусе скана имеет конечное расстояние"
+                        + " Иначе тест hazardRef_BadDistance_IsRejected перестанет ловить эту поломку. При смене hazardRef_BadDistance_IsRejected проверь это утверждение.");
         assertEquals(
                 0.0,
                 new HazardRef(HazardType.DROP, pos, 0.0).distance(),
-                "нулевое расстояние допустимо: опасность может быть под ногами");
+                "нулевое расстояние допустимо: опасность может быть под ногами"
+                        + " Иначе тест hazardRef_BadDistance_IsRejected перестанет ловить эту поломку. При смене hazardRef_BadDistance_IsRejected проверь это утверждение.");
     }
 }

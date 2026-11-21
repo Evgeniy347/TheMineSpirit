@@ -51,7 +51,8 @@ class MemoryStoreTests {
                 expected,
                 new MemoryStore(points).recall(name),
                 "recall обязан вернуть точку с этим именем, а для неизвестного (и иного регистра) имени — null: "
-                        + "стратег отличает «не помню» от «помню»");
+                        + "стратег отличает «не помню» от «помню»"
+                        + " Иначе тест recall_NameInStore_FindsExactlyThatPointElseNull перестанет ловить эту поломку. При смене recall_NameInStore_FindsExactlyThatPointElseNull проверь это утверждение.");
     }
 
     @Test
@@ -62,10 +63,18 @@ class MemoryStoreTests {
         assertEquals(
                 List.of(IRON, secondIron),
                 store.recallAll(MemoryType.RESOURCE),
-                "recallAll(resource) обязан вернуть только ресурсы в порядке запоминания");
+                "recallAll(resource) обязан вернуть только ресурсы в порядке запоминания"
+                        + " Иначе тест recallAll_SeveralTypes_ReturnsOnlyRequestedTypeInInsertionOrder перестанет ловить эту поломку. При смене recallAll_SeveralTypes_ReturnsOnlyRequestedTypeInInsertionOrder проверь это утверждение.");
         assertEquals(
-                List.of(LAVA), store.recallAll(MemoryType.DANGER), "recallAll(danger) обязан вернуть только опасности");
-        assertEquals(List.of(), MemoryStore.empty().recallAll(MemoryType.BASE), "в пустой памяти баз нет");
+                List.of(LAVA),
+                store.recallAll(MemoryType.DANGER),
+                "recallAll(danger) обязан вернуть только опасности"
+                        + " Иначе тест recallAll_SeveralTypes_ReturnsOnlyRequestedTypeInInsertionOrder перестанет ловить эту поломку. При смене recallAll_SeveralTypes_ReturnsOnlyRequestedTypeInInsertionOrder проверь это утверждение.");
+        assertEquals(
+                List.of(),
+                MemoryStore.empty().recallAll(MemoryType.BASE),
+                "в пустой памяти баз нет"
+                        + " Иначе тест recallAll_SeveralTypes_ReturnsOnlyRequestedTypeInInsertionOrder перестанет ловить эту поломку. При смене recallAll_SeveralTypes_ReturnsOnlyRequestedTypeInInsertionOrder проверь это утверждение.");
     }
 
     @Test
@@ -78,8 +87,13 @@ class MemoryStoreTests {
         assertEquals(
                 List.of(moved, LAVA),
                 updated.all(),
-                "повтор имени обязан заменить точку на месте, а не добавить вторую: имя однозначно определяет точку");
-        assertEquals(List.of(IRON, LAVA), store.all(), "исходная память не должна меняться: remember возвращает новую");
+                "повтор имени обязан заменить точку на месте, а не добавить вторую: имя однозначно определяет точку"
+                        + " Иначе тест remember_SameName_ReplacesPointInPlaceWithoutGrowing перестанет ловить эту поломку. При смене remember_SameName_ReplacesPointInPlaceWithoutGrowing проверь это утверждение.");
+        assertEquals(
+                List.of(IRON, LAVA),
+                store.all(),
+                "исходная память не должна меняться: remember возвращает новую"
+                        + " Иначе тест remember_SameName_ReplacesPointInPlaceWithoutGrowing перестанет ловить эту поломку. При смене remember_SameName_ReplacesPointInPlaceWithoutGrowing проверь это утверждение.");
     }
 
     @Test
@@ -88,8 +102,16 @@ class MemoryStoreTests {
 
         MemoryStore updated = new MemoryStore(List.of(IRON)).remember(asDanger);
 
-        assertEquals(List.of(), updated.recallAll(MemoryType.RESOURCE), "старая запись типа resource должна исчезнуть");
-        assertEquals(List.of(asDanger), updated.recallAll(MemoryType.DANGER), "точка должна перейти в новый тип");
+        assertEquals(
+                List.of(),
+                updated.recallAll(MemoryType.RESOURCE),
+                "старая запись типа resource должна исчезнуть"
+                        + " Иначе тест remember_SameNameOtherType_PointMovesToNewType перестанет ловить эту поломку. При смене remember_SameNameOtherType_PointMovesToNewType проверь это утверждение.");
+        assertEquals(
+                List.of(asDanger),
+                updated.recallAll(MemoryType.DANGER),
+                "точка должна перейти в новый тип"
+                        + " Иначе тест remember_SameNameOtherType_PointMovesToNewType перестанет ловить эту поломку. При смене remember_SameNameOtherType_PointMovesToNewType проверь это утверждение.");
     }
 
     @Test
@@ -99,24 +121,39 @@ class MemoryStoreTests {
         assertEquals(
                 NETHER,
                 MemoryStore.empty().remember(inNether).recall("fortress").dimension(),
-                "точка обязана помнить измерение, где её запомнили: recall из другого измерения решает стратег");
+                "точка обязана помнить измерение, где её запомнили: recall из другого измерения решает стратег"
+                        + " Иначе тест remember_PointFromOtherDimension_KeepsItsDimension перестанет ловить эту поломку. При смене remember_PointFromOtherDimension_KeepsItsDimension проверь это утверждение.");
     }
 
     @Test
     void remember_TypeAtLimit_NextPointFailsNamingTheType() {
-        assertEquals(16, MemoryStore.MAX_PER_TYPE, "предел точек одного типа согласован: 16 (поправка П2)");
+        assertEquals(
+                16,
+                MemoryStore.MAX_PER_TYPE,
+                "предел точек одного типа согласован: 16 (поправка П2)"
+                        + " Иначе тест remember_TypeAtLimit_NextPointFailsNamingTheType перестанет ловить эту поломку. При смене remember_TypeAtLimit_NextPointFailsNamingTheType проверь это утверждение.");
         MemoryStore full = filledWith(MemoryType.RESOURCE, 16);
 
         MemoryFullException error = assertThrows(
                 MemoryFullException.class,
                 () -> full.remember(point("one_more", MemoryType.RESOURCE, 99)),
-                "17-я точка типа обязана отклоняться ошибкой, а не вытеснять старую молча");
+                "17-я точка типа обязана отклоняться ошибкой, а не вытеснять старую молча"
+                        + " Иначе тест remember_TypeAtLimit_NextPointFailsNamingTheType перестанет ловить эту поломку. При смене remember_TypeAtLimit_NextPointFailsNamingTheType проверь это утверждение.");
 
-        assertEquals(MemoryType.RESOURCE, error.type(), "ошибка обязана называть заполненный тип");
+        assertEquals(
+                MemoryType.RESOURCE,
+                error.type(),
+                "ошибка обязана называть заполненный тип"
+                        + " Иначе тест remember_TypeAtLimit_NextPointFailsNamingTheType перестанет ловить эту поломку. При смене remember_TypeAtLimit_NextPointFailsNamingTheType проверь это утверждение.");
         assertTrue(
                 error.getMessage().contains("resource") && error.getMessage().contains("забудь"),
-                "сообщение обязано называть тип и что делать (забыть точку): " + error.getMessage());
-        assertEquals(16, full.recallAll(MemoryType.RESOURCE).size(), "после отказа память не должна меняться");
+                "сообщение обязано называть тип и что делать (забыть точку): " + error.getMessage()
+                        + " Иначе тест remember_TypeAtLimit_NextPointFailsNamingTheType перестанет ловить эту поломку. При смене remember_TypeAtLimit_NextPointFailsNamingTheType проверь это утверждение.");
+        assertEquals(
+                16,
+                full.recallAll(MemoryType.RESOURCE).size(),
+                "после отказа память не должна меняться"
+                        + " Иначе тест remember_TypeAtLimit_NextPointFailsNamingTheType перестанет ловить эту поломку. При смене remember_TypeAtLimit_NextPointFailsNamingTheType проверь это утверждение.");
     }
 
     @Test
@@ -130,12 +167,18 @@ class MemoryStoreTests {
         assertEquals(
                 List.of(LAVA),
                 withDanger.recallAll(MemoryType.DANGER),
-                "заполненный тип не должен блокировать другие типы: пределы раздельные");
+                "заполненный тип не должен блокировать другие типы: пределы раздельные"
+                        + " Иначе тест remember_TypeAtLimit_OtherTypesAndReplacementsStillWork перестанет ловить эту поломку. При смене remember_TypeAtLimit_OtherTypesAndReplacementsStillWork проверь это утверждение.");
         assertEquals(
                 16,
                 replacedStore.recallAll(MemoryType.RESOURCE).size(),
-                "замена по имени в заполненном типе не считается новой точкой");
-        assertEquals(replaced, replacedStore.recall("resource3"), "замена обязана подменить точку");
+                "замена по имени в заполненном типе не считается новой точкой"
+                        + " Иначе тест remember_TypeAtLimit_OtherTypesAndReplacementsStillWork перестанет ловить эту поломку. При смене remember_TypeAtLimit_OtherTypesAndReplacementsStillWork проверь это утверждение.");
+        assertEquals(
+                replaced,
+                replacedStore.recall("resource3"),
+                "замена обязана подменить точку"
+                        + " Иначе тест remember_TypeAtLimit_OtherTypesAndReplacementsStillWork перестанет ловить эту поломку. При смене remember_TypeAtLimit_OtherTypesAndReplacementsStillWork проверь это утверждение.");
     }
 
     @Test
@@ -147,7 +190,8 @@ class MemoryStoreTests {
         assertThrows(
                 MemoryFullException.class,
                 () -> store.remember(lavaAsResource),
-                "смена типа существующей точки на заполненный тип — это новая точка этого типа: предел обязан сработать");
+                "смена типа существующей точки на заполненный тип — это новая точка этого типа: предел обязан сработать"
+                        + " Иначе тест remember_ExistingPointMovedToFullType_Fails перестанет ловить эту поломку. При смене remember_ExistingPointMovedToFullType_Fails проверь это утверждение.");
     }
 
     @Test
@@ -156,19 +200,31 @@ class MemoryStoreTests {
 
         MemoryStore after = store.forget("lava_lake");
 
-        assertNull(after.recall("lava_lake"), "забытая точка не должна находиться");
-        assertEquals(List.of(IRON, HOME), after.all(), "остальные точки обязаны остаться в прежнем порядке");
+        assertNull(
+                after.recall("lava_lake"),
+                "забытая точка не должна находиться"
+                        + " Иначе тест forget_PointPresent_RemovesOnlyThatPoint перестанет ловить эту поломку. При смене forget_PointPresent_RemovesOnlyThatPoint проверь это утверждение.");
+        assertEquals(
+                List.of(IRON, HOME),
+                after.all(),
+                "остальные точки обязаны остаться в прежнем порядке"
+                        + " Иначе тест forget_PointPresent_RemovesOnlyThatPoint перестанет ловить эту поломку. При смене forget_PointPresent_RemovesOnlyThatPoint проверь это утверждение.");
     }
 
     @Test
     void forget_UnknownName_ReturnsSameStoreWithoutError() {
         MemoryStore store = new MemoryStore(List.of(IRON));
 
-        assertSame(store, store.forget("nothing"), "забыть неизвестное имя — не ошибка и не изменение");
+        assertSame(
+                store,
+                store.forget("nothing"),
+                "забыть неизвестное имя — не ошибка и не изменение"
+                        + " Иначе тест forget_UnknownName_ReturnsSameStoreWithoutError перестанет ловить эту поломку. При смене forget_UnknownName_ReturnsSameStoreWithoutError проверь это утверждение.");
         assertSame(
                 MemoryStore.empty(),
                 MemoryStore.empty().forget("nothing"),
-                "в пустой памяти забывать нечего, ошибки нет");
+                "в пустой памяти забывать нечего, ошибки нет"
+                        + " Иначе тест forget_UnknownName_ReturnsSameStoreWithoutError перестанет ловить эту поломку. При смене forget_UnknownName_ReturnsSameStoreWithoutError проверь это утверждение.");
     }
 
     @Test
@@ -176,9 +232,13 @@ class MemoryStoreTests {
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,
                 () -> new MemoryStore(List.of(IRON, point("iron", MemoryType.BASE, 5))),
-                "две точки с одним именем в памяти недопустимы: recall не знал бы, какую вернуть");
+                "две точки с одним именем в памяти недопустимы: recall не знал бы, какую вернуть"
+                        + " Иначе тест constructor_DuplicateNames_IsRejected перестанет ловить эту поломку. При смене constructor_DuplicateNames_IsRejected проверь это утверждение.");
 
-        assertTrue(error.getMessage().contains("iron"), "отказ обязан называть имя: " + error.getMessage());
+        assertTrue(
+                error.getMessage().contains("iron"),
+                "отказ обязан называть имя: " + error.getMessage()
+                        + " Иначе тест constructor_DuplicateNames_IsRejected перестанет ловить эту поломку. При смене constructor_DuplicateNames_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -190,7 +250,8 @@ class MemoryStoreTests {
         assertThrows(
                 MemoryFullException.class,
                 () -> new MemoryStore(tooMany),
-                "память, собранная списком сверх предела типа, обязана отклоняться так же, как remember");
+                "память, собранная списком сверх предела типа, обязана отклоняться так же, как remember"
+                        + " Иначе тест constructor_MoreThanLimitInList_IsRejected перестанет ловить эту поломку. При смене constructor_MoreThanLimitInList_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -202,6 +263,10 @@ class MemoryStoreTests {
             }
         }
 
-        assertEquals(48, store.all().size(), "три типа по 16 точек — всего 48 (поправка П2)");
+        assertEquals(
+                48,
+                store.all().size(),
+                "три типа по 16 точек — всего 48 (поправка П2)"
+                        + " Иначе тест totalCapacity_AllTypesFull_IsFortyEight перестанет ловить эту поломку. При смене totalCapacity_AllTypesFull_IsFortyEight проверь это утверждение.");
     }
 }

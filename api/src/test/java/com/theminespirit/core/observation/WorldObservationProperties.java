@@ -24,7 +24,8 @@ class WorldObservationProperties {
                 reversed.hash(),
                 "hash наблюдения обязан не зависеть от порядка ВСЕХ списков (inventory, blocks, entities, "
                         + "containers): иначе один и тот же мир даёт разные хэши в зависимости от порядка сбора "
-                        + "сущностей и контейнеров, и кэш решений ИИ промахивается");
+                        + "сущностей и контейнеров, и кэш решений ИИ промахивается"
+                        + " При смене hash_AllListsOrderChanged_StaysEqual проверь это утверждение.");
     }
 
     @Property
@@ -37,7 +38,8 @@ class WorldObservationProperties {
                 WorldObservation.fromJson(original.toJson()),
                 "наблюдение обязано восстанавливаться из своего JSON без потерь на случайных данных, включая "
                         + "повторы предметов и пустые списки: иначе REST-клиент и ИИ увидят не тот мир, что сервер, "
-                        + "и план будет строиться по искажённым данным");
+                        + "и план будет строиться по искажённым данным"
+                        + " При смене json_RoundTrip_EqualsOriginal проверь это утверждение.");
     }
 
     @Property
@@ -51,7 +53,8 @@ class WorldObservationProperties {
                 original.hash(),
                 randomObservation(rotated, 32, 1L).hash(),
                 "hash обязан не зависеть от порядка списков при любой циклической перестановке: канонизация "
-                        + "в конструкторе обязана сортировать, а не полагаться на порядок прихода данных");
+                        + "в конструкторе обязана сортировать, а не полагаться на порядок прихода данных"
+                        + " Иначе тест hash_SameDataAnyPermutation_StaysEqual перестанет ловить эту поломку. При смене hash_SameDataAnyPermutation_StaysEqual проверь это утверждение.");
     }
 
     private static List<Integer> reversed(List<Integer> raw) {

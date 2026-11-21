@@ -12,6 +12,7 @@ class CatalogLimitsTests {
                 3,
                 CatalogLimits.ACQUIRE_MAX_ATTEMPTS,
                 "Предел пересборок acquire согласован в H1 (tasks/28-acquire.md): больше трёх пересчётов "
-                        + "платят повторным обследованием мира и не приближают цель");
+                        + "платят повторным обследованием мира и не приближают цель"
+                        + " Иначе тест acquireMaxAttempts_H1AgreedValue_IsThree перестанет ловить эту поломку. При смене acquireMaxAttempts_H1AgreedValue_IsThree проверь это утверждение.");
     }
 }

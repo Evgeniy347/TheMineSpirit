@@ -37,7 +37,10 @@ class HazardFactsProperties {
         HazardFacts facts = new HazardFacts(hazards);
 
         if (hazards.isEmpty()) {
-            assertNull(facts.nearest(), "в пустой сцене ближайшей опасности быть не должно");
+            assertNull(
+                    facts.nearest(),
+                    "в пустой сцене ближайшей опасности быть не должно"
+                            + " Иначе тест nearest_AnyScene_HasMinimalDistanceOrIsNullWhenEmpty перестанет ловить эту поломку. При смене nearest_AnyScene_HasMinimalDistanceOrIsNullWhenEmpty проверь это утверждение.");
             return;
         }
         double minimum = hazards.stream().mapToDouble(HazardRef::distance).min().orElseThrow();
@@ -45,8 +48,12 @@ class HazardFactsProperties {
                 minimum,
                 facts.nearest().distance(),
                 0.0,
-                "nearest обязан иметь наименьшее расстояние среди опасностей сцены");
-        assertTrue(hazards.contains(facts.nearest()), "nearest обязан быть одной из опасностей сцены");
+                "nearest обязан иметь наименьшее расстояние среди опасностей сцены"
+                        + " Иначе тест nearest_AnyScene_HasMinimalDistanceOrIsNullWhenEmpty перестанет ловить эту поломку. При смене nearest_AnyScene_HasMinimalDistanceOrIsNullWhenEmpty проверь это утверждение.");
+        assertTrue(
+                hazards.contains(facts.nearest()),
+                "nearest обязан быть одной из опасностей сцены"
+                        + " Иначе тест nearest_AnyScene_HasMinimalDistanceOrIsNullWhenEmpty перестанет ловить эту поломку. При смене nearest_AnyScene_HasMinimalDistanceOrIsNullWhenEmpty проверь это утверждение.");
     }
 
     @Property
@@ -57,6 +64,7 @@ class HazardFactsProperties {
         assertEquals(
                 new HazardFacts(hazards).nearest(),
                 new HazardFacts(shuffled).nearest(),
-                "порядок опасностей в списке не должен влиять на ближайшую: сцена одна и та же");
+                "порядок опасностей в списке не должен влиять на ближайшую: сцена одна и та же"
+                        + " При смене nearest_ShuffledScene_StaysTheSame проверь это утверждение.");
     }
 }

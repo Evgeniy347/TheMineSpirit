@@ -20,7 +20,8 @@ class RespawnCellTests {
         assertEquals(
                 plot,
                 RespawnCell.base(plot, home),
-                "Якорь участка — главная точка базы: дом духа не имеет права увести возрождение с участка поселения");
+                "Якорь участка — главная точка базы: дом духа не имеет права увести возрождение с участка поселения"
+                        + " Иначе тест base_PlotAnchorAndHome_UsesPlotAnchor перестанет ловить эту поломку. При смене base_PlotAnchorAndHome_UsesPlotAnchor проверь это утверждение.");
     }
 
     @Test
@@ -30,7 +31,8 @@ class RespawnCellTests {
         assertEquals(
                 home,
                 RespawnCell.base(Optional.empty(), home),
-                "Без плана участка дух возрождается у своего дома: иначе возрождение некуда привязать");
+                "Без плана участка дух возрождается у своего дома: иначе возрождение некуда привязать"
+                        + " При смене base_NoPlotAndHome_UsesHome проверь это утверждение.");
     }
 
     @Test
@@ -38,7 +40,8 @@ class RespawnCellTests {
         assertEquals(
                 Optional.empty(),
                 RespawnCell.base(Optional.empty(), Optional.empty()),
-                "Без базы и дома возрождать некуда: запись не должна создаваться, дух не появится в случайной точке");
+                "Без базы и дома возрождать некуда: запись не должна создаваться, дух не появится в случайной точке"
+                        + " Иначе тест base_NoPlotAndNoHome_ReturnsEmpty перестанет ловить эту поломку. При смене base_NoPlotAndNoHome_ReturnsEmpty проверь это утверждение.");
     }
 
     @Test
@@ -48,7 +51,8 @@ class RespawnCellTests {
         assertEquals(
                 Optional.of(BASE),
                 RespawnCell.nearest(BASE, terrain),
-                "Свободная клетка базы обязана побеждать: дух возрождается в точке базы, а не ищет другую без причины");
+                "Свободная клетка базы обязана побеждать: дух возрождается в точке базы, а не ищет другую без причины"
+                        + " Иначе тест nearest_FreeBaseCell_ReturnsBase перестанет ловить эту поломку. При смене nearest_FreeBaseCell_ReturnsBase проверь это утверждение.");
     }
 
     @Test
@@ -59,7 +63,8 @@ class RespawnCellTests {
         assertEquals(
                 Optional.of(neighbour),
                 RespawnCell.nearest(BASE, terrain),
-                "Занятая клетка базы заменяется ближайшей свободной с твёрдым полом: иначе дух возродится в блоке");
+                "Занятая клетка базы заменяется ближайшей свободной с твёрдым полом: иначе дух возродится в блоке"
+                        + " При смене nearest_BaseOccupied_ReturnsNeighbourWithSolidFloorAndTwoAir проверь это утверждение.");
     }
 
     @Test
@@ -70,7 +75,8 @@ class RespawnCellTests {
         assertEquals(
                 Optional.empty(),
                 RespawnCell.nearest(BASE, terrain),
-                "Клетка с одним воздухом над ногами не годится: дух ростом выше одного блока застрянет и задохнётся");
+                "Клетка с одним воздухом над ногами не годится: дух ростом выше одного блока застрянет и задохнётся"
+                        + " При смене nearest_OnlyOneAirAboveCell_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -80,7 +86,8 @@ class RespawnCellTests {
         assertEquals(
                 Optional.empty(),
                 RespawnCell.nearest(BASE, terrain),
-                "Без твёрдого пола свободной клетки нет: дух не может возродиться в воздухе и упасть");
+                "Без твёрдого пола свободной клетки нет: дух не может возродиться в воздухе и упасть"
+                        + " Иначе тест nearest_NoSolidFloor_ReturnsEmpty перестанет ловить эту поломку. При смене nearest_NoSolidFloor_ReturnsEmpty проверь это утверждение.");
     }
 
     @Test
@@ -93,7 +100,8 @@ class RespawnCellTests {
                 Optional.of(negative),
                 RespawnCell.nearest(BASE, terrain),
                 "При равном расстоянии клетка выбирается по координатам: случайный порядок уводил бы духа в "
-                        + "разные места после перезапуска");
+                        + "разные места после перезапуска"
+                        + " Иначе тест nearest_TwoEqualDistanceCells_ReturnsLexicographicallyFirst перестанет ловить эту поломку. При смене nearest_TwoEqualDistanceCells_ReturnsLexicographicallyFirst проверь это утверждение.");
     }
 
     @Test
@@ -103,7 +111,8 @@ class RespawnCellTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> RespawnCell.nearest(BASE, -1, terrain),
-                "Отрицательный радиус — ошибка вызова: пустая окрестность не может считаться поиском");
+                "Отрицательный радиус — ошибка вызова: пустая окрестность не может считаться поиском"
+                        + " Иначе тест nearest_NegativeRadius_Throws перестанет ловить эту поломку. При смене nearest_NegativeRadius_Throws проверь это утверждение.");
     }
 
     private static BlockCoord floor(BlockCoord feet) {

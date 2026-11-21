@@ -39,15 +39,18 @@ class TaskRegistryProperties {
         assertTrue(
                 registry.completedCount() <= TaskRegistry.MAX_COMPLETED,
                 "Завершённых обязано остаться не больше " + TaskRegistry.MAX_COMPLETED + ", фактически "
-                        + registry.completedCount());
+                        + registry.completedCount()
+                        + " Иначе тест reserve_AnyCompletionOrder_SizeStaysWithinCapPlusActive перестанет ловить эту поломку. При смене reserve_AnyCompletionOrder_SizeStaysWithinCapPlusActive проверь это утверждение.");
         assertTrue(
                 registry.size() <= TaskRegistry.MAX_COMPLETED + ACTIVE_KEEPERS,
-                "Размер реестра ограничен лимитом завершённых плюс активные: " + registry.size());
+                "Размер реестра ограничен лимитом завершённых плюс активные: " + registry.size()
+                        + " Иначе тест reserve_AnyCompletionOrder_SizeStaysWithinCapPlusActive перестанет ловить эту поломку. При смене reserve_AnyCompletionOrder_SizeStaysWithinCapPlusActive проверь это утверждение.");
         for (String activeId : activeIds) {
             assertEquals(
                     TaskState.RUNNING,
                     registry.get(activeId).orElseThrow().state(),
-                    "Активная задача " + activeId + " не должна вытесняться ни при каком порядке завершений");
+                    "Активная задача " + activeId + " не должна вытесняться ни при каком порядке завершений"
+                            + " Иначе тест reserve_AnyCompletionOrder_SizeStaysWithinCapPlusActive перестанет ловить эту поломку. При смене reserve_AnyCompletionOrder_SizeStaysWithinCapPlusActive проверь это утверждение.");
         }
     }
 
@@ -62,12 +65,22 @@ class TaskRegistryProperties {
             registry.activeForBot(bot)
                     .ifPresent(active -> registry.observe(active.taskId(), TaskState.SUCCEEDED, null, null));
             String taskId = registry.reserve(bot, null);
-            assertTrue(seen.add(taskId), "id обязан быть уникальным, повтор " + taskId);
+            assertTrue(
+                    seen.add(taskId),
+                    "id обязан быть уникальным, повтор " + taskId
+                            + " Иначе тест reserve_AnySequence_IdsUniqueAndGrowing перестанет ловить эту поломку. При смене reserve_AnySequence_IdsUniqueAndGrowing проверь это утверждение.");
             long numeric = Long.parseLong(taskId.substring(2));
-            assertTrue(numeric > previous, "id обязан расти: " + previous + " → " + numeric);
+            assertTrue(
+                    numeric > previous,
+                    "id обязан расти: " + previous + " → " + numeric
+                            + " Иначе тест reserve_AnySequence_IdsUniqueAndGrowing перестанет ловить эту поломку. При смене reserve_AnySequence_IdsUniqueAndGrowing проверь это утверждение.");
             previous = numeric;
         }
-        assertEquals(tasks, seen.size(), "Число выданных id обязано совпасть с числом reserve");
+        assertEquals(
+                tasks,
+                seen.size(),
+                "Число выданных id обязано совпасть с числом reserve"
+                        + " Иначе тест reserve_AnySequence_IdsUniqueAndGrowing перестанет ловить эту поломку. При смене reserve_AnySequence_IdsUniqueAndGrowing проверь это утверждение.");
     }
 
     @Test
@@ -84,9 +97,13 @@ class TaskRegistryProperties {
         assertEquals(
                 256,
                 registry.completedCount(),
-                "После 10 000 завершённых в реестре обязано остаться ровно 256 завершённых: память реестра не растёт");
+                "После 10 000 завершённых в реестре обязано остаться ровно 256 завершённых: память реестра не растёт"
+                        + " Иначе тест reserve_TenThousandCompletedWithTenActive_KeepsTwoHundredFiftySixCompletedAndAllActive перестанет ловить эту поломку. При смене reserve_TenThousandCompletedWithTenActive_KeepsTwoHundredFiftySixCompletedAndAllActive проверь это утверждение.");
         assertEquals(
-                266, registry.size(), "Десять активных задач вытесняться не должны: 256 завершённых + 10 активных");
+                266,
+                registry.size(),
+                "Десять активных задач вытесняться не должны: 256 завершённых + 10 активных"
+                        + " Иначе тест reserve_TenThousandCompletedWithTenActive_KeepsTwoHundredFiftySixCompletedAndAllActive перестанет ловить эту поломку. При смене reserve_TenThousandCompletedWithTenActive_KeepsTwoHundredFiftySixCompletedAndAllActive проверь это утверждение.");
     }
 
     @Provide

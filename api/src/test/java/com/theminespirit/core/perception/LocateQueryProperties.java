@@ -29,9 +29,21 @@ class LocateQueryProperties {
             @ForAll @IntRange(min = ScanRadius.MIN, max = ScanRadius.MAX) int radius) {
         LocateQuery query = LocateQuery.tree(species, new ScanRadius(radius));
 
-        assertEquals(LocateType.TREE, query.type(), "фабрика tree обязана строить поиск TREE");
-        assertEquals(species, query.species(), "вид дерева обязан остаться тем, что задан");
-        assertEquals(radius, query.radius().value(), "радиус поиска обязан остаться тем, что задан");
+        assertEquals(
+                LocateType.TREE,
+                query.type(),
+                "фабрика tree обязана строить поиск TREE"
+                        + " Иначе тест tree_AnyValidSpeciesAndRadius_KeepsBothUnchanged перестанет ловить эту поломку. При смене tree_AnyValidSpeciesAndRadius_KeepsBothUnchanged проверь это утверждение.");
+        assertEquals(
+                species,
+                query.species(),
+                "вид дерева обязан остаться тем, что задан"
+                        + " Иначе тест tree_AnyValidSpeciesAndRadius_KeepsBothUnchanged перестанет ловить эту поломку. При смене tree_AnyValidSpeciesAndRadius_KeepsBothUnchanged проверь это утверждение.");
+        assertEquals(
+                radius,
+                query.radius().value(),
+                "радиус поиска обязан остаться тем, что задан"
+                        + " Иначе тест tree_AnyValidSpeciesAndRadius_KeepsBothUnchanged перестанет ловить эту поломку. При смене tree_AnyValidSpeciesAndRadius_KeepsBothUnchanged проверь это утверждение.");
     }
 
     @Property
@@ -42,6 +54,7 @@ class LocateQueryProperties {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new LocateQuery(LocateType.CONTAINER, IdFilter.matchAll(), species, ScanRadius.DEFAULT),
-                "вид '" + species + "' у поиска контейнера обязан отклоняться: вид применим только к дереву");
+                "вид '" + species + "' у поиска контейнера обязан отклоняться: вид применим только к дереву"
+                        + " Иначе тест container_SpeciesGivenForNonTree_IsRejected перестанет ловить эту поломку. При смене container_SpeciesGivenForNonTree_IsRejected проверь это утверждение.");
     }
 }

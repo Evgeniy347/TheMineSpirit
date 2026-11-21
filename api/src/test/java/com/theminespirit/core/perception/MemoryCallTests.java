@@ -109,11 +109,13 @@ class MemoryCallTests {
                 expectedStore,
                 outcome.store(),
                 scene
-                        + ": память после действия обязана быть такой, как задумано, иначе точки пропадают или дублируются");
+                        + ": память после действия обязана быть такой, как задумано, иначе точки пропадают или дублируются"
+                        + " При смене apply_Call_ChangesStoreAndAnswersAsExpected проверь это утверждение.");
         assertEquals(
                 new Finding(call.script(), expectedSightings),
                 outcome.finding(),
-                scene + ": ответ действия обязан называть найденные точки, а «нет такой» — быть пустым");
+                scene + ": ответ действия обязан называть найденные точки, а «нет такой» — быть пустым"
+                        + " Иначе тест apply_Call_ChangesStoreAndAnswersAsExpected перестанет ловить эту поломку. При смене apply_Call_ChangesStoreAndAnswersAsExpected проверь это утверждение.");
     }
 
     @Test
@@ -127,11 +129,13 @@ class MemoryCallTests {
                 MemoryFullException.class,
                 () -> new MemoryCall.Remember("one_more", MemoryType.RESOURCE, HOME)
                         .apply(new MemoryStore(full), OVERWORLD),
-                "семнадцатая точка типа обязана отклоняться ошибкой, а не вытеснять старую молча");
+                "семнадцатая точка типа обязана отклоняться ошибкой, а не вытеснять старую молча"
+                        + " Иначе тест remember_PointOfFullType_FailsWithTypeAndAdvice перестанет ловить эту поломку. При смене remember_PointOfFullType_FailsWithTypeAndAdvice проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("resource") && error.getMessage().contains("забудь"),
-                "сообщение обязано назвать тип и совет забыть точку, сейчас: " + error.getMessage());
+                "сообщение обязано назвать тип и совет забыть точку, сейчас: " + error.getMessage()
+                        + " Иначе тест remember_PointOfFullType_FailsWithTypeAndAdvice перестанет ловить эту поломку. При смене remember_PointOfFullType_FailsWithTypeAndAdvice проверь это утверждение.");
     }
 
     @Test
@@ -147,11 +151,13 @@ class MemoryCallTests {
         assertEquals(
                 HOME,
                 outcome.store().recall("ore_3").pos(),
-                "повтор имени в заполненном типе — замена, а не новая точка: иначе память не обновить без забывания");
+                "повтор имени в заполненном типе — замена, а не новая точка: иначе память не обновить без забывания"
+                        + " При смене remember_ReplacingNameInFullType_IsAllowed проверь это утверждение.");
         assertEquals(
                 MemoryStore.MAX_PER_TYPE,
                 outcome.store().recallAll(MemoryType.RESOURCE).size(),
-                "после замены число точек типа не растёт");
+                "после замены число точек типа не растёт"
+                        + " Иначе тест remember_ReplacingNameInFullType_IsAllowed перестанет ловить эту поломку. При смене remember_ReplacingNameInFullType_IsAllowed проверь это утверждение.");
     }
 
     @Test
@@ -162,11 +168,13 @@ class MemoryCallTests {
         assertEquals(
                 "minecraft:the_nether",
                 outcome.store().recall("portal").dimension(),
-                "точка помнит измерение, где её запомнили: recall из другого измерения решает стратег");
+                "точка помнит измерение, где её запомнили: recall из другого измерения решает стратег"
+                        + " Иначе тест remember_Dimension_IsStoredWithPointAndReported перестанет ловить эту поломку. При смене remember_Dimension_IsStoredWithPointAndReported проверь это утверждение.");
         assertEquals(
                 "minecraft:the_nether",
                 outcome.finding().sightings().get(0).detail(),
-                "находка обязана назвать измерение точки");
+                "находка обязана назвать измерение точки"
+                        + " Иначе тест remember_Dimension_IsStoredWithPointAndReported перестанет ловить эту поломку. При смене remember_Dimension_IsStoredWithPointAndReported проверь это утверждение.");
     }
 
     static Stream<Arguments> reports() {
@@ -217,6 +225,7 @@ class MemoryCallTests {
                 expected,
                 call.describe(outcome.finding()),
                 scene + ": ответ команды /spirit memory обязан называть имя, тип, позицию и измерение точки, а "
-                        + "отсутствие точки — прямо говорить, что её нет");
+                        + "отсутствие точки — прямо говорить, что её нет"
+                        + " Иначе тест describe_OutcomeOfCall_ReadsAsOneLinePerPoint перестанет ловить эту поломку. При смене describe_OutcomeOfCall_ReadsAsOneLinePerPoint проверь это утверждение.");
     }
 }

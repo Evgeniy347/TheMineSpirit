@@ -42,11 +42,13 @@ class MemoryCallProperties {
         assertTrue(
                 finding.sightings().stream()
                         .allMatch(sighting -> sighting.kind().equals(type.id())),
-                "recall_all по типу " + type.id() + " вернул точку другого типа: " + finding.sightings());
+                "recall_all по типу " + type.id() + " вернул точку другого типа: " + finding.sightings()
+                        + " Иначе тест recallAll_AnyStore_ReturnsOnlyPointsOfRequestedType перестанет ловить эту поломку. При смене recallAll_AnyStore_ReturnsOnlyPointsOfRequestedType проверь это утверждение.");
         assertEquals(
                 store.recallAll(type).size(),
                 finding.sightings().size(),
-                "recall_all обязан вернуть все точки типа " + type.id() + " без потерь");
+                "recall_all обязан вернуть все точки типа " + type.id() + " без потерь"
+                        + " Иначе тест recallAll_AnyStore_ReturnsOnlyPointsOfRequestedType перестанет ловить эту поломку. При смене recallAll_AnyStore_ReturnsOnlyPointsOfRequestedType проверь это утверждение.");
     }
 
     @Property
@@ -54,7 +56,10 @@ class MemoryCallProperties {
             @ForAll("stores") MemoryStore store, @ForAll("names") String name) {
         MemoryStore after = new MemoryCall.Forget(name).apply(store, OVERWORLD).store();
 
-        assertNull(after.recall(name), "после forget точка '" + name + "' не должна находиться");
+        assertNull(
+                after.recall(name),
+                "после forget точка '" + name + "' не должна находиться"
+                        + " Иначе тест forget_AnyStoreAndName_LeavesNoPointWithThatName перестанет ловить эту поломку. При смене forget_AnyStoreAndName_LeavesNoPointWithThatName проверь это утверждение.");
     }
 
     @Property
@@ -74,11 +79,13 @@ class MemoryCallProperties {
         assertEquals(
                 new MemoryPoint(name, second, OVERWORLD, b),
                 afterSecond.recall(name),
-                "повторный remember с тем же именем обязан заменить точку: осталась " + afterSecond.recall(name));
+                "повторный remember с тем же именем обязан заменить точку: осталась " + afterSecond.recall(name)
+                        + " Иначе тест remember_SameNameTwice_KeepsOnlyLastPoint перестанет ловить эту поломку. При смене remember_SameNameTwice_KeepsOnlyLastPoint проверь это утверждение.");
         assertEquals(
                 afterFirst.all().size(),
                 afterSecond.all().size(),
-                "замена не меняет число точек: имя однозначно определяет точку");
+                "замена не меняет число точек: имя однозначно определяет точку"
+                        + " Иначе тест remember_SameNameTwice_KeepsOnlyLastPoint перестанет ловить эту поломку. При смене remember_SameNameTwice_KeepsOnlyLastPoint проверь это утверждение.");
     }
 
     @Provide
@@ -90,7 +97,15 @@ class MemoryCallProperties {
     void recall_UnknownName_IsEmptyAndStoreUnchanged(@ForAll("stores") MemoryStore store) {
         MemoryOutcome outcome = new MemoryCall.Recall("never_remembered").apply(store, OVERWORLD);
 
-        assertEquals(List.of(), outcome.finding().sightings(), "recall несуществующего имени обязан быть пустым");
-        assertEquals(store, outcome.store(), "recall не имеет права менять память");
+        assertEquals(
+                List.of(),
+                outcome.finding().sightings(),
+                "recall несуществующего имени обязан быть пустым"
+                        + " Иначе тест recall_UnknownName_IsEmptyAndStoreUnchanged перестанет ловить эту поломку. При смене recall_UnknownName_IsEmptyAndStoreUnchanged проверь это утверждение.");
+        assertEquals(
+                store,
+                outcome.store(),
+                "recall не имеет права менять память"
+                        + " Иначе тест recall_UnknownName_IsEmptyAndStoreUnchanged перестанет ловить эту поломку. При смене recall_UnknownName_IsEmptyAndStoreUnchanged проверь это утверждение.");
     }
 }

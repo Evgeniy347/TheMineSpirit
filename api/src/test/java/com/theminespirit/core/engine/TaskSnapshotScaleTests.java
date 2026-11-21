@@ -24,8 +24,16 @@ class TaskSnapshotScaleTests {
     @Test
     void snapshotAndRestore_AtNodeLimit_TouchEachNodeAtMostTwice() {
         TaskNode plan = caterpillar(LIMIT_NODES, LIMIT_DEPTH);
-        assertEquals(LIMIT_NODES, countNodes(plan), "план обязан упираться в предел узлов");
-        assertEquals(LIMIT_DEPTH, countDepth(plan), "план обязан упираться в предел глубины");
+        assertEquals(
+                LIMIT_NODES,
+                countNodes(plan),
+                "план обязан упираться в предел узлов"
+                        + " Иначе тест snapshotAndRestore_AtNodeLimit_TouchEachNodeAtMostTwice перестанет ловить эту поломку. При смене snapshotAndRestore_AtNodeLimit_TouchEachNodeAtMostTwice проверь это утверждение.");
+        assertEquals(
+                LIMIT_DEPTH,
+                countDepth(plan),
+                "план обязан упираться в предел глубины"
+                        + " Иначе тест snapshotAndRestore_AtNodeLimit_TouchEachNodeAtMostTwice перестанет ловить эту поломку. При смене snapshotAndRestore_AtNodeLimit_TouchEachNodeAtMostTwice проверь это утверждение.");
 
         ScriptRegistry scripts = ScriptRegistry.of(Map.of(
                 "go", params -> () -> ScriptStatus.SUCCEEDED,
@@ -34,7 +42,11 @@ class TaskSnapshotScaleTests {
 
         TaskRunner runner = TaskRunner.start(plan, scripts, conditions);
         for (int i = 0; i < LIMIT_DEPTH; i++) {
-            assertEquals(RunStatus.RUNNING, runner.tick(), "план на пределе обязан дойти до самой глубины");
+            assertEquals(
+                    RunStatus.RUNNING,
+                    runner.tick(),
+                    "план на пределе обязан дойти до самой глубины"
+                            + " Иначе тест snapshotAndRestore_AtNodeLimit_TouchEachNodeAtMostTwice перестанет ловить эту поломку. При смене snapshotAndRestore_AtNodeLimit_TouchEachNodeAtMostTwice проверь это утверждение.");
         }
 
         EngineCounters.reset();
@@ -45,19 +57,26 @@ class TaskSnapshotScaleTests {
         assertTrue(
                 bytes <= LIMIT_BYTES,
                 "JSON снимка " + bytes + " байт превышает предел " + LIMIT_BYTES
-                        + ": снимок хранят в NBT сущности и большие значения его раздувают");
+                        + ": снимок хранят в NBT сущности и большие значения его раздувают"
+                        + " Иначе тест snapshotAndRestore_AtNodeLimit_TouchEachNodeAtMostTwice перестанет ловить эту поломку. При смене snapshotAndRestore_AtNodeLimit_TouchEachNodeAtMostTwice проверь это утверждение.");
         assertTrue(
                 EngineCounters.snapshotVisits <= 2L * LIMIT_NODES,
                 "обход снимка посетил " + EngineCounters.snapshotVisits + " исполнителей: каждый узел обязан "
-                        + "посещаться не более двух раз, иначе снимок квадратичен по числу узлов");
+                        + "посещаться не более двух раз, иначе снимок квадратичен по числу узлов"
+                        + " При смене snapshotAndRestore_AtNodeLimit_TouchEachNodeAtMostTwice проверь это утверждение.");
 
         EngineCounters.reset();
         TaskRunner restored = TaskRunner.restore(TaskSnapshotCodec.decode(json), scripts, conditions);
-        assertEquals(RunStatus.RUNNING, restored.status(), "восстановленная задача на пределе остаётся RUNNING");
+        assertEquals(
+                RunStatus.RUNNING,
+                restored.status(),
+                "восстановленная задача на пределе остаётся RUNNING"
+                        + " Иначе тест snapshotAndRestore_AtNodeLimit_TouchEachNodeAtMostTwice перестанет ловить эту поломку. При смене snapshotAndRestore_AtNodeLimit_TouchEachNodeAtMostTwice проверь это утверждение.");
         assertTrue(
                 EngineCounters.executorCreations <= 2L * LIMIT_NODES,
                 "восстановление создало " + EngineCounters.executorCreations + " исполнителей: каждый узел "
-                        + "обязан создаваться не более двух раз");
+                        + "обязан создаваться не более двух раз"
+                        + " Иначе тест snapshotAndRestore_AtNodeLimit_TouchEachNodeAtMostTwice перестанет ловить эту поломку. При смене snapshotAndRestore_AtNodeLimit_TouchEachNodeAtMostTwice проверь это утверждение.");
     }
 
     private static TaskNode caterpillar(int totalNodes, int depth) {

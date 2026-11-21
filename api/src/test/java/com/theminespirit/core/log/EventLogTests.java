@@ -46,7 +46,11 @@ class EventLogTests {
             }
         }
 
-        assertEquals(50, sink.records().size(), "Закрытие обязано дописать очередь: иначе хвост событий теряется");
+        assertEquals(
+                50,
+                sink.records().size(),
+                "Закрытие обязано дописать очередь: иначе хвост событий теряется"
+                        + " При смене close_DrainsQueue_WritesEveryRecord проверь это утверждение.");
     }
 
     @Test
@@ -65,7 +69,8 @@ class EventLogTests {
                         && record.toJson().contains("\"tag\":\"logqueue\""));
         assertTrue(
                 reported,
-                "Переполнение очереди обязано оставить отдельное событие: иначе потеря строк не видна в базе");
+                "Переполнение очереди обязано оставить отдельное событие: иначе потеря строк не видна в базе"
+                        + " При смене overflow_WhenWriterBlocked_ReportsLostCountAsMessage проверь это утверждение.");
     }
 
     @Test
@@ -83,11 +88,13 @@ class EventLogTests {
         }
         assertTrue(
                 files.size() > 1,
-                "Ротация по размеру обязана создавать новые файлы: иначе один JSONL растёт без предела");
+                "Ротация по размеру обязана создавать новые файлы: иначе один JSONL растёт без предела"
+                        + " При смене jsonlSink_SmallLimit_RotatesFiles проверь это утверждение.");
         for (Path file : files) {
             assertTrue(
                     Files.readString(file, StandardCharsets.UTF_8).contains("\"type\""),
-                    "Каждый файл ротации обязан содержать JSON-записи с полем type");
+                    "Каждый файл ротации обязан содержать JSON-записи с полем type"
+                            + " Иначе тест jsonlSink_SmallLimit_RotatesFiles перестанет ловить эту поломку. При смене jsonlSink_SmallLimit_RotatesFiles проверь это утверждение.");
         }
     }
 
@@ -105,7 +112,8 @@ class EventLogTests {
                     2,
                     list.filter(path -> path.getFileName().toString().endsWith(".jsonl"))
                             .count(),
-                    "Новый запуск обязан продолжить нумерацию файлов, а не перезаписать прошлый");
+                    "Новый запуск обязан продолжить нумерацию файлов, а не перезаписать прошлый"
+                            + " Иначе тест jsonlSink_Reopen_ContinuesSequence перестанет ловить эту поломку. При смене jsonlSink_Reopen_ContinuesSequence проверь это утверждение.");
         }
     }
 

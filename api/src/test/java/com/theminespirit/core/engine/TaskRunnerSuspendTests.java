@@ -89,16 +89,19 @@ class TaskRunnerSuspendTests {
             assertEquals(
                     RunStatus.RUNNING,
                     runner.tick(),
-                    "Приостановленная задача остаётся RUNNING: политика не отменяет работу");
+                    "Приостановленная задача остаётся RUNNING: политика не отменяет работу"
+                            + " Иначе тест tick_Suspended_DoesNotTickScriptAndStaysRunning перестанет ловить эту поломку. При смене tick_Suspended_DoesNotTickScriptAndStaysRunning проверь это утверждение.");
         }
 
         assertEquals(
                 1,
                 fixture.created.get(0).ticks,
-                "Приостановленный скрипт не тикает: иначе его тайм-аут идёт, пока политика владеет духом");
+                "Приостановленный скрипт не тикает: иначе его тайм-аут идёт, пока политика владеет духом"
+                        + " При смене tick_Suspended_DoesNotTickScriptAndStaysRunning проверь это утверждение.");
         assertTrue(
                 runner.isSuspended(),
-                "Признак приостановки виден снаружи: по нему отчёт различает «ждёт политику» и «работает»");
+                "Признак приостановки виден снаружи: по нему отчёт различает «ждёт политику» и «работает»"
+                        + " Иначе тест tick_Suspended_DoesNotTickScriptAndStaysRunning перестанет ловить эту поломку. При смене tick_Suspended_DoesNotTickScriptAndStaysRunning проверь это утверждение.");
     }
 
     @Test
@@ -115,15 +118,18 @@ class TaskRunnerSuspendTests {
         assertEquals(
                 RunStatus.RUNNING,
                 runner.tick(),
-                "Второй тик скрипта из трёх после возобновления: задача продолжается");
+                "Второй тик скрипта из трёх после возобновления: задача продолжается"
+                        + " Иначе тест resume_SuspendedScript_ContinuesWhereItStopped перестанет ловить эту поломку. При смене resume_SuspendedScript_ContinuesWhereItStopped проверь это утверждение.");
         assertEquals(
                 RunStatus.SUCCEEDED,
                 runner.tick(),
-                "Третий тик завершает: счёт тиков скрипта не сбрасывался приостановкой");
+                "Третий тик завершает: счёт тиков скрипта не сбрасывался приостановкой"
+                        + " Иначе тест resume_SuspendedScript_ContinuesWhereItStopped перестанет ловить эту поломку. При смене resume_SuspendedScript_ContinuesWhereItStopped проверь это утверждение.");
         assertEquals(
                 1,
                 fixture.created.size(),
-                "Скрипт тот же, новый не создавался: приостановка не отменяет и не пересоздаёт скрипт");
+                "Скрипт тот же, новый не создавался: приостановка не отменяет и не пересоздаёт скрипт"
+                        + " Иначе тест resume_SuspendedScript_ContinuesWhereItStopped перестанет ловить эту поломку. При смене resume_SuspendedScript_ContinuesWhereItStopped проверь это утверждение.");
     }
 
     @Test
@@ -142,8 +148,13 @@ class TaskRunnerSuspendTests {
         assertEquals(
                 1,
                 probe.suspends,
-                "Повторная приостановка не вызывает suspend() скрипта второй раз: остановка навигации идемпотентна, но счёт вызовов должен быть честным");
-        assertEquals(1, probe.resumes, "Повторное возобновление не вызывает resume() второй раз");
+                "Повторная приостановка не вызывает suspend() скрипта второй раз: остановка навигации идемпотентна, но счёт вызовов должен быть честным"
+                        + " Иначе тест suspend_LiveScript_IsNotifiedOncePerSuspension перестанет ловить эту поломку. При смене suspend_LiveScript_IsNotifiedOncePerSuspension проверь это утверждение.");
+        assertEquals(
+                1,
+                probe.resumes,
+                "Повторное возобновление не вызывает resume() второй раз"
+                        + " Иначе тест suspend_LiveScript_IsNotifiedOncePerSuspension перестанет ловить эту поломку. При смене suspend_LiveScript_IsNotifiedOncePerSuspension проверь это утверждение.");
     }
 
     @Test
@@ -159,11 +170,13 @@ class TaskRunnerSuspendTests {
         assertEquals(
                 "walk",
                 runner.currentScript().orElseThrow(),
-                "Приостановленная задача сохраняет текущий скрипт: по нему видно, что она не отменена");
+                "Приостановленная задача сохраняет текущий скрипт: по нему видно, что она не отменена"
+                        + " Иначе тест suspend_SequenceOfScripts_KeepsCurrentScriptName перестанет ловить эту поломку. При смене suspend_SequenceOfScripts_KeepsCurrentScriptName проверь это утверждение.");
         assertEquals(
                 1,
                 fixture.created.get(0).suspends,
-                "Скрипт внутри sequence получает suspend(): иначе навигация продолжит работу, пока политика владеет духом");
+                "Скрипт внутри sequence получает suspend(): иначе навигация продолжит работу, пока политика владеет духом"
+                        + " При смене suspend_SequenceOfScripts_KeepsCurrentScriptName проверь это утверждение.");
     }
 
     @Test
@@ -179,7 +192,8 @@ class TaskRunnerSuspendTests {
         assertEquals(
                 running,
                 runner.snapshot().orElseThrow(),
-                "Снимок приостановленной задачи совпадает с обычным: сохранение мира во время рефлекса не теряет задачу");
+                "Снимок приостановленной задачи совпадает с обычным: сохранение мира во время рефлекса не теряет задачу"
+                        + " Иначе тест snapshot_Suspended_EqualsSnapshotOfRunningTask перестанет ловить эту поломку. При смене snapshot_Suspended_EqualsSnapshotOfRunningTask проверь это утверждение.");
     }
 
     @Test
@@ -192,9 +206,20 @@ class TaskRunnerSuspendTests {
 
         runner.cancel();
 
-        assertEquals(RunStatus.CANCELLED, runner.status(), "Отмена приостановленной задачи штатная");
-        assertEquals(1, fixture.created.get(0).cancels, "Скрипт получил cancel()");
-        assertFalse(runner.isSuspended(), "Отменённая задача не числится приостановленной");
+        assertEquals(
+                RunStatus.CANCELLED,
+                runner.status(),
+                "Отмена приостановленной задачи штатная"
+                        + " Иначе тест cancel_Suspended_CancelsScriptAndEndsCancelled перестанет ловить эту поломку. При смене cancel_Suspended_CancelsScriptAndEndsCancelled проверь это утверждение.");
+        assertEquals(
+                1,
+                fixture.created.get(0).cancels,
+                "Скрипт получил cancel()"
+                        + " Иначе тест cancel_Suspended_CancelsScriptAndEndsCancelled перестанет ловить эту поломку. При смене cancel_Suspended_CancelsScriptAndEndsCancelled проверь это утверждение.");
+        assertFalse(
+                runner.isSuspended(),
+                "Отменённая задача не числится приостановленной"
+                        + " Иначе тест cancel_Suspended_CancelsScriptAndEndsCancelled перестанет ловить эту поломку. При смене cancel_Suspended_CancelsScriptAndEndsCancelled проверь это утверждение.");
     }
 
     @Test
@@ -210,7 +235,8 @@ class TaskRunnerSuspendTests {
         assertEquals(
                 List.of(1, 1),
                 fixture.created.stream().map(probe -> probe.suspends).toList(),
-                "Оба параллельных скрипта обязаны остановить навигацию: иначе один из них продолжит идти, пока политика владеет духом");
+                "Оба параллельных скрипта обязаны остановить навигацию: иначе один из них продолжит идти, пока политика владеет духом"
+                        + " При смене suspend_ParallelScripts_NotifiesEveryRunningScript проверь это утверждение.");
     }
 
     @Test
@@ -237,7 +263,8 @@ class TaskRunnerSuspendTests {
         assertEquals(
                 PolicyExemptions.of(PolicyId.WATER, PolicyId.PORTAL),
                 runner.policyExemptions(),
-                "Исключения параллельных скриптов объединяются: каждый скрипт объявляет своё узкое исключение");
+                "Исключения параллельных скриптов объединяются: каждый скрипт объявляет своё узкое исключение"
+                        + " Иначе тест policyExemptions_ParallelScripts_AreUnionOfRunningOnes перестанет ловить эту поломку. При смене policyExemptions_ParallelScripts_AreUnionOfRunningOnes проверь это утверждение.");
     }
 
     @Test
@@ -250,7 +277,8 @@ class TaskRunnerSuspendTests {
         assertEquals(
                 PolicyExemptions.empty(),
                 runner.policyExemptions(),
-                "У завершённой задачи исключений нет: иначе исключение WATER пережило бы скрипт, который его объявил");
+                "У завершённой задачи исключений нет: иначе исключение WATER пережило бы скрипт, который его объявил"
+                        + " При смене policyExemptions_FinishedTask_IsEmpty проверь это утверждение.");
     }
 
     @Test
@@ -263,6 +291,7 @@ class TaskRunnerSuspendTests {
         assertEquals(
                 PolicyExemptions.of(PolicyId.WATER),
                 runner.policyExemptions(),
-                "Исключение живого скрипта доступно рантайму политик");
+                "Исключение живого скрипта доступно рантайму политик"
+                        + " Иначе тест policyExemptions_RunningScriptWithWater_IsReported перестанет ловить эту поломку. При смене policyExemptions_RunningScriptWithWater_IsReported проверь это утверждение.");
     }
 }

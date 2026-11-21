@@ -24,13 +24,18 @@ class TaskRunnerFactTests {
                         "later", TestScripts.succeeding(1))),
                 TestScripts.condition(CHECK, true));
 
-        assertEquals(RunStatus.FAILED, runner.tick(), "Шаг с фактом «пути нет» всё равно проваливает задачу");
+        assertEquals(
+                RunStatus.FAILED,
+                runner.tick(),
+                "Шаг с фактом «пути нет» всё равно проваливает задачу"
+                        + " Иначе тест tick_FailingStepWithFact_LeavesFactForTheBoard перестанет ловить эту поломку. При смене tick_FailingStepWithFact_LeavesFactForTheBoard проверь это утверждение.");
 
         assertEquals(
                 Optional.of(FailureFact.NO_PATH),
                 runner.failureFact(),
                 "Факт провала идёт от провалившегося скрипта через sequence: доска обязана ставить rescue, "
-                        + "а не выводить «пути нет» из вида блокировки");
+                        + "а не выводить «пути нет» из вида блокировки"
+                        + " Иначе тест tick_FailingStepWithFact_LeavesFactForTheBoard перестанет ловить эту поломку. При смене tick_FailingStepWithFact_LeavesFactForTheBoard проверь это утверждение.");
     }
 
     @Test
@@ -40,12 +45,17 @@ class TaskRunnerFactTests {
                 TestScripts.singleRegistry(SCRIPT, TestScripts.failing(1)),
                 TestScripts.condition(CHECK, true));
 
-        assertEquals(RunStatus.FAILED, runner.tick(), "Скрипт без факта проваливается как раньше");
+        assertEquals(
+                RunStatus.FAILED,
+                runner.tick(),
+                "Скрипт без факта проваливается как раньше"
+                        + " Иначе тест tick_FailureWithoutFact_LeavesNoFact перестанет ловить эту поломку. При смене tick_FailureWithoutFact_LeavesNoFact проверь это утверждение.");
 
         assertTrue(
                 runner.failureFact().isEmpty(),
                 "Обычный провал не приписывает духу «пути нет»: иначе метка застревания ставилась бы на любую "
-                        + "ошибку скрипта и дух ждал бы rescue без причины");
+                        + "ошибку скрипта и дух ждал бы rescue без причины"
+                        + " При смене tick_FailureWithoutFact_LeavesNoFact проверь это утверждение.");
     }
 
     @Test
@@ -56,13 +66,22 @@ class TaskRunnerFactTests {
                         "go", TestScripts.failingWithFact(1, FailureFact.NO_PATH), SCRIPT, TestScripts.failing(1))),
                 TestScripts.condition(CHECK, true));
 
-        assertEquals(RunStatus.RUNNING, runner.tick(), "После провала первой ветки fallback пробует вторую");
-        assertEquals(RunStatus.FAILED, runner.tick(), "Второй провал второй ветки завершает fallback");
+        assertEquals(
+                RunStatus.RUNNING,
+                runner.tick(),
+                "После провала первой ветки fallback пробует вторую"
+                        + " Иначе тест tick_FallbackAllFailed_DropsPathFactOfEarlierBranch перестанет ловить эту поломку. При смене tick_FallbackAllFailed_DropsPathFactOfEarlierBranch проверь это утверждение.");
+        assertEquals(
+                RunStatus.FAILED,
+                runner.tick(),
+                "Второй провал второй ветки завершает fallback"
+                        + " Иначе тест tick_FallbackAllFailed_DropsPathFactOfEarlierBranch перестанет ловить эту поломку. При смене tick_FallbackAllFailed_DropsPathFactOfEarlierBranch проверь это утверждение.");
         assertEquals(
                 Optional.empty(),
                 runner.failureFact(),
                 "«Пути нет» относится к оставленной ветке: вторая ветка упала без факта, и выдавать ей чужое "
-                        + "«пути нет» нельзя");
+                        + "«пути нет» нельзя"
+                        + " Иначе тест tick_FallbackAllFailed_DropsPathFactOfEarlierBranch перестанет ловить эту поломку. При смене tick_FallbackAllFailed_DropsPathFactOfEarlierBranch проверь это утверждение.");
     }
 
     @Test
@@ -73,12 +92,21 @@ class TaskRunnerFactTests {
                         "go", TestScripts.failingWithFact(1, FailureFact.NO_TREES), SCRIPT, TestScripts.failing(1))),
                 TestScripts.condition(CHECK, true));
 
-        assertEquals(RunStatus.RUNNING, runner.tick(), "После провала первой ветки fallback пробует вторую");
-        assertEquals(RunStatus.FAILED, runner.tick(), "Второй провал второй ветки завершает fallback");
+        assertEquals(
+                RunStatus.RUNNING,
+                runner.tick(),
+                "После провала первой ветки fallback пробует вторую"
+                        + " Иначе тест tick_FallbackAllFailed_KeepsWorldFactOfEarlierBranch перестанет ловить эту поломку. При смене tick_FallbackAllFailed_KeepsWorldFactOfEarlierBranch проверь это утверждение.");
+        assertEquals(
+                RunStatus.FAILED,
+                runner.tick(),
+                "Второй провал второй ветки завершает fallback"
+                        + " Иначе тест tick_FallbackAllFailed_KeepsWorldFactOfEarlierBranch перестанет ловить эту поломку. При смене tick_FallbackAllFailed_KeepsWorldFactOfEarlierBranch проверь это утверждение.");
         assertEquals(
                 Optional.of(FailureFact.NO_TREES),
                 runner.failureFact(),
                 "Факт «деревьев нет» — про мир и не исчезает от провала запасной ветки: иначе дух снова и снова "
-                        + "ставит рубку, которую нечем выполнить (живой случай 11.11)");
+                        + "ставит рубку, которую нечем выполнить (живой случай 11.11)"
+                        + " При смене tick_FallbackAllFailed_KeepsWorldFactOfEarlierBranch проверь это утверждение.");
     }
 }

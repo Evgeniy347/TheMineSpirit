@@ -41,16 +41,19 @@ class SectionCursorProperties {
                 box.volume(),
                 total,
                 "Сумма объёмов срезов обязана равняться объёму куба " + box
-                        + ": иначе блоки пропущены или посчитаны дважды");
+                        + ": иначе блоки пропущены или посчитаны дважды"
+                        + " При смене next_RandomCube_SlicesCoverCubeExactlyWithoutOverlap проверь это утверждение.");
         for (int i = 0; i < slices.size(); i++) {
             assertTrue(
                     contained(box, slices.get(i).bounds()),
-                    "Срез " + slices.get(i) + " выходит за куб " + box + ": скан прочитал бы блоки вне радиуса");
+                    "Срез " + slices.get(i) + " выходит за куб " + box + ": скан прочитал бы блоки вне радиуса"
+                            + " Иначе тест next_RandomCube_SlicesCoverCubeExactlyWithoutOverlap перестанет ловить эту поломку. При смене next_RandomCube_SlicesCoverCubeExactlyWithoutOverlap проверь это утверждение.");
             for (int j = i + 1; j < slices.size(); j++) {
                 assertTrue(
                         !intersects(slices.get(i).bounds(), slices.get(j).bounds()),
                         "Срезы " + slices.get(i) + " и " + slices.get(j)
-                                + " пересекаются: блоки на стыке посчитаны дважды");
+                                + " пересекаются: блоки на стыке посчитаны дважды"
+                                + " Иначе тест next_RandomCube_SlicesCoverCubeExactlyWithoutOverlap перестанет ловить эту поломку. При смене next_RandomCube_SlicesCoverCubeExactlyWithoutOverlap проверь это утверждение.");
             }
         }
     }
@@ -66,7 +69,8 @@ class SectionCursorProperties {
             assertTrue(
                     slices.get(i - 1).distanceSquared(center) <= slices.get(i).distanceSquared(center),
                     "Срез " + slices.get(i) + " ближе к центру " + center + ", чем предыдущий " + slices.get(i - 1)
-                            + ": ближние срезы обязаны идти первыми, иначе поиск блока сначала читает дальнее");
+                            + ": ближние срезы обязаны идти первыми, иначе поиск блока сначала читает дальнее"
+                            + " При смене next_RandomCube_SlicesDoNotDecreaseInDistance проверь это утверждение.");
         }
     }
 
@@ -83,13 +87,14 @@ class SectionCursorProperties {
         assertEquals(
                 (total + maxSlices - 1) / maxSlices,
                 portions.size(),
-                "Курсор из " + total + " срезов с порцией " + maxSlices
-                        + " обязан опустеть за ceil(N / порция) вызовов");
+                "Курсор из " + total + " срезов с порцией " + maxSlices + " обязан опустеть за ceil(N / порция) вызовов"
+                        + " Иначе тест next_RandomPortionSize_PortionsStayWithinLimitAndDrainInCeilCalls перестанет ловить эту поломку. При смене next_RandomPortionSize_PortionsStayWithinLimitAndDrainInCeilCalls проверь это утверждение.");
         for (List<SectionSlice> portion : portions) {
             assertTrue(
                     portion.size() <= maxSlices && !portion.isEmpty(),
                     "Порция из " + portion.size() + " срезов нарушает предел " + maxSlices
-                            + ": лимит порции держит стоимость тика");
+                            + ": лимит порции держит стоимость тика"
+                            + " Иначе тест next_RandomPortionSize_PortionsStayWithinLimitAndDrainInCeilCalls перестанет ловить эту поломку. При смене next_RandomPortionSize_PortionsStayWithinLimitAndDrainInCeilCalls проверь это утверждение.");
         }
     }
 

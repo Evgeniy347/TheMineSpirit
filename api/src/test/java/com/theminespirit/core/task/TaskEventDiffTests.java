@@ -37,11 +37,16 @@ class TaskEventDiffTests {
         TaskEvent event =
                 stateEvent(record(TaskState.RUNNING, null, null), recordWithResult(TaskState.SUCCEEDED, result));
 
-        assertEquals("succeeded", event.data().get("state"), "state-событие обязано называть succeeded");
+        assertEquals(
+                "succeeded",
+                event.data().get("state"),
+                "state-событие обязано называть succeeded"
+                        + " Иначе тест between_SucceededWithResult_StateEventCarriesResult перестанет ловить эту поломку. При смене between_SucceededWithResult_StateEventCarriesResult проверь это утверждение.");
         assertEquals(
                 result,
                 event.data().get("result"),
-                "state-событие успеха обязано нести итог: по нему клиент узнаёт, что сделано, без второго запроса");
+                "state-событие успеха обязано нести итог: по нему клиент узнаёт, что сделано, без второго запроса"
+                        + " Иначе тест between_SucceededWithResult_StateEventCarriesResult перестанет ловить эту поломку. При смене between_SucceededWithResult_StateEventCarriesResult проверь это утверждение.");
     }
 
     @Test
@@ -52,8 +57,12 @@ class TaskEventDiffTests {
         assertTrue(
                 event.data().containsKey("result"),
                 "state-событие успеха обязано содержать ключ result даже при пустом итоге: клиент отличает 'нет "
-                        + "ключа' от 'итога нет'");
-        assertNull(event.data().get("result"), "успех без итога обязан нести result == null");
+                        + "ключа' от 'итога нет'"
+                        + " Иначе тест between_SucceededWithoutResult_StateEventHasNullResult перестанет ловить эту поломку. При смене between_SucceededWithoutResult_StateEventHasNullResult проверь это утверждение.");
+        assertNull(
+                event.data().get("result"),
+                "успех без итога обязан нести result == null"
+                        + " Иначе тест between_SucceededWithoutResult_StateEventHasNullResult перестанет ловить эту поломку. При смене between_SucceededWithoutResult_StateEventHasNullResult проверь это утверждение.");
     }
 
     @Test
@@ -66,7 +75,8 @@ class TaskEventDiffTests {
         for (TaskEvent event : events) {
             assertTrue(
                     !event.data().containsKey("result"),
-                    "событие провала (" + event.type() + ") не должно нести result: итог принадлежит только успеху");
+                    "событие провала (" + event.type() + ") не должно нести result: итог принадлежит только успеху"
+                            + " Иначе тест between_Failed_NoResultKeyInScriptFailedOrState перестанет ловить эту поломку. При смене between_Failed_NoResultKeyInScriptFailedOrState проверь это утверждение.");
         }
     }
 
@@ -125,7 +135,8 @@ class TaskEventDiffTests {
         assertEquals(
                 expected,
                 events.stream().map(TaskEvent::type).toList(),
-                "Дифф кадров (" + label + ") обязан давать ровно типы " + expected);
+                "Дифф кадров (" + label + ") обязан давать ровно типы " + expected
+                        + " Иначе тест between_TableCase_ProducesExpectedTypes перестанет ловить эту поломку. При смене between_TableCase_ProducesExpectedTypes проверь это утверждение.");
     }
 
     @ParameterizedTest
@@ -138,16 +149,19 @@ class TaskEventDiffTests {
                     assertEquals(
                             current.state().wire(),
                             event.data().get("state"),
-                            "Кадр state обязан нести текущее состояние (" + label + ")");
+                            "Кадр state обязан нести текущее состояние (" + label + ")"
+                                    + " Иначе тест between_AnyCase_EventDataMatchesCurrentFrame перестанет ловить эту поломку. При смене between_AnyCase_EventDataMatchesCurrentFrame проверь это утверждение.");
                 case TaskEvent.TYPE_PROGRESS -> {
                     assertEquals(
                             current.progress().step(),
                             event.data().get("step"),
-                            "Кадр progress обязан нести текущий шаг (" + label + ")");
+                            "Кадр progress обязан нести текущий шаг (" + label + ")"
+                                    + " Иначе тест between_AnyCase_EventDataMatchesCurrentFrame перестанет ловить эту поломку. При смене between_AnyCase_EventDataMatchesCurrentFrame проверь это утверждение.");
                     assertEquals(
                             current.progress().totalSteps(),
                             event.data().get("total_steps"),
-                            "Кадр progress обязан нести число шагов (" + label + ")");
+                            "Кадр progress обязан нести число шагов (" + label + ")"
+                                    + " Иначе тест between_AnyCase_EventDataMatchesCurrentFrame перестанет ловить эту поломку. При смене between_AnyCase_EventDataMatchesCurrentFrame проверь это утверждение.");
                 }
                 case TaskEvent.TYPE_SCRIPT_FAILED -> {
                     assertEquals(
@@ -155,11 +169,13 @@ class TaskEventDiffTests {
                                     ? null
                                     : previous.progress().currentScript(),
                             event.data().get("script"),
-                            "script_failed обязан называть скрипт, работавший до провала (" + label + ")");
+                            "script_failed обязан называть скрипт, работавший до провала (" + label + ")"
+                                    + " Иначе тест between_AnyCase_EventDataMatchesCurrentFrame перестанет ловить эту поломку. При смене between_AnyCase_EventDataMatchesCurrentFrame проверь это утверждение.");
                     assertEquals(
                             current.error(),
                             event.data().get("reason"),
-                            "script_failed обязан нести причину провала (" + label + ")");
+                            "script_failed обязан нести причину провала (" + label + ")"
+                                    + " Иначе тест between_AnyCase_EventDataMatchesCurrentFrame перестанет ловить эту поломку. При смене between_AnyCase_EventDataMatchesCurrentFrame проверь это утверждение.");
                 }
                 default -> fail("Неизвестный тип события " + event.type());
             }

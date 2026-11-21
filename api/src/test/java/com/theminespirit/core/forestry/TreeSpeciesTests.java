@@ -49,7 +49,8 @@ class TreeSpeciesTests {
                                 "minecraft:cherry_sapling")),
                 TreeSpecies.ALL,
                 "Таблица пород обязана называть ровно восемь видов с их брёвнами, листвой и саженцем: "
-                        + "по id-шникам поиск находит деревья в мире, а пропущенная порода тихо даёт «деревьев нет»");
+                        + "по id-шникам поиск находит деревья в мире, а пропущенная порода тихо даёт «деревьев нет»"
+                        + " Иначе тест all_EightSpecies_ListLogsLeavesAndSaplings перестанет ловить эту поломку. При смене all_EightSpecies_ListLogsLeavesAndSaplings проверь это утверждение.");
     }
 
     @Test
@@ -58,7 +59,8 @@ class TreeSpeciesTests {
                 TreeSpecies.ALL,
                 TreeSpecies.parse("any"),
                 "parse('any') обязан вернуть все породы: запись any в плане значит «рубить что найду», "
-                        + "а не «порубу ничего»");
+                        + "а не «порубу ничего»"
+                        + " Иначе тест parse_Any_ReturnsAllSpecies перестанет ловить эту поломку. При смене parse_Any_ReturnsAllSpecies проверь это утверждение.");
     }
 
     @Test
@@ -66,7 +68,8 @@ class TreeSpeciesTests {
         assertEquals(
                 List.of(new TreeSpecies("oak", "minecraft:oak_log", "minecraft:oak_leaves", "minecraft:oak_sapling")),
                 TreeSpecies.parse("oak"),
-                "parse известной породы обязан вернуть ровно её: по названию из плана дух ищет брёвна конкретного вида");
+                "parse известной породы обязан вернуть ровно её: по названию из плана дух ищет брёвна конкретного вида"
+                        + " Иначе тест parse_KnownId_ReturnsThatSpecies перестанет ловить эту поломку. При смене parse_KnownId_ReturnsThatSpecies проверь это утверждение.");
     }
 
     @Test
@@ -74,12 +77,14 @@ class TreeSpeciesTests {
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,
                 () -> TreeSpecies.parse("pine"),
-                "parse неизвестной породы обязан отказывать: опечатка в названии иначе тихо рубит любое дерево");
+                "parse неизвестной породы обязан отказывать: опечатка в названии иначе тихо рубит любое дерево"
+                        + " При смене parse_UnknownId_ThrowsListingAllowed проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("oak") && error.getMessage().contains("any"),
                 "Сообщение обязано перечислить допустимые породы вместе с 'any': по нему игрок правит название. "
-                        + "Фактическое: " + error.getMessage());
+                        + "Фактическое: " + error.getMessage()
+                        + " Иначе тест parse_UnknownId_ThrowsListingAllowed перестанет ловить эту поломку. При смене parse_UnknownId_ThrowsListingAllowed проверь это утверждение.");
     }
 
     @Test
@@ -87,7 +92,8 @@ class TreeSpeciesTests {
         assertThrows(
                 NullPointerException.class,
                 () -> TreeSpecies.parse(null),
-                "parse(null) обязан отказывать: без имени породы нельзя выбрать вид для рубки");
+                "parse(null) обязан отказывать: без имени породы нельзя выбрать вид для рубки"
+                        + " Иначе тест parse_Null_IsRejected перестанет ловить эту поломку. При смене parse_Null_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -96,7 +102,8 @@ class TreeSpeciesTests {
                 Optional.of(
                         new TreeSpecies("oak", "minecraft:oak_log", "minecraft:oak_leaves", "minecraft:oak_sapling")),
                 TreeSpecies.ofLog("minecraft:oak_log"),
-                "ofLog по настоящему бревну обязан вернуть его породу: по нему дух понимает, что перед ним дерево");
+                "ofLog по настоящему бревну обязан вернуть его породу: по нему дух понимает, что перед ним дерево"
+                        + " Иначе тест ofLog_OakLog_ReturnsOak перестанет ловить эту поломку. При смене ofLog_OakLog_ReturnsOak проверь это утверждение.");
     }
 
     @Test
@@ -105,7 +112,8 @@ class TreeSpeciesTests {
                 Optional.empty(),
                 TreeSpecies.ofLog("minecraft:stripped_oak_log"),
                 "ofLog тёсаного бревна обязан вернуть пусто: stripped_* — строительный материал, а не дерево, "
-                        + "его дух ломать не должен");
+                        + "его дух ломать не должен"
+                        + " Иначе тест ofLog_StrippedLog_IsEmpty перестанет ловить эту поломку. При смене ofLog_StrippedLog_IsEmpty проверь это утверждение.");
     }
 
     @Test
@@ -114,7 +122,8 @@ class TreeSpeciesTests {
                 Optional.empty(),
                 TreeSpecies.ofLog("minecraft:oak_wood"),
                 "ofLog блока *_wood обязан вернуть пусто: wood — брёвна без коры, из них делают постройки, "
-                        + "а не рубят деревья");
+                        + "а не рубят деревья"
+                        + " Иначе тест ofLog_WoodBlock_IsEmpty перестанет ловить эту поломку. При смене ofLog_WoodBlock_IsEmpty проверь это утверждение.");
     }
 
     @Test
@@ -123,6 +132,7 @@ class TreeSpeciesTests {
                 List.of("any", "oak", "spruce", "birch", "jungle", "acacia", "dark_oak", "mangrove", "cherry"),
                 TreeSpecies.names(),
                 "Список имён для enum обязан начинаться с 'any' и перечислить все породы: по нему валидатор плана "
-                        + "принимает только осмысленные значения species");
+                        + "принимает только осмысленные значения species"
+                        + " Иначе тест names_AnyFirst_ThenEightSpecies перестанет ловить эту поломку. При смене names_AnyFirst_ThenEightSpecies проверь это утверждение.");
     }
 }
