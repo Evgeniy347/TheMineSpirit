@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge;
 
 import com.mojang.logging.LogUtils;
+import com.theminespirit.neoforge.movement.WalkGaze;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -51,6 +52,10 @@ public final class MoveTrace {
         if (broken || spirit.level().isClientSide()) {
             return;
         }
+        WalkGaze.tick(
+                spirit,
+                spirit instanceof SpiritTaskView view
+                        && view.currentTaskScript().isPresent());
         SpinWatch.tick(spirit, owner, tick);
         Vec3 pos = spirit.position();
         var navigation = spirit.getNavigation();
