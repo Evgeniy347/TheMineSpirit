@@ -85,7 +85,7 @@ public final class WalkAscent {
             return new Command(descent, targetX, cell.y(), targetZ);
         }
         Step step = switch (lift(rising, body)) {
-            case HOLD -> Step.MOVE;
+            case HOLD -> horizontal(pose, targetX, targetZ) > MAX_JUMP_REACH ? Step.IMPOSSIBLE : Step.MOVE;
             case JUMP ->
                 cell.y() - pose.feet().y() > 1 || horizontal(pose, targetX, targetZ) > MAX_JUMP_REACH
                         ? Step.IMPOSSIBLE

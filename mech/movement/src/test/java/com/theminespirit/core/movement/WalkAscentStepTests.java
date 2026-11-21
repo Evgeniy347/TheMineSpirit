@@ -17,6 +17,35 @@ class WalkAscentStepTests {
     private static final int TICKS = 40;
 
     @Test
+    void next_WalkTwoCellsAway_IsImpossible() {
+        WalkAscent.Command command = WalkAscent.next(
+                new BlockCoord(0, 0, 2),
+                new WalkAscent.Pose(new BlockCoord(0, 0, 0), 0.5, 0.0, 0.5),
+                new WalkAscent.Body(true, false, false));
+        assertEquals(
+                WalkAscent.Step.IMPOSSIBLE,
+                command.step(),
+                "Ровный шаг в клетку через две не ведёт по прямой: иначе дух упирается в препятствие между "
+                        + "ними, скользит вдоль стены по кругу и даёт эпизод TURN (окно 60, spirit-5 IDLE: "
+                        + "287° за 44 тика, путь 2.12, сдвиг 0.26). При смене правила проверь шаг в соседнюю "
+                        + "клетку: он обязан остаться MOVE");
+    }
+
+    @Test
+    void next_WalkNeighbourCell_StaysMove() {
+        WalkAscent.Command command = WalkAscent.next(
+                new BlockCoord(0, 0, 1),
+                new WalkAscent.Pose(new BlockCoord(0, 0, 0), 0.5, 0.0, 0.5),
+                new WalkAscent.Body(true, false, false));
+        assertEquals(
+                WalkAscent.Step.MOVE,
+                command.step(),
+                "Соседняя клетка на том же уровне берётся шагом: иначе дух остановится на каждом обычном "
+                        + "шаге маршрута. При смене порога дальности проверь живой проход по поселению: MOVE "
+                        + "выполняется");
+    }
+
+    @Test
     void next_JumpTwoCellsAway_IsImpossible() {
         WalkAscent.Command command = WalkAscent.next(
                 new BlockCoord(0, 1, 2),
