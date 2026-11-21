@@ -19,17 +19,28 @@ public final class WalkAscent {
         DIVE,
         ARRIVED,
         IMPOSSIBLE,
-        DESCENT_BLOCKED
+        DESCENT_BLOCKED,
+        ASCENT_BLOCKED
     }
 
     public record Body(
-            boolean onGround, boolean inWater, boolean onClimbable, boolean waterTarget, boolean descentBlocked) {
+            boolean onGround,
+            boolean inWater,
+            boolean onClimbable,
+            boolean waterTarget,
+            boolean descentBlocked,
+            boolean headBlocked) {
         public Body(boolean onGround, boolean inWater, boolean onClimbable, boolean waterTarget) {
-            this(onGround, inWater, onClimbable, waterTarget, false);
+            this(onGround, inWater, onClimbable, waterTarget, false, false);
+        }
+
+        public Body(
+                boolean onGround, boolean inWater, boolean onClimbable, boolean waterTarget, boolean descentBlocked) {
+            this(onGround, inWater, onClimbable, waterTarget, descentBlocked, false);
         }
 
         public Body(boolean onGround, boolean inWater, boolean onClimbable) {
-            this(onGround, inWater, onClimbable, false, false);
+            this(onGround, inWater, onClimbable, false, false, false);
         }
     }
 
@@ -74,7 +85,8 @@ public final class WalkAscent {
         }
         Step step = switch (lift(rising, body)) {
             case HOLD -> Step.MOVE;
-            case JUMP -> cell.y() - pose.feet().y() > 1 ? Step.IMPOSSIBLE : Step.JUMP;
+            case JUMP ->
+                cell.y() - pose.feet().y() > 1 ? Step.IMPOSSIBLE : body.headBlocked() ? Step.ASCENT_BLOCKED : Step.JUMP;
             case CLIMB -> Step.CLIMB;
         };
         return new Command(step, targetX, cell.y(), targetZ);

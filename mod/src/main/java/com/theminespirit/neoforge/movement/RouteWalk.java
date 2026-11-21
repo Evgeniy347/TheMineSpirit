@@ -145,13 +145,8 @@ public final class RouteWalk {
             advance();
             return Optional.empty();
         }
-        if (command.step() == WalkAscent.Step.IMPOSSIBLE) {
-            return Optional.of(
-                    "шаг выше на " + (cell.y() - spirit.blockPosition().getY()) + " блока: прыжком не взять");
-        }
-        if (command.step() == WalkAscent.Step.DESCENT_BLOCKED) {
-            return Optional.of("спуск к " + cell + " перекрыт блоком: нужен обход с копанием");
-        }
+        Optional<String> early = earlyRefusal(command, cell);
+        if (early.isPresent()) return early;
         spirit.getNavigation().stop();
         boolean fall = command.step() == WalkAscent.Step.MOVE || command.step() == WalkAscent.Step.DIVE;
         if (fall && command.y() < spirit.getY() - 0.5 && !spirit.isInWater()) {
@@ -195,17 +190,24 @@ public final class RouteWalk {
         if (command.step() == WalkAscent.Step.ARRIVED) {
             return advance();
         }
-        if (command.step() == WalkAscent.Step.IMPOSSIBLE) {
-            return Optional.of(
-                    "шаг выше на " + (cell.y() - spirit.blockPosition().getY()) + " блока: прыжком не взять");
-        }
-        if (command.step() == WalkAscent.Step.DESCENT_BLOCKED) {
-            return Optional.of("спуск к " + cell + " перекрыт блоком: нужен обход с копанием");
-        }
+        Optional<String> early = earlyRefusal(command, cell);
+        if (early.isPresent()) return early;
         spirit.getNavigation().stop();
         spirit.getMoveControl().setWantedPosition(cell.x() + 0.5, cell.y(), cell.z() + 0.5, SPEED);
         if (spirit.onGround() && atEdge(cell)) {
             spirit.getJumpControl().jump();
+        }
+        return Optional.empty();
+    }
+
+    private Optional<String> earlyRefusal(WalkAscent.Command command, BlockCoord cell) {
+        WalkAscent.Step step = command.step();
+        if (step == WalkAscent.Step.IMPOSSIBLE) {
+            return Optional.of(
+                    "шаг выше на " + (cell.y() - spirit.blockPosition().getY()) + " блока: прыжком не взять");
+        }
+        if (step == WalkAscent.Step.DESCENT_BLOCKED || step == WalkAscent.Step.ASCENT_BLOCKED) {
+            return Optional.of("шаг в " + cell + " перекрыт: нужен обход с копанием");
         }
         return Optional.empty();
     }
@@ -262,13 +264,16 @@ public final class RouteWalk {
         BlockPos target = pos(cell);
         boolean water = spirit.level().getFluidState(target).is(FluidTags.WATER)
                 || spirit.level().getFluidState(target.below()).is(FluidTags.WATER);
+        Vec3 center = new Vec3(cell.x() + 0.5, cell.y() + 0.5, cell.z() + 0.5);
         boolean blocked = cell.y() < Math.floor(spirit.getY()) - 1
-                && WalkReport.blocking(
-                                spirit.level(),
-                                spirit.position(),
-                                new Vec3(cell.x() + 0.5, cell.y() + 0.5, cell.z() + 0.5))
-                        != null;
-        return new WalkAscent.Body(spirit.onGround(), spirit.isInWater(), spirit.onClimbable(), water, blocked);
+                && WalkReport.blocking(spirit.level(), spirit.position(), center) != null;
+        return new WalkAscent.Body(
+                spirit.onGround(),
+                spirit.isInWater(),
+                spirit.onClimbable(),
+                water,
+                blocked,
+                WalkReport.headBlocked(spirit, cell));
     }
 
     Optional<String> advanceStep() {

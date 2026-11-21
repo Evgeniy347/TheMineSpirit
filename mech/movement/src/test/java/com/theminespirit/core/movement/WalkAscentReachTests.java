@@ -104,6 +104,31 @@ class WalkAscentReachTests {
     }
 
     @Test
+    void next_StepOneAboveUnderCeiling_IsAscentBlocked() {
+        Command command =
+                WalkAscent.next(new BlockCoord(0, 1, 0), FEET, new Body(true, false, false, false, false, true));
+
+        assertEquals(
+                Step.ASCENT_BLOCKED,
+                command.step(),
+                "Подъём при блоке над головой сразу отвергается: иначе дух прыгает под потолком на 0.42 и "
+                        + "толчётся 60 тиков (окно 32, spirit-1 у -171,71,-489, цель -170,72,-489). При смене "
+                        + "правила подъёма проверь живой прыжок под потолком: отказ сразу, обход с копанием");
+    }
+
+    @Test
+    void next_StepOneAboveWithHeadroom_Jumps() {
+        Command command =
+                WalkAscent.next(new BlockCoord(0, 1, 0), FEET, new Body(true, false, false, false, false, false));
+
+        assertEquals(
+                Step.JUMP,
+                command.step(),
+                "Подъём с чистым потолком остаётся прыжком: иначе дух перестанет брать ступени и бордюры, "
+                        + "где над головой воздух. При смене правила подъёма проверь ступень под открытым небом");
+    }
+
+    @Test
     void next_StepTwoBelowWithBlockedLane_IsDescentBlocked() {
         Command command = WalkAscent.next(new BlockCoord(0, -2, 0), FEET, new Body(true, false, false, false, true));
 

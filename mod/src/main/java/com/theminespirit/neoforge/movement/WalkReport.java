@@ -64,6 +64,15 @@ final class WalkReport {
         return blocked == null ? "-" : BlockStates.idOf(level.getBlockState(blocked)) + "@" + blocked.toShortString();
     }
 
+    static boolean headBlocked(SpiritEntity spirit, BlockCoord cell) {
+        BlockPos feet = spirit.blockPosition();
+        return cell.y() > feet.getY() && (solid(spirit.level(), feet.above()) || solid(spirit.level(), feet.above(2)));
+    }
+
+    private static boolean solid(Level level, BlockPos pos) {
+        return !level.getBlockState(pos).getCollisionShape(level, pos).isEmpty();
+    }
+
     static @Nullable BlockPos blocking(Level level, Vec3 from, Vec3 to) {
         Vec3 delta = to.subtract(from);
         int steps = (int) Math.ceil(delta.length() / 0.25);
