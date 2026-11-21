@@ -114,7 +114,8 @@ public final class SpiritNavigation extends GroundPathNavigation {
 
     private void logBuilt(BlockPos want, Path path, @Nullable BlockPos last, @Nullable Path previous) {
         LOGGER.info(
-                "[nav] дух {}: путь к {} — узлов {}, конец {}, из {}, прошлая цель {}, прошлый путь {}, источник {}",
+                "[nav] дух {}: путь к {} — узлов {}, конец {}, из {}, прошлая цель {}, прошлый путь {}, источник {},"
+                        + " узел {}",
                 mob.getName().getString(),
                 want.toShortString(),
                 path.getNodeCount(),
@@ -122,7 +123,8 @@ public final class SpiritNavigation extends GroundPathNavigation {
                 mob.blockPosition().toShortString(),
                 last == null ? "-" : last.toShortString(),
                 previous == null ? "нет" : previous.isDone() ? "конец" : "идёт " + previous.getNextNodeIndex(),
-                source());
+                source(),
+                path.getNodeCount() == 0 ? "-" : path.getNode(0).type);
     }
 
     private static String source() {

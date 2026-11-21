@@ -28,34 +28,34 @@ class SettlementTreeScenarioTests {
         assertEquals(
                 "Создать поселение",
                 tree.node("s1:root").orElseThrow().title(),
-                "Корень древа этапа 1 — «Создать поселение»: с него начинается развитие");
+                "Корень древа этапа 1 — «Создать поселение»: с него начинается развитие Иначе тест stageOne_PartlyBuilt_UsesWorldPercentsAndKeepsGateClosed перестанет ловить эту поломку. При смене stageOne_PartlyBuilt_UsesWorldPercentsAndKeepsGateClosed проверь это утверждение.");
         assertEquals(
                 40,
                 tree.node("s1:case:BUILD_MINE:1").orElseThrow().percent(),
-                "Шахта 40%: процент берётся из состояния мира, а не из отметки журнала");
+                "Шахта 40%: процент берётся из состояния мира, а не из отметки журнала Иначе тест stageOne_PartlyBuilt_UsesWorldPercentsAndKeepsGateClosed перестанет ловить эту поломку. При смене stageOne_PartlyBuilt_UsesWorldPercentsAndKeepsGateClosed проверь это утверждение.");
         assertEquals(
                 SettlementTree.State.IN_PROGRESS,
                 tree.node("s1:case:BUILD_MINE:1").orElseThrow().state(),
-                "Шахта 40% — в работе, а не готова");
+                "Шахта 40% — в работе, а не готова Иначе тест stageOne_PartlyBuilt_UsesWorldPercentsAndKeepsGateClosed перестанет ловить эту поломку. При смене stageOne_PartlyBuilt_UsesWorldPercentsAndKeepsGateClosed проверь это утверждение.");
         assertEquals(
                 SettlementTree.State.NOT_STARTED,
                 tree.node("s1:case:BUILD_ORCHARD:1").orElseThrow().state(),
-                "Сад 0% — не начат");
+                "Сад 0% — не начат Иначе тест stageOne_PartlyBuilt_UsesWorldPercentsAndKeepsGateClosed перестанет ловить эту поломку. При смене stageOne_PartlyBuilt_UsesWorldPercentsAndKeepsGateClosed проверь это утверждение.");
         assertEquals(
                 PERCENT,
                 tree.node("s1:case:BUILD_FENCE:1").orElseThrow().percent(),
-                "Забор 100%: готовность мира доходит до предела");
+                "Забор 100%: готовность мира доходит до предела Иначе тест stageOne_PartlyBuilt_UsesWorldPercentsAndKeepsGateClosed перестанет ловить эту поломку. При смене stageOne_PartlyBuilt_UsesWorldPercentsAndKeepsGateClosed проверь это утверждение.");
         SettlementTree.Node gate = tree.node("s1:gate").orElseThrow();
         assertEquals(
                 SettlementTree.State.LOCKED,
                 gate.state(),
-                "Ворота этапа закрыты, пока шахта, сад и дом не готовы целиком");
+                "Ворота этапа закрыты, пока шахта, сад и дом не готовы целиком Иначе тест stageOne_PartlyBuilt_UsesWorldPercentsAndKeepsGateClosed перестанет ловить эту поломку. При смене stageOne_PartlyBuilt_UsesWorldPercentsAndKeepsGateClosed проверь это утверждение.");
         assertTrue(
                 gate.requirements().contains("Шахта"),
-                "Закрытые ворота называют недостающую обязательную постройку «Шахта»: игрок видит, чего ждать");
+                "Закрытые ворота называют недостающую обязательную постройку «Шахта»: игрок видит, чего ждать Иначе тест stageOne_PartlyBuilt_UsesWorldPercentsAndKeepsGateClosed перестанет ловить эту поломку. При смене stageOne_PartlyBuilt_UsesWorldPercentsAndKeepsGateClosed проверь это утверждение.");
         assertTrue(
                 gate.requirements().contains("Сад"),
-                "Закрытые ворота называют недостающий «Сад»: подсказка ведёт к неготовой постройке");
+                "Закрытые ворота называют недостающий «Сад»: подсказка ведёт к неготовой постройке Иначе тест stageOne_PartlyBuilt_UsesWorldPercentsAndKeepsGateClosed перестанет ловить эту поломку. При смене stageOne_PartlyBuilt_UsesWorldPercentsAndKeepsGateClosed проверь это утверждение.");
     }
 
     @Test
@@ -73,15 +73,15 @@ class SettlementTreeScenarioTests {
         assertEquals(
                 SettlementTree.State.READY,
                 tree.node("s1:gate").orElseThrow().state(),
-                "Все обязательные постройки этапа 1 готовы — ворота этапа 2 открыты");
+                "Все обязательные постройки этапа 1 готовы — ворота этапа 2 открыты Иначе тест stageOne_AllMandatoryReady_OpensGateAndIgnoresPlanExtras перестанет ловить эту поломку. При смене stageOne_AllMandatoryReady_OpensGateAndIgnoresPlanExtras проверь это утверждение.");
         SettlementTree.Node wheat = tree.node("s1:plan:wheat_field:1").orElseThrow();
         assertFalse(
                 wheat.blocking(),
-                "Грядка пшеницы из плана этапа 1 не держит переход: ворота открывает набор stages.json buildings");
+                "Грядка пшеницы из плана этапа 1 не держит переход: ворота открывает набор stages.json buildings Иначе тест stageOne_AllMandatoryReady_OpensGateAndIgnoresPlanExtras перестанет ловить эту поломку. При смене stageOne_AllMandatoryReady_OpensGateAndIgnoresPlanExtras проверь это утверждение.");
         assertEquals(
                 SettlementTree.State.NOT_STARTED,
                 wheat.state(),
-                "Грядка пшеницы без постройки показана серой и не мешает открыть этап");
+                "Грядка пшеницы без постройки показана серой и не мешает открыть этап Иначе тест stageOne_AllMandatoryReady_OpensGateAndIgnoresPlanExtras перестанет ловить эту поломку. При смене stageOne_AllMandatoryReady_OpensGateAndIgnoresPlanExtras проверь это утверждение.");
     }
 
     @Test
@@ -92,19 +92,30 @@ class SettlementTreeScenarioTests {
 
         SettlementTree.Node first = tree.node("s2:plan:family_house_a:1").orElseThrow();
         assertEquals(
-                SettlementTree.State.READY, first.state(), "Первый уровень дома семьи готов — ветка улучшений открыта");
+                SettlementTree.State.READY,
+                first.state(),
+                "Первый уровень дома семьи готов — ветка улучшений открыта Иначе тест upgrades_NextLevelFactsLocked_ShowGrayUntilPreviousLevelReady перестанет ловить эту поломку. При смене upgrades_NextLevelFactsLocked_ShowGrayUntilPreviousLevelReady проверь это утверждение.");
         SettlementTree.Node second = tree.node("s2:plan:family_house_a:2").orElseThrow();
         assertEquals(
-                SettlementTree.State.IN_PROGRESS, second.state(), "Второй уровень дома семьи строится: 50% в работе");
-        assertEquals(50, second.percent(), "Второй уровень показывает 50% из аудита мира");
+                SettlementTree.State.IN_PROGRESS,
+                second.state(),
+                "Второй уровень дома семьи строится: 50% в работе Иначе тест upgrades_NextLevelFactsLocked_ShowGrayUntilPreviousLevelReady перестанет ловить эту поломку. При смене upgrades_NextLevelFactsLocked_ShowGrayUntilPreviousLevelReady проверь это утверждение.");
+        assertEquals(
+                50,
+                second.percent(),
+                "Второй уровень показывает 50% из аудита мира Иначе тест upgrades_NextLevelFactsLocked_ShowGrayUntilPreviousLevelReady перестанет ловить эту поломку. При смене upgrades_NextLevelFactsLocked_ShowGrayUntilPreviousLevelReady проверь это утверждение.");
         SettlementTree.Node third = tree.node("s2:plan:family_house_a:3").orElseThrow();
         assertEquals(
-                SettlementTree.State.LOCKED, third.state(), "Третий уровень закрыт, пока второй не построен целиком");
+                SettlementTree.State.LOCKED,
+                third.state(),
+                "Третий уровень закрыт, пока второй не построен целиком Иначе тест upgrades_NextLevelFactsLocked_ShowGrayUntilPreviousLevelReady перестанет ловить эту поломку. При смене upgrades_NextLevelFactsLocked_ShowGrayUntilPreviousLevelReady проверь это утверждение.");
         assertEquals(
-                0, third.percent(), "Закрытый третий уровень не показывает процент: сначала нужен предыдущий уровень");
+                0,
+                third.percent(),
+                "Закрытый третий уровень не показывает процент: сначала нужен предыдущий уровень Иначе тест upgrades_NextLevelFactsLocked_ShowGrayUntilPreviousLevelReady перестанет ловить эту поломку. При смене upgrades_NextLevelFactsLocked_ShowGrayUntilPreviousLevelReady проверь это утверждение.");
         assertTrue(
                 third.requirements().contains("Дом семьи A (уровень 2)"),
-                "Подсказка третьего уровня называет предшественника «Дом семьи A (уровень 2)»");
+                "Подсказка третьего уровня называет предшественника «Дом семьи A (уровень 2)» Иначе тест upgrades_NextLevelFactsLocked_ShowGrayUntilPreviousLevelReady перестанет ловить эту поломку. При смене upgrades_NextLevelFactsLocked_ShowGrayUntilPreviousLevelReady проверь это утверждение.");
     }
 
     @Test
@@ -116,15 +127,15 @@ class SettlementTreeScenarioTests {
         assertEquals(
                 SettlementTree.State.IN_PROGRESS,
                 tree.node("s2:plan:family_house_a:1").orElseThrow().state(),
-                "Первый уровень дома семьи в работе: 30%");
+                "Первый уровень дома семьи в работе: 30% Иначе тест upgrades_PreviousLevelMissing_LocksNextEvenWithWorldProgress перестанет ловить эту поломку. При смене upgrades_PreviousLevelMissing_LocksNextEvenWithWorldProgress проверь это утверждение.");
         assertEquals(
                 SettlementTree.State.LOCKED,
                 tree.node("s2:plan:family_house_a:2").orElseThrow().state(),
-                "Второй уровень закрыт, пока первый не готов, даже если в мире уже стоит 70% его схемы");
+                "Второй уровень закрыт, пока первый не готов, даже если в мире уже стоит 70% его схемы Иначе тест upgrades_PreviousLevelMissing_LocksNextEvenWithWorldProgress перестанет ловить эту поломку. При смене upgrades_PreviousLevelMissing_LocksNextEvenWithWorldProgress проверь это утверждение.");
         assertEquals(
                 0,
                 tree.node("s2:plan:family_house_a:2").orElseThrow().percent(),
-                "Закрытый второй уровень не показывает 70%: игрок видит недоступность, а не ложный прогресс");
+                "Закрытый второй уровень не показывает 70%: игрок видит недоступность, а не ложный прогресс Иначе тест upgrades_PreviousLevelMissing_LocksNextEvenWithWorldProgress перестанет ловить эту поломку. При смене upgrades_PreviousLevelMissing_LocksNextEvenWithWorldProgress проверь это утверждение.");
     }
 
     @Test
@@ -136,11 +147,11 @@ class SettlementTreeScenarioTests {
         assertEquals(
                 SettlementTree.State.READY,
                 tree.node("s2:plan:family_house_a:2").orElseThrow().state(),
-                "Второй уровень готов — следующий шаг ветки становится доступным");
+                "Второй уровень готов — следующий шаг ветки становится доступным Иначе тест upgrades_PreviousLevelReady_ShowsNextNotStarted перестанет ловить эту поломку. При смене upgrades_PreviousLevelReady_ShowsNextNotStarted проверь это утверждение.");
         assertEquals(
                 SettlementTree.State.NOT_STARTED,
                 tree.node("s2:plan:family_house_a:3").orElseThrow().state(),
-                "Третий уровень после готового второго — не начат, а не закрыт");
+                "Третий уровень после готового второго — не начат, а не закрыт Иначе тест upgrades_PreviousLevelReady_ShowsNextNotStarted перестанет ловить эту поломку. При смене upgrades_PreviousLevelReady_ShowsNextNotStarted проверь это утверждение.");
     }
 
     @Test
@@ -151,12 +162,15 @@ class SettlementTreeScenarioTests {
         assertEquals(
                 SettlementTree.State.UNKNOWN,
                 mine.state(),
-                "Незагруженный чанк шахты — «мир не проверен», а не «готово»");
-        assertEquals(0, mine.percent(), "Неизвестная постройка не показывает готовность, которой мир не подтвердил");
+                "Незагруженный чанк шахты — «мир не проверен», а не «готово» Иначе тест unknownWorld_UnloadedChunk_IsNotReady перестанет ловить эту поломку. При смене unknownWorld_UnloadedChunk_IsNotReady проверь это утверждение.");
+        assertEquals(
+                0,
+                mine.percent(),
+                "Неизвестная постройка не показывает готовность, которой мир не подтвердил Иначе тест unknownWorld_UnloadedChunk_IsNotReady перестанет ловить эту поломку. При смене unknownWorld_UnloadedChunk_IsNotReady проверь это утверждение.");
         assertEquals(
                 SettlementTree.State.LOCKED,
                 tree.node("s1:gate").orElseThrow().state(),
-                "Ворота этапа закрыты, пока мир не подтвердил обязательную постройку");
+                "Ворота этапа закрыты, пока мир не подтвердил обязательную постройку Иначе тест unknownWorld_UnloadedChunk_IsNotReady перестанет ловить эту поломку. При смене unknownWorld_UnloadedChunk_IsNotReady проверь это утверждение.");
     }
 
     @Test
@@ -171,15 +185,18 @@ class SettlementTreeScenarioTests {
         assertEquals(
                 SettlementTree.State.IN_PROGRESS,
                 clearing.state(),
-                "Неровная зона — работа в процессе, а не готово: этап не закрывается при дефектах");
+                "Неровная зона — работа в процессе, а не готово: этап не закрывается при дефектах Иначе тест stageOne_ClearingIsSeparateItem_WithDefectCounts перестанет ловить эту поломку. При смене stageOne_ClearingIsSeparateItem_WithDefectCounts проверь это утверждение.");
         assertEquals(
                 "ям 3, бугров 2, столбов 1",
                 clearing.detail(),
-                "Вкладка J называет числа дефектов ровности: игрок видит, что именно чинят");
+                "Вкладка J называет числа дефектов ровности: игрок видит, что именно чинят Иначе тест stageOne_ClearingIsSeparateItem_WithDefectCounts перестанет ловить эту поломку. При смене stageOne_ClearingIsSeparateItem_WithDefectCounts проверь это утверждение.");
         assertTrue(
                 !clearing.id().equals(streets.id()),
-                "Расчистка и улицы — отдельные пункты древа: улицы не прячут дефекты зоны");
-        assertEquals(SettlementTree.State.READY, streets.state(), "Улицы готовы независимо от дефектов ровности");
+                "Расчистка и улицы — отдельные пункты древа: улицы не прячут дефекты зоны Иначе тест stageOne_ClearingIsSeparateItem_WithDefectCounts перестанет ловить эту поломку. При смене stageOne_ClearingIsSeparateItem_WithDefectCounts проверь это утверждение.");
+        assertEquals(
+                SettlementTree.State.READY,
+                streets.state(),
+                "Улицы готовы независимо от дефектов ровности Иначе тест stageOne_ClearingIsSeparateItem_WithDefectCounts перестанет ловить эту поломку. При смене stageOne_ClearingIsSeparateItem_WithDefectCounts проверь это утверждение.");
     }
 
     @Test
@@ -189,8 +206,14 @@ class SettlementTreeScenarioTests {
                         .build());
 
         SettlementTree.Node clearing = tree.node("s1:case:CLEAR_GROUNDS:1").orElseThrow();
-        assertEquals(SettlementTree.State.READY, clearing.state(), "Ровная зона закрывает расчистку");
-        assertEquals("ям 0, бугров 0, столбов 0", clearing.detail(), "Ноль дефектов показывается числом, а не пусто");
+        assertEquals(
+                SettlementTree.State.READY,
+                clearing.state(),
+                "Ровная зона закрывает расчистку Иначе тест stageOne_CleanClearing_ShowsZeroDefects перестанет ловить эту поломку. При смене stageOne_CleanClearing_ShowsZeroDefects проверь это утверждение.");
+        assertEquals(
+                "ям 0, бугров 0, столбов 0",
+                clearing.detail(),
+                "Ноль дефектов показывается числом, а не пусто Иначе тест stageOne_CleanClearing_ShowsZeroDefects перестанет ловить эту поломку. При смене stageOne_CleanClearing_ShowsZeroDefects проверь это утверждение.");
     }
 
     @Test
@@ -202,7 +225,7 @@ class SettlementTreeScenarioTests {
                 40,
                 tree.node("s1:case:BUILD_MINE:1").orElseThrow().percent(),
                 "Процент берётся из состояния мира (40%), а не из готовности журнала: иначе подлог «по журналу» "
-                        + "показывал бы 100%");
+                        + "показывал бы 100% При смене percentFromWorld_PartialProgress_BeatsJournalReadyFlag проверь это утверждение.");
     }
 
     private static SettlementTree stageOne(SettlementTreeFacts facts) {

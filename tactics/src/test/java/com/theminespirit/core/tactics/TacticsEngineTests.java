@@ -35,7 +35,7 @@ class TacticsEngineTests {
                         TacticalState.ENGAGED,
                         CombatMode.AGGRESSIVE),
                 List.of(outcome.decision(), outcome.action(), outcome.retreatMethod(), outcome.state(), outcome.mode()),
-                "Один зомби при полном HP и мече: бой, обычная атака, отход не нужен, состояние ENGAGED");
+                "Один зомби при полном HP и мече: бой, обычная атака, отход не нужен, состояние ENGAGED Иначе тест step_LoneZombieFullHp_FightsAndRemembersAnchor перестанет ловить эту поломку. При смене step_LoneZombieFullHp_FightsAndRemembersAnchor проверь это утверждение.");
         assertEquals(
                 List.of(Decision.BY_SCORE, "engage_default", Optional.of("calm_to_engaged"), ""),
                 List.of(
@@ -43,15 +43,15 @@ class TacticsEngineTests {
                         outcome.trace().actionRule(),
                         outcome.trace().stateRule(),
                         outcome.trace().whyNotFight()),
-                "Trace называет, чем решено: оценка, затем действие по умолчанию и переход CALM → ENGAGED");
+                "Trace называет, чем решено: оценка, затем действие по умолчанию и переход CALM → ENGAGED Иначе тест step_LoneZombieFullHp_FightsAndRemembersAnchor перестанет ловить эту поломку. При смене step_LoneZombieFullHp_FightsAndRemembersAnchor проверь это утверждение.");
         assertEquals(
                 Optional.of(situation.self().pos()),
                 outcome.memory().anchor(),
-                "Бой начался: точка начала боя запоминается якорем для оборонительного режима");
+                "Бой начался: точка начала боя запоминается якорем для оборонительного режима Иначе тест step_LoneZombieFullHp_FightsAndRemembersAnchor перестанет ловить эту поломку. При смене step_LoneZombieFullHp_FightsAndRemembersAnchor проверь это утверждение.");
         assertEquals(
                 Factor.values().length,
                 outcome.trace().factors().size(),
-                "Trace перечисляет вклад каждого из факторов");
+                "Trace перечисляет вклад каждого из факторов Иначе тест step_LoneZombieFullHp_FightsAndRemembersAnchor перестанет ловить эту поломку. При смене step_LoneZombieFullHp_FightsAndRemembersAnchor проверь это утверждение.");
     }
 
     @Test
@@ -81,7 +81,7 @@ class TacticsEngineTests {
                         outcome.trace().rule(),
                         outcome.trace().whyNotFight()),
                 "Крипер в 3 блоках без меча: жёсткое правило отхода, укрытие и столб равны по полезности, выигрывает укрытие "
-                        + "по порядку способов, баррикада закрыта взрывчаткой");
+                        + "по порядку способов, баррикада закрыта взрывчаткой Иначе тест step_CreeperCloseWithCoverAndBlocks_RetreatsByHardRuleToCover перестанет ловить эту поломку. При смене step_CreeperCloseWithCoverAndBlocks_RetreatsByHardRuleToCover проверь это утверждение.");
     }
 
     @Test
@@ -101,7 +101,7 @@ class TacticsEngineTests {
                         outcome.state(),
                         outcome.trace().rule(),
                         outcome.returnTo()),
-                "Без врагов: игнор, продолжать прежнее дело, покой, возвращаться некуда");
+                "Без врагов: игнор, продолжать прежнее дело, покой, возвращаться некуда Иначе тест step_NoEnemies_IgnoresAndStaysCalm перестанет ловить эту поломку. При смене step_NoEnemies_IgnoresAndStaysCalm проверь это утверждение.");
     }
 
     @Test
@@ -118,7 +118,7 @@ class TacticsEngineTests {
         assertEquals(
                 List.of(TacticalOption.IGNORE, "outside_leash_ignore", Optional.of(new Point(0, 0, 0))),
                 List.of(outcome.decision(), outcome.trace().rule(), outcome.returnTo()),
-                "Враг за поводком охраны (пределы зоны 10 + 4): не преследуем и возвращаемся к центру зоны");
+                "Враг за поводком охраны (пределы зоны 10 + 4): не преследуем и возвращаемся к центру зоны Иначе тест step_GuardAreaEnemyBeyondLeash_IgnoresAndReturnsToZoneCenter перестанет ловить эту поломку. При смене step_GuardAreaEnemyBeyondLeash_IgnoresAndReturnsToZoneCenter проверь это утверждение.");
     }
 
     @Test
@@ -151,7 +151,7 @@ class TacticsEngineTests {
                         recovered.mode(),
                         low.trace().modeRule(),
                         recovered.trace().modeRule()),
-                "Приказ aggressive не теряется: при HP 28 % режим временно defensive, при 80 % возвращается");
+                "Приказ aggressive не теряется: при HP 28 % режим временно defensive, при 80 % возвращается Иначе тест step_AggressiveWithLowHp_DegradesModeAndRestoresItWhenHealthy перестанет ловить эту поломку. При смене step_AggressiveWithLowHp_DegradesModeAndRestoresItWhenHealthy проверь это утверждение.");
     }
 
     @Test
@@ -171,7 +171,7 @@ class TacticsEngineTests {
                         calm.state(),
                         calm.trace().stateRule(),
                         calm.memory().anchor()),
-                "Враг пропал: через 10 тиков бой ещё не окончен, через 30 (≥ 20) — покой, якорь забыт");
+                "Враг пропал: через 10 тиков бой ещё не окончен, через 30 (≥ 20) — покой, якорь забыт Иначе тест step_EnemyGoneForLongEnough_ReturnsToCalmAndDropsAnchor перестанет ловить эту поломку. При смене step_EnemyGoneForLongEnough_ReturnsToCalmAndDropsAnchor проверь это утверждение.");
     }
 
     @Test
@@ -181,15 +181,19 @@ class TacticsEngineTests {
 
         TacticalOutcome outcome = first(situation);
 
-        assertEquals(TacticalOption.RETREAT, outcome.decision(), "Шестеро зомби при одном мече: отход по оценке");
+        assertEquals(
+                TacticalOption.RETREAT,
+                outcome.decision(),
+                "Шестеро зомби при одном мече: отход по оценке Иначе тест step_HordeOnScore_ExplainsWhyNotFightWithTopFactors перестанет ловить эту поломку. При смене step_HordeOnScore_ExplainsWhyNotFightWithTopFactors проверь это утверждение.");
         String why = outcome.trace().whyNotFight();
         assertTrue(
                 why.startsWith("перевес RETREAT над FIGHT:") && why.contains("WIN_MARGIN"),
                 "Trace объясняет, почему не бой: называет факторы, которые перевесили (WIN_MARGIN здесь главный), а "
-                        + "получили: " + why);
+                        + "получили:  Иначе тест step_HordeOnScore_ExplainsWhyNotFightWithTopFactors перестанет ловить эту поломку. При смене step_HordeOnScore_ExplainsWhyNotFightWithTopFactors проверь это утверждение."
+                        + why);
         assertTrue(
                 outcome.trace().explain().contains(why),
-                "Текстовое объяснение содержит ту же причину, что и поле trace");
+                "Текстовое объяснение содержит ту же причину, что и поле trace Иначе тест step_HordeOnScore_ExplainsWhyNotFightWithTopFactors перестанет ловить эту поломку. При смене step_HordeOnScore_ExplainsWhyNotFightWithTopFactors проверь это утверждение.");
     }
 
     @Test
@@ -204,7 +208,10 @@ class TacticsEngineTests {
         TacticalOutcome one = engine().step(situation, memory, 7);
         TacticalOutcome two = engine().step(situation, memory, 7);
 
-        assertEquals(one, two, "Вызов без побочных эффектов: те же факты и память дают побитово тот же результат");
+        assertEquals(
+                one,
+                two,
+                "Вызов без побочных эффектов: те же факты и память дают побитово тот же результат Иначе тест step_SameInputTwice_GivesEqualOutcomesIncludingTrace перестанет ловить эту поломку. При смене step_SameInputTwice_GivesEqualOutcomesIncludingTrace проверь это утверждение.");
     }
 
     @Test
@@ -214,7 +221,7 @@ class TacticsEngineTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> engine().step(situation, Memories.fresh(situation), -1),
-                "Номер тика обязан быть неотрицательным: отрицательный означает ошибку адаптера, а не момент до начала мира");
+                "Номер тика обязан быть неотрицательным: отрицательный означает ошибку адаптера, а не момент до начала мира Иначе тест step_NegativeTick_IsRejected перестанет ловить эту поломку. При смене step_NegativeTick_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -231,17 +238,17 @@ class TacticsEngineTests {
                 List.of(TacticalOption.IGNORE, "no_route_ignore"),
                 List.of(outcome.decision(), outcome.trace().rule()),
                 "HP 20 % при лаве рядом и целящемся враге: отходить некуда (от быстрого стрелка не убежать), бой "
-                        + "вычеркнут, подмена noRoute выбирает IGNORE");
+                        + "вычеркнут, подмена noRoute выбирает IGNORE Иначе тест step_NoRouteIgnoreAfterCriticalHp_ExplainsExcludedFight перестанет ловить эту поломку. При смене step_NoRouteIgnoreAfterCriticalHp_ExplainsExcludedFight проверь это утверждение.");
         assertEquals(
                 List.of("no_fight_near_lava"),
                 outcome.trace().excludingRules(),
                 "Trace подмены обязан хранить вычёркивания, которые она учла: иначе вычеркнутый бой теряется "
-                        + "в Decision.excluded. Проверьте слияние вычёркиваний подмены в Decider");
+                        + "в Decision.excluded. Проверьте слияние вычёркиваний подмены в Decider При смене step_NoRouteIgnoreAfterCriticalHp_ExplainsExcludedFight проверь это утверждение.");
         assertEquals(
                 "бой вычеркнут правилами [no_fight_near_lava]",
                 outcome.trace().whyNotFight(),
                 "Trace обязан объяснять, почему не FIGHT: игрок видит IGNORE и должен узнать про лаву, а не "
-                        + "«решило правило no_route_ignore» без причины");
+                        + "«решило правило no_route_ignore» без причины Иначе тест step_NoRouteIgnoreAfterCriticalHp_ExplainsExcludedFight перестанет ловить эту поломку. При смене step_NoRouteIgnoreAfterCriticalHp_ExplainsExcludedFight проверь это утверждение.");
     }
 
     @Test
@@ -274,6 +281,6 @@ class TacticsEngineTests {
                         TacticalOption.RETREAT),
                 decisions,
                 "Крипер без меча подходит до 5 и отходит до 6–7 блоков: после первого отхода дух не возвращается в бой, пока "
-                        + "крипер ближе 8 блоков (правило explosive_band_retreat). Иначе качка 5/6 ведёт духа к взрыву");
+                        + "крипер ближе 8 блоков (правило explosive_band_retreat). Иначе качка 5/6 ведёт духа к взрыву При смене step_CreeperHoversAroundFive_NeverSwingsBetweenRetreatAndFight проверь это утверждение.");
     }
 }

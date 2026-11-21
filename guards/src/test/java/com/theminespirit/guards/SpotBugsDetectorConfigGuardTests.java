@@ -47,11 +47,11 @@ class SpotBugsDetectorConfigGuardTests {
                 "Список omitVisitors в theminespirit.java-conventions.gradle разошёлся с таблицей отключённых "
                         + "детекторов в docs/research/analyzers-cost.md. Как надо: правишь один список — правишь "
                         + "второй и причину в комментарии; отключение только целиком (omitVisitors), не паттерном "
-                        + "exclude.xml. Только в конфиге / только в отчёте");
+                        + "exclude.xml. Только в конфиге / только в отчёте Иначе тест omittedVisitors_ConfigAndReport_Match перестанет ловить эту поломку. При смене omittedVisitors_ConfigAndReport_Match проверь это утверждение.");
         assertTrue(
                 reportDetectors(report).size() >= 15,
                 "Таблица кандидатов в отчёте сузилась: владелец должен видеть не меньше 15 детекторов с причиной "
-                        + "«нужен/не нужен», иначе решение отключения примут вслепую");
+                        + "«нужен/не нужен», иначе решение отключения примут вслепую При смене omittedVisitors_ConfigAndReport_Match проверь это утверждение.");
     }
 
     @Test
@@ -59,23 +59,25 @@ class SpotBugsDetectorConfigGuardTests {
         String config = read(CONVENTIONS);
         assertTrue(
                 config.contains("ignoreFailures = false"),
-                "ignoreFailures должен остаться false: анализатор обязан ронять сборку");
+                "ignoreFailures должен остаться false: анализатор обязан ронять сборку Иначе тест spotbugs_OtherStrictness_NotLowered перестанет ловить эту поломку. При смене spotbugs_OtherStrictness_NotLowered проверь это утверждение.");
         assertTrue(
                 config.contains("excludeFilter = configAt('spotbugs/exclude.xml')"),
-                "фильтр исключений должен остаться config/spotbugs/exclude.xml");
+                "фильтр исключений должен остаться config/spotbugs/exclude.xml Иначе тест spotbugs_OtherStrictness_NotLowered перестанет ловить эту поломку. При смене spotbugs_OtherStrictness_NotLowered проверь это утверждение.");
         assertFalse(
                 Pattern.compile("(?m)^\\s*effort\\s*=").matcher(config).find(),
-                "effort настраивать нельзя: понижение строгости — не способ уложиться в 30%");
+                "effort настраивать нельзя: понижение строгости — не способ уложиться в 30% Иначе тест spotbugs_OtherStrictness_NotLowered перестанет ловить эту поломку. При смене spotbugs_OtherStrictness_NotLowered проверь это утверждение.");
         assertFalse(
                 Pattern.compile("(?m)^\\s*reportLevel\\s*=").matcher(config).find(),
-                "reportLevel настраивать нельзя: это тихо спрячет находки");
+                "reportLevel настраивать нельзя: это тихо спрячет находки Иначе тест spotbugs_OtherStrictness_NotLowered перестанет ловить эту поломку. При смене spotbugs_OtherStrictness_NotLowered проверь это утверждение.");
         assertFalse(
                 Pattern.compile("(?m)^\\s*visitors\\s*=").matcher(config).find(),
-                "visitors настраивать нельзя: белый список сузил бы анализ");
-        assertFalse(config.contains("chooseVisitors ="), "chooseVisitors настраивать нельзя");
+                "visitors настраивать нельзя: белый список сузил бы анализ Иначе тест spotbugs_OtherStrictness_NotLowered перестанет ловить эту поломку. При смене spotbugs_OtherStrictness_NotLowered проверь это утверждение.");
+        assertFalse(
+                config.contains("chooseVisitors ="),
+                "chooseVisitors настраивать нельзя Иначе тест spotbugs_OtherStrictness_NotLowered перестанет ловить эту поломку. При смене spotbugs_OtherStrictness_NotLowered проверь это утверждение.");
         assertTrue(
                 config.contains("dependsOn tasks.named('spotbugsMain'), tasks.named('spotbugsTest')"),
-                "staticAnalysis обязан по-прежнему зависеть от spotbugsMain и spotbugsTest");
+                "staticAnalysis обязан по-прежнему зависеть от spotbugsMain и spotbugsTest Иначе тест spotbugs_OtherStrictness_NotLowered перестанет ловить эту поломку. При смене spotbugs_OtherStrictness_NotLowered проверь это утверждение.");
         assertEquals(
                 new TreeSet<>(List.of(
                         "EI_EXPOSE_REP",
@@ -86,7 +88,7 @@ class SpotBugsDetectorConfigGuardTests {
                         "VA_FORMAT_STRING_USES_NEWLINE")),
                 excludePatterns(read(EXCLUDE)),
                 "Набор исключений SpotBugs изменился: ослаблять его ради скорости запрещено, отключай детектор "
-                        + "целиком в omitVisitors с причиной");
+                        + "целиком в omitVisitors с причиной Иначе тест spotbugs_OtherStrictness_NotLowered перестанет ловить эту поломку. При смене spotbugs_OtherStrictness_NotLowered проверь это утверждение.");
     }
 
     @Test
@@ -103,7 +105,7 @@ class SpotBugsDetectorConfigGuardTests {
                         + "синхронизация висит на публичном API, куда может войти кто угодно. SpotBugs ловил это "
                         + "как USO_UNSAFE_STATIC_METHOD_SYNCHRONIZATION (BuildSquadRegistry, WorkReserveHub, "
                         + "PolicyConfig, b1523e0f). Как надо: private static final Object LOCK и synchronized (LOCK) "
-                        + "внутри метода. Нарушители (файл:строка)");
+                        + "внутри метода. Нарушители (файл:строка) Иначе тест productionSources_StaticSynchronizedMethods_AreAbsent перестанет ловить эту поломку. При смене productionSources_StaticSynchronizedMethods_AreAbsent проверь это утверждение.");
     }
 
     @Test
@@ -119,7 +121,7 @@ class SpotBugsDetectorConfigGuardTests {
                 "Середина двух координат X/Z считается как (a + b) / 2 в int: сумма переполняется, центр уезжает "
                         + "за край мира, и поиск идёт не там. SpotBugs ловил это как "
                         + "IM_AVERAGE_COMPUTATION_COULD_OVERFLOW (TreeSupport, FloatingScan, b003b3b2). Как надо: "
-                        + "(int) (((long) a + b) / 2). Нарушители (файл:строка)");
+                        + "(int) (((long) a + b) / 2). Нарушители (файл:строка) Иначе тест productionSources_CoordinateMidpoint_SummedInLong перестанет ловить эту поломку. При смене productionSources_CoordinateMidpoint_SummedInLong проверь это утверждение.");
     }
 
     @Test
@@ -137,7 +139,7 @@ class SpotBugsDetectorConfigGuardTests {
                 "Сравнение переменной с литералом через variable.equals(\"…\") падает с NPE, если переменная null, "
                         + "и прячет проверку от читателя. PMD нашёл так 209 мест (LiteralsFirstInComparisons). "
                         + "Как надо: \"литерал\".equals(variable) — null-safe и читается как вопрос «равно ли». "
-                        + "Нарушители (файл:строка)");
+                        + "Нарушители (файл:строка) Иначе тест sources_StringComparison_PutsLiteralFirst перестанет ловить эту поломку. При смене sources_StringComparison_PutsLiteralFirst проверь это утверждение.");
     }
 
     @Test
@@ -148,31 +150,31 @@ class SpotBugsDetectorConfigGuardTests {
                         STATIC_SYNCHRONIZED,
                         "class Sample {\n    static synchronized void run() { }\n}\n",
                         "Sample.java"),
-                "Сторож ослеп: static synchronized обязан попадать в нарушители");
+                "Сторож ослеп: static synchronized обязан попадать в нарушители Иначе тест analyzerFindingsPatterns_Violations_AreDetected перестанет ловить эту поломку. При смене analyzerFindingsPatterns_Violations_AreDetected проверь это утверждение.");
         assertEquals(
                 List.of(),
                 matches(STATIC_SYNCHRONIZED, "static void run() { synchronized (LOCK) { } }", "Sample.java"),
-                "Сторож ложно срабатывает: замок-объект — правильная форма");
+                "Сторож ложно срабатывает: замок-объект — правильная форма Иначе тест analyzerFindingsPatterns_Violations_AreDetected перестанет ловить эту поломку. При смене analyzerFindingsPatterns_Violations_AreDetected проверь это утверждение.");
         assertEquals(
                 List.of("Sample.java:1"),
                 matches(COORDINATE_MIDPOINT, "int mid = (minX + maxX) / 2;", "Sample.java"),
-                "Сторож ослеп: середина координат без long обязана попадать в нарушители");
+                "Сторож ослеп: середина координат без long обязана попадать в нарушители Иначе тест analyzerFindingsPatterns_Violations_AreDetected перестанет ловить эту поломку. При смене analyzerFindingsPatterns_Violations_AreDetected проверь это утверждение.");
         assertEquals(
                 List.of(),
                 matches(COORDINATE_MIDPOINT, "int mid = (int) (((long) minX + maxX) / 2);", "Sample.java"),
-                "Сторож ложно срабатывает: сумма в long переполнения не даёт");
+                "Сторож ложно срабатывает: сумма в long переполнения не даёт Иначе тест analyzerFindingsPatterns_Violations_AreDetected перестанет ловить эту поломку. При смене analyzerFindingsPatterns_Violations_AreDetected проверь это утверждение.");
         assertEquals(
                 List.of("Sample.java:1"),
                 equalsLiteralFindings("ticket.id().equals(\"x\")", "Sample.java"),
-                "Сторож ослеп: variable.equals(\"…\") обязан находиться");
+                "Сторож ослеп: variable.equals(\"…\") обязан находиться Иначе тест analyzerFindingsPatterns_Violations_AreDetected перестанет ловить эту поломку. При смене analyzerFindingsPatterns_Violations_AreDetected проверь это утверждение.");
         assertEquals(
                 List.of(),
                 equalsLiteralFindings("\"x\".equals(ticket.id())", "Sample.java"),
-                "Сторож ложно срабатывает: литерал слева — правильная форма");
+                "Сторож ложно срабатывает: литерал слева — правильная форма Иначе тест analyzerFindingsPatterns_Violations_AreDetected перестанет ловить эту поломку. При смене analyzerFindingsPatterns_Violations_AreDetected проверь это утверждение.");
         assertEquals(
                 List.of(),
                 equalsLiteralFindings("Objects.equals(\"x\", ticket.id())", "Sample.java"),
-                "Сторож ложно срабатывает: Objects.equals принимает литерал первым аргументом");
+                "Сторож ложно срабатывает: Objects.equals принимает литерал первым аргументом Иначе тест analyzerFindingsPatterns_Violations_AreDetected перестанет ловить эту поломку. При смене analyzerFindingsPatterns_Violations_AreDetected проверь это утверждение.");
     }
 
     @Test
@@ -192,16 +194,16 @@ class SpotBugsDetectorConfigGuardTests {
         assertEquals(
                 Set.of("SerializableIdiom"),
                 reportDisabledDetectors(report),
-                "Сторож ослеп: строка «да» обязана попасть в список отключённых");
+                "Сторож ослеп: строка «да» обязана попасть в список отключённых Иначе тест parser_DisabledAndEnabledRows_AreSeparated перестанет ловить эту поломку. При смене parser_DisabledAndEnabledRows_AreSeparated проверь это утверждение.");
         assertEquals(
                 Set.of("SerializableIdiom"),
                 omittedVisitors(config),
-                "Сторож ослеп: omitVisitors обязан разбираться из конфигурации");
+                "Сторож ослеп: omitVisitors обязан разбираться из конфигурации Иначе тест parser_DisabledAndEnabledRows_AreSeparated перестанет ловить эту поломку. При смене parser_DisabledAndEnabledRows_AreSeparated проверь это утверждение.");
         assertNotEquals(
                 Set.of("SerializableIdiom"),
                 reportDisabledDetectors(report.replace(
                         "| `SerializableIdiom` | сериализация | да |", "| `SerializableIdiom` | сериализация | нет |")),
-                "Сторож ослеп: строка «нет» не должна попадать в список отключённых");
+                "Сторож ослеп: строка «нет» не должна попадать в список отключённых Иначе тест parser_DisabledAndEnabledRows_AreSeparated перестанет ловить эту поломку. При смене parser_DisabledAndEnabledRows_AreSeparated проверь это утверждение.");
     }
 
     static Set<String> omittedVisitors(String config) {

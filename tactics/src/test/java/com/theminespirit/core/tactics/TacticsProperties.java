@@ -147,13 +147,14 @@ class TacticsProperties {
                 outcome.decision(),
                 outcome.action().option(),
                 "Действие " + outcome.action() + " обязано согласоваться с решением " + outcome.decision()
-                        + ": иначе адаптер получит «драться и бежать» одновременно");
+                        + ": иначе адаптер получит «драться и бежать» одновременно При смене step_AnyAdmissibleFacts_ReturnsConsistentDecisionAndAction проверь это утверждение.");
         assertTrue(
                 outcome.decision() == TacticalOption.RETREAT || outcome.retreatMethod() == RetreatMethod.NONE,
-                "Способ отхода называется только при решении RETREAT: " + outcome.retreatMethod());
+                "Способ отхода называется только при решении RETREAT:  Иначе тест step_AnyAdmissibleFacts_ReturnsConsistentDecisionAndAction перестанет ловить эту поломку. При смене step_AnyAdmissibleFacts_ReturnsConsistentDecisionAndAction проверь это утверждение."
+                        + outcome.retreatMethod());
         assertTrue(
                 outcome.decision() == TacticalOption.RETREAT || !outcome.callHelp(),
-                "Зов на помощь - побочное действие отхода, при другом решении его нет");
+                "Зов на помощь - побочное действие отхода, при другом решении его нет Иначе тест step_AnyAdmissibleFacts_ReturnsConsistentDecisionAndAction перестанет ловить эту поломку. При смене step_AnyAdmissibleFacts_ReturnsConsistentDecisionAndAction проверь это утверждение.");
     }
 
     @Property
@@ -163,7 +164,7 @@ class TacticsProperties {
         assertTrue(
                 outcome.decision() != TacticalOption.RETREAT || outcome.retreatMethod() != RetreatMethod.NONE,
                 "Решение RETREAT без способа отхода (rule " + outcome.trace().rule() + ") отправило бы духа в никуда: "
-                        + "если способов нет совсем, замена по правилам noRoute");
+                        + "если способов нет совсем, замена по правилам noRoute Иначе тест step_AnyAdmissibleCase_RetreatAlwaysNamesAWay перестанет ловить эту поломку. При смене step_AnyAdmissibleCase_RetreatAlwaysNamesAWay проверь это утверждение.");
     }
 
     @Property
@@ -171,7 +172,7 @@ class TacticsProperties {
         assertEquals(
                 run(c),
                 run(c),
-                "Тактика детерминирована: те же факты и память дают побитово тот же результат вместе с trace");
+                "Тактика детерминирована: те же факты и память дают побитово тот же результат вместе с trace Иначе тест step_TwoEnginesSameInput_ReturnEqualOutcomesIncludingTrace перестанет ловить эту поломку. При смене step_TwoEnginesSameInput_ReturnEqualOutcomesIncludingTrace проверь это утверждение.");
     }
 
     @Property
@@ -190,7 +191,7 @@ class TacticsProperties {
         assertEquals(
                 run(c),
                 run(new Case(permuted, c.memory(), c.tick())),
-                "Порядок, в котором адаптер нашёл врагов, не должен менять решение");
+                "Порядок, в котором адаптер нашёл врагов, не должен менять решение Иначе тест step_ShuffledEnemies_ReturnSameOutcome перестанет ловить эту поломку. При смене step_ShuffledEnemies_ReturnSameOutcome проверь это утверждение.");
     }
 
     @Property
@@ -203,7 +204,7 @@ class TacticsProperties {
                     "При HP 20 % и врагах рядом бой допустим только когда загнан в угол (враг ближе 3 блоков) или отступать некуда, "
                             + "а враг целится в духа; решило правило "
                             + outcome.trace().rule()
-                            + ": иначе дух героически гибнет вместо отхода");
+                            + ": иначе дух героически гибнет вместо отхода При смене step_CriticalHpWithEnemies_NeverFightsExceptCornered проверь это утверждение.");
         }
     }
 
@@ -215,7 +216,8 @@ class TacticsProperties {
             assertTrue(
                     fightJustified(c.situation(), outcome.trace().rule()),
                     "Пассивный режим не нападает: бой только если загнан в угол (враг ближе 3 блоков) или отступать некуда, "
-                            + "а враг целится в духа; решило " + outcome.trace().rule());
+                            + "а враг целится в духа; решило  Иначе тест step_PassiveMode_NeverFightsExceptCornered перестанет ловить эту поломку. При смене step_PassiveMode_NeverFightsExceptCornered проверь это утверждение."
+                            + outcome.trace().rule());
         }
     }
 
@@ -237,7 +239,8 @@ class TacticsProperties {
                             || (NO_ROUTE_FIGHT.contains(outcome.trace().rule()) && anyTargeting(situation)),
                     "За поводком (остаток " + geometry.leashLeft() + ") в режиме " + outcome.mode()
                             + " враг дальше 3 блоков не повод драться (кроме замены noRoute, когда враг целится в духа и бежать некуда); "
-                            + "решило " + outcome.trace().rule() + ": дух не преследует за пределы зоны");
+                            + "решило " + outcome.trace().rule()
+                            + ": дух не преследует за пределы зоны Иначе тест step_BeyondLeashInGuardModes_DoesNotFightUnlessEnemyWithinThree перестанет ловить эту поломку. При смене step_BeyondLeashInGuardModes_DoesNotFightUnlessEnemyWithinThree проверь это утверждение.");
         }
     }
 
@@ -248,7 +251,7 @@ class TacticsProperties {
         assertEquals(
                 run(c),
                 new TacticsEngine(shuffled).step(c.situation(), c.memory(), c.tick()),
-                "Порядок ключей и пробелы в JSON не влияют на поведение: значение имеет только содержание файлов");
+                "Порядок ключей и пробелы в JSON не влияют на поведение: значение имеет только содержание файлов Иначе тест step_ConfigWithShuffledKeysAndWhitespace_GivesSameOutcome перестанет ловить эту поломку. При смене step_ConfigWithShuffledKeysAndWhitespace_GivesSameOutcome проверь это утверждение.");
     }
 
     private static TacticsConfig shuffledConfig(long seed) {

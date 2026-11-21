@@ -27,7 +27,7 @@ class PlanParserTests {
                 new ScriptCall("wait", Map.of("ticks", 5)),
                 node,
                 "Узел script обязан собираться в ScriptCall с типизированными параметрами: иначе движок получит "
-                        + "не тот тип и не сможет исполнить шаг");
+                        + "не тот тип и не сможет исполнить шаг При смене parse_ScriptNode_ReturnsScriptCallWithTypedParams проверь это утверждение.");
     }
 
     @Test
@@ -42,7 +42,7 @@ class PlanParserTests {
                 new SequenceNode(
                         List.of(new ScriptCall("wait", Map.of("ticks", 1)), new ScriptCall("return_home", Map.of()))),
                 node,
-                "Узел sequence обязан сохранять порядок шагов: перестановка шагов меняет смысл плана");
+                "Узел sequence обязан сохранять порядок шагов: перестановка шагов меняет смысл плана Иначе тест parse_SequenceNode_ReturnsOrderedSteps перестанет ловить эту поломку. При смене parse_SequenceNode_ReturnsOrderedSteps проверь это утверждение.");
     }
 
     @Test
@@ -55,7 +55,7 @@ class PlanParserTests {
         assertEquals(
                 new RepeatNode(3, new ScriptCall("wait", Map.of("ticks", 2))),
                 node,
-                "Узел repeat обязан нести число повторов и шаг: потеря times превращает повтор в одиночное действие");
+                "Узел repeat обязан нести число повторов и шаг: потеря times превращает повтор в одиночное действие Иначе тест parse_RepeatNode_ReturnsTimesAndStep перестанет ловить эту поломку. При смене parse_RepeatNode_ReturnsTimesAndStep проверь это утверждение.");
     }
 
     @Test
@@ -75,7 +75,7 @@ class PlanParserTests {
                 node,
                 "Узел fallback обязан нести шаги по порядку: потеря порядка ломает стратегию 'первый успешный'. "
                         + "Заодно видны подставленные умолчания sort_chest: без них скрипт контейнера не понял бы, "
-                        + "куда идти");
+                        + "куда идти При смене parse_FallbackNode_ReturnsSteps проверь это утверждение.");
     }
 
     @Test
@@ -94,7 +94,7 @@ class PlanParserTests {
                                 new ScriptCall("flee", Map.of()))),
                 node,
                 "Узел parallel обязан нести режим all/any: перепутанный режим меняет условие завершения "
-                        + "и дух либо ждёт вечно, либо бросает начатое");
+                        + "и дух либо ждёт вечно, либо бросает начатое Иначе тест parse_ParallelNode_ReturnsModeAndSteps перестанет ловить эту поломку. При смене parse_ParallelNode_ReturnsModeAndSteps проверь это утверждение.");
     }
 
     @Test
@@ -115,7 +115,7 @@ class PlanParserTests {
                         new ScriptCall("craft", Map.of("item", "stick", "count", 4, "radius", 16, "place", false)),
                         new ScriptCall("acquire", Map.of("item", "oak_log", "count", 1, "fresh", false))),
                 node,
-                "Узел condition обязан нести проверку, параметры и обе ветки: потеря ветки else лишает план запасного пути");
+                "Узел condition обязан нести проверку, параметры и обе ветки: потеря ветки else лишает план запасного пути Иначе тест parse_ConditionNode_ReturnsBranchesAndParams перестанет ловить эту поломку. При смене parse_ConditionNode_ReturnsBranchesAndParams проверь это утверждение.");
     }
 
     @Test
@@ -130,7 +130,7 @@ class PlanParserTests {
         assertEquals(
                 new ConditionNode("is_day", Map.of(), new ScriptCall("return_home", Map.of()), null),
                 node,
-                "Условие без ветки else обязано давать null в elseStep: движок трактует это как 'ничего не делать'");
+                "Условие без ветки else обязано давать null в elseStep: движок трактует это как 'ничего не делать' Иначе тест parse_ConditionNodeWithoutElse_ReturnsNullElseBranch перестанет ловить эту поломку. При смене parse_ConditionNodeWithoutElse_ReturnsNullElseBranch проверь это утверждение.");
     }
 
     @Test
@@ -143,7 +143,7 @@ class PlanParserTests {
         assertEquals(
                 new ScriptCall("scan", Map.of("radius", 32, "filter", List.of("*_log", "*_ore"))),
                 node,
-                "scan.filter принимает массив строк: иначе планировщик не сможет задать фильтр блоков, как в docs/api/README.md");
+                "scan.filter принимает массив строк: иначе планировщик не сможет задать фильтр блоков, как в docs/api/README.md При смене parse_ScanWithFilterArray_ReturnsStringList проверь это утверждение.");
     }
 
     @Test
@@ -154,11 +154,12 @@ class PlanParserTests {
                 PlanValidationException.class,
                 () -> PlanParser.parse(json, CATALOG),
                 "scan.filter объявлен как string[] и обязан принимать только массив: одиночная строка молча "
-                        + "превратилась бы в список из символов и фильтр блоков перестал бы работать");
+                        + "превратилась бы в список из символов и фильтр блоков перестал бы работать Иначе тест parse_ScanWithFilterString_Throws перестанет ловить эту поломку. При смене parse_ScanWithFilterString_Throws проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("filter"),
-                "Сообщение обязано называть параметр 'filter' с неверным типом. Фактическое: " + error.getMessage());
+                "Сообщение обязано называть параметр 'filter' с неверным типом. Фактическое:  Иначе тест parse_ScanWithFilterString_Throws перестанет ловить эту поломку. При смене parse_ScanWithFilterString_Throws проверь это утверждение."
+                        + error.getMessage());
     }
 
     @Test
@@ -169,11 +170,12 @@ class PlanParserTests {
                 PlanValidationException.class,
                 () -> PlanParser.parse(json, CATALOG),
                 "Параметр типа string обязан принимать только JSON-строку: приём массива маскировал бы ошибку "
-                        + "типа в плане и ломал контракт string-параметров");
+                        + "типа в плане и ломал контракт string-параметров Иначе тест parse_StringParamWithArray_Throws перестанет ловить эту поломку. При смене parse_StringParamWithArray_Throws проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("text"),
-                "Сообщение обязано называть параметр 'text' с неверным типом. Фактическое: " + error.getMessage());
+                "Сообщение обязано называть параметр 'text' с неверным типом. Фактическое:  Иначе тест parse_StringParamWithArray_Throws перестанет ловить эту поломку. При смене parse_StringParamWithArray_Throws проверь это утверждение."
+                        + error.getMessage());
     }
 
     @Test
@@ -183,11 +185,11 @@ class PlanParserTests {
         PlanValidationException error = assertThrows(
                 PlanValidationException.class,
                 () -> PlanParser.parse(json, CATALOG),
-                "Неизвестный скрипт обязан отвергаться: иначе whitelist не работает и ИИ исполнит произвольное действие");
+                "Неизвестный скрипт обязан отвергаться: иначе whitelist не работает и ИИ исполнит произвольное действие При смене parse_UnknownScript_ThrowsNamingScript проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("fly_to_moon"),
-                "Сообщение обязано называть неизвестный скрипт 'fly_to_moon': по нему правят план. Фактическое: "
+                "Сообщение обязано называть неизвестный скрипт 'fly_to_moon': по нему правят план. Фактическое:  Иначе тест parse_UnknownScript_ThrowsNamingScript перестанет ловить эту поломку. При смене parse_UnknownScript_ThrowsNamingScript проверь это утверждение."
                         + error.getMessage());
     }
 
@@ -199,11 +201,11 @@ class PlanParserTests {
                 PlanValidationException.class,
                 () -> PlanParser.parse(json, CATALOG),
                 "Отсутствие обязательного параметра должно отвергаться: иначе скрипт получит null вместо значения "
-                        + "и поведение станет неопределённым");
+                        + "и поведение станет неопределённым При смене parse_MissingRequiredParam_ThrowsNamingParam проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("text"),
-                "Сообщение обязано называть пропущенный параметр 'text': по нему правят план. Фактическое: "
+                "Сообщение обязано называть пропущенный параметр 'text': по нему правят план. Фактическое:  Иначе тест parse_MissingRequiredParam_ThrowsNamingParam перестанет ловить эту поломку. При смене parse_MissingRequiredParam_ThrowsNamingParam проверь это утверждение."
                         + error.getMessage());
     }
 
@@ -215,11 +217,12 @@ class PlanParserTests {
                 PlanValidationException.class,
                 () -> PlanParser.parse(json, CATALOG),
                 "Неверный тип параметра обязан отвергаться: иначе движок получит строку вместо числа тиков "
-                        + "и упадёт в рантайме уже после старта задачи");
+                        + "и упадёт в рантайме уже после старта задачи При смене parse_WrongParamType_Throws проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("ticks"),
-                "Сообщение обязано называть параметр 'ticks' с неверным типом. Фактическое: " + error.getMessage());
+                "Сообщение обязано называть параметр 'ticks' с неверным типом. Фактическое:  Иначе тест parse_WrongParamType_Throws перестанет ловить эту поломку. При смене parse_WrongParamType_Throws проверь это утверждение."
+                        + error.getMessage());
     }
 
     @Test
@@ -230,11 +233,12 @@ class PlanParserTests {
                 PlanValidationException.class,
                 () -> PlanParser.parse(json, CATALOG),
                 "Лишний параметр обязан отвергаться: иначе опечатка в имени молча игнорируется, и скрипт работает "
-                        + "не так, как задумал планировщик");
+                        + "не так, как задумал планировщик При смене parse_UnknownParam_ThrowsNamingParam проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("speed"),
-                "Сообщение обязано называть лишний параметр 'speed'. Фактическое: " + error.getMessage());
+                "Сообщение обязано называть лишний параметр 'speed'. Фактическое:  Иначе тест parse_UnknownParam_ThrowsNamingParam перестанет ловить эту поломку. При смене parse_UnknownParam_ThrowsNamingParam проверь это утверждение."
+                        + error.getMessage());
     }
 
     @Test
@@ -245,11 +249,12 @@ class PlanParserTests {
                 PlanValidationException.class,
                 () -> PlanParser.parse(json, CATALOG),
                 "Глубина дерева больше 16 обязана отвергаться: без лимита рекурсивный план переполнит стек "
-                        + "и уронит серверный тик");
+                        + "и уронит серверный тик Иначе тест parse_DepthOverLimit_Throws перестанет ловить эту поломку. При смене parse_DepthOverLimit_Throws проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("16"),
-                "Сообщение о глубине обязано называть лимит 16. Фактическое: " + error.getMessage());
+                "Сообщение о глубине обязано называть лимит 16. Фактическое:  Иначе тест parse_DepthOverLimit_Throws перестанет ловить эту поломку. При смене parse_DepthOverLimit_Throws проверь это утверждение."
+                        + error.getMessage());
     }
 
     @Test
@@ -266,11 +271,12 @@ class PlanParserTests {
         PlanValidationException error = assertThrows(
                 PlanValidationException.class,
                 () -> PlanParser.parse(json.toString(), CATALOG),
-                "Больше 256 узлов обязано отвергаться: без лимита огромный план займёт серверный тик надолго");
+                "Больше 256 узлов обязано отвергаться: без лимита огромный план займёт серверный тик надолго Иначе тест parse_NodeCountOverLimit_Throws перестанет ловить эту поломку. При смене parse_NodeCountOverLimit_Throws проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("256"),
-                "Сообщение о числе узлов обязано называть лимит 256. Фактическое: " + error.getMessage());
+                "Сообщение о числе узлов обязано называть лимит 256. Фактическое:  Иначе тест parse_NodeCountOverLimit_Throws перестанет ловить эту поломку. При смене parse_NodeCountOverLimit_Throws проверь это утверждение."
+                        + error.getMessage());
     }
 
     private static String nestedSequences(int depth) {
