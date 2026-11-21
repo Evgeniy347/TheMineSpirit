@@ -31,7 +31,8 @@ class RetreatCommitmentProperties {
                         || next.method() == current.method()
                         || next.method() == outcome.retreatMethod(),
                 "Обязательство отхода берёт только прежний способ, способ из решения или простой, получили " + next
-                        + " из " + current + " и решения " + option + "/" + outcomeMethod);
+                        + " из " + current + " и решения " + option + "/" + outcomeMethod
+                        + " Иначе тест next_AnyInputs_KeepsCurrentMethodOrTakesOutcomeMethodOrIdles перестанет ловить эту поломку. При смене next_AnyInputs_KeepsCurrentMethodOrTakesOutcomeMethodOrIdles проверь это утверждение.");
     }
 
     @Property(tries = 200)
@@ -43,6 +44,9 @@ class RetreatCommitmentProperties {
 
         RetreatTracker next = RetreatCommitment.next(current, fight, since + 5, SETTINGS);
 
-        assertTrue(!next.retreating(), "Бой прерывает бег в любой момент: дух, которого догнали, не бежит дальше");
+        assertTrue(
+                !next.retreating(),
+                "Бой прерывает бег в любой момент: дух, которого догнали, не бежит дальше"
+                        + " Иначе тест next_FightWhileWalking_AlwaysIdle перестанет ловить эту поломку. При смене next_FightWhileWalking_AlwaysIdle проверь это утверждение.");
     }
 }

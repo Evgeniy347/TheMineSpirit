@@ -63,7 +63,8 @@ class FactMapTests {
         for (String name : SPEC_NAMES) {
             assertTrue(
                     keys.contains(name),
-                    "В каталоге фактов нет " + name + ": правило из rules.json на этот факт не загрузится");
+                    "В каталоге фактов нет " + name + ": правило из rules.json на этот факт не загрузится"
+                            + " Иначе тест factNames_Catalog_ContainsEveryDocumentedFact перестанет ловить эту поломку. При смене factNames_Catalog_ContainsEveryDocumentedFact проверь это утверждение.");
         }
     }
 
@@ -74,11 +75,13 @@ class FactMapTests {
         assertEquals(
                 keys.size(),
                 Set.copyOf(keys).size(),
-                "Ключи фактов уникальны: иначе два факта слились бы в условии под одним именем");
+                "Ключи фактов уникальны: иначе два факта слились бы в условии под одним именем"
+                        + " При смене factNames_Catalog_KeysAreUniqueAndWellFormed проверь это утверждение.");
         for (String key : keys) {
             assertTrue(
                     KEY.matcher(key).matches(),
-                    "Ключ факта «" + key + "» не подходит под группа.имя: так факты читаются в JSON и в trace");
+                    "Ключ факта «" + key + "» не подходит под группа.имя: так факты читаются в JSON и в trace"
+                            + " Иначе тест factNames_Catalog_KeysAreUniqueAndWellFormed перестанет ловить эту поломку. При смене factNames_Catalog_KeysAreUniqueAndWellFormed проверь это утверждение.");
         }
     }
 
@@ -100,13 +103,15 @@ class FactMapTests {
                         facts.number(FactName.ENEMY_NEAREST_EXPLOSIVE),
                         facts.number(FactName.ENEMY_TOTAL_DPS),
                         facts.number(FactName.ENEMY_FASTEST)),
-                "Сводка врагов: четверо, все видны, крипер в 6, суммарный урон 3+3+4+0, быстрейший 0.25");
+                "Сводка врагов: четверо, все видны, крипер в 6, суммарный урон 3+3+4+0, быстрейший 0.25"
+                        + " Иначе тест from_MixedEnemies_BuildsExpectedEnemyFacts перестанет ловить эту поломку. При смене from_MixedEnemies_BuildsExpectedEnemyFacts проверь это утверждение.");
         assertEquals(
                 List.of(true, true, false, false),
                 List.of(
                         facts.bool(FactName.ENEMY_ANY_RANGED), facts.bool(FactName.ENEMY_ANY_EXPLOSIVE),
                         facts.bool(FactName.ENEMY_ANY_SWIMS), facts.bool(FactName.ENEMY_ANY_FLIES)),
-                "Флаги врагов складываются по профилям: скелет стреляет, крипер взрывается");
+                "Флаги врагов складываются по профилям: скелет стреляет, крипер взрывается"
+                        + " Иначе тест from_MixedEnemies_BuildsExpectedEnemyFacts перестанет ловить эту поломку. При смене from_MixedEnemies_BuildsExpectedEnemyFacts проверь это утверждение.");
     }
 
     @Test
@@ -119,7 +124,8 @@ class FactMapTests {
                         facts.number(FactName.ENEMY_COUNT),
                         facts.number(FactName.ENEMY_NEAREST),
                         facts.number(FactName.ENEMY_NEAREST_EXPLOSIVE)),
-                "Без врагов расстояния равны FAR_DISTANCE, а не 0: иначе правило «враг ≤ 3» сработало бы на пустом поле");
+                "Без врагов расстояния равны FAR_DISTANCE, а не 0: иначе правило «враг ≤ 3» сработало бы на пустом поле"
+                        + " При смене from_NoEnemies_NearestIsFarAndCountsAreZero проверь это утверждение.");
     }
 
     @Test
@@ -142,14 +148,16 @@ class FactMapTests {
                         facts.text(FactName.ORDER_MODE),
                         facts.text(FactName.ORDER_ORDERED),
                         facts.text(FactName.STATE_TACTICAL)),
-                "Режим и состояние выдаются идентификаторами в нижнем регистре: так их пишут в JSON-условиях");
+                "Режим и состояние выдаются идентификаторами в нижнем регистре: так их пишут в JSON-условиях"
+                        + " Иначе тест from_OrdersAndSelf_AreReflectedAsFacts перестанет ловить эту поломку. При смене from_OrdersAndSelf_AreReflectedAsFacts проверь это утверждение.");
         assertEquals(
                 List.of(0.25, 7.0, 12.0, true, true, true),
                 List.of(
                         facts.number(FactName.SELF_HP_FRACTION), facts.number(FactName.SELF_ARMOR),
                         facts.number(FactName.TIME_SINCE_HIT), facts.bool(FactName.SELF_HAS_RANGED),
                         facts.bool(FactName.ORDER_ZONE_SET), facts.bool(FactName.ORDER_PROTECTED_THREATENED)),
-                "Факты о себе и приказах берутся из Situation без искажений");
+                "Факты о себе и приказах берутся из Situation без искажений"
+                        + " Иначе тест from_OrdersAndSelf_AreReflectedAsFacts перестанет ловить эту поломку. При смене from_OrdersAndSelf_AreReflectedAsFacts проверь это утверждение.");
     }
 
     @Test
@@ -162,7 +170,8 @@ class FactMapTests {
                 7.0,
                 facts.number(FactName.TIME_SINCE_STRIKE),
                 "Тики с последнего удара духа по врагу видны тактике: по ним правило «ударил–отошёл» держит отход "
-                        + "после удара, а не по дистанции; значение обязано доходить без искажений");
+                        + "после удара, а не по дистанции; значение обязано доходить без искажений"
+                        + " Иначе тест from_StrikeTimer_IsReflectedAsFact перестанет ловить эту поломку. При смене from_StrikeTimer_IsReflectedAsFact проверь это утверждение.");
     }
 
     @Test
@@ -172,10 +181,12 @@ class FactMapTests {
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,
                 () -> facts.number(FactName.ENV_NIGHT),
-                "Чтение булева факта как числа — ошибка кода, а не значение 0: тихая подмена скрыла бы опечатку в типе");
+                "Чтение булева факта как числа — ошибка кода, а не значение 0: тихая подмена скрыла бы опечатку в типе"
+                        + " Иначе тест number_BoolFact_ThrowsWithFactName перестанет ловить эту поломку. При смене number_BoolFact_ThrowsWithFactName проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("env.night"),
-                "Сообщение называет факт, чтобы ошибку типа нашли сразу: " + error.getMessage());
+                "Сообщение называет факт, чтобы ошибку типа нашли сразу: " + error.getMessage()
+                        + " Иначе тест number_BoolFact_ThrowsWithFactName перестанет ловить эту поломку. При смене number_BoolFact_ThrowsWithFactName проверь это утверждение.");
     }
 }

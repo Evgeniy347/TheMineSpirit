@@ -48,7 +48,8 @@ class HelpCallPolicyTests {
                 List.of(new AssistOrder(NEAR, CALLER, true)),
                 orders,
                 "На зов идёт ближайший свободный дух в радиусе R3; приказ помечен срочным, чтобы прервать работу "
-                        + "и вернуться к ней после боя");
+                        + "и вернуться к ней после боя"
+                        + " Иначе тест answer_FreeSpiritInsideRadius_GoesUrgently перестанет ловить эту поломку. При смене answer_FreeSpiritInsideRadius_GoesUrgently проверь это утверждение.");
     }
 
     @Test
@@ -63,7 +64,8 @@ class HelpCallPolicyTests {
         assertEquals(
                 List.of(new AssistOrder(MIDDLE, CALLER, true)),
                 orders,
-                "Дух, которого уже бьют, не бросает свой бой: он сам в бою и не может идти на помощь");
+                "Дух, которого уже бьют, не бросает свой бой: он сам в бою и не может идти на помощь"
+                        + " Иначе тест answer_AttackedSpirit_StaysInItsFight перестанет ловить эту поломку. При смене answer_AttackedSpirit_StaysInItsFight проверь это утверждение.");
     }
 
     @Test
@@ -79,7 +81,8 @@ class HelpCallPolicyTests {
                 List.of(new AssistOrder(MIDDLE, CALLER, true)),
                 orders,
                 "Дух, который сам зовёт на помощь, не идёт помогать другому: он занят своим боем, "
-                        + "иначе два зова уводят одного помощника с его собственной нужды");
+                        + "иначе два зова уводят одного помощника с его собственной нужды"
+                        + " При смене answer_CallingSpirit_NotChosenAsHelper проверь это утверждение.");
     }
 
     @Test
@@ -92,7 +95,8 @@ class HelpCallPolicyTests {
                                 HELP_RADIUS,
                                 2)
                         .isEmpty(),
-                "Дух за радиусом R3 не слышит зов: иначе помощь идёт через полкарты");
+                "Дух за радиусом R3 не слышит зов: иначе помощь идёт через полкарты"
+                        + " При смене answer_SpiritOutsideRadius_NotCalled проверь это утверждение.");
     }
 
     @Test
@@ -111,7 +115,8 @@ class HelpCallPolicyTests {
         assertEquals(
                 List.of(new AssistOrder(NEAR, CALLER, true), new AssistOrder(FAR, MIDDLE, true)),
                 orders,
-                "Один дух отвечает на один зов: иначе два зова уводят одного помощника и оставляют второго без помощи");
+                "Один дух отвечает на один зов: иначе два зова уводят одного помощника и оставляют второго без помощи"
+                        + " При смене answer_TwoCalls_EachHelperGoesOnlyOnce проверь это утверждение.");
     }
 
     @Test
@@ -120,7 +125,8 @@ class HelpCallPolicyTests {
                 new HelpCallPolicy()
                         .answer(List.of(), List.of(spirit(NEAR, 5, false)), HELP_RADIUS, 2)
                         .isEmpty(),
-                "Без зова никто никуда не идёт: помощь не выдумывается координатором");
+                "Без зова никто никуда не идёт: помощь не выдумывается координатором"
+                        + " Иначе тест answer_NoCalls_NoOrders перестанет ловить эту поломку. При смене answer_NoCalls_NoOrders проверь это утверждение.");
     }
 
     @Test
@@ -139,6 +145,7 @@ class HelpCallPolicyTests {
         assertEquals(
                 2,
                 orders.size(),
-                "На один зов откликаются не больше maxHelpers духов: иначе поселение остаётся без остальных дел");
+                "На один зов откликаются не больше maxHelpers духов: иначе поселение остаётся без остальных дел"
+                        + " При смене answer_MaxHelpers_Respected проверь это утверждение.");
     }
 }

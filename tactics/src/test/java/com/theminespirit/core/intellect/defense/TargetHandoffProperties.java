@@ -55,7 +55,8 @@ class TargetHandoffProperties {
 
         next.ifPresent(id -> assertTrue(
                 !id.equals(self) && !busy.contains(id),
-                "Приёмник — не уходящий и не занятый: иначе цель уйдёт духу, который её не поведёт"));
+                "Приёмник — не уходящий и не занятый: иначе цель уйдёт духу, который её не поведёт"
+                        + " При смене handOff_AnyInput_NotSelfNorBusy проверь это утверждение."));
     }
 
     @Property
@@ -72,7 +73,10 @@ class TargetHandoffProperties {
                     .filter(ally -> ally.id().equals(next.orElseThrow()))
                     .findFirst()
                     .orElseThrow();
-            assertTrue(taker.bow(), "Крипера принимает лучник: иначе подмена подойдёт к взрыву вместо обстрела");
+            assertTrue(
+                    taker.bow(),
+                    "Крипера принимает лучник: иначе подмена подойдёт к взрыву вместо обстрела"
+                            + " При смене handOff_CreeperTarget_ArcherTakesOver проверь это утверждение.");
         }
     }
 
@@ -83,7 +87,8 @@ class TargetHandoffProperties {
         assertEquals(
                 TargetHandoff.handOff(self, CREEPER, allies, Set.of(), DefenseProfileTests.PROFILE),
                 TargetHandoff.handOff(self, CREEPER, allies, Set.of(), DefenseProfileTests.PROFILE),
-                "Передача детерминирована: иначе цель мечется между приёмниками");
+                "Передача детерминирована: иначе цель мечется между приёмниками"
+                        + " При смене handOff_AnyInput_Deterministic проверь это утверждение.");
     }
 
     @Property
@@ -95,7 +100,8 @@ class TargetHandoffProperties {
         assertEquals(
                 TargetHandoff.handOff(self, CREEPER, allies, Set.of(), DefenseProfileTests.PROFILE),
                 TargetHandoff.handOff(self, CREEPER, shuffled, Set.of(), DefenseProfileTests.PROFILE),
-                "Приёмник не зависит от порядка входа: иначе подмена мигает при каждом новом снимке");
+                "Приёмник не зависит от порядка входа: иначе подмена мигает при каждом новом снимке"
+                        + " При смене handOff_ShuffledAllies_SameTaker проверь это утверждение.");
     }
 
     private static List<DefenderCapability> distinctIds(List<DefenderCapability> allies) {

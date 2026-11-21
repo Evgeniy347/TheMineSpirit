@@ -65,7 +65,8 @@ class FuelPlannerProperties {
                     () -> FuelPlanner.select("iron_ingot", count, knowledge, path, new HashMap<>()),
                     "Если ни один кандидат не добывается или все на текущей цепочке, выбор топлива обязан "
                             + "отказать: молчаливый пропуск даст план без топлива и холодную печь. Режимы=" + modes
-                            + ", путь=" + path);
+                            + ", путь=" + path
+                            + " Иначе тест select_RandomCandidateModes_ChoosesFirstObtainableNotOnPathWithMinimalAmount перестанет ловить эту поломку. При смене select_RandomCandidateModes_ChoosesFirstObtainableNotOnPathWithMinimalAmount проверь это утверждение.");
             return;
         }
         String fuel = "fuel_" + expected;
@@ -78,12 +79,14 @@ class FuelPlannerProperties {
                 fuel,
                 chosen.fuel(),
                 "Выбор обязан взять первого кандидата, который добывается (цепочкой предков тоже) и не стоит на "
-                        + "текущей цепочке резолвера: режимы=" + modes + ", путь=" + path);
+                        + "текущей цепочке резолвера: режимы=" + modes + ", путь=" + path
+                        + " Иначе тест select_RandomCandidateModes_ChoosesFirstObtainableNotOnPathWithMinimalAmount перестанет ловить эту поломку. При смене select_RandomCandidateModes_ChoosesFirstObtainableNotOnPathWithMinimalAmount проверь это утверждение.");
         assertEquals(
                 FuelTable.fuelNeeded(count, expectedBurn),
                 chosen.count(),
                 "Топлива надо ровно на плавку без излишка: перебор оставит духа с лишним грузом, недобор встанет "
-                        + "посреди работы. Топливо=" + fuel + ", количество плавок=" + count);
+                        + "посреди работы. Топливо=" + fuel + ", количество плавок=" + count
+                        + " Иначе тест select_RandomCandidateModes_ChoosesFirstObtainableNotOnPathWithMinimalAmount перестанет ловить эту поломку. При смене select_RandomCandidateModes_ChoosesFirstObtainableNotOnPathWithMinimalAmount проверь это утверждение.");
     }
 
     private static final class FuelKnowledge implements ResourceKnowledge {

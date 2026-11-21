@@ -26,7 +26,8 @@ class DescentKitTests {
         assertEquals(
                 List.of(),
                 DescentKit.missing(KIT, inventory, ValueTable.load()),
-                "Полный набор спуска нехватки не даёт: дух готов идти в шахту");
+                "Полный набор спуска нехватки не даёт: дух готов идти в шахту"
+                        + " Иначе тест missing_FullKit_Empty перестанет ловить эту поломку. При смене missing_FullKit_Empty проверь это утверждение.");
     }
 
     @Test
@@ -35,10 +36,15 @@ class DescentKitTests {
 
         List<String> missing = DescentKit.missing(KIT, inventory, ValueTable.load());
 
-        assertEquals(1, missing.size(), "Нехватка ровно одна — факелов, фактически: " + missing);
+        assertEquals(
+                1,
+                missing.size(),
+                "Нехватка ровно одна — факелов, фактически: " + missing
+                        + " Иначе тест missing_NoTorches_ReportsNeed перестанет ловить эту поломку. При смене missing_NoTorches_ReportsNeed проверь это утверждение.");
         assertTrue(
                 missing.get(0).contains("torch") && missing.get(0).contains("0 из 8"),
-                "Отчёт обязан назвать нехвату и числа, фактически: " + missing.get(0));
+                "Отчёт обязан назвать нехвату и числа, фактически: " + missing.get(0)
+                        + " Иначе тест missing_NoTorches_ReportsNeed перестанет ловить эту поломку. При смене missing_NoTorches_ReportsNeed проверь это утверждение.");
     }
 
     @Test
@@ -48,10 +54,15 @@ class DescentKitTests {
 
         List<String> missing = DescentKit.missing(KIT, inventory, ValueTable.load());
 
-        assertEquals(1, missing.size(), "Кирка и еда есть — не хватает только факелов, фактически: " + missing);
+        assertEquals(
+                1,
+                missing.size(),
+                "Кирка и еда есть — не хватает только факелов, фактически: " + missing
+                        + " Иначе тест missing_PartialTorches_ReportsHaveOfNeed перестанет ловить эту поломку. При смене missing_PartialTorches_ReportsHaveOfNeed проверь это утверждение.");
         assertTrue(
                 missing.get(0).contains("3 из 8"),
-                "Отчёт называет сколько есть и сколько нужно, фактически: " + missing.get(0));
+                "Отчёт называет сколько есть и сколько нужно, фактически: " + missing.get(0)
+                        + " Иначе тест missing_PartialTorches_ReportsHaveOfNeed перестанет ловить эту поломку. При смене missing_PartialTorches_ReportsHaveOfNeed проверь это утверждение.");
     }
 
     @Test
@@ -60,13 +71,19 @@ class DescentKitTests {
 
         List<String> missing = DescentKit.missing(KIT, inventory, ValueTable.load());
 
-        assertEquals(2, missing.size(), "Нет кирки и еды — две нехватки, фактически: " + missing);
+        assertEquals(
+                2,
+                missing.size(),
+                "Нет кирки и еды — две нехватки, фактически: " + missing
+                        + " Иначе тест missing_NoPickaxeNoFood_ReportsBoth перестанет ловить эту поломку. При смене missing_NoPickaxeNoFood_ReportsBoth проверь это утверждение.");
         assertTrue(
                 missing.stream().anyMatch(line -> line.contains("pickaxe")),
-                "Отчёт обязан назвать кирку, фактически: " + missing);
+                "Отчёт обязан назвать кирку, фактически: " + missing
+                        + " Иначе тест missing_NoPickaxeNoFood_ReportsBoth перестанет ловить эту поломку. При смене missing_NoPickaxeNoFood_ReportsBoth проверь это утверждение.");
         assertTrue(
                 missing.stream().anyMatch(line -> line.contains("food")),
-                "Отчёт обязан назвать еду, фактически: " + missing);
+                "Отчёт обязан назвать еду, фактически: " + missing
+                        + " Иначе тест missing_NoPickaxeNoFood_ReportsBoth перестанет ловить эту поломку. При смене missing_NoPickaxeNoFood_ReportsBoth проверь это утверждение.");
     }
 
     @Test
@@ -83,18 +100,21 @@ class DescentKitTests {
                 List.of("minecraft:torch", "minecraft:bread"),
                 steps.stream().map(call -> (String) call.params().get("item")).toList(),
                 "В поход добирается только то, чего у лидера нет: кирку при себе не перекладывают, "
-                        + "факелы и еду берут со склада перед спуском");
+                        + "факелы и еду берут со склада перед спуском"
+                        + " Иначе тест supply_LeaderHasPickaxe_TakesTorchesAndFoodFromWarehouse перестанет ловить эту поломку. При смене supply_LeaderHasPickaxe_TakesTorchesAndFoodFromWarehouse проверь это утверждение.");
         assertTrue(
                 steps.stream()
                         .allMatch(call -> "withdraw".equals(call.script())
                                 && "warehouse".equals(call.params().get("container"))),
-                "Набор идёт шагом withdraw со склада поселения, а не местным крафтом мимо графа: " + steps);
+                "Набор идёт шагом withdraw со склада поселения, а не местным крафтом мимо графа: " + steps
+                        + " Иначе тест supply_LeaderHasPickaxe_TakesTorchesAndFoodFromWarehouse перестанет ловить эту поломку. При смене supply_LeaderHasPickaxe_TakesTorchesAndFoodFromWarehouse проверь это утверждение.");
         assertEquals(
                 Map.of("minecraft:bread", 3, "minecraft:torch", 8),
                 steps.stream()
                         .collect(Collectors.toMap(call -> (String) call.params().get("item"), call ->
                                 (Integer) call.params().get("count"))),
-                "Берут ровно нехватку набора: 8 факелов и 3 еды");
+                "Берут ровно нехватку набора: 8 факелов и 3 еды"
+                        + " Иначе тест supply_LeaderHasPickaxe_TakesTorchesAndFoodFromWarehouse перестанет ловить эту поломку. При смене supply_LeaderHasPickaxe_TakesTorchesAndFoodFromWarehouse проверь это утверждение.");
     }
 
     @Test
@@ -106,7 +126,8 @@ class DescentKitTests {
                 List.of(),
                 DescentKit.supply(
                         KIT, inventory, Map.of("minecraft:torch", 8, "minecraft:bread", 3), ValueTable.load()),
-                "Полный набор у лидера — до старта ничего не забирают: лишний заход к складу задерживает поход");
+                "Полный набор у лидера — до старта ничего не забирают: лишний заход к складу задерживает поход"
+                        + " Иначе тест supply_FullKit_NoSteps перестанет ловить эту поломку. При смене supply_FullKit_NoSteps проверь это утверждение.");
     }
 
     @Test
@@ -120,6 +141,7 @@ class DescentKitTests {
         assertEquals(
                 List.of(),
                 DescentKit.missing(KIT, inventory, ValueTable.load()),
-                "Разная еда складывается по категории: три штуки любых продуктов закрывают нужду");
+                "Разная еда складывается по категории: три штуки любых продуктов закрывают нужду"
+                        + " Иначе тест missing_FoodCategory_CountsAnyFood перестанет ловить эту поломку. При смене missing_FoodCategory_CountsAnyFood проверь это утверждение.");
     }
 }

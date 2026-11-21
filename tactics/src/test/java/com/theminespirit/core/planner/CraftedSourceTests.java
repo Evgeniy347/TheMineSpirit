@@ -31,12 +31,14 @@ class CraftedSourceTests {
                 UnplannableGoalException.class,
                 () -> CorePlanner.resolve(PLANKS, 148, knowledge),
                 "Доски — крафтовый предмет: при потере рецепта резолвер обязан назвать причину, а не искать "
-                        + "37 размещённых досок по постройкам (аномалия A, oak_planks ×148)");
+                        + "37 размещённых досок по постройкам (аномалия A, oak_planks ×148)"
+                        + " Иначе тест resolve_CraftedPlanksWithoutRecipe_RefusesWorldGather перестанет ловить эту поломку. При смене resolve_CraftedPlanksWithoutRecipe_RefusesWorldGather проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains(PLANKS) && error.getMessage().contains("крафтом"),
                 "Причина обязана называть предмет и то, что он делается крафтом: по ней доска ставит честный "
-                        + "BLOCKED, а не 5 провалов добычи. Текст: " + error.getMessage());
+                        + "BLOCKED, а не 5 провалов добычи. Текст: " + error.getMessage()
+                        + " Иначе тест resolve_CraftedPlanksWithoutRecipe_RefusesWorldGather перестанет ловить эту поломку. При смене resolve_CraftedPlanksWithoutRecipe_RefusesWorldGather проверь это утверждение.");
     }
 
     @Test
@@ -52,7 +54,8 @@ class CraftedSourceTests {
         assertEquals(
                 new SequenceNode(List.of(gather("oak_log", 2), craft(PLANKS, 8))),
                 plan,
-                "Живой рецепт обязан побеждать сбор размещённых досок: 2 бревна дают 8 досок крафтом");
+                "Живой рецепт обязан побеждать сбор размещённых досок: 2 бревна дают 8 досок крафтом"
+                        + " Иначе тест resolve_CraftedPlanksWithRecipe_CraftsFromLogs перестанет ловить эту поломку. При смене resolve_CraftedPlanksWithRecipe_CraftsFromLogs проверь это утверждение.");
     }
 
     @Test
@@ -63,12 +66,14 @@ class CraftedSourceTests {
                 UnplannableGoalException.class,
                 () -> CorePlanner.resolve(SAPLING, 4, knowledge),
                 "Саженец не добывается выкапыванием посаженного: без рецепта источник — листва (GatherPlans), "
-                        + "а не размещённые саженцы в мире (N8)");
+                        + "а не размещённые саженцы в мире (N8)"
+                        + " Иначе тест resolve_CraftedSaplingWithoutRecipe_RefusesWorldGather перестанет ловить эту поломку. При смене resolve_CraftedSaplingWithoutRecipe_RefusesWorldGather проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains(SAPLING),
                 "Причина обязана называть саженец: иначе в логе снова «не удалось добыть oak_sapling ×4» без "
-                        + "источника. Текст: " + error.getMessage());
+                        + "источника. Текст: " + error.getMessage()
+                        + " При смене resolve_CraftedSaplingWithoutRecipe_RefusesWorldGather проверь это утверждение.");
     }
 
     @Test
@@ -80,7 +85,8 @@ class CraftedSourceTests {
                 UnplannableGoalException.class,
                 () -> CorePlanner.resolve("minecraft:oak_planks", 67, knowledge),
                 "Пространство имён не делает доски другим блоком: 'minecraft:oak_planks' и 'oak_planks' — "
-                        + "один предмет, и добыча размещённых досок запрещена так же, как для короткого id (A)");
+                        + "один предмет, и добыча размещённых досок запрещена так же, как для короткого id (A)"
+                        + " Иначе тест resolve_NamespacedPlanksWithoutRecipe_RefusesWorldGather перестанет ловить эту поломку. При смене resolve_NamespacedPlanksWithoutRecipe_RefusesWorldGather проверь это утверждение.");
     }
 
     @Test
@@ -94,7 +100,8 @@ class CraftedSourceTests {
                 gather("sand", 3),
                 plan,
                 "Предмет с настоящим блоком-источником по-прежнему берётся из мира: правило крафтовых семейств "
-                        + "не должно отменять добычу сырья");
+                        + "не должно отменять добычу сырья"
+                        + " Иначе тест resolve_DropSourcedCraftedFamily_GathersSourceBlock перестанет ловить эту поломку. При смене resolve_DropSourcedCraftedFamily_GathersSourceBlock проверь это утверждение.");
     }
 
     @Test
@@ -106,7 +113,8 @@ class CraftedSourceTests {
         assertEquals(
                 gather("dirt", 5),
                 plan,
-                "Природный блок остаётся добычей: правило не должно запрещать сбор земли, песка и камня");
+                "Природный блок остаётся добычей: правило не должно запрещать сбор земли, песка и камня"
+                        + " Иначе тест resolve_NaturalBlock_StillGathersFromWorld перестанет ловить эту поломку. При смене resolve_NaturalBlock_StillGathersFromWorld проверь это утверждение.");
     }
 
     @Test
@@ -130,7 +138,8 @@ class CraftedSourceTests {
                     UnplannableGoalException.class,
                     () -> CorePlanner.resolve(item, 4, knowledge),
                     "Крафтовый '" + item + "' без рецепта обязан отказывать на любом пути выдачи (graph:make, "
-                            + "supply, supply_gather, acquire), а не искать размещённую копию блоком в мире");
+                            + "supply, supply_gather, acquire), а не искать размещённую копию блоком в мире"
+                            + " Иначе тест resolve_EveryCraftedFamilyWithoutRecipe_RefusesWorldGather перестанет ловить эту поломку. При смене resolve_EveryCraftedFamilyWithoutRecipe_RefusesWorldGather проверь это утверждение.");
         }
     }
 
@@ -150,7 +159,8 @@ class CraftedSourceTests {
             assertTrue(
                     CraftedItems.isCrafted(item),
                     "Предмет '" + item + "' делается крафтом: добыча его размещённых копий — та же ошибка, "
-                            + "что с досками и саженцами");
+                            + "что с досками и саженцами"
+                            + " Иначе тест isCrafted_Families_True перестанет ловить эту поломку. При смене isCrafted_Families_True проверь это утверждение.");
         }
     }
 
@@ -163,19 +173,23 @@ class CraftedSourceTests {
                 UnplannableGoalException.class,
                 () -> CorePlanner.resolve("stone_bricks", 111, knowledge),
                 "Кирпичи — крафтовый предмет: без рецепта сбор обязан отказать, а не искать блок "
-                        + "(-329,63,-515) в 150 блоках от поселения (observe18 B5)");
+                        + "(-329,63,-515) в 150 блоках от поселения (observe18 B5)"
+                        + " Иначе тест resolve_StoneBricksWithoutRecipe_RefusesFarWorldBlock перестанет ловить эту поломку. При смене resolve_StoneBricksWithoutRecipe_RefusesFarWorldBlock проверь это утверждение.");
         UnplannableGoalException stairs = assertThrows(
                 UnplannableGoalException.class,
                 () -> CorePlanner.resolve("stone_brick_stairs", 1, knowledge),
-                "Ступени кирпича — крафтовый предмет: без рецепта дух не идёт за блоком (-18,74,-421)");
+                "Ступени кирпича — крафтовый предмет: без рецепта дух не идёт за блоком (-18,74,-421)"
+                        + " Иначе тест resolve_StoneBricksWithoutRecipe_RefusesFarWorldBlock перестанет ловить эту поломку. При смене resolve_StoneBricksWithoutRecipe_RefusesFarWorldBlock проверь это утверждение.");
 
         assertTrue(
                 bricks.getMessage().contains("stone_bricks")
                         && bricks.getMessage().contains("крафтом"),
-                "Отказ обязан называть кирпичи и крафт: " + bricks.getMessage());
+                "Отказ обязан называть кирпичи и крафт: " + bricks.getMessage()
+                        + " Иначе тест resolve_StoneBricksWithoutRecipe_RefusesFarWorldBlock перестанет ловить эту поломку. При смене resolve_StoneBricksWithoutRecipe_RefusesFarWorldBlock проверь это утверждение.");
         assertTrue(
                 stairs.getMessage().contains("stone_brick_stairs"),
-                "Отказ обязан называть ступени: " + stairs.getMessage());
+                "Отказ обязан называть ступени: " + stairs.getMessage()
+                        + " Иначе тест resolve_StoneBricksWithoutRecipe_RefusesFarWorldBlock перестанет ловить эту поломку. При смене resolve_StoneBricksWithoutRecipe_RefusesFarWorldBlock проверь это утверждение.");
     }
 
     @Test
@@ -183,7 +197,8 @@ class CraftedSourceTests {
         for (String item : List.of("oak_log", "dirt", "stone", "coal_ore", "raw_iron", "oak_leaves")) {
             assertFalse(
                     CraftedItems.isCrafted(item),
-                    "Природный '" + item + "' не крафтовый: запрет сбора сломал бы добычу сырья");
+                    "Природный '" + item + "' не крафтовый: запрет сбора сломал бы добычу сырья"
+                            + " Иначе тест isCrafted_NaturalItems_False перестанет ловить эту поломку. При смене isCrafted_NaturalItems_False проверь это утверждение.");
         }
     }
 

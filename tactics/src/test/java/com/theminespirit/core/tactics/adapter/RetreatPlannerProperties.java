@@ -54,14 +54,23 @@ class RetreatPlannerProperties {
         for (RetreatMethod method : RetreatMethod.values()) {
             Optional<RetreatPlan> plan = RetreatPlanner.plan(method, input);
             if (method == RetreatMethod.NONE) {
-                assertTrue(plan.isEmpty(), "NONE означает «не отходить»: плана нет");
+                assertTrue(
+                        plan.isEmpty(),
+                        "NONE означает «не отходить»: плана нет"
+                                + " Иначе тест plan_EveryRealMethod_GivesExactlyOneKindOfPlanWhenTargetsExist перестанет ловить эту поломку. При смене plan_EveryRealMethod_GivesExactlyOneKindOfPlanWhenTargetsExist проверь это утверждение.");
                 continue;
             }
-            assertTrue(plan.isPresent(), "Способ " + method + " при наличии цели, дома и блоков обязан дать план");
+            assertTrue(
+                    plan.isPresent(),
+                    "Способ " + method + " при наличии цели, дома и блоков обязан дать план"
+                            + " Иначе тест plan_EveryRealMethod_GivesExactlyOneKindOfPlanWhenTargetsExist перестанет ловить эту поломку. При смене plan_EveryRealMethod_GivesExactlyOneKindOfPlanWhenTargetsExist проверь это утверждение.");
             boolean walk = plan.get() instanceof RetreatPlan.Walk;
             boolean pour = plan.get() instanceof RetreatPlan.Pour;
             int kinds = (walk ? 1 : 0) + (pour ? 1 : 0);
-            assertTrue(kinds == 1, "Способ " + method + " даёт ровно один вид плана, получили " + plan.get());
+            assertTrue(
+                    kinds == 1,
+                    "Способ " + method + " даёт ровно один вид плана, получили " + plan.get()
+                            + " Иначе тест plan_EveryRealMethod_GivesExactlyOneKindOfPlanWhenTargetsExist перестанет ловить эту поломку. При смене plan_EveryRealMethod_GivesExactlyOneKindOfPlanWhenTargetsExist проверь это утверждение.");
         }
     }
 
@@ -75,6 +84,7 @@ class RetreatPlannerProperties {
 
         assertTrue(
                 walk.target().distanceTo(enemy.pos()) > SELF.distanceTo(enemy.pos()),
-                "Бег прочь обязан увеличивать расстояние до врага: цель " + walk.target() + " не дальше духа");
+                "Бег прочь обязан увеличивать расстояние до врага: цель " + walk.target() + " не дальше духа"
+                        + " Иначе тест plan_Away_TargetIsFartherFromNearestEnemyThanSelf перестанет ловить эту поломку. При смене plan_Away_TargetIsFartherFromNearestEnemyThanSelf проверь это утверждение.");
     }
 }

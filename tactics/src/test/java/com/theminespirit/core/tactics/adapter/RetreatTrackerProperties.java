@@ -49,7 +49,8 @@ class RetreatTrackerProperties {
 
         assertTrue(
                 result.equals(RetreatTracker.IDLE) || (result.retreating() && result.sinceTick() == nowTick),
-                "Из простоя ход даёт только простой или начало отхода с текущего тика, получили " + result);
+                "Из простоя ход даёт только простой или начало отхода с текущего тика, получили " + result
+                        + " Иначе тест advance_IdleTracker_StaysIdleOrStarts перестанет ловить эту поломку. При смене advance_IdleTracker_StaysIdleOrStarts проверь это утверждение.");
     }
 
     @Property(tries = 200)
@@ -64,11 +65,13 @@ class RetreatTrackerProperties {
 
         assertTrue(
                 lastHeld.retreating(),
-                "За тик до исхода удержания способ ещё исполняется: иначе дух бросит манёвр раньше срока");
+                "За тик до исхода удержания способ ещё исполняется: иначе дух бросит манёвр раньше срока"
+                        + " При смене advance_Hold_DoesNotOutlastHoldTicks проверь это утверждение.");
         assertEquals(
                 RetreatTracker.IDLE,
                 released,
-                "На исходе удержания отход снимается: удержание не длится больше HOLD_TICKS");
+                "На исходе удержания отход снимается: удержание не длится больше HOLD_TICKS"
+                        + " Иначе тест advance_Hold_DoesNotOutlastHoldTicks перестанет ловить эту поломку. При смене advance_Hold_DoesNotOutlastHoldTicks проверь это утверждение.");
     }
 
     @Property(tries = 200)
@@ -82,6 +85,7 @@ class RetreatTrackerProperties {
         assertEquals(
                 tracker,
                 tracker.advance(retreat, since + extra, 200),
-                "Тот же способ отхода не сбрасывает прогресс: иначе удержание начиналось бы заново каждый тик");
+                "Тот же способ отхода не сбрасывает прогресс: иначе удержание начиналось бы заново каждый тик"
+                        + " При смене advance_SameMethod_KeepsStartTick проверь это утверждение.");
     }
 }

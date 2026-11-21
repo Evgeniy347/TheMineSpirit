@@ -31,11 +31,13 @@ class RetreatSelectorProperties {
             assertTrue(
                     entry.requires().matches(facts),
                     "Выбранный способ " + choice.method() + " (" + id + ") обязан удовлетворять собственным requires: "
-                            + "иначе дух отходит туда, куда по условиям отходить нельзя");
+                            + "иначе дух отходит туда, куда по условиям отходить нельзя"
+                            + " При смене choice_AnySituation_ChosenMethodSatisfiesItsOwnRequirements проверь это утверждение.");
         });
         assertEquals(
                 options.routes() == 0,
                 choice.method() == RetreatMethod.NONE,
-                "NONE выбирается тогда и только тогда, когда ни один способ не подошёл");
+                "NONE выбирается тогда и только тогда, когда ни один способ не подошёл"
+                        + " Иначе тест choice_AnySituation_ChosenMethodSatisfiesItsOwnRequirements перестанет ловить эту поломку. При смене choice_AnySituation_ChosenMethodSatisfiesItsOwnRequirements проверь это утверждение.");
     }
 }

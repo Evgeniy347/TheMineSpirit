@@ -17,7 +17,8 @@ class CombatTuningTests {
                 CombatTuning.DANGER_RADIUS,
                 "Радиус опасности равен 8: не дальше зоны, до которой враги преследуют оборонительного духа "
                         + "(modes.json: defensive.pursuitRadius), иначе flee ждал бы спасения там, "
-                        + "где его ещё достают");
+                        + "где его ещё достают"
+                        + " При смене combatTuning_DangerRadius_MatchAgreedValue проверь это утверждение.");
     }
 
     @Test
@@ -27,7 +28,8 @@ class CombatTuningTests {
                 DEFENSIVE.pursuit(0),
                 "Радиус опасности обязан совпадать с преследованием оборонительного режима из modes.json: "
                         + "это один и тот же рубеж «дальше — не догоняют», и расхождение сделало бы бегство "
-                        + "ложным (враги в зоне, а дух считает себя спасшимся)");
+                        + "ложным (враги в зоне, а дух считает себя спасшимся)"
+                        + " Иначе тест combatTuning_DangerRadius_MatchesDefensivePursuitRadius перестанет ловить эту поломку. При смене combatTuning_DangerRadius_MatchesDefensivePursuitRadius проверь это утверждение.");
     }
 
     @Test
@@ -35,7 +37,8 @@ class CombatTuningTests {
         assertTrue(
                 CombatTuning.DANGER_RADIUS > 0 && Double.isFinite(CombatTuning.DANGER_RADIUS),
                 "Радиус опасности обязан быть положительным и конечным: ноль объявил бы духа спасшимся "
-                        + "сразу, бесконечность — никогда. Фактическое: " + CombatTuning.DANGER_RADIUS);
+                        + "сразу, бесконечность — никогда. Фактическое: " + CombatTuning.DANGER_RADIUS
+                        + " Иначе тест combatTuning_DangerRadius_IsPositiveAndFinite перестанет ловить эту поломку. При смене combatTuning_DangerRadius_IsPositiveAndFinite проверь это утверждение.");
     }
 
     @Test
@@ -43,6 +46,7 @@ class CombatTuningTests {
         assertNotEquals(
                 0.0,
                 CombatTuning.DANGER_RADIUS,
-                "Нулевой радиус опасности запрещено: flee завершился бы на месте, не отойдя ни на шаг");
+                "Нулевой радиус опасности запрещено: flee завершился бы на месте, не отойдя ни на шаг"
+                        + " Иначе тест combatTuning_DangerRadius_IsNotZero перестанет ловить эту поломку. При смене combatTuning_DangerRadius_IsNotZero проверь это утверждение.");
     }
 }

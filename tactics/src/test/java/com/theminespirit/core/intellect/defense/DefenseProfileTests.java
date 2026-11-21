@@ -29,7 +29,8 @@ class DefenseProfileTests {
         assertEquals(
                 TargetClass.CREEPER,
                 PROFILE.classify("minecraft:creeper"),
-                "Явная карта главнее профиля: крипер обязан быть CREEPER даже при нулевом уроне в профиле");
+                "Явная карта главнее профиля: крипер обязан быть CREEPER даже при нулевом уроне в профиле"
+                        + " Иначе тест classify_KnownType_ReturnsMappedClass перестанет ловить эту поломку. При смене classify_KnownType_ReturnsMappedClass проверь это утверждение.");
     }
 
     @Test
@@ -37,7 +38,8 @@ class DefenseProfileTests {
         assertEquals(
                 TargetClass.MELEE,
                 PROFILE.classify("minecraft:unknown_beast"),
-                "Неизвестный тип без профиля падает в fallback: иначе цель останется без класса и приоритета");
+                "Неизвестный тип без профиля падает в fallback: иначе цель останется без класса и приоритета"
+                        + " При смене classify_UnknownTypeWithoutProfile_ReturnsFallback проверь это утверждение.");
     }
 
     @Test
@@ -47,7 +49,8 @@ class DefenseProfileTests {
         assertEquals(
                 TargetClass.CREEPER,
                 PROFILE.classify("minecraft:boom", explosive),
-                "Взрывной враг вне карты — CREEPER: иначе лучник не возьмёт его первым, а мечник подойдёт впритык");
+                "Взрывной враг вне карты — CREEPER: иначе лучник не возьмёт его первым, а мечник подойдёт впритык"
+                        + " При смене classify_UnknownExplosiveProfile_ReturnsCreeper проверь это утверждение.");
     }
 
     @Test
@@ -57,7 +60,8 @@ class DefenseProfileTests {
         assertEquals(
                 TargetClass.FLYER,
                 PROFILE.classify("minecraft:bat", flyer),
-                "Летающий враг вне карты — FLYER: иначе его приоритет посчитают как у пешего");
+                "Летающий враг вне карты — FLYER: иначе его приоритет посчитают как у пешего"
+                        + " При смене classify_UnknownFlyingProfile_ReturnsFlyer проверь это утверждение.");
     }
 
     @Test
@@ -67,7 +71,8 @@ class DefenseProfileTests {
         assertEquals(
                 TargetClass.RANGED,
                 PROFILE.classify("minecraft:sniper", shooter),
-                "Стрелок вне карты — RANGED: иначе отряд не прикроется от обстрела");
+                "Стрелок вне карты — RANGED: иначе отряд не прикроется от обстрела"
+                        + " При смене classify_UnknownRangedProfile_ReturnsRanged проверь это утверждение.");
     }
 
     @Test
@@ -75,7 +80,8 @@ class DefenseProfileTests {
         assertEquals(
                 TargetClass.MELEE,
                 PROFILE.classify("minecraft:husk", PLAIN),
-                "Обычный враг вне карты — MELEE: иначе мечник останется без целей в ближнем бою");
+                "Обычный враг вне карты — MELEE: иначе мечник останется без целей в ближнем бою"
+                        + " При смене classify_UnknownPlainProfile_ReturnsMelee проверь это утверждение.");
     }
 
     @Test
@@ -83,7 +89,8 @@ class DefenseProfileTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> PROFILE.classify(null),
-                "Классификация без типа обязана падать: иначе молчаливый fallback спрячет ошибку источника");
+                "Классификация без типа обязана падать: иначе молчаливый fallback спрячет ошибку источника"
+                        + " При смене classify_NullType_Throws проверь это утверждение.");
     }
 
     @Test
@@ -91,7 +98,8 @@ class DefenseProfileTests {
         assertEquals(
                 List.of(TargetClass.CREEPER, TargetClass.SKELETON, TargetClass.RANGED, TargetClass.MELEE),
                 PROFILE.orderFor(DefenderRole.ARCHER, true),
-                "Порядок лучника — крипер, скелет, дальние, ближние: иначе лучник бьёт ближнего вместо крипера");
+                "Порядок лучника — крипер, скелет, дальние, ближние: иначе лучник бьёт ближнего вместо крипера"
+                        + " При смене orderFor_Archer_ReturnsExactFour проверь это утверждение.");
     }
 
     @Test
@@ -99,7 +107,8 @@ class DefenseProfileTests {
         assertEquals(
                 List.of(TargetClass.MELEE, TargetClass.RANGED),
                 PROFILE.orderFor(DefenderRole.MELEE, true),
-                "Мечник при живом лучнике не берёт крипера и скелета: иначе подойдёт к взрыву вместо лучника");
+                "Мечник при живом лучнике не берёт крипера и скелета: иначе подойдёт к взрыву вместо лучника"
+                        + " При смене orderFor_MeleeWithArcher_ExcludesCreeperAndSkeleton проверь это утверждение.");
     }
 
     @Test
@@ -109,11 +118,13 @@ class DefenseProfileTests {
         assertEquals(
                 TargetClass.SKELETON,
                 order.get(0),
-                "Мечник без лучника идёт на скелета первым: иначе обстрел останется без ответа");
+                "Мечник без лучника идёт на скелета первым: иначе обстрел останется без ответа"
+                        + " При смене orderFor_MeleeWithoutArcher_StartsWithSkeleton проверь это утверждение.");
         assertEquals(
                 List.of(TargetClass.SKELETON, TargetClass.MELEE, TargetClass.RANGED),
                 order,
-                "Порядок мечника без лучника — скелет, ближние, дальние: иначе скелет перестреляет отряд");
+                "Порядок мечника без лучника — скелет, ближние, дальние: иначе скелет перестреляет отряд"
+                        + " При смене orderFor_MeleeWithoutArcher_StartsWithSkeleton проверь это утверждение.");
     }
 
     @Test
@@ -121,7 +132,8 @@ class DefenseProfileTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> PROFILE.orderFor(null, true),
-                "Порядок целей без роли обязан падать: иначе лучник и мечник получат чужой приоритет");
+                "Порядок целей без роли обязан падать: иначе лучник и мечник получат чужой приоритет"
+                        + " При смене orderFor_NullRole_Throws проверь это утверждение.");
     }
 
     @Test
@@ -133,7 +145,8 @@ class DefenseProfileTests {
                         TargetClass.MELEE,
                         Map.of(DefenderRole.MELEE, List.of(TargetClass.MELEE)),
                         Map.of(DefenderRole.MELEE, List.of(TargetClass.MELEE))),
-                "Профиль без карты типов обязан падать: иначе каждый враг упадёт в молчаливый fallback");
+                "Профиль без карты типов обязан падать: иначе каждый враг упадёт в молчаливый fallback"
+                        + " При смене profile_NullClasses_Throws проверь это утверждение.");
     }
 
     @Test
@@ -149,7 +162,8 @@ class DefenseProfileTests {
                                 DefenderRole.MELEE,
                                 List.of(TargetClass.MELEE)),
                         Map.of(DefenderRole.MELEE, List.of(TargetClass.MELEE))),
-                "Дубль класса в приоритете обязан падать: повтор ломает тай-брейк целей");
+                "Дубль класса в приоритете обязан падать: повтор ломает тай-брейк целей"
+                        + " При смене profile_DuplicateClassInOrder_Throws проверь это утверждение.");
     }
 
     @Test
@@ -161,6 +175,7 @@ class DefenseProfileTests {
                         TargetClass.MELEE,
                         Map.of(DefenderRole.ARCHER, List.of(), DefenderRole.MELEE, List.of(TargetClass.MELEE)),
                         Map.of(DefenderRole.MELEE, List.of(TargetClass.MELEE))),
-                "Пустой порядок целей обязан падать: отряд без порядка бьёт кого попало");
+                "Пустой порядок целей обязан падать: отряд без порядка бьёт кого попало"
+                        + " Иначе тест profile_EmptyOrder_Throws перестанет ловить эту поломку. При смене profile_EmptyOrder_Throws проверь это утверждение.");
     }
 }

@@ -61,7 +61,8 @@ class CoreFactCollectorProperties {
                 expected,
                 actual,
                 "Снятие фактов обязано оставить ровно врагов в факт-радиусе " + AdapterFixtures.RADIUS
-                        + " и отдать их ядру: иначе решение принимается по невидимым врагам или теряет видимых");
+                        + " и отдать их ядру: иначе решение принимается по невидимым врагам или теряет видимых"
+                        + " При смене collect_AnyEnemies_KeepsOnlyThoseInFactRadius проверь это утверждение.");
     }
 
     @Property(tries = 200)
@@ -77,7 +78,8 @@ class CoreFactCollectorProperties {
                 actual,
                 "До лимита " + Situation.MAX_ENEMIES + " список врагов ситуации обязан идти по (дистанция, тип, "
                         + "HP-доля, id): порядок находки сущностей не должен протекать в решение. Свыше лимита хвост "
-                        + "приписывается свёрнутым и общей сортировке не подчиняется");
+                        + "приписывается свёрнутым и общей сортировке не подчиняется"
+                        + " Иначе тест collect_AnyEnemies_ReturnsCanonicalOrder перестанет ловить эту поломку. При смене collect_AnyEnemies_ReturnsCanonicalOrder проверь это утверждение.");
     }
 
     @Property(tries = 200)
@@ -94,11 +96,13 @@ class CoreFactCollectorProperties {
                 expectedCount,
                 situation.enemies().stream().mapToInt(EnemyFact::count).sum(),
                 "Сворачивание хвоста сверх " + Situation.MAX_ENEMIES + " сохраняет число врагов: орда не должна "
-                        + "пропадать из вида");
+                        + "пропадать из вида"
+                        + " Иначе тест collect_MoreThanMax_PreservesCountWithinBounds перестанет ловить эту поломку. При смене collect_MoreThanMax_PreservesCountWithinBounds проверь это утверждение.");
         assertTrue(
                 situation.enemies().size() <= Situation.MAX_ENEMIES + distinctTypes,
                 "Сверх лимита хвост сворачивается в одну запись на тип, значит записей не больше "
-                        + Situation.MAX_ENEMIES + " + число типов = " + (Situation.MAX_ENEMIES + distinctTypes));
+                        + Situation.MAX_ENEMIES + " + число типов = " + (Situation.MAX_ENEMIES + distinctTypes)
+                        + " Иначе тест collect_MoreThanMax_PreservesCountWithinBounds перестанет ловить эту поломку. При смене collect_MoreThanMax_PreservesCountWithinBounds проверь это утверждение.");
     }
 
     private static Comparator<EnemyFact> canonicalOrder(Point origin) {

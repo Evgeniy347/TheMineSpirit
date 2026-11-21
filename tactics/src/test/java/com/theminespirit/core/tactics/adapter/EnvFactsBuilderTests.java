@@ -18,16 +18,31 @@ class EnvFactsBuilderTests {
         EnvFacts facts =
                 EnvFactsBuilder.build(EnvReading.NOTHING, SELF, 15, TimeOfDay.DAY, Optional.of(new Point(8, 1, 0)));
 
-        assertTrue(facts.homeReachable(), "Дом в памяти духа — путь к нему доступен ядру отхода HOME");
-        assertEquals(8.0, facts.homeDistance(), 1e-9, "Расстояние до дома считается от духа до точки дома");
+        assertTrue(
+                facts.homeReachable(),
+                "Дом в памяти духа — путь к нему доступен ядру отхода HOME"
+                        + " Иначе тест build_HomeEightBlocksAway_HomeReachableWithDistance перестанет ловить эту поломку. При смене build_HomeEightBlocksAway_HomeReachableWithDistance проверь это утверждение.");
+        assertEquals(
+                8.0,
+                facts.homeDistance(),
+                1e-9,
+                "Расстояние до дома считается от духа до точки дома"
+                        + " Иначе тест build_HomeEightBlocksAway_HomeReachableWithDistance перестанет ловить эту поломку. При смене build_HomeEightBlocksAway_HomeReachableWithDistance проверь это утверждение.");
     }
 
     @Test
     void build_NoHome_HomeFarAndNotReachable() {
         EnvFacts facts = EnvFactsBuilder.build(EnvReading.NOTHING, SELF, 15, TimeOfDay.DAY, Optional.empty());
 
-        assertFalse(facts.homeReachable(), "Без точки дома отход HOME недоступен, иначе дух побежит в никуда");
-        assertEquals(EnvFacts.FAR_DISTANCE, facts.homeDistance(), "Нет дома — расстояние FAR");
+        assertFalse(
+                facts.homeReachable(),
+                "Без точки дома отход HOME недоступен, иначе дух побежит в никуда"
+                        + " При смене build_NoHome_HomeFarAndNotReachable проверь это утверждение.");
+        assertEquals(
+                EnvFacts.FAR_DISTANCE,
+                facts.homeDistance(),
+                "Нет дома — расстояние FAR"
+                        + " Иначе тест build_NoHome_HomeFarAndNotReachable перестанет ловить эту поломку. При смене build_NoHome_HomeFarAndNotReachable проверь это утверждение.");
     }
 
     @Test
@@ -38,15 +53,23 @@ class EnvFactsBuilderTests {
         assertEquals(
                 EnvFacts.FAR_DISTANCE,
                 facts.homeDistance(),
-                "Дом дальше FAR не должен ломать EnvFacts: расстояние зажимается до FAR");
+                "Дом дальше FAR не должен ломать EnvFacts: расстояние зажимается до FAR"
+                        + " Иначе тест build_HomeBeyondFar_DistanceClampedToFar перестанет ловить эту поломку. При смене build_HomeBeyondFar_DistanceClampedToFar проверь это утверждение.");
     }
 
     @Test
     void build_Night_PassesTimeAndLight() {
         EnvFacts facts = EnvFactsBuilder.build(EnvReading.NOTHING, SELF, 3, TimeOfDay.NIGHT, Optional.empty());
 
-        assertTrue(facts.night(), "Ночь из мира дойдёт до ядра без подмены: от неё зависит фактор DARKNESS");
-        assertEquals(3, facts.light(), "Освещённость из мира дойдёт до ядра без подмены");
+        assertTrue(
+                facts.night(),
+                "Ночь из мира дойдёт до ядра без подмены: от неё зависит фактор DARKNESS"
+                        + " Иначе тест build_Night_PassesTimeAndLight перестанет ловить эту поломку. При смене build_Night_PassesTimeAndLight проверь это утверждение.");
+        assertEquals(
+                3,
+                facts.light(),
+                "Освещённость из мира дойдёт до ядра без подмены"
+                        + " Иначе тест build_Night_PassesTimeAndLight перестанет ловить эту поломку. При смене build_Night_PassesTimeAndLight проверь это утверждение.");
     }
 
     @Test
@@ -55,9 +78,25 @@ class EnvFactsBuilderTests {
 
         EnvFacts facts = EnvFactsBuilder.build(reading, SELF, 15, TimeOfDay.DAY, Optional.empty());
 
-        assertEquals(2.5, facts.lavaNear(), "Лава из скана обязана дойти до фактов");
-        assertEquals(4.0, facts.dropHeight(), "Обрыв из скана обязан дойти до фактов");
-        assertEquals(6.0, facts.waterDistance(), "Вода из скана обязана дойти до фактов");
-        assertEquals(3.5, facts.coverDistance(), "Укрытие из скана обязано дойти до фактов");
+        assertEquals(
+                2.5,
+                facts.lavaNear(),
+                "Лава из скана обязана дойти до фактов"
+                        + " Иначе тест build_Reading_CarriesLavaWaterCoverAndDrop перестанет ловить эту поломку. При смене build_Reading_CarriesLavaWaterCoverAndDrop проверь это утверждение.");
+        assertEquals(
+                4.0,
+                facts.dropHeight(),
+                "Обрыв из скана обязан дойти до фактов"
+                        + " Иначе тест build_Reading_CarriesLavaWaterCoverAndDrop перестанет ловить эту поломку. При смене build_Reading_CarriesLavaWaterCoverAndDrop проверь это утверждение.");
+        assertEquals(
+                6.0,
+                facts.waterDistance(),
+                "Вода из скана обязана дойти до фактов"
+                        + " Иначе тест build_Reading_CarriesLavaWaterCoverAndDrop перестанет ловить эту поломку. При смене build_Reading_CarriesLavaWaterCoverAndDrop проверь это утверждение.");
+        assertEquals(
+                3.5,
+                facts.coverDistance(),
+                "Укрытие из скана обязано дойти до фактов"
+                        + " Иначе тест build_Reading_CarriesLavaWaterCoverAndDrop перестанет ловить эту поломку. При смене build_Reading_CarriesLavaWaterCoverAndDrop проверь это утверждение.");
     }
 }

@@ -37,7 +37,8 @@ class LeashProperties {
 
         assertTrue(
                 farLeft <= nearLeft + 1e-12,
-                "Чем дальше цель от якоря, тем меньше остаток поводка: " + nearLeft + " → " + farLeft);
+                "Чем дальше цель от якоря, тем меньше остаток поводка: " + nearLeft + " → " + farLeft
+                        + " Иначе тест check_FartherTarget_NeverLeavesMoreRoom перестанет ловить эту поломку. При смене check_FartherTarget_NeverLeavesMoreRoom проверь это утверждение.");
     }
 
     @Property
@@ -52,7 +53,8 @@ class LeashProperties {
         assertInstanceOf(
                 LeashResult.Exceeded.class,
                 result,
-                "Цель дальше радиуса преследования (" + pursuit + " + " + over + ") не преследуется");
+                "Цель дальше радиуса преследования (" + pursuit + " + " + over + ") не преследуется"
+                        + " Иначе тест check_TargetBeyondPursuitRadius_IsNeverPursued перестанет ловить эту поломку. При смене check_TargetBeyondPursuitRadius_IsNeverPursued проверь это утверждение.");
     }
 
     @Property
@@ -69,6 +71,7 @@ class LeashProperties {
                 params.returnToAnchor() && distance > tolerance,
                 target.isPresent(),
                 "После боя дух возвращается к якорю, когда режим это требует и он дальше допуска " + tolerance
-                        + ": режим " + mode + ", расстояние " + distance);
+                        + ": режим " + mode + ", расстояние " + distance
+                        + " Иначе тест returnTarget_AfterCombat_PresentExactlyWhenFarAndModeReturns перестанет ловить эту поломку. При смене returnTarget_AfterCombat_PresentExactlyWhenFarAndModeReturns проверь это утверждение.");
     }
 }

@@ -122,7 +122,8 @@ class TacticsSensitivityTests {
                 "Решение по счёту держится на одном весе: сдвиг любого веса на ±10 % его меняет, значит сценарий "
                         + "проверяет подогнанный вес, а не устройство оценки. Либо добавьте сценарий с запасом, либо "
                         + "пометьте его \"boundary\": true с причиной в \"why\" и парой \"pair\" с другой стороны границы. "
-                        + "Хрупкие сценарии");
+                        + "Хрупкие сценарии"
+                        + " При смене scenarios_DecidedByScoreWithoutBoundaryMark_SurviveAnySingleWeightShiftOfTenPercent проверь это утверждение.");
     }
 
     @Test
@@ -133,7 +134,8 @@ class TacticsSensitivityTests {
                 List.of(),
                 stale,
                 "Сценарий помечен граничным, но решение не зависит от сдвига ни одного веса на ±10 % (или решено "
-                        + "не счётом): пометка устарела и скрывает настоящие границы. Снимите \"boundary\" у сценариев");
+                        + "не счётом): пометка устарела и скрывает настоящие границы. Снимите \"boundary\" у сценариев"
+                        + " При смене scenarios_MarkedBoundary_AreReallySensitiveToSomeWeight проверь это утверждение.");
     }
 
     @Test
@@ -144,7 +146,8 @@ class TacticsSensitivityTests {
                 List.of(),
                 problems,
                 "Граничный сценарий проверяет вес с одной стороны границы, поэтому обязан иметь пару по другую "
-                        + "(\"pair\": имя сценария с иным решением). Проблемы");
+                        + "(\"pair\": имя сценария с иным решением). Проблемы"
+                        + " При смене scenarios_MarkedBoundary_HaveOppositeSidePair проверь это утверждение.");
     }
 
     @Test
@@ -154,7 +157,8 @@ class TacticsSensitivityTests {
         assertFalse(
                 fragile.isEmpty(),
                 "Анализ ослеп: при сдвиге весов на 50 % ни один сценарий по счёту не переключился, "
-                        + "а известные границы весов (например ALLY_SUPPORT) в файле есть. Проверьте shifted() и flips()");
+                        + "а известные границы весов (например ALLY_SUPPORT) в файле есть. Проверьте shifted() и flips()"
+                        + " При смене fragileUnmarked_HalfWeightShift_FindsScenariosDecidedByScore проверь это утверждение.");
     }
 
     @Test
@@ -164,7 +168,8 @@ class TacticsSensitivityTests {
         assertEquals(
                 List.of("один"),
                 staleBoundary(scenarios, SPEC_SHIFT),
-                "Сторож пометок ослеп: устойчивый сценарий с пометкой boundary обязан попадать в устаревшие");
+                "Сторож пометок ослеп: устойчивый сценарий с пометкой boundary обязан попадать в устаревшие"
+                        + " При смене staleBoundary_RobustScenarioMarkedBoundary_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -172,15 +177,18 @@ class TacticsSensitivityTests {
         assertEquals(
                 List.of("один: нет поля pair"),
                 pairProblems(synthetic("\"boundary\": true,")),
-                "Граничный сценарий без pair обязан попадать в проблемы");
+                "Граничный сценарий без pair обязан попадать в проблемы"
+                        + " При смене pairProblems_MissingOrSameDecisionPair_AreReported проверь это утверждение.");
         assertEquals(
                 List.of("один: пара «нет такого» не найдена"),
                 pairProblems(synthetic("\"boundary\": true, \"pair\": \"нет такого\",")),
-                "Пара с несуществующим именем обязана попадать в проблемы");
+                "Пара с несуществующим именем обязана попадать в проблемы"
+                        + " Иначе тест pairProblems_MissingOrSameDecisionPair_AreReported перестанет ловить эту поломку. При смене pairProblems_MissingOrSameDecisionPair_AreReported проверь это утверждение.");
         assertEquals(
                 List.of("один: пара «два» ожидает то же решение FIGHT, а не противоположное"),
                 pairProblems(synthetic("\"boundary\": true, \"pair\": \"два\",")),
-                "Пара с тем же решением — не другая сторона границы, обязана попадать в проблемы");
+                "Пара с тем же решением — не другая сторона границы, обязана попадать в проблемы"
+                        + " Иначе тест pairProblems_MissingOrSameDecisionPair_AreReported перестанет ловить эту поломку. При смене pairProblems_MissingOrSameDecisionPair_AreReported проверь это утверждение.");
     }
 
     @Test
@@ -194,6 +202,7 @@ class TacticsSensitivityTests {
                                 == CONFIG.weights().weight(Factor.ALLY_SUPPORT, TacticalOption.RETREAT)
                         && config.weights().weight(Factor.BIAS, TacticalOption.FIGHT)
                                 == CONFIG.weights().weight(Factor.BIAS, TacticalOption.FIGHT),
-                "Сдвиг трогает ровно одну ячейку матрицы, иначе анализ чувствительности смешивает веса");
+                "Сдвиг трогает ровно одну ячейку матрицы, иначе анализ чувствительности смешивает веса"
+                        + " При смене shifted_OneWeight_ChangesOnlyThatCellByTenPercent проверь это утверждение.");
     }
 }

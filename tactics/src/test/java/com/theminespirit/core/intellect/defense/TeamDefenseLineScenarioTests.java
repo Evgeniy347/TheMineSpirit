@@ -66,11 +66,13 @@ class TeamDefenseLineScenarioTests {
         assertEquals(
                 Optional.of("S1"),
                 orderOf(plan, "S2").reinforce(),
-                "Помощь адресуется конкретной паре на краю: иначе духи бегут в пустой сектор");
+                "Помощь адресуется конкретной паре на краю: иначе духи бегут в пустой сектор"
+                        + " При смене line_StrongestEdge_GetsTwoPairsNearestToIt проверь это утверждение.");
         assertEquals(
                 Optional.of("S1"),
                 orderOf(plan, "S3").reinforce(),
-                "Вторая помощница идёт к тому же краю: две пары закрывают сильнейшую угрозу");
+                "Вторая помощница идёт к тому же краю: две пары закрывают сильнейшую угрозу"
+                        + " Иначе тест line_StrongestEdge_GetsTwoPairsNearestToIt перестанет ловить эту поломку. При смене line_StrongestEdge_GetsTwoPairsNearestToIt проверь это утверждение.");
     }
 
     @Test
@@ -96,11 +98,13 @@ class TeamDefenseLineScenarioTests {
                 plan.memberOrders().stream()
                         .filter(order -> order.target().isPresent())
                         .count(),
-                "Без угроз ни у кого нет цели: иначе мирная шеренга срывается с постов");
+                "Без угроз ни у кого нет цели: иначе мирная шеренга срывается с постов"
+                        + " При смене line_NoThreats_NoOneLeavesPost проверь это утверждение.");
         assertEquals(
                 5,
                 plan.memberOrders().stream().map(MemberOrder::post).distinct().count(),
-                "Каждая пара остаётся на своей точке: иначе резерв сбегается в кучу");
+                "Каждая пара остаётся на своей точке: иначе резерв сбегается в кучу"
+                        + " При смене line_NoThreats_NoOneLeavesPost проверь это утверждение.");
     }
 
     @Test
@@ -135,11 +139,16 @@ class TeamDefenseLineScenarioTests {
         assertEquals(
                 6,
                 west,
-                "К краю с десятью мобами идут три пары: две ближайшие помощницы и местная, иначе помощь неполная");
+                "К краю с десятью мобами идут три пары: две ближайшие помощницы и местная, иначе помощь неполная"
+                        + " При смене planner_SpreadDefenders_UsesTeamPosts проверь это утверждение.");
         assertEquals(
-                4, east, "К краю с пятью мобами идут две пары: местная и одна помощница, иначе середина оголяется");
+                4,
+                east,
+                "К краю с пятью мобами идут две пары: местная и одна помощница, иначе середина оголяется"
+                        + " При смене planner_SpreadDefenders_UsesTeamPosts проверь это утверждение.");
         assertTrue(
                 WEIGHTS.localRadius() > 0,
-                "Радиус боя положителен: иначе местные отряды не отличаются от резерва и план не сходится");
+                "Радиус боя положителен: иначе местные отряды не отличаются от резерва и план не сходится"
+                        + " При смене planner_SpreadDefenders_UsesTeamPosts проверь это утверждение.");
     }
 }

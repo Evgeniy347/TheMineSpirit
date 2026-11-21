@@ -28,12 +28,13 @@ class SituationContextTests {
                 IllegalArgumentException.class,
                 build,
                 "Повреждённый вход адаптера обязан падать сразу с именем поля: иначе он молча дойдёт до ядра и решение "
-                        + "будет принято по фиктивным фактам");
+                        + "будет принято по фиктивным фактам"
+                        + " При смене context_InvalidField_IsRejected проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains(field),
-                "Сообщение называет поле " + field + ", чтобы правка шла по подсказке; получили: "
-                        + error.getMessage());
+                "Сообщение называет поле " + field + ", чтобы правка шла по подсказке; получили: " + error.getMessage()
+                        + " Иначе тест context_InvalidField_IsRejected перестанет ловить эту поломку. При смене context_InvalidField_IsRejected проверь это утверждение.");
     }
 
     static Stream<Arguments> invalidContexts() {
@@ -65,7 +66,8 @@ class SituationContextTests {
         assertEquals(
                 1,
                 context.enemies().size(),
-                "Контекст неизменяем: список врагов копируется, иначе правка сборщика меняла бы факты задним числом");
+                "Контекст неизменяем: список врагов копируется, иначе правка сборщика меняла бы факты задним числом"
+                        + " При смене context_SourceEnemyList_IsCopied проверь это утверждение.");
     }
 
     @Test
@@ -75,11 +77,13 @@ class SituationContextTests {
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,
                 () -> collector.collect(null),
-                "Сборщик без контекста — ошибка вызова, а не пустая ситуация: тихий пропуск скрыл бы неверный код");
+                "Сборщик без контекста — ошибка вызова, а не пустая ситуация: тихий пропуск скрыл бы неверный код"
+                        + " Иначе тест collect_NullContext_IsRejected перестанет ловить эту поломку. При смене collect_NullContext_IsRejected проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("collect"),
-                "Сообщение называет метод сборщика; получили: " + error.getMessage());
+                "Сообщение называет метод сборщика; получили: " + error.getMessage()
+                        + " Иначе тест collect_NullContext_IsRejected перестанет ловить эту поломку. При смене collect_NullContext_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -87,11 +91,13 @@ class SituationContextTests {
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,
                 () -> new CoreFactCollector(null),
-                "Без настроек неизвестен факт-радиус: сборщик обязан отказаться, а не искать врагов по всему миру");
+                "Без настроек неизвестен факт-радиус: сборщик обязан отказаться, а не искать врагов по всему миру"
+                        + " Иначе тест constructor_NullSettings_IsRejected перестанет ловить эту поломку. При смене constructor_NullSettings_IsRejected проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("settings"),
-                "Сообщение называет настройки; получили: " + error.getMessage());
+                "Сообщение называет настройки; получили: " + error.getMessage()
+                        + " Иначе тест constructor_NullSettings_IsRejected перестанет ловить эту поломку. При смене constructor_NullSettings_IsRejected проверь это утверждение.");
     }
 
     private static Executable build(

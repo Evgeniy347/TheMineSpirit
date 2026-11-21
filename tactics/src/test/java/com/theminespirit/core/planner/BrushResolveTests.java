@@ -23,9 +23,21 @@ class BrushResolveTests {
         TaskNode plan = ResourceResolver.resolve(
                 "armadillo_scute", 3, new Brushed(), CoreScripts.defaultCatalog(), ConditionCatalog.empty());
 
-        ScriptCall call = assertInstanceOf(ScriptCall.class, plan, "Щетину броненосца добывают шагом brush");
-        assertEquals("brush", call.script(), "Предмет броненосца — не блок и не рецепт: путь добычи — щётка");
-        assertEquals(3, call.params().get("count"), "Число щетин из задания передаётся щётке");
+        ScriptCall call = assertInstanceOf(
+                ScriptCall.class,
+                plan,
+                "Щетину броненосца добывают шагом brush"
+                        + " Иначе тест resolve_ArmadilloScute_BrushCall перестанет ловить эту поломку. При смене resolve_ArmadilloScute_BrushCall проверь это утверждение.");
+        assertEquals(
+                "brush",
+                call.script(),
+                "Предмет броненосца — не блок и не рецепт: путь добычи — щётка"
+                        + " Иначе тест resolve_ArmadilloScute_BrushCall перестанет ловить эту поломку. При смене resolve_ArmadilloScute_BrushCall проверь это утверждение.");
+        assertEquals(
+                3,
+                call.params().get("count"),
+                "Число щетин из задания передаётся щётке"
+                        + " Иначе тест resolve_ArmadilloScute_BrushCall перестанет ловить эту поломку. При смене resolve_ArmadilloScute_BrushCall проверь это утверждение.");
     }
 
     @Test
@@ -34,7 +46,8 @@ class BrushResolveTests {
                 UnplannableGoalException.class,
                 () -> ResourceResolver.resolve(
                         "bone", 1, new Brushed(), CoreScripts.defaultCatalog(), ConditionCatalog.empty()),
-                "brush не закоулок для всех предметов: кость добывается не щёткой");
+                "brush не закоулок для всех предметов: кость добывается не щёткой"
+                        + " Иначе тест resolve_OtherItem_NotBrushed перестанет ловить эту поломку. При смене resolve_OtherItem_NotBrushed проверь это утверждение.");
     }
 
     @Test
@@ -42,15 +55,18 @@ class BrushResolveTests {
         assertEquals(
                 new BrushParams(16, 4),
                 BrushParams.from(Map.of("radius", 16, "count", 4)),
-                "Параметры щётки — радиус поиска и число щетин");
+                "Параметры щётки — радиус поиска и число щетин"
+                        + " Иначе тест brushParams_ValidRadiusAndCount_Accepted перестанет ловить эту поломку. При смене brushParams_ValidRadiusAndCount_Accepted проверь это утверждение.");
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new BrushParams(0, 1),
-                "Нулевой радиус щётки отвергается: броненосца в нуле не найти");
+                "Нулевой радиус щётки отвергается: броненосца в нуле не найти"
+                        + " Иначе тест brushParams_ValidRadiusAndCount_Accepted перестанет ловить эту поломку. При смене brushParams_ValidRadiusAndCount_Accepted проверь это утверждение.");
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new BrushParams(16, 65),
-                "Больше 64 щетин за запуск не чистим: это предел счётных задач");
+                "Больше 64 щетин за запуск не чистим: это предел счётных задач"
+                        + " Иначе тест brushParams_ValidRadiusAndCount_Accepted перестанет ловить эту поломку. При смене brushParams_ValidRadiusAndCount_Accepted проверь это утверждение.");
     }
 
     private static final class Brushed implements ResourceKnowledge {

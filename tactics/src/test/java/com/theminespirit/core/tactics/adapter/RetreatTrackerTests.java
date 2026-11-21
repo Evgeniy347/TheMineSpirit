@@ -30,7 +30,8 @@ class RetreatTrackerTests {
                 row.expected(),
                 result,
                 "Ход удержания отхода «" + row.name() + "»: способ меняется только по истечении удержания, а простой "
-                        + "наступает, когда решение не просит отход и удержание истекло");
+                        + "наступает, когда решение не просит отход и удержание истекло"
+                        + " Иначе тест advance_TrackerAndOutcome_ProducesExpectedState перестанет ловить эту поломку. При смене advance_TrackerAndOutcome_ProducesExpectedState проверь это утверждение.");
     }
 
     static Stream<Row> rows() {
@@ -110,21 +111,25 @@ class RetreatTrackerTests {
         assertEquals(
                 new RetreatTracker(RetreatMethod.HOME, 5),
                 held,
-                "До retreatHoldTicks из настроек отход ещё удерживается: иначе дух бросит манёвр на полпути");
+                "До retreatHoldTicks из настроек отход ещё удерживается: иначе дух бросит манёвр на полпути"
+                        + " При смене advance_ConfiguredSettings_UsesItsHoldTicks проверь это утверждение.");
         assertEquals(
                 RetreatTracker.IDLE,
                 released,
-                "На исходе retreatHoldTicks из настроек простой наступает: удержание ограничено настройкой, а не вечно");
+                "На исходе retreatHoldTicks из настроек простой наступает: удержание ограничено настройкой, а не вечно"
+                        + " Иначе тест advance_ConfiguredSettings_UsesItsHoldTicks перестанет ловить эту поломку. При смене advance_ConfiguredSettings_UsesItsHoldTicks проверь это утверждение.");
     }
 
     @Test
     void retreating_Idle_IsFalse() {
         assertFalse(
                 RetreatTracker.IDLE.retreating(),
-                "Простой не считается отходом: иначе исполнитель начнёт манёвр без способа");
+                "Простой не считается отходом: иначе исполнитель начнёт манёвр без способа"
+                        + " При смене retreating_Idle_IsFalse проверь это утверждение.");
         assertTrue(
                 new RetreatTracker(RetreatMethod.AWAY, 7).retreating(),
-                "Исполняемый способ отхода означает отход идёт");
+                "Исполняемый способ отхода означает отход идёт"
+                        + " Иначе тест retreating_Idle_IsFalse перестанет ловить эту поломку. При смене retreating_Idle_IsFalse проверь это утверждение.");
     }
 
     @ParameterizedTest(name = "{0}")
@@ -133,11 +138,13 @@ class RetreatTrackerTests {
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,
                 build,
-                "Ошибочный вход отхода обязан падать сразу с именем поля: иначе дух пойдёт по фиктивному манёвру");
+                "Ошибочный вход отхода обязан падать сразу с именем поля: иначе дух пойдёт по фиктивному манёвру"
+                        + " При смене tracker_InvalidInput_IsRejected проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains(field),
-                "Сообщение называет поле " + field + "; получили: " + error.getMessage());
+                "Сообщение называет поле " + field + "; получили: " + error.getMessage()
+                        + " Иначе тест tracker_InvalidInput_IsRejected перестанет ловить эту поломку. При смене tracker_InvalidInput_IsRejected проверь это утверждение.");
     }
 
     static Stream<Arguments> invalidInputs() {

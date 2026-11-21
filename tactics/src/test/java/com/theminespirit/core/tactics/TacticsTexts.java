@@ -26,14 +26,15 @@ final class TacticsTexts {
     static String mutateRegex(String text, String regex, String replacement) {
         assertTrue(
                 Pattern.compile(regex, Pattern.DOTALL).matcher(text).find(),
-                "Подлог в тесте не применился: в файле нет фрагмента по шаблону " + regex);
+                "Подлог в тесте не применился: в файле нет фрагмента по шаблону " + regex
+                        + " Иначе тест механику перестанет ловить эту поломку. При смене механику проверь это утверждение.");
         return Pattern.compile(regex, Pattern.DOTALL).matcher(text).replaceFirst(Matcher.quoteReplacement(replacement));
     }
 
     private static void assertContains(String text, String fragment) {
         assertTrue(
                 text.contains(fragment),
-                "Подлог в тесте не применился: в файле нет фрагмента «" + fragment
-                        + "», тест мутаций стал бесполезным");
+                "Подлог в тесте не применился: в файле нет фрагмента «" + fragment + "», тест мутаций стал бесполезным"
+                        + " Иначе тест assertContains перестанет ловить эту поломку. При смене assertContains проверь это утверждение.");
     }
 }

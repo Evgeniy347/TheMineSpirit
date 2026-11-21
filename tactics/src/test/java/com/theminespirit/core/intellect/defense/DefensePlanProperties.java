@@ -79,7 +79,8 @@ class DefensePlanProperties {
         assertEquals(
                 new HashSet<>(owners).size(),
                 owners.size(),
-                "У духа не больше одного приказа: иначе дух получит и пост, и бой сразу");
+                "У духа не больше одного приказа: иначе дух получит и пост, и бой сразу"
+                        + " При смене plan_AnyInput_OneOrderPerSpirit проверь это утверждение.");
     }
 
     @Property
@@ -97,7 +98,8 @@ class DefensePlanProperties {
         assertEquals(
                 new HashSet<>(targets).size(),
                 targets.size(),
-                "Каждая цель занята не больше чем одним духом: иначе двое бьют одного, а второй без присмотра");
+                "Каждая цель занята не больше чем одним духом: иначе двое бьют одного, а второй без присмотра"
+                        + " При смене plan_AnyInput_TargetsDistinct проверь это утверждение.");
     }
 
     @Property
@@ -112,11 +114,13 @@ class DefensePlanProperties {
         for (DefenderOrder order : plan.orders()) {
             assertTrue(
                     defenderIds.contains(order.defender()),
-                    "Приказ ссылается на защитника из входа: иначе приказ уйдёт несуществующему духу");
+                    "Приказ ссылается на защитника из входа: иначе приказ уйдёт несуществующему духу"
+                            + " При смене plan_AnyInput_OrdersAndTargetsFromInput проверь это утверждение.");
             order.target()
                     .ifPresent(target -> assertTrue(
                             enemyIds.contains(target.id()),
-                            "Цель приказа — враг из входа: иначе приказ уйдёт на несуществующую цель"));
+                            "Цель приказа — враг из входа: иначе приказ уйдёт на несуществующую цель"
+                                    + " При смене plan_AnyInput_OrdersAndTargetsFromInput проверь это утверждение."));
         }
     }
 
@@ -128,7 +132,8 @@ class DefensePlanProperties {
         assertEquals(
                 plan(center, defenders, enemies),
                 plan(center, defenders, enemies),
-                "Тот же вход даёт тот же план: иначе приказы мигают между пересборками");
+                "Тот же вход даёт тот же план: иначе приказы мигают между пересборками"
+                        + " При смене plan_AnyInput_Deterministic проверь это утверждение.");
     }
 
     @Property
@@ -144,7 +149,8 @@ class DefensePlanProperties {
         assertEquals(
                 plan(center, defenders, enemies),
                 plan(center, shuffledDefenders, shuffledEnemies),
-                "План не зависит от порядка входа: иначе приказы мигают при каждом новом снимке мира");
+                "План не зависит от порядка входа: иначе приказы мигают при каждом новом снимке мира"
+                        + " При смене plan_ShuffledInput_SamePlan проверь это утверждение.");
     }
 
     @Property
@@ -162,11 +168,13 @@ class DefensePlanProperties {
         for (DefenderOrder order : reduced.orders()) {
             assertTrue(
                     remainingIds.contains(order.defender()),
-                    "После выбытия приказы только уцелевшим: иначе приказ уйдёт выбывшему духу");
+                    "После выбытия приказы только уцелевшим: иначе приказ уйдёт выбывшему духу"
+                            + " При смене plan_RemovedDefender_PlanStaysValid проверь это утверждение.");
             order.target()
                     .ifPresent(target -> assertTrue(
                             enemyIds.contains(target.id()),
-                            "После выбытия цели только из входа: иначе приказ уйдёт на несуществующую цель"));
+                            "После выбытия цели только из входа: иначе приказ уйдёт на несуществующую цель"
+                                    + " При смене plan_RemovedDefender_PlanStaysValid проверь это утверждение."));
         }
         List<String> targets = reduced.orders().stream()
                 .filter(order -> order.target().isPresent())
@@ -175,11 +183,13 @@ class DefensePlanProperties {
         assertEquals(
                 new HashSet<>(targets).size(),
                 targets.size(),
-                "После выбытия каждая цель за одним духом: иначе перераспределение дублирует цели");
+                "После выбытия каждая цель за одним духом: иначе перераспределение дублирует цели"
+                        + " При смене plan_RemovedDefender_PlanStaysValid проверь это утверждение.");
         for (DefenseAssignment post : reduced.posts()) {
             assertTrue(
                     post.post().distanceTo(center) <= 16.0 + 1e-9,
-                    "После выбытия посты внутри радиуса: иначе уцелевшие встанут за периметром");
+                    "После выбытия посты внутри радиуса: иначе уцелевшие встанут за периметром"
+                            + " При смене plan_RemovedDefender_PlanStaysValid проверь это утверждение.");
         }
     }
 

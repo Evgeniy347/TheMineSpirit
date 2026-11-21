@@ -70,7 +70,10 @@ class DefenseAllocatorProperties {
                 posts.stream().map(DefenseAssignment::defender).sorted().toList();
 
         assertEquals(
-                inputIds, postIds, "Каждый защитник ровно на одном посту: иначе дух либо без поста, либо раздвоен");
+                inputIds,
+                postIds,
+                "Каждый защитник ровно на одном посту: иначе дух либо без поста, либо раздвоен"
+                        + " При смене allocate_AnyInput_EachDefenderOnce проверь это утверждение.");
     }
 
     @Property
@@ -85,7 +88,8 @@ class DefenseAllocatorProperties {
         for (DefenseAssignment post : posts) {
             assertTrue(
                     post.post().distanceTo(center) <= radius + 1e-9,
-                    "Пост внутри радиуса обороны: иначе дух встанет за периметром");
+                    "Пост внутри радиуса обороны: иначе дух встанет за периметром"
+                            + " При смене allocate_AnyInput_PostsWithinRadius проверь это утверждение.");
         }
     }
 
@@ -111,7 +115,8 @@ class DefenseAllocatorProperties {
 
         assertTrue(
                 after >= before,
-                "Усилившееся направление не теряет защитников: иначе подмога врагу оголяет то же направление");
+                "Усилившееся направление не теряет защитников: иначе подмога врагу оголяет то же направление"
+                        + " При смене allocate_StrengthenedSector_KeepsDefenders проверь это утверждение.");
     }
 
     @Property
@@ -129,22 +134,28 @@ class DefenseAllocatorProperties {
                 DefenseAllocator.allocate(center, radius, remaining, enemies, DefenseAllocatorTests.PROFILES);
 
         assertEquals(
-                defenders.size(), full.size(), "Полный план накрывает всех: иначе выбытие началось уже с потери поста");
+                defenders.size(),
+                full.size(),
+                "Полный план накрывает всех: иначе выбытие началось уже с потери поста"
+                        + " При смене allocate_RemovedDefender_PlanStaysValid проверь это утверждение.");
         assertEquals(
                 remaining.size(),
                 reduced.size(),
-                "После выбытия оставшиеся перераспределены: иначе посты застыли на выбывшем");
+                "После выбытия оставшиеся перераспределены: иначе посты застыли на выбывшем"
+                        + " При смене allocate_RemovedDefender_PlanStaysValid проверь это утверждение.");
         for (DefenseAssignment post : reduced) {
             assertTrue(
                     post.post().distanceTo(center) <= radius + 1e-9,
-                    "Перераспределённые посты внутри радиуса: иначе уцелевшие встанут за периметром");
+                    "Перераспределённые посты внутри радиуса: иначе уцелевшие встанут за периметром"
+                            + " При смене allocate_RemovedDefender_PlanStaysValid проверь это утверждение.");
         }
         List<DirectionThreat> threats = ThreatBearing.sum(enemies, center, DefenseAllocatorTests.PROFILES);
         Assume.that(!threats.isEmpty() && remaining.size() >= threats.size());
         for (DirectionThreat threat : threats) {
             assertTrue(
                     countOnBearing(reduced, threat.bearing()) >= 1,
-                    "Каждое угрожаемое направление накрыто: иначе выбытие оголило сектор");
+                    "Каждое угрожаемое направление накрыто: иначе выбытие оголило сектор"
+                            + " При смене allocate_RemovedDefender_PlanStaysValid проверь это утверждение.");
         }
     }
 
@@ -162,7 +173,8 @@ class DefenseAllocatorProperties {
                         DefenseAllocator.allocate(center, radius, defenders, enemies, DefenseAllocatorTests.PROFILES)),
                 postsByDefender(
                         DefenseAllocator.allocate(center, radius, shuffled, enemies, DefenseAllocatorTests.PROFILES)),
-                "Посты не зависят от порядка входа: иначе пересборка дёргает духов между постами");
+                "Посты не зависят от порядка входа: иначе пересборка дёргает духов между постами"
+                        + " При смене allocate_ShuffledDefenders_SamePosts проверь это утверждение.");
     }
 
     @Provide

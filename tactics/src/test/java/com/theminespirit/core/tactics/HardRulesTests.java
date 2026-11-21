@@ -234,7 +234,8 @@ class HardRulesTests {
                 List.of(decisive, excluded),
                 List.of(verdict.decisive().map(HardRule::id).orElse(""), verdict.excluded()),
                 "Жёсткое правило «" + name + "»: срабатывает ровно на своей границе, иначе дух бросит бой раньше или "
-                        + "позже, чем задумано в rules.json");
+                        + "позже, чем задумано в rules.json"
+                        + " При смене evaluate_RuleBoundary_FiresOnlyWhenConditionHolds проверь это утверждение.");
     }
 
     @Test
@@ -259,7 +260,8 @@ class HardRulesTests {
                 List.of("cornered_fight", "critical_hp_retreat"),
                 List.of(normal, reversed),
                 "Из двух подходящих правил с решением выигрывает старшее по приоритету: порядок задаёт rules.json, "
-                        + "а не порядок перечисления в коде");
+                        + "а не порядок перечисления в коде"
+                        + " Иначе тест evaluate_TwoDecisiveRules_HigherPriorityWins перестанет ловить эту поломку. При смене evaluate_TwoDecisiveRules_HigherPriorityWins проверь это утверждение.");
     }
 
     private static TacticsConfig withRules(String rules) {
@@ -282,6 +284,7 @@ class HardRulesTests {
                 List.of("explosive_close_retreat", 5L),
                 List.of(verdict.decisive().get().id(), counter.checks()),
                 "После первого подходящего правила с решением остальные не проверяются: стоимость вызова ограничена "
-                        + "числом правил до него (no_enemies, cornered, critical, strike, explosive)");
+                        + "числом правил до него (no_enemies, cornered, critical, strike, explosive)"
+                        + " Иначе тест evaluate_DecisionRuleAboveExcludeRule_StopsBeforeLowerRules перестанет ловить эту поломку. При смене evaluate_DecisionRuleAboveExcludeRule_StopsBeforeLowerRules проверь это утверждение.");
     }
 }

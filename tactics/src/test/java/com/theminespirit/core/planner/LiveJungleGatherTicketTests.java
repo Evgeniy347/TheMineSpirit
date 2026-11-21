@@ -40,27 +40,40 @@ class LiveJungleGatherTicketTests {
     void liveJungleTicket_TreeSearch_IsNotCutToThirtyTwo() throws IOException {
         JsonNode ticket = ticket(JUNGLE_TICKET);
         assertOnBoard(ticket);
-        assertEquals("jungle_log", ticket.get("supplyItem").asText(), "Живой тикет обязан снабжать брёвнами jungle");
-        assertEquals("GATHER_MATERIALS", ticket.get("case").asText(), "Живой тикет обязан добывать материалы");
+        assertEquals(
+                "jungle_log",
+                ticket.get("supplyItem").asText(),
+                "Живой тикет обязан снабжать брёвнами jungle"
+                        + " Иначе тест liveJungleTicket_TreeSearch_IsNotCutToThirtyTwo перестанет ловить эту поломку. При смене liveJungleTicket_TreeSearch_IsNotCutToThirtyTwo проверь это утверждение.");
+        assertEquals(
+                "GATHER_MATERIALS",
+                ticket.get("case").asText(),
+                "Живой тикет обязан добывать материалы"
+                        + " Иначе тест liveJungleTicket_TreeSearch_IsNotCutToThirtyTwo перестанет ловить эту поломку. При смене liveJungleTicket_TreeSearch_IsNotCutToThirtyTwo проверь это утверждение.");
 
         List<ScriptCall> steps = calls(livePlan(ticket));
         ScriptCall chop = first(
                 steps,
                 call -> "chop_tree".equals(call.script())
                         && "jungle".equals(call.params().get("species")));
-        assertTrue(chop != null, "Живой graph:make:jungle_log обязан рубить дерево породы jungle: " + steps);
+        assertTrue(
+                chop != null,
+                "Живой graph:make:jungle_log обязан рубить дерево породы jungle: " + steps
+                        + " Иначе тест liveJungleTicket_TreeSearch_IsNotCutToThirtyTwo перестанет ловить эту поломку. При смене liveJungleTicket_TreeSearch_IsNotCutToThirtyTwo проверь это утверждение.");
         assertEquals(
                 BoardTuning.chopRadius(),
                 chop.params().get("radius"),
                 "Живой graph:make:jungle_log обязан просить полный радиус рубки доски, иначе поиск снова упрётся "
-                        + "в 32 блока: " + steps);
+                        + "в 32 блока: " + steps
+                        + " При смене liveJungleTicket_TreeSearch_IsNotCutToThirtyTwo проверь это утверждение.");
         assertEquals(
                 ChopTuning.maxDistance((Integer) chop.params().get("radius")),
                 chop.params().get("radius"),
                 "Поиск бревна срезан ниже запрошенного радиуса: в живой игре дух искал "
                         + ChopTuning.maxDistance((Integer) chop.params().get("radius"))
                         + " вместо "
-                        + chop.params().get("radius"));
+                        + chop.params().get("radius")
+                        + " Иначе тест liveJungleTicket_TreeSearch_IsNotCutToThirtyTwo перестанет ловить эту поломку. При смене liveJungleTicket_TreeSearch_IsNotCutToThirtyTwo проверь это утверждение.");
     }
 
     @Test
@@ -76,35 +89,44 @@ class LiveJungleGatherTicketTests {
                 TreeChooser.near(anchor, radius, trunk.x(), trunk.y(), trunk.z(), List.of(trunk), Set.of())
                         .isPresent(),
                 "Живое дерево jungle в 55 блоках от поселения не попадает в поиск радиуса " + radius
-                        + ": дух снова останется без брёвен");
+                        + ": дух снова останется без брёвен"
+                        + " Иначе тест liveJungleTree_FiftyFiveBlocksAway_IsFoundOnlyByWideSearch перестанет ловить эту поломку. При смене liveJungleTree_FiftyFiveBlocksAway_IsFoundOnlyByWideSearch проверь это утверждение.");
         assertTrue(
                 TreeChooser.near(anchor, 32, trunk.x(), trunk.y(), trunk.z(), List.of(trunk), Set.of())
                         .isEmpty(),
                 "Живое дерево в 55 блоках не должно находиться старым пределом 32: именно этот предел дал провал "
-                        + "observe11, и его снимает поиск до 100");
+                        + "observe11, и его снимает поиск до 100"
+                        + " Иначе тест liveJungleTree_FiftyFiveBlocksAway_IsFoundOnlyByWideSearch перестанет ловить эту поломку. При смене liveJungleTree_FiftyFiveBlocksAway_IsFoundOnlyByWideSearch проверь это утверждение.");
     }
 
     @Test
     void liveOakPlanksTicket_MissingTrees_FallsBackToCrafting() throws IOException {
         JsonNode ticket = ticket(OAK_TICKET);
         assertOnBoard(ticket);
-        assertEquals("oak_planks", ticket.get("supplyItem").asText(), "Живой тикет обязан снабжать дубовыми досками");
+        assertEquals(
+                "oak_planks",
+                ticket.get("supplyItem").asText(),
+                "Живой тикет обязан снабжать дубовыми досками"
+                        + " Иначе тест liveOakPlanksTicket_MissingTrees_FallsBackToCrafting перестанет ловить эту поломку. При смене liveOakPlanksTicket_MissingTrees_FallsBackToCrafting проверь это утверждение.");
 
         TaskNode plan = livePlan(ticket);
         List<ScriptCall> steps = calls(plan);
 
         assertTrue(
                 steps.stream().anyMatch(call -> "acquire".equals(call.script())),
-                "План обязан крафтить доски через acquire: " + steps);
+                "План обязан крафтить доски через acquire: " + steps
+                        + " Иначе тест liveOakPlanksTicket_MissingTrees_FallsBackToCrafting перестанет ловить эту поломку. При смене liveOakPlanksTicket_MissingTrees_FallsBackToCrafting проверь это утверждение.");
         ScriptCall chop = first(steps, call -> "chop_tree".equals(call.script()));
         assertFalse(
                 chop == null,
                 "План досок снова идёт в сбор пней без рубки: после observe14 настоящий дуб ищется только "
-                        + "рубкой целого дерева, иначе задание бьётся в (−144,72,−503). План: " + steps);
+                        + "рубкой целого дерева, иначе задание бьётся в (−144,72,−503). План: " + steps
+                        + " При смене liveOakPlanksTicket_MissingTrees_FallsBackToCrafting проверь это утверждение.");
         assertTrue(
                 fallbackContains(plan, "chop_tree", "acquire"),
                 "Рубка обязана быть запасной веткой перед acquire: при отсутствии деревьев провал рубки "
-                        + "не должен валить крафт из брёвен в инвентаре (observe12 N18). План: " + steps);
+                        + "не должен валить крафт из брёвен в инвентаре (observe12 N18). План: " + steps
+                        + " Иначе тест liveOakPlanksTicket_MissingTrees_FallsBackToCrafting перестанет ловить эту поломку. При смене liveOakPlanksTicket_MissingTrees_FallsBackToCrafting проверь это утверждение.");
     }
 
     private static boolean fallbackContains(TaskNode node, String first, String second) {
@@ -141,15 +163,18 @@ class LiveJungleGatherTicketTests {
         }
         assertTrue(
                 onBoard != null,
-                "Доска из живого мира не содержит тикета " + ticket.get("id").asText());
+                "Доска из живого мира не содержит тикета " + ticket.get("id").asText()
+                        + " Иначе тест assertOnBoard перестанет ловить эту поломку. При смене assertOnBoard проверь это утверждение.");
         assertEquals(
                 ticket.get("status").asText(),
                 onBoard.get("status").asText(),
-                "Тикет и доска разошлись по статусу: тест пошёл бы не тем путём, что в игре");
+                "Тикет и доска разошлись по статусу: тест пошёл бы не тем путём, что в игре"
+                        + " Иначе тест assertOnBoard перестанет ловить эту поломку. При смене assertOnBoard проверь это утверждение.");
         assertEquals(
                 ticket.get("supplyCount").asInt(),
                 onBoard.get("supplyCount").asInt(),
-                "Тикет и доска разошлись по количеству: тест проверял бы не тот запас");
+                "Тикет и доска разошлись по количеству: тест проверял бы не тот запас"
+                        + " Иначе тест assertOnBoard перестанет ловить эту поломку. При смене assertOnBoard проверь это утверждение.");
     }
 
     private static ScriptCall first(List<ScriptCall> calls, Predicate<ScriptCall> match) {

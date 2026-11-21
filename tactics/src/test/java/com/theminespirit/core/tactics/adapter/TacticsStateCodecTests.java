@@ -52,14 +52,19 @@ class TacticsStateCodecTests {
                 full(),
                 restored,
                 "Сохранение духа обязано вернуть память тактики, зону, подопечного и "
-                        + "исполняемый отход без потерь, иначе после перезапуска дух забудет бой");
+                        + "исполняемый отход без потерь, иначе после перезапуска дух забудет бой"
+                        + " При смене decode_EncodedFullState_RestoresEveryField проверь это утверждение.");
     }
 
     @Test
     void decode_EncodedMinimalState_RestoresIt() {
         StoredTactics restored = TacticsStateCodec.decode(TacticsStateCodec.encode(minimal()));
 
-        assertEquals(minimal(), restored, "Дух, ни разу не дравшийся, сохраняется без памяти и возвращается таким же");
+        assertEquals(
+                minimal(),
+                restored,
+                "Дух, ни разу не дравшийся, сохраняется без памяти и возвращается таким же"
+                        + " Иначе тест decode_EncodedMinimalState_RestoresIt перестанет ловить эту поломку. При смене decode_EncodedMinimalState_RestoresIt проверь это утверждение.");
     }
 
     @Test
@@ -68,7 +73,8 @@ class TacticsStateCodecTests {
 
         assertTrue(
                 json.contains("\"version\":" + TacticsStateCodec.VERSION),
-                "Состояние тактики пишется с версией формата: читатель выбирает разбор по ней");
+                "Состояние тактики пишется с версией формата: читатель выбирает разбор по ней"
+                        + " Иначе тест encode_Full_CarriesCurrentVersion перестанет ловить эту поломку. При смене encode_Full_CarriesCurrentVersion проверь это утверждение.");
     }
 
     record Corrupt(String name, String json) {}
@@ -95,7 +101,8 @@ class TacticsStateCodecTests {
                 TacticsFormatException.class,
                 () -> TacticsStateCodec.decode(corrupt.json()),
                 "Повреждённое состояние («" + corrupt.name() + "») обязано кончаться ошибкой, а не тихим "
-                        + "значением по умолчанию: молчаливый сброс прячет потерю памяти боя");
+                        + "значением по умолчанию: молчаливый сброс прячет потерю памяти боя"
+                        + " Иначе тест decode_CorruptState_ThrowsFormatException перестанет ловить эту поломку. При смене decode_CorruptState_ThrowsFormatException проверь это утверждение.");
     }
 
     @Test
@@ -105,10 +112,12 @@ class TacticsStateCodecTests {
         TacticsFormatException error = assertThrows(
                 TacticsFormatException.class,
                 () -> TacticsStateCodec.decode(json),
-                "Доля HP больше единицы — не память тактики, а повреждение");
+                "Доля HP больше единицы — не память тактики, а повреждение"
+                        + " Иначе тест decode_BrokenMemory_ThrowsFormatExceptionWithReason перестанет ловить эту поломку. При смене decode_BrokenMemory_ThrowsFormatExceptionWithReason проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("SpiritTactics"),
-                "Сообщение называет ключ, который проверять: " + error.getMessage());
+                "Сообщение называет ключ, который проверять: " + error.getMessage()
+                        + " Иначе тест decode_BrokenMemory_ThrowsFormatExceptionWithReason перестанет ловить эту поломку. При смене decode_BrokenMemory_ThrowsFormatExceptionWithReason проверь это утверждение.");
     }
 }

@@ -43,7 +43,8 @@ class LowHpRetreatTests {
                 "HP " + Math.round(hpFraction * 100) + " %, урон " + dps + ", зомби в " + distance
                         + " блоках: при низком HP отход обязан перевесить атаку даже у сильного духа, иначе "
                         + "вес RETREAT в weights.json снова стал малым. Трасса: "
-                        + outcome.trace().explain());
+                        + outcome.trace().explain()
+                        + " При смене step_LowHpSingleMeleeEnemyAndHomeRoute_RetreatsInsteadOfFighting проверь это утверждение.");
     }
 
     @Example
@@ -62,6 +63,7 @@ class LowHpRetreatTests {
                 outcome.decision(),
                 "HP 40 % и сильный меч против одного зомби в 3.5 блоках при доме в 20: вес LOW_HP поднят "
                         + "(RETREAT 2.5, FIGHT −2.0), поэтому низкое HP побеждает атаку; иначе отход снова решает "
-                        + "перевес боя. Трасса: " + outcome.trace().explain());
+                        + "перевес боя. Трасса: " + outcome.trace().explain()
+                        + " При смене step_HpFortyPercentStrongSwordZombieAdjacent_RetreatsByLargerLowHpWeight проверь это утверждение.");
     }
 }

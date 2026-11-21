@@ -41,13 +41,15 @@ class FoodNormProperties {
         assertEquals(
                 table.nutrition().size(),
                 rank.size(),
-                "Ранг содержит каждый предмет таблицы ровно раз: иначе часть еды выпадет из приоритета");
+                "Ранг содержит каждый предмет таблицы ровно раз: иначе часть еды выпадет из приоритета"
+                        + " При смене rankScore_AnyTable_SortedDescending проверь это утверждение.");
         for (int index = 1; index < rank.size(); index++) {
             double prev = table.nutrition().get(rank.get(index - 1));
             double next = table.nutrition().get(rank.get(index));
             assertTrue(
                     prev > next || (prev == next && rank.get(index - 1).compareTo(rank.get(index)) < 0),
-                    "Ранг отсортирован по убыванию сытности: иначе менее сытная еда опередит сытную");
+                    "Ранг отсортирован по убыванию сытности: иначе менее сытная еда опередит сытную"
+                            + " При смене rankScore_AnyTable_SortedDescending проверь это утверждение.");
         }
     }
 
@@ -61,7 +63,8 @@ class FoodNormProperties {
 
         assertTrue(
                 large.items() >= small.items() && large.nutrition() >= small.nutrition(),
-                "Нужда монотонна по населению: иначе рост поселения снизит спрос фермы");
+                "Нужда монотонна по населению: иначе рост поселения снизит спрос фермы"
+                        + " При смене perSoul_LargerPopulation_NeedsNoLess проверь это утверждение.");
     }
 
     @Property
@@ -69,7 +72,8 @@ class FoodNormProperties {
         assertEquals(
                 FoodNorm.rankScore(table),
                 FoodNorm.rankScore(table),
-                "Ранг детерминирован: иначе приоритет еды мигает между пересборками");
+                "Ранг детерминирован: иначе приоритет еды мигает между пересборками"
+                        + " При смене rankScore_RepeatedCalls_Deterministic проверь это утверждение.");
     }
 
     @Property
@@ -81,7 +85,9 @@ class FoodNormProperties {
         FoodDeficit deficit = FoodNorm.deficit(adults, children, days, 1.5, 0.75, stock);
 
         assertTrue(
-                deficit.deficit() >= 0, "Дефицит неотрицателен при любом запасе: излишек еды не превращается в долг");
+                deficit.deficit() >= 0,
+                "Дефицит неотрицателен при любом запасе: излишек еды не превращается в долг"
+                        + " Иначе тест deficit_AnyInputs_NonNegative перестанет ловить эту поломку. При смене deficit_AnyInputs_NonNegative проверь это утверждение.");
     }
 
     @Property
@@ -95,6 +101,7 @@ class FoodNormProperties {
 
         assertTrue(
                 large.deficit() >= small.deficit(),
-                "Больше духов — дефицит не меньше: иначе рост поселения снизит спрос на еду");
+                "Больше духов — дефицит не меньше: иначе рост поселения снизит спрос на еду"
+                        + " При смене deficit_LargerPopulation_NeedsNoLess проверь это утверждение.");
     }
 }

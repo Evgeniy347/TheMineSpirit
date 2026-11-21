@@ -53,7 +53,8 @@ class TargetRankerProperties {
         assertEquals(
                 inputIds,
                 rankedIds,
-                "Порядок — перестановка входа: каждая цель ровно один раз, иначе цель потеряется или удвоится");
+                "Порядок — перестановка входа: каждая цель ровно один раз, иначе цель потеряется или удвоится"
+                        + " При смене rank_AnyInput_IsPermutationOfInput проверь это утверждение.");
     }
 
     @Property
@@ -64,7 +65,8 @@ class TargetRankerProperties {
         for (int index = 1; index < ranked.size(); index++) {
             assertTrue(
                     ranked.get(index - 1).rank() <= ranked.get(index).rank(),
-                    "Ранг класса не убывает вдоль порядка: иначе низкоприоритетная цель вытеснит главную угрозу");
+                    "Ранг класса не убывает вдоль порядка: иначе низкоприоритетная цель вытеснит главную угрозу"
+                            + " При смене rank_AnyInput_ClassOrderNeverDecreases проверь это утверждение.");
         }
     }
 
@@ -77,7 +79,8 @@ class TargetRankerProperties {
         assertEquals(
                 TargetRanker.rank(role, archerPresent, enemies, DefenseProfileTests.PROFILE),
                 TargetRanker.rank(role, archerPresent, shuffled, DefenseProfileTests.PROFILE),
-                "Порядок не зависит от порядка входа: иначе цели мигают при каждом новом снимке мира");
+                "Порядок не зависит от порядка входа: иначе цели мигают при каждом новом снимке мира"
+                        + " При смене rank_ShuffledInput_SameOrder проверь это утверждение.");
     }
 
     private static List<EnemyFact> distinctIds(List<EnemyFact> enemies) {

@@ -40,10 +40,12 @@ class WorkAllocatorTests {
         assertEquals(
                 2,
                 assignments.size(),
-                "Работа есть всем при нехватке целей: свободный дух не пустует, когда цель одна");
+                "Работа есть всем при нехватке целей: свободный дух не пустует, когда цель одна"
+                        + " Иначе тест allocate_OneTargetTwoSpirits_BothGetIt перестанет ловить эту поломку. При смене allocate_OneTargetTwoSpirits_BothGetIt проверь это утверждение.");
         assertTrue(
                 assignments.stream().allMatch(assignment -> assignment.target().equals(tree)),
-                "Оба духа получают единственную цель: запрета на толпу нет");
+                "Оба духа получают единственную цель: запрета на толпу нет"
+                        + " Иначе тест allocate_OneTargetTwoSpirits_BothGetIt перестанет ловить эту поломку. При смене allocate_OneTargetTwoSpirits_BothGetIt проверь это утверждение.");
     }
 
     @Test
@@ -60,11 +62,16 @@ class WorkAllocatorTests {
                         reservations,
                         100);
 
-        assertEquals(3, assignments.size(), "Каждый свободный дух получает цель");
+        assertEquals(
+                3,
+                assignments.size(),
+                "Каждый свободный дух получает цель"
+                        + " Иначе тест allocate_ThreeTargetsThreeSpirits_DifferentTargets перестанет ловить эту поломку. При смене allocate_ThreeTargetsThreeSpirits_DifferentTargets проверь это утверждение.");
         assertEquals(
                 3,
                 assignments.stream().map(WorkAssignment::target).distinct().count(),
-                "Духи у разных расстояний берут разные цели: иначе все толпятся у одной");
+                "Духи у разных расстояний берут разные цели: иначе все толпятся у одной"
+                        + " При смене allocate_ThreeTargetsThreeSpirits_DifferentTargets проверь это утверждение.");
     }
 
     @Test
@@ -77,7 +84,9 @@ class WorkAllocatorTests {
                 new WorkAllocator().allocate(List.of(free(ALPHA, 0), free(BETA, 1)), List.of(tree), reservations, 100);
 
         assertTrue(
-                assignments.isEmpty(), "Цель под чужой бронью не назначается: иначе два духа работают на одном дереве");
+                assignments.isEmpty(),
+                "Цель под чужой бронью не назначается: иначе два духа работают на одном дереве"
+                        + " При смене allocate_TargetUnderForeignReservation_Skipped проверь это утверждение.");
     }
 
     @Test
@@ -86,7 +95,8 @@ class WorkAllocatorTests {
                 new WorkAllocator()
                         .allocate(List.of(), List.of(target(1, 0)), new WorkReservations(), 100)
                         .isEmpty(),
-                "Свободных нет — назначений нет");
+                "Свободных нет — назначений нет"
+                        + " Иначе тест allocate_NoFreeSpirits_ReturnsEmpty перестанет ловить эту поломку. При смене allocate_NoFreeSpirits_ReturnsEmpty проверь это утверждение.");
     }
 
     @Test
@@ -95,7 +105,8 @@ class WorkAllocatorTests {
                 new WorkAllocator()
                         .allocate(List.of(free(ALPHA, 0)), List.of(), new WorkReservations(), 100)
                         .isEmpty(),
-                "Целей нет — назначений нет");
+                "Целей нет — назначений нет"
+                        + " Иначе тест allocate_NoCandidates_ReturnsEmpty перестанет ловить эту поломку. При смене allocate_NoCandidates_ReturnsEmpty проверь это утверждение.");
     }
 
     @Test
@@ -107,11 +118,16 @@ class WorkAllocatorTests {
         List<WorkAssignment> assignments =
                 new WorkAllocator().allocate(List.of(free(ALPHA, 0)), List.of(east, west), reservations, 100);
 
-        assertEquals(1, assignments.size(), "Один дух получает одну цель");
+        assertEquals(
+                1,
+                assignments.size(),
+                "Один дух получает одну цель"
+                        + " Иначе тест allocate_EqualDistanceTie_BrokenByAnchor перестанет ловить эту поломку. При смене allocate_EqualDistanceTie_BrokenByAnchor проверь это утверждение.");
         assertEquals(
                 east,
                 assignments.get(0).target(),
-                "При равной оценке берётся цель с меньшим якорем по порядку BlockCoord: выбор детерминирован");
+                "При равной оценке берётся цель с меньшим якорем по порядку BlockCoord: выбор детерминирован"
+                        + " Иначе тест allocate_EqualDistanceTie_BrokenByAnchor перестанет ловить эту поломку. При смене allocate_EqualDistanceTie_BrokenByAnchor проверь это утверждение.");
     }
 
     @Test
@@ -123,11 +139,16 @@ class WorkAllocatorTests {
         List<WorkAssignment> assignments = new WorkAllocator()
                 .allocate(List.of(free(ALPHA, 0), free(BETA, 3)), List.of(near, far), reservations, 100);
 
-        assertEquals(2, assignments.size(), "Оба духа получают работу");
+        assertEquals(
+                2,
+                assignments.size(),
+                "Оба духа получают работу"
+                        + " Иначе тест allocate_CrowdPenalty_SplitsSpiritsToDifferentTargets перестанет ловить эту поломку. При смене allocate_CrowdPenalty_SplitsSpiritsToDifferentTargets проверь это утверждение.");
         assertEquals(
                 2,
                 assignments.stream().map(WorkAssignment::target).distinct().count(),
-                "Штраф за толпу разводит духов по разным целям: иначе оба пошли на ближайшую");
+                "Штраф за толпу разводит духов по разным целям: иначе оба пошли на ближайшую"
+                        + " При смене allocate_CrowdPenalty_SplitsSpiritsToDifferentTargets проверь это утверждение.");
     }
 
     @Test
@@ -139,11 +160,16 @@ class WorkAllocatorTests {
         List<WorkAssignment> assignments =
                 new WorkAllocator().allocate(List.of(free(ALPHA, 0)), List.of(far, near), reservations, 100);
 
-        assertEquals(1, assignments.size(), "Один свободный дух получает одну цель выбора");
+        assertEquals(
+                1,
+                assignments.size(),
+                "Один свободный дух получает одну цель выбора"
+                        + " Иначе тест allocate_OneSpiritTwoCandidates_NearestFreeChosen перестанет ловить эту поломку. При смене allocate_OneSpiritTwoCandidates_NearestFreeChosen проверь это утверждение.");
         assertEquals(
                 near,
                 assignments.get(0).target(),
-                "Выбор отдаёт ближайшую свободную цель: иначе дух бежит через весь участок к дальней");
+                "Выбор отдаёт ближайшую свободную цель: иначе дух бежит через весь участок к дальней"
+                        + " При смене allocate_OneSpiritTwoCandidates_NearestFreeChosen проверь это утверждение.");
     }
 
     @Test
@@ -151,7 +177,8 @@ class WorkAllocatorTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new WorkAllocator().allocate(null, List.of(target(1, 0)), new WorkReservations(), 100),
-                "null вместо свободных не говорит, есть ли они: передавайте пустой список");
+                "null вместо свободных не говорит, есть ли они: передавайте пустой список"
+                        + " Иначе тест allocate_NullFree_Throws перестанет ловить эту поломку. При смене allocate_NullFree_Throws проверь это утверждение.");
     }
 
     @Test
@@ -159,7 +186,8 @@ class WorkAllocatorTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new WorkAllocator().allocate(List.of(free(ALPHA, 0)), null, new WorkReservations(), 100),
-                "null вместо целей не говорит, есть ли они: передавайте пустой список");
+                "null вместо целей не говорит, есть ли они: передавайте пустой список"
+                        + " Иначе тест allocate_NullCandidates_Throws перестанет ловить эту поломку. При смене allocate_NullCandidates_Throws проверь это утверждение.");
     }
 
     @Test
@@ -167,7 +195,8 @@ class WorkAllocatorTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new WorkAllocator().allocate(List.of(free(ALPHA, 0)), List.of(target(1, 0)), null, 100),
-                "Брони без реестра не проверить: реестр обязателен");
+                "Брони без реестра не проверить: реестр обязателен"
+                        + " Иначе тест allocate_NullReservations_Throws перестанет ловить эту поломку. При смене allocate_NullReservations_Throws проверь это утверждение.");
     }
 
     @Test
@@ -176,6 +205,7 @@ class WorkAllocatorTests {
                 IllegalArgumentException.class,
                 () -> new WorkAllocator()
                         .allocate(List.of(free(ALPHA, 0)), List.of(target(1, 0)), new WorkReservations(), -1),
-                "Время распределения назад противоречит пересборке: просрочка считается от него");
+                "Время распределения назад противоречит пересборке: просрочка считается от него"
+                        + " Иначе тест allocate_NegativeNow_Throws перестанет ловить эту поломку. При смене allocate_NegativeNow_Throws проверь это утверждение.");
     }
 }

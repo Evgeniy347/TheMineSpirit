@@ -31,13 +31,15 @@ class BatchPlannerTests {
                         goal,
                         List.of(OBSERVATION, Observations.empty("spirit_2"))),
                 "Если второй дух не может принять цель, её не должен получить и первый: иначе '/spirit goal' "
-                        + "применяется частично, и часть духов остаётся без задачи");
+                        + "применяется частично, и часть духов остаётся без задачи"
+                        + " При смене planAll_SecondCatalogCannotPlan_ThrowsNamingSecond проверь это утверждение.");
 
         assertEquals(
                 1,
                 error.index(),
                 "Ошибка обязана называть второго духа (индекс 1), которому цель не поставилась: по номеру игрок "
-                        + "видит, кого чинить. Фактическое сообщение: " + error.getMessage());
+                        + "видит, кого чинить. Фактическое сообщение: " + error.getMessage()
+                        + " Иначе тест planAll_SecondCatalogCannotPlan_ThrowsNamingSecond перестанет ловить эту поломку. При смене planAll_SecondCatalogCannotPlan_ThrowsNamingSecond проверь это утверждение.");
     }
 
     @Test
@@ -50,7 +52,8 @@ class BatchPlannerTests {
         assertEquals(
                 2,
                 plans.size(),
-                "Когда цель по силам всем духам, план обязан быть у каждого: иначе часть духов остаётся без задачи");
+                "Когда цель по силам всем духам, план обязан быть у каждого: иначе часть духов остаётся без задачи"
+                        + " При смене planAll_EveryCatalogCanPlan_ReturnsPlanForEach проверь это утверждение.");
     }
 
     @Test
@@ -61,12 +64,14 @@ class BatchPlannerTests {
                 IllegalArgumentException.class,
                 () -> BatchPlanner.planAll(List.of(FOLLOW_CATALOG, FOLLOW_CATALOG), goal, List.of(OBSERVATION)),
                 "Одно наблюдение на двух духов — старый подлог: планирование обязано требовать наблюдение "
-                        + "на каждого духа, иначе все получат план по окружению первого");
+                        + "на каждого духа, иначе все получат план по окружению первого"
+                        + " При смене planAll_FewerObservationsThanCatalogs_ThrowsNamingMismatch проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("2") && error.getMessage().contains("1"),
                 "Сообщение обязано называть оба числа (каталогов и наблюдений): по нему видно рассинхрон списков. "
-                        + "Фактическое: " + error.getMessage());
+                        + "Фактическое: " + error.getMessage()
+                        + " Иначе тест planAll_FewerObservationsThanCatalogs_ThrowsNamingMismatch перестанет ловить эту поломку. При смене planAll_FewerObservationsThanCatalogs_ThrowsNamingMismatch проверь это утверждение.");
     }
 
     @Test
@@ -78,11 +83,13 @@ class BatchPlannerTests {
                 () -> BatchPlanner.planAll(
                         List.of(FOLLOW_CATALOG, FOLLOW_CATALOG), goal, List.of(OBSERVATION, OBSERVATION)),
                 "Общее наблюдение первого духа обязаны отклонять до планирования: иначе оба духа получат план "
-                        + "по чужой позиции и чужому инвентарю");
+                        + "по чужой позиции и чужому инвентарю"
+                        + " При смене planAll_SameObservationTwice_ThrowsNamingBot проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains(OBSERVATION.botId()),
                 "Сообщение обязано называть id духа, чьё наблюдение задвоено: по нему находят место подлога. "
-                        + "Фактическое: " + error.getMessage());
+                        + "Фактическое: " + error.getMessage()
+                        + " Иначе тест planAll_SameObservationTwice_ThrowsNamingBot перестанет ловить эту поломку. При смене planAll_SameObservationTwice_ThrowsNamingBot проверь это утверждение.");
     }
 }

@@ -26,17 +26,25 @@ class OutsideRulesTests {
         assertEquals(
                 2,
                 rules.partyMin(),
-                "Порог группы обязан разобраться из файла: иначе число духов не управляется данными");
-        assertEquals(3, rules.mineKit().size(), "Набор шахты из файла обязан содержать все три нужды");
+                "Порог группы обязан разобраться из файла: иначе число духов не управляется данными"
+                        + " При смене parse_ValidJson_BuildsPartyAndKit проверь это утверждение.");
+        assertEquals(
+                3,
+                rules.mineKit().size(),
+                "Набор шахты из файла обязан содержать все три нужды"
+                        + " Иначе тест parse_ValidJson_BuildsPartyAndKit перестанет ловить эту поломку. При смене parse_ValidJson_BuildsPartyAndKit проверь это утверждение.");
         assertTrue(
                 rules.mineKit().get(1).covers("minecraft:torch", ValueTable.load()),
-                "Нужда «torch» совпадает с факелом: иначе проверка набора слепа");
+                "Нужда «torch» совпадает с факелом: иначе проверка набора слепа"
+                        + " При смене parse_ValidJson_BuildsPartyAndKit проверь это утверждение.");
         assertTrue(
                 rules.mineKit().get(0).covers("minecraft:iron_pickaxe", ValueTable.load()),
-                "Нужда «*_pickaxe» совпадает с любой киркой");
+                "Нужда «*_pickaxe» совпадает с любой киркой"
+                        + " Иначе тест parse_ValidJson_BuildsPartyAndKit перестанет ловить эту поломку. При смене parse_ValidJson_BuildsPartyAndKit проверь это утверждение.");
         assertTrue(
                 rules.mineKit().get(2).covers("minecraft:bread", ValueTable.load()),
-                "Нужда категории «food» совпадает с едой склада");
+                "Нужда категории «food» совпадает с едой склада"
+                        + " Иначе тест parse_ValidJson_BuildsPartyAndKit перестанет ловить эту поломку. При смене parse_ValidJson_BuildsPartyAndKit проверь это утверждение.");
     }
 
     @Test
@@ -44,11 +52,15 @@ class OutsideRulesTests {
         OutsideRules rules = OutsideRules.load();
 
         assertEquals(
-                2, rules.partyMin(), "В одиночку за границу не выходят: шахта, отлов и поход начинаются от двух духов");
+                2,
+                rules.partyMin(),
+                "В одиночку за границу не выходят: шахта, отлов и поход начинаются от двух духов"
+                        + " Иначе тест load_ShippedFile_MatchesOwnerDecision перестанет ловить эту поломку. При смене load_ShippedFile_MatchesOwnerDecision проверь это утверждение.");
         assertEquals(
                 3,
                 rules.mineKit().size(),
-                "Перед спуском проверяются кирка, факелы и еда: без них шахта в темноте и без инструмента");
+                "Перед спуском проверяются кирка, факелы и еда: без них шахта в темноте и без инструмента"
+                        + " Иначе тест load_ShippedFile_MatchesOwnerDecision перестанет ловить эту поломку. При смене load_ShippedFile_MatchesOwnerDecision проверь это утверждение.");
     }
 
     @Test
@@ -57,12 +69,13 @@ class OutsideRulesTests {
                 IllegalStateException.class,
                 () -> OutsideRules.parse(RETIRED, "старый.json"),
                 "Старое поле escortRadius больше не читается: молча принятый радиус сопровождения вернул бы "
-                        + "правило «идти с игроком», которое владелец удалил");
+                        + "правило «идти с игроком», которое владелец удалил"
+                        + " Иначе тест parse_RetiredEscortRadius_Throws перестанет ловить эту поломку. При смене parse_RetiredEscortRadius_Throws проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("escortRadius"),
                 "Ошибка обязана называть устаревшее поле, иначе правку outside.json не найти, фактически: "
-                        + error.getMessage());
+                        + error.getMessage() + " При смене parse_RetiredEscortRadius_Throws проверь это утверждение.");
     }
 
     @Test
@@ -70,12 +83,14 @@ class OutsideRulesTests {
         IllegalStateException error = assertThrows(
                 IllegalStateException.class,
                 () -> OutsideRules.parse(VALID.replace("\"partyMin\":2", "\"partyMin\":1"), "порог.json"),
-                "Порог ниже двух отменяет решение владельца: один дух за границу не выходит");
+                "Порог ниже двух отменяет решение владельца: один дух за границу не выходит"
+                        + " Иначе тест parse_PartyBelowTwo_Throws перестанет ловить эту поломку. При смене parse_PartyBelowTwo_Throws проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("порог ниже двух")
                         || error.getMessage().contains("меньше 2"),
-                "Ошибка обязана объяснять, что порог обязан быть не меньше двух, фактически: " + error.getMessage());
+                "Ошибка обязана объяснять, что порог обязан быть не меньше двух, фактически: " + error.getMessage()
+                        + " Иначе тест parse_PartyBelowTwo_Throws перестанет ловить эту поломку. При смене parse_PartyBelowTwo_Throws проверь это утверждение.");
     }
 
     @Test
@@ -87,11 +102,13 @@ class OutsideRulesTests {
         IllegalStateException error = assertThrows(
                 IllegalStateException.class,
                 () -> OutsideRules.parse(broken, "нужда.json"),
-                "Нужда без match и category не описывает ни один предмет: такой файл не читается");
+                "Нужда без match и category не описывает ни один предмет: такой файл не читается"
+                        + " Иначе тест parse_NeedWithoutMatchOrCategory_Throws перестанет ловить эту поломку. При смене parse_NeedWithoutMatchOrCategory_Throws проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("match") && error.getMessage().contains("category"),
-                "Ошибка называет оба поля выбора предмета, фактически: " + error.getMessage());
+                "Ошибка называет оба поля выбора предмета, фактически: " + error.getMessage()
+                        + " Иначе тест parse_NeedWithoutMatchOrCategory_Throws перестанет ловить эту поломку. При смене parse_NeedWithoutMatchOrCategory_Throws проверь это утверждение.");
     }
 
     @Test
@@ -99,7 +116,8 @@ class OutsideRulesTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new OutsideRules.Need(List.of("torch"), "food", 1),
-                "Два способа выбора предмета делают требование неопределённым");
+                "Два способа выбора предмета делают требование неопределённым"
+                        + " Иначе тест need_BothMatchAndCategory_Throws перестанет ловить эту поломку. При смене need_BothMatchAndCategory_Throws проверь это утверждение.");
     }
 
     @Test
@@ -107,6 +125,7 @@ class OutsideRulesTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new OutsideRules.Need(List.of("torch"), null, 0),
-                "Нулевая нужда не проверяет ничего: количество обязано быть не меньше единицы");
+                "Нулевая нужда не проверяет ничего: количество обязано быть не меньше единицы"
+                        + " Иначе тест need_ZeroCount_Throws перестанет ловить эту поломку. При смене need_ZeroCount_Throws проверь это утверждение.");
     }
 }

@@ -15,7 +15,8 @@ class DefenseTuningTests {
         assertEquals(
                 8,
                 DefenseTuning.SECTORS,
-                "Направления делятся на 8 секторов: иначе посты не накроют круг вокруг защищаемой точки");
+                "Направления делятся на 8 секторов: иначе посты не накроют круг вокруг защищаемой точки"
+                        + " При смене sectors_DeclaredValue_MatchesTuningLiteral проверь это утверждение.");
     }
 
     @Test
@@ -23,7 +24,8 @@ class DefenseTuningTests {
         assertEquals(
                 1.5,
                 DefenseTuning.COVER_CORRIDOR,
-                "Коридор укрытия 1.5 блока: уже — укрытий почти нет, шире — укрытием считается моб мимо линии");
+                "Коридор укрытия 1.5 блока: уже — укрытий почти нет, шире — укрытием считается моб мимо линии"
+                        + " Иначе тест coverCorridor_DeclaredValue_MatchesTuningLiteral перестанет ловить эту поломку. При смене coverCorridor_DeclaredValue_MatchesTuningLiteral проверь это утверждение.");
     }
 
     @Test
@@ -31,7 +33,8 @@ class DefenseTuningTests {
         assertEquals(
                 0.35,
                 DefenseTuning.LOW_HP_FRACTION,
-                "Низкое здоровье ниже 0.35: раньше защитник рано выходит из боя, позже — гибнет на месте");
+                "Низкое здоровье ниже 0.35: раньше защитник рано выходит из боя, позже — гибнет на месте"
+                        + " Иначе тест lowHpFraction_DeclaredValue_MatchesTuningLiteral перестанет ловить эту поломку. При смене lowHpFraction_DeclaredValue_MatchesTuningLiteral проверь это утверждение.");
     }
 
     @Test
@@ -40,7 +43,8 @@ class DefenseTuningTests {
                 DefenseTuning.LOW_HP_FRACTION,
                 IntellectTuning.loadDefault().healFraction(),
                 "Порог отхода обороны совпадает с порогом лечения интеллекта: иначе один слой лечит, а второй "
-                        + "дерётся тем же духом");
+                        + "дерётся тем же духом"
+                        + " При смене lowHpFraction_HealThreshold_MatchesIntellect проверь это утверждение.");
     }
 
     @Test
@@ -48,7 +52,8 @@ class DefenseTuningTests {
         assertEquals(
                 8.0,
                 DefenseTuning.RUSH_MARGIN,
-                "Радиус ближней реакции 8 блоков: в нём скелет рядом для прикрытия и крипер у самой цели защиты");
+                "Радиус ближней реакции 8 блоков: в нём скелет рядом для прикрытия и крипер у самой цели защиты"
+                        + " Иначе тест rushMargin_DeclaredValue_MatchesTuningLiteral перестанет ловить эту поломку. При смене rushMargin_DeclaredValue_MatchesTuningLiteral проверь это утверждение.");
     }
 
     @Test
@@ -56,7 +61,8 @@ class DefenseTuningTests {
         assertEquals(
                 3.0,
                 DefenseTuning.FRONT_RADIUS,
-                "Пост фронтовика в 3 блоках от центра: ближе к угрозе, чем посты прикрытия, но внутри радиуса");
+                "Пост фронтовика в 3 блоках от центра: ближе к угрозе, чем посты прикрытия, но внутри радиуса"
+                        + " Иначе тест frontRadius_DeclaredValue_MatchesTuningLiteral перестанет ловить эту поломку. При смене frontRadius_DeclaredValue_MatchesTuningLiteral проверь это утверждение.");
     }
 
     @Test
@@ -64,7 +70,8 @@ class DefenseTuningTests {
         assertEquals(
                 CoordinatorTuning.DEFENSE_POST_RADIUS,
                 DefenseTuning.FRONT_RADIUS,
-                "Пост фронтовика совпадает с постом координатора: иначе два слоя ставят духа в разные точки");
+                "Пост фронтовика совпадает с постом координатора: иначе два слоя ставят духа в разные точки"
+                        + " При смене frontRadius_PostRadius_MatchesCoordinator проверь это утверждение.");
     }
 
     @Test
@@ -72,7 +79,8 @@ class DefenseTuningTests {
         assertEquals(
                 16,
                 DefenseTuning.MAX_ENEMIES,
-                "Предел обзора 16 врагов как у тактики: иначе пересборка обороны тяжелеет сверх бюджета тика");
+                "Предел обзора 16 врагов как у тактики: иначе пересборка обороны тяжелеет сверх бюджета тика"
+                        + " При смене maxEnemies_DeclaredValue_MatchesTuningLiteral проверь это утверждение.");
     }
 
     @Test
@@ -80,7 +88,8 @@ class DefenseTuningTests {
         assertEquals(
                 Situation.MAX_ENEMIES,
                 DefenseTuning.MAX_ENEMIES,
-                "Предел обзора обороны совпадает с тактическим: иначе слои видят разное число врагов");
+                "Предел обзора обороны совпадает с тактическим: иначе слои видят разное число врагов"
+                        + " При смене maxEnemies_TacticsLimit_MatchesSituation проверь это утверждение.");
     }
 
     @Test
@@ -88,7 +97,8 @@ class DefenseTuningTests {
         assertEquals(
                 0.1,
                 DefenseTuning.MIN_DPS,
-                "Пол урона 0.1 в силе направления: иначе крипер с нулевым dps не войдёт в вес сектора");
+                "Пол урона 0.1 в силе направления: иначе крипер с нулевым dps не войдёт в вес сектора"
+                        + " При смене minDps_DeclaredValue_MatchesTuningLiteral проверь это утверждение.");
     }
 
     @Test
@@ -96,29 +106,41 @@ class DefenseTuningTests {
         assertEquals(
                 DefenseTuning.MIN_DPS,
                 TacticsConfig.loadDefault().weights().scales().minDps(),
-                "Пол урона обороны совпадает с тактическим: иначе сила сектора и запас победы считают по-разному");
+                "Пол урона обороны совпадает с тактическим: иначе сила сектора и запас победы считают по-разному"
+                        + " При смене minDps_TacticsFloor_MatchesScales проверь это утверждение.");
     }
 
     @Test
     void everyConstant_AllValues_PositiveAndFinite() {
-        assertTrue(DefenseTuning.SECTORS > 0, "Число секторов положительно: иначе круг не делится на направления");
+        assertTrue(
+                DefenseTuning.SECTORS > 0,
+                "Число секторов положительно: иначе круг не делится на направления"
+                        + " При смене everyConstant_AllValues_PositiveAndFinite проверь это утверждение.");
         assertTrue(
                 Double.isFinite(DefenseTuning.COVER_CORRIDOR) && DefenseTuning.COVER_CORRIDOR > 0,
-                "Коридор укрытия положителен и конечен: иначе укрытие либо везде, либо нигде");
+                "Коридор укрытия положителен и конечен: иначе укрытие либо везде, либо нигде"
+                        + " При смене everyConstant_AllValues_PositiveAndFinite проверь это утверждение.");
         assertTrue(
                 Double.isFinite(DefenseTuning.LOW_HP_FRACTION)
                         && DefenseTuning.LOW_HP_FRACTION > 0
                         && DefenseTuning.LOW_HP_FRACTION < 1,
-                "Порог здоровья — доля в 0..1: иначе раненый либо всегда, либо никогда");
+                "Порог здоровья — доля в 0..1: иначе раненый либо всегда, либо никогда"
+                        + " При смене everyConstant_AllValues_PositiveAndFinite проверь это утверждение.");
         assertTrue(
                 Double.isFinite(DefenseTuning.RUSH_MARGIN) && DefenseTuning.RUSH_MARGIN > 0,
-                "Радиус реакции положителен и конечен: иначе рядом нет никого или все");
+                "Радиус реакции положителен и конечен: иначе рядом нет никого или все"
+                        + " При смене everyConstant_AllValues_PositiveAndFinite проверь это утверждение.");
         assertTrue(
                 Double.isFinite(DefenseTuning.FRONT_RADIUS) && DefenseTuning.FRONT_RADIUS > 0,
-                "Радиус поста положителен и конечен: иначе пост негде ставить");
-        assertTrue(DefenseTuning.MAX_ENEMIES > 0, "Предел обзора положителен: иначе оборона слепа");
+                "Радиус поста положителен и конечен: иначе пост негде ставить"
+                        + " При смене everyConstant_AllValues_PositiveAndFinite проверь это утверждение.");
+        assertTrue(
+                DefenseTuning.MAX_ENEMIES > 0,
+                "Предел обзора положителен: иначе оборона слепа"
+                        + " При смене everyConstant_AllValues_PositiveAndFinite проверь это утверждение.");
         assertTrue(
                 Double.isFinite(DefenseTuning.MIN_DPS) && DefenseTuning.MIN_DPS > 0,
-                "Пол урона положителен и конечен: нулевой пол вычёркивает крипера из веса сектора");
+                "Пол урона положителен и конечен: нулевой пол вычёркивает крипера из веса сектора"
+                        + " Иначе тест everyConstant_AllValues_PositiveAndFinite перестанет ловить эту поломку. При смене everyConstant_AllValues_PositiveAndFinite проверь это утверждение.");
     }
 }

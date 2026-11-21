@@ -155,7 +155,8 @@ class StateMachineTests {
                 List.of(expected, rule),
                 List.of(step.state(), step.rule().orElse("")),
                 "Переход «" + name + "»: состояние боя меняется только по таблице states, иначе дух застрянет в бою "
-                        + "или забудет об отходе");
+                        + "или забудет об отходе"
+                        + " При смене next_StateDecisionAndFacts_FollowsTransitionTable проверь это утверждение.");
     }
 
     @Test
@@ -175,7 +176,8 @@ class StateMachineTests {
             assertTrue(
                     seen.contains(TacticalState.CALM),
                     "Из состояния " + start + " по таблице states нельзя дойти до CALM: это тупик, дух остался бы "
-                            + "в бою навсегда. Добавьте переход к покою");
+                            + "в бою навсегда. Добавьте переход к покою"
+                            + " Иначе тест transitions_Table_EveryStateReachesCalm перестанет ловить эту поломку. При смене transitions_Table_EveryStateReachesCalm проверь это утверждение.");
         }
     }
 
@@ -195,7 +197,8 @@ class StateMachineTests {
                     TacticalState.CALM,
                     state,
                     "При тишине (нет врагов, HP полное, прошло много тиков) из " + start
-                            + " возвращаемся в CALM не более чем за 3 шага");
+                            + " возвращаемся в CALM не более чем за 3 шага"
+                            + " Иначе тест next_QuietFacts_AnyStateReachesCalmInThreeSteps перестанет ловить эту поломку. При смене next_QuietFacts_AnyStateReachesCalmInThreeSteps проверь это утверждение.");
         }
     }
 }

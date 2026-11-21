@@ -106,7 +106,8 @@ class RetreatCommitmentTests {
                 next,
                 "Обязательство отхода («" + row.name()
                         + "»): бой прерывает бег; запасной AWAY уступает найденному лучшему способу; остальные держатся "
-                        + SETTINGS.retreatHoldTicks() + " тиков");
+                        + SETTINGS.retreatHoldTicks() + " тиков"
+                        + " Иначе тест next_Outcome_GivesExpectedCommitment перестанет ловить эту поломку. При смене next_Outcome_GivesExpectedCommitment проверь это утверждение.");
     }
 
     @Test
@@ -114,7 +115,8 @@ class RetreatCommitmentTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> RetreatCommitment.next(RetreatTracker.IDLE, null, 0, SETTINGS),
-                "Без решения ядра обязательство не обновить: ошибка вызова, а не молчаливый простой");
+                "Без решения ядра обязательство не обновить: ошибка вызова, а не молчаливый простой"
+                        + " Иначе тест next_NullOutcome_Rejected перестанет ловить эту поломку. При смене next_NullOutcome_Rejected проверь это утверждение.");
     }
 
     private static TacticalAction actionOf(TacticalOption option) {

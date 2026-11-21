@@ -44,9 +44,13 @@ class AssistPolicyProperties {
 
         assertTrue(
                 helpers.size() <= maxHelpers,
-                "Помощников не больше maxHelpers: иначе сектора пустеют при любом пределе");
+                "Помощников не больше maxHelpers: иначе сектора пустеют при любом пределе"
+                        + " При смене assist_AnySpiritsAndMaxHelpers_HelpersWithinLimits проверь это утверждение.");
         for (UUID helper : helpers) {
-            assertTrue(!helper.equals(attacked), "Атакованный не помогает себе: он держит свой сектор или отбивается");
+            assertTrue(
+                    !helper.equals(attacked),
+                    "Атакованный не помогает себе: он держит свой сектор или отбивается"
+                            + " Иначе тест assist_AnySpiritsAndMaxHelpers_HelpersWithinLimits перестанет ловить эту поломку. При смене assist_AnySpiritsAndMaxHelpers_HelpersWithinLimits проверь это утверждение.");
             SpiritSnapshot snapshot = spirits.stream()
                     .filter(spirit -> spirit.id().equals(helper))
                     .findFirst()
@@ -54,10 +58,12 @@ class AssistPolicyProperties {
             assertEquals(
                     SpiritRole.DEFENDER,
                     snapshot.role(),
-                    "Помощник — защитник: работник бросит работу, которую координатор ему не давал");
+                    "Помощник — защитник: работник бросит работу, которую координатор ему не давал"
+                            + " Иначе тест assist_AnySpiritsAndMaxHelpers_HelpersWithinLimits перестанет ловить эту поломку. При смене assist_AnySpiritsAndMaxHelpers_HelpersWithinLimits проверь это утверждение.");
             assertTrue(
                     posts.stream().anyMatch(post -> post.defender().equals(helper)),
-                    "Помощник держит пост в обороне: иначе помощь приходит от тех, кого нет в секторах");
+                    "Помощник держит пост в обороне: иначе помощь приходит от тех, кого нет в секторах"
+                            + " При смене assist_AnySpiritsAndMaxHelpers_HelpersWithinLimits проверь это утверждение.");
         }
     }
 

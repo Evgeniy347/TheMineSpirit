@@ -17,13 +17,15 @@ class ReturnStallTests {
         for (int tick = 1; tick < ReturnStall.STALL_TICKS; tick++) {
             assertFalse(
                     stall.stalled(ANCHOR, 10.0),
-                    "До предела срыва возврат обязан продолжаться: " + tick + " тик из " + ReturnStall.STALL_TICKS);
+                    "До предела срыва возврат обязан продолжаться: " + tick + " тик из " + ReturnStall.STALL_TICKS
+                            + " Иначе тест stalled_NoProgressForLimit_ReportsStall перестанет ловить эту поломку. При смене stalled_NoProgressForLimit_ReportsStall проверь это утверждение.");
         }
 
         assertTrue(
                 stall.stalled(ANCHOR, 10.0),
                 "На " + ReturnStall.STALL_TICKS + "-м тике без прогресса возврат обязан сниматься: "
-                        + "иначе дух навсегда тянется к недостижимому якорю");
+                        + "иначе дух навсегда тянется к недостижимому якорю"
+                        + " При смене stalled_NoProgressForLimit_ReportsStall проверь это утверждение.");
     }
 
     @Test
@@ -38,6 +40,7 @@ class ReturnStallTests {
         assertFalse(
                 stall.stalled(ANCHOR, 9.0),
                 "Сокращение расстояния на полблока обязано сбрасывать счётчик: иначе медленный, но живой "
-                        + "возврат снимается раньше времени");
+                        + "возврат снимается раньше времени"
+                        + " При смене stalled_Progress_ResetsCounter проверь это утверждение.");
     }
 }

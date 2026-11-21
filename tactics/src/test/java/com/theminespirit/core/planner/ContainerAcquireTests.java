@@ -37,19 +37,24 @@ class ContainerAcquireTests {
 
         assertTrue(
                 planned.stream().anyMatch("craft:minecraft:chest"::equals),
-                "Сундук для стройки обязан планироваться крафтом из досок, а не выниматься из склада: " + planned);
+                "Сундук для стройки обязан планироваться крафтом из досок, а не выниматься из склада: " + planned
+                        + " Иначе тест chestItem_ChestLiesInChest_PlannedByCraft перестанет ловить эту поломку. При смене chestItem_ChestLiesInChest_PlannedByCraft проверь это утверждение.");
         assertTrue(
-                planned.stream().anyMatch("gather:oak_planks"::equals), "Доски на сундук добывают заново: " + planned);
+                planned.stream().anyMatch("gather:oak_planks"::equals),
+                "Доски на сундук добывают заново: " + planned
+                        + " Иначе тест chestItem_ChestLiesInChest_PlannedByCraft перестанет ловить эту поломку. При смене chestItem_ChestLiesInChest_PlannedByCraft проверь это утверждение.");
     }
 
     @Test
     void storageItems_ContainerAndPlank_Classified() {
         assertTrue(
                 StorageItems.container("minecraft:barrel") && StorageItems.container("white_shulker_box"),
-                "Бочка и шалкер тоже места хранения: вынимать их из сундуков нельзя");
+                "Бочка и шалкер тоже места хранения: вынимать их из сундуков нельзя"
+                        + " Иначе тест storageItems_ContainerAndPlank_Classified перестанет ловить эту поломку. При смене storageItems_ContainerAndPlank_Classified проверь это утверждение.");
         assertTrue(
                 !StorageItems.container("minecraft:oak_planks"),
-                "Доски — расходный материал: их по-прежнему берут из сундуков");
+                "Доски — расходный материал: их по-прежнему берут из сундуков"
+                        + " Иначе тест storageItems_ContainerAndPlank_Classified перестанет ловить эту поломку. При смене storageItems_ContainerAndPlank_Classified проверь это утверждение.");
     }
 
     private static ResourceKnowledge chestKnowledge() {

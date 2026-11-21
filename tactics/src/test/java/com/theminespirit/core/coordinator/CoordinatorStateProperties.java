@@ -45,7 +45,8 @@ class CoordinatorStateProperties {
             assertEquals(
                     Optional.of(spirit),
                     state.byId(spirit.id()),
-                    "Каждый дух состояния находится по своему id: иначе план не сопоставит решения с духами");
+                    "Каждый дух состояния находится по своему id: иначе план не сопоставит решения с духами"
+                            + " При смене byId_EverySpiritInState_IsFound проверь это утверждение.");
         }
     }
 }

@@ -48,11 +48,13 @@ class DefenseProfileProperties {
 
         assertTrue(
                 EnumSet.allOf(TargetClass.class).contains(cls),
-                "Классификация обязана вернуть реальный класс: иначе цель выпадет из таблицы приоритетов");
+                "Классификация обязана вернуть реальный класс: иначе цель выпадет из таблицы приоритетов"
+                        + " При смене classify_AnyTypeAndProfile_ReturnsRealClass проверь это утверждение.");
         assertEquals(
                 cls,
                 DefenseProfileTests.PROFILE.classify(type, profile),
-                "Классификация детерминирована: иначе порядок целей мигает между пересборками");
+                "Классификация детерминирована: иначе порядок целей мигает между пересборками"
+                        + " При смене classify_AnyTypeAndProfile_ReturnsRealClass проверь это утверждение.");
     }
 
     @Property
@@ -63,10 +65,12 @@ class DefenseProfileProperties {
             assertEquals(
                     Set.copyOf(order).size(),
                     order.size(),
-                    "Порядок целей без дублей: повтор ломает тай-брейк, и цель выбирается случайно");
+                    "Порядок целей без дублей: повтор ломает тай-брейк, и цель выбирается случайно"
+                            + " При смене orderFor_AnyRole_HasNoDuplicates проверь это утверждение.");
             assertTrue(
                     order.size() <= TargetClass.values().length,
-                    "Порядок не длиннее множества классов: иначе в нём мусор вместо приоритетов");
+                    "Порядок не длиннее множества классов: иначе в нём мусор вместо приоритетов"
+                            + " При смене orderFor_AnyRole_HasNoDuplicates проверь это утверждение.");
         }
     }
 }

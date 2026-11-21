@@ -194,29 +194,34 @@ final class TeamDefenseScenarios {
                 scenario.squads().size(),
                 plan.orders().size(),
                 "Сценарий " + scenario.id() + " (" + scenario.situation() + "): у каждого отряда ровно один "
-                        + "приказ, иначе часть духов останется без решения");
+                        + "приказ, иначе часть духов останется без решения"
+                        + " При смене verify проверь это утверждение.");
         int members = scenario.squads().stream().mapToInt(SquadSpec::size).sum();
         assertEquals(
                 members,
                 plan.memberOrders().size(),
-                "Сценарий " + scenario.id() + ": каждый дух получает приказ, иначе команда распадается");
+                "Сценарий " + scenario.id() + ": каждый дух получает приказ, иначе команда распадается"
+                        + " При смене verify проверь это утверждение. Иначе поломка пройдёт незамеченной в прогоне.");
         assertEquals(
                 members,
                 plan.memberOrders().stream().map(MemberOrder::member).distinct().count(),
-                "Сценарий " + scenario.id() + ": один дух получает один приказ, иначе приказы противоречат друг другу");
+                "Сценарий " + scenario.id() + ": один дух получает один приказ, иначе приказы противоречат друг другу"
+                        + " При смене verify проверь это утверждение.");
         scenario.decisions().forEach((squad, decision) -> {
             SquadOrder order = orderOf(plan, squad);
             assertEquals(
                     decision,
                     order.decision(),
                     "Сценарий " + scenario.id() + " (" + scenario.situation() + "): отряд " + squad + " должен решить "
-                            + decision + ", а решил " + order.decision());
+                            + decision + ", а решил " + order.decision()
+                            + " При смене verify проверь это утверждение. Иначе поломка пройдёт незамеченной в прогоне.");
             switch (decision) {
                 case STAY -> {
                     assertEquals(
                             0,
                             order.targets(),
-                            "Сценарий " + scenario.id() + ": стоящий отряд не берёт цель, иначе он уходит с поста");
+                            "Сценарий " + scenario.id() + ": стоящий отряд не берёт цель, иначе он уходит с поста"
+                                    + " При смене verify проверь это утверждение. Иначе поломка пройдёт незамеченной в прогоне.");
                     assertEquals(
                             plan.squads().stream()
                                     .filter(value -> value.id().equals(squad))
@@ -224,36 +229,42 @@ final class TeamDefenseScenarios {
                                     .orElseThrow()
                                     .center(),
                             order.post(),
-                            "Сценарий " + scenario.id() + ": стоящий отряд остаётся на своей точке");
+                            "Сценарий " + scenario.id() + ": стоящий отряд остаётся на своей точке"
+                                    + " При смене verify проверь это утверждение. Иначе поломка пройдёт незамеченной в прогоне.");
                 }
                 case ENGAGE ->
                     assertTrue(
                             order.targets() > 0,
-                            "Сценарий " + scenario.id()
-                                    + ": дерущийся отряд обязан иметь цель, иначе он стоит без дела");
+                            "Сценарий " + scenario.id() + ": дерущийся отряд обязан иметь цель, иначе он стоит без дела"
+                                    + " При смене verify проверь это утверждение. Иначе поломка пройдёт незамеченной в прогоне.");
                 case REINFORCE ->
                     assertTrue(
                             order.targets() > 0,
-                            "Сценарий " + scenario.id() + ": идущий на помощь отряд обязан видеть цель");
+                            "Сценарий " + scenario.id() + ": идущий на помощь отряд обязан видеть цель"
+                                    + " При смене verify проверь это утверждение. Иначе поломка пройдёт незамеченной в прогоне.");
                 case RETREAT -> {
                     assertEquals(
                             0,
                             order.targets(),
-                            "Сценарий " + scenario.id() + ": отходящий отряд не берёт цель, иначе гибнет на месте");
+                            "Сценарий " + scenario.id() + ": отходящий отряд не берёт цель, иначе гибнет на месте"
+                                    + " При смене verify проверь это утверждение. Иначе поломка пройдёт незамеченной в прогоне.");
                     assertEquals(
                             CENTER,
                             order.post(),
-                            "Сценарий " + scenario.id() + ": отход ведёт к центру обороны, а не в бой");
+                            "Сценарий " + scenario.id() + ": отход ведёт к центру обороны, а не в бой"
+                                    + " При смене verify проверь это утверждение. Иначе поломка пройдёт незамеченной в прогоне.");
                 }
                 case EAT ->
                     assertEquals(
                             0,
                             order.targets(),
-                            "Сценарий " + scenario.id() + ": голодный отряд сперва ест, а не берёт цель");
+                            "Сценарий " + scenario.id() + ": голодный отряд сперва ест, а не берёт цель"
+                                    + " При смене verify проверь это утверждение. Иначе поломка пройдёт незамеченной в прогоне.");
                 case SPREAD ->
                     assertTrue(
                             order.sectors().size() >= 2,
-                            "Сценарий " + scenario.id() + ": рассредоточение накрывает хотя бы два сектора");
+                            "Сценарий " + scenario.id() + ": рассредоточение накрывает хотя бы два сектора"
+                                    + " При смене verify проверь это утверждение. Иначе поломка пройдёт незамеченной в прогоне.");
             }
         });
         scenario.stances().forEach((squad, expected) -> {
@@ -264,7 +275,8 @@ final class TeamDefenseScenarios {
                     expected,
                     actual,
                     "Сценарий " + scenario.id() + " (" + scenario.situation() + "): стойки отряда " + squad
-                            + " должны быть " + expected + ", а вышли " + actual);
+                            + " должны быть " + expected + ", а вышли " + actual
+                            + " При смене verify проверь это утверждение. Иначе поломка пройдёт незамеченной в прогоне.");
         });
     }
 }

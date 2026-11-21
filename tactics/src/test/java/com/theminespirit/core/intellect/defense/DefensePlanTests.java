@@ -60,9 +60,18 @@ class DefensePlanTests {
         assertEquals(
                 Optional.empty(),
                 plan.defendedPoint(),
-                "Без защищаемой точки плана нет: иначе посты встанут вокруг ничего");
-        assertEquals(List.of(), plan.posts(), "Без защищаемой точки постов нет: иначе приказ уведёт духа от поселения");
-        assertEquals(List.of(), plan.orders(), "Без защищаемой точки приказов нет: иначе дух получит цель без рубежа");
+                "Без защищаемой точки плана нет: иначе посты встанут вокруг ничего"
+                        + " При смене plan_NoDefendedPoint_ReturnsEmptyPlan проверь это утверждение.");
+        assertEquals(
+                List.of(),
+                plan.posts(),
+                "Без защищаемой точки постов нет: иначе приказ уведёт духа от поселения"
+                        + " При смене plan_NoDefendedPoint_ReturnsEmptyPlan проверь это утверждение.");
+        assertEquals(
+                List.of(),
+                plan.orders(),
+                "Без защищаемой точки приказов нет: иначе дух получит цель без рубежа"
+                        + " При смене plan_NoDefendedPoint_ReturnsEmptyPlan проверь это утверждение.");
     }
 
     @Test
@@ -78,15 +87,18 @@ class DefensePlanTests {
         assertEquals(
                 Optional.of(CENTER),
                 plan.defendedPoint(),
-                "План привязан к защищаемой точке: иначе посты не с чем сверять");
+                "План привязан к защищаемой точке: иначе посты не с чем сверять"
+                        + " При смене plan_PointAndEnemies_EveryPostHasOrder проверь это утверждение.");
         assertEquals(
                 plan.posts().size(),
                 plan.orders().size(),
-                "У каждого поста свой приказ: иначе дух стоит без цели или воюет без поста");
+                "У каждого поста свой приказ: иначе дух стоит без цели или воюет без поста"
+                        + " При смене plan_PointAndEnemies_EveryPostHasOrder проверь это утверждение.");
         assertEquals(
                 plan.posts().stream().map(DefenseAssignment::defender).sorted().toList(),
                 plan.orders().stream().map(DefenderOrder::defender).sorted().toList(),
-                "Посты и приказы накрывают одних духов: иначе часть отряда без управления");
+                "Посты и приказы накрывают одних духов: иначе часть отряда без управления"
+                        + " При смене plan_PointAndEnemies_EveryPostHasOrder проверь это утверждение.");
     }
 
     @Test
@@ -105,11 +117,13 @@ class DefensePlanTests {
         assertEquals(
                 "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
                 orderOf(plan, MELEE_ID).target().orElseThrow().id(),
-                "Мечник при живом лучнике не берёт крипера: взрыв убьёт мечника раньше обстрела");
+                "Мечник при живом лучнике не берёт крипера: взрыв убьёт мечника раньше обстрела"
+                        + " Иначе тест plan_MeleeWithArcher_NeverTakesCreeper перестанет ловить эту поломку. При смене plan_MeleeWithArcher_NeverTakesCreeper проверь это утверждение.");
         assertEquals(
                 "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
                 orderOf(plan, ARCHER_ID).target().orElseThrow().id(),
-                "Далёкий крипер — цель лучника: иначе взрыв подойдёт к точке без обстрела");
+                "Далёкий крипер — цель лучника: иначе взрыв подойдёт к точке без обстрела"
+                        + " При смене plan_MeleeWithArcher_NeverTakesCreeper проверь это утверждение.");
     }
 
     @Test
@@ -129,15 +143,18 @@ class DefensePlanTests {
         assertEquals(
                 "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
                 champion.target().orElseThrow().id(),
-                "Без лучника один мечник в лучшей броне идёт наскоком на крипера: иначе взрыв никто не встретит");
+                "Без лучника один мечник в лучшей броне идёт наскоком на крипера: иначе взрыв никто не встретит"
+                        + " При смене plan_LoneCreeperNoArcher_BestArmorMeleeTakesIt проверь это утверждение.");
         assertEquals(
                 CombatStance.STRIKE_AND_RETREAT,
                 champion.stance(),
-                "Наскок на крипера — удар и отскок: иначе мечник встанет впритык под взрывом");
+                "Наскок на крипера — удар и отскок: иначе мечник встанет впритык под взрывом"
+                        + " При смене plan_LoneCreeperNoArcher_BestArmorMeleeTakesIt проверь это утверждение.");
         assertEquals(
                 Optional.empty(),
                 orderOf(plan, weak).target(),
-                "Второй мечник держится дальше от крипера: на взрыв идёт ровно один");
+                "Второй мечник держится дальше от крипера: на взрыв идёт ровно один"
+                        + " Иначе тест plan_LoneCreeperNoArcher_BestArmorMeleeTakesIt перестанет ловить эту поломку. При смене plan_LoneCreeperNoArcher_BestArmorMeleeTakesIt проверь это утверждение.");
     }
 
     @Test
@@ -153,11 +170,13 @@ class DefensePlanTests {
         assertEquals(
                 CombatStance.WITHDRAW,
                 order.stance(),
-                "Раненый без лечилки отходит: иначе дух дерётся до смерти вместо передачи цели");
+                "Раненый без лечилки отходит: иначе дух дерётся до смерти вместо передачи цели"
+                        + " При смене plan_WoundedDefender_HandsOffTarget проверь это утверждение.");
         assertEquals(
                 Optional.of(MELEE_ID),
                 order.handOff(),
-                "Отход передаёт цель уцелевшему: иначе цель останется без присмотра");
+                "Отход передаёт цель уцелевшему: иначе цель останется без присмотра"
+                        + " При смене plan_WoundedDefender_HandsOffTarget проверь это утверждение.");
     }
 
     @Test
@@ -181,7 +200,8 @@ class DefensePlanTests {
                         shuffledEnemies,
                         ThreatBearingTests.PROFILES,
                         DefenseProfileTests.PROFILE),
-                "План не зависит от порядка входа: иначе приказы мигают при каждом новом снимке мира");
+                "План не зависит от порядка входа: иначе приказы мигают при каждом новом снимке мира"
+                        + " При смене plan_ShuffledInput_SamePlan проверь это утверждение.");
     }
 
     @Test
@@ -200,18 +220,24 @@ class DefensePlanTests {
         long targeted = plan.orders().stream()
                 .filter(order -> order.target().isPresent())
                 .count();
-        assertEquals(16, targeted, "Цели ограничены пределом обзора: иначе пересборка тяжелеет сверх бюджета тика");
+        assertEquals(
+                16,
+                targeted,
+                "Цели ограничены пределом обзора: иначе пересборка тяжелеет сверх бюджета тика"
+                        + " При смене plan_TooManyEnemies_TrimmedToMax проверь это утверждение.");
         assertEquals(
                 1,
                 plan.orders().size() - targeted,
-                "Лишний защитник держит пост без цели: иначе дух без цели останется без приказа");
+                "Лишний защитник держит пост без цели: иначе дух без цели останется без приказа"
+                        + " При смене plan_TooManyEnemies_TrimmedToMax проверь это утверждение.");
         Set<String> targetedIds = plan.orders().stream()
                 .filter(order -> order.target().isPresent())
                 .map(order -> order.target().orElseThrow().id())
                 .collect(Collectors.toSet());
         assertTrue(
                 !targetedIds.contains("aaaaaaaa-aaaa-aaaa-aaaa-000000000016"),
-                "Дальний семнадцатый за пределом обзора: иначе обрезка не работает и лимит фиктивен");
+                "Дальний семнадцатый за пределом обзора: иначе обрезка не работает и лимит фиктивен"
+                        + " При смене plan_TooManyEnemies_TrimmedToMax проверь это утверждение.");
     }
 
     @Test
@@ -225,8 +251,13 @@ class DefensePlanTests {
 
         assertTrue(
                 plan.posts().size() == 2,
-                "Без врагов посты всё равно стоят: иначе мирное время оставит периметр пустым");
-        assertEquals(List.of(), plan.orders(), "Без врагов приказов нет: иначе дух получит цель из ничего");
+                "Без врагов посты всё равно стоят: иначе мирное время оставит периметр пустым"
+                        + " При смене plan_NoEnemies_PostsOnly проверь это утверждение.");
+        assertEquals(
+                List.of(),
+                plan.orders(),
+                "Без врагов приказов нет: иначе дух получит цель из ничего"
+                        + " При смене plan_NoEnemies_PostsOnly проверь это утверждение. Иначе поломка пройдёт незамеченной в прогоне.");
     }
 
     @Test
@@ -241,6 +272,7 @@ class DefensePlanTests {
                         List.of(enemy("minecraft:zombie", "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", 5)),
                         ThreatBearingTests.PROFILES,
                         DefenseProfileTests.PROFILE),
-                "Дух дважды в списке обязан падать: один дух — один пост и один приказ");
+                "Дух дважды в списке обязан падать: один дух — один пост и один приказ"
+                        + " Иначе тест plan_DuplicateDefender_Throws перестанет ловить эту поломку. При смене plan_DuplicateDefender_Throws проверь это утверждение.");
     }
 }

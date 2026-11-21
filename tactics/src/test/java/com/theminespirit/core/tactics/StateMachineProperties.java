@@ -38,6 +38,7 @@ class StateMachineProperties {
                                 && described.get().from().contains(from)
                                 && described.get().to() == step.state(),
                 "Переход " + from + " → " + step.state() + " (правило " + step.rule()
-                        + ") не описан таблицей states: автомат не вправе менять состояние иначе");
+                        + ") не описан таблицей states: автомат не вправе менять состояние иначе"
+                        + " При смене next_AnyFacts_ResultIsDescribedByTable проверь это утверждение.");
     }
 }

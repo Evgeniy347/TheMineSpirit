@@ -54,7 +54,8 @@ class TeamDefenseCircleScenarioTests {
                 plan.orders().stream()
                         .filter(order -> order.decision() == SquadDecision.REINFORCE)
                         .count(),
-                "Одной пары помощи хватает на восемь мобов: больше помощников оголит остальной периметр");
+                "Одной пары помощи хватает на восемь мобов: больше помощников оголит остальной периметр"
+                        + " Иначе тест circle_OneSideAtStageTwo_HelperComesFromNeighbour перестанет ловить эту поломку. При смене circle_OneSideAtStageTwo_HelperComesFromNeighbour проверь это утверждение.");
     }
 
     @Test
@@ -72,10 +73,14 @@ class TeamDefenseCircleScenarioTests {
                 .mapToInt(SquadOrder::members)
                 .sum();
         assertEquals(
-                6, helpers, "Предел помощи — три пары: остальные посты остаются на периметре, иначе поселение оголено");
+                6,
+                helpers,
+                "Предел помощи — три пары: остальные посты остаются на периметре, иначе поселение оголено"
+                        + " При смене circle_SixteenNorth_ThreePairsHelpButPerimeterKeepsReserve проверь это утверждение.");
         assertTrue(
                 plan.orders().stream().anyMatch(order -> order.decision() == SquadDecision.STAY),
-                "Часть постов остаётся в резерве: помощь не снимает весь периметр");
+                "Часть постов остаётся в резерве: помощь не снимает весь периметр"
+                        + " Иначе тест circle_SixteenNorth_ThreePairsHelpButPerimeterKeepsReserve перестанет ловить эту поломку. При смене circle_SixteenNorth_ThreePairsHelpButPerimeterKeepsReserve проверь это утверждение.");
     }
 
     @Test
@@ -93,7 +98,8 @@ class TeamDefenseCircleScenarioTests {
                 plan.orders().stream()
                         .filter(order -> order.decision() == SquadDecision.REINFORCE)
                         .count(),
-                "На восемь мобов идут две ближайшие пары: одна не закрывает пролом");
+                "На восемь мобов идут две ближайшие пары: одна не закрывает пролом"
+                        + " Иначе тест circle_GapInEast_TwoNearestPostsFillIt перестанет ловить эту поломку. При смене circle_GapInEast_TwoNearestPostsFillIt проверь это утверждение.");
     }
 
     @Test
@@ -109,11 +115,13 @@ class TeamDefenseCircleScenarioTests {
         assertEquals(
                 2,
                 orderOf(spread, "S1").sectors().size(),
-                "Рассредоточение накрывает ровно угрожаемые секторы: лишние секторы растянули бы отряд");
+                "Рассредоточение накрывает ровно угрожаемые секторы: лишние секторы растянули бы отряд"
+                        + " Иначе тест circle_SpreadPlan_KeepsEverySectorCoveredOnce перестанет ловить эту поломку. При смене circle_SpreadPlan_KeepsEverySectorCoveredOnce проверь это утверждение.");
         assertEquals(
                 4,
                 orderOf(spread, "S1").targets(),
-                "Каждый дух расходящегося отряда получает цель: иначе половина стоит в стороне");
+                "Каждый дух расходящегося отряда получает цель: иначе половина стоит в стороне"
+                        + " При смене circle_SpreadPlan_KeepsEverySectorCoveredOnce проверь это утверждение.");
     }
 
     @Test
@@ -126,7 +134,8 @@ class TeamDefenseCircleScenarioTests {
                 plan.orders().stream()
                         .filter(order -> order.decision() == SquadDecision.STAY)
                         .count(),
-                "Без угроз все посты стоят: иначе мирное поселение теряет периметр");
+                "Без угроз все посты стоят: иначе мирное поселение теряет периметр"
+                        + " При смене circle_NoThreats_AllPostsHoldEvenWithManySquads проверь это утверждение.");
     }
 
     @Test
@@ -150,7 +159,8 @@ class TeamDefenseCircleScenarioTests {
         assertEquals(
                 4,
                 plan.orders().size(),
-                "Каждый пост получает приказ, даже если не дерётся: иначе часть духов без управления");
+                "Каждый пост получает приказ, даже если не дерётся: иначе часть духов без управления"
+                        + " При смене circle_ThreeSidesLocalFight_NoUnnecessaryHelp проверь это утверждение.");
     }
 
     @Test
@@ -166,8 +176,12 @@ class TeamDefenseCircleScenarioTests {
                 plan.orders().stream()
                         .filter(order -> order.decision() == SquadDecision.ENGAGE)
                         .count(),
-                "Каждую сторону встречает свой пост: иначе на одной стороне дерутся, а другую некому закрыть");
+                "Каждую сторону встречает свой пост: иначе на одной стороне дерутся, а другую некому закрыть"
+                        + " При смене circle_BigGarrison_FourSidesEachKeepsLocalFighter проверь это утверждение.");
         assertEquals(
-                16, plan.orders().size(), "Все посты получают приказ: иначе часть гарнизона остаётся без управления");
+                16,
+                plan.orders().size(),
+                "Все посты получают приказ: иначе часть гарнизона остаётся без управления"
+                        + " При смене circle_BigGarrison_FourSidesEachKeepsLocalFighter проверь это утверждение.");
     }
 }

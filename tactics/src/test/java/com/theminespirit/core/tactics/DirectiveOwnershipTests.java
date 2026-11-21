@@ -16,10 +16,12 @@ class DirectiveOwnershipTests {
         assertFalse(
                 ownership.mayClear(DirectiveOwner.COORDINATOR),
                 "координатор не снимает директиву теста, игрока или скрипта: иначе его уборка "
-                        + "приказа стирает PASSIVE и снимает чужую задачу");
+                        + "приказа стирает PASSIVE и снимает чужую задачу"
+                        + " При смене clear_CoordinatorAfterScript_Refused проверь это утверждение.");
         assertTrue(
                 ownership.mayClear(DirectiveOwner.SCRIPT),
-                "владелец снимает свою директиву: иначе скрипт не вернёт тактику после работы");
+                "владелец снимает свою директиву: иначе скрипт не вернёт тактику после работы"
+                        + " При смене clear_CoordinatorAfterScript_Refused проверь это утверждение.");
     }
 
     @Test
@@ -29,10 +31,12 @@ class DirectiveOwnershipTests {
 
         assertTrue(
                 ownership.mayClear(DirectiveOwner.COORDINATOR),
-                "координатор снимает только свой приказ: уборка после боя не должна зависеть от чужого");
+                "координатор снимает только свой приказ: уборка после боя не должна зависеть от чужого"
+                        + " Иначе тест clear_CoordinatorAfterOwnDirective_Allowed перестанет ловить эту поломку. При смене clear_CoordinatorAfterOwnDirective_Allowed проверь это утверждение.");
         assertFalse(
                 ownership.mayClear(DirectiveOwner.SCRIPT),
-                "скрипт не снимает директиву координатора: владелец у директивы один");
+                "скрипт не снимает директиву координатора: владелец у директивы один"
+                        + " Иначе тест clear_CoordinatorAfterOwnDirective_Allowed перестанет ловить эту поломку. При смене clear_CoordinatorAfterOwnDirective_Allowed проверь это утверждение.");
     }
 
     @Test
@@ -43,10 +47,12 @@ class DirectiveOwnershipTests {
 
         assertFalse(
                 ownership.mayClear(DirectiveOwner.COORDINATOR),
-                "освобождённую директиву повторно не снимают: иначе ложное «снял» сбивает учёт владельца");
+                "освобождённую директиву повторно не снимают: иначе ложное «снял» сбивает учёт владельца"
+                        + " При смене clear_AfterOwnerReleased_RefusedForEveryone проверь это утверждение.");
         assertFalse(
                 ownership.mayClear(DirectiveOwner.SCRIPT),
-                "освобождённую директиву скрипт не снимает: владельца уже нет");
+                "освобождённую директиву скрипт не снимает: владельца уже нет"
+                        + " Иначе тест clear_AfterOwnerReleased_RefusedForEveryone перестанет ловить эту поломку. При смене clear_AfterOwnerReleased_RefusedForEveryone проверь это утверждение.");
     }
 
     @Test
@@ -56,10 +62,12 @@ class DirectiveOwnershipTests {
         assertThrows(
                 NullPointerException.class,
                 () -> ownership.appliedBy(null),
-                "директива без владельца не принимается: её снял бы первый встречный");
+                "директива без владельца не принимается: её снял бы первый встречный"
+                        + " Иначе тест appliedBy_NullOwner_Rejected перестанет ловить эту поломку. При смене appliedBy_NullOwner_Rejected проверь это утверждение.");
         assertThrows(
                 NullPointerException.class,
                 () -> ownership.mayClear(null),
-                "снятие без владельца не проверить: кто снимает — часть правила");
+                "снятие без владельца не проверить: кто снимает — часть правила"
+                        + " Иначе тест appliedBy_NullOwner_Rejected перестанет ловить эту поломку. При смене appliedBy_NullOwner_Rejected проверь это утверждение.");
     }
 }

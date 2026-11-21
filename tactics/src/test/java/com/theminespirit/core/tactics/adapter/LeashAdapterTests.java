@@ -62,7 +62,8 @@ class LeashAdapterTests {
                 "outside_leash_ignore".equals(outcome.trace().rule()),
                 "Жёсткое правило поводка («" + row.name() + "», расстояние " + row.distance() + " при поводке "
                         + PURSUIT + "): оно срабатывает строго за границей, на границе решает счёт; сработало "
-                        + outcome.trace().rule());
+                        + outcome.trace().rule()
+                        + " Иначе тест step_TargetAtDistanceFromPost_LeashRuleFiresOnlyBeyondBorder перестанет ловить эту поломку. При смене step_TargetAtDistanceFromPost_LeashRuleFiresOnlyBeyondBorder проверь это утверждение.");
     }
 
     @ParameterizedTest(name = "{0}")
@@ -83,10 +84,12 @@ class LeashAdapterTests {
             assertTrue(
                     target.isEmpty(),
                     "Цель за поводком («" + row.name() + "») не выставляется: охранник не гонится, "
-                            + "а возвращается к посту; выставлена " + target);
+                            + "а возвращается к посту; выставлена " + target
+                            + " Иначе тест pick_TargetBeyondLeash_NoTargetDesignated перестанет ловить эту поломку. При смене pick_TargetBeyondLeash_NoTargetDesignated проверь это утверждение.");
         }
         assertTrue(
                 outcome.decision() != TacticalOption.FIGHT || target.isPresent(),
-                "Решение FIGHT («" + row.name() + "») всегда несёт цель: иначе дух стоит среди врагов");
+                "Решение FIGHT («" + row.name() + "») всегда несёт цель: иначе дух стоит среди врагов"
+                        + " При смене pick_TargetBeyondLeash_NoTargetDesignated проверь это утверждение.");
     }
 }

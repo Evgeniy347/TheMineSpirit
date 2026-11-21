@@ -35,15 +35,18 @@ class CoordinatorDirectivesTests {
         assertEquals(
                 CombatMode.GUARD_AREA,
                 directive.mode(),
-                "Защитник получает приказ обороны: иначе тактика духа не знает, что держать пост");
+                "Защитник получает приказ обороны: иначе тактика духа не знает, что держать пост"
+                        + " При смене directives_PostOnPlan_GuardDirectiveWithPostAsSafePoint проверь это утверждение.");
         assertEquals(
                 Optional.of(POST),
                 directive.safePoint(),
-                "Пост обороны — точка приказа: без неё защитник отойдёт от сектора");
+                "Пост обороны — точка приказа: без неё защитник отойдёт от сектора"
+                        + " Иначе тест directives_PostOnPlan_GuardDirectiveWithPostAsSafePoint перестанет ловить эту поломку. При смене directives_PostOnPlan_GuardDirectiveWithPostAsSafePoint проверь это утверждение.");
         assertEquals(
                 Optional.empty(),
                 directive.target(),
-                "Оборона у поста не назначает цели: цель приказа — дело самой тактики");
+                "Оборона у поста не назначает цели: цель приказа — дело самой тактики"
+                        + " Иначе тест directives_PostOnPlan_GuardDirectiveWithPostAsSafePoint перестанет ловить эту поломку. При смене directives_PostOnPlan_GuardDirectiveWithPostAsSafePoint проверь это утверждение.");
     }
 
     @Test
@@ -57,11 +60,13 @@ class CoordinatorDirectivesTests {
         assertEquals(
                 CombatMode.PROTECT,
                 directive.mode(),
-                "Помощник защищает подопечного: приказ обязан выбрать режим защиты, а не оборону поста");
+                "Помощник защищает подопечного: приказ обязан выбрать режим защиты, а не оборону поста"
+                        + " Иначе тест directives_AssistOrderOnPlan_ProtectDirectiveOnWard перестанет ловить эту поломку. При смене directives_AssistOrderOnPlan_ProtectDirectiveOnWard проверь это утверждение.");
         assertEquals(
                 Optional.of(new TargetSelector.Target(TargetSelector.Kind.SPIRIT, Optional.of(WARD.toString()))),
                 directive.target(),
-                "Подопечный помощника — атакованный дух, иначе помогать некому");
+                "Подопечный помощника — атакованный дух, иначе помогать некому"
+                        + " При смене directives_AssistOrderOnPlan_ProtectDirectiveOnWard проверь это утверждение.");
     }
 
     @Test
@@ -72,11 +77,15 @@ class CoordinatorDirectivesTests {
         Map<UUID, CombatDirective> directives = CoordinatorDirectives.of(plan);
 
         assertEquals(
-                1, directives.size(), "Один дух — один приказ: помощь и оборона поста не накладываются друг на друга");
+                1,
+                directives.size(),
+                "Один дух — один приказ: помощь и оборона поста не накладываются друг на друга"
+                        + " Иначе тест directives_AssistOverridesPostDuty_HelperHasSingleDirective перестанет ловить эту поломку. При смене directives_AssistOverridesPostDuty_HelperHasSingleDirective проверь это утверждение.");
         assertEquals(
                 CombatMode.PROTECT,
                 directives.get(HELPER).mode(),
-                "Помощник уходит к подопечному: приказ помощи важнее поста");
+                "Помощник уходит к подопечному: приказ помощи важнее поста"
+                        + " Иначе тест directives_AssistOverridesPostDuty_HelperHasSingleDirective перестанет ловить эту поломку. При смене directives_AssistOverridesPostDuty_HelperHasSingleDirective проверь это утверждение.");
     }
 
     @Test
@@ -86,7 +95,8 @@ class CoordinatorDirectivesTests {
 
         assertTrue(
                 CoordinatorDirectives.of(plan).isEmpty(),
-                "Без защищаемой точки обороны нет: приказывать держать нечего");
+                "Без защищаемой точки обороны нет: приказывать держать нечего"
+                        + " Иначе тест directives_NoDefendedPoint_NoDirectives перестанет ловить эту поломку. При смене directives_NoDefendedPoint_NoDirectives проверь это утверждение.");
     }
 
     @Test
@@ -94,6 +104,7 @@ class CoordinatorDirectivesTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> CoordinatorDirectives.of(null),
-                "Приказ собирается из плана: план обязателен, иначе решение принимается без входа");
+                "Приказ собирается из плана: план обязателен, иначе решение принимается без входа"
+                        + " При смене directives_NullPlan_Throws проверь это утверждение.");
     }
 }

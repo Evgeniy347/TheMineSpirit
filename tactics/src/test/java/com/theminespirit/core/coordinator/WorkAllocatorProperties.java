@@ -54,14 +54,16 @@ class WorkAllocatorProperties {
         assertEquals(
                 assignments.stream().map(WorkAssignment::spirit).distinct().count(),
                 assignments.size(),
-                "Каждый свободный дух появляется в назначениях не больше раза: иначе дух получил бы две цели");
+                "Каждый свободный дух появляется в назначениях не больше раза: иначе дух получил бы две цели"
+                        + " При смене allocate_AnyFreeSpiritsAndTargets_EachSpiritOnce проверь это утверждение.");
         assertTrue(
                 free.stream()
                         .map(SpiritSnapshot::id)
                         .toList()
                         .containsAll(
                                 assignments.stream().map(WorkAssignment::spirit).toList()),
-                "Назначенный дух — из свободных: иначе работа ушла тому, кого нет в списке");
+                "Назначенный дух — из свободных: иначе работа ушла тому, кого нет в списке"
+                        + " При смене allocate_AnyFreeSpiritsAndTargets_EachSpiritOnce проверь это утверждение.");
     }
 
     @Property
@@ -81,7 +83,8 @@ class WorkAllocatorProperties {
                             .map(owner ->
                                     free.stream().anyMatch(spirit -> spirit.id().equals(owner)))
                             .orElse(true),
-                    "Цель под чужой бронью не назначается: иначе два духа работают на одной цели");
+                    "Цель под чужой бронью не назначается: иначе два духа работают на одной цели"
+                            + " При смене allocate_AnyFreeSpiritsAndTargets_NoDoubleBookingOfReservedTarget проверь это утверждение.");
         }
         Map<WorkTarget, Long> perTarget = new HashMap<>();
         for (WorkAssignment assignment : assignments) {
@@ -94,7 +97,8 @@ class WorkAllocatorProperties {
                 assertEquals(
                         1L,
                         entry.getValue(),
-                        "Цель под брони свободного духа занята не больше чем одним: иначе бронь не держит");
+                        "Цель под брони свободного духа занята не больше чем одним: иначе бронь не держит"
+                                + " При смене allocate_AnyFreeSpiritsAndTargets_NoDoubleBookingOfReservedTarget проверь это утверждение.");
             }
         }
     }
@@ -119,11 +123,16 @@ class WorkAllocatorProperties {
         List<WorkAssignment> assignments =
                 new WorkAllocator().allocate(free, CIRCLE_TARGETS, new WorkReservations(), 100);
 
-        assertEquals(spiritCount, assignments.size(), "При достатке целей каждый свободный дух получает работу");
+        assertEquals(
+                spiritCount,
+                assignments.size(),
+                "При достатке целей каждый свободный дух получает работу"
+                        + " Иначе тест allocate_EqualDistancesMoreTargetsThanSpirits_MaxOnePerTarget перестанет ловить эту поломку. При смене allocate_EqualDistancesMoreTargetsThanSpirits_MaxOnePerTarget проверь это утверждение.");
         assertEquals(
                 assignments.stream().map(WorkAssignment::target).distinct().count(),
                 assignments.size(),
-                "При равных расстояниях и достатке целей максимум один дух на цель: иначе толпа у одного дерева");
+                "При равных расстояниях и достатке целей максимум один дух на цель: иначе толпа у одного дерева"
+                        + " При смене allocate_EqualDistancesMoreTargetsThanSpirits_MaxOnePerTarget проверь это утверждение.");
     }
 
     @Property
@@ -134,7 +143,8 @@ class WorkAllocatorProperties {
         assertEquals(
                 new WorkAllocator().allocate(free, targets, reservations, 100),
                 new WorkAllocator().allocate(free, targets, reservations, 100),
-                "Тот же вход даёт тот же выход: назначения стабильны между пересборками плана");
+                "Тот же вход даёт тот же выход: назначения стабильны между пересборками плана"
+                        + " Иначе тест allocate_AnyInput_Deterministic перестанет ловить эту поломку. При смене allocate_AnyInput_Deterministic проверь это утверждение.");
     }
 
     private Arbitrary<SpiritSnapshot> freeSpirit() {

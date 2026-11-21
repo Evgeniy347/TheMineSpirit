@@ -125,7 +125,8 @@ class TargetDesignationTests {
                 row.expectedId(),
                 picked,
                 "Цель духа («" + row.name() + "»): только FIGHT выставляет цель, "
-                        + "PASSIVE не выставляет никогда, видимый враг важнее ближнего невидимого");
+                        + "PASSIVE не выставляет никогда, видимый враг важнее ближнего невидимого"
+                        + " Иначе тест pick_Outcome_GivesExpectedTarget перестанет ловить эту поломку. При смене pick_Outcome_GivesExpectedTarget проверь это утверждение.");
     }
 
     @Test
@@ -133,6 +134,7 @@ class TargetDesignationTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> TargetDesignation.pick(null, AdapterFixtures.context(List.of())),
-                "Решение обязательно: цель выбирают по нему, а не угадывают");
+                "Решение обязательно: цель выбирают по нему, а не угадывают"
+                        + " Иначе тест pick_NullOutcome_Rejected перестанет ловить эту поломку. При смене pick_NullOutcome_Rejected проверь это утверждение.");
     }
 }

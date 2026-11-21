@@ -38,11 +38,13 @@ class SectorAssignerProperties {
         assertEquals(
                 defenders.size(),
                 assignments.size(),
-                "Каждый защитник получает ровно один пост: иначе кто-то без сектора или кто-то с двумя");
+                "Каждый защитник получает ровно один пост: иначе кто-то без сектора или кто-то с двумя"
+                        + " При смене assign_AnyDefenderList_EachDefenderOnce проверь это утверждение.");
         assertEquals(
                 defenders.stream().sorted().toList(),
                 assignments.stream().map(DefenseAssignment::defender).sorted().toList(),
-                "Множество защитников в постах равно множеству на входе: ни один не потерян и не добавлен");
+                "Множество защитников в постах равно множеству на входе: ни один не потерян и не добавлен"
+                        + " Иначе тест assign_AnyDefenderList_EachDefenderOnce перестанет ловить эту поломку. При смене assign_AnyDefenderList_EachDefenderOnce проверь это утверждение.");
     }
 
     @Property
@@ -55,7 +57,8 @@ class SectorAssignerProperties {
                     radius,
                     assignment.post().distanceTo(CENTER),
                     1e-6,
-                    "Пост не дальше радиуса от центра: иначе защитник уходит за пределы обороны");
+                    "Пост не дальше радиуса от центра: иначе защитник уходит за пределы обороны"
+                            + " При смене assign_AnyDefenderList_PostsWithinRadius проверь это утверждение.");
         }
     }
 
@@ -67,7 +70,8 @@ class SectorAssignerProperties {
         assertEquals(
                 assigner.assign(CENTER, radius, defenders),
                 assigner.assign(CENTER, radius, defenders),
-                "Тот же вход даёт тот же выход: сектора стабильны между пересборками плана");
+                "Тот же вход даёт тот же выход: сектора стабильны между пересборками плана"
+                        + " Иначе тест assign_AnyDefenderList_Deterministic перестанет ловить эту поломку. При смене assign_AnyDefenderList_Deterministic проверь это утверждение.");
     }
 
     @Property
@@ -86,17 +90,20 @@ class SectorAssignerProperties {
         assertEquals(
                 defenders.size() - 1,
                 after.size(),
-                "Без выбывшего защитника секторов на один меньше: остальные перераспределяются");
+                "Без выбывшего защитника секторов на один меньше: остальные перераспределяются"
+                        + " Иначе тест assign_DefenderRemoved_OthersStayInRadius перестанет ловить эту поломку. При смене assign_DefenderRemoved_OthersStayInRadius проверь это утверждение.");
         for (DefenseAssignment assignment : after) {
             assertEquals(
                     radius,
                     assignment.post().distanceTo(CENTER),
                     1e-6,
                     "После выбытия оставшиеся посты снова в радиусе: перераспределение не выгоняет защитников "
-                            + "за пределы обороны");
+                            + "за пределы обороны"
+                            + " Иначе тест assign_DefenderRemoved_OthersStayInRadius перестанет ловить эту поломку. При смене assign_DefenderRemoved_OthersStayInRadius проверь это утверждение.");
         }
         assertTrue(
                 after.stream().map(DefenseAssignment::defender).noneMatch(removed::equals),
-                "Выбывший защитник не получает поста в новом распределении");
+                "Выбывший защитник не получает поста в новом распределении"
+                        + " Иначе тест assign_DefenderRemoved_OthersStayInRadius перестанет ловить эту поломку. При смене assign_DefenderRemoved_OthersStayInRadius проверь это утверждение.");
     }
 }

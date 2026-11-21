@@ -56,11 +56,13 @@ class InstinctRulesTests {
         assertEquals(
                 CombatStance.HEAL,
                 decision.stance(),
-                "Раненый с лечилкой лечится: иначе дух с зельем гибнет вместо отхода за лечением");
+                "Раненый с лечилкой лечится: иначе дух с зельем гибнет вместо отхода за лечением"
+                        + " При смене decide_WoundedWithHeal_ReturnsHeal проверь это утверждение.");
         assertEquals(
                 Optional.empty(),
                 decision.handOff(),
-                "Лечение без передачи цели: дух сам возвращается в бой после лечения");
+                "Лечение без передачи цели: дух сам возвращается в бой после лечения"
+                        + " Иначе тест decide_WoundedWithHeal_ReturnsHeal перестанет ловить эту поломку. При смене decide_WoundedWithHeal_ReturnsHeal проверь это утверждение.");
     }
 
     @Test
@@ -76,11 +78,13 @@ class InstinctRulesTests {
         assertEquals(
                 CombatStance.WITHDRAW,
                 decision.stance(),
-                "Раненый без лечилки отходит: иначе дух дерётся до смерти вместо передачи цели");
+                "Раненый без лечилки отходит: иначе дух дерётся до смерти вместо передачи цели"
+                        + " При смене decide_WoundedWithoutHeal_ReturnsWithdrawWithHandoff проверь это утверждение.");
         assertEquals(
                 Optional.of(UUID.fromString("11111111-1111-1111-1111-111111111111")),
                 decision.handOff(),
-                "Отход передаёт цель ближайшему способному: иначе цель останется без присмотра");
+                "Отход передаёт цель ближайшему способному: иначе цель останется без присмотра"
+                        + " При смене decide_WoundedWithoutHeal_ReturnsWithdrawWithHandoff проверь это утверждение.");
     }
 
     @Test
@@ -96,11 +100,13 @@ class InstinctRulesTests {
         assertEquals(
                 CombatStance.STRIKE_AND_RETREAT,
                 decision.stance(),
-                "Мечник бьёт крипера наскоком: иначе либо стоит впритык под взрывом, либо не бьёт вовсе");
+                "Мечник бьёт крипера наскоком: иначе либо стоит впритык под взрывом, либо не бьёт вовсе"
+                        + " При смене decide_MeleeVsCreeper_ReturnsStrikeAndRetreat проверь это утверждение.");
         assertEquals(
                 7.0,
                 decision.holdDistance().orElseThrow(),
-                "Держание равно радиусу политики крипера: свой радиус рассинхронизирует инстинкт с рефлексом");
+                "Держание равно радиусу политики крипера: свой радиус рассинхронизирует инстинкт с рефлексом"
+                        + " Иначе тест decide_MeleeVsCreeper_ReturnsStrikeAndRetreat перестанет ловить эту поломку. При смене decide_MeleeVsCreeper_ReturnsStrikeAndRetreat проверь это утверждение.");
     }
 
     @Test
@@ -116,7 +122,8 @@ class InstinctRulesTests {
         assertEquals(
                 CombatStance.RUSH_RANGED,
                 decision.stance(),
-                "Мечник без лучника быстро сближается со скелетом: иначе обстрел останется без ответа");
+                "Мечник без лучника быстро сближается со скелетом: иначе обстрел останется без ответа"
+                        + " При смене decide_MeleeVsSkeletonWithoutArcher_ReturnsRushRanged проверь это утверждение.");
     }
 
     @Test
@@ -132,7 +139,8 @@ class InstinctRulesTests {
         assertEquals(
                 CombatStance.ENGAGE,
                 decision.stance(),
-                "Мечник при живом лучнике не мчится к скелету: скелет — цель лучника, мечник держит ближних");
+                "Мечник при живом лучнике не мчится к скелету: скелет — цель лучника, мечник держит ближних"
+                        + " Иначе тест decide_MeleeVsSkeletonWithArcher_ReturnsEngage перестанет ловить эту поломку. При смене decide_MeleeVsSkeletonWithArcher_ReturnsEngage проверь это утверждение.");
     }
 
     @Test
@@ -151,11 +159,13 @@ class InstinctRulesTests {
         assertEquals(
                 CombatStance.COVER_ENGAGE,
                 decision.stance(),
-                "При скелете рядом мечник дерётся из-за укрытия: иначе стрелы скелета бьют в спину");
+                "При скелете рядом мечник дерётся из-за укрытия: иначе стрелы скелета бьют в спину"
+                        + " При смене decide_MeleeVsZombieWithSkeletonNear_ReturnsCoverEngage проверь это утверждение.");
         assertEquals(
                 Optional.of(new Point(5, 64, 0)),
                 decision.cover(),
-                "Приём «зомби между»: цель встаёт между духом и скелетом, и стрелы попадают в зомби");
+                "Приём «зомби между»: цель встаёт между духом и скелетом, и стрелы попадают в зомби"
+                        + " Иначе тест decide_MeleeVsZombieWithSkeletonNear_ReturnsCoverEngage перестанет ловить эту поломку. При смене decide_MeleeVsZombieWithSkeletonNear_ReturnsCoverEngage проверь это утверждение.");
     }
 
     @Test
@@ -174,11 +184,13 @@ class InstinctRulesTests {
         assertEquals(
                 CombatStance.ENGAGE,
                 decision.stance(),
-                "Далёкий скелет не требует прикрытия: иначе боец жмётся к укрытию без обстрела");
+                "Далёкий скелет не требует прикрытия: иначе боец жмётся к укрытию без обстрела"
+                        + " При смене decide_MeleeVsZombieWithSkeletonFar_ReturnsEngage проверь это утверждение.");
         assertEquals(
                 Optional.empty(),
                 decision.cover(),
-                "Без скелета рядом укрытие не ищется: иначе приказ сошлётся на случайную точку");
+                "Без скелета рядом укрытие не ищется: иначе приказ сошлётся на случайную точку"
+                        + " При смене decide_MeleeVsZombieWithSkeletonFar_ReturnsEngage проверь это утверждение.");
     }
 
     @Test
@@ -191,7 +203,8 @@ class InstinctRulesTests {
         assertEquals(
                 CombatStance.HOLD_DISTANCE,
                 decision.stance(),
-                "Лучник держит дистанцию: иначе стрелок ввязывается в ближний бой вместо обстрела");
+                "Лучник держит дистанцию: иначе стрелок ввязывается в ближний бой вместо обстрела"
+                        + " При смене decide_ArcherVsZombie_ReturnsHoldDistance проверь это утверждение.");
     }
 
     @Test
@@ -204,7 +217,8 @@ class InstinctRulesTests {
         assertEquals(
                 CombatStance.HOLD_DISTANCE,
                 decision.stance(),
-                "Лучник расстреливает крипера издали: иначе стрелок рискует взрывом вместо безопасного обстрела");
+                "Лучник расстреливает крипера издали: иначе стрелок рискует взрывом вместо безопасного обстрела"
+                        + " При смене decide_ArcherVsCreeper_ReturnsHoldDistance проверь это утверждение.");
     }
 
     @Test
@@ -218,6 +232,7 @@ class InstinctRulesTests {
                         List.of(meleeAlly()),
                         Set.of(),
                         DefenseProfileTests.PROFILE),
-                "Стойка без духа обязана падать: иначе приказ уйдёт без адресата");
+                "Стойка без духа обязана падать: иначе приказ уйдёт без адресата"
+                        + " При смене decide_NullSelf_Throws проверь это утверждение.");
     }
 }

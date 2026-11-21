@@ -35,7 +35,8 @@ class CharcoalFuelResolveTests {
                 plan,
                 "Древесный уголь жгут брёвнами, а не углём: уголь приходится добывать из руды, и обжиг "
                         + "оказывался недоступен там, где уголь и понадобился (наблюдение 8, «не удалось добыть "
-                        + "charcoal ×1»). Топливо — своя доска из брёвен, уголь в цепочке не участвует");
+                        + "charcoal ×1»). Топливо — своя доска из брёвен, уголь в цепочке не участвует"
+                        + " Иначе тест resolve_CharcoalFuel_BurnsWoodInsteadOfCoal перестанет ловить эту поломку. При смене resolve_CharcoalFuel_BurnsWoodInsteadOfCoal проверь это утверждение.");
     }
 
     @Test
@@ -48,14 +49,16 @@ class CharcoalFuelResolveTests {
                 steps.stream()
                         .anyMatch(call -> "smelt".equals(call.script())
                                 && "charcoal".equals(call.params().get("item"))),
-                "Обжиг древесного угля обязан остаться в плане: " + steps);
+                "Обжиг древесного угля обязан остаться в плане: " + steps
+                        + " Иначе тест resolve_CharcoalWithLogsInInventory_DoesNotGatherInput перестанет ловить эту поломку. При смене resolve_CharcoalWithLogsInInventory_DoesNotGatherInput проверь это утверждение.");
         assertFalse(
                 steps.stream()
                         .anyMatch(call -> "gather".equals(call.script())
                                 && "oak_log".equals(call.params().get("block"))),
                 "Брёвна уже в инвентаре — обжиг обязан взять их, а не идти рубить дерево: " + steps
                         + ". В observe12 acquire charcoal падал «подходящих блоков в радиусе 32 не осталось» "
-                        + "при 8 брёвнах за спиной");
+                        + "при 8 брёвнах за спиной"
+                        + " Иначе тест resolve_CharcoalWithLogsInInventory_DoesNotGatherInput перестанет ловить эту поломку. При смене resolve_CharcoalWithLogsInInventory_DoesNotGatherInput проверь это утверждение.");
     }
 
     @Test
@@ -68,7 +71,8 @@ class CharcoalFuelResolveTests {
                 "oak_planks",
                 fuel.fuel(),
                 "Предмет из задания приходит с полным id (minecraft:charcoal), а знания и таблица топлива — "
-                        + "с короткими: без приведения имени обжиг снова выбирал уголь, и сад зависел от шахты");
+                        + "с короткими: без приведения имени обжиг снова выбирал уголь, и сад зависел от шахты"
+                        + " Иначе тест select_PrefixedCharcoal_SkipsCoalFuel перестанет ловить эту поломку. При смене select_PrefixedCharcoal_SkipsCoalFuel проверь это утверждение.");
     }
 
     private static ResourceKnowledge woodKnowledge() {

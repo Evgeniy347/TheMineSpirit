@@ -79,7 +79,8 @@ class DeciderProperties {
                 excluded.contains(decision.option()) && !mayOverride.contains(decision.rule()),
                 "Вычёркнутый вариант " + decision.option() + " выбран правилом " + decision.rule() + " (вычеркнуто "
                         + excluded + "): вычёркивание не обходит ни оценка, ни удержание, ни подмена RETREAT при "
-                        + "отсутствии пути; исключения — решающие жёсткие правила и all_excluded");
+                        + "отсутствии пути; исключения — решающие жёсткие правила и all_excluded"
+                        + " Иначе тест decide_NoRouteOrScore_NeverPicksExcludedOption перестанет ловить эту поломку. При смене decide_NoRouteOrScore_NeverPicksExcludedOption проверь это утверждение.");
     }
 
     private static boolean isNoRoute(String ruleId) {
@@ -117,13 +118,16 @@ class DeciderProperties {
                                         : decision.rule(),
                                 "Жёсткое правило " + rule.id()
                                         + " с решением не может быть перебито весами: иначе правила безопасности "
-                                        + "(критическое HP, крипер вплотную) перестанут быть жёсткими. Проверьте порядок в Decider (единственное исключение — RETREAT без способа отхода, его подменяют правила noRoute)"));
+                                        + "(критическое HP, крипер вплотную) перестанут быть жёсткими. Проверьте порядок в Decider (единственное исключение — RETREAT без способа отхода, его подменяют правила noRoute)"
+                                        + " При смене decide_DecisiveHardRule_CannotBeOutbidByAnyWeights проверь это утверждение."));
         verdict.excluded()
-                .forEach(excluded -> assertEquals(
-                        false,
-                        decision.option() == excluded
-                                && verdict.decisive().isEmpty()
-                                && Decision.BY_SCORE.equals(decision.rule()),
-                        "Вычеркнутый вариант " + excluded + " не может победить по счёту ни при каких весах"));
+                .forEach(
+                        excluded -> assertEquals(
+                                false,
+                                decision.option() == excluded
+                                        && verdict.decisive().isEmpty()
+                                        && Decision.BY_SCORE.equals(decision.rule()),
+                                "Вычеркнутый вариант " + excluded + " не может победить по счёту ни при каких весах"
+                                        + " Иначе тест decide_DecisiveHardRule_CannotBeOutbidByAnyWeights перестанет ловить эту поломку. При смене decide_DecisiveHardRule_CannotBeOutbidByAnyWeights проверь это утверждение."));
     }
 }

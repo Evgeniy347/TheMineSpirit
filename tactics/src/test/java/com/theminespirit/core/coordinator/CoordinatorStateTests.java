@@ -28,10 +28,22 @@ class CoordinatorStateTests {
         assertEquals(
                 List.of(),
                 state.spirits(),
-                "Пустое состояние не прячет духов: план обязан видеть, что координировать некого");
-        assertEquals(List.of(), state.defenders(), "Пустое состояние: защитников нет");
-        assertEquals(List.of(), state.workers(), "Пустое состояние: работников нет");
-        assertTrue(state.byId(ALPHA).isEmpty(), "Пустое состояние: дух по id не находится");
+                "Пустое состояние не прячет духов: план обязан видеть, что координировать некого"
+                        + " Иначе тест state_NoSpirits_ReturnsEmptyCollections перестанет ловить эту поломку. При смене state_NoSpirits_ReturnsEmptyCollections проверь это утверждение.");
+        assertEquals(
+                List.of(),
+                state.defenders(),
+                "Пустое состояние: защитников нет"
+                        + " Иначе тест state_NoSpirits_ReturnsEmptyCollections перестанет ловить эту поломку. При смене state_NoSpirits_ReturnsEmptyCollections проверь это утверждение.");
+        assertEquals(
+                List.of(),
+                state.workers(),
+                "Пустое состояние: работников нет"
+                        + " Иначе тест state_NoSpirits_ReturnsEmptyCollections перестанет ловить эту поломку. При смене state_NoSpirits_ReturnsEmptyCollections проверь это утверждение.");
+        assertTrue(
+                state.byId(ALPHA).isEmpty(),
+                "Пустое состояние: дух по id не находится"
+                        + " Иначе тест state_NoSpirits_ReturnsEmptyCollections перестанет ловить эту поломку. При смене state_NoSpirits_ReturnsEmptyCollections проверь это утверждение.");
     }
 
     @Test
@@ -41,11 +53,13 @@ class CoordinatorStateTests {
 
         assertTrue(
                 state.defendedPoint().isEmpty(),
-                "Без защищаемой точки обороны нет: план не строит сектора и не шлёт помощь");
+                "Без защищаемой точки обороны нет: план не строит сектора и не шлёт помощь"
+                        + " Иначе тест defendedPoint_Empty_DefensePointIsEmpty перестанет ловить эту поломку. При смене defendedPoint_Empty_DefensePointIsEmpty проверь это утверждение.");
         assertEquals(
                 List.of(spirit(ALPHA, SpiritRole.DEFENDER)),
                 state.defenders(),
-                "Духи с ролью защитника видны в состоянии независимо от точки: их участь решает план");
+                "Духи с ролью защитника видны в состоянии независимо от точки: их участь решает план"
+                        + " Иначе тест defendedPoint_Empty_DefensePointIsEmpty перестанет ловить эту поломку. При смене defendedPoint_Empty_DefensePointIsEmpty проверь это утверждение.");
     }
 
     @Test
@@ -53,11 +67,13 @@ class CoordinatorStateTests {
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,
                 () -> new CoordinatorState(Optional.of(new Point(0, 64, 0)), 0, List.of(), 0),
-                "Радиус обороны нулевой или отрицательный при точке вырождает сектора: посты слипнутся в центр");
+                "Радиус обороны нулевой или отрицательный при точке вырождает сектора: посты слипнутся в центр"
+                        + " Иначе тест defendedPoint_PresentNonPositiveRadius_Throws перестанет ловить эту поломку. При смене defendedPoint_PresentNonPositiveRadius_Throws проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("defendedRadius"),
-                "Сообщение называет поле defendedRadius: без этого при падении не видно, что не так с радиусом");
+                "Сообщение называет поле defendedRadius: без этого при падении не видно, что не так с радиусом"
+                        + " При смене defendedPoint_PresentNonPositiveRadius_Throws проверь это утверждение.");
     }
 
     @Test
@@ -65,7 +81,8 @@ class CoordinatorStateTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new CoordinatorState(null, 0, List.of(), 0),
-                "null вместо Optional точки обороны не говорит, есть ли оборона: передавайте Optional.empty()");
+                "null вместо Optional точки обороны не говорит, есть ли оборона: передавайте Optional.empty()"
+                        + " Иначе тест constructor_NullDefendedPoint_Throws перестанет ловить эту поломку. При смене constructor_NullDefendedPoint_Throws проверь это утверждение.");
     }
 
     @Test
@@ -73,7 +90,8 @@ class CoordinatorStateTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new CoordinatorState(Optional.empty(), 0, null, 0),
-                "null вместо списка духов не говорит, пустое состояние или нет: передавайте пустой список");
+                "null вместо списка духов не говорит, пустое состояние или нет: передавайте пустой список"
+                        + " Иначе тест constructor_NullSpirits_Throws перестанет ловить эту поломку. При смене constructor_NullSpirits_Throws проверь это утверждение.");
     }
 
     @Test
@@ -91,7 +109,8 @@ class CoordinatorStateTests {
                 List.of(ALPHA, BETA, GAMMA),
                 state.spirits().stream().map(SpiritSnapshot::id).toList(),
                 "Духи упорядочены по id: план обязан быть детерминирован при том же входе независимо от порядка "
-                        + "наблюдения");
+                        + "наблюдения"
+                        + " Иначе тест spirits_MixedIds_AreSortedById перестанет ловить эту поломку. При смене spirits_MixedIds_AreSortedById проверь это утверждение.");
     }
 
     @Test
@@ -102,14 +121,18 @@ class CoordinatorStateTests {
         assertEquals(
                 Optional.of(spirit(ALPHA, SpiritRole.IDLE)),
                 state.byId(ALPHA),
-                "Дух из состояния находится по id: без этого план не сопоставит решения с духами");
+                "Дух из состояния находится по id: без этого план не сопоставит решения с духами"
+                        + " При смене byId_ExistingSpirit_IsFound проверь это утверждение.");
     }
 
     @Test
     void byId_MissingSpirit_IsEmpty() {
         CoordinatorState state = new CoordinatorState(Optional.empty(), 0, List.of(spirit(ALPHA, SpiritRole.IDLE)), 0);
 
-        assertTrue(state.byId(BETA).isEmpty(), "Дух вне состояния не находится: план не знает несуществующих");
+        assertTrue(
+                state.byId(BETA).isEmpty(),
+                "Дух вне состояния не находится: план не знает несуществующих"
+                        + " Иначе тест byId_MissingSpirit_IsEmpty перестанет ловить эту поломку. При смене byId_MissingSpirit_IsEmpty проверь это утверждение.");
     }
 
     @Test
@@ -126,7 +149,8 @@ class CoordinatorStateTests {
         assertEquals(
                 List.of(ALPHA, GAMMA),
                 state.defenders().stream().map(SpiritSnapshot::id).toList(),
-                "Защитники — только роль DEFENDER: работник в сектор не встанет");
+                "Защитники — только роль DEFENDER: работник в сектор не встанет"
+                        + " Иначе тест defenders_OnlyDefenderRole_AreReturned перестанет ловить эту поломку. При смене defenders_OnlyDefenderRole_AreReturned проверь это утверждение.");
     }
 
     @Test
@@ -143,7 +167,8 @@ class CoordinatorStateTests {
         assertEquals(
                 List.of(ALPHA),
                 state.workers().stream().map(SpiritSnapshot::id).toList(),
-                "Работники — только роль WORKER: строитель и защитник цели работ не получают");
+                "Работники — только роль WORKER: строитель и защитник цели работ не получают"
+                        + " Иначе тест workers_OnlyWorkerRole_AreReturned перестанет ловить эту поломку. При смене workers_OnlyWorkerRole_AreReturned проверь это утверждение.");
     }
 
     @Test
@@ -151,6 +176,7 @@ class CoordinatorStateTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new CoordinatorState(Optional.empty(), 0, List.of(), -1),
-                "Отрицательный тик состояния противоречит наблюдению: просроченность снимка считается от него");
+                "Отрицательный тик состояния противоречит наблюдению: просроченность снимка считается от него"
+                        + " Иначе тест tick_Negative_Throws перестанет ловить эту поломку. При смене tick_Negative_Throws проверь это утверждение.");
     }
 }

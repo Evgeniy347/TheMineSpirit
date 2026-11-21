@@ -87,7 +87,8 @@ class ConditionTests {
                 expected,
                 actual,
                 "Условие «" + name + "» (" + fact + " " + op + " " + value + "): граница оператора определяет, когда "
-                        + "срабатывает жёсткое правило; перепроверьте < против <= в rules.json, если ожидание меняют");
+                        + "срабатывает жёсткое правило; перепроверьте < против <= в rules.json, если ожидание меняют"
+                        + " Иначе тест matches_SingleAtom_FollowsOperatorSemantics перестанет ловить эту поломку. При смене matches_SingleAtom_FollowsOperatorSemantics проверь это утверждение.");
     }
 
     @Test
@@ -102,7 +103,8 @@ class ConditionTests {
         assertEquals(
                 List.of(true, false),
                 List.of(both.matches(near), both.matches(far)),
-                "Условие — конъюнкция: если не выполнен хотя бы один атом, правило не срабатывает");
+                "Условие — конъюнкция: если не выполнен хотя бы один атом, правило не срабатывает"
+                        + " Иначе тест matches_AllAtomsTrue_ConjunctionHolds перестанет ловить эту поломку. При смене matches_AllAtomsTrue_ConjunctionHolds проверь это утверждение.");
     }
 
     @Test
@@ -110,7 +112,8 @@ class ConditionTests {
         assertTrue(
                 condition("[]")
                         .matches(Assessments.facts(SituationBuilder.create().build())),
-                "Пустое условие истинно всегда: замыкающие правила таблицы действий держатся на нём");
+                "Пустое условие истинно всегда: замыкающие правила таблицы действий держатся на нём"
+                        + " Иначе тест matches_EmptyCondition_AlwaysHolds перестанет ловить эту поломку. При смене matches_EmptyCondition_AlwaysHolds проверь это утверждение.");
     }
 
     static Stream<Arguments> brokenAtoms() {
@@ -151,10 +154,12 @@ class ConditionTests {
         IllegalStateException error = assertThrows(
                 IllegalStateException.class,
                 () -> condition(json),
-                "Ошибка в условии («" + name + "») должна ловиться при загрузке, а не при первом срабатывании правила");
+                "Ошибка в условии («" + name + "») должна ловиться при загрузке, а не при первом срабатывании правила"
+                        + " Иначе тест parse_BrokenAtom_FailsWithPath перестанет ловить эту поломку. При смене parse_BrokenAtom_FailsWithPath проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("rules.json") && error.getMessage().contains(path),
-                "Сообщение называет файл и путь " + path + ": получили " + error.getMessage());
+                "Сообщение называет файл и путь " + path + ": получили " + error.getMessage()
+                        + " Иначе тест parse_BrokenAtom_FailsWithPath перестанет ловить эту поломку. При смене parse_BrokenAtom_FailsWithPath проверь это утверждение.");
     }
 }

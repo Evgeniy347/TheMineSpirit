@@ -24,6 +24,7 @@ class ActionTableProperties {
                 decision,
                 choice.action().option(),
                 "Для любой ситуации действие определено и согласуется с решением: FIGHT не даёт RETREAT или CONTINUE, "
-                        + "иначе адаптер получит противоречие «решили драться, а действие — бежать»");
+                        + "иначе адаптер получит противоречие «решили драться, а действие — бежать»"
+                        + " При смене choose_AnySituationAndDecision_ActionIsDefinedAndMatchesDecision проверь это утверждение.");
     }
 }

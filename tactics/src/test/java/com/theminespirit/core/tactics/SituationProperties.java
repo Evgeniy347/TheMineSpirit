@@ -48,7 +48,8 @@ class SituationProperties {
                 situation(enemies),
                 situation(shuffled),
                 "Любая перестановка врагов даёт равную Situation: порядок, в котором адаптер нашёл сущностей, "
-                        + "не должен менять решение. Если красно — сортировка Situation не полная (тай-брейк)");
+                        + "не должен менять решение. Если красно — сортировка Situation не полная (тай-брейк)"
+                        + " Иначе тест situation_AnyEnemyPermutation_IsEqual перестанет ловить эту поломку. При смене situation_AnyEnemyPermutation_IsEqual проверь это утверждение.");
     }
 
     @Property
@@ -56,17 +57,22 @@ class SituationProperties {
         Situation situation = situation(enemies);
 
         assertEquals(
-                sumCount(enemies), sumCount(situation.enemies()), "Усечение сверх MAX_ENEMIES сохраняет число врагов");
+                sumCount(enemies),
+                sumCount(situation.enemies()),
+                "Усечение сверх MAX_ENEMIES сохраняет число врагов"
+                        + " Иначе тест situation_AnyEnemies_KeepsCountDamageAndHealth перестанет ловить эту поломку. При смене situation_AnyEnemies_KeepsCountDamageAndHealth проверь это утверждение.");
         assertEquals(
                 totalDamage(enemies),
                 totalDamage(situation.enemies()),
                 1e-9,
-                "Усечение сохраняет суммарный урон: сворачивание хвоста не должно делать орду безопаснее");
+                "Усечение сохраняет суммарный урон: сворачивание хвоста не должно делать орду безопаснее"
+                        + " Иначе тест situation_AnyEnemies_KeepsCountDamageAndHealth перестанет ловить эту поломку. При смене situation_AnyEnemies_KeepsCountDamageAndHealth проверь это утверждение.");
         assertEquals(
                 totalHealth(enemies),
                 totalHealth(situation.enemies()),
                 1e-9,
-                "Усечение сохраняет суммарное HP врагов (доля × число)");
+                "Усечение сохраняет суммарное HP врагов (доля × число)"
+                        + " Иначе тест situation_AnyEnemies_KeepsCountDamageAndHealth перестанет ловить эту поломку. При смене situation_AnyEnemies_KeepsCountDamageAndHealth проверь это утверждение.");
     }
 
     private static int sumCount(List<EnemyFact> enemies) {

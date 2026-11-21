@@ -52,7 +52,8 @@ class ResourceResolverStationTests {
                         craft("wooden_pickaxe", 1)),
                 plan,
                 "Кирка 3×3 требует верстак: резолвер обязан вставить получение верстака (доски → верстак) перед "
-                        + "крафтом кирки, иначе дух упрётся в 'нужен верстак' посреди плана");
+                        + "крафтом кирки, иначе дух упрётся в 'нужен верстак' посреди плана"
+                        + " При смене resolve_ThreeByThreeCraft_AcquiresCraftingTableRightBeforeIt проверь это утверждение.");
     }
 
     @Test
@@ -62,10 +63,12 @@ class ResourceResolverStationTests {
         assertEquals(
                 1,
                 producedCount(plan, "crafting_table"),
-                "Два крафта 3×3 в одном плане обязаны делить один верстак: второй верстак — лишние 4 доски и ход");
+                "Два крафта 3×3 в одном плане обязаны делить один верстак: второй верстак — лишние 4 доски и ход"
+                        + " Иначе тест resolve_TwoCraftsNeedingTable_AcquiresTableOnce перестанет ловить эту поломку. При смене resolve_TwoCraftsNeedingTable_AcquiresTableOnce проверь это утверждение.");
         assertTrue(
                 indexOfCraft(plan, "crafting_table") < indexOfCraft(plan, "wooden_pickaxe"),
-                "Верстак обязан быть получен до первого крафта, которому он нужен: иначе кирка крафтится без него");
+                "Верстак обязан быть получен до первого крафта, которому он нужен: иначе кирка крафтится без него"
+                        + " При смене resolve_TwoCraftsNeedingTable_AcquiresTableOnce проверь это утверждение.");
     }
 
     @Test
@@ -75,7 +78,8 @@ class ResourceResolverStationTests {
         assertEquals(
                 0,
                 producedCount(plan, "crafting_table"),
-                "Палки идут в сетке инвентаря: резолвер не вправе просить верстак ради рецепта 2×2");
+                "Палки идут в сетке инвентаря: резолвер не вправе просить верстак ради рецепта 2×2"
+                        + " Иначе тест resolve_InventoryCraft_DoesNotAskForStation перестанет ловить эту поломку. При смене resolve_InventoryCraft_DoesNotAskForStation проверь это утверждение.");
     }
 
     @Test
@@ -90,7 +94,8 @@ class ResourceResolverStationTests {
                         smelt("iron_ingot", 1)),
                 plan,
                 "Плавке нужна печь, а печи (3×3) нужен верстак: резолвер обязан получить верстак, затем печь и только "
-                        + "потом плавить. Топливо добывается как раньше (1 уголь на 1 слиток)");
+                        + "потом плавить. Топливо добывается как раньше (1 уголь на 1 слиток)"
+                        + " Иначе тест resolve_Smelt_AcquiresFurnaceAndItsTableBeforeSmelting перестанет ловить эту поломку. При смене resolve_Smelt_AcquiresFurnaceAndItsTableBeforeSmelting проверь это утверждение.");
     }
 
     @Test
@@ -101,7 +106,8 @@ class ResourceResolverStationTests {
                 seq(gather("iron_ore", 1), smelt("iron_ingot", 1)),
                 plan,
                 "Печь уже стоит в мире — план обязан плавить сразу: добыча 8 булыжников под вторую печь падает "
-                        + "в мире, где булыжника нет");
+                        + "в мире, где булыжника нет"
+                        + " Иначе тест resolve_FurnaceStandingInWorld_SkipsFurnaceBuildingPlan перестанет ловить эту поломку. При смене resolve_FurnaceStandingInWorld_SkipsFurnaceBuildingPlan проверь это утверждение.");
     }
 
     @Test
@@ -112,7 +118,8 @@ class ResourceResolverStationTests {
                 seq(gather("iron_ore", 1), seq(gather("cobblestone", 8), craft("furnace", 1)), smelt("iron_ingot", 1)),
                 plan,
                 "Верстак в мире гасит только свой шаг: печь строится, но без второго верстака — иначе план "
-                        + "тратит 4 доски на дубль того, что уже стоит");
+                        + "тратит 4 доски на дубль того, что уже стоит"
+                        + " При смене resolve_CraftingTableStandingInWorld_FurnacePlannedWithoutTable проверь это утверждение.");
     }
 
     @Test
@@ -122,11 +129,17 @@ class ResourceResolverStationTests {
         assertEquals(
                 1,
                 producedCount(plan, "crafting_table"),
-                "Верстак нужен и печи, и кирке, но план обязан получить его один раз");
-        assertEquals(1, producedCount(plan, "furnace"), "Печь нужна плавке один раз на план");
+                "Верстак нужен и печи, и кирке, но план обязан получить его один раз"
+                        + " Иначе тест resolve_SmeltAndThreeByThreeCraft_EachStationOnce перестанет ловить эту поломку. При смене resolve_SmeltAndThreeByThreeCraft_EachStationOnce проверь это утверждение.");
+        assertEquals(
+                1,
+                producedCount(plan, "furnace"),
+                "Печь нужна плавке один раз на план"
+                        + " Иначе тест resolve_SmeltAndThreeByThreeCraft_EachStationOnce перестанет ловить эту поломку. При смене resolve_SmeltAndThreeByThreeCraft_EachStationOnce проверь это утверждение.");
         assertTrue(
                 indexOfCraft(plan, "furnace") < indexOfSmelt(plan, "iron_ingot"),
-                "Печь обязана быть получена до плавки, которой она нужна");
+                "Печь обязана быть получена до плавки, которой она нужна"
+                        + " Иначе тест resolve_SmeltAndThreeByThreeCraft_EachStationOnce перестанет ловить эту поломку. При смене resolve_SmeltAndThreeByThreeCraft_EachStationOnce проверь это утверждение.");
     }
 
     @Test
@@ -146,12 +159,14 @@ class ResourceResolverStationTests {
                 UnplannableGoalException.class,
                 () -> CorePlanner.resolve("wooden_pickaxe", 1, noTable),
                 "Станция, которую негде взять, обязана давать отказ: иначе план выглядит готовым и ломается у "
-                        + "верстака");
+                        + "верстака"
+                        + " При смене resolve_StationWithoutWayToGetIt_ThrowsNamingStation проверь это утверждение.");
 
         assertEquals(
                 "crafting_table",
                 error.item(),
-                "Исключение обязано нести станцию 'crafting_table': по ней правят знания или выдают верстак духу");
+                "Исключение обязано нести станцию 'crafting_table': по ней правят знания или выдают верстак духу"
+                        + " Иначе тест resolve_StationWithoutWayToGetIt_ThrowsNamingStation перестанет ловить эту поломку. При смене resolve_StationWithoutWayToGetIt_ThrowsNamingStation проверь это утверждение.");
     }
 
     private static TaskNode tableSteps() {

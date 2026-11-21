@@ -57,13 +57,23 @@ class SupplyGatherLiveTicketTests {
         assertTrue(
                 onBoard != null,
                 "Доска из живого мира не содержит живого тикета "
-                        + ticket.get("id").asText());
-        assertEquals("GATHER_MATERIALS", ticket.get("case").asText(), "Живой тикет обязан быть добычей материалов");
-        assertEquals("oak_planks", ticket.get("supplyItem").asText(), "Живой тикет обязан снабжать досками");
+                        + ticket.get("id").asText()
+                        + " Иначе тест liveTicket_SupplyGatherPlanks_TargetMatchesBoard перестанет ловить эту поломку. При смене liveTicket_SupplyGatherPlanks_TargetMatchesBoard проверь это утверждение.");
+        assertEquals(
+                "GATHER_MATERIALS",
+                ticket.get("case").asText(),
+                "Живой тикет обязан быть добычей материалов"
+                        + " Иначе тест liveTicket_SupplyGatherPlanks_TargetMatchesBoard перестанет ловить эту поломку. При смене liveTicket_SupplyGatherPlanks_TargetMatchesBoard проверь это утверждение.");
+        assertEquals(
+                "oak_planks",
+                ticket.get("supplyItem").asText(),
+                "Живой тикет обязан снабжать досками"
+                        + " Иначе тест liveTicket_SupplyGatherPlanks_TargetMatchesBoard перестанет ловить эту поломку. При смене liveTicket_SupplyGatherPlanks_TargetMatchesBoard проверь это утверждение.");
         assertEquals(
                 ticket.get("supplyItem").asText(),
                 onBoard.get("supplyItem").asText(),
-                "Тикет и доска разошлись по предмету: тест пошёл бы не тем путём, что в игре");
+                "Тикет и доска разошлись по предмету: тест пошёл бы не тем путём, что в игре"
+                        + " Иначе тест liveTicket_SupplyGatherPlanks_TargetMatchesBoard перестанет ловить эту поломку. При смене liveTicket_SupplyGatherPlanks_TargetMatchesBoard проверь это утверждение.");
     }
 
     @Test
@@ -93,9 +103,17 @@ class SupplyGatherLiveTicketTests {
                 "В живом supply_gather:oak_planks шаг после рубки — крафт досок из брёвен в инвентаре — не "
                         + "выполняется: " + ran
                         + ". Рубка перед крафтом падала «деревья oak в радиусе 100 закончились» и валила всё "
-                        + "задание, хотя 37 брёвен уже лежат в инвентаре (observe12). План: " + plan);
-        assertFalse(ran.contains("gather_planks"), "Доски снова добываются блоком мира: " + ran);
-        assertEquals(RunStatus.SUCCEEDED, status, "План досок обязан дойти до сдачи: " + ran);
+                        + "задание, хотя 37 брёвен уже лежат в инвентаре (observe12). План: " + plan
+                        + " Иначе тест liveTicket_LogsInHand_CraftsWhenTreesAreGone перестанет ловить эту поломку. При смене liveTicket_LogsInHand_CraftsWhenTreesAreGone проверь это утверждение.");
+        assertFalse(
+                ran.contains("gather_planks"),
+                "Доски снова добываются блоком мира: " + ran
+                        + " Иначе тест liveTicket_LogsInHand_CraftsWhenTreesAreGone перестанет ловить эту поломку. При смене liveTicket_LogsInHand_CraftsWhenTreesAreGone проверь это утверждение.");
+        assertEquals(
+                RunStatus.SUCCEEDED,
+                status,
+                "План досок обязан дойти до сдачи: " + ran
+                        + " Иначе тест liveTicket_LogsInHand_CraftsWhenTreesAreGone перестанет ловить эту поломку. При смене liveTicket_LogsInHand_CraftsWhenTreesAreGone проверь это утверждение.");
     }
 
     private static ScriptRegistry registry(

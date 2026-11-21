@@ -34,14 +34,16 @@ class DefenderCapabilityProperties {
 
         assertTrue(
                 first.frontRank() >= second.frontRank(),
-                "Фронтовость монотонна по броне и здоровью: иначе распределение выберет слабого первым на крипера");
+                "Фронтовость монотонна по броне и здоровью: иначе распределение выберет слабого первым на крипера"
+                        + " При смене frontRank_BetterArmorAndHp_NeverLower проверь это утверждение.");
     }
 
     @Property
     void frontRank_AnyInput_WithinUnitRange(@ForAll("capabilities") DefenderCapability capability) {
         assertTrue(
                 capability.frontRank() >= 0.0 && capability.frontRank() <= 1.0,
-                "Фронтовость — нормализованная шкала 0..1: иначе сравнение защитников между собой бессмысленно");
+                "Фронтовость — нормализованная шкала 0..1: иначе сравнение защитников между собой бессмысленно"
+                        + " При смене frontRank_AnyInput_WithinUnitRange проверь это утверждение.");
     }
 
     @Property
@@ -53,6 +55,7 @@ class DefenderCapabilityProperties {
                 before,
                 capability.role(),
                 "Роль зависит только от флага лука, а не от расчёта ранга фронта (" + rank + "): иначе приказы "
-                        + "лучнику и мечнику перемешаются между тиками");
+                        + "лучнику и мечнику перемешаются между тиками"
+                        + " При смене role_AnyInput_Deterministic проверь это утверждение.");
     }
 }
