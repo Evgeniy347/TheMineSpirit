@@ -6,15 +6,15 @@ import java.util.Map;
 final class BrewScriptSpecsRows {
     private BrewScriptSpecsRows() {}
 
-    static List<ScriptCatalogTests.ScriptExpectation> rows() {
+    static List<ScriptCatalogTestsSupport.ScriptExpectation> rows() {
         return List.of(
-                new ScriptCatalogTests.ScriptExpectation(
+                new ScriptCatalogTestsSupport.ScriptExpectation(
                         "brew",
                         List.of("item", "count"),
                         Map.of("count", new long[] {1, 256}, "radius", new long[] {1, 32})),
-                new ScriptCatalogTests.ScriptExpectation(
+                new ScriptCatalogTestsSupport.ScriptExpectation(
                         "farm_nether_wart", List.of(), Map.of("count", new long[] {1, 256}, "radius", new long[] {1, 16
                         })),
-                new ScriptCatalogTests.ScriptExpectation("undo_lease", List.of("id"), Map.of()));
+                new ScriptCatalogTestsSupport.ScriptExpectation("undo_lease", List.of("id"), Map.of()));
     }
 }
