@@ -54,4 +54,37 @@ class SpinDetectorTests {
                             + " Иначе тест walkingStraight_ConstantCourse_ReportsNothing перестанет ловить эту поломку. При смене walkingStraight_ConstantCourse_ReportsNothing проверь это утверждение.");
         }
     }
+
+    @Test
+    void spiralStairs_RisingCircle_IsNotSpin() {
+        SpinDetector detector = new SpinDetector();
+        for (int tick = 0; tick < 200; tick++) {
+            double angle = Math.toRadians(tick * 24.0);
+            assertNull(
+                    detector.feed(tick, 0.3 * Math.cos(angle), tick * 0.05, 0.3 * Math.sin(angle), tick * 24.0f),
+                    "Подъём по винтовой лестнице — это движение с набором высоты, а не кружение на ровном месте: "
+                            + "иначе каждый подъём по спирали (spirit-6, окно 50: шаги y 70→73 у -164,73,-492) "
+                            + "даёт эпизод CIRCLE, хотя дух идёт по маршруту dig_out. При смене порога высоты "
+                            + "проверь ровный круг: он обязан остаться эпизодом");
+        }
+    }
+
+    @Test
+    void flatCircle_OnLevelGround_ReportsCircleEpisode() {
+        SpinDetector detector = new SpinDetector();
+        for (int tick = 0; tick < 90; tick++) {
+            double angle = Math.toRadians(tick * 12.0);
+            detector.feed(tick, 0.3 * Math.cos(angle), 68.0, 0.3 * Math.sin(angle), tick * 12.0f);
+        }
+        SpinDetector.Spin spin = null;
+        for (int tick = 90; tick < 200 && spin == null; tick++) {
+            spin = detector.feed(tick, 0.3, 68.0, 0.0, 1080.0f);
+        }
+        assertEquals(
+                SpinDetector.Kind.CIRCLE,
+                spin == null ? null : spin.kind(),
+                "Круг по ровной площадке обязан остаться эпизодом CIRCLE: иначе учёт высоты скроет настоящее "
+                        + "кружение (окно 48, spirit-4: путь 15.85 при сдвиге 0.97 на одной высоте). При смене "
+                        + "порога высоты проверь спираль лестницы: её обрывать нельзя");
+    }
 }

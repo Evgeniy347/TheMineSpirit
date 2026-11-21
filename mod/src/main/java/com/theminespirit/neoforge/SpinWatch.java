@@ -30,7 +30,7 @@ public final class SpinWatch {
         String script =
                 mob instanceof SpiritTaskView view ? view.currentTaskScript().orElse("-") : "-";
         ScriptAge age = SCRIPTS.compute(mob.getUUID(), (id, old) -> switchAge(old, script, tick));
-        SpinDetector.Spin spin = detector.feed(tick, mob.getX(), mob.getZ(), mob.getYRot());
+        SpinDetector.Spin spin = detector.feed(tick, mob.getX(), mob.getY(), mob.getZ(), mob.getYRot());
         if (spin == null) {
             return;
         }
