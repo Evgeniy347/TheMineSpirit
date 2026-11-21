@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.movement.StairJump;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.phys.Vec3;
@@ -27,5 +28,9 @@ final class DigOutStep {
         }
         spirit.getNavigation().stop();
         spirit.getMoveControl().setWantedPosition(cell.getX() + 0.5, cell.getY(), cell.getZ() + 0.5, 1.0);
+        if (StairJump.needed(
+                cell.getY() - spirit.blockPosition().getY(), spirit.onGround(), spirit.horizontalCollision)) {
+            spirit.getJumpControl().jump();
+        }
     }
 }
