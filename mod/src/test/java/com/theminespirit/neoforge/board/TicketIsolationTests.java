@@ -13,7 +13,13 @@ class TicketIsolationTests {
         });
         boolean healthy = TicketIsolation.post("graph:healthy", () -> true);
 
-        assertFalse(broken, "упавшее задание не считается поставленным");
-        assertTrue(healthy, "соседнее задание ставится: иначе один сбой оставляет всех духов без работы");
+        assertFalse(
+                broken,
+                "упавшее задание не считается поставленным"
+                        + " Иначе тест post_TicketThrows_NextTicketStillPosted перестанет ловить эту поломку. При смене post_TicketThrows_NextTicketStillPosted проверь это утверждение.");
+        assertTrue(
+                healthy,
+                "соседнее задание ставится: иначе один сбой оставляет всех духов без работы"
+                        + " При смене post_TicketThrows_NextTicketStillPosted проверь это утверждение.");
     }
 }

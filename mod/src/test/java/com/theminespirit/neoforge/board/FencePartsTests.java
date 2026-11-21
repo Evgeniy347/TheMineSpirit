@@ -21,7 +21,8 @@ class FencePartsTests {
                 List.of(1, 3),
                 FenceParts.open(parts),
                 "Часть, чьи клетки ещё заняты, пропускается, а готовые части за ней открываются: иначе ограда "
-                        + "строится только до первой занятой клетки и не дорастает до 100% (наблюдение 6, аномалия 3)");
+                        + "строится только до первой занятой клетки и не дорастает до 100% (наблюдение 6, аномалия 3)"
+                        + " При смене open_DeferredPart_DoesNotBlockLaterReadyParts проверь это утверждение.");
     }
 
     @Test
@@ -32,7 +33,8 @@ class FencePartsTests {
                 List.of(1, 3),
                 FenceParts.required(parts),
                 "Часть, у которой нет готовых к постройке блоков, не держит ограду незакрытой: иначе DONE всех "
-                        + "построенных частей навсегда остаётся ложью, и задача переоткрывается по кругу");
+                        + "построенных частей навсегда остаётся ложью, и задача переоткрывается по кругу"
+                        + " При смене required_DeferredPart_DoesNotHoldFenceDone проверь это утверждение.");
     }
 
     @Test
@@ -43,7 +45,8 @@ class FencePartsTests {
                 List.of(1, 3),
                 FenceParts.open(parts),
                 "Часть без кусков забора пуста по плану, а не из-за занятых клеток: её пропускают, "
-                        + "а следующие части открывают");
+                        + "а следующие части открывают"
+                        + " Иначе тест open_EmptyPartWithoutPieces_SkipsItAndKeepsLater перестанет ловить эту поломку. При смене open_EmptyPartWithoutPieces_SkipsItAndKeepsLater проверь это утверждение.");
     }
 
     private static StageBuilds.FencePart part(boolean hasPieces, boolean withWork) {

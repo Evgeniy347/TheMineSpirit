@@ -15,7 +15,8 @@ class GraphStockNoteTests {
                         + "деревянных 4, каменных 1, железных 1)",
                 line,
                 "Запас топоров обязан разделять материал: иначе 57 деревянных и 57 каменных не отличить, "
-                        + "и крафт «при запасе» выглядит загадкой (observe25 B10)");
+                        + "и крафт «при запасе» выглядит загадкой (observe25 B10)"
+                        + " При смене line_MixedAxes_ListsMaterialCounts проверь это утверждение.");
     }
 
     @Test
@@ -25,12 +26,21 @@ class GraphStockNoteTests {
         assertEquals(
                 "[graph] запасы: сундуков 2, топоров 0 (сундуки 0, духи 0, в руках 0)",
                 line,
-                "Пустой запас не выдумывает материал: строку видят в журнале каждый раз");
+                "Пустой запас не выдумывает материал: строку видят в журнале каждый раз"
+                        + " Иначе тест line_NoAxes_KeepsSourceCounts перестанет ловить эту поломку. При смене line_NoAxes_KeepsSourceCounts проверь это утверждение.");
     }
 
     @Test
     void tier_AxeId_ReturnsMaterial() {
-        assertEquals("wooden", GraphStockNote.tier("minecraft:wooden_axe"), "Материал берётся из id предмета");
-        assertEquals("stone", GraphStockNote.tier("stone_axe"), "Пространство имён не обязательно");
+        assertEquals(
+                "wooden",
+                GraphStockNote.tier("minecraft:wooden_axe"),
+                "Материал берётся из id предмета"
+                        + " Иначе тест tier_AxeId_ReturnsMaterial перестанет ловить эту поломку. При смене tier_AxeId_ReturnsMaterial проверь это утверждение.");
+        assertEquals(
+                "stone",
+                GraphStockNote.tier("stone_axe"),
+                "Пространство имён не обязательно"
+                        + " Иначе тест tier_AxeId_ReturnsMaterial перестанет ловить эту поломку. При смене tier_AxeId_ReturnsMaterial проверь это утверждение.");
     }
 }

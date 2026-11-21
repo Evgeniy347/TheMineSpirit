@@ -94,25 +94,36 @@ class WorkZoneTests {
 
         assertFalse(
                 base.contains(east),
-                "Фикстура observe16: chunk " + east + " (spirit-2, x=-48) вне базовых forceload — там дух замёрз");
+                "Фикстура observe16: chunk " + east + " (spirit-2, x=-48) вне базовых forceload — там дух замёрз"
+                        + " Иначе тест workZone_SpiritsOutsideBaseForceload_ChunksHeld перестанет ловить эту поломку. При смене workZone_SpiritsOutsideBaseForceload_ChunksHeld проверь это утверждение.");
         assertFalse(
                 base.contains(west),
-                "Фикстура observe16: chunk " + west + " (spirit-5, x=-324) вне базовых forceload — шахта/лес");
+                "Фикстура observe16: chunk " + west + " (spirit-5, x=-324) вне базовых forceload — шахта/лес"
+                        + " Иначе тест workZone_SpiritsOutsideBaseForceload_ChunksHeld перестанет ловить эту поломку. При смене workZone_SpiritsOutsideBaseForceload_ChunksHeld проверь это утверждение.");
 
         Set<ChunkCoord> zone = SettlementChunks.workZone(plan, anchors, spirits, radius);
 
-        assertTrue(zone.contains(east), "Зона работ обязана включать чанк духа на востоке " + east);
-        assertTrue(zone.contains(west), "Зона работ обязана включать чанк духа в шахте/лесу " + west);
+        assertTrue(
+                zone.contains(east),
+                "Зона работ обязана включать чанк духа на востоке " + east
+                        + " Иначе тест workZone_SpiritsOutsideBaseForceload_ChunksHeld перестанет ловить эту поломку. При смене workZone_SpiritsOutsideBaseForceload_ChunksHeld проверь это утверждение.");
+        assertTrue(
+                zone.contains(west),
+                "Зона работ обязана включать чанк духа в шахте/лесу " + west
+                        + " Иначе тест workZone_SpiritsOutsideBaseForceload_ChunksHeld перестанет ловить эту поломку. При смене workZone_SpiritsOutsideBaseForceload_ChunksHeld проверь это утверждение.");
         assertTrue(
                 zone.contains(new ChunkCoord(west.x() - radius, west.z())),
                 "Радиус духа задан в чанках: чанк в " + radius + " от духа обязан держаться, иначе подход к цели "
-                        + "снова уйдёт в незагруженный чанк");
+                        + "снова уйдёт в незагруженный чанк"
+                        + " При смене workZone_SpiritsOutsideBaseForceload_ChunksHeld проверь это утверждение.");
         assertFalse(
                 zone.contains(new ChunkCoord(west.x() - radius - 1, west.z())),
-                "За пределом радиуса зона не растёт: иначе зона работ превратится в весь мир");
+                "За пределом радиуса зона не растёт: иначе зона работ превратится в весь мир"
+                        + " При смене workZone_SpiritsOutsideBaseForceload_ChunksHeld проверь это утверждение.");
         assertTrue(
                 zone.contains(new ChunkCoord(-11, -32)),
-                "Зона работ обязана включать чанки поселения (регион плана), а не только духов");
+                "Зона работ обязана включать чанки поселения (регион плана), а не только духов"
+                        + " Иначе тест workZone_SpiritsOutsideBaseForceload_ChunksHeld перестанет ловить эту поломку. При смене workZone_SpiritsOutsideBaseForceload_ChunksHeld проверь это утверждение.");
     }
 
     @Test
@@ -122,15 +133,20 @@ class WorkZoneTests {
         Set<BlockCoord> anchors = Set.of(new BlockCoord(-160, 70, -480));
         List<BlockCoord> spirits = List.of(new BlockCoord(200, 64, 200));
 
-        assertTrue(zone.update(plan, anchors, spirits, 1, 8), "Первый расчёт зоны обязан её построить");
+        assertTrue(
+                zone.update(plan, anchors, spirits, 1, 8),
+                "Первый расчёт зоны обязан её построить"
+                        + " Иначе тест zone_SamePlanAnchorsAndSpiritChunks_ReusesZone перестанет ловить эту поломку. При смене zone_SamePlanAnchorsAndSpiritChunks_ReusesZone проверь это утверждение.");
         assertFalse(
                 zone.update(plan, anchors, spirits, 1, 8),
                 "Повторный тик с теми же планом, якорями и чанками духов не пересобирает зону: "
-                        + "пересборка каждого тика и есть всплеск BoardService");
+                        + "пересборка каждого тика и есть всплеск BoardService"
+                        + " Иначе тест zone_SamePlanAnchorsAndSpiritChunks_ReusesZone перестанет ловить эту поломку. При смене zone_SamePlanAnchorsAndSpiritChunks_ReusesZone проверь это утверждение.");
         assertSame(
                 zone.workZone(),
                 zone.workZone(),
-                "Кэш отдаёт тот же набор чанков, а не копию: иначе тик снова аллоцирует сотни чанков");
+                "Кэш отдаёт тот же набор чанков, а не копию: иначе тик снова аллоцирует сотни чанков"
+                        + " При смене zone_SamePlanAnchorsAndSpiritChunks_ReusesZone проверь это утверждение.");
     }
 
     @Test
@@ -142,10 +158,12 @@ class WorkZoneTests {
         zone.update(plan, anchors, List.of(new BlockCoord(200, 64, 200)), 1, 8);
         assertFalse(
                 zone.update(plan, anchors, List.of(new BlockCoord(205, 64, 207)), 1, 8),
-                "Шаг духа внутри чанка не меняет зону работ: пересборка нужна только при смене чанка");
+                "Шаг духа внутри чанка не меняет зону работ: пересборка нужна только при смене чанка"
+                        + " Иначе тест zone_SpiritMovesWithinSameChunk_NoRebuild перестанет ловить эту поломку. При смене zone_SpiritMovesWithinSameChunk_NoRebuild проверь это утверждение.");
         assertTrue(
                 zone.workZone().contains(new ChunkCoord(12, 12)),
-                "Чанк духа остаётся в зоне, пока дух не вышел из него");
+                "Чанк духа остаётся в зоне, пока дух не вышел из него"
+                        + " Иначе тест zone_SpiritMovesWithinSameChunk_NoRebuild перестанет ловить эту поломку. При смене zone_SpiritMovesWithinSameChunk_NoRebuild проверь это утверждение.");
     }
 
     @Test
@@ -157,11 +175,16 @@ class WorkZoneTests {
 
         assertTrue(
                 zone.update(plan, anchors, List.of(new BlockCoord(400, 64, 400)), 1, 8),
-                "Смена чанка духа обязана пересобрать зону: иначе новый чанк не держится, и дух застревает");
-        assertTrue(zone.workZone().contains(new ChunkCoord(25, 25)), "Зона работ следует за духом в новый чанк");
+                "Смена чанка духа обязана пересобрать зону: иначе новый чанк не держится, и дух застревает"
+                        + " При смене zone_SpiritMovesToAnotherChunk_WorkZoneFollows проверь это утверждение.");
+        assertTrue(
+                zone.workZone().contains(new ChunkCoord(25, 25)),
+                "Зона работ следует за духом в новый чанк"
+                        + " Иначе тест zone_SpiritMovesToAnotherChunk_WorkZoneFollows перестанет ловить эту поломку. При смене zone_SpiritMovesToAnotherChunk_WorkZoneFollows проверь это утверждение.");
         assertFalse(
                 zone.workZone().contains(new ChunkCoord(13, 13)),
-                "Старый чанк духа снимается с зоны: за пределами радиуса чанки не держатся");
+                "Старый чанк духа снимается с зоны: за пределами радиуса чанки не держатся"
+                        + " Иначе тест zone_SpiritMovesToAnotherChunk_WorkZoneFollows перестанет ловить эту поломку. При смене zone_SpiritMovesToAnotherChunk_WorkZoneFollows проверь это утверждение.");
     }
 
     @Test
@@ -173,16 +196,22 @@ class WorkZoneTests {
         TownPlan second = planAt(1000, 1000);
 
         zone.update(first, anchors, spirits, 1, 8);
-        assertTrue(zone.settlement().contains(new ChunkCoord(0, 0)), "Участок первого плана держится");
+        assertTrue(
+                zone.settlement().contains(new ChunkCoord(0, 0)),
+                "Участок первого плана держится"
+                        + " Иначе тест zone_PlanRegionChanges_SettlementFollowsPlan перестанет ловить эту поломку. При смене zone_PlanRegionChanges_SettlementFollowsPlan проверь это утверждение.");
         assertTrue(
                 zone.update(second, anchors, spirits, 1, 8),
-                "Новый план поселения обязан пересобрать зону: иначе стройка идёт в незагруженных чанках");
+                "Новый план поселения обязан пересобрать зону: иначе стройка идёт в незагруженных чанках"
+                        + " При смене zone_PlanRegionChanges_SettlementFollowsPlan проверь это утверждение.");
         assertTrue(
                 zone.settlement().contains(new ChunkCoord(62, 62)),
-                "Чанки нового участка плана попадают в зону поселения");
+                "Чанки нового участка плана попадают в зону поселения"
+                        + " Иначе тест zone_PlanRegionChanges_SettlementFollowsPlan перестанет ловить эту поломку. При смене zone_PlanRegionChanges_SettlementFollowsPlan проверь это утверждение.");
         assertFalse(
                 zone.settlement().contains(new ChunkCoord(5, 5)),
-                "Чанки прежнего участка снимаются: план один, а не сумма всех прошлых");
+                "Чанки прежнего участка снимаются: план один, а не сумма всех прошлых"
+                        + " Иначе тест zone_PlanRegionChanges_SettlementFollowsPlan перестанет ловить эту поломку. При смене zone_PlanRegionChanges_SettlementFollowsPlan проверь это утверждение.");
     }
 
     @Test
@@ -193,13 +222,18 @@ class WorkZoneTests {
         List<BlockCoord> spirits = List.of(new BlockCoord(0, 64, 0));
 
         zone.update(plan, anchors, spirits, 1, 8);
-        assertFalse(zone.settlement().contains(new ChunkCoord(2, 0)), "При обмере 8 чанк на 32 блока не нужен");
+        assertFalse(
+                zone.settlement().contains(new ChunkCoord(2, 0)),
+                "При обмере 8 чанк на 32 блока не нужен"
+                        + " Иначе тест zone_ProbeRadiusChanges_SettlementCoversRing перестанет ловить эту поломку. При смене zone_ProbeRadiusChanges_SettlementCoversRing проверь это утверждение.");
         assertTrue(
                 zone.update(plan, anchors, spirits, 1, 32),
-                "Смена радиуса обмера — новое состояние мира, зону поселения надо пересобрать");
+                "Смена радиуса обмера — новое состояние мира, зону поселения надо пересобрать"
+                        + " Иначе тест zone_ProbeRadiusChanges_SettlementCoversRing перестанет ловить эту поломку. При смене zone_ProbeRadiusChanges_SettlementCoversRing проверь это утверждение.");
         assertTrue(
                 zone.settlement().contains(new ChunkCoord(2, 0)),
-                "Обмер 32 блока держит чанк на расстоянии 32: иначе аудит читает незагруженный чанк");
+                "Обмер 32 блока держит чанк на расстоянии 32: иначе аудит читает незагруженный чанк"
+                        + " При смене zone_ProbeRadiusChanges_SettlementCoversRing проверь это утверждение.");
     }
 
     @Test
@@ -216,13 +250,16 @@ class WorkZoneTests {
 
         assertTrue(
                 zone.workZone().contains(new ChunkCoord(-48 >> 4, -518 >> 4)),
-                "Живой прогон observe16: чанк духа на востоке обязан держаться и после кэша");
+                "Живой прогон observe16: чанк духа на востоке обязан держаться и после кэша"
+                        + " Иначе тест zone_LiveSixSpirits_MatchesWorkZoneAndStaysCached перестанет ловить эту поломку. При смене zone_LiveSixSpirits_MatchesWorkZoneAndStaysCached проверь это утверждение.");
         assertTrue(
                 zone.workZone().contains(new ChunkCoord(-324 >> 4, -472 >> 4)),
-                "Живой прогон observe16: чанк духа в шахте/лесу обязан держаться и после кэша");
+                "Живой прогон observe16: чанк духа в шахте/лесу обязан держаться и после кэша"
+                        + " Иначе тест zone_LiveSixSpirits_MatchesWorkZoneAndStaysCached перестанет ловить эту поломку. При смене zone_LiveSixSpirits_MatchesWorkZoneAndStaysCached проверь это утверждение.");
         assertFalse(
                 zone.update(plan, anchors, spirits, radius, 8),
-                "Живой снимок с теми же шестью духами не пересобирает зону каждый тик");
+                "Живой снимок с теми же шестью духами не пересобирает зону каждый тик"
+                        + " Иначе тест zone_LiveSixSpirits_MatchesWorkZoneAndStaysCached перестанет ловить эту поломку. При смене zone_LiveSixSpirits_MatchesWorkZoneAndStaysCached проверь это утверждение.");
     }
 
     private static TownPlan planAt(int minX, int minZ) {

@@ -15,7 +15,8 @@ class IncidentNoteTests {
                 "20261024-103015-250-spirit_2.nbt",
                 IncidentNote.fileName(Instant.parse("2026-10-24T10:30:15.250Z"), "spirit 2"),
                 "Имя снимка — время UTC до миллисекунд и дух без пробелов: два инцидента не затирают друг друга, "
-                        + "файл открывается на любой системе");
+                        + "файл открывается на любой системе"
+                        + " Иначе тест fileName_SpiritWithSpaces_StampedSafeName перестанет ловить эту поломку. При смене fileName_SpiritWithSpaces_StampedSafeName проверь это утверждение.");
     }
 
     @Test
@@ -24,11 +25,13 @@ class IncidentNoteTests {
         assertEquals(
                 new BlockCoord(-177, 52, -501),
                 note.origin(),
-                "Снимок ±12 вокруг духа: угол — позиция минус 12, иначе загруженная сцена сдвинута от места беды");
+                "Снимок ±12 вокруг духа: угол — позиция минус 12, иначе загруженная сцена сдвинута от места беды"
+                        + " При смене origin_SpiritAtPosition_SnapshotCenteredOnSpirit проверь это утверждение.");
         assertEquals(
                 new BlockCoord(12, 12, 12),
                 IncidentNote.spiritOffset(),
-                "Дух в снимке — в его центре: тест ставит духа туда же, где он был");
+                "Дух в снимке — в его центре: тест ставит духа туда же, где он был"
+                        + " Иначе тест origin_SpiritAtPosition_SnapshotCenteredOnSpirit перестанет ловить эту поломку. При смене origin_SpiritAtPosition_SnapshotCenteredOnSpirit проверь это утверждение.");
     }
 
     @Test
@@ -44,7 +47,8 @@ class IncidentNoteTests {
                         + "stone_pickaxe=1}",
                 note.line(),
                 "Строка инцидента называет духа, позицию, задачу с параметрами и инвентарь по алфавиту: без них "
-                        + "инцидент не повторить в тесте");
+                        + "инцидент не повторить в тесте"
+                        + " Иначе тест line_TaskAndInventory_AllForRepeat перестанет ловить эту поломку. При смене line_TaskAndInventory_AllForRepeat проверь это утверждение.");
     }
 
     @Test
@@ -58,7 +62,8 @@ class IncidentNoteTests {
                 "дух spirit-3 в (1, 2, 3): задача clear_area; инвентарь {dirt=12}; снимок a.nbt",
                 brief,
                 "Инцидент не повторяет задание и причину, уже названные строкой лога: дубль раздувал запись "
-                        + "до килобайтов, но место, ход задачи и снимок остаются для разбора");
+                        + "до килобайтов, но место, ход задачи и снимок остаются для разбора"
+                        + " Иначе тест brief_WhatAlreadyLoggedOutside_PrintsPlaceTaskInventoryAndSnapshot перестанет ловить эту поломку. При смене brief_WhatAlreadyLoggedOutside_PrintsPlaceTaskInventoryAndSnapshot проверь это утверждение.");
     }
 
     @Test
@@ -68,6 +73,7 @@ class IncidentNoteTests {
         assertEquals(
                 note.line() + "; снимок a.nbt",
                 note.line(Path.of("a.nbt")),
-                "Строка [incident] обязана нести путь NBT-снимка: без него инцидент не найти среди файлов");
+                "Строка [incident] обязана нести путь NBT-снимка: без него инцидент не найти среди файлов"
+                        + " Иначе тест line_SnapshotPath_IsAppended перестанет ловить эту поломку. При смене line_SnapshotPath_IsAppended проверь это утверждение.");
     }
 }

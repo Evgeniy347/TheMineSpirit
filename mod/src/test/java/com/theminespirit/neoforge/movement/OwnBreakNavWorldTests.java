@@ -16,7 +16,11 @@ class OwnBreakNavWorldTests {
     void breakTicks_OwnBlock_StaysBreakable() {
         NavWorld world = new OwnBreakNavWorld(new Open(), OWN::equals);
 
-        assertEquals(7.0, world.breakTicks(OWN.x(), OWN.y(), OWN.z()), "Свой временный блок дух вправе сломать");
+        assertEquals(
+                7.0,
+                world.breakTicks(OWN.x(), OWN.y(), OWN.z()),
+                "Свой временный блок дух вправе сломать"
+                        + " Иначе тест breakTicks_OwnBlock_StaysBreakable перестанет ловить эту поломку. При смене breakTicks_OwnBlock_StaysBreakable проверь это утверждение.");
     }
 
     @Test
@@ -26,14 +30,18 @@ class OwnBreakNavWorldTests {
         assertEquals(
                 NavActionCosts.COST_INF,
                 world.breakTicks(OTHER.x(), OTHER.y(), OTHER.z()),
-                "Чужой блок остаётся неразрушимым: маршрут не сносит постройки и план поселения");
+                "Чужой блок остаётся неразрушимым: маршрут не сносит постройки и план поселения"
+                        + " Иначе тест breakTicks_ForeignBlock_IsUnbreakable перестанет ловить эту поломку. При смене breakTicks_ForeignBlock_IsUnbreakable проверь это утверждение.");
     }
 
     @Test
     void passable_FreeCell_DelegatesToLiveWorld() {
         NavWorld world = new OwnBreakNavWorld(new Open(), OWN::equals);
 
-        assertTrue(world.passable(OTHER.x(), OTHER.y(), OTHER.z()), "Ходьба не запрещается: ломка отдельно");
+        assertTrue(
+                world.passable(OTHER.x(), OTHER.y(), OTHER.z()),
+                "Ходьба не запрещается: ломка отдельно"
+                        + " Иначе тест passable_FreeCell_DelegatesToLiveWorld перестанет ловить эту поломку. При смене passable_FreeCell_DelegatesToLiveWorld проверь это утверждение.");
     }
 
     private static final class Open implements NavWorld {

@@ -22,14 +22,19 @@ class StageSettleLiveTests {
         assertEquals(
                 BoardStatus.DONE,
                 board.statusOf("first:build_mine").orElseThrow(),
-                "Живая шахта observe15 закрыта доской: " + mine);
+                "Живая шахта observe15 закрыта доской: " + mine
+                        + " Иначе тест settle_LiveDoneMineWithInfeasibleGraph_IsReadyForAudit перестанет ловить эту поломку. При смене settle_LiveDoneMineWithInfeasibleGraph_IsReadyForAudit проверь это утверждение.");
         assertEquals(
-                59, mine.requiredItems().get("cobblestone"), "Живой тикет шахты несёт 59 недостающих полов: " + mine);
+                59,
+                mine.requiredItems().get("cobblestone"),
+                "Живой тикет шахты несёт 59 недостающих полов: " + mine
+                        + " Иначе тест settle_LiveDoneMineWithInfeasibleGraph_IsReadyForAudit перестанет ловить эту поломку. При смене settle_LiveDoneMineWithInfeasibleGraph_IsReadyForAudit проверь это утверждение.");
         assertEquals(
                 StageAudit.Decision.AUDIT,
                 StageAudit.decide(BoardStatus.DONE, true, 1524 - 59, 1524),
                 "Шахта DONE при 96% обязана идти в аудит/ремонт независимо от того, поставил ли граф задачу: "
-                        + "в observe15 graph:building:mine был infeasible и аудит не запускался");
+                        + "в observe15 graph:building:mine был infeasible и аудит не запускался"
+                        + " Иначе тест settle_LiveDoneMineWithInfeasibleGraph_IsReadyForAudit перестанет ловить эту поломку. При смене settle_LiveDoneMineWithInfeasibleGraph_IsReadyForAudit проверь это утверждение.");
     }
 
     @Test
@@ -39,10 +44,14 @@ class StageSettleLiveTests {
                 .orElseThrow(() -> new AssertionError("В живой доске observe15 нет repair:level:23338210"));
 
         assertEquals(
-                Map.of(), repair.requiredItems(), "Ремонт выравнивания в живой доске идёт без материалов: " + repair);
+                Map.of(),
+                repair.requiredItems(),
+                "Ремонт выравнивания в живой доске идёт без материалов: " + repair
+                        + " Иначе тест levelRepair_LiveBoard_ExistsWithEmptyPlan перестанет ловить эту поломку. При смене levelRepair_LiveBoard_ExistsWithEmptyPlan проверь это утверждение.");
         assertEquals(
                 BoardStatus.ASSIGNED,
                 board.statusOf(repair.id()).orElseThrow(),
-                "Живой repair:level уже выдан духу: " + repair);
+                "Живой repair:level уже выдан духу: " + repair
+                        + " Иначе тест levelRepair_LiveBoard_ExistsWithEmptyPlan перестанет ловить эту поломку. При смене levelRepair_LiveBoard_ExistsWithEmptyPlan проверь это утверждение.");
     }
 }

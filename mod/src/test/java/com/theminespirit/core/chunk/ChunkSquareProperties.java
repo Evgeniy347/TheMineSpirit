@@ -23,7 +23,8 @@ class ChunkSquareProperties {
                 (2 * radius + 1) * (2 * radius + 1),
                 chunks.size(),
                 "Для любого радиуса от 0 до 32 размер квадрата обязан быть (2R+1)^2: иначе дух держит "
-                        + "не ту зону, а на границе чанк либо теряется, либо грузится лишний");
+                        + "не ту зону, а на границе чанк либо теряется, либо грузится лишний"
+                        + " При смене chunks_AnyRadius_ContainsExactSquareSize проверь это утверждение.");
     }
 
     @Property
@@ -40,7 +41,8 @@ class ChunkSquareProperties {
                 ChunkSquare.chunks(newCenter, radius),
                 applied,
                 "Применённый diff обязан переводить старый квадрат в новый при любых центрах: билеты после "
-                        + "сдвига должны совпадать с зоной вокруг духа, ни больше ни меньше");
+                        + "сдвига должны совпадать с зоной вокруг духа, ни больше ни меньше"
+                        + " Иначе тест diff_AnyCenters_RemovesAndAddsToReachNewSquare перестанет ловить эту поломку. При смене diff_AnyCenters_RemovesAndAddsToReachNewSquare проверь это утверждение.");
 
         Set<ChunkCoord> intersection = new HashSet<>(ChunkSquare.chunks(oldCenter, radius));
         intersection.retainAll(ChunkSquare.chunks(newCenter, radius));
@@ -85,16 +87,19 @@ class ChunkSquareProperties {
                 steps * row,
                 added,
                 "N переходов на соседний чанк обязаны дать ровно N*(2R+1) добавлений: иначе набор не "
-                        + "сдвигается, и дух тянет за собой старые чанки");
+                        + "сдвигается, и дух тянет за собой старые чанки"
+                        + " При смене diff_WalkOfSteps_CountsOneRowAddedAndRemovedPerStep проверь это утверждение.");
         assertEquals(
                 steps * row,
                 removed,
                 "N переходов на соседний чанк обязаны дать ровно N*(2R+1) снятий: иначе ушедшие чанки "
-                        + "остаются нагруженными и утекут");
+                        + "остаются нагруженными и утекут"
+                        + " При смене diff_WalkOfSteps_CountsOneRowAddedAndRemovedPerStep проверь это утверждение.");
         assertEquals(
                 ChunkSquare.chunks(new ChunkCoord(steps, 0), radius),
                 current,
-                "После N переходов удержанный набор обязан равняться квадрату вокруг конечного центра");
+                "После N переходов удержанный набор обязан равняться квадрату вокруг конечного центра"
+                        + " Иначе тест diff_WalkOfSteps_CountsOneRowAddedAndRemovedPerStep перестанет ловить эту поломку. При смене diff_WalkOfSteps_CountsOneRowAddedAndRemovedPerStep проверь это утверждение.");
     }
 
     private static Arbitrary<ChunkCoord> anyCenter() {

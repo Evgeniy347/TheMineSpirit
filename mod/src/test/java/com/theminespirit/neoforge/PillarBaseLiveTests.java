@@ -30,9 +30,16 @@ class PillarBaseLiveTests {
         assertEquals(
                 68,
                 start,
-                "Дух прыгнул (ноги y=69), под ногами воздух: первый блок столба ставят на опору y=68, а не отказывают");
-        assertFalse(world.solid(X, 68, Z), "Клетка 68 свободна: опора под ней — земля y=67");
-        assertTrue(world.solid(X, 67, Z), "Земля под первым блоком обязана быть");
+                "Дух прыгнул (ноги y=69), под ногами воздух: первый блок столба ставят на опору y=68, а не отказывают"
+                        + " Иначе тест first_FeetInTheAir_StartsPillarOnTheNearestSupportBelow перестанет ловить эту поломку. При смене first_FeetInTheAir_StartsPillarOnTheNearestSupportBelow проверь это утверждение.");
+        assertFalse(
+                world.solid(X, 68, Z),
+                "Клетка 68 свободна: опора под ней — земля y=67"
+                        + " Иначе тест first_FeetInTheAir_StartsPillarOnTheNearestSupportBelow перестанет ловить эту поломку. При смене first_FeetInTheAir_StartsPillarOnTheNearestSupportBelow проверь это утверждение.");
+        assertTrue(
+                world.solid(X, 67, Z),
+                "Земля под первым блоком обязана быть"
+                        + " Иначе тест first_FeetInTheAir_StartsPillarOnTheNearestSupportBelow перестанет ловить эту поломку. При смене first_FeetInTheAir_StartsPillarOnTheNearestSupportBelow проверь это утверждение.");
     }
 
     @Test
@@ -41,7 +48,11 @@ class PillarBaseLiveTests {
 
         int start = PillarBase.first(68, 0, 4, y -> world.supported(X, y, Z));
 
-        assertEquals(68, start, "Дух стоит на земле: столб начинают с его ног, а не ищут опору ниже");
+        assertEquals(
+                68,
+                start,
+                "Дух стоит на земле: столб начинают с его ног, а не ищут опору ниже"
+                        + " Иначе тест first_FeetOnGround_KeepsTheColumnBase перестанет ловить эту поломку. При смене first_FeetOnGround_KeepsTheColumnBase проверь это утверждение.");
     }
 
     @Test
@@ -49,12 +60,17 @@ class PillarBaseLiveTests {
         assertEquals(
                 70,
                 PillarBase.first(70, 0, 4, y -> false),
-                "Опора дальше предела спуска: столб не начинают в воздухе, отказ остаётся за местом постановки");
+                "Опора дальше предела спуска: столб не начинают в воздухе, отказ остаётся за местом постановки"
+                        + " Иначе тест first_NoSupportWithinDrop_KeepsBaseForTheCallersRefusal перестанет ловить эту поломку. При смене first_NoSupportWithinDrop_KeepsBaseForTheCallersRefusal проверь это утверждение.");
     }
 
     @Test
     void first_SupportBelowWorldFloor_KeepsBase() {
-        assertEquals(2, PillarBase.first(2, 3, 4, y -> true), "Ниже дна мира опору не ищут: столб не уходит под мир");
+        assertEquals(
+                2,
+                PillarBase.first(2, 3, 4, y -> true),
+                "Ниже дна мира опору не ищут: столб не уходит под мир"
+                        + " Иначе тест first_SupportBelowWorldFloor_KeepsBase перестанет ловить эту поломку. При смене first_SupportBelowWorldFloor_KeepsBase проверь это утверждение.");
     }
 
     private record World(Set<BlockCoord> solid) {

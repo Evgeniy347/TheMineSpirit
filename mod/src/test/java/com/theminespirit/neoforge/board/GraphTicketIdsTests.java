@@ -20,7 +20,8 @@ class GraphTicketIdsTests {
         assertEquals(
                 List.of("repair:build_house"),
                 GraphTicketIds.ids(task, GRAPH),
-                "Узел графа repair:hut исполняет ремонт хижины: приоритет обязан дойти до билета repair:build_house");
+                "Узел графа repair:hut исполняет ремонт хижины: приоритет обязан дойти до билета repair:build_house"
+                        + " Иначе тест ids_RepairNode_PointsToTheRepairTicketOfItsBuilding перестанет ловить эту поломку. При смене ids_RepairNode_PointsToTheRepairTicketOfItsBuilding проверь это утверждение.");
     }
 
     private static GraphPlan.Task task(String id, BoardCase boardCase, String makes) {

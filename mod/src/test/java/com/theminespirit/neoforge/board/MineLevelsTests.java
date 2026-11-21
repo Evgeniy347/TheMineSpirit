@@ -19,7 +19,8 @@ class MineLevelsTests {
                 Optional.of(ENTRANCE),
                 MineLevels.home(Optional.of(ENTRANCE), Optional.of(ANCHOR), List.of(HOME)),
                 "Спуск уровня шахты считается от входа шахты этапа: якорь участка и дом духа — запасные "
-                        + "точки, иначе спуск встаёт не там, где шахта плана");
+                        + "точки, иначе спуск встаёт не там, где шахта плана"
+                        + " При смене home_EntranceOfStage_WinsOverPlotAndSpiritHome проверь это утверждение.");
     }
 
     @Test
@@ -27,7 +28,8 @@ class MineLevelsTests {
         assertEquals(
                 Optional.of(ANCHOR),
                 MineLevels.home(Optional.empty(), Optional.of(ANCHOR), List.of(HOME)),
-                "Без входа шахты место спуска считают от якоря размеченного участка, а не от случайного духа");
+                "Без входа шахты место спуска считают от якоря размеченного участка, а не от случайного духа"
+                        + " Иначе тест home_NoEntrance_FallsBackToPlotAnchor перестанет ловить эту поломку. При смене home_NoEntrance_FallsBackToPlotAnchor проверь это утверждение.");
     }
 
     @Test
@@ -35,7 +37,8 @@ class MineLevelsTests {
         assertEquals(
                 Optional.of(HOME),
                 MineLevels.home(Optional.empty(), Optional.empty(), List.of(HOME)),
-                "Без участка домом остаётся дом духа: уровень шахты ставится у поселения, где духи живут");
+                "Без участка домом остаётся дом духа: уровень шахты ставится у поселения, где духи живут"
+                        + " Иначе тест home_NoPlot_FallsBackToSpiritHome перестанет ловить эту поломку. При смене home_NoPlot_FallsBackToSpiritHome проверь это утверждение.");
     }
 
     @Test
@@ -43,6 +46,7 @@ class MineLevelsTests {
         assertTrue(
                 MineLevels.home(Optional.empty(), Optional.empty(), List.of()).isEmpty(),
                 "Нет ни участка, ни дома — домашней точки нет: выдуманная (0,64,0) увела бы спуск шахты в "
-                        + "случайное место мира. Как надо: не ставить задание уровня, пока дома нет");
+                        + "случайное место мира. Как надо: не ставить задание уровня, пока дома нет"
+                        + " Иначе тест home_NoPlotAndNoHome_IsEmptyInsteadOfInventedPoint перестанет ловить эту поломку. При смене home_NoPlotAndNoHome_IsEmptyInsteadOfInventedPoint проверь это утверждение.");
     }
 }

@@ -20,10 +20,15 @@ class AccessPostTests {
         ScriptCall top =
                 (ScriptCall) ((FallbackNode) steps.steps().get(0)).steps().get(0);
 
-        assertEquals(70, top.params().get("y1"), "Клетки срезаются в порядке плана: сверху вниз");
+        assertEquals(
+                70,
+                top.params().get("y1"),
+                "Клетки срезаются в порядке плана: сверху вниз"
+                        + " Иначе тест steps_WalkwayCells_DemolishInGivenOrderThenCollect перестанет ловить эту поломку. При смене steps_WalkwayCells_DemolishInGivenOrderThenCollect проверь это утверждение.");
         assertTrue(
                 Boolean.TRUE.equals(top.params().get("demolish")),
                 "Срезка над тропой — снос по плану: иначе защита участка не даёт ломать поставленную духами землю "
-                        + "(сервер 12.11: «у действия BREAK нет законного основания»)");
+                        + "(сервер 12.11: «у действия BREAK нет законного основания»)"
+                        + " При смене steps_WalkwayCells_DemolishInGivenOrderThenCollect проверь это утверждение.");
     }
 }

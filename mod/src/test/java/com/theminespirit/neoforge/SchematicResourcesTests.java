@@ -24,7 +24,8 @@ class SchematicResourcesTests {
                 houseHolder().current(),
                 SchematicResources.load("fixture_plate"),
                 "Потребитель обязан брать тело схемы из держателя, а не из classpath-кэша: иначе /reload "
-                        + "не поменяет постройку дома, хотя таблица перечитана");
+                        + "не поменяет постройку дома, хотя таблица перечитана"
+                        + " При смене load_RegisteredSchematic_ReturnsHolderCurrent проверь это утверждение.");
     }
 
     @Test
@@ -47,12 +48,14 @@ class SchematicResourcesTests {
                     1,
                     SchematicResources.load("fixture_plate").sizeX(),
                     "После /reload потребитель обязан видеть новое тело схемы: иначе датапак мира не поменяет "
-                            + "постройку без перезапуска, а схема числится горячей ложно");
+                            + "постройку без перезапуска, а схема числится горячей ложно"
+                            + " При смене reload_ChangedSchematic_ConsumerSeesNewSize проверь это утверждение.");
             assertEquals(
                     List.of(new Schematic.Entry(0, 0, 0, "minecraft:stone")),
                     SchematicResources.load("fixture_plate").blocks(),
                     "Новое тело схемы обязано подменяться целиком, а не смешиваться со старым: блоки берутся "
-                            + "из перечитанного файла");
+                            + "из перечитанного файла"
+                            + " Иначе тест reload_ChangedSchematic_ConsumerSeesNewSize перестанет ловить эту поломку. При смене reload_ChangedSchematic_ConsumerSeesNewSize проверь это утверждение.");
         } finally {
             holder.replace(
                     original,
@@ -75,10 +78,12 @@ class SchematicResourcesTests {
                     original,
                     holder.current(),
                     "Битый файл схемы не должен подменять тело: прежняя схема остаётся в силе, иначе /reload "
-                            + "сломает постройку дома у игроков");
+                            + "сломает постройку дома у игроков"
+                            + " При смене reload_BrokenSchematic_KeepsPreviousVersion проверь это утверждение.");
             assertTrue(
                     holder.status().failed(),
-                    "Ошибка чтения схемы обязана быть видна в /spirit tables и логе, а не проглочена молча");
+                    "Ошибка чтения схемы обязана быть видна в /spirit tables и логе, а не проглочена молча"
+                            + " Иначе тест reload_BrokenSchematic_KeepsPreviousVersion перестанет ловить эту поломку. При смене reload_BrokenSchematic_KeepsPreviousVersion проверь это утверждение.");
         } finally {
             holder.replace(
                     original,

@@ -15,7 +15,8 @@ class ModProtocolTests {
 
         assertTrue(
                 server.matches(client),
-                "Одна и та же сборка (пробелы не в счёт) совпадает: иначе одинаковые клиент и сервер не пустят в игру");
+                "Одна и та же сборка (пробелы не в счёт) совпадает: иначе одинаковые клиент и сервер не пустят в игру"
+                        + " При смене matches_SameBuild_True проверь это утверждение.");
     }
 
     @Test
@@ -25,7 +26,8 @@ class ModProtocolTests {
 
         assertFalse(
                 server.matches(client),
-                "Разные jar при одном номере версии — разные сборки: хэш отличает их и не пускает старый клиент");
+                "Разные jar при одном номере версии — разные сборки: хэш отличает их и не пускает старый клиент"
+                        + " Иначе тест matches_DifferentBuild_False перестанет ловить эту поломку. При смене matches_DifferentBuild_False проверь это утверждение.");
     }
 
     @Test
@@ -34,10 +36,12 @@ class ModProtocolTests {
 
         assertTrue(
                 message.contains("0.1.0+3c1a31a3dbf1b") && message.contains("0.1.0+b06538dea4198"),
-                "Отказ называет обе сборки: по нему видно, что именно обновлять");
+                "Отказ называет обе сборки: по нему видно, что именно обновлять"
+                        + " Иначе тест refusal_DifferentBuild_NamesBothAndAsksToUpdateClient перестанет ловить эту поломку. При смене refusal_DifferentBuild_NamesBothAndAsksToUpdateClient проверь это утверждение.");
         assertTrue(
                 message.contains("Обновите клиент"),
-                "Отказ прямо просит обновить клиент: вместо краша set_entity_data игрок понимает, что делать");
+                "Отказ прямо просит обновить клиент: вместо краша set_entity_data игрок понимает, что делать"
+                        + " Иначе тест refusal_DifferentBuild_NamesBothAndAsksToUpdateClient перестанет ловить эту поломку. При смене refusal_DifferentBuild_NamesBothAndAsksToUpdateClient проверь это утверждение.");
     }
 
     @Test
@@ -45,7 +49,8 @@ class ModProtocolTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new ModProtocol("   "),
-                "Пустая строка сборки не описывает протокол: сверять было бы нечего");
+                "Пустая строка сборки не описывает протокол: сверять было бы нечего"
+                        + " Иначе тест build_Blank_Throws перестанет ловить эту поломку. При смене build_Blank_Throws проверь это утверждение.");
     }
 
     @Test
@@ -53,7 +58,8 @@ class ModProtocolTests {
         assertThrows(
                 NullPointerException.class,
                 () -> new ModProtocol(null),
-                "Без сборки протокол не сверить: null не должен молча стать «совпало»");
+                "Без сборки протокол не сверить: null не должен молча стать «совпало»"
+                        + " Иначе тест build_Null_Throws перестанет ловить эту поломку. При смене build_Null_Throws проверь это утверждение.");
     }
 
     @Test
@@ -61,6 +67,7 @@ class ModProtocolTests {
         assertEquals(
                 "dev",
                 new ModProtocol(" dev ").build(),
-                "Сборка хранится без пробелов: иначе клиент и сервер с одним jar не совпадут из-за форматирования");
+                "Сборка хранится без пробелов: иначе клиент и сервер с одним jar не совпадут из-за форматирования"
+                        + " При смене build_WithSurroundingSpaces_Stripped проверь это утверждение.");
     }
 }

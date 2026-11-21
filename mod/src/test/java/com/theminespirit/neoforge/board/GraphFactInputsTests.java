@@ -24,17 +24,37 @@ class GraphFactInputsTests {
         List<GraphFacts.Chest> chests =
                 GraphFactInputs.chestFacts(List.of(snapshot), ignored -> GraphFacts.Reach.UNKNOWN);
 
-        assertEquals(1, chests.size(), "Один открытый сундук даёт один факт");
+        assertEquals(
+                1,
+                chests.size(),
+                "Один открытый сундук даёт один факт"
+                        + " Иначе тест chestFacts_ContentsAndFreeSlots_AreCounted перестанет ловить эту поломку. При смене chestFacts_ContentsAndFreeSlots_AreCounted проверь это утверждение.");
         GraphFacts.Chest chest = chests.get(0);
-        assertEquals(new GraphFacts.Position(1, 64, 2), chest.position(), "Позиция сундука переносится");
+        assertEquals(
+                new GraphFacts.Position(1, 64, 2),
+                chest.position(),
+                "Позиция сундука переносится"
+                        + " Иначе тест chestFacts_ContentsAndFreeSlots_AreCounted перестанет ловить эту поломку. При смене chestFacts_ContentsAndFreeSlots_AreCounted проверь это утверждение.");
         assertEquals(
                 Map.of("minecraft:oak_log", 5, "minecraft:coal", 2),
                 chest.contents(),
-                "Содержимое сундука складывается по предметам");
-        assertEquals(1, chest.freeSlots(), "Свободный слот считается по null-слотам");
-        assertEquals(3, chest.totalSlots(), "Общее число слотов считается по размеру контейнера");
+                "Содержимое сундука складывается по предметам"
+                        + " Иначе тест chestFacts_ContentsAndFreeSlots_AreCounted перестанет ловить эту поломку. При смене chestFacts_ContentsAndFreeSlots_AreCounted проверь это утверждение.");
         assertEquals(
-                GraphFacts.Reach.UNKNOWN, chest.reach(), "Неизвестная достижимость сундука переносится как UNKNOWN");
+                1,
+                chest.freeSlots(),
+                "Свободный слот считается по null-слотам"
+                        + " Иначе тест chestFacts_ContentsAndFreeSlots_AreCounted перестанет ловить эту поломку. При смене chestFacts_ContentsAndFreeSlots_AreCounted проверь это утверждение.");
+        assertEquals(
+                3,
+                chest.totalSlots(),
+                "Общее число слотов считается по размеру контейнера"
+                        + " Иначе тест chestFacts_ContentsAndFreeSlots_AreCounted перестанет ловить эту поломку. При смене chestFacts_ContentsAndFreeSlots_AreCounted проверь это утверждение.");
+        assertEquals(
+                GraphFacts.Reach.UNKNOWN,
+                chest.reach(),
+                "Неизвестная достижимость сундука переносится как UNKNOWN"
+                        + " Иначе тест chestFacts_ContentsAndFreeSlots_AreCounted перестанет ловить эту поломку. При смене chestFacts_ContentsAndFreeSlots_AreCounted проверь это утверждение.");
     }
 
     @Test
@@ -49,7 +69,8 @@ class GraphFactInputsTests {
                 GraphFacts.Reach.NO_PATH,
                 chest.reach(),
                 "Факт достижимости сундука обязан попадать во вход графа: иначе еда в недостижимом сундуке "
-                        + "считается выполнимой задачей");
+                        + "считается выполнимой задачей"
+                        + " При смене chestFacts_ReachFromWorld_MarksUnreachableChest проверь это утверждение.");
     }
 
     @Test
@@ -65,15 +86,36 @@ class GraphFactInputsTests {
 
         List<GraphFacts.Resource> resources = GraphFactInputs.resourceFacts(around, graph);
 
-        assertEquals(1, resources.size(), "Один тег с координатой даёт один факт ресурса");
+        assertEquals(
+                1,
+                resources.size(),
+                "Один тег с координатой даёт один факт ресурса"
+                        + " Иначе тест resourceFacts_NearestTag_KeepsDistanceAndUnknownReach перестанет ловить эту поломку. При смене resourceFacts_NearestTag_KeepsDistanceAndUnknownReach проверь это утверждение.");
         GraphFacts.Resource resource = resources.get(0);
-        assertEquals("tree:oak", resource.tag(), "Тег ресурса переносится");
-        assertEquals(new GraphFacts.Position(5, 64, 6), resource.position(), "Координата ресурса переносится");
-        assertEquals(4, resource.distance(), "Расстояние до ресурса переносится в блоках");
-        assertEquals(GraphFacts.Reach.UNKNOWN, resource.reach(), "Достижимость пока неизвестна модели");
+        assertEquals(
+                "tree:oak",
+                resource.tag(),
+                "Тег ресурса переносится"
+                        + " Иначе тест resourceFacts_NearestTag_KeepsDistanceAndUnknownReach перестанет ловить эту поломку. При смене resourceFacts_NearestTag_KeepsDistanceAndUnknownReach проверь это утверждение.");
+        assertEquals(
+                new GraphFacts.Position(5, 64, 6),
+                resource.position(),
+                "Координата ресурса переносится"
+                        + " Иначе тест resourceFacts_NearestTag_KeepsDistanceAndUnknownReach перестанет ловить эту поломку. При смене resourceFacts_NearestTag_KeepsDistanceAndUnknownReach проверь это утверждение.");
+        assertEquals(
+                4,
+                resource.distance(),
+                "Расстояние до ресурса переносится в блоках"
+                        + " Иначе тест resourceFacts_NearestTag_KeepsDistanceAndUnknownReach перестанет ловить эту поломку. При смене resourceFacts_NearestTag_KeepsDistanceAndUnknownReach проверь это утверждение.");
+        assertEquals(
+                GraphFacts.Reach.UNKNOWN,
+                resource.reach(),
+                "Достижимость пока неизвестна модели"
+                        + " Иначе тест resourceFacts_NearestTag_KeepsDistanceAndUnknownReach перестанет ловить эту поломку. При смене resourceFacts_NearestTag_KeepsDistanceAndUnknownReach проверь это утверждение.");
         assertEquals(
                 graph.costs().travel(4),
                 resource.travelTicks(),
-                "Время дороги считается теми же costs, что и в планировщике");
+                "Время дороги считается теми же costs, что и в планировщике"
+                        + " Иначе тест resourceFacts_NearestTag_KeepsDistanceAndUnknownReach перестанет ловить эту поломку. При смене resourceFacts_NearestTag_KeepsDistanceAndUnknownReach проверь это утверждение.");
     }
 }

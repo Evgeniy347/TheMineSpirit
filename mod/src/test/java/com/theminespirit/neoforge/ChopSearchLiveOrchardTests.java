@@ -43,19 +43,30 @@ class ChopSearchLiveOrchardTests {
         JsonNode onBoard = find(board, ticket.get("id").asText());
 
         assertTrue(
-                onBoard != null, "На живой доске нет тикета " + ticket.get("id").asText());
-        assertEquals("BUILD_ORCHARD", ticket.get("case").asText(), "Живой тикет обязан быть постройкой сада");
+                onBoard != null,
+                "На живой доске нет тикета " + ticket.get("id").asText()
+                        + " Иначе тест liveTicket_OrchardPlan_KeepsChopRadiusAndSearchDoesNotCutItToThirtyTwo перестанет ловить эту поломку. При смене liveTicket_OrchardPlan_KeepsChopRadiusAndSearchDoesNotCutItToThirtyTwo проверь это утверждение.");
+        assertEquals(
+                "BUILD_ORCHARD",
+                ticket.get("case").asText(),
+                "Живой тикет обязан быть постройкой сада"
+                        + " Иначе тест liveTicket_OrchardPlan_KeepsChopRadiusAndSearchDoesNotCutItToThirtyTwo перестанет ловить эту поломку. При смене liveTicket_OrchardPlan_KeepsChopRadiusAndSearchDoesNotCutItToThirtyTwo проверь это утверждение.");
         assertEquals(
                 ticket.get("status").asText(),
                 onBoard.get("status").asText(),
-                "Тикет и доска разошлись по статусу: тест пошёл бы не тем путём, что в игре");
-        assertFalse(ticket.get("done").asBoolean(), "Живой тикет сада провален: сад не построен");
+                "Тикет и доска разошлись по статусу: тест пошёл бы не тем путём, что в игре"
+                        + " Иначе тест liveTicket_OrchardPlan_KeepsChopRadiusAndSearchDoesNotCutItToThirtyTwo перестанет ловить эту поломку. При смене liveTicket_OrchardPlan_KeepsChopRadiusAndSearchDoesNotCutItToThirtyTwo проверь это утверждение.");
+        assertFalse(
+                ticket.get("done").asBoolean(),
+                "Живой тикет сада провален: сад не построен"
+                        + " Иначе тест liveTicket_OrchardPlan_KeepsChopRadiusAndSearchDoesNotCutItToThirtyTwo перестанет ловить эту поломку. При смене liveTicket_OrchardPlan_KeepsChopRadiusAndSearchDoesNotCutItToThirtyTwo проверь это утверждение.");
 
         int plannedRadius = plannedChopRadius(ticket);
         assertEquals(
                 BoardTuning.chopRadius(),
                 plannedRadius,
-                "План заготовки брёвен обязан просить полный радиус рубки из board.json, иначе поиск снова упрётся в 32");
+                "План заготовки брёвен обязан просить полный радиус рубки из board.json, иначе поиск снова упрётся в 32"
+                        + " При смене liveTicket_OrchardPlan_KeepsChopRadiusAndSearchDoesNotCutItToThirtyTwo проверь это утверждение.");
         assertEquals(
                 plannedRadius,
                 ChopTuning.maxDistance(plannedRadius),
@@ -63,7 +74,8 @@ class ChopSearchLiveOrchardTests {
                         + plannedRadius
                         + ", а дух искал только "
                         + ChopTuning.maxDistance(plannedRadius)
-                        + " — так и появилось «в радиусе 32 закончились»");
+                        + " — так и появилось «в радиусе 32 закончились»"
+                        + " Иначе тест liveTicket_OrchardPlan_KeepsChopRadiusAndSearchDoesNotCutItToThirtyTwo перестанет ловить эту поломку. При смене liveTicket_OrchardPlan_KeepsChopRadiusAndSearchDoesNotCutItToThirtyTwo проверь это утверждение.");
     }
 
     @Test
@@ -73,7 +85,10 @@ class ChopSearchLiveOrchardTests {
         int oldLimit = failure.get("limit").asInt();
         int nearest = failure.get("nearestTree").asInt();
 
-        assertTrue(nearest > oldLimit, "Живой провал говорит о дереве дальше старого предела 32");
+        assertTrue(
+                nearest > oldLimit,
+                "Живой провал говорит о дереве дальше старого предела 32"
+                        + " Иначе тест liveFailure_NearestTreeAtThirtyThree_IsFoundWithinPlannedRadius перестанет ловить эту поломку. При смене liveFailure_NearestTreeAtThirtyThree_IsFoundWithinPlannedRadius проверь это утверждение.");
 
         BlockCoord anchor = coord(failure.get("anchor"));
         BlockCoord tree = new BlockCoord(anchor.x() + nearest, anchor.y(), anchor.z());
@@ -85,7 +100,8 @@ class ChopSearchLiveOrchardTests {
                 chosen.isPresent(),
                 "Ближайшее живое дерево в " + nearest + " блоках от поселения не попадает в поиск: предел "
                         + ChopTuning.maxDistance(plannedRadius) + " вместо запланированных " + plannedRadius
-                        + " — сад снова останется 0 из 24, хотя дерево достижимо");
+                        + " — сад снова останется 0 из 24, хотя дерево достижимо"
+                        + " Иначе тест liveFailure_NearestTreeAtThirtyThree_IsFoundWithinPlannedRadius перестанет ловить эту поломку. При смене liveFailure_NearestTreeAtThirtyThree_IsFoundWithinPlannedRadius проверь это утверждение.");
     }
 
     @Test
@@ -97,15 +113,18 @@ class ChopSearchLiveOrchardTests {
                 calls.stream()
                         .anyMatch(call -> "craft".equals(call.script())
                                 && "minecraft:torch".equals(call.params().get("item"))),
-                "Сад обязан крафтить факелы из угля и палки, а не добывать их блоком мира: " + calls);
+                "Сад обязан крафтить факелы из угля и палки, а не добывать их блоком мира: " + calls
+                        + " Иначе тест liveTicket_OrchardPlan_CraftsTorchAndTreadsDirtPath перестанет ловить эту поломку. При смене liveTicket_OrchardPlan_CraftsTorchAndTreadsDirtPath проверь это утверждение.");
         assertFalse(
                 calls.stream()
                         .anyMatch(call -> "acquire".equals(call.script())
                                 && String.valueOf(call.params().get("item")).endsWith("dirt_path")),
-                "Дорожка сада не покупается и не добывается: она утаптывается лопатой по схеме: " + calls);
+                "Дорожка сада не покупается и не добывается: она утаптывается лопатой по схеме: " + calls
+                        + " Иначе тест liveTicket_OrchardPlan_CraftsTorchAndTreadsDirtPath перестанет ловить эту поломку. При смене liveTicket_OrchardPlan_CraftsTorchAndTreadsDirtPath проверь это утверждение.");
         assertTrue(
                 calls.stream().anyMatch(call -> "build_schematic".equals(call.script())),
-                "Сад строится по схеме: без build_schematic дорожка и факелы не встанут: " + calls);
+                "Сад строится по схеме: без build_schematic дорожка и факелы не встанут: " + calls
+                        + " Иначе тест liveTicket_OrchardPlan_CraftsTorchAndTreadsDirtPath перестанет ловить эту поломку. При смене liveTicket_OrchardPlan_CraftsTorchAndTreadsDirtPath проверь это утверждение.");
     }
 
     private static int plannedChopRadius(JsonNode ticket) {

@@ -34,8 +34,12 @@ class HomeStandLiveTests {
                 STAND,
                 home,
                 "Середина домов попала в стену склада (-171,71,-489): цель задания обязана стать ближайшей "
-                        + "стоянкой, иначе каждое «иди домой» падает «ни одной стоянки рядом, а цель занята блоком»");
-        assertTrue(standable(cells, home), "Выбранная домашняя точка обязана быть стоянкой в живом мире фикстуры");
+                        + "стоянкой, иначе каждое «иди домой» падает «ни одной стоянки рядом, а цель занята блоком»"
+                        + " При смене home_MedianOfHomesInsideWarehouseWall_UsesWalkableStand проверь это утверждение.");
+        assertTrue(
+                standable(cells, home),
+                "Выбранная домашняя точка обязана быть стоянкой в живом мире фикстуры"
+                        + " Иначе тест home_MedianOfHomesInsideWarehouseWall_UsesWalkableStand перестанет ловить эту поломку. При смене home_MedianOfHomesInsideWarehouseWall_UsesWalkableStand проверь это утверждение.");
     }
 
     @Test
@@ -45,7 +49,8 @@ class HomeStandLiveTests {
         assertEquals(
                 STAND,
                 HomeStand.of(List.of(), BASE, cell -> standable(cells, cell)),
-                "Без домов дом считают от якоря этапа: якорь под стеной склада тоже обязан уступить стоянке");
+                "Без домов дом считают от якоря этапа: якорь под стеной склада тоже обязан уступить стоянке"
+                        + " Иначе тест home_WithoutHomes_UsesWalkableStand перестанет ловить эту поломку. При смене home_WithoutHomes_UsesWalkableStand проверь это утверждение.");
     }
 
     @Test
@@ -53,7 +58,8 @@ class HomeStandLiveTests {
         assertEquals(
                 BASE,
                 HomeStand.of(List.of(BASE), BASE, BASE::equals),
-                "Свободная домашняя точка не двигается: ближайшая стоянка — она сама");
+                "Свободная домашняя точка не двигается: ближайшая стоянка — она сама"
+                        + " Иначе тест home_CentreAlreadyWalkable_KeepsCentre перестанет ловить эту поломку. При смене home_CentreAlreadyWalkable_KeepsCentre проверь это утверждение.");
     }
 
     @Test
@@ -65,7 +71,8 @@ class HomeStandLiveTests {
         assertNotEquals(
                 BASE,
                 home,
-                "HomePoint духа, чей дом оказался в стене склада, обязан вернуть стоянку, а не занятую клетку");
+                "HomePoint духа, чей дом оказался в стене склада, обязан вернуть стоянку, а не занятую клетку"
+                        + " Иначе тест home_HomeInsideWarehouseWall_IsNotReturnedAsIs перестанет ловить эту поломку. При смене home_HomeInsideWarehouseWall_IsNotReturnedAsIs проверь это утверждение.");
     }
 
     @Test
@@ -73,7 +80,8 @@ class HomeStandLiveTests {
         assertEquals(
                 BASE,
                 HomeStand.of(List.of(), BASE, cell -> true),
-                "Свободный якорь остаётся домом: соседняя стоянка ищется только когда сам дом занят");
+                "Свободный якорь остаётся домом: соседняя стоянка ищется только когда сам дом занят"
+                        + " Иначе тест home_AnchorFree_KeepsAnchor перестанет ловить эту поломку. При смене home_AnchorFree_KeepsAnchor проверь это утверждение.");
     }
 
     @Test
@@ -86,7 +94,8 @@ class HomeStandLiveTests {
                 Optional.of(new BlockCoord(-173, 70, -493)),
                 HomeStand.largest(BASE, List.of(sealed, settlement)),
                 "Дом не может оказаться в ближней запертой комнате: из двух компонент проходимости берут ту, где "
-                        + "ходят духи поселения, иначе цель снова за преградой");
+                        + "ходят духи поселения, иначе цель снова за преградой"
+                        + " При смене largest_SealedRoomNearer_ChoosesSettlementComponent проверь это утверждение.");
     }
 
     @Test
@@ -97,14 +106,16 @@ class HomeStandLiveTests {
         assertEquals(
                 Optional.of(new BlockCoord(-169, 70, -490)),
                 HomeStand.largest(BASE, List.of(far, near)),
-                "При равном числе клеток дом — ближайшая компонента: выбор не зависит от порядка духов");
+                "При равном числе клеток дом — ближайшая компонента: выбор не зависит от порядка духов"
+                        + " Иначе тест largest_SameSize_PicksNearestComponent перестанет ловить эту поломку. При смене largest_SameSize_PicksNearestComponent проверь это утверждение.");
     }
 
     @Test
     void largest_NoComponents_IsEmpty() {
         assertTrue(
                 HomeStand.largest(BASE, List.of()).isEmpty(),
-                "Нет проходимых компонент — нет домашней стоянки: выдуманную точку не подставляем");
+                "Нет проходимых компонент — нет домашней стоянки: выдуманную точку не подставляем"
+                        + " Иначе тест largest_NoComponents_IsEmpty перестанет ловить эту поломку. При смене largest_NoComponents_IsEmpty проверь это утверждение.");
     }
 
     @Test
@@ -117,7 +128,8 @@ class HomeStandLiveTests {
                 Optional.of(remembered),
                 HomeStand.largest(BASE, List.of(component), Optional.of(remembered)),
                 "Запомненная домашняя стоянка внутри проходимой компоненты остаётся домом, даже если ближе к центру "
-                        + "есть другая клетка: иначе цель уже выданного задания дрейфует между пересборами");
+                        + "есть другая клетка: иначе цель уже выданного задания дрейфует между пересборами"
+                        + " При смене largest_RememberedCellInComponent_KeepsHome проверь это утверждение.");
     }
 
     @Test
@@ -129,7 +141,8 @@ class HomeStandLiveTests {
                 Optional.of(new BlockCoord(-173, 70, -493)),
                 HomeStand.largest(BASE, List.of(component), Optional.of(sealed)),
                 "Запомненная стоянка, к которой духи больше не ходят (заперта), заменяется ближайшей клеткой "
-                        + "проходимой компоненты: дом не остаётся за преградой");
+                        + "проходимой компоненты: дом не остаётся за преградой"
+                        + " Иначе тест largest_RememberedCellOutsideComponents_Recomputed перестанет ловить эту поломку. При смене largest_RememberedCellOutsideComponents_Recomputed проверь это утверждение.");
     }
 
     @Test
@@ -143,7 +156,8 @@ class HomeStandLiveTests {
                 Optional.of(remembered),
                 HomeStand.largest(BASE, List.of(big, small), Optional.of(remembered)),
                 "Проходимость важнее размера компоненты: раз духи уже ходят к запомненной клетке, дом не "
-                        + "переезжает в более крупную компоненту и не тянет за собой выданное задание");
+                        + "переезжает в более крупную компоненту и не тянет за собой выданное задание"
+                        + " Иначе тест largest_RememberedCellInSmallerComponent_KeepsReachableHome перестанет ловить эту поломку. При смене largest_RememberedCellInSmallerComponent_KeepsReachableHome проверь это утверждение.");
     }
 
     private static boolean standable(Map<BlockCoord, String> cells, BlockCoord feet) {

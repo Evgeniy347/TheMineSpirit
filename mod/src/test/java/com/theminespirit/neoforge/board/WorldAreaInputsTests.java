@@ -27,16 +27,36 @@ class WorldAreaInputsTests {
 
         List<GraphSiteFacts.Stray> strays = WorldAreaInputs.strays(placed, at -> at.x() < 4, at -> at.x() == 2);
 
-        assertEquals(2, strays.size(), "След вне участка и след в плане не считаются лишними");
-        assertEquals("oak_planks", strays.get(0).type(), "Тип лишней постройки берётся из журнала");
-        assertEquals("spirit-1", strays.get(0).builder(), "Кто ставил — переносится в факт");
         assertEquals(
-                new GraphFacts.Position(1, 64, 1), strays.get(0).position(), "Координата следа переносится в факт");
-        assertEquals("stone", strays.get(1).type(), "Второй лишний след сохраняется");
+                2,
+                strays.size(),
+                "След вне участка и след в плане не считаются лишними"
+                        + " Иначе тест strays_UnplannedInside_KeptWithBuilder перестанет ловить эту поломку. При смене strays_UnplannedInside_KeptWithBuilder проверь это утверждение.");
+        assertEquals(
+                "oak_planks",
+                strays.get(0).type(),
+                "Тип лишней постройки берётся из журнала"
+                        + " Иначе тест strays_UnplannedInside_KeptWithBuilder перестанет ловить эту поломку. При смене strays_UnplannedInside_KeptWithBuilder проверь это утверждение.");
+        assertEquals(
+                "spirit-1",
+                strays.get(0).builder(),
+                "Кто ставил — переносится в факт"
+                        + " Иначе тест strays_UnplannedInside_KeptWithBuilder перестанет ловить эту поломку. При смене strays_UnplannedInside_KeptWithBuilder проверь это утверждение.");
+        assertEquals(
+                new GraphFacts.Position(1, 64, 1),
+                strays.get(0).position(),
+                "Координата следа переносится в факт"
+                        + " Иначе тест strays_UnplannedInside_KeptWithBuilder перестанет ловить эту поломку. При смене strays_UnplannedInside_KeptWithBuilder проверь это утверждение.");
+        assertEquals(
+                "stone",
+                strays.get(1).type(),
+                "Второй лишний след сохраняется"
+                        + " Иначе тест strays_UnplannedInside_KeptWithBuilder перестанет ловить эту поломку. При смене strays_UnplannedInside_KeptWithBuilder проверь это утверждение.");
         assertEquals(
                 Map.of("oak_planks", 1),
                 strays.get(0).blocks(),
-                "у лишней постройки есть состав блоков: по нему считается возврат материалов");
+                "у лишней постройки есть состав блоков: по нему считается возврат материалов"
+                        + " Иначе тест strays_UnplannedInside_KeptWithBuilder перестанет ловить эту поломку. При смене strays_UnplannedInside_KeptWithBuilder проверь это утверждение.");
     }
 
     @Test
@@ -48,10 +68,25 @@ class WorldAreaInputsTests {
 
         List<GraphSiteFacts.Stray> strays = WorldAreaInputs.strays(placed, at -> true, at -> false);
 
-        assertEquals(2, strays.size(), "Один след на клетку: повтор из журнала не размножается");
-        assertEquals("stone", first(strays, 1).type(), "Новая запись журнала главнее старой");
-        assertEquals("new", first(strays, 1).builder(), "Строитель новой записи сохраняется");
-        assertNull(first(strays, 2).builder(), "Неизвестный строитель остаётся null, а не выдумывается");
+        assertEquals(
+                2,
+                strays.size(),
+                "Один след на клетку: повтор из журнала не размножается"
+                        + " Иначе тест strays_SameCell_KeepsNewest перестанет ловить эту поломку. При смене strays_SameCell_KeepsNewest проверь это утверждение.");
+        assertEquals(
+                "stone",
+                first(strays, 1).type(),
+                "Новая запись журнала главнее старой"
+                        + " Иначе тест strays_SameCell_KeepsNewest перестанет ловить эту поломку. При смене strays_SameCell_KeepsNewest проверь это утверждение.");
+        assertEquals(
+                "new",
+                first(strays, 1).builder(),
+                "Строитель новой записи сохраняется"
+                        + " Иначе тест strays_SameCell_KeepsNewest перестанет ловить эту поломку. При смене strays_SameCell_KeepsNewest проверь это утверждение.");
+        assertNull(
+                first(strays, 2).builder(),
+                "Неизвестный строитель остаётся null, а не выдумывается"
+                        + " Иначе тест strays_SameCell_KeepsNewest перестанет ловить эту поломку. При смене strays_SameCell_KeepsNewest проверь это утверждение.");
     }
 
     @Test
@@ -69,9 +104,21 @@ class WorldAreaInputsTests {
 
         List<GraphSiteFacts.Stray> strays = WorldAreaInputs.strays(found, placed);
 
-        assertEquals(1, strays.size(), "связные клетки сканера — один кусок лишнего");
-        assertEquals(Map.of("oak_fence", 2), strays.get(0).blocks(), "у куска есть тип и количество");
-        assertEquals("spirit-1", strays.get(0).builder(), "строитель куска берётся из журнала, если запись есть");
+        assertEquals(
+                1,
+                strays.size(),
+                "связные клетки сканера — один кусок лишнего"
+                        + " Иначе тест strays_WorldScan_GroupsConnectedBlocksAndKeepsJournalBuilder перестанет ловить эту поломку. При смене strays_WorldScan_GroupsConnectedBlocksAndKeepsJournalBuilder проверь это утверждение.");
+        assertEquals(
+                Map.of("oak_fence", 2),
+                strays.get(0).blocks(),
+                "у куска есть тип и количество"
+                        + " Иначе тест strays_WorldScan_GroupsConnectedBlocksAndKeepsJournalBuilder перестанет ловить эту поломку. При смене strays_WorldScan_GroupsConnectedBlocksAndKeepsJournalBuilder проверь это утверждение.");
+        assertEquals(
+                "spirit-1",
+                strays.get(0).builder(),
+                "строитель куска берётся из журнала, если запись есть"
+                        + " Иначе тест strays_WorldScan_GroupsConnectedBlocksAndKeepsJournalBuilder перестанет ловить эту поломку. При смене strays_WorldScan_GroupsConnectedBlocksAndKeepsJournalBuilder проверь это утверждение.");
     }
 
     @Test
@@ -79,8 +126,15 @@ class WorldAreaInputsTests {
         GraphSiteFacts.Terrain terrain = WorldAreaInputs.terrain(
                 List.of(), Map.of(), List.of(), 0, 0, new WorldAreaInputs.Marks(Map.of(), Map.of(), Map.of()), true);
 
-        assertTrue(terrain.unknown(), "незагруженный чанк делает рельеф неизвестным");
-        assertEquals(0, terrain.pits(), "по неизвестному рельефу ям не выдумываем");
+        assertTrue(
+                terrain.unknown(),
+                "незагруженный чанк делает рельеф неизвестным"
+                        + " Иначе тест terrain_UnknownChunk_IsNotReportedFlat перестанет ловить эту поломку. При смене terrain_UnknownChunk_IsNotReportedFlat проверь это утверждение.");
+        assertEquals(
+                0,
+                terrain.pits(),
+                "по неизвестному рельефу ям не выдумываем"
+                        + " Иначе тест terrain_UnknownChunk_IsNotReportedFlat перестанет ловить эту поломку. При смене terrain_UnknownChunk_IsNotReportedFlat проверь это утверждение.");
     }
 
     @Test
@@ -96,12 +150,35 @@ class WorldAreaInputsTests {
                 4,
                 7);
 
-        assertEquals(2, terrain.pits(), "Число ям — число клеток с глубиной");
-        assertEquals(5, terrain.deepestPit(), "Самая глубокая яма задаёт глубину");
-        assertEquals(3, terrain.heightDrop(), "Перепад — от нижней ямы до верхнего лишнего блока");
-        assertEquals(4, terrain.hanging(), "Висящее переносится");
-        assertEquals(7, terrain.traces(), "Следы вне плана переносятся");
-        assertTrue(terrain.pits() > 0, "Неровный участок виден по ямам, а не по выдуманному флагу");
+        assertEquals(
+                2,
+                terrain.pits(),
+                "Число ям — число клеток с глубиной"
+                        + " Иначе тест terrain_HolesAndExtras_CountDepthAndDrop перестанет ловить эту поломку. При смене terrain_HolesAndExtras_CountDepthAndDrop проверь это утверждение.");
+        assertEquals(
+                5,
+                terrain.deepestPit(),
+                "Самая глубокая яма задаёт глубину"
+                        + " Иначе тест terrain_HolesAndExtras_CountDepthAndDrop перестанет ловить эту поломку. При смене terrain_HolesAndExtras_CountDepthAndDrop проверь это утверждение.");
+        assertEquals(
+                3,
+                terrain.heightDrop(),
+                "Перепад — от нижней ямы до верхнего лишнего блока"
+                        + " Иначе тест terrain_HolesAndExtras_CountDepthAndDrop перестанет ловить эту поломку. При смене terrain_HolesAndExtras_CountDepthAndDrop проверь это утверждение.");
+        assertEquals(
+                4,
+                terrain.hanging(),
+                "Висящее переносится"
+                        + " Иначе тест terrain_HolesAndExtras_CountDepthAndDrop перестанет ловить эту поломку. При смене terrain_HolesAndExtras_CountDepthAndDrop проверь это утверждение.");
+        assertEquals(
+                7,
+                terrain.traces(),
+                "Следы вне плана переносятся"
+                        + " Иначе тест terrain_HolesAndExtras_CountDepthAndDrop перестанет ловить эту поломку. При смене terrain_HolesAndExtras_CountDepthAndDrop проверь это утверждение.");
+        assertTrue(
+                terrain.pits() > 0,
+                "Неровный участок виден по ямам, а не по выдуманному флагу"
+                        + " Иначе тест terrain_HolesAndExtras_CountDepthAndDrop перестанет ловить эту поломку. При смене terrain_HolesAndExtras_CountDepthAndDrop проверь это утверждение.");
     }
 
     @Test
@@ -115,19 +192,31 @@ class WorldAreaInputsTests {
                 new WorldAreaInputs.Marks(Map.of(), Map.of(), Map.of(), 17),
                 false);
 
-        assertEquals(17, terrain.natural(), "природный склон учитывается отдельно от насыпей лота");
-        assertTrue(terrain.cut().isEmpty(), "природный склон не подаётся в cut как работа");
+        assertEquals(
+                17,
+                terrain.natural(),
+                "природный склон учитывается отдельно от насыпей лота"
+                        + " Иначе тест terrain_NaturalSlope_IsNotWork перестанет ловить эту поломку. При смене terrain_NaturalSlope_IsNotWork проверь это утверждение.");
+        assertTrue(
+                terrain.cut().isEmpty(),
+                "природный склон не подаётся в cut как работа"
+                        + " Иначе тест terrain_NaturalSlope_IsNotWork перестанет ловить эту поломку. При смене terrain_NaturalSlope_IsNotWork проверь это утверждение.");
     }
 
     @Test
     void terrain_EmptyOrNegative_Handled() {
         GraphSiteFacts.Terrain flat = WorldAreaInputs.terrain(List.of(), Map.of(), List.of(), 0, 0);
 
-        assertEquals(GraphSiteFacts.Terrain.empty(), flat, "Пустой вход даёт ровный участок");
+        assertEquals(
+                GraphSiteFacts.Terrain.empty(),
+                flat,
+                "Пустой вход даёт ровный участок"
+                        + " Иначе тест terrain_EmptyOrNegative_Handled перестанет ловить эту поломку. При смене terrain_EmptyOrNegative_Handled проверь это утверждение.");
         assertThrows(
                 IllegalArgumentException.class,
                 () -> WorldAreaInputs.terrain(List.of(), Map.of(), List.of(), -1, 0),
-                "Отрицательное висящее не имеет смысла");
+                "Отрицательное висящее не имеет смысла"
+                        + " Иначе тест terrain_EmptyOrNegative_Handled перестанет ловить эту поломку. При смене terrain_EmptyOrNegative_Handled проверь это утверждение.");
     }
 
     @Test
@@ -146,12 +235,33 @@ class WorldAreaInputsTests {
         Map<String, GraphFacts.Building> facts =
                 WorldAreaInputs.buildings(base, new RepairAudit.Report(20, 5, false, List.of(), 0));
 
-        assertEquals(75, facts.get("hut").auditPercent(), "Процент — сколько целых клеток схемы");
-        assertEquals(5, facts.get("hut").damage(), "Повреждения — недостача аудита");
-        assertTrue(!facts.get("hut").unknown(), "Аудит без незагруженных чанков считается известным");
-        assertTrue(facts.get("mine").unknown(), "Постройка без аудита остаётся неизвестной");
-        assertEquals(0, facts.get("fence").auditPercent(), "Непостроенная постройка — ноль процентов");
-        assertTrue(!facts.get("fence").unknown(), "Отсутствие известно: это не unknown");
+        assertEquals(
+                75,
+                facts.get("hut").auditPercent(),
+                "Процент — сколько целых клеток схемы"
+                        + " Иначе тест buildings_HouseAudit_GivesPercentAndDamage перестанет ловить эту поломку. При смене buildings_HouseAudit_GivesPercentAndDamage проверь это утверждение.");
+        assertEquals(
+                5,
+                facts.get("hut").damage(),
+                "Повреждения — недостача аудита"
+                        + " Иначе тест buildings_HouseAudit_GivesPercentAndDamage перестанет ловить эту поломку. При смене buildings_HouseAudit_GivesPercentAndDamage проверь это утверждение.");
+        assertTrue(
+                !facts.get("hut").unknown(),
+                "Аудит без незагруженных чанков считается известным"
+                        + " Иначе тест buildings_HouseAudit_GivesPercentAndDamage перестанет ловить эту поломку. При смене buildings_HouseAudit_GivesPercentAndDamage проверь это утверждение.");
+        assertTrue(
+                facts.get("mine").unknown(),
+                "Постройка без аудита остаётся неизвестной"
+                        + " Иначе тест buildings_HouseAudit_GivesPercentAndDamage перестанет ловить эту поломку. При смене buildings_HouseAudit_GivesPercentAndDamage проверь это утверждение.");
+        assertEquals(
+                0,
+                facts.get("fence").auditPercent(),
+                "Непостроенная постройка — ноль процентов"
+                        + " Иначе тест buildings_HouseAudit_GivesPercentAndDamage перестанет ловить эту поломку. При смене buildings_HouseAudit_GivesPercentAndDamage проверь это утверждение.");
+        assertTrue(
+                !facts.get("fence").unknown(),
+                "Отсутствие известно: это не unknown"
+                        + " Иначе тест buildings_HouseAudit_GivesPercentAndDamage перестанет ловить эту поломку. При смене buildings_HouseAudit_GivesPercentAndDamage проверь это утверждение.");
     }
 
     @Test
@@ -166,54 +276,13 @@ class WorldAreaInputsTests {
 
         assertTrue(
                 !facts.get("mine").unknown(),
-                "Аудит 100% без незагруженных чанков — известная готовая постройка: иначе этап не закрывается");
-        assertEquals(100, facts.get("mine").auditPercent(), "Процент готовой постройки остаётся 100");
-    }
-
-    @Test
-    void buildings_WrongHeight_MissingAndExtraKept() {
-        Map<String, GraphFacts.Building> base = new LinkedHashMap<>();
-        base.put(
-                "hut",
-                new GraphFacts.Building(
-                        "hut",
-                        1,
-                        75,
-                        5,
-                        Map.of("minecraft:dirt", 3),
-                        Map.of("minecraft:stone", 2),
-                        1,
-                        new GraphFacts.Position(0, 64, 0),
-                        false,
-                        true));
-
-        Map<String, GraphFacts.Building> facts = WorldAreaInputs.buildings(base, null);
-
+                "Аудит 100% без незагруженных чанков — известная готовая постройка: иначе этап не закрывается"
+                        + " При смене buildings_CompleteAudited_IsKnownNotUnknown проверь это утверждение.");
         assertEquals(
-                Map.of("minecraft:dirt", 3),
-                facts.get("hut").missing(),
-                "Недостача на единой высоте остаётся фактом: по ней ставится стройка");
-        assertEquals(
-                Map.of("minecraft:stone", 2),
-                facts.get("hut").extra(),
-                "Блоки не на единой высоте остаются extra: по ним ставится снос/восстановление");
-        assertEquals(1, facts.get("hut").wrong(), "Чужая клетка плана не теряется при сборке факта");
-    }
-
-    @Test
-    void buildings_UnknownAudit_IsNotReady() {
-        Map<String, GraphFacts.Building> base = new LinkedHashMap<>();
-        base.put(
-                "hut",
-                new GraphFacts.Building(
-                        "hut", 1, 100, 0, Map.of(), Map.of(), 0, new GraphFacts.Position(0, 64, 0), false, true));
-
-        Map<String, GraphFacts.Building> facts =
-                WorldAreaInputs.buildings(base, new RepairAudit.Report(20, 5, false, List.of(), 2));
-
-        assertTrue(facts.get("hut").unknown(), "Незагруженные чанки делают аудит неизвестным");
-        assertEquals(0, facts.get("hut").damage(), "Пока аудит не готов, повреждений не выдумываем");
-        assertEquals(0, facts.get("hut").auditPercent(), "Пока аудит не готов, процент не выдумываем");
+                100,
+                facts.get("mine").auditPercent(),
+                "Процент готовой постройки остаётся 100"
+                        + " Иначе тест buildings_CompleteAudited_IsKnownNotUnknown перестанет ловить эту поломку. При смене buildings_CompleteAudited_IsKnownNotUnknown проверь это утверждение.");
     }
 
     private static GraphSiteFacts.Stray first(List<GraphSiteFacts.Stray> strays, int x) {

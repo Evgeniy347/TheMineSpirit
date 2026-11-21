@@ -17,7 +17,8 @@ class LifeEventPostTests {
         assertEquals(
                 Optional.of("heal"),
                 GraphEventPost.lifeAction("heal", BoardCase.ACTIVITY_REST),
-                "life_injury:heal не остаётся без исполнителя: отдых идёт тем же действием, что и more4_rest_injured");
+                "life_injury:heal не остаётся без исполнителя: отдых идёт тем же действием, что и more4_rest_injured"
+                        + " Иначе тест lifeAction_InjuryHeal_HasExecutor перестанет ловить эту поломку. При смене lifeAction_InjuryHeal_HasExecutor проверь это утверждение.");
     }
 
     @Test
@@ -31,7 +32,8 @@ class LifeEventPostTests {
             assertTrue(
                     action.isPresent(),
                     "Задача life_injury:" + task.id() + " объявлена выполнимой, но у неё нет исполнителя: "
-                            + "доска поставит билет, а дух ничего не сделает");
+                            + "доска поставит билет, а дух ничего не сделает"
+                            + " Иначе тест lifeAction_EveryInjuryTask_IsHandled перестанет ловить эту поломку. При смене lifeAction_EveryInjuryTask_IsHandled проверь это утверждение.");
         }
     }
 }

@@ -26,12 +26,17 @@ class RescueNavWorldRouteTests {
         assertTrue(
                 world.passable(PLAN.x(), PLAN.y(), PLAN.z()),
                 "Клетка чужого плана проходима, если она воздух: иначе дух, стоящий внутри плана, не находит "
-                        + "даже соседнюю клетку (observe25 B4)");
-        assertTrue(world.walkable(PLAN.x(), PLAN.y() - 1, PLAN.z()), "По плану можно идти, не меняя мир");
+                        + "даже соседнюю клетку (observe25 B4)"
+                        + " При смене passable_ForeignPlanCell_StaysWalkableButUnbreakable проверь это утверждение.");
+        assertTrue(
+                world.walkable(PLAN.x(), PLAN.y() - 1, PLAN.z()),
+                "По плану можно идти, не меняя мир"
+                        + " Иначе тест passable_ForeignPlanCell_StaysWalkableButUnbreakable перестанет ловить эту поломку. При смене passable_ForeignPlanCell_StaysWalkableButUnbreakable проверь это утверждение.");
         assertEquals(
                 NavActionCosts.COST_INF,
                 world.breakTicks(PLAN.x(), PLAN.y(), PLAN.z()),
-                "Ломать чужой план по-прежнему нельзя: охрана плана остаётся у ломки, а не у ходьбы");
+                "Ломать чужой план по-прежнему нельзя: охрана плана остаётся у ломки, а не у ходьбы"
+                        + " Иначе тест passable_ForeignPlanCell_StaysWalkableButUnbreakable перестанет ловить эту поломку. При смене passable_ForeignPlanCell_StaysWalkableButUnbreakable проверь это утверждение.");
     }
 
     @Test
@@ -45,14 +50,18 @@ class RescueNavWorldRouteTests {
                 NavSearchStatus.FOUND,
                 route.status(),
                 "Маршрут с ровного места внутри плана находится: раньше все соседние клетки плана считались "
-                        + "стеной, и A* отдавал NONE после одного узла (observe25 B4)");
+                        + "стеной, и A* отдавал NONE после одного узла (observe25 B4)"
+                        + " Иначе тест plan_RouteInsideBuildingFootprint_IsFound перестанет ловить эту поломку. При смене plan_RouteInsideBuildingFootprint_IsFound проверь это утверждение.");
     }
 
     @Test
     void route_StartCell_StaysPassable() {
         NavWorld world = RescueNavWorld.route(new Open(), START, GOAL, START::equals);
 
-        assertTrue(world.passable(START.x(), START.y(), START.z()), "Дух уже стоит на стартовой клетке плана");
+        assertTrue(
+                world.passable(START.x(), START.y(), START.z()),
+                "Дух уже стоит на стартовой клетке плана"
+                        + " Иначе тест route_StartCell_StaysPassable перестанет ловить эту поломку. При смене route_StartCell_StaysPassable проверь это утверждение.");
     }
 
     @Test
@@ -61,7 +70,8 @@ class RescueNavWorldRouteTests {
 
         assertTrue(
                 world.passable(PLAN.x(), PLAN.y(), PLAN.z()),
-                "Вход в план — цель задания: его нельзя запирать запретом клеток (debtnav, п.6)");
+                "Вход в план — цель задания: его нельзя запирать запретом клеток (debtnav, п.6)"
+                        + " Иначе тест route_GoalCell_AllowedAsEntrance перестанет ловить эту поломку. При смене route_GoalCell_AllowedAsEntrance проверь это утверждение.");
     }
 
     private static boolean insidePlan(int x, int y, int z) {

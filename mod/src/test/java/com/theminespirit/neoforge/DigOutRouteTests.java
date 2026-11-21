@@ -11,12 +11,19 @@ class DigOutRouteTests {
         assertFalse(
                 DigOutRoute.mode(70, 71, false, true),
                 "Дух на ступеньке качается между y=70 и 71 у дома на y=70, путь уже идёт — режим не переключается: "
-                        + "иначе готовый путь отменялся и искался заново по кругу (сервер 12.11, поиски до 85 с)");
+                        + "иначе готовый путь отменялся и искался заново по кругу (сервер 12.11, поиски до 85 с)"
+                        + " При смене mode_SpiritBobsWhileFollowingRoute_RouteKept проверь это утверждение.");
     }
 
     @Test
     void mode_NoRoute_DecidedByHeight() {
-        assertTrue(DigOutRoute.mode(70, 71, false, false), "Пути нет, дом ниже — новый путь вниз");
-        assertFalse(DigOutRoute.mode(71, 70, true, false), "Пути нет, дом не ниже — новый путь к дому");
+        assertTrue(
+                DigOutRoute.mode(70, 71, false, false),
+                "Пути нет, дом ниже — новый путь вниз"
+                        + " Иначе тест mode_NoRoute_DecidedByHeight перестанет ловить эту поломку. При смене mode_NoRoute_DecidedByHeight проверь это утверждение.");
+        assertFalse(
+                DigOutRoute.mode(71, 70, true, false),
+                "Пути нет, дом не ниже — новый путь к дому"
+                        + " Иначе тест mode_NoRoute_DecidedByHeight перестанет ловить эту поломку. При смене mode_NoRoute_DecidedByHeight проверь это утверждение.");
     }
 }

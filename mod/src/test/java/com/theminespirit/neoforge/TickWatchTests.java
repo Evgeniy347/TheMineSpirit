@@ -14,7 +14,8 @@ class TickWatchTests {
     void describe_UnderLimit_IsSilent() {
         assertNull(
                 TickWatch.describe("RouteDetour", 499_999_999L),
-                "Операция короче 500 мс не попадает в лог: иначе сторож шумит на обычных тиках");
+                "Операция короче 500 мс не попадает в лог: иначе сторож шумит на обычных тиках"
+                        + " При смене describe_UnderLimit_IsSilent проверь это утверждение.");
     }
 
     @Test
@@ -24,7 +25,8 @@ class TickWatchTests {
         assertEquals(
                 "[tick] операция RouteDetour держала серверный поток 2750 мс",
                 report,
-                "Сообщение сторожа называет класс операции и время: по нему ищут виновника в живом мире");
+                "Сообщение сторожа называет класс операции и время: по нему ищут виновника в живом мире"
+                        + " Иначе тест describe_OverLimit_NamesOperationAndMilliseconds перестанет ловить эту поломку. При смене describe_OverLimit_NamesOperationAndMilliseconds проверь это утверждение.");
     }
 
     @Test
@@ -35,7 +37,8 @@ class TickWatchTests {
                 "[tick] операция BoardService держала серверный поток 1030 мс",
                 watch.observe("BoardService", 1_030_000_000L, 10).orElseThrow(),
                 "Первый медленный тик печатается сразу: иначе о подвисании узнают только из сводки и потеряют "
-                        + "начало приступа");
+                        + "начало приступа"
+                        + " При смене observe_FirstSlow_IsReportedImmediately проверь это утверждение.");
     }
 
     @Test
@@ -46,7 +49,8 @@ class TickWatchTests {
         assertEquals(
                 Optional.empty(),
                 watch.observe("BoardService", 1_100_000_000L, 20),
-                "То же подвисание внутри окна сводки не печатается по строке каждые 5 секунд: повтор — не новость");
+                "То же подвисание внутри окна сводки не печатается по строке каждые 5 секунд: повтор — не новость"
+                        + " Иначе тест observe_SameOperationWithinWindow_IsSilent перестанет ловить эту поломку. При смене observe_SameOperationWithinWindow_IsSilent проверь это утверждение.");
     }
 
     @Test
@@ -59,9 +63,16 @@ class TickWatchTests {
 
         assertTrue(
                 text.contains("3 раз"),
-                "Сводка обязана называть число подвисаний: единичный случай и приступ " + "различают по числу");
-        assertTrue(text.contains("1030–1157 мс"), "Сводка обязана называть разброс: максимум показывает худший тик");
-        assertTrue(text.contains("3287 мс"), "Сводка обязана называть сумму: по ней оценивают потерю времени");
+                "Сводка обязана называть число подвисаний: единичный случай и приступ " + "различают по числу"
+                        + " Иначе тест observe_AfterWindow_ReturnsSummaryWithCountAndRange перестанет ловить эту поломку. При смене observe_AfterWindow_ReturnsSummaryWithCountAndRange проверь это утверждение.");
+        assertTrue(
+                text.contains("1030–1157 мс"),
+                "Сводка обязана называть разброс: максимум показывает худший тик"
+                        + " Иначе тест observe_AfterWindow_ReturnsSummaryWithCountAndRange перестанет ловить эту поломку. При смене observe_AfterWindow_ReturnsSummaryWithCountAndRange проверь это утверждение.");
+        assertTrue(
+                text.contains("3287 мс"),
+                "Сводка обязана называть сумму: по ней оценивают потерю времени"
+                        + " Иначе тест observe_AfterWindow_ReturnsSummaryWithCountAndRange перестанет ловить эту поломку. При смене observe_AfterWindow_ReturnsSummaryWithCountAndRange проверь это утверждение.");
     }
 
     @Test
@@ -75,6 +86,7 @@ class TickWatchTests {
         assertTrue(
                 text.contains("1500 мс"),
                 "Новое подвисание после нормального тика обязано снова печататься сразу: приступ закончился и "
-                        + "начался заново");
+                        + "начался заново"
+                        + " Иначе тест observe_FastTickAfterSlow_StartsNewReport перестанет ловить эту поломку. При смене observe_FastTickAfterSlow_StartsNewReport проверь это утверждение.");
     }
 }

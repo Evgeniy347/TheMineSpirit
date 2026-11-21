@@ -18,16 +18,24 @@ class PlanDemolitionOrderTests {
         assertEquals(
                 List.of(fence, highDirt),
                 PlanDemolition.order(List.of(highDirt, fence), Set.of(fence)),
-                "Столб-заглушка обязан идти в уборку первым: иначе задача на снос забора ждёт тысячи чужих клеток");
+                "Столб-заглушка обязан идти в уборку первым: иначе задача на снос забора ждёт тысячи чужих клеток"
+                        + " При смене order_FenceAmongTallerStrays_FenceGoesFirst проверь это утверждение.");
     }
 
     @Test
     void hidden_StubFailures_ThirdHides() {
-        assertFalse(ExtraFenceScan.hidden(0), "Новый столб виден уборке сразу");
         assertFalse(
-                ExtraFenceScan.hidden(2), "После двух срывов столб получает ещё одну попытку: срыв мог быть случайным");
+                ExtraFenceScan.hidden(0),
+                "Новый столб виден уборке сразу"
+                        + " Иначе тест hidden_StubFailures_ThirdHides перестанет ловить эту поломку. При смене hidden_StubFailures_ThirdHides проверь это утверждение.");
+        assertFalse(
+                ExtraFenceScan.hidden(2),
+                "После двух срывов столб получает ещё одну попытку: срыв мог быть случайным"
+                        + " Иначе тест hidden_StubFailures_ThirdHides перестанет ловить эту поломку. При смене hidden_StubFailures_ThirdHides проверь это утверждение.");
         assertTrue(
-                ExtraFenceScan.hidden(3), "После трёх срывов столб уходит из сказа, чтобы уборка не крутилась вечно");
+                ExtraFenceScan.hidden(3),
+                "После трёх срывов столб уходит из сказа, чтобы уборка не крутилась вечно"
+                        + " Иначе тест hidden_StubFailures_ThirdHides перестанет ловить эту поломку. При смене hidden_StubFailures_ThirdHides проверь это утверждение.");
     }
 
     @Test
@@ -38,7 +46,8 @@ class PlanDemolitionOrderTests {
         assertEquals(
                 2,
                 PlanDemolition.stubPieces(List.of(nearTree, byTrunk)).size(),
-                "Каждый столб идёт своим куском: срыв на одном не держит остальные");
+                "Каждый столб идёт своим куском: срыв на одном не держит остальные"
+                        + " Иначе тест stubPieces_DistantStubs_SplitApart перестанет ловить эту поломку. При смене stubPieces_DistantStubs_SplitApart проверь это утверждение.");
     }
 
     @Test
@@ -51,7 +60,8 @@ class PlanDemolitionOrderTests {
         assertEquals(
                 orchard,
                 pieces.get(0).get(0),
-                "Садовый столб сносится первым: он стоит у дерева и мешает рубке, остальные ждут");
+                "Садовый столб сносится первым: он стоит у дерева и мешает рубке, остальные ждут"
+                        + " Иначе тест stubPieces_OrchardFirst_OrchardPieceLeads перестанет ловить эту поломку. При смене stubPieces_OrchardFirst_OrchardPieceLeads проверь это утверждение.");
     }
 
     @Test
@@ -61,11 +71,16 @@ class PlanDemolitionOrderTests {
 
         List<List<BlockCoord>> pieces = PlanDemolition.stubPieces(List.of(first, second));
 
-        assertEquals(1, pieces.size(), "Соседние столбы сносятся одним куском");
+        assertEquals(
+                1,
+                pieces.size(),
+                "Соседние столбы сносятся одним куском"
+                        + " Иначе тест stubPieces_NeighbourStubs_OnePiece перестанет ловить эту поломку. При смене stubPieces_NeighbourStubs_OnePiece проверь это утверждение.");
         assertEquals(
                 Set.of(first, second),
                 Set.copyOf(pieces.get(0)),
-                "В кусок попадают оба соседних столба, и ничего не теряется");
+                "В кусок попадают оба соседних столба, и ничего не теряется"
+                        + " Иначе тест stubPieces_NeighbourStubs_OnePiece перестанет ловить эту поломку. При смене stubPieces_NeighbourStubs_OnePiece проверь это утверждение.");
     }
 
     @Test
@@ -76,6 +91,7 @@ class PlanDemolitionOrderTests {
         assertEquals(
                 List.of(high, low),
                 PlanDemolition.order(List.of(low, high), Set.of()),
-                "Без заглушек очередь прежняя: выше — раньше");
+                "Без заглушек очередь прежняя: выше — раньше"
+                        + " Иначе тест order_WithoutFences_TallestGoesFirst перестанет ловить эту поломку. При смене order_WithoutFences_TallestGoesFirst проверь это утверждение.");
     }
 }
