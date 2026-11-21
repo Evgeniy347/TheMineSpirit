@@ -98,6 +98,10 @@ public final class WalkAscent {
         return Math.sqrt(dx * dx + dz * dz);
     }
 
+    public static boolean needsFloor(Step step, boolean water, boolean floorBelow) {
+        return step == Step.MOVE && !water && !floorBelow;
+    }
+
     private static boolean arrived(BlockCoord cell, Pose pose) {
         return pose.feet().equals(cell) && horizontal(pose, cell.x() + CENTER, cell.z() + CENTER) < ARRIVAL;
     }

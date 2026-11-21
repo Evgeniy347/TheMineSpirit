@@ -147,6 +147,8 @@ public final class RouteWalk {
         }
         Optional<String> early = earlyRefusal(command, cell);
         if (early.isPresent()) return early;
+        if (WalkAscent.needsFloor(command.step(), water(cell), stand(cell)))
+            return Optional.of("шаг MOVE в " + cell + " без опоры: под клеткой пустота — дух провалится");
         spirit.getNavigation().stop();
         boolean fall = command.step() == WalkAscent.Step.MOVE || command.step() == WalkAscent.Step.DIVE;
         if (fall && command.y() < spirit.getY() - 0.5 && !spirit.isInWater()) {
