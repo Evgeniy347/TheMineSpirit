@@ -45,6 +45,16 @@ class WalkAscentSupportTests {
     }
 
     @Test
+    void safeWithoutFloor_WithNeedsFloor_EndsStepWithoutCenter() {
+        assertTrue(
+                WalkAscent.needsFloor(WalkAscent.Step.MOVE, false, false) && WalkAscent.safeWithoutFloor(true, true),
+                "Шаг MOVE в свою клетку над пустотой с земли завершается без довода к центру: иначе дух у края "
+                        + "ступает к центру над дырой, топчется и обрывается по StallWatch (окно 53, 13 обрывов "
+                        + "у -167..-168,69..70,-489). При смене правил хода проверь шаг в чужую клетку над "
+                        + "пропастью: он остаётся отказом");
+    }
+
+    @Test
     void safeWithoutFloor_SameCellOnGround_IsTrue() {
         assertTrue(
                 WalkAscent.safeWithoutFloor(true, true),
