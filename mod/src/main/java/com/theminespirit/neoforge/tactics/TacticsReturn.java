@@ -56,7 +56,7 @@ final class TacticsReturn {
     }
 
     void walk(Point point) {
-        retreating.reset();
+        if (retreating.active()) retreating.reset();
         spirit.gear().holdNothing();
         Vec3 destination = new Vec3(point.x(), point.y(), point.z());
         double distance = spirit.position().distanceTo(destination);

@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.tactics;
 
 import com.theminespirit.core.policy.BlockProtection;
+import com.theminespirit.core.tactics.RetreatReset;
 import com.theminespirit.core.tactics.adapter.RetreatPlan;
 import com.theminespirit.core.tactics.api.Point;
 import com.theminespirit.neoforge.Approach;
@@ -46,7 +47,14 @@ public final class RetreatExecutor {
         };
     }
 
+    public boolean active() {
+        return RetreatReset.needed(current != null, lastTarget != null);
+    }
+
     public void reset() {
+        if (!active()) {
+            return;
+        }
         approach.cancel();
         current = null;
         lastTarget = null;
