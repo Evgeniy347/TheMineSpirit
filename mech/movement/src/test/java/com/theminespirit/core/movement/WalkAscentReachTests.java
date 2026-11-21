@@ -78,6 +78,32 @@ class WalkAscentReachTests {
     }
 
     @Test
+    void next_AirborneOverCell_Arrives() {
+        Pose over = new Pose(new BlockCoord(0, 0, 0), 0.27, 0.0, 0.5);
+        Command command = WalkAscent.next(new BlockCoord(0, 0, 0), over, new Body(false, false, false));
+
+        assertEquals(
+                Step.ARRIVED,
+                command.step(),
+                "Дух над центром клетки без опоры уже пришёл: иначе на завершающем шаге у края он висит "
+                        + "60 тиков с дистанцией 0.23 и маршрут сходит с него (окно 30, spirit-6 у -174,71,-489). "
+                        + "При смене arrived проверь живой сход с уступа: дух не ждёт опоры под центром клетки");
+    }
+
+    @Test
+    void next_AirborneBesidesCell_Moves() {
+        Pose beside = new Pose(new BlockCoord(0, 0, 0), 0.9, 0.0, 0.5);
+        Command command = WalkAscent.next(new BlockCoord(0, 0, 0), beside, new Body(false, false, false));
+
+        assertEquals(
+                Step.MOVE,
+                command.step(),
+                "Дух в воздухе в стороне от центра той же клетки ещё не пришёл: иначе шаг засчитался бы "
+                        + "раньше времени и путь пошёл бы от чужой точки. При смене arrived проверь пролёт "
+                        + "над клеткой: приход только у центра");
+    }
+
+    @Test
     void next_StepOneBelowOnGround_Moves() {
         Command command = WalkAscent.next(new BlockCoord(0, -1, 0), FEET, new Body(true, false, false));
 
