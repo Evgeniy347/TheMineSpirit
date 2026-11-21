@@ -14,7 +14,8 @@ class BlockPointParamsTests {
         assertEquals(
                 new BlockPointParams(4, 64, 7),
                 params,
-                "Скрипты use_block/open/close_door обязаны сохранить клетку цели: по ней ищется блок и подход к нему");
+                "Скрипты use_block/open/close_door обязаны сохранить клетку цели: по ней ищется блок и подход к нему"
+                        + " Иначе тест from_AllCoordinatesPresent_ReturnsPoint перестанет ловить эту поломку. При смене from_AllCoordinatesPresent_ReturnsPoint проверь это утверждение.");
     }
 
     @Test
@@ -22,7 +23,8 @@ class BlockPointParamsTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> BlockPointParams.from(Map.of("x", 4, "y", 64)),
-                "Без координаты задачу к блоку не выполнить: параметр обязан быть обязательным");
+                "Без координаты задачу к блоку не выполнить: параметр обязан быть обязательным"
+                        + " Иначе тест from_MissingCoordinate_IsRejected перестанет ловить эту поломку. При смене from_MissingCoordinate_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -30,7 +32,8 @@ class BlockPointParamsTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> BlockPointParams.from(Map.of("x", 30_000_001, "y", 64, "z", 7)),
-                "Цель за границей мира обязана отвергаться: туда не подойти и блока там нет");
+                "Цель за границей мира обязана отвергаться: туда не подойти и блока там нет"
+                        + " Иначе тест from_XOutsideWorld_IsRejected перестанет ловить эту поломку. При смене from_XOutsideWorld_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -38,7 +41,8 @@ class BlockPointParamsTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> BlockPointParams.from(Map.of("x", 4, "y", -65, "z", 7)),
-                "Клетка ниже мира обязана отвергаться: иначе дух искал бы блок вне мира");
+                "Клетка ниже мира обязана отвергаться: иначе дух искал бы блок вне мира"
+                        + " При смене from_YOutsideWorld_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -46,6 +50,7 @@ class BlockPointParamsTests {
         assertThrows(
                 NullPointerException.class,
                 () -> BlockPointParams.from(null),
-                "from(null) обязан отказывать: без карты параметров взять координаты неоткуда");
+                "from(null) обязан отказывать: без карты параметров взять координаты неоткуда"
+                        + " Иначе тест from_NullParams_IsRejected перестанет ловить эту поломку. При смене from_NullParams_IsRejected проверь это утверждение.");
     }
 }

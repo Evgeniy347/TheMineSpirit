@@ -19,6 +19,7 @@ class PlanJsonProperties {
                 reparsed,
                 "любой валидный план обязан переживать запись в JSON и обратный разбор без потерь: потеря шага, "
                         + "типа параметра или ветки условия после перезапуска заставит духа исполнить не тот план. "
-                        + "seed=" + seed + ", план=" + plan);
+                        + "seed=" + seed + ", план=" + plan
+                        + " Иначе тест toJson_AnyValidPlan_RoundTripsThroughParser перестанет ловить эту поломку. При смене toJson_AnyValidPlan_RoundTripsThroughParser проверь это утверждение.");
     }
 }

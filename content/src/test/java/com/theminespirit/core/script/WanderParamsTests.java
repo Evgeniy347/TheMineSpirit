@@ -14,7 +14,8 @@ class WanderParamsTests {
         assertEquals(
                 new WanderParams(8, 600),
                 params,
-                "wander обязан сохранить радиус и длительность: по ним скрипт выбирает точки и знает, когда кончить");
+                "wander обязан сохранить радиус и длительность: по ним скрипт выбирает точки и знает, когда кончить"
+                        + " Иначе тест from_AllParamsPresent_ReturnsParams перестанет ловить эту поломку. При смене from_AllParamsPresent_ReturnsParams проверь это утверждение.");
     }
 
     @Test
@@ -23,7 +24,8 @@ class WanderParamsTests {
                 IllegalArgumentException.class,
                 () -> WanderParams.from(Map.of("duration_ticks", 600)),
                 "wander без радиуса обязан отказывать: валидатор плана подставляет значение по умолчанию "
-                        + "из каталога до запуска, а без него скрипт не знает границу зоны");
+                        + "из каталога до запуска, а без него скрипт не знает границу зоны"
+                        + " Иначе тест from_MissingRadius_IsRejected перестанет ловить эту поломку. При смене from_MissingRadius_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -31,7 +33,8 @@ class WanderParamsTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> WanderParams.from(Map.of("radius", 33, "duration_ticks", 600)),
-                "radius больше 32 обязан отвергаться: лимит держит духа в тикающей зоне");
+                "radius больше 32 обязан отвергаться: лимит держит духа в тикающей зоне"
+                        + " Иначе тест from_RadiusOutOfRange_IsRejected перестанет ловить эту поломку. При смене from_RadiusOutOfRange_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -40,7 +43,8 @@ class WanderParamsTests {
                 IllegalArgumentException.class,
                 () -> WanderParams.from(Map.of("radius", 8, "duration_ticks", 19)),
                 "Длительность короче 20 тиков обязана отвергаться: за секунду дух не успевает сдвинуться, "
-                        + "а стратег решит, что блуждание прошло");
+                        + "а стратег решит, что блуждание прошло"
+                        + " Иначе тест from_DurationBelowMin_IsRejected перестанет ловить эту поломку. При смене from_DurationBelowMin_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -48,7 +52,8 @@ class WanderParamsTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> WanderParams.from(Map.of("radius", 8, "duration_ticks", 6001)),
-                "Длительность дольше 6000 тиков обязана отвергаться: лимит держит блуждание в пределах 5 минут");
+                "Длительность дольше 6000 тиков обязана отвергаться: лимит держит блуждание в пределах 5 минут"
+                        + " Иначе тест from_DurationAboveMax_IsRejected перестанет ловить эту поломку. При смене from_DurationAboveMax_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -56,6 +61,7 @@ class WanderParamsTests {
         assertThrows(
                 NullPointerException.class,
                 () -> WanderParams.from(null),
-                "WanderParams.from(null) обязан отказывать: без карты параметров маппинг только читает состояние мира");
+                "WanderParams.from(null) обязан отказывать: без карты параметров маппинг только читает состояние мира"
+                        + " Иначе тест from_NullParams_IsRejected перестанет ловить эту поломку. При смене from_NullParams_IsRejected проверь это утверждение.");
     }
 }

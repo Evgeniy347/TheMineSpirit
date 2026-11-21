@@ -45,7 +45,8 @@ class TaskSnapshotCodecProperties {
                 restored,
                 "любой снимок RUNNING обязан переживать encode→decode без потерь: расхождение означает, что часть "
                         + "прогресса уехала в JSON не полностью и после перезапуска план пойдёт иначе. "
-                        + "seed=" + seed + ", план=" + plan);
+                        + "seed=" + seed + ", план=" + plan
+                        + " При смене decode_AnyEncodedSnapshot_EqualsSource проверь это утверждение.");
     }
 
     private static TaskProgress progress(TaskNode plan, Random random) {

@@ -16,7 +16,8 @@ class PlanJsonTests {
                 "{\"type\":\"script\",\"script\":\"wait\",\"params\":{\"ticks\":5}}",
                 json,
                 "узел script обязан писаться как {type,script,params}: по этим ключам PlanParser собирает вызов "
-                        + "обратно, и переименование любого из них ломает чтение снимка");
+                        + "обратно, и переименование любого из них ломает чтение снимка"
+                        + " При смене toJson_ScriptNode_WritesTypeScriptAndParams проверь это утверждение.");
     }
 
     @Test
@@ -27,7 +28,8 @@ class PlanJsonTests {
                 "{\"type\":\"script\",\"script\":\"return_home\",\"params\":{}}",
                 json,
                 "скрипт без параметров обязан писать пустой объект params: пропуск ключа сделал бы JSON плана "
-                        + "неполным, а reader пришлось бы учить отсутствию поля");
+                        + "неполным, а reader пришлось бы учить отсутствию поля"
+                        + " Иначе тест toJson_ScriptWithoutParams_WritesEmptyParamsObject перестанет ловить эту поломку. При смене toJson_ScriptWithoutParams_WritesEmptyParamsObject проверь это утверждение.");
     }
 
     @Test
@@ -38,7 +40,8 @@ class PlanJsonTests {
                 "{\"type\":\"script\",\"script\":\"x\",\"params\":{\"a\":2,\"b\":1}}",
                 json,
                 "параметры обязаны сериализоваться в отсортированном порядке: без канонического порядка один план "
-                        + "давал бы разный JSON и байтовое сравнение снимков перестало бы работать");
+                        + "давал бы разный JSON и байтовое сравнение снимков перестало бы работать"
+                        + " Иначе тест toJson_ParamsWithSeveralKeys_SortsKeysCanonically перестанет ловить эту поломку. При смене toJson_ParamsWithSeveralKeys_SortsKeysCanonically проверь это утверждение.");
     }
 
     @Test
@@ -54,7 +57,8 @@ class PlanJsonTests {
                         + "{\"type\":\"script\",\"script\":\"say\",\"params\":{\"text\":\"привет\"}}]}",
                 json,
                 "узел sequence обязан писать шаги в исходном порядке: перестановка шагов исполнила бы план духа "
-                        + "в другом порядке");
+                        + "в другом порядке"
+                        + " Иначе тест toJson_SequenceNode_WritesNestedStepsInOrder перестанет ловить эту поломку. При смене toJson_SequenceNode_WritesNestedStepsInOrder проверь это утверждение.");
     }
 
     @Test
@@ -66,7 +70,8 @@ class PlanJsonTests {
                         + "\"step\":{\"type\":\"script\",\"script\":\"wait\",\"params\":{\"ticks\":2}}}",
                 json,
                 "узел repeat обязан писать times и step: без times после перезапуска дух повторил бы шаг не то "
-                        + "число раз");
+                        + "число раз"
+                        + " Иначе тест toJson_RepeatNode_WritesTimesAndStep перестанет ловить эту поломку. При смене toJson_RepeatNode_WritesTimesAndStep проверь это утверждение.");
     }
 
     @Test
@@ -82,7 +87,7 @@ class PlanJsonTests {
                         + "{\"type\":\"script\",\"script\":\"say\",\"params\":{\"text\":\"b\"}}]}",
                 json,
                 "узел fallback обязан писать те же steps, что и sequence: иначе reader не восстановит порядок "
-                        + "резервных веток");
+                        + "резервных веток" + " При смене toJson_FallbackNode_WritesSteps проверь это утверждение.");
     }
 
     @Test
@@ -96,7 +101,8 @@ class PlanJsonTests {
                         + "{\"type\":\"script\",\"script\":\"wait\",\"params\":{\"ticks\":1}}],\"mode\":\"any\"}",
                 json,
                 "узел parallel обязан писать режим 'any' для ParallelMode.ANY: перепутанный режим изменил бы "
-                        + "условие завершения после перезапуска");
+                        + "условие завершения после перезапуска"
+                        + " Иначе тест toJson_ParallelAny_WritesModeAfterSteps перестанет ловить эту поломку. При смене toJson_ParallelAny_WritesModeAfterSteps проверь это утверждение.");
     }
 
     @Test
@@ -110,7 +116,8 @@ class PlanJsonTests {
                         + "{\"type\":\"script\",\"script\":\"wait\",\"params\":{\"ticks\":1}}],\"mode\":\"all\"}",
                 json,
                 "узел parallel обязан писать режим 'all' для ParallelMode.ALL: без него reader не отличит "
-                        + "ожидание всех шагов от ожидания любого");
+                        + "ожидание всех шагов от ожидания любого"
+                        + " Иначе тест toJson_ParallelAll_WritesModeAll перестанет ловить эту поломку. При смене toJson_ParallelAll_WritesModeAll проверь это утверждение.");
     }
 
     @Test
@@ -129,7 +136,8 @@ class PlanJsonTests {
                         + "\"else\":{\"type\":\"script\",\"script\":\"say\",\"params\":{\"text\":\"нет\"}}}",
                 json,
                 "узел condition с веткой else обязан писать обе ветки: потеря else после перезапуска увела бы "
-                        + "условие по неверному пути");
+                        + "условие по неверному пути"
+                        + " Иначе тест toJson_ConditionWithElse_WritesCheckParamsThenElse перестанет ловить эту поломку. При смене toJson_ConditionWithElse_WritesCheckParamsThenElse проверь это утверждение.");
     }
 
     @Test
@@ -143,7 +151,8 @@ class PlanJsonTests {
                         + "\"then\":{\"type\":\"script\",\"script\":\"say\",\"params\":{\"text\":\"да\"}}}",
                 json,
                 "узел condition без else обязан опускать ключ else: запись else:null заставила бы reader "
-                        + "разбирать null как узел плана");
+                        + "разбирать null как узел плана"
+                        + " Иначе тест toJson_ConditionWithoutElse_OmitsElseKey перестанет ловить эту поломку. При смене toJson_ConditionWithoutElse_OmitsElseKey проверь это утверждение.");
     }
 
     @Test
@@ -156,7 +165,8 @@ class PlanJsonTests {
                 "{\"type\":\"script\",\"script\":\"x\"," + "\"params\":{\"flag\":true,\"list\":[\"a\",\"b\"]}}",
                 json,
                 "булевы значения и списки строк обязаны писаться своими типами: число вместо флага или строка "
-                        + "вместо списка сорвали бы проверку параметров при чтении");
+                        + "вместо списка сорвали бы проверку параметров при чтении"
+                        + " Иначе тест toJson_BoolAndListParams_PreserveTypes перестанет ловить эту поломку. При смене toJson_BoolAndListParams_PreserveTypes проверь это утверждение.");
     }
 
     @Test
@@ -169,7 +179,8 @@ class PlanJsonTests {
                 "{\"type\":\"script\",\"script\":\"x\",\"params\":{\"big\":5000000000}}",
                 json,
                 "целые значения обязаны писаться без десятичной точки: иначе JSON заставил бы reader вернуть "
-                        + "Double и тип параметра разошёлся бы с каталогом");
+                        + "Double и тип параметра разошёлся бы с каталогом"
+                        + " При смене toJson_LongParam_WritesWithoutDecimalPoint проверь это утверждение.");
     }
 
     @Test
@@ -177,11 +188,13 @@ class PlanJsonTests {
         NullPointerException error = assertThrows(
                 NullPointerException.class,
                 () -> PlanJson.toJson(null),
-                "toJson с null-узлом обязан отказывать: сериализовать нечего, а тихий null оставил бы пустой снимок");
+                "toJson с null-узлом обязан отказывать: сериализовать нечего, а тихий null оставил бы пустой снимок"
+                        + " Иначе тест toJson_NullNode_IsRejected перестанет ловить эту поломку. При смене toJson_NullNode_IsRejected проверь это утверждение.");
 
         assertEquals(
                 "node не может быть null: сериализовать нечего",
                 error.getMessage(),
-                "отказ за null-узел обязан называть поле 'node': по тексту видно, что именно не задано");
+                "отказ за null-узел обязан называть поле 'node': по тексту видно, что именно не задано"
+                        + " Иначе тест toJson_NullNode_IsRejected перестанет ловить эту поломку. При смене toJson_NullNode_IsRejected проверь это утверждение.");
     }
 }

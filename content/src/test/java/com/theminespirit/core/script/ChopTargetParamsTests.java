@@ -17,7 +17,8 @@ class ChopTargetParamsTests {
                 new ChopTargetParams(12, 64, -7, true, false),
                 params,
                 "chop_target обязан принять координату ствола и флаг посадки: по ним скрипт знает, какое дерево рубить "
-                        + "и восстанавливать ли саженец");
+                        + "и восстанавливать ли саженец"
+                        + " Иначе тест from_AllParamsPresent_ReturnsTargetAndReplant перестанет ловить эту поломку. При смене from_AllParamsPresent_ReturnsTargetAndReplant проверь это утверждение.");
     }
 
     @Test
@@ -27,7 +28,8 @@ class ChopTargetParamsTests {
         assertEquals(
                 new ChopTargetParams(1, 70, 2, false, false),
                 params,
-                "replant=false обязан сохраняться: без него дух сажал бы саженец там, где игрок не просил");
+                "replant=false обязан сохраняться: без него дух сажал бы саженец там, где игрок не просил"
+                        + " Иначе тест from_ReplantFalse_KeepsTarget перестанет ловить эту поломку. При смене from_ReplantFalse_KeepsTarget проверь это утверждение.");
     }
 
     @Test
@@ -35,7 +37,8 @@ class ChopTargetParamsTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> ChopTargetParams.from(Map.of("x", 30_000_001, "y", 64, "z", 7, "replant", false)),
-                "Координата x за границей мира обязана отвергаться: ствола там нет, а рубка гнала бы духа в никуда");
+                "Координата x за границей мира обязана отвергаться: ствола там нет, а рубка гнала бы духа в никуда"
+                        + " Иначе тест from_XOutsideWorld_IsRejected перестанет ловить эту поломку. При смене from_XOutsideWorld_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -43,7 +46,8 @@ class ChopTargetParamsTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> ChopTargetParams.from(Map.of("x", 7, "y", 64, "z", -30_000_001, "replant", false)),
-                "Координата z за границей мира обязана отвергаться: ствола там нет");
+                "Координата z за границей мира обязана отвергаться: ствола там нет"
+                        + " Иначе тест from_ZOutsideWorld_IsRejected перестанет ловить эту поломку. При смене from_ZOutsideWorld_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -51,7 +55,8 @@ class ChopTargetParamsTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> ChopTargetParams.from(Map.of("x", 7, "y", -65, "z", 7, "replant", false)),
-                "Координата y ниже дна мира обязана отвергаться: дерево не растёт под бедроком");
+                "Координата y ниже дна мира обязана отвергаться: дерево не растёт под бедроком"
+                        + " Иначе тест from_YBelowWorld_IsRejected перестанет ловить эту поломку. При смене from_YBelowWorld_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -59,7 +64,8 @@ class ChopTargetParamsTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> ChopTargetParams.from(Map.of("x", 7, "y", 320, "z", 7, "replant", false)),
-                "Координата y выше потолка мира обязана отвергаться: там дерева не бывает");
+                "Координата y выше потолка мира обязана отвергаться: там дерева не бывает"
+                        + " Иначе тест from_YAboveWorld_IsRejected перестанет ловить эту поломку. При смене from_YAboveWorld_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -67,11 +73,13 @@ class ChopTargetParamsTests {
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,
                 () -> ChopTargetParams.from(Map.of("x", 7, "y", 64, "replant", false)),
-                "chop_target без координаты z обязан отказывать: без клетки ствола дерево не определить");
+                "chop_target без координаты z обязан отказывать: без клетки ствола дерево не определить"
+                        + " Иначе тест from_MissingCoordinate_IsRejected перестанет ловить эту поломку. При смене from_MissingCoordinate_IsRejected проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("z"),
-                "Отказ обязан называть недостающий параметр 'z'. Фактическое: " + error.getMessage());
+                "Отказ обязан называть недостающий параметр 'z'. Фактическое: " + error.getMessage()
+                        + " Иначе тест from_MissingCoordinate_IsRejected перестанет ловить эту поломку. При смене from_MissingCoordinate_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -80,7 +88,8 @@ class ChopTargetParamsTests {
                 IllegalArgumentException.class,
                 () -> ChopTargetParams.from(Map.of("x", 7, "y", 64, "z", 7, "replant", "yes")),
                 "replant строкой обязан быть отклонён: тип bool обеспечивает валидатор плана, "
-                        + "а строку нельзя молча превратить во флаг");
+                        + "а строку нельзя молча превратить во флаг"
+                        + " Иначе тест from_ReplantWrongType_IsRejected перестанет ловить эту поломку. При смене from_ReplantWrongType_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -88,6 +97,7 @@ class ChopTargetParamsTests {
         assertThrows(
                 NullPointerException.class,
                 () -> ChopTargetParams.from(null),
-                "ChopTargetParams.from(null) обязан отказывать: без карты параметров маппинг только читает состояние мира");
+                "ChopTargetParams.from(null) обязан отказывать: без карты параметров маппинг только читает состояние мира"
+                        + " Иначе тест from_NullParams_IsRejected перестанет ловить эту поломку. При смене from_NullParams_IsRejected проверь это утверждение.");
     }
 }

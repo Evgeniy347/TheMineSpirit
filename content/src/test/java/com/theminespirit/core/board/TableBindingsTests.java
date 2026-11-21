@@ -24,29 +24,88 @@ class TableBindingsTests {
     void reloadBoundTables_OwnerCurrent_ReturnsSameValue() {
         DataTables tables = DataTables.INSTANCE;
 
-        assertSame(tables.board().current(), BoardConfig.current(), "board.json читается у владельца, не из reload");
-        assertSame(tables.stages().current(), StageRules.current(), "stages.json читается у владельца");
-        assertSame(tables.demand().current(), DemandRules.current(), "settlement_demand.json читается у владельца");
-        assertSame(tables.leveling().current(), LevelingRules.current(), "leveling.json читается у владельца");
-        assertSame(tables.graph().current(), SupplyGraph.current(), "graph.json читается у владельца");
+        assertSame(
+                tables.board().current(),
+                BoardConfig.current(),
+                "board.json читается у владельца, не из reload"
+                        + " Иначе тест reloadBoundTables_OwnerCurrent_ReturnsSameValue перестанет ловить эту поломку. При смене reloadBoundTables_OwnerCurrent_ReturnsSameValue проверь это утверждение.");
+        assertSame(
+                tables.stages().current(),
+                StageRules.current(),
+                "stages.json читается у владельца"
+                        + " Иначе тест reloadBoundTables_OwnerCurrent_ReturnsSameValue перестанет ловить эту поломку. При смене reloadBoundTables_OwnerCurrent_ReturnsSameValue проверь это утверждение.");
+        assertSame(
+                tables.demand().current(),
+                DemandRules.current(),
+                "settlement_demand.json читается у владельца"
+                        + " Иначе тест reloadBoundTables_OwnerCurrent_ReturnsSameValue перестанет ловить эту поломку. При смене reloadBoundTables_OwnerCurrent_ReturnsSameValue проверь это утверждение.");
+        assertSame(
+                tables.leveling().current(),
+                LevelingRules.current(),
+                "leveling.json читается у владельца"
+                        + " Иначе тест reloadBoundTables_OwnerCurrent_ReturnsSameValue перестанет ловить эту поломку. При смене reloadBoundTables_OwnerCurrent_ReturnsSameValue проверь это утверждение.");
+        assertSame(
+                tables.graph().current(),
+                SupplyGraph.current(),
+                "graph.json читается у владельца"
+                        + " Иначе тест reloadBoundTables_OwnerCurrent_ReturnsSameValue перестанет ловить эту поломку. При смене reloadBoundTables_OwnerCurrent_ReturnsSameValue проверь это утверждение.");
         @SuppressWarnings("unchecked")
         TableHolder<List<VitalNeeds.Need>> vital = (TableHolder<List<VitalNeeds.Need>>)
                 tables.registry().holder("vital").orElseThrow();
-        assertSame(vital.current(), VitalNeeds.needs(), "vital.json читается у владельца");
-        assertSame(tables.presets().current(), PresetLibrary.current(), "presets.json читается у владельца");
-        assertSame(tables.town().current(), TownRules.current(), "town.json читается у владельца");
-        assertSame(tables.repair().current(), RepairData.current(), "repair.json читается у владельца");
-        assertSame(tables.tactics().current(), TacticsConfig.loadDefault(), "конфиг тактики читается у владельца");
         assertSame(
-                tables.adapter().current(), TacticsAdapterSettings.loadDefault(), "adapter.json читается у владельца");
-        assertSame(tables.intellect().current(), IntellectTuning.loadDefault(), "intellect.json читается у владельца");
+                vital.current(),
+                VitalNeeds.needs(),
+                "vital.json читается у владельца"
+                        + " Иначе тест reloadBoundTables_OwnerCurrent_ReturnsSameValue перестанет ловить эту поломку. При смене reloadBoundTables_OwnerCurrent_ReturnsSameValue проверь это утверждение.");
+        assertSame(
+                tables.presets().current(),
+                PresetLibrary.current(),
+                "presets.json читается у владельца"
+                        + " Иначе тест reloadBoundTables_OwnerCurrent_ReturnsSameValue перестанет ловить эту поломку. При смене reloadBoundTables_OwnerCurrent_ReturnsSameValue проверь это утверждение.");
+        assertSame(
+                tables.town().current(),
+                TownRules.current(),
+                "town.json читается у владельца"
+                        + " Иначе тест reloadBoundTables_OwnerCurrent_ReturnsSameValue перестанет ловить эту поломку. При смене reloadBoundTables_OwnerCurrent_ReturnsSameValue проверь это утверждение.");
+        assertSame(
+                tables.repair().current(),
+                RepairData.current(),
+                "repair.json читается у владельца"
+                        + " Иначе тест reloadBoundTables_OwnerCurrent_ReturnsSameValue перестанет ловить эту поломку. При смене reloadBoundTables_OwnerCurrent_ReturnsSameValue проверь это утверждение.");
+        assertSame(
+                tables.tactics().current(),
+                TacticsConfig.loadDefault(),
+                "конфиг тактики читается у владельца"
+                        + " Иначе тест reloadBoundTables_OwnerCurrent_ReturnsSameValue перестанет ловить эту поломку. При смене reloadBoundTables_OwnerCurrent_ReturnsSameValue проверь это утверждение.");
+        assertSame(
+                tables.adapter().current(),
+                TacticsAdapterSettings.loadDefault(),
+                "adapter.json читается у владельца"
+                        + " Иначе тест reloadBoundTables_OwnerCurrent_ReturnsSameValue перестанет ловить эту поломку. При смене reloadBoundTables_OwnerCurrent_ReturnsSameValue проверь это утверждение.");
+        assertSame(
+                tables.intellect().current(),
+                IntellectTuning.loadDefault(),
+                "intellect.json читается у владельца"
+                        + " Иначе тест reloadBoundTables_OwnerCurrent_ReturnsSameValue перестанет ловить эту поломку. При смене reloadBoundTables_OwnerCurrent_ReturnsSameValue проверь это утверждение.");
         assertSame(
                 tables.inventoryNorm().current(),
                 InventoryNormTable.loadDefault(),
-                "inventory_norm.json читается у владельца");
-        assertSame(tables.outside().current(), OutsideRules.loadDefault(), "outside.json читается у владельца");
-        assertSame(tables.priorities().current(), DefenseProfile.loadDefault(), "priorities.json читается у владельца");
+                "inventory_norm.json читается у владельца"
+                        + " Иначе тест reloadBoundTables_OwnerCurrent_ReturnsSameValue перестанет ловить эту поломку. При смене reloadBoundTables_OwnerCurrent_ReturnsSameValue проверь это утверждение.");
         assertSame(
-                tables.processing().current(), ProcessingRules.loadDefault(), "processing.json читается у владельца");
+                tables.outside().current(),
+                OutsideRules.loadDefault(),
+                "outside.json читается у владельца"
+                        + " Иначе тест reloadBoundTables_OwnerCurrent_ReturnsSameValue перестанет ловить эту поломку. При смене reloadBoundTables_OwnerCurrent_ReturnsSameValue проверь это утверждение.");
+        assertSame(
+                tables.priorities().current(),
+                DefenseProfile.loadDefault(),
+                "priorities.json читается у владельца"
+                        + " Иначе тест reloadBoundTables_OwnerCurrent_ReturnsSameValue перестанет ловить эту поломку. При смене reloadBoundTables_OwnerCurrent_ReturnsSameValue проверь это утверждение.");
+        assertSame(
+                tables.processing().current(),
+                ProcessingRules.loadDefault(),
+                "processing.json читается у владельца"
+                        + " Иначе тест reloadBoundTables_OwnerCurrent_ReturnsSameValue перестанет ловить эту поломку. При смене reloadBoundTables_OwnerCurrent_ReturnsSameValue проверь это утверждение.");
     }
 }

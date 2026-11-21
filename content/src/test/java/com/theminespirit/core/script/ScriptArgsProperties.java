@@ -23,7 +23,8 @@ class ScriptArgsProperties {
                 IllegalArgumentException.class,
                 () -> GotoParams.from(Map.of("x", (long) x, "y", (long) y, "z", (long) z)),
                 "маппинг goto обязан принимать только Integer: валидатор плана приводит INT к Integer, "
-                        + "а long означает, что значение не прошло валидатор");
+                        + "а long означает, что значение не прошло валидатор"
+                        + " Иначе тест gotoParams_LongParameter_IsRejected перестанет ловить эту поломку. При смене gotoParams_LongParameter_IsRejected проверь это утверждение.");
     }
 
     @Property
@@ -33,7 +34,8 @@ class ScriptArgsProperties {
         assertEquals(
                 Optional.of(values),
                 result,
-                "Список строк из плана обязан дойти до скрипта без потерь и перестановок: по нему строится фильтр блоков");
+                "Список строк из плана обязан дойти до скрипта без потерь и перестановок: по нему строится фильтр блоков"
+                        + " Иначе тест optionalStringList_ListOfStrings_ReturnsSameElements перестанет ловить эту поломку. При смене optionalStringList_ListOfStrings_ReturnsSameElements проверь это утверждение.");
     }
 
     @Property
@@ -44,10 +46,12 @@ class ScriptArgsProperties {
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,
                 () -> ScriptArgs.optionalStringList(Map.of("filter", mixed), "filter"),
-                "Список с числом среди строк обязан отвергаться: тихое приведение скрыло бы ошибку плана");
+                "Список с числом среди строк обязан отвергаться: тихое приведение скрыло бы ошибку плана"
+                        + " Иначе тест optionalStringList_ListWithNonString_IsRejected перестанет ловить эту поломку. При смене optionalStringList_ListWithNonString_IsRejected проверь это утверждение.");
         assertTrue(
                 error.getMessage().contains("filter"),
-                "Сообщение обязано называть параметр 'filter'. Фактическое: " + error.getMessage());
+                "Сообщение обязано называть параметр 'filter'. Фактическое: " + error.getMessage()
+                        + " Иначе тест optionalStringList_ListWithNonString_IsRejected перестанет ловить эту поломку. При смене optionalStringList_ListWithNonString_IsRejected проверь это утверждение.");
     }
 
     @Property
@@ -55,7 +59,8 @@ class ScriptArgsProperties {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> ScriptArgs.optionalStringList(Map.of("filter", text), "filter"),
-                "Строка вместо списка строк обязана отвергаться: валидатор приводит STRING_LIST к списку до запуска");
+                "Строка вместо списка строк обязана отвергаться: валидатор приводит STRING_LIST к списку до запуска"
+                        + " Иначе тест optionalStringList_NotAList_IsRejected перестанет ловить эту поломку. При смене optionalStringList_NotAList_IsRejected проверь это утверждение.");
     }
 
     @Property
@@ -63,7 +68,8 @@ class ScriptArgsProperties {
         assertEquals(
                 value,
                 ScriptArgs.requireBoolean(Map.of("replant", value), "replant"),
-                "requireBoolean обязан вернуть то же значение, что положил валидатор плана");
+                "requireBoolean обязан вернуть то же значение, что положил валидатор плана"
+                        + " Иначе тест requireBoolean_BooleanValue_IsReturned перестанет ловить эту поломку. При смене requireBoolean_BooleanValue_IsReturned проверь это утверждение.");
     }
 
     @Property
@@ -71,6 +77,7 @@ class ScriptArgsProperties {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> ScriptArgs.requireBoolean(Map.of("replant", text), "replant"),
-                "Строка вместо true/false обязана отвергаться: \"false\" как строка истинна для проверки на null");
+                "Строка вместо true/false обязана отвергаться: \"false\" как строка истинна для проверки на null"
+                        + " Иначе тест requireBoolean_StringValue_IsRejected перестанет ловить эту поломку. При смене requireBoolean_StringValue_IsRejected проверь это утверждение.");
     }
 }

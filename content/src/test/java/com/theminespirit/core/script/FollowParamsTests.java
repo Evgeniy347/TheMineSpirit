@@ -15,7 +15,8 @@ class FollowParamsTests {
         assertEquals(
                 new FollowParams("Steve", 5),
                 params,
-                "follow обязан принять цель и радиус удержания: по ним скрипт решает, когда идти к игроку");
+                "follow обязан принять цель и радиус удержания: по ним скрипт решает, когда идти к игроку"
+                        + " Иначе тест from_AllParamsPresent_ReturnsTargetAndRadius перестанет ловить эту поломку. При смене from_AllParamsPresent_ReturnsTargetAndRadius проверь это утверждение.");
     }
 
     @Test
@@ -24,11 +25,13 @@ class FollowParamsTests {
                 IllegalArgumentException.class,
                 () -> FollowParams.from(Map.of("target", "Steve")),
                 "follow без радиуса обязан отказывать: валидатор плана подставляет значение по умолчанию "
-                        + "из каталога до запуска, а без него скрипт не знает дистанцию");
+                        + "из каталога до запуска, а без него скрипт не знает дистанцию"
+                        + " Иначе тест radius_Missing_IsRejected перестанет ловить эту поломку. При смене radius_Missing_IsRejected проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("radius"),
-                "отказ обязан называть недостающий радиус 'radius'. Фактическое: " + error.getMessage());
+                "отказ обязан называть недостающий радиус 'radius'. Фактическое: " + error.getMessage()
+                        + " Иначе тест radius_Missing_IsRejected перестанет ловить эту поломку. При смене radius_Missing_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -36,11 +39,13 @@ class FollowParamsTests {
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,
                 () -> FollowParams.from(Map.of("radius", 3)),
-                "follow без цели обязан отказывать: без цели скрипт не знает, за кем следовать");
+                "follow без цели обязан отказывать: без цели скрипт не знает, за кем следовать"
+                        + " Иначе тест target_Missing_IsRejected перестанет ловить эту поломку. При смене target_Missing_IsRejected проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("target"),
-                "отказ обязан называть недостающую цель 'target'. Фактическое: " + error.getMessage());
+                "отказ обязан называть недостающую цель 'target'. Фактическое: " + error.getMessage()
+                        + " Иначе тест target_Missing_IsRejected перестанет ловить эту поломку. При смене target_Missing_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -48,7 +53,8 @@ class FollowParamsTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> FollowParams.from(Map.of("target", "  ")),
-                "follow с пустым именем цели обязан отказывать: пустую строку нельзя сопоставить с игроком");
+                "follow с пустым именем цели обязан отказывать: пустую строку нельзя сопоставить с игроком"
+                        + " Иначе тест target_Blank_IsRejected перестанет ловить эту поломку. При смене target_Blank_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -56,7 +62,8 @@ class FollowParamsTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> FollowParams.from(Map.of("target", "Steve", "radius", -1)),
-                "follow с отрицательным радиусом обязан отказывать: дистанция меньше нуля бессмысленна");
+                "follow с отрицательным радиусом обязан отказывать: дистанция меньше нуля бессмысленна"
+                        + " Иначе тест radius_Negative_IsRejected перестанет ловить эту поломку. При смене radius_Negative_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -64,6 +71,7 @@ class FollowParamsTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> FollowParams.from(Map.of("target", "Steve", "radius", "far")),
-                "follow с нецелым радиусом обязан отказывать: строку нельзя тихо превратить в дистанцию");
+                "follow с нецелым радиусом обязан отказывать: строку нельзя тихо превратить в дистанцию"
+                        + " Иначе тест radius_WrongType_IsRejected перестанет ловить эту поломку. При смене radius_WrongType_IsRejected проверь это утверждение.");
     }
 }

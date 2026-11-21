@@ -15,8 +15,16 @@ class FillCraterParamsTests {
 
         FillCraterParams params = FillCraterParams.from(Map.of("crater", id.toString()));
 
-        assertInstanceOf(FillCraterParams.ById.class, params, "UUID в параметре обязан читаться как воронка по id");
-        assertEquals(id, ((FillCraterParams.ById) params).id(), "Id воронки обязан разобраться без потерь");
+        assertInstanceOf(
+                FillCraterParams.ById.class,
+                params,
+                "UUID в параметре обязан читаться как воронка по id"
+                        + " Иначе тест from_UuidValue_ParsesById перестанет ловить эту поломку. При смене from_UuidValue_ParsesById проверь это утверждение.");
+        assertEquals(
+                id,
+                ((FillCraterParams.ById) params).id(),
+                "Id воронки обязан разобраться без потерь"
+                        + " Иначе тест from_UuidValue_ParsesById перестанет ловить эту поломку. При смене from_UuidValue_ParsesById проверь это утверждение.");
     }
 
     @Test
@@ -24,10 +32,25 @@ class FillCraterParamsTests {
         FillCraterParams params = FillCraterParams.from(Map.of("crater", "10,64,-5"));
 
         FillCraterParams.ByPosition position = assertInstanceOf(
-                FillCraterParams.ByPosition.class, params, "Три числа через запятую обязаны читаться как позиция");
-        assertEquals(10, position.x(), "X позиции обязан совпасть");
-        assertEquals(64, position.y(), "Y позиции обязан совпасть");
-        assertEquals(-5, position.z(), "Z позиции обязан совпасть");
+                FillCraterParams.ByPosition.class,
+                params,
+                "Три числа через запятую обязаны читаться как позиция"
+                        + " Иначе тест from_CoordinateValue_ParsesByPosition перестанет ловить эту поломку. При смене from_CoordinateValue_ParsesByPosition проверь это утверждение.");
+        assertEquals(
+                10,
+                position.x(),
+                "X позиции обязан совпасть"
+                        + " Иначе тест from_CoordinateValue_ParsesByPosition перестанет ловить эту поломку. При смене from_CoordinateValue_ParsesByPosition проверь это утверждение.");
+        assertEquals(
+                64,
+                position.y(),
+                "Y позиции обязан совпасть"
+                        + " Иначе тест from_CoordinateValue_ParsesByPosition перестанет ловить эту поломку. При смене from_CoordinateValue_ParsesByPosition проверь это утверждение.");
+        assertEquals(
+                -5,
+                position.z(),
+                "Z позиции обязан совпасть"
+                        + " Иначе тест from_CoordinateValue_ParsesByPosition перестанет ловить эту поломку. При смене from_CoordinateValue_ParsesByPosition проверь это утверждение.");
     }
 
     @Test
@@ -35,7 +58,8 @@ class FillCraterParamsTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> FillCraterParams.from(Map.of("crater", "10,64,-5,")),
-                "Позиция с хвостовой запятой — опечатка, а не «x,y,z»: молча принятая, она прячет лишнюю координату");
+                "Позиция с хвостовой запятой — опечатка, а не «x,y,z»: молча принятая, она прячет лишнюю координату"
+                        + " Иначе тест from_TrailingCommaPosition_Throws перестанет ловить эту поломку. При смене from_TrailingCommaPosition_Throws проверь это утверждение.");
     }
 
     @Test
@@ -43,7 +67,8 @@ class FillCraterParamsTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> FillCraterParams.from(Map.of()),
-                "Без параметра 'crater' скрипт не знает, какую воронку засыпать: ошибка до первого шага");
+                "Без параметра 'crater' скрипт не знает, какую воронку засыпать: ошибка до первого шага"
+                        + " Иначе тест from_MissingParam_Throws перестанет ловить эту поломку. При смене from_MissingParam_Throws проверь это утверждение.");
     }
 
     @Test
@@ -51,10 +76,12 @@ class FillCraterParamsTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> FillCraterParams.from(Map.of("crater", "воронка")),
-                "Строка, не UUID и не три координаты, обязана отвергаться с понятной причиной");
+                "Строка, не UUID и не три координаты, обязана отвергаться с понятной причиной"
+                        + " Иначе тест from_NotUuidNotPosition_Throws перестанет ловить эту поломку. При смене from_NotUuidNotPosition_Throws проверь это утверждение.");
         assertThrows(
                 IllegalArgumentException.class,
                 () -> FillCraterParams.from(Map.of("crater", "10,64,x")),
-                "Нецелая координата обязана отвергаться, а не читаться как 0");
+                "Нецелая координата обязана отвергаться, а не читаться как 0"
+                        + " Иначе тест from_NotUuidNotPosition_Throws перестанет ловить эту поломку. При смене from_NotUuidNotPosition_Throws проверь это утверждение.");
     }
 }

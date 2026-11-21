@@ -14,7 +14,8 @@ class WalkCarefulParamsTests {
         assertEquals(
                 new WalkCarefulParams(10, 64, -3),
                 params,
-                "walk_careful обязан сохранить точку: по ней осторожный шаг ведёт духа, проверяя обрывы");
+                "walk_careful обязан сохранить точку: по ней осторожный шаг ведёт духа, проверяя обрывы"
+                        + " Иначе тест from_AllParamsPresent_ReturnsParams перестанет ловить эту поломку. При смене from_AllParamsPresent_ReturnsParams проверь это утверждение.");
     }
 
     @Test
@@ -22,7 +23,8 @@ class WalkCarefulParamsTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> WalkCarefulParams.from(Map.of("x", 10, "y", 64)),
-                "walk_careful без координаты обязан отказывать: без точки скрипт не знает, куда вести духа");
+                "walk_careful без координаты обязан отказывать: без точки скрипт не знает, куда вести духа"
+                        + " Иначе тест from_MissingCoordinate_IsRejected перестанет ловить эту поломку. При смене from_MissingCoordinate_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -30,7 +32,8 @@ class WalkCarefulParamsTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> WalkCarefulParams.from(Map.of("x", 10, "y", 320, "z", -3)),
-                "Точка выше границы мира обязана отвергаться: осторожному шагу туда не дойти");
+                "Точка выше границы мира обязана отвергаться: осторожному шагу туда не дойти"
+                        + " Иначе тест from_YOutsideWorld_IsRejected перестанет ловить эту поломку. При смене from_YOutsideWorld_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -38,6 +41,7 @@ class WalkCarefulParamsTests {
         assertThrows(
                 NullPointerException.class,
                 () -> WalkCarefulParams.from(null),
-                "WalkCarefulParams.from(null) обязан отказывать: без карты параметров маппинг только читает состояние мира");
+                "WalkCarefulParams.from(null) обязан отказывать: без карты параметров маппинг только читает состояние мира"
+                        + " Иначе тест from_NullParams_IsRejected перестанет ловить эту поломку. При смене from_NullParams_IsRejected проверь это утверждение.");
     }
 }
