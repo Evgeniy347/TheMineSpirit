@@ -28,43 +28,91 @@ class MapPaintTests {
     @Test
     void of_WideLot_LabelInsideItsBox() {
         List<MapPaint.Text> texts = texts(MapPaint.of(VIEW, VIEWPORT, Optional.empty(), FONT));
-        assertEquals(1, texts.size(), "Подпись только у участка, где она влезает: " + texts);
+        assertEquals(
+                1,
+                texts.size(),
+                "Подпись только у участка, где она влезает: " + texts
+                        + " Иначе тест of_WideLot_LabelInsideItsBox перестанет ловить эту поломку. При смене of_WideLot_LabelInsideItsBox проверь это утверждение.");
         MapPaint.Text text = texts.get(0);
-        assertEquals("Склад", text.text(), "Подпись — название участка");
+        assertEquals(
+                "Склад",
+                text.text(),
+                "Подпись — название участка"
+                        + " Иначе тест of_WideLot_LabelInsideItsBox перестанет ловить эту поломку. При смене of_WideLot_LabelInsideItsBox проверь это утверждение.");
         assertTrue(
                 text.x() >= VIEWPORT.screenX(0)
                         && text.x() + 30 <= VIEWPORT.screenX(40)
                         && text.y() + 9 <= VIEWPORT.screenY(10),
-                "Подпись не вылезает за участок: " + text);
+                "Подпись не вылезает за участок: " + text
+                        + " Иначе тест of_WideLot_LabelInsideItsBox перестанет ловить эту поломку. При смене of_WideLot_LabelInsideItsBox проверь это утверждение.");
     }
 
     @Test
     void of_Hovered_BorderHighlighted() {
         List<MapPaint.Shape> plain = MapPaint.of(VIEW, VIEWPORT, Optional.empty(), FONT);
         List<MapPaint.Shape> hovered = MapPaint.of(VIEW, VIEWPORT, Optional.of(WIDE), FONT);
-        assertEquals(0, count(plain, MapStyle.HOVER_BORDER), "Без наведения рамки подсветки нет");
-        assertEquals(1, count(hovered, MapStyle.HOVER_BORDER), "Наведённый участок — светлая рамка");
+        assertEquals(
+                0,
+                count(plain, MapStyle.HOVER_BORDER),
+                "Без наведения рамки подсветки нет"
+                        + " Иначе тест of_Hovered_BorderHighlighted перестанет ловить эту поломку. При смене of_Hovered_BorderHighlighted проверь это утверждение.");
+        assertEquals(
+                1,
+                count(hovered, MapStyle.HOVER_BORDER),
+                "Наведённый участок — светлая рамка"
+                        + " Иначе тест of_Hovered_BorderHighlighted перестанет ловить эту поломку. При смене of_Hovered_BorderHighlighted проверь это утверждение.");
     }
 
     @Test
     void of_FenceWithGate_LinesThenGatesThenLabelsOnTop() {
         List<MapPaint.Shape> shapes = MapPaint.of(VIEW, VIEWPORT, Optional.empty(), FONT);
-        assertEquals(MapStyle.BACKGROUND, ((MapPaint.Fill) shapes.get(0)).color(), "Сначала фон окна");
-        assertEquals(4, count(shapes, MapStyle.CONTOUR), "Замкнутый контур из 4 точек — 4 отрезка");
-        assertEquals(1, count(shapes, MapStyle.GATE), "Калитка — отдельный квадрат");
-        assertTrue(shapes.get(shapes.size() - 1) instanceof MapPaint.Text, "Подписи рисуются последними");
+        assertEquals(
+                MapStyle.BACKGROUND,
+                ((MapPaint.Fill) shapes.get(0)).color(),
+                "Сначала фон окна"
+                        + " Иначе тест of_FenceWithGate_LinesThenGatesThenLabelsOnTop перестанет ловить эту поломку. При смене of_FenceWithGate_LinesThenGatesThenLabelsOnTop проверь это утверждение.");
+        assertEquals(
+                4,
+                count(shapes, MapStyle.CONTOUR),
+                "Замкнутый контур из 4 точек — 4 отрезка"
+                        + " Иначе тест of_FenceWithGate_LinesThenGatesThenLabelsOnTop перестанет ловить эту поломку. При смене of_FenceWithGate_LinesThenGatesThenLabelsOnTop проверь это утверждение.");
+        assertEquals(
+                1,
+                count(shapes, MapStyle.GATE),
+                "Калитка — отдельный квадрат"
+                        + " Иначе тест of_FenceWithGate_LinesThenGatesThenLabelsOnTop перестанет ловить эту поломку. При смене of_FenceWithGate_LinesThenGatesThenLabelsOnTop проверь это утверждение.");
+        assertTrue(
+                shapes.get(shapes.size() - 1) instanceof MapPaint.Text,
+                "Подписи рисуются последними"
+                        + " Иначе тест of_FenceWithGate_LinesThenGatesThenLabelsOnTop перестанет ловить эту поломку. При смене of_FenceWithGate_LinesThenGatesThenLabelsOnTop проверь это утверждение.");
     }
 
     @Test
     void of_Terrain_BackgroundThenTerrainThenSemiTransparentPlan() {
         TerrainRaster terrain = TerrainRaster.of(List.of(tile(0, 0, 12)));
         List<MapPaint.Shape> shapes = MapPaint.of(VIEW, Optional.of(terrain), VIEWPORT, Optional.empty(), FONT);
-        assertEquals(MapStyle.BACKGROUND, ((MapPaint.Fill) shapes.get(0)).color(), "Сначала фон окна");
+        assertEquals(
+                MapStyle.BACKGROUND,
+                ((MapPaint.Fill) shapes.get(0)).color(),
+                "Сначала фон окна"
+                        + " Иначе тест of_Terrain_BackgroundThenTerrainThenSemiTransparentPlan перестанет ловить эту поломку. При смене of_Terrain_BackgroundThenTerrainThenSemiTransparentPlan проверь это утверждение.");
         MapPaint.Raster raster = (MapPaint.Raster) shapes.get(1);
-        assertTrue(raster.x2() > raster.x1() && raster.y2() > raster.y1(), "Слой местности — первой картинкой на фоне");
-        assertTrue(shapes.indexOf(raster) < shapes.size() - 1, "План рисуется поверх местности");
-        assertTrue((MapStyle.fill(WIDE) >>> 24) < 0xFF, "Участок полупрозрачен, чтобы видеть рельеф под ним");
-        assertTrue((MapStyle.fill(ROAD) >>> 24) < 0xFF, "Улица полупрозрачна, чтобы видеть рельеф под ней");
+        assertTrue(
+                raster.x2() > raster.x1() && raster.y2() > raster.y1(),
+                "Слой местности — первой картинкой на фоне"
+                        + " Иначе тест of_Terrain_BackgroundThenTerrainThenSemiTransparentPlan перестанет ловить эту поломку. При смене of_Terrain_BackgroundThenTerrainThenSemiTransparentPlan проверь это утверждение.");
+        assertTrue(
+                shapes.indexOf(raster) < shapes.size() - 1,
+                "План рисуется поверх местности"
+                        + " Иначе тест of_Terrain_BackgroundThenTerrainThenSemiTransparentPlan перестанет ловить эту поломку. При смене of_Terrain_BackgroundThenTerrainThenSemiTransparentPlan проверь это утверждение.");
+        assertTrue(
+                (MapStyle.fill(WIDE) >>> 24) < 0xFF,
+                "Участок полупрозрачен, чтобы видеть рельеф под ним"
+                        + " Иначе тест of_Terrain_BackgroundThenTerrainThenSemiTransparentPlan перестанет ловить эту поломку. При смене of_Terrain_BackgroundThenTerrainThenSemiTransparentPlan проверь это утверждение.");
+        assertTrue(
+                (MapStyle.fill(ROAD) >>> 24) < 0xFF,
+                "Улица полупрозрачна, чтобы видеть рельеф под ней"
+                        + " Иначе тест of_Terrain_BackgroundThenTerrainThenSemiTransparentPlan перестанет ловить эту поломку. При смене of_Terrain_BackgroundThenTerrainThenSemiTransparentPlan проверь это утверждение.");
     }
 
     @Test
@@ -73,9 +121,13 @@ class MapPaintTests {
         assertEquals(
                 new MapHint("Хижина", MapHint.KEY_DAMAGED, List.of(70, 30)),
                 MapHint.of(damaged),
-                "Повреждённая постройка: цела на 70%, до восстановления 30%");
+                "Повреждённая постройка: цела на 70%, до восстановления 30%"
+                        + " Иначе тест hint_DamagedLot_IntactAndRemainingPercent перестанет ловить эту поломку. При смене hint_DamagedLot_IntactAndRemainingPercent проверь это утверждение.");
         assertEquals(
-                new MapHint("Склад", MapHint.KEY_LOT, List.of(50)), MapHint.of(WIDE), "Целая постройка: готово 50%");
+                new MapHint("Склад", MapHint.KEY_LOT, List.of(50)),
+                MapHint.of(WIDE),
+                "Целая постройка: готово 50%"
+                        + " Иначе тест hint_DamagedLot_IntactAndRemainingPercent перестанет ловить эту поломку. При смене hint_DamagedLot_IntactAndRemainingPercent проверь это утверждение.");
     }
 
     @Test
@@ -83,13 +135,33 @@ class MapPaintTests {
         BoardLayout.Rect board = ScreenTabs.rect(427, ScreenTabs.Tab.BOARD);
         BoardLayout.Rect plan = ScreenTabs.rect(427, ScreenTabs.Tab.PLAN);
         BoardLayout.Rect mine = ScreenTabs.rect(427, ScreenTabs.Tab.MINE);
-        assertEquals(board.x() + board.width() + ScreenTabs.GAP, plan.x(), "Вкладки рядом, «План» правее доски");
-        assertEquals(plan.x() + plan.width() + ScreenTabs.GAP, mine.x(), "Вкладки рядом, «Шахта» правее плана");
+        assertEquals(
+                board.x() + board.width() + ScreenTabs.GAP,
+                plan.x(),
+                "Вкладки рядом, «План» правее доски"
+                        + " Иначе тест tabs_TopRight_SideBySideInsideScreen перестанет ловить эту поломку. При смене tabs_TopRight_SideBySideInsideScreen проверь это утверждение.");
+        assertEquals(
+                plan.x() + plan.width() + ScreenTabs.GAP,
+                mine.x(),
+                "Вкладки рядом, «Шахта» правее плана"
+                        + " Иначе тест tabs_TopRight_SideBySideInsideScreen перестанет ловить эту поломку. При смене tabs_TopRight_SideBySideInsideScreen проверь это утверждение.");
         BoardLayout.Rect craft = ScreenTabs.rect(427, ScreenTabs.Tab.CRAFT);
-        assertEquals(mine.x() + mine.width() + ScreenTabs.GAP, craft.x(), "Вкладки рядом, «Крафт» правее шахты");
+        assertEquals(
+                mine.x() + mine.width() + ScreenTabs.GAP,
+                craft.x(),
+                "Вкладки рядом, «Крафт» правее шахты"
+                        + " Иначе тест tabs_TopRight_SideBySideInsideScreen перестанет ловить эту поломку. При смене tabs_TopRight_SideBySideInsideScreen проверь это утверждение.");
         BoardLayout.Rect tree = ScreenTabs.rect(427, ScreenTabs.Tab.TREE);
-        assertEquals(craft.x() + craft.width() + ScreenTabs.GAP, tree.x(), "Вкладки рядом, «Древо» правее крафта");
-        assertEquals(427 - BoardLayout.MARGIN, tree.x() + tree.width(), "Вкладки прижаты к правому краю");
+        assertEquals(
+                craft.x() + craft.width() + ScreenTabs.GAP,
+                tree.x(),
+                "Вкладки рядом, «Древо» правее крафта"
+                        + " Иначе тест tabs_TopRight_SideBySideInsideScreen перестанет ловить эту поломку. При смене tabs_TopRight_SideBySideInsideScreen проверь это утверждение.");
+        assertEquals(
+                427 - BoardLayout.MARGIN,
+                tree.x() + tree.width(),
+                "Вкладки прижаты к правому краю"
+                        + " Иначе тест tabs_TopRight_SideBySideInsideScreen перестанет ловить эту поломку. При смене tabs_TopRight_SideBySideInsideScreen проверь это утверждение.");
     }
 
     private static TerrainTile tile(int chunkX, int chunkZ, int id) {

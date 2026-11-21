@@ -24,9 +24,18 @@ class MineGeometryTests {
                         geometry.bounds().z1(),
                         geometry.bounds().x2(),
                         geometry.bounds().z2()),
-                "Границы среза охватывают спуск и куб хода у нижней ступени");
-        assertEquals(List.of(7, 10), List.of(geometry.minY(), geometry.maxY()), "Высоты от пола спуска до верха входа");
-        assertEquals(8, geometry.defaultY(), "По умолчанию срез — на уровне нижней ступени");
+                "Границы среза охватывают спуск и куб хода у нижней ступени"
+                        + " Иначе тест of_StairLayout_BoundsCoverDescentAndTunnel перестанет ловить эту поломку. При смене of_StairLayout_BoundsCoverDescentAndTunnel проверь это утверждение.");
+        assertEquals(
+                List.of(7, 10),
+                List.of(geometry.minY(), geometry.maxY()),
+                "Высоты от пола спуска до верха входа"
+                        + " Иначе тест of_StairLayout_BoundsCoverDescentAndTunnel перестанет ловить эту поломку. При смене of_StairLayout_BoundsCoverDescentAndTunnel проверь это утверждение.");
+        assertEquals(
+                8,
+                geometry.defaultY(),
+                "По умолчанию срез — на уровне нижней ступени"
+                        + " Иначе тест of_StairLayout_BoundsCoverDescentAndTunnel перестанет ловить эту поломку. При смене of_StairLayout_BoundsCoverDescentAndTunnel проверь это утверждение.");
         assertEquals(
                 List.of(2, 8, 0, 4, 10, 2),
                 List.of(
@@ -36,7 +45,8 @@ class MineGeometryTests {
                         geometry.tunnel().maxX(),
                         geometry.tunnel().maxY(),
                         geometry.tunnel().maxZ()),
-                "Куб хода растёт от нижней клетки воздуха спуска");
+                "Куб хода растёт от нижней клетки воздуха спуска"
+                        + " Иначе тест of_StairLayout_BoundsCoverDescentAndTunnel перестанет ловить эту поломку. При смене of_StairLayout_BoundsCoverDescentAndTunnel проверь это утверждение.");
     }
 
     @Test
@@ -50,7 +60,12 @@ class MineGeometryTests {
                         geometry.bounds().z1(),
                         geometry.bounds().x2(),
                         geometry.bounds().z2()),
-                "Без выкопанного спуска карта показывает хотя бы куб хода от входа");
-        assertEquals(20, geometry.defaultY(), "Срез по умолчанию — на высоте входа");
+                "Без выкопанного спуска карта показывает хотя бы куб хода от входа"
+                        + " Иначе тест of_WithoutAir_TunnelFromEntrance перестанет ловить эту поломку. При смене of_WithoutAir_TunnelFromEntrance проверь это утверждение.");
+        assertEquals(
+                20,
+                geometry.defaultY(),
+                "Срез по умолчанию — на высоте входа"
+                        + " Иначе тест of_WithoutAir_TunnelFromEntrance перестанет ловить эту поломку. При смене of_WithoutAir_TunnelFromEntrance проверь это утверждение.");
     }
 }

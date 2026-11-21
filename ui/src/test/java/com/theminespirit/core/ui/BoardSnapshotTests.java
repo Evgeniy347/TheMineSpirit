@@ -80,17 +80,41 @@ class BoardSnapshotTests {
         assertEquals(
                 List.of("done-early", "done-late", "work", "lack", "free-high", "free-low"),
                 tiles.stream().map(BoardTile::id).toList(),
-                "Порядок плиток: успешно завершённые по времени, активные, ждущие с причиной, доступные");
-        assertEquals(100L, tiles.get(0).doneAt(), "Завершённая плитка обязана нести тик завершения из журнала");
-        assertEquals(BoardTileGroup.ACTIVE, tiles.get(2).group(), "Выданное задание обязано стоять в активных");
+                "Порядок плиток: успешно завершённые по времени, активные, ждущие с причиной, доступные"
+                        + " Иначе тест build_MixedBoard_KeepsWaitingApartFromDone перестанет ловить эту поломку. При смене build_MixedBoard_KeepsWaitingApartFromDone проверь это утверждение.");
+        assertEquals(
+                100L,
+                tiles.get(0).doneAt(),
+                "Завершённая плитка обязана нести тик завершения из журнала"
+                        + " Иначе тест build_MixedBoard_KeepsWaitingApartFromDone перестанет ловить эту поломку. При смене build_MixedBoard_KeepsWaitingApartFromDone проверь это утверждение.");
+        assertEquals(
+                BoardTileGroup.ACTIVE,
+                tiles.get(2).group(),
+                "Выданное задание обязано стоять в активных"
+                        + " Иначе тест build_MixedBoard_KeepsWaitingApartFromDone перестанет ловить эту поломку. При смене build_MixedBoard_KeepsWaitingApartFromDone проверь это утверждение.");
         assertEquals(
                 BoardTileGroup.WAITING,
                 tiles.get(3).group(),
-                "Задание без ресурсов обязано стоять в колонке ожидания, а не среди завершённых");
-        assertFalse(tiles.get(3).unfinished(), "Ждущее задание не считается не удавшимся в колонке завершённых");
-        assertEquals(0L, tiles.get(3).doneAt(), "Ждущее задание не имеет тика завершения");
-        assertEquals("Тихон", tiles.get(2).spirit(), "Плитка обязана называть духа-исполнителя по имени");
-        assertNull(tiles.get(4).spirit(), "Невыданная плитка не называет исполнителя");
+                "Задание без ресурсов обязано стоять в колонке ожидания, а не среди завершённых"
+                        + " Иначе тест build_MixedBoard_KeepsWaitingApartFromDone перестанет ловить эту поломку. При смене build_MixedBoard_KeepsWaitingApartFromDone проверь это утверждение.");
+        assertFalse(
+                tiles.get(3).unfinished(),
+                "Ждущее задание не считается не удавшимся в колонке завершённых"
+                        + " Иначе тест build_MixedBoard_KeepsWaitingApartFromDone перестанет ловить эту поломку. При смене build_MixedBoard_KeepsWaitingApartFromDone проверь это утверждение.");
+        assertEquals(
+                0L,
+                tiles.get(3).doneAt(),
+                "Ждущее задание не имеет тика завершения"
+                        + " Иначе тест build_MixedBoard_KeepsWaitingApartFromDone перестанет ловить эту поломку. При смене build_MixedBoard_KeepsWaitingApartFromDone проверь это утверждение.");
+        assertEquals(
+                "Тихон",
+                tiles.get(2).spirit(),
+                "Плитка обязана называть духа-исполнителя по имени"
+                        + " Иначе тест build_MixedBoard_KeepsWaitingApartFromDone перестанет ловить эту поломку. При смене build_MixedBoard_KeepsWaitingApartFromDone проверь это утверждение.");
+        assertNull(
+                tiles.get(4).spirit(),
+                "Невыданная плитка не называет исполнителя"
+                        + " Иначе тест build_MixedBoard_KeepsWaitingApartFromDone перестанет ловить эту поломку. При смене build_MixedBoard_KeepsWaitingApartFromDone проверь это утверждение.");
     }
 
     @Test
@@ -117,7 +141,8 @@ class BoardSnapshotTests {
                 List.of("script=chop_tree", "target=-203,68,-560"),
                 tile.details(),
                 "Скрипт и цель обязаны дойти до плитки: иначе на экране доски карточка не говорит, "
-                        + "чем дух занят и куда идёт");
+                        + "чем дух занят и куда идёт"
+                        + " При смене build_TicketDetails_ReachTheTile проверь это утверждение.");
     }
 
     @Test
@@ -132,7 +157,8 @@ class BoardSnapshotTests {
                 List.of("target=10,64,-5", "supply=minecraft:oak_log×5"),
                 tile.details(),
                 "Цель задания обязана дойти до плитки любого кейса, а не только передачи: "
-                        + "иначе по доске не видно, куда идёт дух");
+                        + "иначе по доске не видно, куда идёт дух"
+                        + " При смене build_NonTransferTicket_ShowsTicketTargetAndSpecifics проверь это утверждение.");
     }
 
     @Test
@@ -160,7 +186,8 @@ class BoardSnapshotTests {
         assertEquals(
                 List.of("script=chop_tree", "target=-203,68,-560", "scheme=fence"),
                 tile.details(),
-                "Цель задания не повторяет уже показанную цель, но добавляет недостающую подробность");
+                "Цель задания не повторяет уже показанную цель, но добавляет недостающую подробность"
+                        + " Иначе тест build_TicketDetails_KeepExistingTargetWithoutRepeating перестанет ловить эту поломку. При смене build_TicketDetails_KeepExistingTargetWithoutRepeating проверь это утверждение.");
     }
 
     @Test
@@ -168,7 +195,11 @@ class BoardSnapshotTests {
         List<BoardTile> tiles = BoardSnapshot.build(
                 List.of(task("work", 20, "ASSIGNED", Map.of(), List.of(), 1, SPIRIT_UUID, false)), uuid -> null);
 
-        assertEquals("0f1e2d3c", tiles.get(0).spirit(), "Дух вне загруженных чанков показывается началом UUID");
+        assertEquals(
+                "0f1e2d3c",
+                tiles.get(0).spirit(),
+                "Дух вне загруженных чанков показывается началом UUID"
+                        + " Иначе тест build_UnknownSpirit_ShowsShortUuid перестанет ловить эту поломку. При смене build_UnknownSpirit_ShowsShortUuid проверь это утверждение.");
     }
 
     @Test
@@ -178,11 +209,13 @@ class BoardSnapshotTests {
         assertEquals(
                 BoardTileGroup.WAITING,
                 BoardListings.groupOf(dependant, Set.of("before", "after")),
-                "Задание, ждущее незавершённую зависимость, стоит в колонке ожидания с причиной");
+                "Задание, ждущее незавершённую зависимость, стоит в колонке ожидания с причиной"
+                        + " Иначе тест groupOf_PendingWithUnfinishedDependency_GoesToWaiting перестанет ловить эту поломку. При смене groupOf_PendingWithUnfinishedDependency_GoesToWaiting проверь это утверждение.");
         assertEquals(
                 BoardTileGroup.AVAILABLE,
                 BoardListings.groupOf(dependant, Set.of("after")),
-                "После завершения зависимости задание без нехватки доступно");
+                "После завершения зависимости задание без нехватки доступно"
+                        + " Иначе тест groupOf_PendingWithUnfinishedDependency_GoesToWaiting перестанет ловить эту поломку. При смене groupOf_PendingWithUnfinishedDependency_GoesToWaiting проверь это утверждение.");
     }
 
     @Test
@@ -190,11 +223,13 @@ class BoardSnapshotTests {
         assertEquals(
                 BoardTileGroup.WAITING,
                 BoardListings.groupOf(task("x", 1, "BLOCKED", Map.of(), List.of(), 1), Set.of()),
-                "Заблокированное задание стоит в колонке ожидания, а не среди завершённых");
+                "Заблокированное задание стоит в колонке ожидания, а не среди завершённых"
+                        + " Иначе тест groupOf_BlockedAndFailed_GoToWaiting перестанет ловить эту поломку. При смене groupOf_BlockedAndFailed_GoToWaiting проверь это утверждение.");
         assertEquals(
                 BoardTileGroup.WAITING,
                 BoardListings.groupOf(task("y", 1, "FAILED", Map.of(), List.of(), 1), Set.of()),
-                "Проваленное задание ждёт повтора в колонке ожидания, а не среди завершённых");
+                "Проваленное задание ждёт повтора в колонке ожидания, а не среди завершённых"
+                        + " Иначе тест groupOf_BlockedAndFailed_GoToWaiting перестанет ловить эту поломку. При смене groupOf_BlockedAndFailed_GoToWaiting проверь это утверждение.");
     }
 
     @Test
@@ -205,8 +240,12 @@ class BoardSnapshotTests {
         assertEquals(
                 BoardTileGroup.WAITING,
                 tiles.get(0).group(),
-                "Заблокированное задание обязано стоять в колонке ожидания, а не в завершённых");
-        assertFalse(tiles.get(0).completed(), "Заблокированное задание нельзя считать успешно завершённым");
+                "Заблокированное задание обязано стоять в колонке ожидания, а не в завершённых"
+                        + " Иначе тест blockedTask_InWaitingColumn_IsNotCompleted перестанет ловить эту поломку. При смене blockedTask_InWaitingColumn_IsNotCompleted проверь это утверждение.");
+        assertFalse(
+                tiles.get(0).completed(),
+                "Заблокированное задание нельзя считать успешно завершённым"
+                        + " Иначе тест blockedTask_InWaitingColumn_IsNotCompleted перестанет ловить эту поломку. При смене blockedTask_InWaitingColumn_IsNotCompleted проверь это утверждение.");
     }
 
     @Test
@@ -217,7 +256,8 @@ class BoardSnapshotTests {
         assertEquals(
                 List.of("before"),
                 tiles.get(0).dependsOn(),
-                "Плитка обязана нести id зависимостей: иначе экран не назовёт задание, которого она ждёт");
+                "Плитка обязана нести id зависимостей: иначе экран не назовёт задание, которого она ждёт"
+                        + " При смене build_DependentTask_KeepsDependencyIds проверь это утверждение.");
     }
 
     @Test
@@ -225,7 +265,11 @@ class BoardSnapshotTests {
         List<BoardTile> tiles = BoardSnapshot.build(
                 List.of(task("done", 5, "DONE", Map.of(), List.of(), 42, null, true)), uuid -> null);
 
-        assertEquals(42L, tiles.get(0).doneAt(), "Без записи журнала время завершения — время постановки");
+        assertEquals(
+                42L,
+                tiles.get(0).doneAt(),
+                "Без записи журнала время завершения — время постановки"
+                        + " Иначе тест build_DoneWithoutJournal_UsesCreationTime перестанет ловить эту поломку. При смене build_DoneWithoutJournal_UsesCreationTime проверь это утверждение.");
     }
 
     @Test
@@ -233,8 +277,20 @@ class BoardSnapshotTests {
         List<BoardTile> tiles = BoardSnapshot.build(
                 List.of(timed("work", 5, "DONE", Map.of(), List.of(), 1, SPIRIT_UUID, true, 500L, 900L)), uuid -> null);
 
-        assertEquals(500L, tiles.get(0).startedAt(), "Плитка обязана нести тик выдачи из журнала");
-        assertEquals(900L, tiles.get(0).finishedAt(), "Плитка обязана нести тик закрытия из журнала");
-        assertEquals(400L, tiles.get(0).durationTicks(), "Плитка обязана нести затраченные тики работы");
+        assertEquals(
+                500L,
+                tiles.get(0).startedAt(),
+                "Плитка обязана нести тик выдачи из журнала"
+                        + " Иначе тест build_TimedTask_KeepsStartFinishAndSpentTicks перестанет ловить эту поломку. При смене build_TimedTask_KeepsStartFinishAndSpentTicks проверь это утверждение.");
+        assertEquals(
+                900L,
+                tiles.get(0).finishedAt(),
+                "Плитка обязана нести тик закрытия из журнала"
+                        + " Иначе тест build_TimedTask_KeepsStartFinishAndSpentTicks перестанет ловить эту поломку. При смене build_TimedTask_KeepsStartFinishAndSpentTicks проверь это утверждение.");
+        assertEquals(
+                400L,
+                tiles.get(0).durationTicks(),
+                "Плитка обязана нести затраченные тики работы"
+                        + " Иначе тест build_TimedTask_KeepsStartFinishAndSpentTicks перестанет ловить эту поломку. При смене build_TimedTask_KeepsStartFinishAndSpentTicks проверь это утверждение.");
     }
 }

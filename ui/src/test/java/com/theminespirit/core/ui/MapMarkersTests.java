@@ -22,10 +22,17 @@ class MapMarkersTests {
         assertEquals(
                 List.of(199, 149),
                 List.of(marker.dotX(), marker.dotY()),
-                "Точка метки стоит в центре блока 0,0 при масштабе 2: иначе игрок видит духа не там, где он стоит");
-        assertEquals(207, marker.labelX(), "Подпись стоит справа от точки с зазором");
+                "Точка метки стоит в центре блока 0,0 при масштабе 2: иначе игрок видит духа не там, где он стоит"
+                        + " При смене layout_BlockCenter_DotAndLabelInsideWindow проверь это утверждение.");
+        assertEquals(
+                207,
+                marker.labelX(),
+                "Подпись стоит справа от точки с зазором"
+                        + " Иначе тест layout_BlockCenter_DotAndLabelInsideWindow перестанет ловить эту поломку. При смене layout_BlockCenter_DotAndLabelInsideWindow проверь это утверждение.");
         assertTrue(
-                marker.labelX() + marker.labelWidth() <= WINDOW.left() + WINDOW.width(), "Подпись не вылезает за окно");
+                marker.labelX() + marker.labelWidth() <= WINDOW.left() + WINDOW.width(),
+                "Подпись не вылезает за окно"
+                        + " Иначе тест layout_BlockCenter_DotAndLabelInsideWindow перестанет ловить эту поломку. При смене layout_BlockCenter_DotAndLabelInsideWindow проверь это утверждение.");
     }
 
     @Test
@@ -35,15 +42,18 @@ class MapMarkersTests {
         assertEquals(
                 Optional.of(SPIRIT),
                 MapMarkers.at(List.of(SPIRIT), WINDOW, FONT, marker.dotX() + 2, marker.dotY() + 2),
-                "Курсор на точке — подсказка духа");
+                "Курсор на точке — подсказка духа"
+                        + " Иначе тест at_DotAndLabel_ReturnOwnMarker перестанет ловить эту поломку. При смене at_DotAndLabel_ReturnOwnMarker проверь это утверждение.");
         assertEquals(
                 Optional.of(SPIRIT),
                 MapMarkers.at(List.of(SPIRIT), WINDOW, FONT, marker.labelX() + 2, marker.labelY() + 2),
-                "Курсор на подписи имени — та же подсказка");
+                "Курсор на подписи имени — та же подсказка"
+                        + " Иначе тест at_DotAndLabel_ReturnOwnMarker перестанет ловить эту поломку. При смене at_DotAndLabel_ReturnOwnMarker проверь это утверждение.");
         assertEquals(
                 Optional.empty(),
                 MapMarkers.at(List.of(SPIRIT), WINDOW, FONT, marker.labelX() + 200, marker.labelY()),
-                "Курсор мимо метки — без подсказки");
+                "Курсор мимо метки — без подсказки"
+                        + " Иначе тест at_DotAndLabel_ReturnOwnMarker перестанет ловить эту поломку. При смене at_DotAndLabel_ReturnOwnMarker проверь это утверждение.");
     }
 
     @Test
@@ -51,23 +61,30 @@ class MapMarkersTests {
         assertEquals(
                 Optional.empty(),
                 MapMarkers.at(List.of(SPIRIT), WINDOW, FONT, 500, 500),
-                "Метки вне окна карты не ловят курсор");
+                "Метки вне окна карты не ловят курсор"
+                        + " Иначе тест at_OutsideWindow_Empty перестанет ловить эту поломку. При смене at_OutsideWindow_Empty проверь это утверждение.");
     }
 
     @Test
     void layout_TwoMarkersInOneBlock_LabelsDoNotOverlap() {
         MapMarker second = new MapMarker(MapMarker.Kind.SPIRIT, "spirit-2", "", 0, 0);
         List<MapMarkers.Placed> placed = MapMarkers.layout(List.of(SPIRIT, second), WINDOW, FONT);
-        assertEquals(2, placed.size(), "Обе метки в кадре");
+        assertEquals(
+                2,
+                placed.size(),
+                "Обе метки в кадре"
+                        + " Иначе тест layout_TwoMarkersInOneBlock_LabelsDoNotOverlap перестанет ловить эту поломку. При смене layout_TwoMarkersInOneBlock_LabelsDoNotOverlap проверь это утверждение.");
         assertNotEquals(
                 placed.get(0).labelY(),
                 placed.get(1).labelY(),
-                "Подписи двух меток в одном блоке разводятся по вертикали: иначе имена не прочитать");
+                "Подписи двух меток в одном блоке разводятся по вертикали: иначе имена не прочитать"
+                        + " При смене layout_TwoMarkersInOneBlock_LabelsDoNotOverlap проверь это утверждение.");
         assertTrue(
                 placed.get(0).labelY() + FONT.lineHeight() <= placed.get(1).labelY()
                         || placed.get(1).labelY() + FONT.lineHeight()
                                 <= placed.get(0).labelY(),
-                "Подписи соседних меток не налезают друг на друга");
+                "Подписи соседних меток не налезают друг на друга"
+                        + " Иначе тест layout_TwoMarkersInOneBlock_LabelsDoNotOverlap перестанет ловить эту поломку. При смене layout_TwoMarkersInOneBlock_LabelsDoNotOverlap проверь это утверждение.");
     }
 
     @Test
@@ -76,7 +93,8 @@ class MapMarkersTests {
         MapMarkers.Placed marker = MapMarkers.layout(List.of(far), WINDOW, FONT).get(0);
         assertTrue(
                 marker.labelX() < marker.dotX(),
-                "У правого края подпись переносится влево от точки, а не обрезается окном");
+                "У правого края подпись переносится влево от точки, а не обрезается окном"
+                        + " Иначе тест layout_MarkerNearRightEdge_LabelFlipsLeft перестанет ловить эту поломку. При смене layout_MarkerNearRightEdge_LabelFlipsLeft проверь это утверждение.");
     }
 
     @Test
@@ -85,7 +103,8 @@ class MapMarkersTests {
         assertEquals(
                 List.of(),
                 MapMarkers.layout(List.of(away), WINDOW, FONT),
-                "Метка вне окна не раскладывается: карта не рисует пустые подписи за краем");
+                "Метка вне окна не раскладывается: карта не рисует пустые подписи за краем"
+                        + " Иначе тест layout_MarkerOutsideWindow_Skipped перестанет ловить эту поломку. При смене layout_MarkerOutsideWindow_Skipped проверь это утверждение.");
     }
 
     @Test
@@ -100,12 +119,17 @@ class MapMarkersTests {
         assertEquals(
                 List.of(MapStyle.SPIRIT, MapStyle.PLAYER),
                 dots,
-                "Дух и игрок — точки разного цвета: по карте видно, кто перед тобой");
+                "Дух и игрок — точки разного цвета: по карте видно, кто перед тобой"
+                        + " Иначе тест paint_SpiritAndPlayer_DifferentDotColorsAndBothNames перестанет ловить эту поломку. При смене paint_SpiritAndPlayer_DifferentDotColorsAndBothNames проверь это утверждение.");
         List<String> names = shapes.stream()
                 .filter(MapPaint.Text.class::isInstance)
                 .map(MapPaint.Text.class::cast)
                 .map(MapPaint.Text::text)
                 .toList();
-        assertEquals(List.of("spirit-1", "Steve"), names, "У каждой метки подписано имя");
+        assertEquals(
+                List.of("spirit-1", "Steve"),
+                names,
+                "У каждой метки подписано имя"
+                        + " Иначе тест paint_SpiritAndPlayer_DifferentDotColorsAndBothNames перестанет ловить эту поломку. При смене paint_SpiritAndPlayer_DifferentDotColorsAndBothNames проверь это утверждение.");
     }
 }

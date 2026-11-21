@@ -35,13 +35,24 @@ class BoardFeedTests {
 
         feed.apply(page(BoardTileGroup.AVAILABLE, 0, 50, "a", "b"));
 
-        assertEquals(2, feed.tiles(BoardTileGroup.AVAILABLE).size(), "Первая страница обязана лечь в колонку");
+        assertEquals(
+                2,
+                feed.tiles(BoardTileGroup.AVAILABLE).size(),
+                "Первая страница обязана лечь в колонку"
+                        + " Иначе тест firstPage_EmptyFeed_LoadsPortionAndKeepsTotal перестанет ловить эту поломку. При смене firstPage_EmptyFeed_LoadsPortionAndKeepsTotal проверь это утверждение.");
         assertEquals(
                 50,
                 feed.total(BoardTileGroup.AVAILABLE),
-                "Счётчик колонки обязан показывать общее число заданий, а не число загруженных");
-        assertFalse(feed.complete(BoardTileGroup.AVAILABLE), "При 50 заданиях и двух загруженных лента не закончена");
-        assertTrue(feed.seen(), "После ответа клиент уже знает доску: показывать «загрузка» нельзя");
+                "Счётчик колонки обязан показывать общее число заданий, а не число загруженных"
+                        + " Иначе тест firstPage_EmptyFeed_LoadsPortionAndKeepsTotal перестанет ловить эту поломку. При смене firstPage_EmptyFeed_LoadsPortionAndKeepsTotal проверь это утверждение.");
+        assertFalse(
+                feed.complete(BoardTileGroup.AVAILABLE),
+                "При 50 заданиях и двух загруженных лента не закончена"
+                        + " Иначе тест firstPage_EmptyFeed_LoadsPortionAndKeepsTotal перестанет ловить эту поломку. При смене firstPage_EmptyFeed_LoadsPortionAndKeepsTotal проверь это утверждение.");
+        assertTrue(
+                feed.seen(),
+                "После ответа клиент уже знает доску: показывать «загрузка» нельзя"
+                        + " Иначе тест firstPage_EmptyFeed_LoadsPortionAndKeepsTotal перестанет ловить эту поломку. При смене firstPage_EmptyFeed_LoadsPortionAndKeepsTotal проверь это утверждение.");
     }
 
     @Test
@@ -54,8 +65,12 @@ class BoardFeedTests {
         assertEquals(
                 List.of("a", "b", "c", "d", "e"),
                 feed.tiles(BoardTileGroup.AVAILABLE).stream().map(BoardTile::id).toList(),
-                "Вторая порция обязана дописываться в конец ленты, а не заменять первую");
-        assertTrue(feed.complete(BoardTileGroup.AVAILABLE), "Когда загружено всё, лента обязана считаться законченной");
+                "Вторая порция обязана дописываться в конец ленты, а не заменять первую"
+                        + " Иначе тест nextPage_AfterFirst_AppendsWithoutLosingEarlierTiles перестанет ловить эту поломку. При смене nextPage_AfterFirst_AppendsWithoutLosingEarlierTiles проверь это утверждение.");
+        assertTrue(
+                feed.complete(BoardTileGroup.AVAILABLE),
+                "Когда загружено всё, лента обязана считаться законченной"
+                        + " Иначе тест nextPage_AfterFirst_AppendsWithoutLosingEarlierTiles перестанет ловить эту поломку. При смене nextPage_AfterFirst_AppendsWithoutLosingEarlierTiles проверь это утверждение.");
     }
 
     @Test
@@ -68,7 +83,8 @@ class BoardFeedTests {
         assertEquals(
                 List.of("a", "b", "c", "d", "e"),
                 feed.tiles(BoardTileGroup.AVAILABLE).stream().map(BoardTile::id).toList(),
-                "Сдвиг доски между порциями не имеет права показать плитку дважды — иначе лента врёт о заданиях");
+                "Сдвиг доски между порциями не имеет права показать плитку дважды — иначе лента врёт о заданиях"
+                        + " При смене apply_ChangedBoardBetweenPages_DoesNotDuplicateLoadedTiles проверь это утверждение.");
     }
 
     @Test
@@ -81,7 +97,8 @@ class BoardFeedTests {
         assertEquals(
                 List.of("new", "keep"),
                 feed.tiles(BoardTileGroup.ACTIVE).stream().map(BoardTile::id).toList(),
-                "Обновление загруженной порции обязано заменять её, а не дописывать поверх");
+                "Обновление загруженной порции обязано заменять её, а не дописывать поверх"
+                        + " Иначе тест refresh_LoadedPrefix_ReplacesStaleTiles перестанет ловить эту поломку. При смене refresh_LoadedPrefix_ReplacesStaleTiles проверь это утверждение.");
     }
 
     @Test
@@ -91,10 +108,22 @@ class BoardFeedTests {
 
         feed.filter(new BoardFilter(BoardTileGroup.ACTIVE, BoardFilter.Spirit.NAMED, "Яков"));
 
-        assertEquals(List.of(), feed.tiles(BoardTileGroup.AVAILABLE), "Смена фильтра обязана сбросить старые порции");
+        assertEquals(
+                List.of(),
+                feed.tiles(BoardTileGroup.AVAILABLE),
+                "Смена фильтра обязана сбросить старые порции"
+                        + " Иначе тест filter_Changed_ClearsLoadedTilesAndCarriesFilterIntoQuery перестанет ловить эту поломку. При смене filter_Changed_ClearsLoadedTilesAndCarriesFilterIntoQuery проверь это утверждение.");
         BoardPageQuery query = feed.query(BoardTileGroup.AVAILABLE, false);
-        assertEquals(BoardTileGroup.ACTIVE, query.status(), "Query обязан нести фильтр статуса на сервер");
-        assertEquals("Яков", query.spiritName(), "Query обязан нести имя духа на сервер");
+        assertEquals(
+                BoardTileGroup.ACTIVE,
+                query.status(),
+                "Query обязан нести фильтр статуса на сервер"
+                        + " Иначе тест filter_Changed_ClearsLoadedTilesAndCarriesFilterIntoQuery перестанет ловить эту поломку. При смене filter_Changed_ClearsLoadedTilesAndCarriesFilterIntoQuery проверь это утверждение.");
+        assertEquals(
+                "Яков",
+                query.spiritName(),
+                "Query обязан нести имя духа на сервер"
+                        + " Иначе тест filter_Changed_ClearsLoadedTilesAndCarriesFilterIntoQuery перестанет ловить эту поломку. При смене filter_Changed_ClearsLoadedTilesAndCarriesFilterIntoQuery проверь это утверждение.");
     }
 
     @Test
@@ -105,13 +134,26 @@ class BoardFeedTests {
         BoardPageQuery next = feed.query(BoardTileGroup.AVAILABLE, true);
         BoardPageQuery refresh = feed.query(BoardTileGroup.AVAILABLE, false);
 
-        assertEquals(2, next.offset(), "Догрузка обязана начинаться с числа уже загруженных плиток");
-        assertEquals(BoardFeed.PAGE_SIZE, next.limit(), "Догрузка обязана просить очередную порцию, а не всю доску");
-        assertEquals(0, refresh.offset(), "Обновление раз в секунду обязано перечитывать только загруженную порцию");
+        assertEquals(
+                2,
+                next.offset(),
+                "Догрузка обязана начинаться с числа уже загруженных плиток"
+                        + " Иначе тест query_AfterFirstPage_NextPageStartsAtLoadedCount перестанет ловить эту поломку. При смене query_AfterFirstPage_NextPageStartsAtLoadedCount проверь это утверждение.");
+        assertEquals(
+                BoardFeed.PAGE_SIZE,
+                next.limit(),
+                "Догрузка обязана просить очередную порцию, а не всю доску"
+                        + " Иначе тест query_AfterFirstPage_NextPageStartsAtLoadedCount перестанет ловить эту поломку. При смене query_AfterFirstPage_NextPageStartsAtLoadedCount проверь это утверждение.");
+        assertEquals(
+                0,
+                refresh.offset(),
+                "Обновление раз в секунду обязано перечитывать только загруженную порцию"
+                        + " Иначе тест query_AfterFirstPage_NextPageStartsAtLoadedCount перестанет ловить эту поломку. При смене query_AfterFirstPage_NextPageStartsAtLoadedCount проверь это утверждение.");
         assertEquals(
                 BoardFeed.PAGE_SIZE,
                 refresh.limit(),
-                "Пока загружено меньше порции, обновление обязано просить хотя бы первую порцию");
+                "Пока загружено меньше порции, обновление обязано просить хотя бы первую порцию"
+                        + " Иначе тест query_AfterFirstPage_NextPageStartsAtLoadedCount перестанет ловить эту поломку. При смене query_AfterFirstPage_NextPageStartsAtLoadedCount проверь это утверждение.");
     }
 
     @Test
@@ -119,7 +161,10 @@ class BoardFeedTests {
         BoardFeed feed = new BoardFeed();
         feed.apply(page(BoardTileGroup.AVAILABLE, 0, 2, "a", "b"));
 
-        assertNull(feed.query(BoardTileGroup.AVAILABLE, true), "У законченной ленты нет следующей страницы");
+        assertNull(
+                feed.query(BoardTileGroup.AVAILABLE, true),
+                "У законченной ленты нет следующей страницы"
+                        + " Иначе тест query_FinishedFeed_ReturnsNoNextPage перестанет ловить эту поломку. При смене query_FinishedFeed_ReturnsNoNextPage проверь это утверждение.");
     }
 
     @Test
@@ -128,8 +173,14 @@ class BoardFeedTests {
 
         feed.apply(page(BoardTileGroup.ACTIVE, 0, 0));
 
-        assertTrue(feed.complete(BoardTileGroup.ACTIVE), "Пустая колонка обязана считаться законченной сразу");
-        assertTrue(feed.seen(), "Пустой ответ всё равно означает, что доска загружена");
+        assertTrue(
+                feed.complete(BoardTileGroup.ACTIVE),
+                "Пустая колонка обязана считаться законченной сразу"
+                        + " Иначе тест emptyColumn_ServerSaidZero_IsSeenAndFinished перестанет ловить эту поломку. При смене emptyColumn_ServerSaidZero_IsSeenAndFinished проверь это утверждение.");
+        assertTrue(
+                feed.seen(),
+                "Пустой ответ всё равно означает, что доска загружена"
+                        + " Иначе тест emptyColumn_ServerSaidZero_IsSeenAndFinished перестанет ловить эту поломку. При смене emptyColumn_ServerSaidZero_IsSeenAndFinished проверь это утверждение.");
     }
 
     @Test
@@ -148,6 +199,7 @@ class BoardFeedTests {
         assertEquals(
                 List.of("Агафья", "Яков"),
                 feed.spirits(),
-                "Список духов из ответа обязан использоваться кнопкой фильтра: он полнее загруженной порции");
+                "Список духов из ответа обязан использоваться кнопкой фильтра: он полнее загруженной порции"
+                        + " Иначе тест spirits_FromServerPage_ReachFilterCycle перестанет ловить эту поломку. При смене spirits_FromServerPage_ReachFilterCycle проверь это утверждение.");
     }
 }

@@ -16,12 +16,30 @@ class MineMapPngTests {
         MapViewport viewport = MapViewport.fit(snapshot.bounds(), 0, 0, MineMapPng.WIDTH, MineMapPng.HEIGHT);
         List<MineSnapshot.Kind> kinds =
                 snapshot.cells().stream().map(MineSnapshot.Cell::kind).toList();
-        assertTrue(kinds.contains(MineSnapshot.Kind.PASSAGE), "В срезе есть проходы");
-        assertTrue(kinds.contains(MineSnapshot.Kind.DESCENT), "В срезе есть спуск");
-        assertTrue(kinds.contains(MineSnapshot.Kind.ORE), "В срезе есть оставленная руда");
-        assertTrue(kinds.contains(MineSnapshot.Kind.LUCK_ORE), "Руда на удачу показана отдельным цветом");
-        assertTrue(kinds.contains(MineSnapshot.Kind.WATER), "Вода показана цветом");
-        assertTrue(kinds.contains(MineSnapshot.Kind.LAVA), "Лава показана цветом");
+        assertTrue(
+                kinds.contains(MineSnapshot.Kind.PASSAGE),
+                "В срезе есть проходы"
+                        + " Иначе тест render_SliceAtTunnel_ShowsOreFluidsAndPlans перестанет ловить эту поломку. При смене render_SliceAtTunnel_ShowsOreFluidsAndPlans проверь это утверждение.");
+        assertTrue(
+                kinds.contains(MineSnapshot.Kind.DESCENT),
+                "В срезе есть спуск"
+                        + " Иначе тест render_SliceAtTunnel_ShowsOreFluidsAndPlans перестанет ловить эту поломку. При смене render_SliceAtTunnel_ShowsOreFluidsAndPlans проверь это утверждение.");
+        assertTrue(
+                kinds.contains(MineSnapshot.Kind.ORE),
+                "В срезе есть оставленная руда"
+                        + " Иначе тест render_SliceAtTunnel_ShowsOreFluidsAndPlans перестанет ловить эту поломку. При смене render_SliceAtTunnel_ShowsOreFluidsAndPlans проверь это утверждение.");
+        assertTrue(
+                kinds.contains(MineSnapshot.Kind.LUCK_ORE),
+                "Руда на удачу показана отдельным цветом"
+                        + " Иначе тест render_SliceAtTunnel_ShowsOreFluidsAndPlans перестанет ловить эту поломку. При смене render_SliceAtTunnel_ShowsOreFluidsAndPlans проверь это утверждение.");
+        assertTrue(
+                kinds.contains(MineSnapshot.Kind.WATER),
+                "Вода показана цветом"
+                        + " Иначе тест render_SliceAtTunnel_ShowsOreFluidsAndPlans перестанет ловить эту поломку. При смене render_SliceAtTunnel_ShowsOreFluidsAndPlans проверь это утверждение.");
+        assertTrue(
+                kinds.contains(MineSnapshot.Kind.LAVA),
+                "Лава показана цветом"
+                        + " Иначе тест render_SliceAtTunnel_ShowsOreFluidsAndPlans перестанет ловить эту поломку. При смене render_SliceAtTunnel_ShowsOreFluidsAndPlans проверь это утверждение.");
         MineSnapshot.Rect tunnel = snapshot.rects().stream()
                 .filter(rect -> MineSnapshot.TUNNEL.equals(rect.label()))
                 .findFirst()
@@ -29,16 +47,26 @@ class MineMapPngTests {
         double x = viewport.screenX((tunnel.x1() + tunnel.x2() + 1) / 2.0);
         double y = viewport.screenY((tunnel.z1() + tunnel.z2() + 1) / 2.0);
         Optional<MineSnapshot.Rect> hovered = MineHit.rectAt(snapshot, viewport, x, y);
-        assertEquals(Optional.of(tunnel), hovered, "Курсор в центре хода — подсказка о нём");
+        assertEquals(
+                Optional.of(tunnel),
+                hovered,
+                "Курсор в центре хода — подсказка о нём"
+                        + " Иначе тест render_SliceAtTunnel_ShowsOreFluidsAndPlans перестанет ловить эту поломку. При смене render_SliceAtTunnel_ShowsOreFluidsAndPlans проверь это утверждение.");
         MineMapPng.draw(
                 snapshot, viewport, hovered, Optional.of(snapshot.markers().get(0)), "mine-slice-2.png");
-        assertTrue(Files.exists(MineMapPng.OUT.resolve("mine-slice-2.png")), "Скрин среза записан");
+        assertTrue(
+                Files.exists(MineMapPng.OUT.resolve("mine-slice-2.png")),
+                "Скрин среза записан"
+                        + " Иначе тест render_SliceAtTunnel_ShowsOreFluidsAndPlans перестанет ловить эту поломку. При смене render_SliceAtTunnel_ShowsOreFluidsAndPlans проверь это утверждение.");
         MapViewport zoomed = tunnelViewport(snapshot);
         double zoomX = zoomed.screenX((tunnel.x1() + tunnel.x2() + 1) / 2.0);
         double zoomY = zoomed.screenY((tunnel.z1() + tunnel.z2() + 1) / 2.0);
         MineMapPng.draw(
                 snapshot, zoomed, MineHit.rectAt(snapshot, zoomed, zoomX, zoomY), Optional.empty(), "mine-tunnel.png");
-        assertTrue(Files.exists(MineMapPng.OUT.resolve("mine-tunnel.png")), "Скрин хода записан");
+        assertTrue(
+                Files.exists(MineMapPng.OUT.resolve("mine-tunnel.png")),
+                "Скрин хода записан"
+                        + " Иначе тест render_SliceAtTunnel_ShowsOreFluidsAndPlans перестанет ловить эту поломку. При смене render_SliceAtTunnel_ShowsOreFluidsAndPlans проверь это утверждение.");
     }
 
     @Test
@@ -46,10 +74,14 @@ class MineMapPngTests {
         MineSnapshot snapshot = MineMapPng.marked(1);
         assertTrue(
                 snapshot.cells().stream().anyMatch(cell -> cell.kind() == MineSnapshot.Kind.FLOOR),
-                "На нижнем срезе виден пол");
+                "На нижнем срезе виден пол"
+                        + " Иначе тест render_BottomSlice_ShowsFloor перестанет ловить эту поломку. При смене render_BottomSlice_ShowsFloor проверь это утверждение.");
         MapViewport zoomed = tunnelViewport(snapshot);
         MineMapPng.draw(snapshot, zoomed, Optional.empty(), Optional.empty(), "mine-floor-1.png");
-        assertTrue(Files.exists(MineMapPng.OUT.resolve("mine-floor-1.png")), "Скрин пола записан");
+        assertTrue(
+                Files.exists(MineMapPng.OUT.resolve("mine-floor-1.png")),
+                "Скрин пола записан"
+                        + " Иначе тест render_BottomSlice_ShowsFloor перестанет ловить эту поломку. При смене render_BottomSlice_ShowsFloor проверь это утверждение.");
     }
 
     private static MapViewport tunnelViewport(MineSnapshot snapshot) {

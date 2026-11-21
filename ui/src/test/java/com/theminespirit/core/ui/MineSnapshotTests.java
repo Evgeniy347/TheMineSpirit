@@ -32,7 +32,8 @@ class MineSnapshotTests {
                         new MineSnapshot.Cell(2, 0, MineSnapshot.Kind.WATER),
                         new MineSnapshot.Cell(2, 1, MineSnapshot.Kind.ORE)),
                 snapshot.cells(),
-                "Срез на y=4: пол, спуск, вода, руда на удачу и обычная руда; глухая порода не рисуется");
+                "Срез на y=4: пол, спуск, вода, руда на удачу и обычная руда; глухая порода не рисуется"
+                        + " Иначе тест of_Slice_ShowsDescentFloorOreWaterAndLava перестанет ловить эту поломку. При смене of_Slice_ShowsDescentFloorOreWaterAndLava проверь это утверждение.");
     }
 
     @Test
@@ -46,23 +47,30 @@ class MineSnapshotTests {
                         new MineSnapshot.Cell(2, 0, MineSnapshot.Kind.PASSAGE),
                         new MineSnapshot.Cell(2, 1, MineSnapshot.Kind.PASSAGE)),
                 snapshot.cells(),
-                "На y=5 в срезе видны продолжение спуска, проходы и лава");
+                "На y=5 в срезе видны продолжение спуска, проходы и лава"
+                        + " Иначе тест of_LavaAtHeight_LavaCell перестанет ловить эту поломку. При смене of_LavaAtHeight_LavaCell проверь это утверждение.");
     }
 
     @Test
     void of_PlanRects_PercentFromWorld() {
         MineSnapshot snapshot = MineSnapshot.of(GEOMETRY, MineSnapshot.ANY_Y, MineSnapshotTests::at);
-        assertEquals(4, snapshot.y(), "Срез без высоты — нижняя ступень спуска");
+        assertEquals(
+                4,
+                snapshot.y(),
+                "Срез без высоты — нижняя ступень спуска"
+                        + " Иначе тест of_PlanRects_PercentFromWorld перестанет ловить эту поломку. При смене of_PlanRects_PercentFromWorld проверь это утверждение.");
         assertEquals(
                 List.of(
                         new MineSnapshot.Rect(0, 0, 1, 0, MineSnapshot.DESCENT, 100),
                         new MineSnapshot.Rect(1, 0, 2, 1, MineSnapshot.TUNNEL, 50)),
                 snapshot.rects(),
-                "Спуск готов на 100% (4 из 4), ход — на 50% (4 пустых из 8)");
+                "Спуск готов на 100% (4 из 4), ход — на 50% (4 пустых из 8)"
+                        + " Иначе тест of_PlanRects_PercentFromWorld перестанет ловить эту поломку. При смене of_PlanRects_PercentFromWorld проверь это утверждение.");
         assertEquals(
                 5,
                 MineSnapshot.of(GEOMETRY, 99, MineSnapshotTests::at).y(),
-                "Высота за верхней границей шахты прижата к максимуму");
+                "Высота за верхней границей шахты прижата к максимуму"
+                        + " Иначе тест of_PlanRects_PercentFromWorld перестанет ловить эту поломку. При смене of_PlanRects_PercentFromWorld проверь это утверждение.");
     }
 
     @Test
@@ -70,9 +78,21 @@ class MineSnapshotTests {
         MapMarker marker = new MapMarker(MapMarker.Kind.SPIRIT, "spirit-1", "", 1, 1);
         MineSnapshot snapshot = MineSnapshot.of(GEOMETRY, 4, MineSnapshotTests::at);
         MineSnapshot marked = snapshot.withMarkers(List.of(marker));
-        assertEquals(snapshot.cells(), marked.cells(), "Метки не меняют срез шахты");
-        assertEquals(snapshot.rects(), marked.rects(), "Метки не меняют постройки шахты");
-        assertEquals(List.of(marker), marked.markers(), "Снимок несёт присланные метки");
+        assertEquals(
+                snapshot.cells(),
+                marked.cells(),
+                "Метки не меняют срез шахты"
+                        + " Иначе тест withMarkers_NewMarkers_KeepSliceAndRects перестанет ловить эту поломку. При смене withMarkers_NewMarkers_KeepSliceAndRects проверь это утверждение.");
+        assertEquals(
+                snapshot.rects(),
+                marked.rects(),
+                "Метки не меняют постройки шахты"
+                        + " Иначе тест withMarkers_NewMarkers_KeepSliceAndRects перестанет ловить эту поломку. При смене withMarkers_NewMarkers_KeepSliceAndRects проверь это утверждение.");
+        assertEquals(
+                List.of(marker),
+                marked.markers(),
+                "Снимок несёт присланные метки"
+                        + " Иначе тест withMarkers_NewMarkers_KeepSliceAndRects перестанет ловить эту поломку. При смене withMarkers_NewMarkers_KeepSliceAndRects проверь это утверждение.");
     }
 
     private static MineBlocks.Observed at(BlockCoord cell) {

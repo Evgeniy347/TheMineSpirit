@@ -33,7 +33,8 @@ class TownMapPngTests {
                             .filter(rect -> rect.kind() == TownMapView.Kind.LOT)
                             .count(),
                     plan.placements().size(),
-                    "Каждая постройка плана — участок на карте, сид " + seed);
+                    "Каждая постройка плана — участок на карте, сид " + seed
+                            + " Иначе тест render_ThreeReliefSeeds_LabelsInsideLotsAndApart перестанет ловить эту поломку. При смене render_ThreeReliefSeeds_LabelsInsideLotsAndApart проверь это утверждение.");
         }
     }
 
@@ -52,7 +53,11 @@ class TownMapPngTests {
         double y = fit.screenY((damaged.z1() + damaged.z2() + 1) / 2.0);
         MapViewport zoomed = fit.zoom(x, y, 3);
         Optional<TownMapView.MapRect> hovered = MapHit.lotAt(view, zoomed, x, y);
-        assertEquals(Optional.of(damaged), hovered, "Курсор в центре повреждённого участка — подсказка о нём");
+        assertEquals(
+                Optional.of(damaged),
+                hovered,
+                "Курсор в центре повреждённого участка — подсказка о нём"
+                        + " Иначе тест render_HoverDamagedLot_TooltipWithRestorePercent перестанет ловить эту поломку. При смене render_HoverDamagedLot_TooltipWithRestorePercent проверь это утверждение.");
         TownMapPng.assertApart(
                 TownMapPng.draw(
                         view,

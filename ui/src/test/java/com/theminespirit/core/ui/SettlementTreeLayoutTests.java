@@ -23,7 +23,8 @@ class SettlementTreeLayoutTests {
                     assertFalse(
                             overlaps(nodes.get(first), nodes.get(second)),
                             "Этап " + stage + ": рамки «" + nodes.get(first).title() + "» и «"
-                                    + nodes.get(second).title() + "» наложились друг на друга");
+                                    + nodes.get(second).title() + "» наложились друг на друга"
+                                    + " Иначе тест layout_AllRealStages_HasNoOverlappingFrames перестанет ловить эту поломку. При смене layout_AllRealStages_HasNoOverlappingFrames проверь это утверждение.");
                 }
             }
         }
@@ -40,7 +41,8 @@ class SettlementTreeLayoutTests {
             assertEquals(
                     places(first),
                     places(second),
-                    "Этап " + stage + ": раскладка древа повторяется при тех же таблицах и состоянии мира");
+                    "Этап " + stage + ": раскладка древа повторяется при тех же таблицах и состоянии мира"
+                            + " Иначе тест layout_SameTables_IsDeterministic перестанет ловить эту поломку. При смене layout_SameTables_IsDeterministic проверь это утверждение.");
         }
     }
 
@@ -59,7 +61,8 @@ class SettlementTreeLayoutTests {
                         assertFalse(
                                 inside(node, point),
                                 "Этап " + stage + ": линия " + edge.from() + " → " + edge.to()
-                                        + " проходит сквозь рамку «" + node.title() + "»");
+                                        + " проходит сквозь рамку «" + node.title() + "»"
+                                        + " Иначе тест layout_AllRealStages_LinksDoNotCrossFrames перестанет ловить эту поломку. При смене layout_AllRealStages_LinksDoNotCrossFrames проверь это утверждение.");
                     }
                 }
             }
@@ -77,18 +80,22 @@ class SettlementTreeLayoutTests {
             for (SettlementTree.Node node : tree.nodes()) {
                 assertTrue(
                         node.x() >= root.x(),
-                        "Этап " + stage + ": рамка «" + node.title() + "» не левее корня — ветки идут вправо");
+                        "Этап " + stage + ": рамка «" + node.title() + "» не левее корня — ветки идут вправо"
+                                + " Иначе тест layout_AllRealStages_RootLeftAndGateRight перестанет ловить эту поломку. При смене layout_AllRealStages_RootLeftAndGateRight проверь это утверждение.");
                 assertTrue(
                         node.x() <= gate.x(),
-                        "Этап " + stage + ": рамка «" + node.title() + "» не правее ворот — ворота замыкают ветку");
+                        "Этап " + stage + ": рамка «" + node.title() + "» не правее ворот — ворота замыкают ветку"
+                                + " Иначе тест layout_AllRealStages_RootLeftAndGateRight перестанет ловить эту поломку. При смене layout_AllRealStages_RootLeftAndGateRight проверь это утверждение.");
             }
             assertTrue(
                     gate.y() >= root.y(),
-                    "Этап " + stage + ": ворота стоят ниже корня, отдельной строкой, и не наезжают на ветки");
+                    "Этап " + stage + ": ворота стоят ниже корня, отдельной строкой, и не наезжают на ветки"
+                            + " Иначе тест layout_AllRealStages_RootLeftAndGateRight перестанет ловить эту поломку. При смене layout_AllRealStages_RootLeftAndGateRight проверь это утверждение.");
             assertTrue(
                     tree.width() >= gate.x() + SettlementTreeStyle.NODE
                             && tree.height() >= gate.y() + SettlementTreeStyle.NODE,
-                    "Этап " + stage + ": размер древа вмещает ворота — иначе их не дотащить мышью");
+                    "Этап " + stage + ": размер древа вмещает ворота — иначе их не дотащить мышью"
+                            + " При смене layout_AllRealStages_RootLeftAndGateRight проверь это утверждение.");
         }
     }
 
@@ -104,19 +111,22 @@ class SettlementTreeLayoutTests {
                         tree.node("s" + stage + ":case:" + entry.getKey().name() + ":" + entry.getValue())
                                 .isPresent(),
                         "Этап " + stage + ": нет рамки обязательного кейса " + entry.getKey() + " уровня "
-                                + entry.getValue());
+                                + entry.getValue()
+                                + " Иначе тест frames_RealStageTables_ListEveryRequirementAndPlanObject перестанет ловить эту поломку. При смене frames_RealStageTables_ListEveryRequirementAndPlanObject проверь это утверждение.");
             }
             for (var entry : rule.requires().entrySet()) {
                 assertTrue(
                         tree.node("s" + stage + ":plan:" + entry.getKey() + ":" + entry.getValue())
                                 .isPresent(),
-                        "Этап " + stage + ": нет рамки обязательной постройки " + entry.getKey());
+                        "Этап " + stage + ": нет рамки обязательной постройки " + entry.getKey()
+                                + " Иначе тест frames_RealStageTables_ListEveryRequirementAndPlanObject перестанет ловить эту поломку. При смене frames_RealStageTables_ListEveryRequirementAndPlanObject проверь это утверждение.");
             }
             for (var entry : rule.optional().entrySet()) {
                 assertTrue(
                         tree.node("s" + stage + ":plan:" + entry.getKey() + ":" + entry.getValue())
                                 .isPresent(),
-                        "Этап " + stage + ": нет рамки желательной постройки " + entry.getKey());
+                        "Этап " + stage + ": нет рамки желательной постройки " + entry.getKey()
+                                + " Иначе тест frames_RealStageTables_ListEveryRequirementAndPlanObject перестанет ловить эту поломку. При смене frames_RealStageTables_ListEveryRequirementAndPlanObject проверь это утверждение.");
             }
             for (String planId : rule.plan()) {
                 boolean hidden = icons.alias(planId)
@@ -125,13 +135,18 @@ class SettlementTreeLayoutTests {
                 if (!hidden) {
                     assertTrue(
                             tree.node("s" + stage + ":plan:" + planId + ":1").isPresent(),
-                            "Этап " + stage + ": нет рамки объекта плана " + planId);
+                            "Этап " + stage + ": нет рамки объекта плана " + planId
+                                    + " Иначе тест frames_RealStageTables_ListEveryRequirementAndPlanObject перестанет ловить эту поломку. При смене frames_RealStageTables_ListEveryRequirementAndPlanObject проверь это утверждение.");
                 }
             }
             String gate = tree.node("s" + stage + ":gate").orElseThrow().title();
             String expected =
                     stage == rules.stages().size() ? "Поселение завершено" : "Этап " + (stage + 1) + " открыт";
-            assertEquals(expected, gate, "Этап " + stage + ": последняя рамка ветки называется «" + expected + "»");
+            assertEquals(
+                    expected,
+                    gate,
+                    "Этап " + stage + ": последняя рамка ветки называется «" + expected + "»"
+                            + " Иначе тест frames_RealStageTables_ListEveryRequirementAndPlanObject перестанет ловить эту поломку. При смене frames_RealStageTables_ListEveryRequirementAndPlanObject проверь это утверждение.");
         }
     }
 
@@ -156,8 +171,14 @@ class SettlementTreeLayoutTests {
     }
 
     private static void assertFilled(SettlementTreeIcons.Entry entry, String what) {
-        assertFalse(entry.title().isBlank(), "Пустое название " + what + " в " + SettlementTreeIcons.RESOURCE);
-        assertFalse(entry.icon().isBlank(), "Пустая иконка " + what + " в " + SettlementTreeIcons.RESOURCE);
+        assertFalse(
+                entry.title().isBlank(),
+                "Пустое название " + what + " в " + SettlementTreeIcons.RESOURCE
+                        + " Иначе тест assertFilled перестанет ловить эту поломку. При смене assertFilled проверь это утверждение.");
+        assertFalse(
+                entry.icon().isBlank(),
+                "Пустая иконка " + what + " в " + SettlementTreeIcons.RESOURCE
+                        + " Иначе тест assertFilled перестанет ловить эту поломку. При смене assertFilled проверь это утверждение. Иначе поломка пройдёт незамеченной в прогоне.");
     }
 
     private static Map<String, SettlementTree.Point> places(SettlementTree tree) {

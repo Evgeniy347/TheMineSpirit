@@ -158,21 +158,29 @@ final class TownMapPng {
             for (int b = a + 1; b < labels.size(); b++) {
                 assertTrue(
                         !labels.get(a).intersects(labels.get(b)),
-                        "Подписи " + labels.get(a) + " и " + labels.get(b) + " налезают, сид " + seed);
+                        "Подписи " + labels.get(a) + " и " + labels.get(b) + " налезают, сид " + seed
+                                + " Иначе тест assertApart перестанет ловить эту поломку. При смене assertApart проверь это утверждение.");
             }
         }
     }
 
     static void assertMarkerLabelsApart(List<MapMarker> markers, MapViewport viewport, MapPaint.Font font, long seed) {
         List<MapMarkers.Placed> placed = MapMarkers.layout(markers, viewport, font);
-        assertEquals(markers.size(), placed.size(), "Все метки в кадре карты, сид " + seed);
+        assertEquals(
+                markers.size(),
+                placed.size(),
+                "Все метки в кадре карты, сид " + seed
+                        + " Иначе тест assertMarkerLabelsApart перестанет ловить эту поломку. При смене assertMarkerLabelsApart проверь это утверждение.");
         for (int a = 0; a < placed.size(); a++) {
             for (int b = a + 1; b < placed.size(); b++) {
                 MapMarkers.Placed first = placed.get(a);
                 MapMarkers.Placed second = placed.get(b);
                 Rectangle one = new Rectangle(first.labelX(), first.labelY(), first.labelWidth(), font.lineHeight());
                 Rectangle two = new Rectangle(second.labelX(), second.labelY(), second.labelWidth(), font.lineHeight());
-                assertTrue(!one.intersects(two), "Подписи меток " + one + " и " + two + " налезают, сид " + seed);
+                assertTrue(
+                        !one.intersects(two),
+                        "Подписи меток " + one + " и " + two + " налезают, сид " + seed
+                                + " Иначе тест assertMarkerLabelsApart перестанет ловить эту поломку. При смене assertMarkerLabelsApart проверь это утверждение.");
             }
         }
     }
@@ -261,7 +269,10 @@ final class TownMapPng {
             String json = Files.readString(LANG, StandardCharsets.UTF_8);
             Matcher matcher = Pattern.compile("\"" + Pattern.quote(key) + "\"\\s*:\\s*\"([^\"]*)\"")
                     .matcher(json);
-            assertTrue(matcher.find(), "Ключ подсказки " + key + " есть в ru_ru.json");
+            assertTrue(
+                    matcher.find(),
+                    "Ключ подсказки " + key + " есть в ru_ru.json"
+                            + " Иначе тест tooltip перестанет ловить эту поломку. При смене tooltip проверь это утверждение.");
             return matcher.group(1);
         } catch (IOException e) {
             throw new IllegalStateException("Не прочитан " + LANG + ": тест запускается из корня проекта", e);
