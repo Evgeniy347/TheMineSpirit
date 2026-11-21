@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.tactics;
 
 import com.mojang.logging.LogUtils;
+import com.theminespirit.core.tactics.ReturnAttempts;
 import com.theminespirit.core.tactics.ReturnStall;
 import com.theminespirit.core.tactics.api.Point;
 import com.theminespirit.neoforge.Approach;
@@ -26,6 +27,7 @@ final class TacticsReturn {
     private long blockedUntil;
     private String lastState = "-";
     private boolean returned;
+    private int failed;
 
     TacticsReturn(TacticsService host, SpiritEntity spirit, Approach approach, RetreatExecutor retreating) {
         this.host = host;
@@ -37,6 +39,7 @@ final class TacticsReturn {
     void set(Optional<Point> point) {
         target = point;
         returned = false;
+        failed = 0;
     }
 
     boolean due(long now) {
@@ -111,8 +114,30 @@ final class TacticsReturn {
             approach.beginWithRoutes(destination, TacticsService.RETURN_ARRIVAL);
         }
         Approach.State state = approach.tick();
+        if (state == Approach.State.STUCK || state == Approach.State.TIMEOUT) {
+            failed++;
+            if (!ReturnAttempts.keep(failed)) {
+                abandon(point, "подход отказал " + failed + " раза подряд");
+                return;
+            }
+        }
         if (state != Approach.State.MOVING) {
             lastState = state + (approach.refusal() == null ? "" : ": " + approach.refusal());
         }
+    }
+
+    private void abandon(Point point, String reason) {
+        LOGGER.warn(
+                "[incident] дух {}: возврат к якорю {} снят на {} тиков — {}",
+                spirit.displayName(),
+                point,
+                COOLDOWN_TICKS,
+                reason);
+        approach.cancel();
+        returned = true;
+        ticks = 0;
+        lastState = "-";
+        stall.reset();
+        blockedUntil = spirit.level().getGameTime() + COOLDOWN_TICKS;
     }
 }

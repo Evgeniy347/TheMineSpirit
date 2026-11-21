@@ -5,6 +5,7 @@ import com.theminespirit.core.movement.api.PathReuse;
 import com.theminespirit.core.policy.WaterTasks;
 import com.theminespirit.neoforge.SpiritBrain;
 import com.theminespirit.neoforge.SpiritEntity;
+import java.util.stream.Collectors;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
@@ -50,7 +51,7 @@ public final class SpiritNavigation extends GroundPathNavigation {
 
     private void logStop() {
         long now = mob.level().getGameTime();
-        if (now - stopLogTick < NO_PATH_LOG_TICKS) {
+        if (now < stopLogTick + NO_PATH_LOG_TICKS) {
             return;
         }
         stopLogTick = now;
@@ -107,18 +108,20 @@ public final class SpiritNavigation extends GroundPathNavigation {
                     FUTILE_BACKOFF_TICKS);
             return false;
         }
-        logBuilt(want, built);
+        logBuilt(want, built, last, path);
         return moveTo(built, speed);
     }
 
-    private void logBuilt(BlockPos want, Path path) {
+    private void logBuilt(BlockPos want, Path path, @Nullable BlockPos last, @Nullable Path previous) {
         LOGGER.info(
-                "[nav] дух {}: путь к {} — узлов {}, конец {}, из {}, источник {}",
+                "[nav] дух {}: путь к {} — узлов {}, конец {}, из {}, прошлая цель {}, прошлый путь {}, источник {}",
                 mob.getName().getString(),
                 want.toShortString(),
                 path.getNodeCount(),
                 path.getEndNode() == null ? "-" : path.getEndNode().asBlockPos().toShortString(),
                 mob.blockPosition().toShortString(),
+                last == null ? "-" : last.toShortString(),
+                previous == null ? "нет" : previous.isDone() ? "конец" : "идёт " + previous.getNextNodeIndex(),
                 source());
     }
 
@@ -126,16 +129,16 @@ public final class SpiritNavigation extends GroundPathNavigation {
         return StackWalker.getInstance()
                 .walk(frames -> frames.filter(frame -> frame.getClassName().startsWith("com.theminespirit")
                                 && !frame.getClassName().contains("SpiritNavigation"))
-                        .findFirst()
+                        .limit(3)
                         .map(frame -> frame.getClassName()
                                         .substring(frame.getClassName().lastIndexOf('.') + 1) + "."
                                 + frame.getMethodName())
-                        .orElse("-"));
+                        .collect(Collectors.joining("<")));
     }
 
     private void logRebuild(BlockPos want, @Nullable Path path) {
         long now = mob.level().getGameTime();
-        if (now - rebuildLogTick < NO_PATH_LOG_TICKS) {
+        if (now < rebuildLogTick + NO_PATH_LOG_TICKS) {
             return;
         }
         rebuildLogTick = now;
@@ -150,7 +153,7 @@ public final class SpiritNavigation extends GroundPathNavigation {
 
     private void logNoPath(BlockPos want, int floorLevel) {
         long now = mob.level().getGameTime();
-        if (now - noPathLogTick < NO_PATH_LOG_TICKS) {
+        if (now < noPathLogTick + NO_PATH_LOG_TICKS) {
             return;
         }
         noPathLogTick = now;

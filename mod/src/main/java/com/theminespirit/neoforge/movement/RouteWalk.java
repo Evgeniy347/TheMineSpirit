@@ -1,11 +1,13 @@
 package com.theminespirit.neoforge.movement;
 
+import com.mojang.logging.LogUtils;
 import com.theminespirit.core.movement.WalkAscent;
 import com.theminespirit.core.movement.api.DropProfile;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.RemovalLog;
 import com.theminespirit.core.route.Route;
 import com.theminespirit.core.route.RouteStep;
+import com.theminespirit.neoforge.CallSource;
 import com.theminespirit.neoforge.EmbeddedSpace;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.List;
@@ -14,8 +16,11 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
 
 public final class RouteWalk {
+    private static final Logger LOGGER = LogUtils.getLogger();
+
     public enum State {
         RUNNING,
         DONE,
@@ -50,6 +55,12 @@ public final class RouteWalk {
         this.swimmer = new SwimStep(spirit);
         this.passages = new PassageWalk(spirit);
         this.mutations = new RouteMutations(spirit, this, rescue);
+        LOGGER.info(
+                "[route] дух {}: маршрут к {}, шагов {}, источник {}",
+                spirit.getName().getString(),
+                target,
+                steps.size(),
+                CallSource.of("RouteWalk", 3));
     }
 
     public State tick() {
