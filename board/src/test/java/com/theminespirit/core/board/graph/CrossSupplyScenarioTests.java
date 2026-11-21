@@ -38,20 +38,30 @@ class CrossSupplyScenarioTests {
         GraphPlan.Task defend = task(plan, "event:life_threat:defend");
         GraphPlan.Task armor = task(plan, "event:gear_craft_armor:craft_armor");
 
-        assertEquals(List.of(), ahead(plan, defend), "Защита жизни на потолке: " + ids(plan));
-        assertTrue(armor.feasible(), "Броня без надетых слотов ставится в крафт: " + ids(plan));
+        assertEquals(
+                List.of(),
+                ahead(plan, defend),
+                "Защита жизни на потолке: " + ids(plan)
+                        + " Иначе тест combat_WoundedWithoutArmor_FightsBeforeCraftingArmor перестанет ловить эту поломку. При смене combat_WoundedWithoutArmor_FightsBeforeCraftingArmor проверь это утверждение.");
+        assertTrue(
+                armor.feasible(),
+                "Броня без надетых слотов ставится в крафт: " + ids(plan)
+                        + " Иначе тест combat_WoundedWithoutArmor_FightsBeforeCraftingArmor перестанет ловить эту поломку. При смене combat_WoundedWithoutArmor_FightsBeforeCraftingArmor проверь это утверждение.");
         assertTrue(
                 defend.priority() > armor.priority(),
-                "Раненый дух сначала отбивается, броню крафтит позже: " + ids(plan));
+                "Раненый дух сначала отбивается, броню крафтит позже: " + ids(plan)
+                        + " Иначе тест combat_WoundedWithoutArmor_FightsBeforeCraftingArmor перестанет ловить эту поломку. При смене combat_WoundedWithoutArmor_FightsBeforeCraftingArmor проверь это утверждение.");
         assertEquals(
                 BoardCase.ACTIVITY_CRAFT,
                 BoardActivities.caseOfScript("craft").orElseThrow(),
-                "Крафт брони — действие крафта");
+                "Крафт брони — действие крафта"
+                        + " Иначе тест combat_WoundedWithoutArmor_FightsBeforeCraftingArmor перестанет ловить эту поломку. При смене combat_WoundedWithoutArmor_FightsBeforeCraftingArmor проверь это утверждение.");
         assertTrue(
                 BoardActivities.caseOfScript("attack")
                         .filter(BoardCase.ACTIVITY_COMBAT::equals)
                         .isPresent(),
-                "Бой идёт действием attack, а не крафтом");
+                "Бой идёт действием attack, а не крафтом"
+                        + " Иначе тест combat_WoundedWithoutArmor_FightsBeforeCraftingArmor перестанет ловить эту поломку. При смене combat_WoundedWithoutArmor_FightsBeforeCraftingArmor проверь это утверждение.");
     }
 
     @Test
@@ -63,17 +73,28 @@ class CrossSupplyScenarioTests {
         GraphPlan.Task expedition = task(plan, "event:expedition_ready:expedition");
         GraphPlan.Task guard = task(plan, "event:more4_player_near:more4_guard_settlement");
 
-        assertTrue(expedition.feasible(), "Готовый поход остаётся выполнимым: " + ids(plan));
-        assertTrue(guard.feasible(), "Игрок рядом — поселение охраняется: " + ids(plan));
-        assertTrue(expedition.priority() > guard.priority(), "Поход важнее охраны при игроке рядом: " + ids(plan));
+        assertTrue(
+                expedition.feasible(),
+                "Готовый поход остаётся выполнимым: " + ids(plan)
+                        + " Иначе тест social_PlayerNearAndExpedition_ExpeditionOutranksGuard перестанет ловить эту поломку. При смене social_PlayerNearAndExpedition_ExpeditionOutranksGuard проверь это утверждение.");
+        assertTrue(
+                guard.feasible(),
+                "Игрок рядом — поселение охраняется: " + ids(plan)
+                        + " Иначе тест social_PlayerNearAndExpedition_ExpeditionOutranksGuard перестанет ловить эту поломку. При смене social_PlayerNearAndExpedition_ExpeditionOutranksGuard проверь это утверждение.");
+        assertTrue(
+                expedition.priority() > guard.priority(),
+                "Поход важнее охраны при игроке рядом: " + ids(plan)
+                        + " Иначе тест social_PlayerNearAndExpedition_ExpeditionOutranksGuard перестанет ловить эту поломку. При смене social_PlayerNearAndExpedition_ExpeditionOutranksGuard проверь это утверждение.");
         assertEquals(
                 BoardCase.ACTIVITY_EXPEDITION,
                 BoardActivities.caseOfScript("follow").orElseThrow(),
-                "Поход идёт действием follow/escort");
+                "Поход идёт действием follow/escort"
+                        + " Иначе тест social_PlayerNearAndExpedition_ExpeditionOutranksGuard перестанет ловить эту поломку. При смене social_PlayerNearAndExpedition_ExpeditionOutranksGuard проверь это утверждение.");
         assertEquals(
                 BoardCase.ACTIVITY_GUARD,
                 BoardActivities.caseOfScript("patrol").orElseThrow(),
-                "Охрана при игроке — патруль, а не поход");
+                "Охрана при игроке — патруль, а не поход"
+                        + " Иначе тест social_PlayerNearAndExpedition_ExpeditionOutranksGuard перестанет ловить эту поломку. При смене social_PlayerNearAndExpedition_ExpeditionOutranksGuard проверь это утверждение.");
     }
 
     @Test
@@ -85,13 +106,21 @@ class CrossSupplyScenarioTests {
         GraphPlan.Task warehouse = task(plan, "building:warehouse");
         GraphPlan.Task space = task(plan, "store_space");
 
-        assertTrue(warehouse.feasible(), "Склад переполнен — граф ставит стройку склада: " + ids(plan));
-        assertTrue(space.feasible(), "Граф также ставит расширение/сортировку места: " + ids(plan));
+        assertTrue(
+                warehouse.feasible(),
+                "Склад переполнен — граф ставит стройку склада: " + ids(plan)
+                        + " Иначе тест storage_FullWarehouseNotBuilt_GraphBuildsStorageAndPostsSpace перестанет ловить эту поломку. При смене storage_FullWarehouseNotBuilt_GraphBuildsStorageAndPostsSpace проверь это утверждение.");
+        assertTrue(
+                space.feasible(),
+                "Граф также ставит расширение/сортировку места: " + ids(plan)
+                        + " Иначе тест storage_FullWarehouseNotBuilt_GraphBuildsStorageAndPostsSpace перестанет ловить эту поломку. При смене storage_FullWarehouseNotBuilt_GraphBuildsStorageAndPostsSpace проверь это утверждение.");
         assertTrue(
                 scripts(BoardCase.BUILD_WAREHOUSE).contains("build_schematic"),
-                "Склад строится схемой build_schematic: " + scripts(BoardCase.BUILD_WAREHOUSE));
+                "Склад строится схемой build_schematic: " + scripts(BoardCase.BUILD_WAREHOUSE)
+                        + " Иначе тест storage_FullWarehouseNotBuilt_GraphBuildsStorageAndPostsSpace перестанет ловить эту поломку. При смене storage_FullWarehouseNotBuilt_GraphBuildsStorageAndPostsSpace проверь это утверждение.");
         assertTrue(
                 scripts(BoardCase.STOCK_CHESTS).contains("deposit"),
-                "Склад раскладывает предметы через deposit: " + scripts(BoardCase.STOCK_CHESTS));
+                "Склад раскладывает предметы через deposit: " + scripts(BoardCase.STOCK_CHESTS)
+                        + " Иначе тест storage_FullWarehouseNotBuilt_GraphBuildsStorageAndPostsSpace перестанет ловить эту поломку. При смене storage_FullWarehouseNotBuilt_GraphBuildsStorageAndPostsSpace проверь это утверждение.");
     }
 }

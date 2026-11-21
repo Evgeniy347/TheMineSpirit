@@ -36,6 +36,7 @@ class GraphClearingAuditTests {
         assertTrue(
                 result.raised("building:clearing"),
                 "Участок не ровный, аудит видит часть — граф ставит расчистку этапа (слоями): ремонт по схеме для "
-                        + "рельефа не возникает, иначе расчистка стоит: " + CrossScene.ranked(result));
+                        + "рельефа не возникает, иначе расчистка стоит: " + CrossScene.ranked(result)
+                        + " При смене plan_ClearingPartlyAudited_StageClearingPostedNotLeftToRepair проверь это утверждение.");
     }
 }

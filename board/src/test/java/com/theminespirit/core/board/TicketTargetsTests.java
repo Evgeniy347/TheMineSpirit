@@ -27,11 +27,13 @@ class TicketTargetsTests {
         assertEquals(
                 Map.of(GOOD, TicketTarget.at(new BlockCoord(1, 64, 2))),
                 decoded.targets(),
-                "Одна битая цель не отменяет загрузку доски: остальные задания сохраняют свои точки");
+                "Одна битая цель не отменяет загрузку доски: остальные задания сохраняют свои точки"
+                        + " Иначе тест decode_UnreadableTarget_IsReportedAndOthersSurvive перестанет ловить эту поломку. При смене decode_UnreadableTarget_IsReportedAndOthersSurvive проверь это утверждение.");
         assertEquals(
                 List.of(BROKEN),
                 decoded.broken().stream().map(TicketTargets.Broken::id).toList(),
-                "Битая цель названа по id: иначе задание молча исполнилось бы у дома");
+                "Битая цель названа по id: иначе задание молча исполнилось бы у дома"
+                        + " При смене decode_UnreadableTarget_IsReportedAndOthersSurvive проверь это утверждение.");
     }
 
     @Test
@@ -41,7 +43,8 @@ class TicketTargetsTests {
         assertTrue(
                 decoded.broken().get(0).message().contains("Target"),
                 "Причина отказа называет поле NBT, а не только id: "
-                        + decoded.broken().get(0).message());
+                        + decoded.broken().get(0).message()
+                        + " Иначе тест decode_BrokenTargetReason_NamesTheField перестанет ловить эту поломку. При смене decode_BrokenTargetReason_NamesTheField проверь это утверждение.");
     }
 
     @Test
@@ -51,8 +54,12 @@ class TicketTargetsTests {
         assertEquals(
                 Map.of(GOOD, TicketTarget.at(new BlockCoord(-3, 70, 5))),
                 decoded.targets(),
-                "Читаемая цель восстанавливается целиком");
-        assertTrue(decoded.broken().isEmpty(), "Читаемая доска не даёт битых целей");
+                "Читаемая цель восстанавливается целиком"
+                        + " Иначе тест decode_ReadableTargets_AreRestoredWithoutBroken перестанет ловить эту поломку. При смене decode_ReadableTargets_AreRestoredWithoutBroken проверь это утверждение.");
+        assertTrue(
+                decoded.broken().isEmpty(),
+                "Читаемая доска не даёт битых целей"
+                        + " Иначе тест decode_ReadableTargets_AreRestoredWithoutBroken перестанет ловить эту поломку. При смене decode_ReadableTargets_AreRestoredWithoutBroken проверь это утверждение.");
     }
 
     @Test
@@ -74,11 +81,13 @@ class TicketTargetsTests {
         assertEquals(
                 List.of(BROKEN),
                 cancelled,
-                "Снимается только найденное битое задание: чужой id не считается отменённым");
+                "Снимается только найденное битое задание: чужой id не считается отменённым"
+                        + " Иначе тест dropBroken_BrokenTicket_IsCancelledSoGraphRepostsIt перестанет ловить эту поломку. При смене dropBroken_BrokenTicket_IsCancelledSoGraphRepostsIt проверь это утверждение.");
         assertEquals(
                 Optional.of(BoardStatus.CANCELLED),
                 board.statusOf(BROKEN),
-                "Задание без читаемой цели снимается: иначе оно исполнялось бы у дома или висело навсегда");
+                "Задание без читаемой цели снимается: иначе оно исполнялось бы у дома или висело навсегда"
+                        + " При смене dropBroken_BrokenTicket_IsCancelledSoGraphRepostsIt проверь это утверждение.");
     }
 
     @Test
@@ -89,7 +98,8 @@ class TicketTargetsTests {
         assertTrue(
                 TicketTarget.fillsBuilding(known, incoming),
                 "Открытая задача без подписи объекта обязана получить её при повторной постановке: "
-                        + "иначе старая цель висит до переоткрытия");
+                        + "иначе старая цель висит до переоткрытия"
+                        + " При смене fillsBuilding_KnownTargetWithoutBuilding_IsRefreshed проверь это утверждение.");
     }
 
     @Test
@@ -98,6 +108,7 @@ class TicketTargetsTests {
 
         assertFalse(
                 TicketTarget.fillsBuilding(known, known.withBuilding("Сад")),
-                "Цель с подписью объекта не перезаписывается: после переименования задачу переоткрывают, а не подменяют");
+                "Цель с подписью объекта не перезаписывается: после переименования задачу переоткрывают, а не подменяют"
+                        + " Иначе тест fillsBuilding_KnownTargetWithBuilding_IsNotReplaced перестанет ловить эту поломку. При смене fillsBuilding_KnownTargetWithBuilding_IsNotReplaced проверь это утверждение.");
     }
 }

@@ -14,12 +14,36 @@ class StoreRulesTests {
     void config_FragmentRead_ReturnsMinimums() {
         StoreRules.Config config = StoreRules.config();
 
-        assertEquals(25, config.reservePercent(), "Резерв минимума задаётся данными");
-        assertEquals(64, config.minimums().get("#logs"), "Минимум брёвен берётся из настроек");
-        assertEquals(128, config.minimums().get("cobblestone"), "Минимум булыжника берётся из настроек");
-        assertEquals(16, config.minimums().get("bread"), "Минимум хлеба берётся из настроек");
-        assertEquals("iron", config.toolMinimums().get("pickaxe"), "Железная кирка нужна к этапу 2");
-        assertEquals(6, config.maxItemTypesPerChest(), "Порог «смешанного» сундука задаётся данными");
+        assertEquals(
+                25,
+                config.reservePercent(),
+                "Резерв минимума задаётся данными"
+                        + " Иначе тест config_FragmentRead_ReturnsMinimums перестанет ловить эту поломку. При смене config_FragmentRead_ReturnsMinimums проверь это утверждение.");
+        assertEquals(
+                64,
+                config.minimums().get("#logs"),
+                "Минимум брёвен берётся из настроек"
+                        + " Иначе тест config_FragmentRead_ReturnsMinimums перестанет ловить эту поломку. При смене config_FragmentRead_ReturnsMinimums проверь это утверждение.");
+        assertEquals(
+                128,
+                config.minimums().get("cobblestone"),
+                "Минимум булыжника берётся из настроек"
+                        + " Иначе тест config_FragmentRead_ReturnsMinimums перестанет ловить эту поломку. При смене config_FragmentRead_ReturnsMinimums проверь это утверждение.");
+        assertEquals(
+                16,
+                config.minimums().get("bread"),
+                "Минимум хлеба берётся из настроек"
+                        + " Иначе тест config_FragmentRead_ReturnsMinimums перестанет ловить эту поломку. При смене config_FragmentRead_ReturnsMinimums проверь это утверждение.");
+        assertEquals(
+                "iron",
+                config.toolMinimums().get("pickaxe"),
+                "Железная кирка нужна к этапу 2"
+                        + " Иначе тест config_FragmentRead_ReturnsMinimums перестанет ловить эту поломку. При смене config_FragmentRead_ReturnsMinimums проверь это утверждение.");
+        assertEquals(
+                6,
+                config.maxItemTypesPerChest(),
+                "Порог «смешанного» сундука задаётся данными"
+                        + " Иначе тест config_FragmentRead_ReturnsMinimums перестанет ловить эту поломку. При смене config_FragmentRead_ReturnsMinimums проверь это утверждение.");
     }
 
     @Test
@@ -27,7 +51,11 @@ class StoreRulesTests {
         Map<String, Integer> shortfall = StoreRules.shortfalls(
                 Map.of("#logs", 64, "cobblestone", 128), Map.of("#logs", 40, "cobblestone", 200), 25);
 
-        assertEquals(Map.of("#logs", 40), shortfall, "Нужно 80 брёвен, есть 40 — недобор 40");
+        assertEquals(
+                Map.of("#logs", 40),
+                shortfall,
+                "Нужно 80 брёвен, есть 40 — недобор 40"
+                        + " Иначе тест shortfalls_MinimumPlusReserve_CountsRealAmount перестанет ловить эту поломку. При смене shortfalls_MinimumPlusReserve_CountsRealAmount проверь это утверждение.");
     }
 
     @Test
@@ -35,7 +63,8 @@ class StoreRulesTests {
         assertEquals(
                 Map.of(),
                 StoreRules.shortfalls(Map.of("bread", 16), Map.of("bread", 20), 25),
-                "Запас выше минимума с резервом не даёт недобора");
+                "Запас выше минимума с резервом не даёт недобора"
+                        + " Иначе тест shortfalls_StockAboveMinimum_IsEmpty перестанет ловить эту поломку. При смене shortfalls_StockAboveMinimum_IsEmpty проверь это утверждение.");
     }
 
     @Test
@@ -46,7 +75,8 @@ class StoreRulesTests {
         assertEquals(
                 Map.of("#logs", 15),
                 StoreRules.groupCounts(graph, actual, List.of("#logs")),
-                "Счёт группы — сумма предметов, а не одного вида");
+                "Счёт группы — сумма предметов, а не одного вида"
+                        + " Иначе тест groupCounts_LogGroup_SumsMembers перестанет ловить эту поломку. При смене groupCounts_LogGroup_SumsMembers проверь это утверждение.");
     }
 
     @Test
@@ -76,8 +106,16 @@ class StoreRulesTests {
 
         Map<String, Integer> actual = StoreRules.actual(chests, Map.of("spirit-1", spirit));
 
-        assertEquals(8, actual.get("oak_log"), "Реальное количество — сундуки плюс несомое");
-        assertEquals(2, actual.get("coal"), "Содержимое сундука переводится в короткое имя графа");
+        assertEquals(
+                8,
+                actual.get("oak_log"),
+                "Реальное количество — сундуки плюс несомое"
+                        + " Иначе тест actual_ChestsAndSpirits_UseShortIds перестанет ловить эту поломку. При смене actual_ChestsAndSpirits_UseShortIds проверь это утверждение.");
+        assertEquals(
+                2,
+                actual.get("coal"),
+                "Содержимое сундука переводится в короткое имя графа"
+                        + " Иначе тест actual_ChestsAndSpirits_UseShortIds перестанет ловить эту поломку. При смене actual_ChestsAndSpirits_UseShortIds проверь это утверждение.");
     }
 
     @Test
@@ -96,7 +134,11 @@ class StoreRulesTests {
                         27,
                         GraphFacts.Reach.UNKNOWN));
 
-        assertEquals(1, StoreRules.mixedChests(chests, 4), "Смешанным считается сундук, где типов не меньше порога");
+        assertEquals(
+                1,
+                StoreRules.mixedChests(chests, 4),
+                "Смешанным считается сундук, где типов не меньше порога"
+                        + " Иначе тест mixedChests_ManyTypes_AreCounted перестанет ловить эту поломку. При смене mixedChests_ManyTypes_AreCounted проверь это утверждение.");
     }
 
     @Test
@@ -110,7 +152,8 @@ class StoreRulesTests {
                 planned,
                 StoreRules.sortTarget(List.of(extra, planned), Set.of(new BlockCoord(-178, 68, -518)))
                         .orElseThrow(),
-                "Сундук вне плана не сортируют: его разбирают и увозят вещи, а сортировка — только у склада поселения");
+                "Сундук вне плана не сортируют: его разбирают и увозят вещи, а сортировка — только у склада поселения"
+                        + " Иначе тест sortTarget_ExtraChestFirst_TakesPlannedChest перестанет ловить эту поломку. При смене sortTarget_ExtraChestFirst_TakesPlannedChest проверь это утверждение.");
     }
 
     @Test
@@ -121,7 +164,8 @@ class StoreRulesTests {
         assertTrue(
                 StoreRules.sortTarget(List.of(walled), Set.of(new BlockCoord(-178, 68, -518)))
                         .isEmpty(),
-                "К плановому сундуку без пути не посылают: дух застревает на подходе и проваливает задание");
+                "К плановому сундуку без пути не посылают: дух застревает на подходе и проваливает задание"
+                        + " Иначе тест sortTarget_PlannedChestUnreachable_SkipsIt перестанет ловить эту поломку. При смене sortTarget_PlannedChestUnreachable_SkipsIt проверь это утверждение.");
     }
 
     @Test
@@ -129,12 +173,33 @@ class StoreRulesTests {
         Set<String> events =
                 StoreRules.events(Set.of("night"), new StoreRules.Signals(true, true, true, true, true, true));
 
-        assertTrue(events.contains("night"), "Старые события не теряются");
-        assertTrue(events.contains("store_minimum"), "Недобор минимума — событие входа");
-        assertTrue(events.contains("storage_full"), "Мало места — событие склада");
-        assertTrue(events.contains("storage_mixed"), "Смешанный сундук — событие сортировки");
-        assertTrue(events.contains("transfer_pending"), "Несомое — событие переноса");
-        assertTrue(events.contains("furnace_ready"), "Готовый выход печи — событие забрать");
-        assertTrue(events.contains("furnace_needs_fuel"), "Печь без топлива — событие загрузить");
+        assertTrue(
+                events.contains("night"),
+                "Старые события не теряются"
+                        + " Иначе тест events_LowMinimumAndStorage_AddsAll перестанет ловить эту поломку. При смене events_LowMinimumAndStorage_AddsAll проверь это утверждение.");
+        assertTrue(
+                events.contains("store_minimum"),
+                "Недобор минимума — событие входа"
+                        + " Иначе тест events_LowMinimumAndStorage_AddsAll перестанет ловить эту поломку. При смене events_LowMinimumAndStorage_AddsAll проверь это утверждение.");
+        assertTrue(
+                events.contains("storage_full"),
+                "Мало места — событие склада"
+                        + " Иначе тест events_LowMinimumAndStorage_AddsAll перестанет ловить эту поломку. При смене events_LowMinimumAndStorage_AddsAll проверь это утверждение.");
+        assertTrue(
+                events.contains("storage_mixed"),
+                "Смешанный сундук — событие сортировки"
+                        + " Иначе тест events_LowMinimumAndStorage_AddsAll перестанет ловить эту поломку. При смене events_LowMinimumAndStorage_AddsAll проверь это утверждение.");
+        assertTrue(
+                events.contains("transfer_pending"),
+                "Несомое — событие переноса"
+                        + " Иначе тест events_LowMinimumAndStorage_AddsAll перестанет ловить эту поломку. При смене events_LowMinimumAndStorage_AddsAll проверь это утверждение.");
+        assertTrue(
+                events.contains("furnace_ready"),
+                "Готовый выход печи — событие забрать"
+                        + " Иначе тест events_LowMinimumAndStorage_AddsAll перестанет ловить эту поломку. При смене events_LowMinimumAndStorage_AddsAll проверь это утверждение.");
+        assertTrue(
+                events.contains("furnace_needs_fuel"),
+                "Печь без топлива — событие загрузить"
+                        + " Иначе тест events_LowMinimumAndStorage_AddsAll перестанет ловить эту поломку. При смене events_LowMinimumAndStorage_AddsAll проверь это утверждение.");
     }
 }

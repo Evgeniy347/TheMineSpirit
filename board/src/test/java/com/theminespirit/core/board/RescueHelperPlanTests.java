@@ -31,7 +31,8 @@ class RescueHelperPlanTests {
         assertEquals(
                 List.of("goto", "wait", "clear_area", "goto"),
                 scripts(plan),
-                "Когда после clear_area есть пеший выход, помощник не копает и не ставит столб зря");
+                "Когда после clear_area есть пеший выход, помощник не копает и не ставит столб зря"
+                        + " Иначе тест helper_WalkUpAfterClear_NoDig перестанет ловить эту поломку. При смене helper_WalkUpAfterClear_NoDig проверь это утверждение.");
     }
 
     @Test
@@ -45,7 +46,8 @@ class RescueHelperPlanTests {
         assertTrue(
                 scripts(plan).contains("dig_out"),
                 "Спасённого из пещеры после clear_area не вывести шагом — помощник обязан пробить ступени, "
-                        + "иначе задание закрывается, а дух остаётся внизу (debtnav, п.3): " + scripts(plan));
+                        + "иначе задание закрывается, а дух остаётся внизу (debtnav, п.3): " + scripts(plan)
+                        + " При смене helper_NoWalkUpAfterClear_GetsStairs проверь это утверждение.");
     }
 
     @Test
@@ -59,21 +61,31 @@ class RescueHelperPlanTests {
         assertTrue(
                 scripts(plan).contains("pillar_up"),
                 "Из узкой ямы после вскрытия верх остаётся недоступным — помощник ставит столб (debtnav, п.3): "
-                        + scripts(plan));
+                        + scripts(plan)
+                        + " Иначе тест helper_NoWalkUpAfterClear_GetsPillar перестанет ловить эту поломку. При смене helper_NoWalkUpAfterClear_GetsPillar проверь это утверждение.");
         List<String> order = scripts(plan);
         int acquire = order.indexOf("acquire");
         assertTrue(
                 acquire >= 0 && acquire < order.indexOf("pillar_up"),
                 "Помощник идёт с пустыми руками: землю на столб он обязан взять до pillar_up, иначе спасение "
-                        + "падает «нет материала для столба» (observe17): " + order);
+                        + "падает «нет материала для столба» (observe17): " + order
+                        + " При смене helper_NoWalkUpAfterClear_GetsPillar проверь это утверждение.");
         List<ScriptCall> calls = new ArrayList<>();
         collectCalls(plan, calls);
         ScriptCall taken = calls.stream()
                 .filter(call -> "acquire".equals(call.script()))
                 .findFirst()
                 .orElseThrow();
-        assertEquals("minecraft:dirt", taken.params().get("item"), "Столб ставится из земли: " + taken.params());
-        assertEquals(3, taken.params().get("count"), "Земли берётся на весь столб высотой 3: " + taken.params());
+        assertEquals(
+                "minecraft:dirt",
+                taken.params().get("item"),
+                "Столб ставится из земли: " + taken.params()
+                        + " Иначе тест helper_NoWalkUpAfterClear_GetsPillar перестанет ловить эту поломку. При смене helper_NoWalkUpAfterClear_GetsPillar проверь это утверждение.");
+        assertEquals(
+                3,
+                taken.params().get("count"),
+                "Земли берётся на весь столб высотой 3: " + taken.params()
+                        + " Иначе тест helper_NoWalkUpAfterClear_GetsPillar перестанет ловить эту поломку. При смене helper_NoWalkUpAfterClear_GetsPillar проверь это утверждение.");
     }
 
     private static List<String> scripts(TaskNode plan) {

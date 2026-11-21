@@ -41,11 +41,13 @@ class BoardRetainTests {
         assertEquals(
                 List.of("crater_1"),
                 detached,
-                "Исчезнувшая воронка снимает FILL_CRATER: причина отпала, а не срок истёк");
+                "Исчезнувшая воронка снимает FILL_CRATER: причина отпала, а не срок истёк"
+                        + " Иначе тест retain_DeadCause_DetachesTicket перестанет ловить эту поломку. При смене retain_DeadCause_DetachesTicket проверь это утверждение.");
         assertEquals(
                 Optional.of(BoardStatus.CANCELLED),
                 board.statusOf("crater_1"),
-                "Снятое по актуальности задание помечается CANCELLED: prune уберёт его из очереди");
+                "Снятое по актуальности задание помечается CANCELLED: prune уберёт его из очереди"
+                        + " Иначе тест retain_DeadCause_DetachesTicket перестанет ловить эту поломку. При смене retain_DeadCause_DetachesTicket проверь это утверждение.");
     }
 
     @Test
@@ -55,11 +57,16 @@ class BoardRetainTests {
 
         List<String> detached = board.retain(Set.of("crater:1:64:2"), 0);
 
-        assertEquals(List.of(), detached, "Живая причина оставляет задание: воронка на месте — задание висит");
+        assertEquals(
+                List.of(),
+                detached,
+                "Живая причина оставляет задание: воронка на месте — задание висит"
+                        + " Иначе тест retain_LiveCause_KeepsTicket перестанет ловить эту поломку. При смене retain_LiveCause_KeepsTicket проверь это утверждение.");
         assertEquals(
                 Optional.of(BoardStatus.PENDING),
                 board.statusOf("crater_1"),
-                "Задание с живой причиной остаётся в выдаче");
+                "Задание с живой причиной остаётся в выдаче"
+                        + " Иначе тест retain_LiveCause_KeepsTicket перестанет ловить эту поломку. При смене retain_LiveCause_KeepsTicket проверь это утверждение.");
     }
 
     @Test
@@ -73,7 +80,8 @@ class BoardRetainTests {
                 List.of(),
                 detached,
                 "Постоянное задание не снимается никогда: always переживает любое снятие "
-                        + "по актуальности, иначе вечное задание умрёт на первой пересборке");
+                        + "по актуальности, иначе вечное задание умрёт на первой пересборке"
+                        + " При смене retain_AlwaysCause_NeverDetached проверь это утверждение.");
     }
 
     @Test
@@ -87,14 +95,19 @@ class BoardRetainTests {
         assertEquals(
                 List.of("lure_1"),
                 detached,
-                "Напрямую снято только «приманить»: причина укрытия жива, само укрытие стоит");
+                "Напрямую снято только «приманить»: причина укрытия жива, само укрытие стоит"
+                        + " Иначе тест retain_Cascade_DetachesDependants перестанет ловить эту поломку. При смене retain_Cascade_DetachesDependants проверь это утверждение.");
         assertEquals(
-                Optional.of(BoardStatus.CANCELLED), board.statusOf("lure_1"), "«Приманить» снято: животное погибло");
+                Optional.of(BoardStatus.CANCELLED),
+                board.statusOf("lure_1"),
+                "«Приманить» снято: животное погибло"
+                        + " Иначе тест retain_Cascade_DetachesDependants перестанет ловить эту поломку. При смене retain_Cascade_DetachesDependants проверь это утверждение.");
         assertEquals(
                 Optional.of(BoardStatus.CANCELLED),
                 board.statusOf("dismantle_1"),
                 "«Разобрать укрытие» снято каскадом при живой причине: без приманки разбирать "
-                        + "нечего, иначе задание ждало бы отменённого предшественника навсегда");
+                        + "нечего, иначе задание ждало бы отменённого предшественника навсегда"
+                        + " При смене retain_Cascade_DetachesDependants проверь это утверждение.");
     }
 
     @Test
@@ -110,11 +123,13 @@ class BoardRetainTests {
         assertEquals(
                 Optional.of(BoardStatus.DONE),
                 board.statusOf("pen_1"),
-                "Выполненная постройка не трогается снятием: DONE остаётся условием " + "для других заданий");
+                "Выполненная постройка не трогается снятием: DONE остаётся условием " + "для других заданий"
+                        + " Иначе тест retain_DoneBuilding_StaysCondition перестанет ловить эту поломку. При смене retain_DoneBuilding_StaysCondition проверь это утверждение.");
         assertEquals(
                 Optional.of(BoardStatus.CANCELLED),
                 board.statusOf("lure_1"),
-                "Незавершённое с мёртвой причиной снято, выполненное — нет");
+                "Незавершённое с мёртвой причиной снято, выполненное — нет"
+                        + " Иначе тест retain_DoneBuilding_StaysCondition перестанет ловить эту поломку. При смене retain_DoneBuilding_StaysCondition проверь это утверждение.");
     }
 
     @Test
@@ -128,7 +143,8 @@ class BoardRetainTests {
         assertEquals(
                 List.of("crater_1"),
                 detached,
-                "Пустой набор причин снимает только не-always: постоянное остаётся, " + "событийное уходит");
+                "Пустой набор причин снимает только не-always: постоянное остаётся, " + "событийное уходит"
+                        + " Иначе тест retain_EmptyCauses_DetachesOnlyNonAlways перестанет ловить эту поломку. При смене retain_EmptyCauses_DetachesOnlyNonAlways проверь это утверждение.");
     }
 
     @Test
@@ -143,7 +159,8 @@ class BoardRetainTests {
                 List.of(),
                 second,
                 "Двойное снятие идемпотентно: второе снятие не находит работу, иначе "
-                        + "пересборка писала бы дубли в журнал");
+                        + "пересборка писала бы дубли в журнал"
+                        + " При смене retain_Twice_IsIdempotent проверь это утверждение.");
     }
 
     @Property
@@ -158,7 +175,8 @@ class BoardRetainTests {
                 firstRun,
                 secondRun,
                 "Снятие детерминировано: при тех же живых причинах те же задания снимаются "
-                        + "в том же порядке, иначе журнал плывёт между пересборками");
+                        + "в том же порядке, иначе журнал плывёт между пересборками"
+                        + " При смене retain_AnyCauses_IsDeterministic проверь это утверждение.");
     }
 
     private static Board boardWithCraterAndEat() {

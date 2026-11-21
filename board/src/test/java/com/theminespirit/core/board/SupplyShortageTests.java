@@ -24,6 +24,7 @@ class SupplyShortageTests {
                         "shortage:minecraft:crafting_table", "", new GraphBlock.Item("crafting_table", 1))),
                 blocks,
                 "Нет предмета нигде — нехватка уходит в граф блокировкой (граф решает: скрафтить или добыть), "
-                        + "а не задачей «добыть» мимо графа; то, что лежит в сундуках, несёт снабжение");
+                        + "а не задачей «добыть» мимо графа; то, что лежит в сундуках, несёт снабжение"
+                        + " Иначе тест shortages_AbsentItem_BlockForGraphNotGatherTicket перестанет ловить эту поломку. При смене shortages_AbsentItem_BlockForGraphNotGatherTicket проверь это утверждение.");
     }
 }

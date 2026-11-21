@@ -31,11 +31,13 @@ class GraphChoiceFailureCacheTests {
                 calm,
                 oneTarget,
                 1e-9,
-                "Одна недоступная цель узла не штрафует личный путь духа: узел ещё не доказан плохим");
+                "Одна недоступная цель узла не штрафует личный путь духа: узел ещё не доказан плохим"
+                        + " Иначе тест failureBackoff_SpiritSuffixAndNodeTargets_AreAggregatedPerRun перестанет ловить эту поломку. При смене failureBackoff_SpiritSuffixAndNodeTargets_AreAggregatedPerRun проверь это утверждение.");
         assertTrue(
                 twoTargets < calm,
                 "Провал узла и провал личного ключа — разные цели одного узла: агрегат плана складывает их, "
-                        + "а не смотрит только на точный ключ: " + twoTargets + " против " + calm);
+                        + "а не смотрит только на точный ключ: " + twoTargets + " против " + calm
+                        + " Иначе тест failureBackoff_SpiritSuffixAndNodeTargets_AreAggregatedPerRun перестанет ловить эту поломку. При смене failureBackoff_SpiritSuffixAndNodeTargets_AreAggregatedPerRun проверь это утверждение.");
     }
 
     @Test
@@ -47,8 +49,18 @@ class GraphChoiceFailureCacheTests {
         double one = new GraphChoiceRules(GRAPH, nodeUnknown.state()).value(key, 1.0, false);
         GraphWorld bothUnknown = failed(nodeUnknown, key, "2,64,0", null);
         double two = new GraphChoiceRules(GRAPH, bothUnknown.state()).value(key, 1.0, false);
-        assertEquals(calm, one, 1e-9, "Провал без нужды не штрафует узел");
-        assertEquals(calm, two, 1e-9, "Провал без нужды не штрафует и личный ключ");
+        assertEquals(
+                calm,
+                one,
+                1e-9,
+                "Провал без нужды не штрафует узел"
+                        + " Иначе тест failureBackoff_UnknownNeed_DoesNotChangeWeight перестанет ловить эту поломку. При смене failureBackoff_UnknownNeed_DoesNotChangeWeight проверь это утверждение.");
+        assertEquals(
+                calm,
+                two,
+                1e-9,
+                "Провал без нужды не штрафует и личный ключ"
+                        + " Иначе тест failureBackoff_UnknownNeed_DoesNotChangeWeight перестанет ловить эту поломку. При смене failureBackoff_UnknownNeed_DoesNotChangeWeight проверь это утверждение.");
     }
 
     private static GraphWorld failed(GraphWorld world, String node, String target) {

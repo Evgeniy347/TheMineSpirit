@@ -21,17 +21,20 @@ class StageAuditDecideTests {
         assertEquals(
                 BoardStatus.FAILED,
                 board.statusOf("first:build_fence").orElseThrow(),
-                "Живая ограда observe14 держится в FAILED при готовом мире: " + fence);
+                "Живая ограда observe14 держится в FAILED при готовом мире: " + fence
+                        + " Иначе тест decide_LiveFailedFenceButWorldComplete_ClosesWithoutNewTicket перестанет ловить эту поломку. При смене decide_LiveFailedFenceButWorldComplete_ClosesWithoutNewTicket проверь это утверждение.");
         assertEquals(
                 Map.of(),
                 fence.requiredItems(),
-                "Материалы ограды уже пусты, а задача всё равно перевыдаётся: " + fence);
+                "Материалы ограды уже пусты, а задача всё равно перевыдаётся: " + fence
+                        + " Иначе тест decide_LiveFailedFenceButWorldComplete_ClosesWithoutNewTicket перестанет ловить эту поломку. При смене decide_LiveFailedFenceButWorldComplete_ClosesWithoutNewTicket проверь это утверждение.");
 
         assertEquals(
                 StageAudit.Decision.COMPLETE,
                 StageAudit.decide(BoardStatus.FAILED, false, FENCE_DONE, FENCE_TOTAL),
                 "Ограда 70/70 стоит в мире, хотя тикет FAILED: готовая постройка закрывается по факту мира, "
-                        + "а не по статусу тикета");
+                        + "а не по статусу тикета"
+                        + " Иначе тест decide_LiveFailedFenceButWorldComplete_ClosesWithoutNewTicket перестанет ловить эту поломку. При смене decide_LiveFailedFenceButWorldComplete_ClosesWithoutNewTicket проверь это утверждение.");
     }
 
     @Test
@@ -42,17 +45,20 @@ class StageAuditDecideTests {
         assertEquals(
                 BoardStatus.DONE,
                 board.statusOf("first:build_mine").orElseThrow(),
-                "Живая шахта observe14 закрыта доской: " + mine);
+                "Живая шахта observe14 закрыта доской: " + mine
+                        + " Иначе тест decide_LiveDoneMineButDamaged_NeedsAuditRepair перестанет ловить эту поломку. При смене decide_LiveDoneMineButDamaged_NeedsAuditRepair проверь это утверждение.");
         assertEquals(
                 59,
                 mine.requiredItems().get("cobblestone"),
-                "Живой тикет шахты несёт 59 недостающих полов — по ним и нужен ремонт: " + mine);
+                "Живой тикет шахты несёт 59 недостающих полов — по ним и нужен ремонт: " + mine
+                        + " Иначе тест decide_LiveDoneMineButDamaged_NeedsAuditRepair перестанет ловить эту поломку. При смене decide_LiveDoneMineButDamaged_NeedsAuditRepair проверь это утверждение.");
 
         assertEquals(
                 StageAudit.Decision.AUDIT,
                 StageAudit.decide(BoardStatus.DONE, true, MINE_DONE, MINE_TOTAL),
                 "Шахта DONE при 96% повреждена: аудит обязан заказать ремонт по недостающим блокам, "
-                        + "а не считать постройку целой");
+                        + "а не считать постройку целой"
+                        + " Иначе тест decide_LiveDoneMineButDamaged_NeedsAuditRepair перестанет ловить эту поломку. При смене decide_LiveDoneMineButDamaged_NeedsAuditRepair проверь это утверждение.");
     }
 
     @Test
@@ -60,11 +66,13 @@ class StageAuditDecideTests {
         assertEquals(
                 StageAudit.Decision.OPEN,
                 StageAudit.decide(null, true, 0, FENCE_TOTAL),
-                "Шаг без тикета и без блоков в мире открывается обычным планом");
+                "Шаг без тикета и без блоков в мире открывается обычным планом"
+                        + " Иначе тест decide_UnstartedBuild_OpensPlan перестанет ловить эту поломку. При смене decide_UnstartedBuild_OpensPlan проверь это утверждение.");
         assertEquals(
                 StageAudit.Decision.AUDIT,
                 StageAudit.decide(BoardStatus.FAILED, false, 20, FENCE_TOTAL),
                 "Частично стоящая постройка чинится по недостающим блокам, а не перевыдаётся полным планом: "
-                        + "иначе ограда 70/71 висит без задач");
+                        + "иначе ограда 70/71 висит без задач"
+                        + " При смене decide_UnstartedBuild_OpensPlan проверь это утверждение.");
     }
 }

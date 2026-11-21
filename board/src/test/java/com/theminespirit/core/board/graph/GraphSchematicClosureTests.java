@@ -56,7 +56,8 @@ class GraphSchematicClosureTests {
                 List.of(),
                 new ArrayList<>(summary(holes)),
                 "Каждый блок схемы обязан переводиться в предмет графа и закрываться цепочкой добычи до сырья "
-                        + "мира. Дыры (блок → предмет: причина)");
+                        + "мира. Дыры (блок → предмет: причина)"
+                        + " Иначе тест schematics_EveryBlockItem_ClosesToWorldResource перестанет ловить эту поломку. При смене schematics_EveryBlockItem_ClosesToWorldResource проверь это утверждение.");
     }
 
     private static Map<String, String> blockItems() {
@@ -64,7 +65,8 @@ class GraphSchematicClosureTests {
         JsonNode table = root.path("blockItems");
         assertTrue(
                 table.isObject() && !table.isEmpty(),
-                "В графе нет раздела blockItems: без таблицы «блок → предмет» материалы схем не свести к предметам");
+                "В графе нет раздела blockItems: без таблицы «блок → предмет» материалы схем не свести к предметам"
+                        + " Иначе тест schematics_EveryBlockItem_ClosesToWorldResource перестанет ловить эту поломку. При смене schematics_EveryBlockItem_ClosesToWorldResource проверь это утверждение.");
         Map<String, String> items = new HashMap<>();
         table.properties()
                 .forEach(entry -> items.put(

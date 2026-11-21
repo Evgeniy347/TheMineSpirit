@@ -19,7 +19,8 @@ class StageAuditTests {
                 List.of(true, false),
                 List.of(StageAudit.unbuilt(144, 146, REBUILD_PERCENT), StageAudit.unbuilt(5, 146, REBUILD_PERCENT)),
                 "INC-87: ограды нет на 98% — это шаг стройки с материалами, а не ремонт; 5 из 146 — ремонт "
-                        + "построенной и повреждённой");
+                        + "построенной и повреждённой"
+                        + " Иначе тест unbuilt_FenceMissing144Of146_IsConstructionNotRepair перестанет ловить эту поломку. При смене unbuilt_FenceMissing144Of146_IsConstructionNotRepair проверь это утверждение.");
     }
 
     @Test
@@ -44,7 +45,8 @@ class StageAuditTests {
                         board.claimable(empty, 0),
                         ResourceGate.missing(new StockNeed(StageAudit.shortage(need)), empty)),
                 "Ремонт без материалов не выдаётся: ждёт с недостачей «доски×120» (по ней рубка и крафт), а не "
-                        + "ведёт духа вдоль линии с пустыми руками");
+                        + "ведёт духа вдоль линии с пустыми руками"
+                        + " Иначе тест shortage_RepairWithoutFences_TicketWaitsNamingMaterial перестанет ловить эту поломку. При смене shortage_RepairWithoutFences_TicketWaitsNamingMaterial проверь это утверждение.");
     }
 
     @Test
@@ -55,7 +57,8 @@ class StageAuditTests {
                         StageAudit.allDone(List.of(BoardStatus.DONE, BoardStatus.PENDING)),
                         StageAudit.allDone(List.of()),
                         StageAudit.allDone(List.of(BoardStatus.DONE, BoardStatus.DONE))),
-                "Частичную стройку не переоткрывают: шаг ограды закрыт, только когда закрыты все его части");
+                "Частичную стройку не переоткрывают: шаг ограды закрыт, только когда закрыты все его части"
+                        + " Иначе тест allDone_PartsPending_NotRebuilt перестанет ловить эту поломку. При смене allDone_PartsPending_NotRebuilt проверь это утверждение.");
     }
 
     @Test
@@ -65,10 +68,12 @@ class StageAuditTests {
                 List.of(
                         StageAudit.nothingToBuild(1).isPresent(),
                         StageAudit.nothingToBuild(0).isPresent()),
-                "Пустой план стройки закрывается с причиной, а не «сделано»: иначе доска выдаёт задание по кругу");
+                "Пустой план стройки закрывается с причиной, а не «сделано»: иначе доска выдаёт задание по кругу"
+                        + " При смене nothingToBuild_EmptyPlan_NamesReason проверь это утверждение.");
         assertTrue(
                 StageAudit.nothingToBuild(0).orElseThrow().contains("0 блоков"),
-                "Причина пустого плана называет цену: в работе 0 блоков — духу нечего строить");
+                "Причина пустого плана называет цену: в работе 0 блоков — духу нечего строить"
+                        + " Иначе тест nothingToBuild_EmptyPlan_NamesReason перестанет ловить эту поломку. При смене nothingToBuild_EmptyPlan_NamesReason проверь это утверждение.");
     }
 
     @Test
@@ -80,6 +85,7 @@ class StageAuditTests {
                         StageAudit.progressed(2, 30, 146),
                         StageAudit.progressed(146, 146, 146)),
                 "INC-87: задание стройки, закрытое без единого нового блока, — провал с причиной, а не «сделано»: "
-                        + "иначе аудит каждые ~110 с выдаёт его заново тому же духу");
+                        + "иначе аудит каждые ~110 с выдаёт его заново тому же духу"
+                        + " При смене progressed_RepairClosedWithNothingPlaced_IsNotDone проверь это утверждение.");
     }
 }

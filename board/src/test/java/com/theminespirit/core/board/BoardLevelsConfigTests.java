@@ -36,10 +36,12 @@ class BoardLevelsConfigTests {
                 config.levels(),
                 "Таблица уровней обязана совпадать с литералами слово в слово: лишний ключ в "
                         + "файле без теста и забытый ключ в тесте красят прогон, а молчаливое "
-                        + "расхождение изменило бы число уровней постройки");
+                        + "расхождение изменило бы число уровней постройки"
+                        + " Иначе тест defaults_FromClasspath_LevelsMatchLiterals перестанет ловить эту поломку. При смене defaults_FromClasspath_LevelsMatchLiterals проверь это утверждение.");
         assertEquals(
                 4,
                 config.levels().get("BUILD_MINE"),
-                "Предел в тесте, факт из production: у шахты 4 уровня (проход, расширение, " + "ступеньки, рельсы)");
+                "Предел в тесте, факт из production: у шахты 4 уровня (проход, расширение, " + "ступеньки, рельсы)"
+                        + " Иначе тест defaults_FromClasspath_LevelsMatchLiterals перестанет ловить эту поломку. При смене defaults_FromClasspath_LevelsMatchLiterals проверь это утверждение.");
     }
 }

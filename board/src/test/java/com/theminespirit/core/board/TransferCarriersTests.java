@@ -66,7 +66,8 @@ class TransferCarriersTests {
                 List.of(Optional.empty(), Set.of()),
                 List.of(round.refusal(house, self), TransferCarriers.carrying(board, CRAFT, Set.of())),
                 "INC-86: передача, план которой не собрался, снимается, и держатель в ту же пересборку свободен для "
-                        + "других заданий; иначе он вечно «несёт ингредиенты» и стопорит всю доску");
+                        + "других заданий; иначе он вечно «несёт ингредиенты» и стопорит всю доску"
+                        + " При смене dropUnplanned_TransferWithoutPlan_HolderFreeInSameRound проверь это утверждение.");
     }
 
     private static Board boardWithBuild() {
@@ -91,12 +92,14 @@ class TransferCarriersTests {
         assertFalse(
                 TransferCarriers.awaitsDelivery(board, "first:build_fence"),
                 "Занятый дух с палками в кармане — не носильщик: передачу ему не выдать, а держателем его считать "
-                        + "значит держать ограду вечно в «носильщиков нет» (observe8 №3)");
+                        + "значит держать ограду вечно в «носильщиков нет» (observe8 №3)"
+                        + " Иначе тест awaitsDelivery_NoTransfer_FenceNotHeldByBusyHolder перестанет ловить эту поломку. При смене awaitsDelivery_NoTransfer_FenceNotHeldByBusyHolder проверь это утверждение.");
         assertTrue(
                 board.claimable(new StockView(Map.of()), 0).stream()
                         .anyMatch(ticket -> "first:build_fence".equals(ticket.id())),
                 "Без свободных носильщиков задание всё равно продвигается: исполнитель берёт ограду в работу и "
-                        + "забирает ингредиенты со склада или крафтит палки сам, а не ждёт вечно");
+                        + "забирает ингредиенты со склада или крафтит палки сам, а не ждёт вечно"
+                        + " Иначе тест awaitsDelivery_NoTransfer_FenceNotHeldByBusyHolder перестанет ловить эту поломку. При смене awaitsDelivery_NoTransfer_FenceNotHeldByBusyHolder проверь это утверждение.");
     }
 
     @Test
@@ -105,13 +108,15 @@ class TransferCarriersTests {
 
         assertTrue(
                 TransferCarriers.awaitsDelivery(board, CRAFT),
-                "Пока передача открыта, исполнитель ждёт доставку: иначе начнёт работу без ингредиентов");
+                "Пока передача открыта, исполнитель ждёт доставку: иначе начнёт работу без ингредиентов"
+                        + " При смене awaitsDelivery_OpenTransfer_TrueUntilClosed проверь это утверждение.");
 
         board.cancel(TRANSFER);
 
         assertFalse(
                 TransferCarriers.awaitsDelivery(board, CRAFT),
-                "Закрытая передача не держит исполнителя: иначе ожидание не кончается никогда");
+                "Закрытая передача не держит исполнителя: иначе ожидание не кончается никогда"
+                        + " При смене awaitsDelivery_OpenTransfer_TrueUntilClosed проверь это утверждение.");
     }
 
     @Test
@@ -122,10 +127,12 @@ class TransferCarriersTests {
         assertEquals(
                 Set.of(SELF),
                 TransferCarriers.carrying(board, CRAFT, Set.of(SELF)),
-                "Взятая передача с запущенной задачей — дух несёт груз и занят до сдачи");
+                "Взятая передача с запущенной задачей — дух несёт груз и занят до сдачи"
+                        + " Иначе тест carrying_ClaimedTransferWithRunningTask_HolderCarries перестанет ловить эту поломку. При смене carrying_ClaimedTransferWithRunningTask_HolderCarries проверь это утверждение.");
         assertEquals(
                 Set.of(),
                 TransferCarriers.carrying(board, CRAFT, Set.of()),
-                "Взятая передача без запущенной задачи — дух ничего не несёт и не числится занятым");
+                "Взятая передача без запущенной задачи — дух ничего не несёт и не числится занятым"
+                        + " Иначе тест carrying_ClaimedTransferWithRunningTask_HolderCarries перестанет ловить эту поломку. При смене carrying_ClaimedTransferWithRunningTask_HolderCarries проверь это утверждение.");
     }
 }

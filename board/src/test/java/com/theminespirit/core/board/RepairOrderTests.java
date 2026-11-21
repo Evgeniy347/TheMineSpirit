@@ -39,17 +39,23 @@ class RepairOrderTests {
         assertTrue(
                 report.damaged(),
                 "Живая хижина observe11 на 88%: недостача клеток обязана попасть в отчёт обхода, иначе "
-                        + "повреждение не видно никому");
+                        + "повреждение не видно никому"
+                        + " При смене audit_LiveHutMissingTwelfth_NeedsRepairWithoutRebuild проверь это утверждение.");
         assertFalse(
                 report.rebuild(),
-                "Потеряна восьмая часть дома (88% целого), а не больше половины: дом чинят, а не перестраивают уровень");
+                "Потеряна восьмая часть дома (88% целого), а не больше половины: дом чинят, а не перестраивают уровень"
+                        + " Иначе тест audit_LiveHutMissingTwelfth_NeedsRepairWithoutRebuild перестанет ловить эту поломку. При смене audit_LiveHutMissingTwelfth_NeedsRepairWithoutRebuild проверь это утверждение.");
         Map<String, Integer> need = RepairAudit.need(report);
         assertEquals(
                 report.missing(),
                 need.values().stream().mapToInt(Integer::intValue).sum(),
                 "Материалы ремонта считаются по каждой недостающей клетке схемы: без них задание ремонта "
-                        + "не примут на доске и хижина останется 88%");
-        assertFalse(need.isEmpty(), "Аудит повреждённого дома обязан вернуть непустой набор материалов ремонта");
+                        + "не примут на доске и хижина останется 88%"
+                        + " Иначе тест audit_LiveHutMissingTwelfth_NeedsRepairWithoutRebuild перестанет ловить эту поломку. При смене audit_LiveHutMissingTwelfth_NeedsRepairWithoutRebuild проверь это утверждение.");
+        assertFalse(
+                need.isEmpty(),
+                "Аудит повреждённого дома обязан вернуть непустой набор материалов ремонта"
+                        + " Иначе тест audit_LiveHutMissingTwelfth_NeedsRepairWithoutRebuild перестанет ловить эту поломку. При смене audit_LiveHutMissingTwelfth_NeedsRepairWithoutRebuild проверь это утверждение.");
     }
 
     @Test
@@ -58,26 +64,41 @@ class RepairOrderTests {
         assertEquals(
                 Optional.of(BoardStatus.DONE),
                 board.statusOf("first:build_house"),
-                "Живая доска observe11 считает хижину построенной: ремонт идёт поверх DONE");
+                "Живая доска observe11 считает хижину построенной: ремонт идёт поверх DONE"
+                        + " Иначе тест repairTicket_LiveBoardWithoutHutRepair_AcceptedAsPendingRepair перестанет ловить эту поломку. При смене repairTicket_LiveBoardWithoutHutRepair_AcceptedAsPendingRepair проверь это утверждение.");
         assertFalse(
                 board.find("repair:build_house").isPresent(),
-                "Живая доска не открыла ремонт хижины при 88%: именно поэтому повреждение стояло без работы");
+                "Живая доска не открыла ремонт хижины при 88%: именно поэтому повреждение стояло без работы"
+                        + " Иначе тест repairTicket_LiveBoardWithoutHutRepair_AcceptedAsPendingRepair перестанет ловить эту поломку. При смене repairTicket_LiveBoardWithoutHutRepair_AcceptedAsPendingRepair проверь это утверждение.");
         Map<String, Integer> need = Map.of("oak_planks", 12, "jungle_log", 2);
 
         BoardTicket ticket = RepairPlan.ticket(BoardCase.BUILD_HOUSE, need, NOW);
 
-        assertEquals("repair:build_house", ticket.id(), "Ремонт дома идёт одним тикетом repair:build_house");
-        assertEquals(BoardCase.REPAIR_BUILDING, ticket.boardCase(), "Тикет ремонта обязан нести кейс REPAIR_BUILDING");
         assertEquals(
-                BoardOutcome.ACCEPTED, board.submit(ticket), "Ремонт поверх построенной хижины обязан принять доску");
+                "repair:build_house",
+                ticket.id(),
+                "Ремонт дома идёт одним тикетом repair:build_house"
+                        + " Иначе тест repairTicket_LiveBoardWithoutHutRepair_AcceptedAsPendingRepair перестанет ловить эту поломку. При смене repairTicket_LiveBoardWithoutHutRepair_AcceptedAsPendingRepair проверь это утверждение.");
+        assertEquals(
+                BoardCase.REPAIR_BUILDING,
+                ticket.boardCase(),
+                "Тикет ремонта обязан нести кейс REPAIR_BUILDING"
+                        + " Иначе тест repairTicket_LiveBoardWithoutHutRepair_AcceptedAsPendingRepair перестанет ловить эту поломку. При смене repairTicket_LiveBoardWithoutHutRepair_AcceptedAsPendingRepair проверь это утверждение.");
+        assertEquals(
+                BoardOutcome.ACCEPTED,
+                board.submit(ticket),
+                "Ремонт поверх построенной хижины обязан принять доску"
+                        + " Иначе тест repairTicket_LiveBoardWithoutHutRepair_AcceptedAsPendingRepair перестанет ловить эту поломку. При смене repairTicket_LiveBoardWithoutHutRepair_AcceptedAsPendingRepair проверь это утверждение.");
         assertEquals(
                 Optional.of(BoardStatus.PENDING),
                 board.statusOf(ticket.id()),
-                "Принятый ремонт встаёт в очередь и его выдадут духу");
+                "Принятый ремонт встаёт в очередь и его выдадут духу"
+                        + " Иначе тест repairTicket_LiveBoardWithoutHutRepair_AcceptedAsPendingRepair перестанет ловить эту поломку. При смене repairTicket_LiveBoardWithoutHutRepair_AcceptedAsPendingRepair проверь это утверждение.");
         assertEquals(
                 need,
                 board.find(ticket.id()).orElseThrow().requiredItems(),
-                "Тикет несёт материалы недостающих клеток");
+                "Тикет несёт материалы недостающих клеток"
+                        + " Иначе тест repairTicket_LiveBoardWithoutHutRepair_AcceptedAsPendingRepair перестанет ловить эту поломку. При смене repairTicket_LiveBoardWithoutHutRepair_AcceptedAsPendingRepair проверь это утверждение.");
     }
 
     private static Schematic load(String id) {
@@ -92,7 +113,10 @@ class RepairOrderTests {
                 expected.add(entry.pos());
             }
         }
-        assertTrue(expected.size() > 16, "Схема " + HUT + " слишком мала для проверки повреждения: " + expected.size());
+        assertTrue(
+                expected.size() > 16,
+                "Схема " + HUT + " слишком мала для проверки повреждения: " + expected.size()
+                        + " Иначе тест repairTicket_LiveBoardWithoutHutRepair_AcceptedAsPendingRepair перестанет ловить эту поломку. При смене repairTicket_LiveBoardWithoutHutRepair_AcceptedAsPendingRepair проверь это утверждение.");
         Set<BlockCoord> missing = new LinkedHashSet<>();
         for (int index = 0; index < expected.size(); index += 8) {
             missing.add(expected.get(index));

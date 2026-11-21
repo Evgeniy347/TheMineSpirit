@@ -13,7 +13,8 @@ class FenceBreaksTests {
         assertEquals(
                 "fence:10:-64:3",
                 FenceBreaks.cause(new BlockCoord(10, -64, 3)),
-                "Причина сломанного забора — ключ живой причины доски: формат fence:x:y:z держит удержание билета");
+                "Причина сломанного забора — ключ живой причины доски: формат fence:x:y:z держит удержание билета"
+                        + " Иначе тест cause_BlockCoord_IsStableFenceKey перестанет ловить эту поломку. При смене cause_BlockCoord_IsStableFenceKey проверь это утверждение.");
     }
 
     @Test
@@ -29,8 +30,13 @@ class FenceBreaksTests {
         assertEquals(
                 Map.of(broken, "oak_fence"),
                 live,
-                "Починенная клетка выпадает из памяти: иначе граф вечно ставит ремонт уже целого забора");
-        assertEquals(1, breaks.size(), "После чистки в памяти остаётся только реально сломанная клетка");
+                "Починенная клетка выпадает из памяти: иначе граф вечно ставит ремонт уже целого забора"
+                        + " При смене retainLive_RepairedCells_AreForgotten проверь это утверждение.");
+        assertEquals(
+                1,
+                breaks.size(),
+                "После чистки в памяти остаётся только реально сломанная клетка"
+                        + " Иначе тест retainLive_RepairedCells_AreForgotten перестанет ловить эту поломку. При смене retainLive_RepairedCells_AreForgotten проверь это утверждение.");
     }
 
     @Test
@@ -43,7 +49,8 @@ class FenceBreaksTests {
         assertEquals(
                 Map.of(new BlockCoord(1, 64, 0), "oak_fence", new BlockCoord(2, 64, 0), "oak_fence"),
                 breaks.current(),
-                "Память забора хранит последние клетки: переполнение вытесняет самую старую, а не ломает ремонт");
+                "Память забора хранит последние клетки: переполнение вытесняет самую старую, а не ломает ремонт"
+                        + " При смене remember_OverCapacity_DropsOldestCell проверь это утверждение.");
     }
 
     @Test
@@ -53,10 +60,12 @@ class FenceBreaksTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> breaks.remember(new BlockCoord(0, 64, 0), " "),
-                "Пустой блок забора нечем ставить обратно: память обязана отказать, а не молча ждать");
+                "Пустой блок забора нечем ставить обратно: память обязана отказать, а не молча ждать"
+                        + " Иначе тест remember_InvalidArguments_AreRejected перестанет ловить эту поломку. При смене remember_InvalidArguments_AreRejected проверь это утверждение.");
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new FenceBreaks(0),
-                "Память забора без ёмкости не проверяет живые клетки: конструктор обязан отказать");
+                "Память забора без ёмкости не проверяет живые клетки: конструктор обязан отказать"
+                        + " Иначе тест remember_InvalidArguments_AreRejected перестанет ловить эту поломку. При смене remember_InvalidArguments_AreRejected проверь это утверждение.");
     }
 }

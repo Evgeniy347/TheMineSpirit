@@ -16,10 +16,12 @@ class WarehouseGraphNoticeTests {
         assertTrue(
                 plan.task("building:warehouse").isPresent(),
                 "Склад — обычная постройка графа: его строит узел building:warehouse, а не сторож "
-                        + WarehouseGraphNoticeTests.class.getSimpleName() + ": " + plan.tasks());
+                        + WarehouseGraphNoticeTests.class.getSimpleName() + ": " + plan.tasks()
+                        + " Иначе тест plan_WarehousePlannedInTown_GraphPostsBuilding перестанет ловить эту поломку. При смене plan_WarehousePlannedInTown_GraphPostsBuilding проверь это утверждение.");
         assertFalse(
                 plan.notices().stream().anyMatch(notice -> "warehouse".equals(notice.building())),
-                "Лот склада есть в плане — просьба стратегу «её нет в плане» была бы ложью: " + plan.notices());
+                "Лот склада есть в плане — просьба стратегу «её нет в плане» была бы ложью: " + plan.notices()
+                        + " Иначе тест plan_WarehousePlannedInTown_GraphPostsBuilding перестанет ловить эту поломку. При смене plan_WarehousePlannedInTown_GraphPostsBuilding проверь это утверждение.");
     }
 
     @Test
@@ -30,9 +32,11 @@ class WarehouseGraphNoticeTests {
 
         assertTrue(
                 plan.notices().stream().anyMatch(notice -> "warehouse".equals(notice.building())),
-                "Лота склада нет — просьба стратегу уместна: " + plan.notices());
+                "Лота склада нет — просьба стратегу уместна: " + plan.notices()
+                        + " Иначе тест plan_WarehouseMissingAtStageTwo_StillAsksStrategist перестанет ловить эту поломку. При смене plan_WarehouseMissingAtStageTwo_StillAsksStrategist проверь это утверждение.");
         assertTrue(
                 plan.task("building:warehouse").isEmpty(),
-                "Склада нет в плане — задание не ставится без лота: " + plan.task("building:warehouse"));
+                "Склада нет в плане — задание не ставится без лота: " + plan.task("building:warehouse")
+                        + " Иначе тест plan_WarehouseMissingAtStageTwo_StillAsksStrategist перестанет ловить эту поломку. При смене plan_WarehouseMissingAtStageTwo_StillAsksStrategist проверь это утверждение.");
     }
 }

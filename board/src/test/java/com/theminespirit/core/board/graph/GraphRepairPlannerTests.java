@@ -25,7 +25,8 @@ class GraphRepairPlannerTests {
         assertEquals(
                 Map.of("dirt", 3),
                 repair.consumes(),
-                "ремонт хижины потребляет ровно недостающие предметы, а не фиксированный набор схемы");
+                "ремонт хижины потребляет ровно недостающие предметы, а не фиксированный набор схемы"
+                        + " Иначе тест repair_DamagedHut_ConsumesExactlyMissingItems перестанет ловить эту поломку. При смене repair_DamagedHut_ConsumesExactlyMissingItems проверь это утверждение.");
     }
 
     @Test
@@ -43,7 +44,8 @@ class GraphRepairPlannerTests {
                 task(heavy.plan()).priority() > task(light.plan()).priority(),
                 "чем больше доля недостающего, тем выше вес ремонта: "
                         + task(heavy.plan()).priority() + " против "
-                        + task(light.plan()).priority());
+                        + task(light.plan()).priority()
+                        + " Иначе тест repair_MoreMissing_RaisesWeight перестанет ловить эту поломку. При смене repair_MoreMissing_RaisesWeight проверь это утверждение.");
     }
 
     @Test
@@ -57,13 +59,18 @@ class GraphRepairPlannerTests {
 
         assertTrue(
                 !task(world.plan()).feasible(),
-                "Постройка на 0% не ремонтируется: её строят с нуля, иначе задание ремонта подменяет стройку");
+                "Постройка на 0% не ремонтируется: её строят с нуля, иначе задание ремонта подменяет стройку"
+                        + " При смене repair_NotStartedBuilding_NotFeasible проверь это утверждение.");
     }
 
     private static GraphPlan.Task task(GraphPlan plan) {
         List<GraphPlan.Task> repairs =
                 plan.tasks().stream().filter(task -> REPAIR.equals(task.id())).toList();
-        assertEquals(1, repairs.size(), "повреждённая постройка даёт одно задание ремонта: " + plan.tasks());
+        assertEquals(
+                1,
+                repairs.size(),
+                "повреждённая постройка даёт одно задание ремонта: " + plan.tasks()
+                        + " Иначе тест repair_NotStartedBuilding_NotFeasible перестанет ловить эту поломку. При смене repair_NotStartedBuilding_NotFeasible проверь это утверждение.");
         return repairs.get(0);
     }
 

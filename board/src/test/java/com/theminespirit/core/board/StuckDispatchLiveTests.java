@@ -41,8 +41,16 @@ class StuckDispatchLiveTests {
         BoardTicket fenceTicket = ticket(fence);
         BoardTicket mineTicket = ticket(mine);
         StockView stock = stock(fence, mine);
-        assertEquals(BoardOutcome.ACCEPTED, board.submit(fenceTicket), "Живое задание ограды принимается доской");
-        assertEquals(BoardOutcome.ACCEPTED, board.submit(mineTicket), "Живое задание шахты принимается доской");
+        assertEquals(
+                BoardOutcome.ACCEPTED,
+                board.submit(fenceTicket),
+                "Живое задание ограды принимается доской"
+                        + " Иначе тест stuckSpirit_AfterStallFailures_NoNewTicketWhileNearest перестанет ловить эту поломку. При смене stuckSpirit_AfterStallFailures_NoNewTicketWhileNearest проверь это утверждение.");
+        assertEquals(
+                BoardOutcome.ACCEPTED,
+                board.submit(mineTicket),
+                "Живое задание шахты принимается доской"
+                        + " Иначе тест stuckSpirit_AfterStallFailures_NoNewTicketWhileNearest перестанет ловить эту поломку. При смене stuckSpirit_AfterStallFailures_NoNewTicketWhileNearest проверь это утверждение.");
 
         String stall = "задание стоит " + TaskStall.STALL_TICKS + " тиков: подход не двигается в " + at;
         board.stuck().see(stuck, at);
@@ -50,11 +58,13 @@ class StuckDispatchLiveTests {
         assertTrue(
                 board.claimable(stock, clock[0]).stream()
                         .anyMatch(ticket -> ticket.id().equals(fenceTicket.id())),
-                "Перед провалом ограда обязана быть в очереди выдачи: " + fenceTicket.id());
+                "Перед провалом ограда обязана быть в очереди выдачи: " + fenceTicket.id()
+                        + " Иначе тест stuckSpirit_AfterStallFailures_NoNewTicketWhileNearest перестанет ловить эту поломку. При смене stuckSpirit_AfterStallFailures_NoNewTicketWhileNearest проверь это утверждение.");
         assertEquals(
                 BoardOutcome.CLAIMED,
                 board.claim(fenceTicket.id(), stuck, clock[0]),
-                "Живой ticket " + fenceTicket.id() + " выдаётся застрявшему spirit-1, как в observe12");
+                "Живой ticket " + fenceTicket.id() + " выдаётся застрявшему spirit-1, как в observe12"
+                        + " Иначе тест stuckSpirit_AfterStallFailures_NoNewTicketWhileNearest перестанет ловить эту поломку. При смене stuckSpirit_AfterStallFailures_NoNewTicketWhileNearest проверь это утверждение.");
         board.fail(fenceTicket.id(), stock, stall, new GraphBlock.Path(""));
 
         List<DispatchRound.Candidate> candidates = new ArrayList<>();
@@ -65,36 +75,47 @@ class StuckDispatchLiveTests {
 
         Optional<DispatchRound.Candidate> chosen = round.choose(next, candidates);
 
-        assertTrue(chosen.isPresent(), "Задание шахты обязано достаться свободному духу, а не остаться без выбора");
+        assertTrue(
+                chosen.isPresent(),
+                "Задание шахты обязано достаться свободному духу, а не остаться без выбора"
+                        + " Иначе тест stuckSpirit_AfterStallFailures_NoNewTicketWhileNearest перестанет ловить эту поломку. При смене stuckSpirit_AfterStallFailures_NoNewTicketWhileNearest проверь это утверждение.");
         assertEquals(
                 free,
                 chosen.get().id(),
                 "spirit-1 не двигается с " + at + " и провалил подход: доска не имеет права отдавать ему "
-                        + "новое задание (другой кейс), пока он не освободится; выбран ближайший достижимый дух");
+                        + "новое задание (другой кейс), пока он не освободится; выбран ближайший достижимый дух"
+                        + " Иначе тест stuckSpirit_AfterStallFailures_NoNewTicketWhileNearest перестанет ловить эту поломку. При смене stuckSpirit_AfterStallFailures_NoNewTicketWhileNearest проверь это утверждение.");
         String why = round.why(next, candidates);
         assertTrue(
                 why.contains("spirit-1") && why.contains("не двигается"),
-                "Причина ожидания называет застрявшего духа и что он не двигается: " + why);
+                "Причина ожидания называет застрявшего духа и что он не двигается: " + why
+                        + " Иначе тест stuckSpirit_AfterStallFailures_NoNewTicketWhileNearest перестанет ловить эту поломку. При смене stuckSpirit_AfterStallFailures_NoNewTicketWhileNearest проверь это утверждение.");
         board.noteWait(next.id(), why);
         String card = BoardWhy.waitReason(board, next, stock, clock[0]).orElse(null);
         assertTrue(
                 card != null && card.contains("spirit-1") && card.contains("не двигается"),
-                "Карточка задания на доске несёт причину «дух не двигается», а не молчит: " + card);
+                "Карточка задания на доске несёт причину «дух не двигается», а не молчит: " + card
+                        + " Иначе тест stuckSpirit_AfterStallFailures_NoNewTicketWhileNearest перестанет ловить эту поломку. При смене stuckSpirit_AfterStallFailures_NoNewTicketWhileNearest проверь это утверждение.");
         assertEquals(
                 BoardOutcome.CLAIMED,
                 board.claim(next.id(), chosen.get().id(), clock[0]),
-                "Тот же путь, что в игре: claimable → отказ выдачи → claim выдаёт задание достижимому духу");
+                "Тот же путь, что в игре: claimable → отказ выдачи → claim выдаёт задание достижимому духу"
+                        + " Иначе тест stuckSpirit_AfterStallFailures_NoNewTicketWhileNearest перестанет ловить эту поломку. При смене stuckSpirit_AfterStallFailures_NoNewTicketWhileNearest проверь это утверждение.");
         board.stuck().see(stuck, new BlockCoord(at.x() + 1, at.y(), at.z()));
         assertTrue(
                 board.stuck().isStuck(stuck, clock[0]),
-                "Сдвиг на блок внутри ловушки — колебание, а не освобождение: метка обязана держаться (observe13 N23)");
+                "Сдвиг на блок внутри ловушки — колебание, а не освобождение: метка обязана держаться (observe13 N23)"
+                        + " Иначе тест stuckSpirit_AfterStallFailures_NoNewTicketWhileNearest перестанет ловить эту поломку. При смене stuckSpirit_AfterStallFailures_NoNewTicketWhileNearest проверь это утверждение.");
         board.stuck().see(stuck, new BlockCoord(at.x() + 9, at.y() - 3, at.z()), clock[0], false);
         assertTrue(
                 board.stuck().isStuck(stuck, clock[0]),
-                "Блуждание по яме на девять блоков — всё ещё ловушка: метка не снимается сдвигом (observe24 B1)");
+                "Блуждание по яме на девять блоков — всё ещё ловушка: метка не снимается сдвигом (observe24 B1)"
+                        + " Иначе тест stuckSpirit_AfterStallFailures_NoNewTicketWhileNearest перестанет ловить эту поломку. При смене stuckSpirit_AfterStallFailures_NoNewTicketWhileNearest проверь это утверждение.");
         board.stuck().see(stuck, new BlockCoord(at.x() + 9, at.y(), at.z()), clock[0], true);
         assertFalse(
-                board.stuck().isStuck(stuck, clock[0]), "Дух вышел на поверхность: запрет на новые задания снимается");
+                board.stuck().isStuck(stuck, clock[0]),
+                "Дух вышел на поверхность: запрет на новые задания снимается"
+                        + " Иначе тест stuckSpirit_AfterStallFailures_NoNewTicketWhileNearest перестанет ловить эту поломку. При смене stuckSpirit_AfterStallFailures_NoNewTicketWhileNearest проверь это утверждение.");
     }
 
     private static DispatchRound.Candidate candidate(UUID id, String name) {

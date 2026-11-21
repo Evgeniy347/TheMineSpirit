@@ -30,11 +30,13 @@ class LiveWoodSourceTests {
         assertTrue(
                 distance > ChopTuning.GATHER_RADIUS_MAX,
                 "Живой провал обязан быть дальше радиуса поселения: " + distance + " против "
-                        + ChopTuning.GATHER_RADIUS_MAX);
+                        + ChopTuning.GATHER_RADIUS_MAX
+                        + " Иначе тест liveJunglePlanks_FarLogs_AreOutsideSettlementGatherRadius перестанет ловить эту поломку. При смене liveJunglePlanks_FarLogs_AreOutsideSettlementGatherRadius проверь это утверждение.");
         assertEquals(
                 ChopTuning.GATHER_RADIUS_MAX,
                 ChopTuning.gatherDistance(distance),
-                "Сбор обязан отсечь дальний блок и назвать причину, а не идти за 100+ блоков (observe19 E)");
+                "Сбор обязан отсечь дальний блок и назвать причину, а не идти за 100+ блоков (observe19 E)"
+                        + " Иначе тест liveJunglePlanks_FarLogs_AreOutsideSettlementGatherRadius перестанет ловить эту поломку. При смене liveJunglePlanks_FarLogs_AreOutsideSettlementGatherRadius проверь это утверждение.");
     }
 
     @Test
@@ -48,10 +50,12 @@ class LiveWoodSourceTests {
 
         assertTrue(
                 scripts.contains("chop_tree") || scripts.contains("acquire"),
-                "План обязан рубить/крафтить: " + scripts);
+                "План обязан рубить/крафтить: " + scripts
+                        + " Иначе тест liveJunglePlanksPlan_CraftsFromLogs_NoPlanksBlockGather перестанет ловить эту поломку. При смене liveJunglePlanksPlan_CraftsFromLogs_NoPlanksBlockGather проверь это утверждение.");
         assertFalse(
                 scripts.contains("block=jungle_planks"),
-                "Доски нельзя добывать блоком мира: живой провал искал их в блоке (-80,80,-423): " + scripts);
+                "Доски нельзя добывать блоком мира: живой провал искал их в блоке (-80,80,-423): " + scripts
+                        + " Иначе тест liveJunglePlanksPlan_CraftsFromLogs_NoPlanksBlockGather перестанет ловить эту поломку. При смене liveJunglePlanksPlan_CraftsFromLogs_NoPlanksBlockGather проверь это утверждение.");
     }
 
     @Test
@@ -65,9 +69,16 @@ class LiveWoodSourceTests {
 
         assertTrue(
                 CraftedItems.isCrafted("wooden_axe"),
-                "Инструмент — не-блочный предмет: только крафт, без похода за блоком (-273,112,-614)");
-        assertTrue(scripts.contains("wooden_axe"), "План обтёсывания обязан крафтить топор: " + scripts);
-        assertFalse(scripts.contains("block=wooden_axe"), "Топор не добывается блоком мира: " + scripts);
+                "Инструмент — не-блочный предмет: только крафт, без похода за блоком (-273,112,-614)"
+                        + " Иначе тест liveStrippedJungle_AxeComesFromCraft_NotBlockTrip перестанет ловить эту поломку. При смене liveStrippedJungle_AxeComesFromCraft_NotBlockTrip проверь это утверждение.");
+        assertTrue(
+                scripts.contains("wooden_axe"),
+                "План обтёсывания обязан крафтить топор: " + scripts
+                        + " Иначе тест liveStrippedJungle_AxeComesFromCraft_NotBlockTrip перестанет ловить эту поломку. При смене liveStrippedJungle_AxeComesFromCraft_NotBlockTrip проверь это утверждение.");
+        assertFalse(
+                scripts.contains("block=wooden_axe"),
+                "Топор не добывается блоком мира: " + scripts
+                        + " Иначе тест liveStrippedJungle_AxeComesFromCraft_NotBlockTrip перестанет ловить эту поломку. При смене liveStrippedJungle_AxeComesFromCraft_NotBlockTrip проверь это утверждение.");
     }
 
     private static JsonNode json(String file) throws IOException {

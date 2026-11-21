@@ -20,13 +20,17 @@ class EventTaskHandlersTests {
                 "gear_craft_sword",
                 "gear_craft_hoe")) {
             GraphEvent known = GRAPH.events().get(event);
-            assertFalse(known == null || known.tasks().isEmpty(), "У события снаряжения нет задания: " + event);
+            assertFalse(
+                    known == null || known.tasks().isEmpty(),
+                    "У события снаряжения нет задания: " + event
+                            + " Иначе тест gearEvents_TaskIdFromGraph_IsHandled перестанет ловить эту поломку. При смене gearEvents_TaskIdFromGraph_IsHandled проверь это утверждение.");
             String task = known.tasks().get(0).id();
             assertTrue(
                     GearInputs.handlesTask(task),
                     "Обработчик снаряжения обязан узнавать задание события '" + event + "', а видит '" + task
                             + "': на доску приходит id задания, а не id события — иначе узел графа остаётся "
-                            + "без исполнителя");
+                            + "без исполнителя"
+                            + " При смене gearEvents_TaskIdFromGraph_IsHandled проверь это утверждение.");
         }
     }
 
@@ -35,12 +39,16 @@ class EventTaskHandlersTests {
         for (String event :
                 List.of("store_minimum", "transfer_pending", "storage_full", "storage_mixed", "furnace_ready")) {
             GraphEvent known = GRAPH.events().get(event);
-            assertFalse(known == null || known.tasks().isEmpty(), "У события склада нет задания: " + event);
+            assertFalse(
+                    known == null || known.tasks().isEmpty(),
+                    "У события склада нет задания: " + event
+                            + " Иначе тест storeEvents_TaskIdFromGraph_IsHandled перестанет ловить эту поломку. При смене storeEvents_TaskIdFromGraph_IsHandled проверь это утверждение.");
             String task = known.tasks().get(0).id();
             assertTrue(
                     StoreRules.handlesEvent(task),
                     "Обработчик склада обязан узнавать задание события '" + event + "', а видит '" + task
-                            + "': перенос и сортировка иначе висят «без подключения к доске»");
+                            + "': перенос и сортировка иначе висят «без подключения к доске»"
+                            + " При смене storeEvents_TaskIdFromGraph_IsHandled проверь это утверждение.");
         }
     }
 
@@ -48,12 +56,16 @@ class EventTaskHandlersTests {
     void farmEvents_TaskIdFromGraph_IsHandled() {
         for (String event : List.of("crop_ready", "field_empty", "animal_starving")) {
             GraphEvent known = GRAPH.events().get(event);
-            assertFalse(known == null || known.tasks().isEmpty(), "У события фермы нет задания: " + event);
+            assertFalse(
+                    known == null || known.tasks().isEmpty(),
+                    "У события фермы нет задания: " + event
+                            + " Иначе тест farmEvents_TaskIdFromGraph_IsHandled перестанет ловить эту поломку. При смене farmEvents_TaskIdFromGraph_IsHandled проверь это утверждение.");
             String task = known.tasks().get(0).id();
             assertTrue(
                     FarmRules.handlesEvent(task),
                     "Обработчик фермы обязан узнавать задание события '" + event + "', а видит '" + task
-                            + "': посев и сбор иначе уходят в общий сбор предметов");
+                            + "': посев и сбор иначе уходят в общий сбор предметов"
+                            + " При смене farmEvents_TaskIdFromGraph_IsHandled проверь это утверждение.");
         }
     }
 }

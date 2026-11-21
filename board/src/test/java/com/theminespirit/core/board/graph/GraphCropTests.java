@@ -21,7 +21,8 @@ class GraphCropTests {
         assertFalse(
                 plan.raised("forage_carrot") || plan.raised("building:field_carrot"),
                 "Диких посевов моркови рядом нет и моркови нет — собирать негде, поле не сажать нечем: "
-                        + CrossScene.ranked(plan));
+                        + CrossScene.ranked(plan)
+                        + " Иначе тест plan_NoWildCarrots_NoForageAndNoCarrotField перестанет ловить эту поломку. При смене plan_NoWildCarrots_NoForageAndNoCarrotField проверь это утверждение.");
     }
 
     @Test
@@ -31,7 +32,8 @@ class GraphCropTests {
 
         assertTrue(
                 world.plan().raised("forage_carrot"),
-                "Дикие посевы моркови рядом — морковь собирается: " + CrossScene.ranked(world.plan()));
+                "Дикие посевы моркови рядом — морковь собирается: " + CrossScene.ranked(world.plan())
+                        + " Иначе тест plan_WildCarrotsNear_ForageRaised перестанет ловить эту поломку. При смене plan_WildCarrotsNear_ForageRaised проверь это утверждение.");
     }
 
     @Test
@@ -40,10 +42,12 @@ class GraphCropTests {
 
         assertTrue(
                 plan.notices().stream().anyMatch(notice -> "field_beetroot".equals(notice.building())),
-                "Семена свёклы есть — стратегу просьба внести поле свёклы в план: " + plan.notices());
+                "Семена свёклы есть — стратегу просьба внести поле свёклы в план: " + plan.notices()
+                        + " Иначе тест plan_BeetrootSeedsHeld_FieldPlantedFromSeeds перестанет ловить эту поломку. При смене plan_BeetrootSeedsHeld_FieldPlantedFromSeeds проверь это утверждение.");
         assertEquals(
                 Map.of("beetroot_seeds", 8, "dirt", 16),
                 GraphWorld.GRAPH.buildings().get("field_beetroot").materials(),
-                "Свёклу сажают семенами свёклы, а не корнеплодом");
+                "Свёклу сажают семенами свёклы, а не корнеплодом"
+                        + " Иначе тест plan_BeetrootSeedsHeld_FieldPlantedFromSeeds перестанет ловить эту поломку. При смене plan_BeetrootSeedsHeld_FieldPlantedFromSeeds проверь это утверждение.");
     }
 }

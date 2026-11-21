@@ -20,7 +20,8 @@ class GearStockTests {
 
         assertFalse(
                 events.contains(GearInputs.CRAFT_TOOL + "axe"),
-                "Топор лежит в сундуке: граф обязан видеть его и не просить новый");
+                "Топор лежит в сундуке: граф обязан видеть его и не просить новый"
+                        + " Иначе тест events_AxeInChest_NoCraftAxeForEmptySpirit перестанет ловить эту поломку. При смене events_AxeInChest_NoCraftAxeForEmptySpirit проверь это утверждение.");
     }
 
     @Test
@@ -34,7 +35,8 @@ class GearStockTests {
         assertFalse(
                 events.contains(GearInputs.CRAFT_TOOL + "axe"),
                 "Запас деревянных топоров в сундуках — не повод крафтить ещё: дух сначала берёт запас, "
-                        + "крафт ставится только при полной нехватке (observe25 B10)");
+                        + "крафт ставится только при полной нехватке (observe25 B10)"
+                        + " Иначе тест events_WoodenAxeInChest_NoCraftAxeDespiteStoneRequirement перестанет ловить эту поломку. При смене events_WoodenAxeInChest_NoCraftAxeDespiteStoneRequirement проверь это утверждение.");
     }
 
     @Test
@@ -50,7 +52,8 @@ class GearStockTests {
                 plan.tasks().stream()
                         .anyMatch(
                                 task -> task.id().contains("_axe") && task.id().contains("craft")),
-                "В сундуках 57 топоров — граф обязан вести духа за запасом, а не крафтить ещё: " + plan.tasks());
+                "В сундуках 57 топоров — граф обязан вести духа за запасом, а не крафтить ещё: " + plan.tasks()
+                        + " Иначе тест plan_ToolStockInChest_NoAxeCraftDespiteStageTier перестанет ловить эту поломку. При смене plan_ToolStockInChest_NoAxeCraftDespiteStageTier проверь это утверждение.");
     }
 
     @Test
@@ -64,7 +67,8 @@ class GearStockTests {
 
         assertFalse(
                 plan.tasks().stream().anyMatch(task -> isAxeCraft(task.id())),
-                "Топор уже есть, в сундуках ещё 57 — граф не крафтит ни деревянный, ни следующий: " + plan.tasks());
+                "Топор уже есть, в сундуках ещё 57 — граф не крафтит ни деревянный, ни следующий: " + plan.tasks()
+                        + " Иначе тест plan_WoodenAxeHeldAndChestFull_NoHigherAxeCraft перестанет ловить эту поломку. При смене plan_WoodenAxeHeldAndChestFull_NoHigherAxeCraft проверь это утверждение.");
     }
 
     @Test
@@ -82,7 +86,8 @@ class GearStockTests {
         assertTrue(
                 plan.tasks().stream().anyMatch(task -> isAxeCraft(task.id())),
                 "Один топор на двух духов — крафт для того, кому не хватило: иначе «запас есть» скрывает "
-                        + "нехватку: " + plan.tasks());
+                        + "нехватку: " + plan.tasks()
+                        + " При смене plan_FewerAxesThanSpirits_CraftsOnlyForUncovered проверь это утверждение.");
     }
 
     private static boolean isAxeCraft(String taskId) {
@@ -99,8 +104,14 @@ class GearStockTests {
         GraphFacts.Spirit carrying = spirit(null, List.of(tool("axe", 1, 131, 131)), List.of());
         Set<String> after = GearInputs.events(facts(Map.of("spirit-1", carrying), emptyChest), 1);
 
-        assertFalse(before.contains(GearInputs.CRAFT_TOOL + "axe"), "До переноса топор виден в сундуке");
-        assertFalse(after.contains(GearInputs.CRAFT_TOOL + "axe"), "После переноса топор виден у духа");
+        assertFalse(
+                before.contains(GearInputs.CRAFT_TOOL + "axe"),
+                "До переноса топор виден в сундуке"
+                        + " Иначе тест events_AxeMovedFromChestToSpirit_NoCraftBeforeOrAfter перестанет ловить эту поломку. При смене events_AxeMovedFromChestToSpirit_NoCraftBeforeOrAfter проверь это утверждение.");
+        assertFalse(
+                after.contains(GearInputs.CRAFT_TOOL + "axe"),
+                "После переноса топор виден у духа"
+                        + " Иначе тест events_AxeMovedFromChestToSpirit_NoCraftBeforeOrAfter перестанет ловить эту поломку. При смене events_AxeMovedFromChestToSpirit_NoCraftBeforeOrAfter проверь это утверждение.");
     }
 
     private static GraphFacts.Tool tool(String kind, int tier, int durability, int max) {

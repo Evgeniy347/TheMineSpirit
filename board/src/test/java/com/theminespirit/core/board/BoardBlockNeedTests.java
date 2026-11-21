@@ -41,25 +41,30 @@ class BoardBlockNeedTests {
                 Optional.of(BoardStatus.BLOCKED),
                 board.statusOf(same.id()),
                 "Провал отката по пути — блокировка с ключом, а не FAILED: иначе доска забудет задание и граф "
-                        + "поставит его заново");
+                        + "поставит его заново"
+                        + " При смене undoFailure_WithPath_BlocksUntilLeaseKeyChanges проверь это утверждение.");
         assertTrue(
                 board.failures().graphBlocks().stream().anyMatch(block -> block.need() instanceof GraphBlock.Path),
-                "Ключ блокировки отката — путь: " + board.failures().graphBlocks());
+                "Ключ блокировки отката — путь: " + board.failures().graphBlocks()
+                        + " Иначе тест undoFailure_WithPath_BlocksUntilLeaseKeyChanges перестанет ловить эту поломку. При смене undoFailure_WithPath_BlocksUntilLeaseKeyChanges проверь это утверждение.");
         board.prune(now[0] + BoardTuning.failBackoffTicks() * 10);
         assertEquals(
                 Optional.of(BoardStatus.BLOCKED),
                 board.statusOf(same.id()),
-                "Блокировка по ключу не снимается таймером: повтор только после изменения ключа");
+                "Блокировка по ключу не снимается таймером: повтор только после изменения ключа"
+                        + " Иначе тест undoFailure_WithPath_BlocksUntilLeaseKeyChanges перестанет ловить эту поломку. При смене undoFailure_WithPath_BlocksUntilLeaseKeyChanges проверь это утверждение.");
         assertEquals(
                 BoardOutcome.DUPLICATE,
                 board.submit(same),
-                "Тот же ключ аренды — то же задание: граф не шумит новой выдачей");
+                "Тот же ключ аренды — то же задание: граф не шумит новой выдачей"
+                        + " Иначе тест undoFailure_WithPath_BlocksUntilLeaseKeyChanges перестанет ловить эту поломку. При смене undoFailure_WithPath_BlocksUntilLeaseKeyChanges проверь это утверждение.");
 
         BoardTicket changed = undo("graph:event:undo_lease:undo:lease-1#10,69,10:2");
         assertEquals(
                 BoardOutcome.ACCEPTED,
                 board.submit(changed),
-                "Откатанная клетка меняет ключ аренды — откат выдаётся снова");
+                "Откатанная клетка меняет ключ аренды — откат выдаётся снова"
+                        + " Иначе тест undoFailure_WithPath_BlocksUntilLeaseKeyChanges перестанет ловить эту поломку. При смене undoFailure_WithPath_BlocksUntilLeaseKeyChanges проверь это утверждение.");
     }
 
     private static BoardTicket undo(String id) {
@@ -94,10 +99,15 @@ class BoardBlockNeedTests {
         }
 
         List<BoardState.Blocked> blocked = board.snapshot().blocked();
-        assertEquals(1, blocked.size(), "Одна блокировка — одна запись условия");
+        assertEquals(
+                1,
+                blocked.size(),
+                "Одна блокировка — одна запись условия"
+                        + " Иначе тест snapshot_FailuresReachLimit_CarriesTypedNeed перестанет ловить эту поломку. При смене snapshot_FailuresReachLimit_CarriesTypedNeed проверь это утверждение.");
         assertTrue(
                 blocked.get(0).block() != null && blocked.get(0).block().need() != null,
-                "Блокировка без типизированной нужды не собирается: графу нечего ждать и нечего поднимать");
+                "Блокировка без типизированной нужды не собирается: графу нечего ждать и нечего поднимать"
+                        + " Иначе тест snapshot_FailuresReachLimit_CarriesTypedNeed перестанет ловить эту поломку. При смене snapshot_FailuresReachLimit_CarriesTypedNeed проверь это утверждение.");
     }
 
     @Test
@@ -114,12 +124,17 @@ class BoardBlockNeedTests {
 
         List<BoardLogEntry> blocks = board.failures().drainBlocks();
 
-        assertEquals(1, blocks.size(), "Одна блокировка — одна запись журнала");
+        assertEquals(
+                1,
+                blocks.size(),
+                "Одна блокировка — одна запись журнала"
+                        + " Иначе тест blockNote_CarriesTypedNeed_EvenWhenNoItemShortage перестанет ловить эту поломку. При смене blockNote_CarriesTypedNeed_EvenWhenNoItemShortage проверь это утверждение.");
         assertTrue(
                 blocks.get(0).modifiers().stream().anyMatch(line -> line.startsWith("need=")),
                 "Запись BLOCKED называет ключ блокировки, даже когда missing пуст: иначе в живом журнале видно "
                         + "«BLOCKED без missing» и непонятно, что снимет блокировку: "
-                        + blocks.get(0).modifiers());
+                        + blocks.get(0).modifiers()
+                        + " При смене blockNote_CarriesTypedNeed_EvenWhenNoItemShortage проверь это утверждение.");
     }
 
     @Test
@@ -140,6 +155,7 @@ class BoardBlockNeedTests {
         assertEquals(
                 Optional.of(BoardStatus.PENDING),
                 board.statusOf(ID),
-                "Старая блокировка без Need не висит вечно: условие пересчитывается заново, а не ждёт пустоту");
+                "Старая блокировка без Need не висит вечно: условие пересчитывается заново, а не ждёт пустоту"
+                        + " Иначе тест restore_LegacyBlockedWithoutNeed_ReturnsToPending перестанет ловить эту поломку. При смене restore_LegacyBlockedWithoutNeed_ReturnsToPending проверь это утверждение.");
     }
 }

@@ -14,11 +14,13 @@ class PetGraphPlannerTests {
 
         assertTrue(
                 plan.task("trust_ocelot").map(GraphPlan.Task::implemented).orElse(false),
-                "Оцелоту не хватает — доверие сырой рыбой в джунглях стало механикой: " + plan.task("trust_ocelot"));
+                "Оцелоту не хватает — доверие сырой рыбой в джунглях стало механикой: " + plan.task("trust_ocelot")
+                        + " Иначе тест plan_OcelotLacking_TrustWithRawFishImplemented перестанет ловить эту поломку. При смене plan_OcelotLacking_TrustWithRawFishImplemented проверь это утверждение.");
         assertTrue(
                 GraphWorld.GRAPH.way("breed_ocelot").isPresent()
                         && GraphWorld.GRAPH.implemented("breed_ocelot")
                         && GraphWorld.GRAPH.implemented("breed_wolf"),
-                "Размножение питомцев — механика, а не «в разработке»");
+                "Размножение питомцев — механика, а не «в разработке»"
+                        + " Иначе тест plan_OcelotLacking_TrustWithRawFishImplemented перестанет ловить эту поломку. При смене plan_OcelotLacking_TrustWithRawFishImplemented проверь это утверждение.");
     }
 }

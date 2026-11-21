@@ -18,15 +18,18 @@ class WorldTicketRefreshTests {
         assertEquals(
                 BoardOutcome.ACCEPTED,
                 board.submit(first),
-                "Первая заявка ограды обязана встать на доску: без неё дух не узнает о проломах");
+                "Первая заявка ограды обязана встать на доску: без неё дух не узнает о проломах"
+                        + " Иначе тест submit_PendingFenceChanged_RefreshesInPlace перестанет ловить эту поломку. При смене submit_PendingFenceChanged_RefreshesInPlace проверь это утверждение.");
         assertEquals(
                 BoardOutcome.ACCEPTED,
                 board.submit(wider),
-                "Открытая мировая заявка обновляется на месте: иначе новые проломы ждали бы взятия старой");
+                "Открытая мировая заявка обновляется на месте: иначе новые проломы ждали бы взятия старой"
+                        + " При смене submit_PendingFenceChanged_RefreshesInPlace проверь это утверждение.");
         assertEquals(
                 BoardStatus.PENDING,
                 board.statusOf(FenceRepairs.TICKET_ID).orElseThrow(),
-                "Обновлённая заявка остаётся PENDING: её ещё никто не взял");
+                "Обновлённая заявка остаётся PENDING: её ещё никто не взял"
+                        + " Иначе тест submit_PendingFenceChanged_RefreshesInPlace перестанет ловить эту поломку. При смене submit_PendingFenceChanged_RefreshesInPlace проверь это утверждение.");
         assertEquals(
                 Map.of("minecraft:oak_log", 80),
                 board.tickets().stream()
@@ -34,7 +37,8 @@ class WorldTicketRefreshTests {
                         .findFirst()
                         .orElseThrow()
                         .requiredItems(),
-                "Доска хранит свежий расход: старый гейт пропустил бы недобор на новые клетки");
+                "Доска хранит свежий расход: старый гейт пропустил бы недобор на новые клетки"
+                        + " Иначе тест submit_PendingFenceChanged_RefreshesInPlace перестанет ловить эту поломку. При смене submit_PendingFenceChanged_RefreshesInPlace проверь это утверждение.");
     }
 
     @Test
@@ -43,11 +47,16 @@ class WorldTicketRefreshTests {
         BoardTicket first = ticket("stock:chests", BoardCase.STOCK_CHESTS, Map.of("minecraft:oak_planks", 4));
         BoardTicket wider = ticket("stock:chests", BoardCase.STOCK_CHESTS, Map.of("minecraft:oak_planks", 40));
 
-        assertEquals(BoardOutcome.ACCEPTED, board.submit(first), "Первая заявка сундуков встаёт на доску");
+        assertEquals(
+                BoardOutcome.ACCEPTED,
+                board.submit(first),
+                "Первая заявка сундуков встаёт на доску"
+                        + " Иначе тест submit_PendingCraftChanged_StaysDuplicate перестанет ловить эту поломку. При смене submit_PendingCraftChanged_StaysDuplicate проверь это утверждение.");
         assertEquals(
                 BoardOutcome.DUPLICATE,
                 board.submit(wider),
-                "Не-мировые кейсы не обновляются подменой деталей: их работу ставят заново по факту нужды");
+                "Не-мировые кейсы не обновляются подменой деталей: их работу ставят заново по факту нужды"
+                        + " Иначе тест submit_PendingCraftChanged_StaysDuplicate перестанет ловить эту поломку. При смене submit_PendingCraftChanged_StaysDuplicate проверь это утверждение.");
     }
 
     private static BoardTicket ticket(String id, BoardCase boardCase, Map<String, Integer> requiredItems) {

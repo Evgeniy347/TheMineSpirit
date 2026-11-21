@@ -41,15 +41,18 @@ class ChopToolGraphTests {
         assertFalse(
                 chops.isEmpty(),
                 "Пустой старт без топора и брёвен: граф всё равно ставит рубку — дерево рубят руками, топор "
-                        + "не ждут (владелец 05.11, случай 67): " + result.post());
+                        + "не ждут (владелец 05.11, случай 67): " + result.post()
+                        + " Иначе тест case67_EmptyStart_ChopGivenToBareHandsWithoutAxeCraft перестанет ловить эту поломку. При смене case67_EmptyStart_ChopGivenToBareHandsWithoutAxeCraft проверь это утверждение.");
         assertTrue(
                 result.post().stream()
                         .noneMatch(ticket ->
                                 ticket.id().contains("_axe") && ticket.id().contains("craft")),
-                "Крафт топора без материала не ставится: сначала рубка руками, потом доски и топор: " + result.post());
+                "Крафт топора без материала не ставится: сначала рубка руками, потом доски и топор: " + result.post()
+                        + " Иначе тест case67_EmptyStart_ChopGivenToBareHandsWithoutAxeCraft перестанет ловить эту поломку. При смене case67_EmptyStart_ChopGivenToBareHandsWithoutAxeCraft проверь это утверждение.");
         assertTrue(
                 dispatch(world, chops).stream().anyMatch(pair -> pair.ticket().startsWith("graph:chop_")),
-                "Рубка выдаётся духу с пустыми руками и выполняется руками: " + dispatch(world, chops));
+                "Рубка выдаётся духу с пустыми руками и выполняется руками: " + dispatch(world, chops)
+                        + " Иначе тест case67_EmptyStart_ChopGivenToBareHandsWithoutAxeCraft перестанет ловить эту поломку. При смене case67_EmptyStart_ChopGivenToBareHandsWithoutAxeCraft проверь это утверждение.");
     }
 
     @Test
@@ -61,35 +64,41 @@ class ChopToolGraphTests {
         assertTrue(
                 logs.post().stream()
                         .anyMatch(ticket -> "oak_planks".equals(ticket.task().makes())),
-                "Брёвна есть — граф ставит доски первым шагом к топору (случай 68): " + logs.post());
+                "Брёвна есть — граф ставит доски первым шагом к топору (случай 68): " + logs.post()
+                        + " Иначе тест case68_LogsToPlanksTableAxe_ThenChopWithAxe перестанет ловить эту поломку. При смене case68_LogsToPlanksTableAxe_ThenChopWithAxe проверь это утверждение.");
         assertFalse(
                 logs.post().stream()
                         .anyMatch(ticket -> "wooden_axe".equals(ticket.task().makes())),
-                "Без досок и верстака топор не крафтится: " + logs.post());
+                "Без досок и верстака топор не крафтится: " + logs.post()
+                        + " Иначе тест case68_LogsToPlanksTableAxe_ThenChopWithAxe перестанет ловить эту поломку. При смене case68_LogsToPlanksTableAxe_ThenChopWithAxe проверь это утверждение.");
 
         world.with("oak_planks", 8).with("stick", 4);
         GraphTickets.Result planks = tickets(world);
         assertTrue(
                 planks.post().stream().anyMatch(ticket -> "crafting_table".equals(ticket.node())),
-                "Доски на складе — граф ставит верстак: " + planks.post());
+                "Доски на складе — граф ставит верстак: " + planks.post()
+                        + " Иначе тест case68_LogsToPlanksTableAxe_ThenChopWithAxe перестанет ловить эту поломку. При смене case68_LogsToPlanksTableAxe_ThenChopWithAxe проверь это утверждение.");
         assertFalse(
                 planks.post().stream()
                         .anyMatch(ticket -> "wooden_axe".equals(ticket.task().makes())),
-                "Топор ждёт верстак: без постройки его не крафтят: " + planks.post());
+                "Топор ждёт верстак: без постройки его не крафтят: " + planks.post()
+                        + " Иначе тест case68_LogsToPlanksTableAxe_ThenChopWithAxe перестанет ловить эту поломку. При смене case68_LogsToPlanksTableAxe_ThenChopWithAxe проверь это утверждение.");
 
         world.buildings.put("crafting_table", GraphState.Built.BUILT);
         GraphTickets.Result table = tickets(world);
         assertTrue(
                 table.post().stream()
                         .anyMatch(ticket -> "wooden_axe".equals(ticket.task().makes())),
-                "Верстак построен — граф ставит деревянный топор: " + table.post());
+                "Верстак построен — граф ставит деревянный топор: " + table.post()
+                        + " Иначе тест case68_LogsToPlanksTableAxe_ThenChopWithAxe перестанет ловить эту поломку. При смене case68_LogsToPlanksTableAxe_ThenChopWithAxe проверь это утверждение.");
 
         world.tools("spirit-1", 0);
         GraphTickets.Result armed = tickets(world);
         assertTrue(
                 dispatch(world, only(armed, "chop_oak_log")).stream()
                         .anyMatch(pair -> pair.ticket().contains("chop_")),
-                "С топором рубка идёт дальше и достаётся духу с топором: " + armed.post());
+                "С топором рубка идёт дальше и достаётся духу с топором: " + armed.post()
+                        + " Иначе тест case68_LogsToPlanksTableAxe_ThenChopWithAxe перестанет ловить эту поломку. При смене case68_LogsToPlanksTableAxe_ThenChopWithAxe проверь это утверждение.");
     }
 
     @Test
@@ -101,16 +110,19 @@ class ChopToolGraphTests {
 
         assertTrue(
                 ids.stream().anyMatch(id -> id.contains("gear_equip_best")),
-                "Топор лежит в сундуке — граф ставит «взять топор» (случай 69): " + ids);
+                "Топор лежит в сундуке — граф ставит «взять топор» (случай 69): " + ids
+                        + " Иначе тест case69_AxeInChest_TakeItAndDoNotCraft перестанет ловить эту поломку. При смене case69_AxeInChest_TakeItAndDoNotCraft проверь это утверждение.");
         assertFalse(
                 result.post().stream()
                         .anyMatch(ticket ->
                                 ticket.id().contains("_axe") && ticket.id().contains("craft")),
-                "Топор на складе закрывает нужду — крафт не ставится: " + ids);
+                "Топор на складе закрывает нужду — крафт не ставится: " + ids
+                        + " Иначе тест case69_AxeInChest_TakeItAndDoNotCraft перестанет ловить эту поломку. При смене case69_AxeInChest_TakeItAndDoNotCraft проверь это утверждение.");
         assertTrue(
                 dispatch(world, only(result, "chop_oak_log")).stream()
                         .anyMatch(pair -> pair.ticket().contains("chop_")),
-                "С топором из сундука рубка выдаётся, а её план берёт топор до дерева: " + result.post());
+                "С топором из сундука рубка выдаётся, а её план берёт топор до дерева: " + result.post()
+                        + " Иначе тест case69_AxeInChest_TakeItAndDoNotCraft перестанет ловить эту поломку. При смене case69_AxeInChest_TakeItAndDoNotCraft проверь это утверждение.");
     }
 
     @Test
@@ -128,15 +140,18 @@ class ChopToolGraphTests {
 
         assertTrue(
                 released.isEmpty(),
-                "Топор сломался посреди дерева — задание не возвращается на доску (случай 70): " + released);
+                "Топор сломался посреди дерева — задание не возвращается на доску (случай 70): " + released
+                        + " Иначе тест case70_AxeBroke_TicketStaysWithSpiritAndSameTree перестанет ловить эту поломку. При смене case70_AxeBroke_TicketStaysWithSpiritAndSameTree проверь это утверждение.");
         assertEquals(
                 BoardStatus.ASSIGNED,
                 board.statusOf("graph:chop_oak_log").orElseThrow(),
-                "То же дерево дорубается тем же духом: руками или новым топором, но не отдаётся другому");
+                "То же дерево дорубается тем же духом: руками или новым топором, но не отдаётся другому"
+                        + " Иначе тест case70_AxeBroke_TicketStaysWithSpiritAndSameTree перестанет ловить эту поломку. При смене case70_AxeBroke_TicketStaysWithSpiritAndSameTree проверь это утверждение.");
         assertEquals(
                 Optional.of(spirits.get(0).id()),
                 board.holderOf("graph:chop_oak_log"),
-                "Держатель задания не меняется от поломки топора");
+                "Держатель задания не меняется от поломки топора"
+                        + " Иначе тест case70_AxeBroke_TicketStaysWithSpiritAndSameTree перестанет ловить эту поломку. При смене case70_AxeBroke_TicketStaysWithSpiritAndSameTree проверь это утверждение.");
     }
 
     @Test
@@ -150,13 +165,15 @@ class ChopToolGraphTests {
 
         assertTrue(
                 result.live().contains("graph:chop_oak_log"),
-                "Заблокированная рубка остаётся живой причиной для доски: " + result.live());
+                "Заблокированная рубка остаётся живой причиной для доски: " + result.live()
+                        + " Иначе тест blockedChop_LiveButNoStandingDemand_DoesNotRepeatTheRip перестанет ловить эту поломку. При смене blockedChop_LiveButNoStandingDemand_DoesNotRepeatTheRip проверь это утверждение.");
         assertTrue(
                 plan.standing(result.live(), id -> Optional.empty()).stream()
                         .noneMatch(task -> "graph:chop_oak_log".equals(GraphTickets.id(task))),
                 "Заблокированный узел не даёт заявку на брёвна: иначе GraphStanding снова ставит рубку, "
                         + "которую граф только что признал невыполнимой (живой случай 11.11): "
-                        + plan.standing(result.live(), id -> Optional.empty()));
+                        + plan.standing(result.live(), id -> Optional.empty())
+                        + " При смене blockedChop_LiveButNoStandingDemand_DoesNotRepeatTheRip проверь это утверждение.");
     }
 
     @Test
@@ -172,14 +189,21 @@ class ChopToolGraphTests {
                 call -> "withdraw".equals(call.script())
                         && String.valueOf(call.params().get("item")).endsWith("_axe"));
         int chop = first(calls, call -> "chop_tree".equals(call.script()));
-        assertTrue(withdraw >= 0, "Перед рубкой дух пробует взять топор со склада: " + calls);
-        assertTrue(chop > withdraw, "Взять топор идёт раньше рубки, а сама рубка не ждёт топор: " + calls);
+        assertTrue(
+                withdraw >= 0,
+                "Перед рубкой дух пробует взять топор со склада: " + calls
+                        + " Иначе тест chopPlan_AxeMayBeInChest_TakesItButNeverBlocksChop перестанет ловить эту поломку. При смене chopPlan_AxeMayBeInChest_TakesItButNeverBlocksChop проверь это утверждение.");
+        assertTrue(
+                chop > withdraw,
+                "Взять топор идёт раньше рубки, а сама рубка не ждёт топор: " + calls
+                        + " Иначе тест chopPlan_AxeMayBeInChest_TakesItButNeverBlocksChop перестанет ловить эту поломку. При смене chopPlan_AxeMayBeInChest_TakesItButNeverBlocksChop проверь это утверждение.");
         assertTrue(
                 calls.stream()
                         .noneMatch(call -> "acquire".equals(call.script())
                                 && String.valueOf(call.params().get("item")).endsWith("_axe")),
                 "Топор не обязателен: план не крафтит его вместо рубки руками, иначе пустой старт ждёт инструмент: "
-                        + calls);
+                        + calls
+                        + " При смене chopPlan_AxeMayBeInChest_TakesItButNeverBlocksChop проверь это утверждение.");
     }
 
     private static int first(List<ScriptCall> calls, Predicate<ScriptCall> match) {

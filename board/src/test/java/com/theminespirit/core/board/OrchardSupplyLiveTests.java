@@ -39,9 +39,20 @@ class OrchardSupplyLiveTests {
         JsonNode board = read(BOARD);
 
         JsonNode ticket = find(board, "graph:chop_oak_log");
-        assertTrue(ticket != null, "На живой доске нет тикета graph:chop_oak_log");
-        assertEquals("oak_log", ticket.get("supplyItem").asText(), "Живой тикет обязан заготавливать брёвна дуба");
-        assertEquals("GATHER_MATERIALS", ticket.get("case").asText(), "Живой тикет обязан быть добычей материала");
+        assertTrue(
+                ticket != null,
+                "На живой доске нет тикета graph:chop_oak_log"
+                        + " Иначе тест liveFailure_NearestOakAt109_IsReachedWhenSearchExtendsInsideForceload перестанет ловить эту поломку. При смене liveFailure_NearestOakAt109_IsReachedWhenSearchExtendsInsideForceload проверь это утверждение.");
+        assertEquals(
+                "oak_log",
+                ticket.get("supplyItem").asText(),
+                "Живой тикет обязан заготавливать брёвна дуба"
+                        + " Иначе тест liveFailure_NearestOakAt109_IsReachedWhenSearchExtendsInsideForceload перестанет ловить эту поломку. При смене liveFailure_NearestOakAt109_IsReachedWhenSearchExtendsInsideForceload проверь это утверждение.");
+        assertEquals(
+                "GATHER_MATERIALS",
+                ticket.get("case").asText(),
+                "Живой тикет обязан быть добычей материала"
+                        + " Иначе тест liveFailure_NearestOakAt109_IsReachedWhenSearchExtendsInsideForceload перестанет ловить эту поломку. При смене liveFailure_NearestOakAt109_IsReachedWhenSearchExtendsInsideForceload проверь это утверждение.");
 
         int plannedRadius = 0;
         for (ScriptCall call : calls(plan(ticket, anchor))) {
@@ -49,21 +60,33 @@ class OrchardSupplyLiveTests {
                 plannedRadius = (Integer) call.params().get("radius");
             }
         }
-        assertTrue(plannedRadius > 0, "В плане живой заготовки брёвен нет рубки деревьев: " + plan(ticket, anchor));
-        assertEquals(limit, plannedRadius, "Живой провал снят при пределе 100: план обязан просить тот же радиус");
-        assertTrue(nearest > limit, "Живой провал говорит о дубе дальше запрошенного радиуса");
+        assertTrue(
+                plannedRadius > 0,
+                "В плане живой заготовки брёвен нет рубки деревьев: " + plan(ticket, anchor)
+                        + " Иначе тест liveFailure_NearestOakAt109_IsReachedWhenSearchExtendsInsideForceload перестанет ловить эту поломку. При смене liveFailure_NearestOakAt109_IsReachedWhenSearchExtendsInsideForceload проверь это утверждение.");
+        assertEquals(
+                limit,
+                plannedRadius,
+                "Живой провал снят при пределе 100: план обязан просить тот же радиус"
+                        + " Иначе тест liveFailure_NearestOakAt109_IsReachedWhenSearchExtendsInsideForceload перестанет ловить эту поломку. При смене liveFailure_NearestOakAt109_IsReachedWhenSearchExtendsInsideForceload проверь это утверждение.");
+        assertTrue(
+                nearest > limit,
+                "Живой провал говорит о дубе дальше запрошенного радиуса"
+                        + " Иначе тест liveFailure_NearestOakAt109_IsReachedWhenSearchExtendsInsideForceload перестанет ловить эту поломку. При смене liveFailure_NearestOakAt109_IsReachedWhenSearchExtendsInsideForceload проверь это утверждение.");
 
         int extended = ChopTuning.extendTo(plannedRadius, nearest);
         assertTrue(
                 extended >= nearest,
                 "Дуб в " + nearest + " блоках не попадает в расширенный поиск " + extended
-                        + ": «посадите саженцы» снова не станет задачей и сад останется 0 из 24");
+                        + ": «посадите саженцы» снова не станет задачей и сад останется 0 из 24"
+                        + " Иначе тест liveFailure_NearestOakAt109_IsReachedWhenSearchExtendsInsideForceload перестанет ловить эту поломку. При смене liveFailure_NearestOakAt109_IsReachedWhenSearchExtendsInsideForceload проверь это утверждение.");
         BlockCoord tree = new BlockCoord(anchor.x() + nearest, anchor.y(), anchor.z());
         Optional<BlockCoord> chosen =
                 TreeChooser.near(anchor, extended, tree.x(), tree.y(), tree.z(), List.of(tree), Set.of());
         assertTrue(
                 chosen.isPresent(),
-                "Расширенный поиск не выбирает живой дуб в " + nearest + " блоках при пределе " + extended);
+                "Расширенный поиск не выбирает живой дуб в " + nearest + " блоках при пределе " + extended
+                        + " Иначе тест liveFailure_NearestOakAt109_IsReachedWhenSearchExtendsInsideForceload перестанет ловить эту поломку. При смене liveFailure_NearestOakAt109_IsReachedWhenSearchExtendsInsideForceload проверь это утверждение.");
     }
 
     @Test
@@ -76,11 +99,15 @@ class OrchardSupplyLiveTests {
                 .filter(call -> "deposit".equals(call.script())
                         && item.equals(bare(call.params().get("item"))))
                 .toList();
-        assertFalse(deposits.isEmpty(), "План крафта досок не сдаёт досок на склад: " + plan(ticket, anchor));
+        assertFalse(
+                deposits.isEmpty(),
+                "План крафта досок не сдаёт досок на склад: " + plan(ticket, anchor)
+                        + " Иначе тест livePlanksCraft_FullNearestChest_DepositsBySpread перестанет ловить эту поломку. При смене livePlanksCraft_FullNearestChest_DepositsBySpread проверь это утверждение.");
         assertTrue(
                 deposits.stream().anyMatch(call -> "auto".equals(call.params().get("container"))),
                 "Сдача крафта идёт в один ближайший сундук: при полном соседе DepositSpread не раскладывает доски "
-                        + "по остальным. Сдача: " + deposits);
+                        + "по остальным. Сдача: " + deposits
+                        + " Иначе тест livePlanksCraft_FullNearestChest_DepositsBySpread перестанет ловить эту поломку. При смене livePlanksCraft_FullNearestChest_DepositsBySpread проверь это утверждение.");
     }
 
     private static TaskNode plan(JsonNode ticket, BlockCoord anchor) {

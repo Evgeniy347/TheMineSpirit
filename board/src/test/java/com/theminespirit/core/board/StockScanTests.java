@@ -49,8 +49,13 @@ class StockScanTests {
                 far,
                 merged.get(0),
                 "Сундук из реестра поселения читается первым, даже если он вне радиуса обхода: иначе материалы "
-                        + "в нём для гейта «не хватает» и задание хижины стоит");
-        assertEquals(2, merged.size(), "Реестр и обход не раздувают список: оба вклада остаются по разу");
+                        + "в нём для гейта «не хватает» и задание хижины стоит"
+                        + " При смене knownFirst_ChestOutsideScanRadius_IsStillRead проверь это утверждение.");
+        assertEquals(
+                2,
+                merged.size(),
+                "Реестр и обход не раздувают список: оба вклада остаются по разу"
+                        + " Иначе тест knownFirst_ChestOutsideScanRadius_IsStillRead перестанет ловить эту поломку. При смене knownFirst_ChestOutsideScanRadius_IsStillRead проверь это утверждение.");
     }
 
     @Test
@@ -66,7 +71,8 @@ class StockScanTests {
                 List.of(new BlockCoord(-2, 64, 1), new BlockCoord(0, 64, 3)),
                 result.containers(),
                 "Контейнеры ближе к центру читаются первыми, а сундук в 20 блоках за радиусом — "
-                        + "нет: снимок видит склад вокруг работы, а не весь мир");
+                        + "нет: снимок видит склад вокруг работы, а не весь мир"
+                        + " Иначе тест containers_AreFound_WithinRadius перестанет ловить эту поломку. При смене containers_AreFound_WithinRadius проверь это утверждение.");
     }
 
     @Test
@@ -81,11 +87,13 @@ class StockScanTests {
                 result.blockReads(),
                 "Обход обязан остановиться ровно на бюджете: иначе снимок перебирал бы куб "
                         + "вокруг каждого духа и грузил чанки на главном потоке (причина "
-                        + "41-минутного GameTest)");
+                        + "41-минутного GameTest)"
+                        + " При смене containers_UnderBudget_StopsAtBudget проверь это утверждение.");
         assertEquals(
                 List.of(first),
                 result.containers(),
-                "Сундук в пределах прочитанной части всё равно найден: бюджет режет обход, " + "а не отменяет поиск");
+                "Сундук в пределах прочитанной части всё равно найден: бюджет режет обход, " + "а не отменяет поиск"
+                        + " Иначе тест containers_UnderBudget_StopsAtBudget перестанет ловить эту поломку. При смене containers_UnderBudget_StopsAtBudget проверь это утверждение.");
     }
 
     @Test
@@ -100,8 +108,12 @@ class StockScanTests {
                 result.containers(),
                 "Незагруженный чанк пропускается: чтение такого чанка ждёт генерации и "
                         + "останавливает серверный тик — лучше пропустить сундук до следующей "
-                        + "пересборки");
-        assertTrue(result.blockReads() > 0, "Обход всё равно читает блоки: пропуск чанка — не отказ от обхода");
+                        + "пересборки"
+                        + " Иначе тест containers_UnloadedChunks_AreSkipped перестанет ловить эту поломку. При смене containers_UnloadedChunks_AreSkipped проверь это утверждение.");
+        assertTrue(
+                result.blockReads() > 0,
+                "Обход всё равно читает блоки: пропуск чанка — не отказ от обхода"
+                        + " Иначе тест containers_UnloadedChunks_AreSkipped перестанет ловить эту поломку. При смене containers_UnloadedChunks_AreSkipped проверь это утверждение.");
     }
 
     @Test
@@ -110,11 +122,16 @@ class StockScanTests {
 
         StockScan.Result result = StockScan.containers(List.of(), 8, 4, 4096, blocks);
 
-        assertEquals(0, result.blockReads(), "Без центров обходить нечего: снимок не должен читать мир просто так");
+        assertEquals(
+                0,
+                result.blockReads(),
+                "Без центров обходить нечего: снимок не должен читать мир просто так"
+                        + " Иначе тест containers_EmptyCenters_ReadsNothing перестанет ловить эту поломку. При смене containers_EmptyCenters_ReadsNothing проверь это утверждение.");
         assertEquals(
                 List.of(),
                 result.containers(),
-                "Без центров найденных контейнеров нет: снимок не придумывает склад из ничего");
+                "Без центров найденных контейнеров нет: снимок не придумывает склад из ничего"
+                        + " Иначе тест containers_EmptyCenters_ReadsNothing перестанет ловить эту поломку. При смене containers_EmptyCenters_ReadsNothing проверь это утверждение.");
     }
 
     @Test
@@ -128,7 +145,8 @@ class StockScanTests {
                 1,
                 result.containers().stream().filter(pos -> pos.equals(near)).count(),
                 "Сундук в пересечении двух центров читается один раз: иначе один и тот же "
-                        + "склад вычитался бы несколько раз за пересборку");
+                        + "склад вычитался бы несколько раз за пересборку"
+                        + " При смене containers_OverlappingCenters_CountedOnce проверь это утверждение.");
     }
 
     @Test
@@ -146,6 +164,7 @@ class StockScanTests {
                 first,
                 second,
                 "Порядок найденных контейнеров детерминирован: иначе бюджет читал бы разные "
-                        + "сундуки на одинаковом входе");
+                        + "сундуки на одинаковом входе"
+                        + " При смене containers_RepeatedScan_OrderStaysDeterministic проверь это утверждение.");
     }
 }

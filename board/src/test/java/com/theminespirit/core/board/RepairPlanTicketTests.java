@@ -17,8 +17,13 @@ class RepairPlanTicketTests {
                 alchemy.id(),
                 kennel.id(),
                 "Две повреждённые постройки плана не могут делить один билет: иначе вторая ждёт первую "
-                        + "(observe25 B9). id: " + alchemy.id() + " / " + kennel.id());
-        assertEquals("repair:build_placed:alchemy", alchemy.id(), "Билет называет постройку плана");
+                        + "(observe25 B9). id: " + alchemy.id() + " / " + kennel.id()
+                        + " При смене ticket_PlanBuildings_HaveSeparateIds проверь это утверждение.");
+        assertEquals(
+                "repair:build_placed:alchemy",
+                alchemy.id(),
+                "Билет называет постройку плана"
+                        + " Иначе тест ticket_PlanBuildings_HaveSeparateIds перестанет ловить эту поломку. При смене ticket_PlanBuildings_HaveSeparateIds проверь это утверждение.");
     }
 
     @Test
@@ -26,11 +31,13 @@ class RepairPlanTicketTests {
         assertEquals(
                 "repair:build_house",
                 RepairPlan.ticket(BoardCase.BUILD_HOUSE, Map.of(), 1).id(),
-                "У постройки этапа один кейс и один билет: суффикс плана ей не нужен");
+                "У постройки этапа один кейс и один билет: суффикс плана ей не нужен"
+                        + " Иначе тест ticket_StageBuilding_KeepsSharedIdPerCase перестанет ловить эту поломку. При смене ticket_StageBuilding_KeepsSharedIdPerCase проверь это утверждение.");
         assertEquals(
                 "repair:build_house",
                 RepairPlan.ticket(BoardCase.BUILD_HOUSE, Map.of(), 1, null).id(),
-                "Без суффикса билет прежний: старые вызовы не меняют id");
+                "Без суффикса билет прежний: старые вызовы не меняют id"
+                        + " Иначе тест ticket_StageBuilding_KeepsSharedIdPerCase перестанет ловить эту поломку. При смене ticket_StageBuilding_KeepsSharedIdPerCase проверь это утверждение.");
     }
 
     @Test
@@ -41,10 +48,12 @@ class RepairPlanTicketTests {
         assertNotEquals(
                 jungle.id(),
                 second.id(),
-                "У каждого участка сада своя задача ремонта: иначе ремонт одного сада держит другой");
+                "У каждого участка сада своя задача ремонта: иначе ремонт одного сада держит другой"
+                        + " При смене ticket_OrchardPlots_HaveSeparateIds проверь это утверждение.");
         assertEquals(
                 "repair:build_orchard:orchard_jungle",
                 jungle.id(),
-                "Билет ремонта сада называет участок, чтобы цель и нехватка были своими");
+                "Билет ремонта сада называет участок, чтобы цель и нехватка были своими"
+                        + " Иначе тест ticket_OrchardPlots_HaveSeparateIds перестанет ловить эту поломку. При смене ticket_OrchardPlots_HaveSeparateIds проверь это утверждение.");
     }
 }

@@ -15,12 +15,15 @@ class DangerSpotTasksTests {
         GraphEvent danger = assertInstanceOf(
                 GraphEvent.class,
                 GRAPH.events().get("danger_spot"),
-                "Событие опасного места обязано остаться: духи по-прежнему уходят домой");
+                "Событие опасного места обязано остаться: духи по-прежнему уходят домой"
+                        + " Иначе тест dangerSpot_DefaultGraph_HasEscapeWithoutFenceStub перестанет ловить эту поломку. При смене dangerSpot_DefaultGraph_HasEscapeWithoutFenceStub проверь это утверждение.");
         assertTrue(
                 danger.tasks().stream().anyMatch(task -> task.boardCase() == BoardCase.ACTIVITY_ESCAPE),
-                "Побег домой из опасного места остаётся реакцией графа: " + danger.tasks());
+                "Побег домой из опасного места остаётся реакцией графа: " + danger.tasks()
+                        + " Иначе тест dangerSpot_DefaultGraph_HasEscapeWithoutFenceStub перестанет ловить эту поломку. При смене dangerSpot_DefaultGraph_HasEscapeWithoutFenceStub проверь это утверждение.");
         assertFalse(
                 danger.tasks().stream().anyMatch(task -> task.boardCase() == BoardCase.BUILD_FENCE),
-                "Заглушки-заборы по опасности убраны: духи не обносят места внутри площадок плана: " + danger.tasks());
+                "Заглушки-заборы по опасности убраны: духи не обносят места внутри площадок плана: " + danger.tasks()
+                        + " Иначе тест dangerSpot_DefaultGraph_HasEscapeWithoutFenceStub перестанет ловить эту поломку. При смене dangerSpot_DefaultGraph_HasEscapeWithoutFenceStub проверь это утверждение.");
     }
 }

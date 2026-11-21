@@ -18,7 +18,8 @@ class GraphWiringTests {
                 Map.of("spruce_log", 10, "oak_log", 7, "spruce_planks", 3),
                 stock,
                 "Каждая порода — свой узел графа: ель не закрывает нехватку дуба и наоборот, «любая порода» — группа "
-                        + "#logs/#planks графа");
+                        + "#logs/#planks графа"
+                        + " Иначе тест stock_MixedSpecies_EachSpeciesOwnNode перестанет ловить эту поломку. При смене stock_MixedSpecies_EachSpeciesOwnNode проверь это утверждение.");
     }
 
     @Test
@@ -30,9 +31,18 @@ class GraphWiringTests {
         assertEquals(
                 List.of(2, 3),
                 List.of(stock.get("coal"), stock.get("charcoal")),
-                "Каменный и древесный уголь — разные узлы, «любое топливо» — группа #coals графа: " + stock);
-        assertEquals(2, stock.get("bed"), "Кровати любого цвета — один узел bed: " + stock);
-        assertEquals(6, stock.get(GraphNames.FOOD), "Еда — сумма съедобного по таблице сытности: " + stock);
+                "Каменный и древесный уголь — разные узлы, «любое топливо» — группа #coals графа: " + stock
+                        + " Иначе тест stock_CoalsBedsFood_GraphNodes перестанет ловить эту поломку. При смене stock_CoalsBedsFood_GraphNodes проверь это утверждение.");
+        assertEquals(
+                2,
+                stock.get("bed"),
+                "Кровати любого цвета — один узел bed: " + stock
+                        + " Иначе тест stock_CoalsBedsFood_GraphNodes перестанет ловить эту поломку. При смене stock_CoalsBedsFood_GraphNodes проверь это утверждение.");
+        assertEquals(
+                6,
+                stock.get(GraphNames.FOOD),
+                "Еда — сумма съедобного по таблице сытности: " + stock
+                        + " Иначе тест stock_CoalsBedsFood_GraphNodes перестанет ловить эту поломку. При смене stock_CoalsBedsFood_GraphNodes проверь это утверждение.");
     }
 
     @Test
@@ -43,7 +53,8 @@ class GraphWiringTests {
                 3,
                 stock.get("mangrove_sapling"),
                 "Саженец мангрового дерева в игре — mangrove_propagule: без перевода в узел графа "
-                        + "gather_mangrove_sapling никогда не закроет нехватку, а склад не увидит саженцы: " + stock);
+                        + "gather_mangrove_sapling никогда не закроет нехватку, а склад не увидит саженцы: " + stock
+                        + " Иначе тест stock_MangrovePropagule_CountsAsGraphSapling перестанет ловить эту поломку. При смене stock_MangrovePropagule_CountsAsGraphSapling проверь это утверждение.");
     }
 
     @Test
@@ -52,7 +63,8 @@ class GraphWiringTests {
                 "mangrove_propagule",
                 GraphNames.item(GraphWorld.GRAPH, "#saplings", "mangrove"),
                 "Узел графа mangrove_sapling обязан превращаться в настоящий предмет mangrove_propagule: "
-                        + "иначе задание доски просит несуществующий предмет");
+                        + "иначе задание доски просит несуществующий предмет"
+                        + " При смене item_GroupInMangroveSettlement_ResolvesToPropagule проверь это утверждение.");
     }
 
     @Test
@@ -63,7 +75,8 @@ class GraphWiringTests {
                         GraphNames.item(GraphWorld.GRAPH, "#logs", "birch"),
                         GraphNames.item(GraphWorld.GRAPH, "#planks", "jungle"),
                         GraphNames.item(GraphWorld.GRAPH, "spruce_log", "birch")),
-                "Группа «любая порода» в задании доски — порода поселения; предмет определённой породы — как есть");
+                "Группа «любая порода» в задании доски — порода поселения; предмет определённой породы — как есть"
+                        + " Иначе тест item_GroupInBirchSettlement_ResolvesToBirchMember перестанет ловить эту поломку. При смене item_GroupInBirchSettlement_ResolvesToBirchMember проверь это утверждение.");
     }
 
     @Test
@@ -75,7 +88,8 @@ class GraphWiringTests {
         assertEquals(
                 Map.of("pickaxe", 1, "axe", 0),
                 kit,
-                "Набор духа — лучший уровень каждого вида; золото считается деревом, палка — не инструмент");
+                "Набор духа — лучший уровень каждого вида; золото считается деревом, палка — не инструмент"
+                        + " Иначе тест kits_MixedTools_BestTierPerKind перестанет ловить эту поломку. При смене kits_MixedTools_BestTierPerKind проверь это утверждение.");
     }
 
     @Test
@@ -86,7 +100,10 @@ class GraphWiringTests {
         boolean again = notes.due("notice:warehouse", 100 + GraphNotes.EVERY_TICKS - 1);
         boolean later = notes.due("notice:warehouse", 100 + GraphNotes.EVERY_TICKS);
 
-        assertTrue(first && !again && later, "Просьба стратегу — не чаще раза в минуту: " + first + again + later);
+        assertTrue(
+                first && !again && later,
+                "Просьба стратегу — не чаще раза в минуту: " + first + again + later
+                        + " Иначе тест notes_SameKeyWithinMinute_Suppressed перестанет ловить эту поломку. При смене notes_SameKeyWithinMinute_Suppressed проверь это утверждение.");
     }
 
     @Test
@@ -106,6 +123,7 @@ class GraphWiringTests {
                 "Одна и та же просьба стратегу не повторяется каждую минуту (наблюдение 8: «нужна постройка "
                         + "orchard_jungle», «нет источника diamond» — раз в минуту): повтор — раз в "
                         + GraphNotes.NOTICE_EVERY_TICKS + " тиков или сразу, если текст изменился; факт: "
-                        + first + afterMinute + beforePeriod + atPeriod + changed);
+                        + first + afterMinute + beforePeriod + atPeriod + changed
+                        + " Иначе тест notes_StrategistNotice_RepeatsRarelyOrOnChange перестанет ловить эту поломку. При смене notes_StrategistNotice_RepeatsRarelyOrOnChange проверь это утверждение.");
     }
 }

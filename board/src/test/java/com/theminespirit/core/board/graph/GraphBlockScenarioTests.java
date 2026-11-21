@@ -17,19 +17,27 @@ class GraphBlockScenarioTests {
         GraphWorld calm = mining();
         assertTrue(
                 task(calm.plan(), "mine_coal").feasible(),
-                "Без блокировки узел выполним: " + calm.plan().tasks());
+                "Без блокировки узел выполним: " + calm.plan().tasks()
+                        + " Иначе тест item_Blocked_NodeNotPostedAndProducerRaised перестанет ловить эту поломку. При смене item_Blocked_NodeNotPostedAndProducerRaised проверь это утверждение.");
         int torchBefore = calm.plan().priority("craft_torch");
 
         GraphWorld blocked = mining().blocks(new GraphBlock("mine_coal", "", new GraphBlock.Item("torch", 1)));
         GraphPlan plan = blocked.plan();
 
         GraphPlan.Task coal = task(plan, "mine_coal");
-        assertFalse(coal.feasible(), "Узел с нехваткой предмета не ставится повторно: " + coal);
-        assertTrue(coal.blocked().contains("torch"), "Причина блокировки называет предмет: " + coal.blocked());
+        assertFalse(
+                coal.feasible(),
+                "Узел с нехваткой предмета не ставится повторно: " + coal
+                        + " Иначе тест item_Blocked_NodeNotPostedAndProducerRaised перестанет ловить эту поломку. При смене item_Blocked_NodeNotPostedAndProducerRaised проверь это утверждение.");
+        assertTrue(
+                coal.blocked().contains("torch"),
+                "Причина блокировки называет предмет: " + coal.blocked()
+                        + " Иначе тест item_Blocked_NodeNotPostedAndProducerRaised перестанет ловить эту поломку. При смене item_Blocked_NodeNotPostedAndProducerRaised проверь это утверждение.");
         assertTrue(
                 plan.priority("craft_torch") > torchBefore,
                 "Ключ (факел) поднят выше прежнего приоритета: " + plan.priority("craft_torch") + " против "
-                        + torchBefore);
+                        + torchBefore
+                        + " Иначе тест item_Blocked_NodeNotPostedAndProducerRaised перестанет ловить эту поломку. При смене item_Blocked_NodeNotPostedAndProducerRaised проверь это утверждение.");
     }
 
     @Test
@@ -46,7 +54,8 @@ class GraphBlockScenarioTests {
         assertTrue(
                 plan.priority("craft_stick") > torch,
                 "Ключ блокировки (палки) занимает место заблокированного факела: " + plan.priority("craft_stick")
-                        + " против " + torch);
+                        + " против " + torch
+                        + " Иначе тест item_Blocked_KeyTakesBlockedPlace перестанет ловить эту поломку. При смене item_Blocked_KeyTakesBlockedPlace проверь это утверждение.");
     }
 
     @Test
@@ -56,8 +65,14 @@ class GraphBlockScenarioTests {
 
         GraphPlan.Task coal = task(world.plan(), "mine_coal");
 
-        assertTrue(coal.feasible(), "Предмет появился — условие снято, задача вернулась: " + coal);
-        assertTrue(coal.blocked().isEmpty(), "Снятая блокировка не оставляет причину: " + coal.blocked());
+        assertTrue(
+                coal.feasible(),
+                "Предмет появился — условие снято, задача вернулась: " + coal
+                        + " Иначе тест item_Satisfied_BlockClearedAndTaskReturns перестанет ловить эту поломку. При смене item_Satisfied_BlockClearedAndTaskReturns проверь это утверждение.");
+        assertTrue(
+                coal.blocked().isEmpty(),
+                "Снятая блокировка не оставляет причину: " + coal.blocked()
+                        + " Иначе тест item_Satisfied_BlockClearedAndTaskReturns перестанет ловить эту поломку. При смене item_Satisfied_BlockClearedAndTaskReturns проверь это утверждение.");
     }
 
     @Test
@@ -72,10 +87,14 @@ class GraphBlockScenarioTests {
         blocked.blocks(new GraphBlock("mine_coal", "", new GraphBlock.Tool("pickaxe", 0, "spirit-2")));
         GraphPlan plan = blocked.plan();
 
-        assertFalse(task(plan, "mine_coal").feasible(), "Без инструмента узел не ставится");
+        assertFalse(
+                task(plan, "mine_coal").feasible(),
+                "Без инструмента узел не ставится"
+                        + " Иначе тест tool_Blocked_NodeNotPostedAndSpiritToolRaised перестанет ловить эту поломку. При смене tool_Blocked_NodeNotPostedAndSpiritToolRaised проверь это утверждение.");
         assertTrue(
                 toolPriority(plan, "spirit-2") > toolBefore,
-                "Ключ — кирка конкретного духа: " + toolPriority(plan, "spirit-2") + " против " + toolBefore);
+                "Ключ — кирка конкретного духа: " + toolPriority(plan, "spirit-2") + " против " + toolBefore
+                        + " Иначе тест tool_Blocked_NodeNotPostedAndSpiritToolRaised перестанет ловить эту поломку. При смене tool_Blocked_NodeNotPostedAndSpiritToolRaised проверь это утверждение.");
     }
 
     @Test
@@ -83,8 +102,14 @@ class GraphBlockScenarioTests {
         GraphWorld blocked = mining().blocks(new GraphBlock("mine_coal", "", new GraphBlock.Building("clearing")));
         GraphPlan plan = blocked.plan();
 
-        assertFalse(task(plan, "mine_coal").feasible(), "Без постройки узел не ставится");
-        assertTrue(plan.task("building:clearing").isPresent(), "Ключ — нужная постройка в плане: " + plan.tasks());
+        assertFalse(
+                task(plan, "mine_coal").feasible(),
+                "Без постройки узел не ставится"
+                        + " Иначе тест building_Blocked_NodeNotPostedAndBuildingRaised перестанет ловить эту поломку. При смене building_Blocked_NodeNotPostedAndBuildingRaised проверь это утверждение.");
+        assertTrue(
+                plan.task("building:clearing").isPresent(),
+                "Ключ — нужная постройка в плане: " + plan.tasks()
+                        + " Иначе тест building_Blocked_NodeNotPostedAndBuildingRaised перестанет ловить эту поломку. При смене building_Blocked_NodeNotPostedAndBuildingRaised проверь это утверждение.");
     }
 
     @Test
@@ -92,12 +117,16 @@ class GraphBlockScenarioTests {
         GraphWorld blocked = mining().blocks(new GraphBlock("mine_coal", "", new GraphBlock.Item("unobtainium", 1)));
         GraphPlan plan = blocked.plan();
 
-        assertFalse(task(plan, "mine_coal").feasible(), "Нет источника — попыток нет");
+        assertFalse(
+                task(plan, "mine_coal").feasible(),
+                "Нет источника — попыток нет"
+                        + " Иначе тест impossible_NoSource_NoticeAndNoAttempts перестанет ловить эту поломку. При смене impossible_NoSource_NoticeAndNoAttempts проверь это утверждение.");
         assertTrue(
                 plan.notices().stream()
                         .anyMatch(notice -> notice.reason().contains("невозможно")
                                 && notice.reason().contains("unobtainium")),
-                "План получает notice «невозможно»: " + plan.notices());
+                "План получает notice «невозможно»: " + plan.notices()
+                        + " Иначе тест impossible_NoSource_NoticeAndNoAttempts перестанет ловить эту поломку. При смене impossible_NoSource_NoticeAndNoAttempts проверь это утверждение.");
     }
 
     @Test
@@ -106,19 +135,31 @@ class GraphBlockScenarioTests {
                 .blocks(new GraphBlock("building:furnace", "", new GraphBlock.Item("cobblestone", 8)));
         GraphPlan plan = world.plan();
 
-        assertFalse(task(plan, "building:furnace").feasible(), "Печь не ставится, пока нет камня");
+        assertFalse(
+                task(plan, "building:furnace").feasible(),
+                "Печь не ставится, пока нет камня"
+                        + " Иначе тест chain_FurnaceBlocked_FlowReachesCoalAndPickaxe перестанет ловить эту поломку. При смене chain_FurnaceBlocked_FlowReachesCoalAndPickaxe проверь это утверждение.");
         assertTrue(
                 task(plan, "building:furnace").blocked().contains("cobblestone"),
                 "Блокировка печи называет камень: "
-                        + task(plan, "building:furnace").blocked());
-        assertTrue(plan.task("mine_cobble").isPresent(), "Ключ первого шага — добыча камня");
-        assertTrue(plan.task("building:mine").isPresent(), "Шахта нужна камню");
+                        + task(plan, "building:furnace").blocked()
+                        + " Иначе тест chain_FurnaceBlocked_FlowReachesCoalAndPickaxe перестанет ловить эту поломку. При смене chain_FurnaceBlocked_FlowReachesCoalAndPickaxe проверь это утверждение.");
+        assertTrue(
+                plan.task("mine_cobble").isPresent(),
+                "Ключ первого шага — добыча камня"
+                        + " Иначе тест chain_FurnaceBlocked_FlowReachesCoalAndPickaxe перестанет ловить эту поломку. При смене chain_FurnaceBlocked_FlowReachesCoalAndPickaxe проверь это утверждение.");
+        assertTrue(
+                plan.task("building:mine").isPresent(),
+                "Шахта нужна камню"
+                        + " Иначе тест chain_FurnaceBlocked_FlowReachesCoalAndPickaxe перестанет ловить эту поломку. При смене chain_FurnaceBlocked_FlowReachesCoalAndPickaxe проверь это утверждение.");
         assertTrue(
                 plan.tasks().stream().anyMatch(task -> task.id().contains("pickaxe@spirit-1")),
-                "Кирка нужна шахте: " + plan.tasks());
+                "Кирка нужна шахте: " + plan.tasks()
+                        + " Иначе тест chain_FurnaceBlocked_FlowReachesCoalAndPickaxe перестанет ловить эту поломку. При смене chain_FurnaceBlocked_FlowReachesCoalAndPickaxe проверь это утверждение.");
         assertTrue(
                 plan.raised("building:mine") && plan.raised("mine_cobble"),
-                "Поток идёт до источников, а не обрывается на печи: " + plan.tasks());
+                "Поток идёт до источников, а не обрывается на печи: " + plan.tasks()
+                        + " Иначе тест chain_FurnaceBlocked_FlowReachesCoalAndPickaxe перестанет ловить эту поломку. При смене chain_FurnaceBlocked_FlowReachesCoalAndPickaxe проверь это утверждение.");
     }
 
     @Test
@@ -128,12 +169,14 @@ class GraphBlockScenarioTests {
 
         assertTrue(
                 plan.tasks().stream().anyMatch(GraphPlan.Task::feasible),
-                "Заблокирован один узел, остальная работа не простаивает: " + plan.tasks());
+                "Заблокирован один узел, остальная работа не простаивает: " + plan.tasks()
+                        + " Иначе тест otherNode_Blocked_RestOfWorkStaysFeasible перестанет ловить эту поломку. При смене otherNode_Blocked_RestOfWorkStaysFeasible проверь это утверждение.");
         assertTrue(
                 plan.tasks().stream()
                         .filter(GraphPlan.Task::feasible)
                         .anyMatch(task -> !task.id().startsWith("explore:")),
-                "Прочая работа остаётся выполнимой: " + plan.tasks());
+                "Прочая работа остаётся выполнимой: " + plan.tasks()
+                        + " Иначе тест otherNode_Blocked_RestOfWorkStaysFeasible перестанет ловить эту поломку. При смене otherNode_Blocked_RestOfWorkStaysFeasible проверь это утверждение.");
     }
 
     @Test
@@ -161,8 +204,14 @@ class GraphBlockScenarioTests {
         world.blocks(new GraphBlock("mine_coal", "", new GraphBlock.Holder("spirit-1", true)));
         GraphPlan plan = world.plan();
 
-        assertFalse(task(plan, "mine_coal").feasible(), "Задание застрявшего держателя не ставится");
-        assertTrue(plan.raised("rescue_spirit"), "Спасение держателя остаётся главным: " + plan.tasks());
+        assertFalse(
+                task(plan, "mine_coal").feasible(),
+                "Задание застрявшего держателя не ставится"
+                        + " Иначе тест holder_Stuck_BlocksNodeAndRaisesRescue перестанет ловить эту поломку. При смене holder_Stuck_BlocksNodeAndRaisesRescue проверь это утверждение.");
+        assertTrue(
+                plan.raised("rescue_spirit"),
+                "Спасение держателя остаётся главным: " + plan.tasks()
+                        + " Иначе тест holder_Stuck_BlocksNodeAndRaisesRescue перестанет ловить эту поломку. При смене holder_Stuck_BlocksNodeAndRaisesRescue проверь это утверждение.");
     }
 
     @Test
@@ -175,14 +224,27 @@ class GraphBlockScenarioTests {
                 new GraphBlock("mine_cobble", "", new GraphBlock.Tool("pickaxe", 0, "spirit-3")));
         GraphPlan plan = world.plan();
 
-        assertFalse(task(plan, "mine_coal").feasible(), "Первая цель заблокирована");
-        assertFalse(task(plan, "mine_cobble").feasible(), "Вторая цель заблокирована");
-        assertTrue(toolRaised(plan, "spirit-2"), "Ключ первого духа поднят");
-        assertTrue(toolRaised(plan, "spirit-3"), "Ключ второго духа поднят");
+        assertFalse(
+                task(plan, "mine_coal").feasible(),
+                "Первая цель заблокирована"
+                        + " Иначе тест severalSpirits_BlockedTools_BothKeysRaised перестанет ловить эту поломку. При смене severalSpirits_BlockedTools_BothKeysRaised проверь это утверждение.");
+        assertFalse(
+                task(plan, "mine_cobble").feasible(),
+                "Вторая цель заблокирована"
+                        + " Иначе тест severalSpirits_BlockedTools_BothKeysRaised перестанет ловить эту поломку. При смене severalSpirits_BlockedTools_BothKeysRaised проверь это утверждение.");
+        assertTrue(
+                toolRaised(plan, "spirit-2"),
+                "Ключ первого духа поднят"
+                        + " Иначе тест severalSpirits_BlockedTools_BothKeysRaised перестанет ловить эту поломку. При смене severalSpirits_BlockedTools_BothKeysRaised проверь это утверждение.");
+        assertTrue(
+                toolRaised(plan, "spirit-3"),
+                "Ключ второго духа поднят"
+                        + " Иначе тест severalSpirits_BlockedTools_BothKeysRaised перестанет ловить эту поломку. При смене severalSpirits_BlockedTools_BothKeysRaised проверь это утверждение.");
         assertEquals(
                 List.of("spirit-1", "spirit-2", "spirit-3"),
                 world.kits.keySet().stream().sorted().toList(),
-                "Сцена держит несколько духов");
+                "Сцена держит несколько духов"
+                        + " При смене severalSpirits_BlockedTools_BothKeysRaised проверь это утверждение. Иначе поломка пройдёт незамеченной в прогоне.");
     }
 
     @Test
@@ -192,15 +254,22 @@ class GraphBlockScenarioTests {
 
         GraphPlan.Task blocked = task(world.plan(), "mine_coal");
 
-        assertFalse(blocked.feasible(), "Породы в округе нет — рубка не ставится: " + blocked);
+        assertFalse(
+                blocked.feasible(),
+                "Породы в округе нет — рубка не ставится: " + blocked
+                        + " Иначе тест world_Blocked_LiftsOnlyWhenFactAppears перестанет ловить эту поломку. При смене world_Blocked_LiftsOnlyWhenFactAppears проверь это утверждение.");
         assertTrue(
                 blocked.blocked().contains("tree:oak"),
-                "Блокировка называет факт мира, по которому снимется: " + blocked.blocked());
+                "Блокировка называет факт мира, по которому снимется: " + blocked.blocked()
+                        + " Иначе тест world_Blocked_LiftsOnlyWhenFactAppears перестанет ловить эту поломку. При смене world_Blocked_LiftsOnlyWhenFactAppears проверь это утверждение.");
 
         world.world.add("tree:oak");
         GraphPlan.Task back = task(world.plan(), "mine_coal");
 
-        assertTrue(back.feasible(), "Дерево появилось в округе — условие снято, задача вернулась: " + back.blocked());
+        assertTrue(
+                back.feasible(),
+                "Дерево появилось в округе — условие снято, задача вернулась: " + back.blocked()
+                        + " Иначе тест world_Blocked_LiftsOnlyWhenFactAppears перестанет ловить эту поломку. При смене world_Blocked_LiftsOnlyWhenFactAppears проверь это утверждение.");
     }
 
     private static GraphWorld mining() {

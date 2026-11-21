@@ -19,7 +19,8 @@ class FailureTargetsTests {
         assertEquals(
                 other,
                 FailureTargets.choose(List.of(dead, other), Set.of(FailureTargets.key(dead)), 6),
-                "Недостижимый ствол пропускают: рубка переходит к другому дереву того же узла");
+                "Недостижимый ствол пропускают: рубка переходит к другому дереву того же узла"
+                        + " Иначе тест choose_FirstTargetUnreachable_TakesAnotherTarget перестанет ловить эту поломку. При смене choose_FirstTargetUnreachable_TakesAnotherTarget проверь это утверждение.");
     }
 
     @Test
@@ -30,7 +31,8 @@ class FailureTargetsTests {
         assertEquals(
                 sameTree,
                 FailureTargets.choose(List.of(sameTree), Set.of(FailureTargets.key(dead)), 6),
-                "Одна цель внутри радиуса считается той же: без запасной цели честно повторяют её");
+                "Одна цель внутри радиуса считается той же: без запасной цели честно повторяют её"
+                        + " Иначе тест choose_TargetNearAnotherDeadOne_IsTreatedAsSameTree перестанет ловить эту поломку. При смене choose_TargetNearAnotherDeadOne_IsTreatedAsSameTree проверь это утверждение.");
     }
 
     @Test
@@ -41,7 +43,8 @@ class FailureTargetsTests {
                 dead,
                 FailureTargets.choose(List.of(dead), Set.of(FailureTargets.key(dead)), 6),
                 "Если недостижимы все цели, узел не остаётся без работы молча: он честно повторяет ближайшую, "
-                        + "а вес узла решает порог разных целей");
+                        + "а вес узла решает порог разных целей"
+                        + " Иначе тест choose_AllTargetsUnreachable_FallsBackToFirst перестанет ловить эту поломку. При смене choose_AllTargetsUnreachable_FallsBackToFirst проверь это утверждение.");
     }
 
     @Test
@@ -51,7 +54,8 @@ class FailureTargetsTests {
         assertEquals(
                 candidate,
                 FailureTargets.choose(List.of(candidate), Set.of("10,64,40"), 6),
-                "Провал далёкой цели не исключает эту: исключение адресное");
+                "Провал далёкой цели не исключает эту: исключение адресное"
+                        + " Иначе тест choose_DistantDeadTarget_DoesNotBlockCandidate перестанет ловить эту поломку. При смене choose_DistantDeadTarget_DoesNotBlockCandidate проверь это утверждение.");
     }
 
     @Test
@@ -85,11 +89,13 @@ class FailureTargetsTests {
         assertEquals(
                 calmPriority,
                 failedPriority,
-                "Один недоступный ствол не снимает рубку с доски: узел сохраняет вес и ищет другое дерево");
+                "Один недоступный ствол не снимает рубку с доски: узел сохраняет вес и ищет другое дерево"
+                        + " Иначе тест chop_UnreachableJungleTree_KeepsNodeAndPicksAnotherTree перестанет ловить эту поломку. При смене chop_UnreachableJungleTree_KeepsNodeAndPicksAnotherTree проверь это утверждение.");
         assertEquals(
                 other,
                 FailureTargets.choose(List.of(dead, other), Set.of(FailureTargets.key(dead)), 6),
-                "Доска ставит рубку по другой цели того же узла");
+                "Доска ставит рубку по другой цели того же узла"
+                        + " Иначе тест chop_UnreachableJungleTree_KeepsNodeAndPicksAnotherTree перестанет ловить эту поломку. При смене chop_UnreachableJungleTree_KeepsNodeAndPicksAnotherTree проверь это утверждение.");
     }
 
     @Test
@@ -112,7 +118,8 @@ class FailureTargetsTests {
                 other,
                 FailureTargets.choose(List.of(dead, other), memory.unreachablePoints(110, 1000), 6),
                 "Память неудач штрафует точку, а не задачу: недостижимая цель одной работы не выбирается "
-                        + "другой работой (observe25 B5)");
+                        + "другой работой (observe25 B5)"
+                        + " Иначе тест choose_DeadPointOfAnotherTask_IsSkippedForThisTask перестанет ловить эту поломку. При смене choose_DeadPointOfAnotherTask_IsSkippedForThisTask проверь это утверждение.");
     }
 
     @Test
@@ -121,7 +128,11 @@ class FailureTargetsTests {
 
         assertFalse(
                 FailureTargets.near(candidate, Set.of("не координата", ""), 6),
-                "Испорченный ключ памяти не исключает цель: лучше повторить, чем остаться без работы");
-        assertTrue(FailureTargets.near(candidate, Set.of("10,64,10"), 0), "Нулевой радиус исключает ровно точную цель");
+                "Испорченный ключ памяти не исключает цель: лучше повторить, чем остаться без работы"
+                        + " Иначе тест near_MalformedKey_IsIgnored перестанет ловить эту поломку. При смене near_MalformedKey_IsIgnored проверь это утверждение.");
+        assertTrue(
+                FailureTargets.near(candidate, Set.of("10,64,10"), 0),
+                "Нулевой радиус исключает ровно точную цель"
+                        + " Иначе тест near_MalformedKey_IsIgnored перестанет ловить эту поломку. При смене near_MalformedKey_IsIgnored проверь это утверждение.");
     }
 }

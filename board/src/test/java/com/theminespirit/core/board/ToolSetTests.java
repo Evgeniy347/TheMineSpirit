@@ -53,7 +53,8 @@ class ToolSetTests {
         assertEquals(
                 Map.of("cobblestone", 3, "stick", 2),
                 need,
-                "Рецепт каменной кирки — 3 булыжника и 2 палки: гейт считает булыжник из рецепта, " + "а не из кода");
+                "Рецепт каменной кирки — 3 булыжника и 2 палки: гейт считает булыжник из рецепта, " + "а не из кода"
+                        + " Иначе тест gate_StoneSet_NeedsCobblestone перестанет ловить эту поломку. При смене gate_StoneSet_NeedsCobblestone проверь это утверждение.");
     }
 
     @Test
@@ -66,7 +67,8 @@ class ToolSetTests {
                 Map.of("cobblestone", 3),
                 missing,
                 "Нехватка булыжника под каменный набор попадает в отчёт гейта: по нему доска "
-                        + "ставит мелкую задачу «добыть булыжник» деревянной киркой");
+                        + "ставит мелкую задачу «добыть булыжник» деревянной киркой"
+                        + " Иначе тест gate_StoneSet_ReportsCobblestoneShortage перестанет ловить эту поломку. При смене gate_StoneSet_ReportsCobblestoneShortage проверь это утверждение.");
     }
 
     @Test
@@ -77,14 +79,16 @@ class ToolSetTests {
                 9,
                 need.get("cobblestone"),
                 "Три комплекта — три каменные кирки: булыжника нужно втрое больше, число комплектов "
-                        + "идёт из горячей таблицы board");
+                        + "идёт из горячей таблицы board"
+                        + " Иначе тест gate_ToolSetCount_MultipliesRecipe перестанет ловить эту поломку. При смене gate_ToolSetCount_MultipliesRecipe проверь это утверждение.");
     }
 
     @Property
     void itemId_AnyTool_IsPrefixed(@ForAll("toolCases") BoardCase boardCase) {
         assertTrue(
                 ToolSet.itemId(boardCase).startsWith("minecraft:"),
-                "Предмет инструмента несёт полный id: по нему craft ищет рецепт сервера");
+                "Предмет инструмента несёт полный id: по нему craft ищет рецепт сервера"
+                        + " Иначе тест itemId_AnyTool_IsPrefixed перестанет ловить эту поломку. При смене itemId_AnyTool_IsPrefixed проверь это утверждение.");
     }
 
     @Test
@@ -92,11 +96,13 @@ class ToolSetTests {
         assertEquals(
                 Optional.of(BoardCase.CRAFT_STONE_PICKAXE),
                 ToolSet.caseFor("minecraft:stone_pickaxe"),
-                "По предмету кирки доска находит свой кейс крафта: иначе кирка не попадёт на доску");
+                "По предмету кирки доска находит свой кейс крафта: иначе кирка не попадёт на доску"
+                        + " При смене caseFor_ToolItem_FindsCraftCase проверь это утверждение.");
         assertEquals(
                 Optional.of(BoardCase.CRAFT_WOODEN_SHOVEL),
                 ToolSet.caseFor("wooden_shovel"),
-                "Короткое имя предмета тоже находит кейс: граф называет предметы без namespace");
+                "Короткое имя предмета тоже находит кейс: граф называет предметы без namespace"
+                        + " Иначе тест caseFor_ToolItem_FindsCraftCase перестанет ловить эту поломку. При смене caseFor_ToolItem_FindsCraftCase проверь это утверждение.");
     }
 
     @Test
@@ -105,7 +111,8 @@ class ToolSetTests {
                 Optional.empty(),
                 ToolSet.caseFor("minecraft:wooden_hoe"),
                 "У тяпки нет кейса набора инструментов: её крафт идёт общим путём GATHER_MATERIALS "
-                        + "с целью craft, иначе тяпку не скрафтить");
+                        + "с целью craft, иначе тяпку не скрафтить"
+                        + " При смене caseFor_Hoe_HasNoToolCase проверь это утверждение.");
     }
 
     @Test
@@ -113,7 +120,8 @@ class ToolSetTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new ToolsConfig(List.of("pickaxe", "pickaxe"), "stone", List.of("iron")),
-                "Повтор вида в наборе обязан отвергаться: два одинаковых задания на один инструмент");
+                "Повтор вида в наборе обязан отвергаться: два одинаковых задания на один инструмент"
+                        + " Иначе тест toolsConfig_RepeatedKind_Rejected перестанет ловить эту поломку. При смене toolsConfig_RepeatedKind_Rejected проверь это утверждение.");
     }
 
     @Test
@@ -121,11 +129,13 @@ class ToolSetTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new ToolsConfig(List.of("hoe"), "stone", List.of("iron")),
-                "Неизвестный вид инструмента обязан отвергаться: кейса крафта у него нет");
+                "Неизвестный вид инструмента обязан отвергаться: кейса крафта у него нет"
+                        + " Иначе тест toolsConfig_UnknownKindOrTier_Rejected перестанет ловить эту поломку. При смене toolsConfig_UnknownKindOrTier_Rejected проверь это утверждение.");
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new ToolsConfig(List.of("pickaxe"), "wooden", List.of("iron")),
-                "Целевой уровень ниже камня обязан отвергаться: набор начинается с камня");
+                "Целевой уровень ниже камня обязан отвергаться: набор начинается с камня"
+                        + " Иначе тест toolsConfig_UnknownKindOrTier_Rejected перестанет ловить эту поломку. При смене toolsConfig_UnknownKindOrTier_Rejected проверь это утверждение.");
     }
 
     private static Map<String, Integer> needFor(BoardCase boardCase, int toolCount) {

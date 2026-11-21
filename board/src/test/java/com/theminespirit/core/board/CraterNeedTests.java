@@ -32,7 +32,8 @@ class CraterNeedTests {
                 Map.of(),
                 estimate,
                 "Нулевой радиус — ноль блоков: взрыв без радиуса ничего не выкопал, "
-                        + "и задание о засыпке не ставится");
+                        + "и задание о засыпке не ставится"
+                        + " Иначе тест estimate_ZeroRadius_ZeroBlocks перестанет ловить эту поломку. При смене estimate_ZeroRadius_ZeroBlocks проверь это утверждение.");
     }
 
     @Test
@@ -43,7 +44,8 @@ class CraterNeedTests {
                 Map.of("dirt", 29),
                 estimate,
                 "Воронка крипера радиусом 3 — 29 блоков земли (ceil(π·9)): доска ставит "
-                        + "гейт ровно на это число, не больше и не меньше");
+                        + "гейт ровно на это число, не больше и не меньше"
+                        + " Иначе тест estimate_CreeperRadius_DirtBlocks перестанет ловить эту поломку. При смене estimate_CreeperRadius_DirtBlocks проверь это утверждение.");
     }
 
     @Test
@@ -54,7 +56,8 @@ class CraterNeedTests {
         assertTrue(
                 large.get("dirt") >= small.get("dirt"),
                 "Оценка обязана быть монотонной по радиусу: большая воронка требует не "
-                        + "меньше земли, иначе засыпка оставляет яму");
+                        + "меньше земли, иначе засыпка оставляет яму"
+                        + " При смене estimate_Monotone_ByRadius проверь это утверждение.");
     }
 
     @Test
@@ -62,7 +65,8 @@ class CraterNeedTests {
         assertThrows(
                 NullPointerException.class,
                 () -> CraterNeed.estimate(null, 3),
-                "Точка взрыва обязана быть задана: без неё неизвестен центр воронки");
+                "Точка взрыва обязана быть задана: без неё неизвестен центр воронки"
+                        + " Иначе тест estimate_NullBlast_Rejected перестанет ловить эту поломку. При смене estimate_NullBlast_Rejected проверь это утверждение.");
     }
 
     @Test
@@ -71,7 +75,8 @@ class CraterNeedTests {
                 IllegalArgumentException.class,
                 () -> CraterNeed.estimate(new Point(0, 0), -1),
                 "Отрицательный радиус обязан отвергаться: он прошёл бы как «взрыв есть, "
-                        + "а воронки нет» и скрыл бы реальный радиус от наблюдателя");
+                        + "а воронки нет» и скрыл бы реальный радиус от наблюдателя"
+                        + " Иначе тест estimate_NegativeRadius_Rejected перестанет ловить эту поломку. При смене estimate_NegativeRadius_Rejected проверь это утверждение.");
     }
 
     @Test
@@ -143,7 +148,8 @@ class CraterNeedTests {
         assertFalse(
                 outside,
                 "Взрыв в центре поселения — внутри территории: задания доски не ставится, "
-                        + "воронка в зоне работ координатора");
+                        + "воронка в зоне работ координатора"
+                        + " Иначе тест outsideTerritory_BlastInside_NoTask перестанет ловить эту поломку. При смене outsideTerritory_BlastInside_NoTask проверь это утверждение.");
     }
 
     @Test
@@ -154,14 +160,18 @@ class CraterNeedTests {
         assertTrue(
                 outside,
                 "Взрыв за радиусом от всех домов — задание есть: доска ставит FILL_CRATER "
-                        + "с числом блоков, иначе воронка за территорией живёт вечно");
+                        + "с числом блоков, иначе воронка за территорией живёт вечно"
+                        + " При смене outsideTerritory_BlastOutside_Task проверь это утверждение.");
     }
 
     @Test
     void outsideTerritory_EmptyHomes_Task() {
         boolean outside = CraterNeed.outsideTerritory(new Point(500, 500), List.of(), 64);
 
-        assertTrue(outside, "Нет домов — нет территории: любая воронка за её пределами, задание ставится");
+        assertTrue(
+                outside,
+                "Нет домов — нет территории: любая воронка за её пределами, задание ставится"
+                        + " Иначе тест outsideTerritory_EmptyHomes_Task перестанет ловить эту поломку. При смене outsideTerritory_EmptyHomes_Task проверь это утверждение.");
     }
 
     @Test
@@ -169,7 +179,8 @@ class CraterNeedTests {
         assertThrows(
                 NullPointerException.class,
                 () -> CraterNeed.outsideTerritory(new Point(0, 0), null, 64),
-                "Список домов=null обязан отвергаться: пустую территорию задают пустым списком");
+                "Список домов=null обязан отвергаться: пустую территорию задают пустым списком"
+                        + " Иначе тест outsideTerritory_NullHomes_Rejected перестанет ловить эту поломку. При смене outsideTerritory_NullHomes_Rejected проверь это утверждение.");
     }
 
     @Test
@@ -180,7 +191,8 @@ class CraterNeedTests {
                 CraterNeed.outsideTerritory(new Point(100, 0), homes, 64),
                 CraterNeed.outsideTerritory(new Point(100, 0), homes, 64),
                 "Признак «за территорией» обязан быть детерминирован: по нему доска "
-                        + "ставит или не ставит задание, нестабильность — случайное решение");
+                        + "ставит или не ставит задание, нестабильность — случайное решение"
+                        + " Иначе тест outsideTerritory_Is_Deterministic перестанет ловить эту поломку. При смене outsideTerritory_Is_Deterministic проверь это утверждение.");
     }
 
     @Property
@@ -195,11 +207,13 @@ class CraterNeedTests {
 
         assertTrue(
                 small.getOrDefault("dirt", 0) >= 0,
-                "Оценка обязана быть неотрицательной: отрицательное число блоков сломало бы гейт");
+                "Оценка обязана быть неотрицательной: отрицательное число блоков сломало бы гейт"
+                        + " Иначе тест estimate_NonNegative_Monotone перестанет ловить эту поломку. При смене estimate_NonNegative_Monotone проверь это утверждение.");
         assertTrue(
                 large.getOrDefault("dirt", 0) >= small.getOrDefault("dirt", 0),
                 "Оценка обязана быть монотонной по радиусу: иначе меньшая воронка "
-                        + "потребовала бы больше земли, чем большая");
+                        + "потребовала бы больше земли, чем большая"
+                        + " При смене estimate_NonNegative_Monotone проверь это утверждение.");
     }
 
     @Property
@@ -209,7 +223,8 @@ class CraterNeedTests {
                 CraterNeed.outsideTerritory(blast, homes, radius),
                 CraterNeed.outsideTerritory(blast, homes, radius),
                 "Признак «за территорией» детерминирован: иначе наблюдатель видит "
-                        + "разное решение при одних и тех же домах и взрыве");
+                        + "разное решение при одних и тех же домах и взрыве"
+                        + " При смене outsideTerritory_Deterministic_HomeSensitive проверь это утверждение.");
     }
 
     private static PlotLeveling leveling(int blocks) {

@@ -40,12 +40,14 @@ class DemolishPlanTests {
                 List.of(78, 80),
                 heights,
                 "Разбор идёт снизу вверх и не ведёт духа к верхней висящей клетке: прежний переход к y=80 "
-                        + "застревал в петле переносов и проваливал задание каждую минуту");
+                        + "застревал в петле переносов и проваливал задание каждую минуту"
+                        + " Иначе тест plan_DemolishUnreachableTop_ClearsBottomUpWithoutGoto перестанет ловить эту поломку. При смене plan_DemolishUnreachableTop_ClearsBottomUpWithoutGoto проверь это утверждение.");
         assertEquals(
                 List.of(),
                 calls(plan, "goto"),
                 "В плане разбора нет отдельного перехода к блоку: иначе недостижимая цель снова и снова "
-                        + "получает «застрял по пути», а clear_area даже не начинается");
+                        + "получает «застрял по пути», а clear_area даже не начинается"
+                        + " При смене plan_DemolishUnreachableTop_ClearsBottomUpWithoutGoto проверь это утверждение.");
     }
 
     private static List<ScriptCall> calls(TaskNode root, String script) {

@@ -20,7 +20,8 @@ class WarehouseChestsTests {
                     doubles[level - 1] * 2,
                     cells.size(),
                     "Склад уровня " + level + " — " + doubles[level - 1]
-                            + " двойных сундуков: клеток ровно вдвое больше");
+                            + " двойных сундуков: клеток ровно вдвое больше"
+                            + " Иначе тест cells_EveryLevel_MatchesDoubleChestPlan перестанет ловить эту поломку. При смене cells_EveryLevel_MatchesDoubleChestPlan проверь это утверждение.");
         }
     }
 
@@ -30,17 +31,20 @@ class WarehouseChestsTests {
 
         assertTrue(
                 cells.stream().allMatch(cell -> cell.y() > ORIGIN.y()),
-                "Сундуки выше пола склада: пол на уровне origin, сундуки на следующем");
+                "Сундуки выше пола склада: пол на уровне origin, сундуки на следующем"
+                        + " Иначе тест cells_LevelOne_AreShiftedFromOrigin перестанет ловить эту поломку. При смене cells_LevelOne_AreShiftedFromOrigin проверь это утверждение.");
         assertTrue(
                 cells.stream().allMatch(cell -> cell.y() > ORIGIN.y() && cell.y() <= ORIGIN.y() + 3),
                 "Сундуки storage_v1 стоят на трёх уровнях от пола: "
-                        + cells.stream().limit(4).toList());
+                        + cells.stream().limit(4).toList()
+                        + " Иначе тест cells_LevelOne_AreShiftedFromOrigin перестанет ловить эту поломку. При смене cells_LevelOne_AreShiftedFromOrigin проверь это утверждение.");
         assertTrue(
                 cells.stream()
                         .allMatch(cell -> cell.x() >= ORIGIN.x()
                                 && cell.x() < ORIGIN.x() + 6
                                 && cell.z() >= ORIGIN.z()
                                 && cell.z() < ORIGIN.z() + 7),
-                "Сундуки не выходят за габариты схемы 6×7");
+                "Сундуки не выходят за габариты схемы 6×7"
+                        + " Иначе тест cells_LevelOne_AreShiftedFromOrigin перестанет ловить эту поломку. При смене cells_LevelOne_AreShiftedFromOrigin проверь это утверждение.");
     }
 }

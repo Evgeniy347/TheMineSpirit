@@ -21,7 +21,8 @@ class WorkStandTests {
                 Optional.of(new BlockCoord(10, -52, 20)),
                 stand,
                 "Точка задания с высотой до срезки (-48) ведёт духа в воздух — «стоянка за преградой»; высота "
-                        + "стоянки — по текущему рельефу (-52)");
+                        + "стоянки — по текущему рельефу (-52)"
+                        + " Иначе тест near_PointAboveCutGround_StandAtCurrentFeet перестанет ловить эту поломку. При смене near_PointAboveCutGround_StandAtCurrentFeet проверь это утверждение.");
     }
 
     @Test
@@ -33,7 +34,8 @@ class WorkStandTests {
         assertEquals(
                 Optional.of(new BlockCoord(9, -52, 20)),
                 stand,
-                "Верстак стоит в самой точке: дух не встанет в блок, крафт ведёт на ближайшую свободную клетку рядом");
+                "Верстак стоит в самой точке: дух не встанет в блок, крафт ведёт на ближайшую свободную клетку рядом"
+                        + " Иначе тест near_PointOccupiedByTable_NearestFreeNeighbour перестанет ловить эту поломку. При смене near_PointOccupiedByTable_NearestFreeNeighbour проверь это утверждение.");
     }
 
     @Test
@@ -45,7 +47,8 @@ class WorkStandTests {
         assertEquals(
                 Optional.of(new BlockCoord(9, 0, 20)),
                 stand,
-                "Стоянка в точке работы за преградой не годится: берётся ближайшая, до которой дух дойдёт пешком");
+                "Стоянка в точке работы за преградой не годится: берётся ближайшая, до которой дух дойдёт пешком"
+                        + " Иначе тест near_NearestStandUnreachable_NextReachableChosen перестанет ловить эту поломку. При смене near_NearestStandUnreachable_NextReachableChosen проверь это утверждение.");
     }
 
     @Test
@@ -54,7 +57,8 @@ class WorkStandTests {
         assertEquals(
                 Optional.empty(),
                 WorkStand.near(new BlockCoord(10, 0, 20), yard, feet -> false),
-                "Ни одной достижимой стоянки рядом — пусто: «путь есть» не выдумывается");
+                "Ни одной достижимой стоянки рядом — пусто: «путь есть» не выдумывается"
+                        + " Иначе тест near_NoReachableCellWithinRadius_Empty перестанет ловить эту поломку. При смене near_NoReachableCellWithinRadius_Empty проверь это утверждение.");
     }
 
     @Test
@@ -75,7 +79,8 @@ class WorkStandTests {
                 Optional.empty(),
                 WorkStand.near(new BlockCoord(0, 0, 0), walled),
                 "Нет свободной клетки в радиусе " + BoardTuning.workStandRadius()
-                        + " — стоянки нет, задание не ставится в стену");
+                        + " — стоянки нет, задание не ставится в стену"
+                        + " Иначе тест near_NoFreeCellWithinRadius_Empty перестанет ловить эту поломку. При смене near_NoFreeCellWithinRadius_Empty проверь это утверждение.");
     }
 
     private static WorkStand.Ground ground(int feet, Set<BlockCoord> occupied) {
@@ -104,7 +109,8 @@ class WorkStandTests {
                 stand,
                 "Ближайшая стоянка занята другим духом — выбор уходит на следующую свободную: двое в одной "
                         + "клетке у сундука двора запирают друг друга, второй трётся без пути до stuck-провала "
-                        + "(живой сервер 14.11: spirit-2 и spirit-4 оба на -181,69,-518)");
+                        + "(живой сервер 14.11: spirit-2 и spirit-4 оба на -181,69,-518)"
+                        + " Иначе тест near_OccupiedNearestStand_NextFreeStand перестанет ловить эту поломку. При смене near_OccupiedNearestStand_NextFreeStand проверь это утверждение.");
     }
 
     @Test
@@ -122,7 +128,8 @@ class WorkStandTests {
         assertTrue(
                 stand.isPresent(),
                 "Свободных стоянок нет — духи встают в одну клетку (решение владельца 14.11): задание не "
-                        + "проваливается и не ждёт, работа продолжается вплотную");
+                        + "проваливается и не ждёт, работа продолжается вплотную"
+                        + " Иначе тест near_AllStandsOccupied_SharedSingleStand перестанет ловить эту поломку. При смене near_AllStandsOccupied_SharedSingleStand проверь это утверждение.");
     }
 
     @Test
@@ -146,6 +153,7 @@ class WorkStandTests {
                 Optional.of(new BlockCoord(9, -52, 20)),
                 stand,
                 "Несрезанный столб в точке работы (ноги -48 при уровне площадки -52): на него не забраться — "
-                        + "стоянка на уровне точки (±1), а не на вершине столба");
+                        + "стоянка на уровне точки (±1), а не на вершине столба"
+                        + " Иначе тест near_UncutPillarAtPoint_NeighbourOnPlotLevel перестанет ловить эту поломку. При смене near_UncutPillarAtPoint_NeighbourOnPlotLevel проверь это утверждение.");
     }
 }

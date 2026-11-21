@@ -32,7 +32,10 @@ class LeaseLeadTests {
 
     @Test
     void leads_LeadingSpirit_OwnsTicket() {
-        assertTrue(LeaseSupervisor.leads(transfer(), LEADER), "Ведущий тикета — его владелец");
+        assertTrue(
+                LeaseSupervisor.leads(transfer(), LEADER),
+                "Ведущий тикета — его владелец"
+                        + " Иначе тест leads_LeadingSpirit_OwnsTicket перестанет ловить эту поломку. При смене leads_LeadingSpirit_OwnsTicket проверь это утверждение.");
     }
 
     @Test
@@ -41,6 +44,7 @@ class LeaseLeadTests {
                 LeaseSupervisor.leads(transfer(), CARRIER),
                 "Носильщик переноса — участник, а не второй владелец: иначе аренда видит тикет "
                         + "«закреплённым за двумя духами» и роняет сервер живым исключением (сервер упал "
-                        + "17.11 15:26 на transfer:repair:build_orchard:stick)");
+                        + "17.11 15:26 на transfer:repair:build_orchard:stick)"
+                        + " При смене leads_ExecutorOfTransfer_IsNotOwner проверь это утверждение.");
     }
 }

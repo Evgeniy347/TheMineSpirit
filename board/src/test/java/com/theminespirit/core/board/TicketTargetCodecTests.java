@@ -48,7 +48,10 @@ class TicketTargetCodecTests {
         Map<String, Object> encoded = TicketTargetCodec.encode(target).orElseThrow();
 
         assertEquals(
-                target, TicketTargetCodec.decode(encoded), "Цель world:backfill обязана пережить перезапуск целиком");
+                target,
+                TicketTargetCodec.decode(encoded),
+                "Цель world:backfill обязана пережить перезапуск целиком"
+                        + " Иначе тест encodeAndDecode_RichTarget_KeepsEveryPersistedField перестанет ловить эту поломку. При смене encodeAndDecode_RichTarget_KeepsEveryPersistedField проверь это утверждение.");
     }
 
     @Test
@@ -64,7 +67,11 @@ class TicketTargetCodecTests {
         TicketTarget restored =
                 TicketTargetCodec.decode(TicketTargetCodec.encode(target).orElseThrow());
 
-        assertEquals(target, restored, "Задание ограды после перезапуска обязано помнить все проломы и их блоки");
+        assertEquals(
+                target,
+                restored,
+                "Задание ограды после перезапуска обязано помнить все проломы и их блоки"
+                        + " Иначе тест encodeAndDecode_FenceCells_KeepsEveryCellAndBlock перестанет ловить эту поломку. При смене encodeAndDecode_FenceCells_KeepsEveryCellAndBlock проверь это утверждение.");
     }
 
     @Test
@@ -73,7 +80,10 @@ class TicketTargetCodecTests {
                 Map.of("Target", List.of(TARGET.x(), TARGET.y(), TARGET.z()), "Fence", "oak_fence"));
 
         assertEquals(
-                "oak_fence", restored.fenceBlock(), "Цель старой заявки ограды помнит блок: иначе пролом нечем чинить");
+                "oak_fence",
+                restored.fenceBlock(),
+                "Цель старой заявки ограды помнит блок: иначе пролом нечем чинить"
+                        + " При смене decode_LegacyFenceKey_KeepsBlock проверь это утверждение.");
     }
 
     @Test
@@ -83,9 +93,21 @@ class TicketTargetCodecTests {
         TicketTarget restored =
                 TicketTargetCodec.decode(TicketTargetCodec.encode(target).orElseThrow());
 
-        assertEquals(target, restored, "Передача после перезапуска помнит, кто отдаёт и кто принимает");
-        assertEquals(SOURCE, restored.transferFrom(), "Отдающий восстановлен");
-        assertEquals(RECIPIENT, restored.transferTo(), "Принимающий восстановлен");
+        assertEquals(
+                target,
+                restored,
+                "Передача после перезапуска помнит, кто отдаёт и кто принимает"
+                        + " Иначе тест encodeAndDecode_TransferTarget_KeepsBothSpirits перестанет ловить эту поломку. При смене encodeAndDecode_TransferTarget_KeepsBothSpirits проверь это утверждение.");
+        assertEquals(
+                SOURCE,
+                restored.transferFrom(),
+                "Отдающий восстановлен"
+                        + " Иначе тест encodeAndDecode_TransferTarget_KeepsBothSpirits перестанет ловить эту поломку. При смене encodeAndDecode_TransferTarget_KeepsBothSpirits проверь это утверждение.");
+        assertEquals(
+                RECIPIENT,
+                restored.transferTo(),
+                "Принимающий восстановлен"
+                        + " Иначе тест encodeAndDecode_TransferTarget_KeepsBothSpirits перестанет ловить эту поломку. При смене encodeAndDecode_TransferTarget_KeepsBothSpirits проверь это утверждение.");
     }
 
     @Test
@@ -94,7 +116,8 @@ class TicketTargetCodecTests {
 
         assertTrue(
                 TicketTargetCodec.encode(planned).isEmpty(),
-                "Цель с планом в NBT не кладётся: дерево плана не сериализуется, лучше не сохранить, чем сохранить криво");
+                "Цель с планом в NBT не кладётся: дерево плана не сериализуется, лучше не сохранить, чем сохранить криво"
+                        + " Иначе тест encode_TargetWithPlanOrStageWork_IsNotPersisted перестанет ловить эту поломку. При смене encode_TargetWithPlanOrStageWork_IsNotPersisted проверь это утверждение.");
     }
 
     @Test
@@ -104,9 +127,13 @@ class TicketTargetCodecTests {
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,
                 () -> TicketTargetCodec.decode(broken),
-                "Битая точка обязана падать, а не восстанавливаться в (0,0,0)");
+                "Битая точка обязана падать, а не восстанавливаться в (0,0,0)"
+                        + " Иначе тест decode_CoordinateWithoutThreeNumbers_NamesTheBrokenField перестанет ловить эту поломку. При смене decode_CoordinateWithoutThreeNumbers_NamesTheBrokenField проверь это утверждение.");
 
-        assertTrue(error.getMessage().contains("Target"), "Ошибка называет поле, а не молчит: " + error.getMessage());
+        assertTrue(
+                error.getMessage().contains("Target"),
+                "Ошибка называет поле, а не молчит: " + error.getMessage()
+                        + " Иначе тест decode_CoordinateWithoutThreeNumbers_NamesTheBrokenField перестанет ловить эту поломку. При смене decode_CoordinateWithoutThreeNumbers_NamesTheBrokenField проверь это утверждение.");
     }
 
     @Test
@@ -116,6 +143,7 @@ class TicketTargetCodecTests {
         assertEquals(
                 Optional.of(target),
                 TicketTargetCodec.encode(target).map(TicketTargetCodec::decode),
-                "Даже простая цель (точка) восстанавливается: без неё задание снова уйдёт в дом");
+                "Даже простая цель (точка) восстанавливается: без неё задание снова уйдёт в дом"
+                        + " Иначе тест encode_EmptyTarget_IsStillSaved перестанет ловить эту поломку. При смене encode_EmptyTarget_IsStillSaved проверь это утверждение.");
     }
 }

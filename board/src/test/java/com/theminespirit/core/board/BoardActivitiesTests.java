@@ -20,7 +20,8 @@ class BoardActivitiesTests {
         assertEquals(
                 "10,61,-5",
                 BoardActivities.targetOf(call),
-                "Цель карточки — координаты плана: по ней владелец видит, куда дух идёт, а не «внешнее действие»");
+                "Цель карточки — координаты плана: по ней владелец видит, куда дух идёт, а не «внешнее действие»"
+                        + " Иначе тест targetOf_Plan_SaysWhereOrWhat перестанет ловить эту поломку. При смене targetOf_Plan_SaysWhereOrWhat проверь это утверждение.");
     }
 
     @Test
@@ -31,11 +32,13 @@ class BoardActivitiesTests {
                 "smelt",
                 BoardActivities.cardScript("goto", plan),
                 "Карточка занятия с планом «подход, потом плавка» обязана называть плавку: на плитке виден goto, "
-                        + "владелец не понимает, чем дух занят");
+                        + "владелец не понимает, чем дух занят"
+                        + " Иначе тест cardScript_GotoThenWork_NamesWorkNotApproach перестанет ловить эту поломку. При смене cardScript_GotoThenWork_NamesWorkNotApproach проверь это утверждение.");
         assertEquals(
                 "goto",
                 BoardActivities.cardScript("goto", null),
-                "Без плана карточка называет текущий скрипт: команда «goto» остаётся подходом");
+                "Без плана карточка называет текущий скрипт: команда «goto» остаётся подходом"
+                        + " Иначе тест cardScript_GotoThenWork_NamesWorkNotApproach перестанет ловить эту поломку. При смене cardScript_GotoThenWork_NamesWorkNotApproach проверь это утверждение.");
     }
 
     @Test
@@ -56,12 +59,14 @@ class BoardActivitiesTests {
         assertEquals(
                 BoardOutcome.ACCEPTED,
                 board.submit(card),
-                "Занятие графа — полноценное задание доски: иначе владелец не видит, чем занят дух");
+                "Занятие графа — полноценное задание доски: иначе владелец не видит, чем занят дух"
+                        + " При смене submit_ActivityCase_BecomesTicket проверь это утверждение.");
         board.claim(card.id(), spirit, 100);
         assertEquals(
                 Optional.of(BoardCase.ACTIVITY_SENSE),
                 board.occupation(spirit),
-                "Занятие выданного духа читается с доски, а не из отдельной карточки");
+                "Занятие выданного духа читается с доски, а не из отдельной карточки"
+                        + " Иначе тест submit_ActivityCase_BecomesTicket перестанет ловить эту поломку. При смене submit_ActivityCase_BecomesTicket проверь это утверждение.");
     }
 
     @Test
@@ -72,6 +77,7 @@ class BoardActivitiesTests {
         assertEquals(
                 Optional.empty(),
                 BoardHeld.of(board, spirit),
-                "Без билета доски держателя нет: занятие больше не подменяет задание в REST");
+                "Без билета доски держателя нет: занятие больше не подменяет задание в REST"
+                        + " Иначе тест held_NoAssignedTicket_Empty перестанет ловить эту поломку. При смене held_NoAssignedTicket_Empty проверь это утверждение.");
     }
 }

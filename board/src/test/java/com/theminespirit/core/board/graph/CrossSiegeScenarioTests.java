@@ -82,49 +82,123 @@ class CrossSiegeScenarioTests {
         GraphPlan.Task guard = task(plan, "event:more4_player_near:more4_guard_settlement");
         GraphPlan.Task torch = task(plan, "event:more5_mine_dark:more5_craft_mine_torch");
 
-        assertEquals(List.of(), ahead(plan, defend), "Мобы у раненого духа — защита на потолке: " + ids(plan));
-        assertTrue(defend.priority() > mine.priority(), "Бой выше шахты: " + ids(plan));
-        assertTrue(defend.priority() > chop.priority(), "Бой выше рубки: " + ids(plan));
-        assertTrue(defend.priority() > hut.priority(), "Бой выше стройки: " + ids(plan));
-        assertTrue(defend.priority() > backfill.priority(), "Бой выше засыпки: " + ids(plan));
-        assertTrue(defend.priority() > demolish.priority(), "Бой выше сноса: " + ids(plan));
-        assertTrue(defend.priority() > torch.priority(), "Бой выше света: " + ids(plan));
-        assertTrue(defend.priority() > guard.priority(), "Бой выше охраны: " + ids(plan));
+        assertEquals(
+                List.of(),
+                ahead(plan, defend),
+                "Мобы у раненого духа — защита на потолке: " + ids(plan)
+                        + " Иначе тест siege_LifeAboveWork_WorkStaysPosted перестанет ловить эту поломку. При смене siege_LifeAboveWork_WorkStaysPosted проверь это утверждение.");
+        assertTrue(
+                defend.priority() > mine.priority(),
+                "Бой выше шахты: " + ids(plan)
+                        + " Иначе тест siege_LifeAboveWork_WorkStaysPosted перестанет ловить эту поломку. При смене siege_LifeAboveWork_WorkStaysPosted проверь это утверждение.");
+        assertTrue(
+                defend.priority() > chop.priority(),
+                "Бой выше рубки: " + ids(plan)
+                        + " Иначе тест siege_LifeAboveWork_WorkStaysPosted перестанет ловить эту поломку. При смене siege_LifeAboveWork_WorkStaysPosted проверь это утверждение.");
+        assertTrue(
+                defend.priority() > hut.priority(),
+                "Бой выше стройки: " + ids(plan)
+                        + " Иначе тест siege_LifeAboveWork_WorkStaysPosted перестанет ловить эту поломку. При смене siege_LifeAboveWork_WorkStaysPosted проверь это утверждение.");
+        assertTrue(
+                defend.priority() > backfill.priority(),
+                "Бой выше засыпки: " + ids(plan)
+                        + " Иначе тест siege_LifeAboveWork_WorkStaysPosted перестанет ловить эту поломку. При смене siege_LifeAboveWork_WorkStaysPosted проверь это утверждение.");
+        assertTrue(
+                defend.priority() > demolish.priority(),
+                "Бой выше сноса: " + ids(plan)
+                        + " Иначе тест siege_LifeAboveWork_WorkStaysPosted перестанет ловить эту поломку. При смене siege_LifeAboveWork_WorkStaysPosted проверь это утверждение.");
+        assertTrue(
+                defend.priority() > torch.priority(),
+                "Бой выше света: " + ids(plan)
+                        + " Иначе тест siege_LifeAboveWork_WorkStaysPosted перестанет ловить эту поломку. При смене siege_LifeAboveWork_WorkStaysPosted проверь это утверждение.");
+        assertTrue(
+                defend.priority() > guard.priority(),
+                "Бой выше охраны: " + ids(plan)
+                        + " Иначе тест siege_LifeAboveWork_WorkStaysPosted перестанет ловить эту поломку. При смене siege_LifeAboveWork_WorkStaysPosted проверь это утверждение.");
 
-        assertTrue(retreat.priority() > mine.priority(), "Бегство выше шахты: " + ids(plan));
-        assertTrue(retreat.priority() > demolish.priority(), "Бегство выше сноса: " + ids(plan));
-        assertTrue(retreat.priority() > guard.priority(), "Бегство выше охраны: " + ids(plan));
-        assertTrue(retreat.priority() > eat.priority(), "Бегство выше еды: дух уходит от мобов до обеда: " + ids(plan));
+        assertTrue(
+                retreat.priority() > mine.priority(),
+                "Бегство выше шахты: " + ids(plan)
+                        + " Иначе тест siege_LifeAboveWork_WorkStaysPosted перестанет ловить эту поломку. При смене siege_LifeAboveWork_WorkStaysPosted проверь это утверждение.");
+        assertTrue(
+                retreat.priority() > demolish.priority(),
+                "Бегство выше сноса: " + ids(plan)
+                        + " Иначе тест siege_LifeAboveWork_WorkStaysPosted перестанет ловить эту поломку. При смене siege_LifeAboveWork_WorkStaysPosted проверь это утверждение.");
+        assertTrue(
+                retreat.priority() > guard.priority(),
+                "Бегство выше охраны: " + ids(plan)
+                        + " Иначе тест siege_LifeAboveWork_WorkStaysPosted перестанет ловить эту поломку. При смене siege_LifeAboveWork_WorkStaysPosted проверь это утверждение.");
+        assertTrue(
+                retreat.priority() > eat.priority(),
+                "Бегство выше еды: дух уходит от мобов до обеда: " + ids(plan)
+                        + " Иначе тест siege_LifeAboveWork_WorkStaysPosted перестанет ловить эту поломку. При смене siege_LifeAboveWork_WorkStaysPosted проверь это утверждение.");
 
-        assertTrue(arm.priority() > eat.priority(), "Раненый сперва надевает броню, потом ест: " + ids(plan));
-        assertTrue(eat.priority() > sleep.priority(), "Голодный ест раньше сна: " + ids(plan));
-        assertTrue(eat.priority() > fence.priority(), "Еда выше ремонта забора: " + ids(plan));
-        assertTrue(fence.priority() > hut.priority(), "Побитый забор важнее новой хижины: " + ids(plan));
-        assertTrue(fence.priority() > backfill.priority(), "Забор важнее засыпки воронки: " + ids(plan));
-        assertTrue(fence.priority() > demolish.priority(), "Забор важнее сноса лишнего сундука: " + ids(plan));
+        assertTrue(
+                arm.priority() > eat.priority(),
+                "Раненый сперва надевает броню, потом ест: " + ids(plan)
+                        + " Иначе тест siege_LifeAboveWork_WorkStaysPosted перестанет ловить эту поломку. При смене siege_LifeAboveWork_WorkStaysPosted проверь это утверждение.");
+        assertTrue(
+                eat.priority() > sleep.priority(),
+                "Голодный ест раньше сна: " + ids(plan)
+                        + " Иначе тест siege_LifeAboveWork_WorkStaysPosted перестанет ловить эту поломку. При смене siege_LifeAboveWork_WorkStaysPosted проверь это утверждение.");
+        assertTrue(
+                eat.priority() > fence.priority(),
+                "Еда выше ремонта забора: " + ids(plan)
+                        + " Иначе тест siege_LifeAboveWork_WorkStaysPosted перестанет ловить эту поломку. При смене siege_LifeAboveWork_WorkStaysPosted проверь это утверждение.");
+        assertTrue(
+                fence.priority() > hut.priority(),
+                "Побитый забор важнее новой хижины: " + ids(plan)
+                        + " Иначе тест siege_LifeAboveWork_WorkStaysPosted перестанет ловить эту поломку. При смене siege_LifeAboveWork_WorkStaysPosted проверь это утверждение.");
+        assertTrue(
+                fence.priority() > backfill.priority(),
+                "Забор важнее засыпки воронки: " + ids(plan)
+                        + " Иначе тест siege_LifeAboveWork_WorkStaysPosted перестанет ловить эту поломку. При смене siege_LifeAboveWork_WorkStaysPosted проверь это утверждение.");
+        assertTrue(
+                fence.priority() > demolish.priority(),
+                "Забор важнее сноса лишнего сундука: " + ids(plan)
+                        + " Иначе тест siege_LifeAboveWork_WorkStaysPosted перестанет ловить эту поломку. При смене siege_LifeAboveWork_WorkStaysPosted проверь это утверждение.");
         assertTrue(
                 guard.priority() >= mine.priority(),
                 "Охрана не ниже шахты (без факелов уголь — свет тёмной шахты, честный соперник охраны), шахта на доске: "
-                        + ranked(plan));
-        assertTrue(expedition.priority() > fence.priority(), "Поход выше ремонта забора: " + ids(plan));
+                        + ranked(plan)
+                        + " Иначе тест siege_LifeAboveWork_WorkStaysPosted перестанет ловить эту поломку. При смене siege_LifeAboveWork_WorkStaysPosted проверь это утверждение.");
+        assertTrue(
+                expedition.priority() > fence.priority(),
+                "Поход выше ремонта забора: " + ids(plan)
+                        + " Иначе тест siege_LifeAboveWork_WorkStaysPosted перестанет ловить эту поломку. При смене siege_LifeAboveWork_WorkStaysPosted проверь это утверждение.");
 
         GraphPlan.Task hungryEat = task(plan, "event:hungry:eat");
-        assertTrue(hungryEat.priority() > hut.priority(), "Голодный ест раньше стройки: " + ids(plan));
-        assertTrue(mine.priority() > torch.priority(), "Сначала уголь, потом факел: " + ids(plan));
+        assertTrue(
+                hungryEat.priority() > hut.priority(),
+                "Голодный ест раньше стройки: " + ids(plan)
+                        + " Иначе тест siege_LifeAboveWork_WorkStaysPosted перестанет ловить эту поломку. При смене siege_LifeAboveWork_WorkStaysPosted проверь это утверждение.");
+        assertTrue(
+                mine.priority() > torch.priority(),
+                "Сначала уголь, потом факел: " + ids(plan)
+                        + " Иначе тест siege_LifeAboveWork_WorkStaysPosted перестанет ловить эту поломку. При смене siege_LifeAboveWork_WorkStaysPosted проверь это утверждение.");
         assertFalse(
                 plan.task("event:more5_mine_dark:more5_light_mine")
                         .filter(GraphPlan.Task::feasible)
                         .isPresent(),
-                "Без факела шахту не освещают: " + ids(plan));
+                "Без факела шахту не освещают: " + ids(plan)
+                        + " Иначе тест siege_LifeAboveWork_WorkStaysPosted перестанет ловить эту поломку. При смене siege_LifeAboveWork_WorkStaysPosted проверь это утверждение.");
         assertEquals(
                 BoardCase.ACTIVITY_RETREAT,
                 BoardActivities.caseOfScript("retreat").orElseThrow(),
-                "Бегство остаётся действием отхода");
+                "Бегство остаётся действием отхода"
+                        + " Иначе тест siege_LifeAboveWork_WorkStaysPosted перестанет ловить эту поломку. При смене siege_LifeAboveWork_WorkStaysPosted проверь это утверждение.");
         assertEquals(
                 BoardCase.ACTIVITY_EXPEDITION,
                 BoardActivities.caseOfScript("follow").orElseThrow(),
-                "Поход остаётся действием сопровождения");
-        assertTrue(scripts(BoardCase.LIGHTING).contains("place_block"), "Свет ставится блоками: " + ids(plan));
-        assertTrue(scripts(BoardCase.CRAFT_TORCHES).contains("craft"), "Факел крафтится: " + ids(plan));
+                "Поход остаётся действием сопровождения"
+                        + " Иначе тест siege_LifeAboveWork_WorkStaysPosted перестанет ловить эту поломку. При смене siege_LifeAboveWork_WorkStaysPosted проверь это утверждение.");
+        assertTrue(
+                scripts(BoardCase.LIGHTING).contains("place_block"),
+                "Свет ставится блоками: " + ids(plan)
+                        + " Иначе тест siege_LifeAboveWork_WorkStaysPosted перестанет ловить эту поломку. При смене siege_LifeAboveWork_WorkStaysPosted проверь это утверждение.");
+        assertTrue(
+                scripts(BoardCase.CRAFT_TORCHES).contains("craft"),
+                "Факел крафтится: " + ids(plan)
+                        + " Иначе тест siege_LifeAboveWork_WorkStaysPosted перестанет ловить эту поломку. При смене siege_LifeAboveWork_WorkStaysPosted проверь это утверждение.");
     }
 }

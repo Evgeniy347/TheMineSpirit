@@ -33,12 +33,17 @@ class RouteDiggingTests {
         assertEquals(
                 71,
                 plan.cut().stream().mapToInt(PlotLeveling.Box::y1).min().orElseThrow(),
-                "Нижняя граница — на блок выше низшей колонки");
+                "Нижняя граница — на блок выше низшей колонки"
+                        + " Иначе тест layers_UnevenGround_AllColumnsCutToLowest перестанет ловить эту поломку. При смене layers_UnevenGround_AllColumnsCutToLowest проверь это утверждение.");
         assertEquals(
-                73, plan.cut().stream().mapToInt(PlotLeveling.Box::y2).max().orElseThrow(), "Верхняя — высшая");
+                73,
+                plan.cut().stream().mapToInt(PlotLeveling.Box::y2).max().orElseThrow(),
+                "Верхняя — высшая"
+                        + " Иначе тест layers_UnevenGround_AllColumnsCutToLowest перестанет ловить эту поломку. При смене layers_UnevenGround_AllColumnsCutToLowest проверь это утверждение.");
         assertTrue(
                 plan.cut().stream().allMatch(box -> box.y1() == 71),
-                "Все колонки срезаются до одного уровня 70: перепад в 2 блока не остаётся, ям нет");
+                "Все колонки срезаются до одного уровня 70: перепад в 2 блока не остаётся, ям нет"
+                        + " Иначе тест layers_UnevenGround_AllColumnsCutToLowest перестанет ловить эту поломку. При смене layers_UnevenGround_AllColumnsCutToLowest проверь это утверждение.");
     }
 
     @Test
@@ -51,11 +56,17 @@ class RouteDiggingTests {
         assertEquals(
                 65,
                 wet.cut().stream().mapToInt(PlotLeveling.Box::y1).min().orElseThrow(),
-                "Ниже уровня воды не копают");
+                "Ниже уровня воды не копают"
+                        + " Иначе тест layers_WaterInsideColumn_StopsAtWaterLevel перестанет ловить эту поломку. При смене layers_WaterInsideColumn_StopsAtWaterLevel проверь это утверждение.");
         assertTrue(
                 wet.cut().stream().allMatch(box -> box.y1() > 63),
-                "Ни один срез не заходит на уровень воды или ниже: вода не заливает раскоп");
-        assertEquals(plan.cut().size(), wet.cut().size(), "Колонки выше воды срезаются как обычно");
+                "Ни один срез не заходит на уровень воды или ниже: вода не заливает раскоп"
+                        + " Иначе тест layers_WaterInsideColumn_StopsAtWaterLevel перестанет ловить эту поломку. При смене layers_WaterInsideColumn_StopsAtWaterLevel проверь это утверждение.");
+        assertEquals(
+                plan.cut().size(),
+                wet.cut().size(),
+                "Колонки выше воды срезаются как обычно"
+                        + " Иначе тест layers_WaterInsideColumn_StopsAtWaterLevel перестанет ловить эту поломку. При смене layers_WaterInsideColumn_StopsAtWaterLevel проверь это утверждение.");
     }
 
     @Test
@@ -67,8 +78,13 @@ class RouteDiggingTests {
 
         assertTrue(
                 plan.cut().stream().noneMatch(box -> box.x1() == 1),
-                "Блок с 11 блоками воды вокруг не добывают: затопление опаснее ресурса");
-        assertEquals(2, plan.cut().size(), "Соседние сухие колонки срезаются по слою, а мокрую оставляют");
+                "Блок с 11 блоками воды вокруг не добывают: затопление опаснее ресурса"
+                        + " Иначе тест layers_TooMuchWaterAround_BlockSkipped перестанет ловить эту поломку. При смене layers_TooMuchWaterAround_BlockSkipped проверь это утверждение.");
+        assertEquals(
+                2,
+                plan.cut().size(),
+                "Соседние сухие колонки срезаются по слою, а мокрую оставляют"
+                        + " Иначе тест layers_TooMuchWaterAround_BlockSkipped перестанет ловить эту поломку. При смене layers_TooMuchWaterAround_BlockSkipped проверь это утверждение.");
     }
 
     @Test
@@ -80,7 +96,8 @@ class RouteDiggingTests {
 
         assertTrue(
                 plan.cut().stream().anyMatch(box -> box.x1() == 0),
-                "Ровно 10 блоков воды вокруг — предел разрешён: запрет начинается с 11");
+                "Ровно 10 блоков воды вокруг — предел разрешён: запрет начинается с 11"
+                        + " Иначе тест layers_ExactlyTenWater_BlockAllowed перестанет ловить эту поломку. При смене layers_ExactlyTenWater_BlockAllowed проверь это утверждение.");
     }
 
     @Test
@@ -88,14 +105,25 @@ class RouteDiggingTests {
         List<PlotLeveling.Box> layers =
                 RouteDigging.layers(ColumnMask.rect(0, 0, 1, 0), (x, z) -> x == 0 ? 66 : 68, (x, y, z) -> 0, NO_WATER);
 
-        assertEquals(68, layers.get(0).y1(), "Первым снимают верхний слой: дух не подкапывает снизу");
-        assertEquals(67, layers.get(layers.size() - 1).y1(), "Последним — нижний слой среза");
+        assertEquals(
+                68,
+                layers.get(0).y1(),
+                "Первым снимают верхний слой: дух не подкапывает снизу"
+                        + " Иначе тест layers_TopDownOrder_RemovesSurfaceFirst перестанет ловить эту поломку. При смене layers_TopDownOrder_RemovesSurfaceFirst проверь это утверждение.");
+        assertEquals(
+                67,
+                layers.get(layers.size() - 1).y1(),
+                "Последним — нижний слой среза"
+                        + " Иначе тест layers_TopDownOrder_RemovesSurfaceFirst перестанет ловить эту поломку. При смене layers_TopDownOrder_RemovesSurfaceFirst проверь это утверждение.");
     }
 
     @Test
     void plan_AllColumnsBelowWater_Empty() {
         PlotLeveling plan = RouteDigging.plan(area(), (x, z) -> 62, (x, y, z) -> 0, 63);
 
-        assertTrue(plan.cut().isEmpty(), "Всё дно ниже воды: добыча не начинается, чтобы не затопить участок");
+        assertTrue(
+                plan.cut().isEmpty(),
+                "Всё дно ниже воды: добыча не начинается, чтобы не затопить участок"
+                        + " Иначе тест plan_AllColumnsBelowWater_Empty перестанет ловить эту поломку. При смене plan_AllColumnsBelowWater_Empty проверь это утверждение.");
     }
 }

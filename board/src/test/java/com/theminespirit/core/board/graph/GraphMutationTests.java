@@ -41,7 +41,11 @@ class GraphMutationTests {
     @Test
     void plan_EverySingle_NoStall() {
         List<String> found = sweep(GraphMutationTests::stalled);
-        assertEquals(List.of(), head(found), "Полный перебор одиночных мутаций: мир встал (" + found.size() + ")");
+        assertEquals(
+                List.of(),
+                head(found),
+                "Полный перебор одиночных мутаций: мир встал (" + found.size() + ")"
+                        + " Иначе тест plan_EverySingle_NoStall перестанет ловить эту поломку. При смене plan_EverySingle_NoStall проверь это утверждение.");
     }
 
     @Tag("mutation")
@@ -66,7 +70,11 @@ class GraphMutationTests {
                 }
             }
         }
-        assertEquals(List.of(), head(found), "Меньше запаса — не ниже поток добычи (" + found.size() + ")");
+        assertEquals(
+                List.of(),
+                head(found),
+                "Меньше запаса — не ниже поток добычи (" + found.size() + ")"
+                        + " Иначе тест flow_LessStock_NeverLowersProducer перестанет ловить эту поломку. При смене flow_LessStock_NeverLowersProducer проверь это утверждение.");
     }
 
     @Tag("mutation")
@@ -85,7 +93,11 @@ class GraphMutationTests {
                 }
             }
         }
-        assertEquals(List.of(), head(found), "Расчёт графа обязан быть детерминированным");
+        assertEquals(
+                List.of(),
+                head(found),
+                "Расчёт графа обязан быть детерминированным"
+                        + " Иначе тест plan_SameWorld_Deterministic перестанет ловить эту поломку. При смене plan_SameWorld_Deterministic проверь это утверждение.");
     }
 
     @Test
@@ -100,7 +112,8 @@ class GraphMutationTests {
         assertTrue(
                 plan.priority("building:hut") > plan.priority("dig_dirt"),
                 "Материалы хижины на складе — стройка важнее пополнения запаса земли до порога: хижина "
-                        + plan.priority("building:hut") + ", земля " + plan.priority("dig_dirt"));
+                        + plan.priority("building:hut") + ", земля " + plan.priority("dig_dirt")
+                        + " Иначе тест plan_MaterialsReady_BuildingOutranksStockTopUp перестанет ловить эту поломку. При смене plan_MaterialsReady_BuildingOutranksStockTopUp проверь это утверждение.");
     }
 
     @Test
@@ -111,7 +124,8 @@ class GraphMutationTests {
         assertTrue(
                 plan.task("mine_iron").isEmpty() && plan.task("smelt_iron").isEmpty(),
                 "Набор этапа 1 — каменный: железный инструмент стоит заданием, но не тянет добычу и плавку железа: "
-                        + plan.task("mine_iron") + ", " + plan.task("smelt_iron"));
+                        + plan.task("mine_iron") + ", " + plan.task("smelt_iron")
+                        + " Иначе тест plan_StageOneKitStone_IronChainNotPulled перестанет ловить эту поломку. При смене plan_StageOneKitStone_IronChainNotPulled проверь это утверждение.");
     }
 
     @Test
@@ -120,7 +134,8 @@ class GraphMutationTests {
 
         assertTrue(
                 GraphWorld.issueOrder(plan).stream().anyMatch(task -> "chop_oak_log".equals(task.id())),
-                "В пустом мире рубка выполнима сразу, руками: " + GraphWorld.issueOrder(plan));
+                "В пустом мире рубка выполнима сразу, руками: " + GraphWorld.issueOrder(plan)
+                        + " Иначе тест issueOrder_EmptyWorld_ChopIsFeasible перестанет ловить эту поломку. При смене issueOrder_EmptyWorld_ChopIsFeasible проверь это утверждение.");
     }
 
     @Tag("mutation")
@@ -139,6 +154,10 @@ class GraphMutationTests {
             stalled(world, local);
             local.forEach(entry -> found.add(first.name() + " + " + second.name() + ": " + entry));
         }
-        assertEquals(List.of(), head(found), "Пары мутаций (выборка 20000): мир встал (" + found.size() + ")");
+        assertEquals(
+                List.of(),
+                head(found),
+                "Пары мутаций (выборка 20000): мир встал (" + found.size() + ")"
+                        + " Иначе тест pairs_Sampled_NoStall перестанет ловить эту поломку. При смене pairs_Sampled_NoStall проверь это утверждение.");
     }
 }

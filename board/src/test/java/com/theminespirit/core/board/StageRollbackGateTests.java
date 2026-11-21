@@ -28,11 +28,17 @@ class StageRollbackGateTests {
         assertTrue(
                 forward.refused(),
                 "Журнал впереди гейта мира: фактический этап 1, поэтому этап 2 вперёд не ставится, а не «уже стоит»; "
-                        + "иначе ручной откат разойдётся с миром. Отказ: " + forward.refusal());
-        assertEquals(1, forward.previous(), "Прежний этап берётся из подтверждённого гейта мира, а не из журнала");
+                        + "иначе ручной откат разойдётся с миром. Отказ: " + forward.refusal()
+                        + " При смене plan_JournalAheadOrBehindConfirmedGate_UsesGateStage проверь это утверждение.");
+        assertEquals(
+                1,
+                forward.previous(),
+                "Прежний этап берётся из подтверждённого гейта мира, а не из журнала"
+                        + " Иначе тест plan_JournalAheadOrBehindConfirmedGate_UsesGateStage перестанет ловить эту поломку. При смене plan_JournalAheadOrBehindConfirmedGate_UsesGateStage проверь это утверждение.");
         assertTrue(
                 forward.refusal().contains("BUILD_HOUSE"),
-                "Отказ называет остаток подтверждённого гейта, а не пустой журнал: " + forward.refusal());
+                "Отказ называет остаток подтверждённого гейта, а не пустой журнал: " + forward.refusal()
+                        + " Иначе тест plan_JournalAheadOrBehindConfirmedGate_UsesGateStage перестанет ловить эту поломку. При смене plan_JournalAheadOrBehindConfirmedGate_UsesGateStage проверь это утверждение.");
 
         BoardLedger behind = firstStageBuilt();
         behind.gate(new StageGate(2, Map.of("BUILD_MINE", 2)));
@@ -42,8 +48,13 @@ class StageRollbackGateTests {
         assertNull(
                 same.refusal(),
                 "Журнал отстаёт от гейта мира: фактический этап уже 2, откат на него — идемпотентный вызов, а не "
-                        + "шаг вперёд. Отказ: " + same.refusal());
-        assertEquals(2, same.previous(), "Текущий этап поселения — подтверждённый миром, а не журнальный");
+                        + "шаг вперёд. Отказ: " + same.refusal()
+                        + " Иначе тест plan_JournalAheadOrBehindConfirmedGate_UsesGateStage перестанет ловить эту поломку. При смене plan_JournalAheadOrBehindConfirmedGate_UsesGateStage проверь это утверждение.");
+        assertEquals(
+                2,
+                same.previous(),
+                "Текущий этап поселения — подтверждённый миром, а не журнальный"
+                        + " Иначе тест plan_JournalAheadOrBehindConfirmedGate_UsesGateStage перестанет ловить эту поломку. При смене plan_JournalAheadOrBehindConfirmedGate_UsesGateStage проверь это утверждение.");
     }
 
     private static StageRules rules() {

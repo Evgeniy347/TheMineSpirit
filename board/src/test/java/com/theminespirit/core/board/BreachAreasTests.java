@@ -19,7 +19,8 @@ class BreachAreasTests {
                 List.of(new BreachAreas.Area("dirt", 0, 64, 0, 1, 64, 1)),
                 areas,
                 "Четыре соседние клетки — одна площадь: одно задание на группу вместо четырёх place_block. "
-                        + "Иначе сотни проломов снова забивают доску");
+                        + "Иначе сотни проломов снова забивают доску"
+                        + " При смене group_AdjacentCells_SingleArea проверь это утверждение.");
     }
 
     @Test
@@ -34,7 +35,8 @@ class BreachAreasTests {
                         new BreachAreas.Area("dirt", 0, 65, 0, 0, 65, 0)),
                 areas,
                 "Площадь fill — один блок на всю область: разные блоки и разные уровни в одну площадь не "
-                        + "смешиваются, иначе заделка поставит не тот блок");
+                        + "смешиваются, иначе заделка поставит не тот блок"
+                        + " При смене group_DifferentBlockOrLevel_NotMerged проверь это утверждение.");
     }
 
     @Test
@@ -48,7 +50,8 @@ class BreachAreasTests {
                         new BreachAreas.Area("dirt", 0, 64, 0, 1, 64, 0),
                         new BreachAreas.Area("dirt", 3, 64, 0, 4, 64, 0)),
                 areas,
-                "Дырка между клетками (клетка не пролом) делит площадь: fill не должен засыпать лишнюю клетку");
+                "Дырка между клетками (клетка не пролом) делит площадь: fill не должен засыпать лишнюю клетку"
+                        + " Иначе тест group_HoleInRow_SplitsArea перестанет ловить эту поломку. При смене group_HoleInRow_SplitsArea проверь это утверждение.");
     }
 
     @Test
@@ -65,15 +68,18 @@ class BreachAreasTests {
         assertEquals(
                 24,
                 areas.stream().mapToInt(BreachAreas.Area::cells).sum(),
-                "Деление площади не теряет и не добавляет клеток");
+                "Деление площади не теряет и не добавляет клеток"
+                        + " Иначе тест group_AreaOverLimit_SplitsWithoutExceedingLimit перестанет ловить эту поломку. При смене group_AreaOverLimit_SplitsWithoutExceedingLimit проверь это утверждение.");
         assertEquals(
                 List.of(8, 8, 8),
                 areas.stream().map(BreachAreas.Area::cells).toList(),
-                "Порция остаётся верхней границей одной площади: fill на 24 клетки не уходит одним заданием");
+                "Порция остаётся верхней границей одной площади: fill на 24 клетки не уходит одним заданием"
+                        + " Иначе тест group_AreaOverLimit_SplitsWithoutExceedingLimit перестанет ловить эту поломку. При смене group_AreaOverLimit_SplitsWithoutExceedingLimit проверь это утверждение.");
         assertEquals(
                 List.of(0, 2, 4),
                 areas.stream().map(area -> area.min().x()).toList(),
-                "Деление идёт по большей стороне и сохраняет порядок: площади не перекрываются");
+                "Деление идёт по большей стороне и сохраняет порядок: площади не перекрываются"
+                        + " Иначе тест group_AreaOverLimit_SplitsWithoutExceedingLimit перестанет ловить эту поломку. При смене group_AreaOverLimit_SplitsWithoutExceedingLimit проверь это утверждение.");
     }
 
     @Test
@@ -82,7 +88,8 @@ class BreachAreasTests {
                 IllegalArgumentException.class,
                 () -> BreachAreas.group(List.of(cell(0, 64, 0, "dirt")), 0),
                 "Предел площади меньше одной клетки — ошибка вызывающего: молчаливая пустая группа оставила бы "
-                        + "пролом без задания");
+                        + "пролом без задания"
+                        + " Иначе тест group_LimitBelowOne_IsReported перестанет ловить эту поломку. При смене group_LimitBelowOne_IsReported проверь это утверждение.");
     }
 
     private static BreachAreas.Cell cell(int x, int y, int z, String block) {

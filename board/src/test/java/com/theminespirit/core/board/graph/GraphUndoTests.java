@@ -15,7 +15,8 @@ class GraphUndoTests {
 
         assertTrue(
                 UNDO.weight(inside, false, 100) > UNDO.weight(far, false, 100),
-                "Столб на улице поселения важнее брошенного моста далеко в походе");
+                "Столб на улице поселения важнее брошенного моста далеко в походе"
+                        + " Иначе тест insideSettlement_ComparedToFarTrip_WeighsMore перестанет ловить эту поломку. При смене insideSettlement_ComparedToFarTrip_WeighsMore проверь это утверждение.");
     }
 
     @Test
@@ -28,16 +29,20 @@ class GraphUndoTests {
 
         assertTrue(
                 UNDO.weight(street, false, 100) > UNDO.weight(plain, false, 100),
-                "Правка на пути/улице мешает ходить — её вес выше");
+                "Правка на пути/улице мешает ходить — её вес выше"
+                        + " Иначе тест streetHeightAndCells_RaiseWeight_DistanceLowers перестанет ловить эту поломку. При смене streetHeightAndCells_RaiseWeight_DistanceLowers проверь это утверждение.");
         assertTrue(
                 UNDO.weight(high, false, 100) > UNDO.weight(plain, false, 100),
-                "Висящая над землёй правка — риск падения, вес выше");
+                "Висящая над землёй правка — риск падения, вес выше"
+                        + " Иначе тест streetHeightAndCells_RaiseWeight_DistanceLowers перестанет ловить эту поломку. При смене streetHeightAndCells_RaiseWeight_DistanceLowers проверь это утверждение.");
         assertTrue(
                 UNDO.weight(many, false, 100) > UNDO.weight(plain, false, 100),
-                "Много клеток убирать дольше — вес выше");
+                "Много клеток убирать дольше — вес выше"
+                        + " Иначе тест streetHeightAndCells_RaiseWeight_DistanceLowers перестанет ловить эту поломку. При смене streetHeightAndCells_RaiseWeight_DistanceLowers проверь это утверждение.");
         assertTrue(
                 UNDO.weight(near, false, 100) > UNDO.weight(plain, false, 100),
-                "Далеко в походе уборка дешевле: дорога не окупается");
+                "Далеко в походе уборка дешевле: дорога не окупается"
+                        + " Иначе тест streetHeightAndCells_RaiseWeight_DistanceLowers перестанет ловить эту поломку. При смене streetHeightAndCells_RaiseWeight_DistanceLowers проверь это утверждение.");
     }
 
     @Test
@@ -46,7 +51,8 @@ class GraphUndoTests {
 
         assertTrue(
                 UNDO.weight(lease, true, 100) < UNDO.weight(lease, false, 100),
-                "Владелец аренды рядом и знает свои клетки: его откат дешевле");
+                "Владелец аренды рядом и знает свои клетки: его откат дешевле"
+                        + " Иначе тест ownerAlive_ComparedToUnknownOwner_MakesRollbackCheaper перестанет ловить эту поломку. При смене ownerAlive_ComparedToUnknownOwner_MakesRollbackCheaper проверь это утверждение.");
     }
 
     @Test
@@ -56,8 +62,12 @@ class GraphUndoTests {
         assertEquals(
                 GraphUndo.DEFAULTS.base(),
                 graph.costs().undo().base(),
-                "Базовый вес отката берётся из graph.json → undo, а не из кода");
-        assertTrue(graph.costs().undo().inside() > 0, "Поправка поселения задана данными");
+                "Базовый вес отката берётся из graph.json → undo, а не из кода"
+                        + " Иначе тест weights_LoadedFromGraphJson_MatchDefaults перестанет ловить эту поломку. При смене weights_LoadedFromGraphJson_MatchDefaults проверь это утверждение.");
+        assertTrue(
+                graph.costs().undo().inside() > 0,
+                "Поправка поселения задана данными"
+                        + " Иначе тест weights_LoadedFromGraphJson_MatchDefaults перестанет ловить эту поломку. При смене weights_LoadedFromGraphJson_MatchDefaults проверь это утверждение.");
     }
 
     @Test
@@ -70,7 +80,8 @@ class GraphUndoTests {
         assertTrue(
                 UNDO.weight(inside, false, 100) > UNDO.weight(pocket, false, 100),
                 "Сломанное под поселением возвращают раньше кармана вне зоны: " + "под поселением "
-                        + UNDO.weight(inside, false, 100) + " против кармана " + UNDO.weight(pocket, false, 100));
+                        + UNDO.weight(inside, false, 100) + " против кармана " + UNDO.weight(pocket, false, 100)
+                        + " Иначе тест deepPocketOutsideSettlement_ComparedToDamageInside_WeighsLess перестанет ловить эту поломку. При смене deepPocketOutsideSettlement_ComparedToDamageInside_WeighsLess проверь это утверждение.");
     }
 
     private static GraphSiteFacts.Lease lease(

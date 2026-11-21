@@ -115,10 +115,12 @@ class GraphDispatchChainTests {
                 result.post().stream()
                         .anyMatch(ticket ->
                                 ticket.id().contains("_axe") && ticket.id().contains("craft")),
-                "Топоры уже лежат в сундуке — новый топор не крафтится: " + result.post());
+                "Топоры уже лежат в сундуке — новый топор не крафтится: " + result.post()
+                        + " Иначе тест case01_AxesInChest_ChopGivenToOneSpiritOthersGetOtherWork перестанет ловить эту поломку. При смене case01_AxesInChest_ChopGivenToOneSpiritOthersGetOtherWork проверь это утверждение.");
         assertTrue(
                 result.post().stream().anyMatch(ticket -> ticket.id().contains("gear_equip_best")),
-                "Топор берут из сундука событием снаряжения: " + result.post());
+                "Топор берут из сундука событием снаряжения: " + result.post()
+                        + " Иначе тест case01_AxesInChest_ChopGivenToOneSpiritOthersGetOtherWork перестанет ловить эту поломку. При смене case01_AxesInChest_ChopGivenToOneSpiritOthersGetOtherWork проверь это утверждение.");
 
         List<GraphTickets.Ticket> works = new ArrayList<>(only(result, "chop_oak_log"));
         works.addAll(only(result, "mine_cobble"));
@@ -128,14 +130,17 @@ class GraphDispatchChainTests {
         assertEquals(
                 1,
                 chopPairs(pairs).size(),
-                "Одна заявка на рубку — её берёт ровно один дух, а не все пятеро: " + pairs);
+                "Одна заявка на рубку — её берёт ровно один дух, а не все пятеро: " + pairs
+                        + " Иначе тест case01_AxesInChest_ChopGivenToOneSpiritOthersGetOtherWork перестанет ловить эту поломку. При смене case01_AxesInChest_ChopGivenToOneSpiritOthersGetOtherWork проверь это утверждение.");
         assertTrue(
                 pairs.stream().anyMatch(pair -> !pair.ticket().contains("chop_")),
-                "Остальные духи получают другую работу, а не дублируют рубку: " + pairs);
+                "Остальные духи получают другую работу, а не дублируют рубку: " + pairs
+                        + " Иначе тест case01_AxesInChest_ChopGivenToOneSpiritOthersGetOtherWork перестанет ловить эту поломку. При смене case01_AxesInChest_ChopGivenToOneSpiritOthersGetOtherWork проверь это утверждение.");
         assertEquals(
                 pairs.size(),
                 pairs.stream().map(Pair::spirit).distinct().count(),
-                "Один дух за раунд берёт не больше одной работы: " + pairs);
+                "Один дух за раунд берёт не больше одной работы: " + pairs
+                        + " Иначе тест case01_AxesInChest_ChopGivenToOneSpiritOthersGetOtherWork перестанет ловить эту поломку. При смене case01_AxesInChest_ChopGivenToOneSpiritOthersGetOtherWork проверь это утверждение.");
     }
 
     @Test
@@ -146,8 +151,12 @@ class GraphDispatchChainTests {
 
         assertTrue(
                 result.post().stream().noneMatch(ticket -> "chop_oak_log".equals(ticket.node())),
-                "Брёвен достаточно — рубка не ставится никому: " + result.post());
-        assertTrue(chopPairs(dispatch(world, result.post())).isEmpty(), "Закрытая нужда не выдаётся ни одному духу");
+                "Брёвен достаточно — рубка не ставится никому: " + result.post()
+                        + " Иначе тест case02_NeedClosed_ChopRemovedFromAll перестанет ловить эту поломку. При смене case02_NeedClosed_ChopRemovedFromAll проверь это утверждение.");
+        assertTrue(
+                chopPairs(dispatch(world, result.post())).isEmpty(),
+                "Закрытая нужда не выдаётся ни одному духу"
+                        + " Иначе тест case02_NeedClosed_ChopRemovedFromAll перестанет ловить эту поломку. При смене case02_NeedClosed_ChopRemovedFromAll проверь это утверждение.");
     }
 
     @Test
@@ -162,11 +171,13 @@ class GraphDispatchChainTests {
                 1,
                 runTicks(board, world, List.of()),
                 "Без топора нигде рубка всё равно выдаётся: дух рубит дерево руками, а не ждёт инструмент "
-                        + "(владелец 05.11: инструмент — предпочтение, не запрет)");
+                        + "(владелец 05.11: инструмент — предпочтение, не запрет)"
+                        + " Иначе тест case03_NoAxeAnywhere_ChopGivenToBareHandsAndKept перестанет ловить эту поломку. При смене case03_NoAxeAnywhere_ChopGivenToBareHandsAndKept проверь это утверждение.");
         assertEquals(
                 BoardStatus.ASSIGNED,
                 board.statusOf("graph:chop_oak_log").orElseThrow(),
-                "Выданная рубка остаётся за духом: карусели «выдать → вернуть» без топора нет");
+                "Выданная рубка остаётся за духом: карусели «выдать → вернуть» без топора нет"
+                        + " Иначе тест case03_NoAxeAnywhere_ChopGivenToBareHandsAndKept перестанет ловить эту поломку. При смене case03_NoAxeAnywhere_ChopGivenToBareHandsAndKept проверь это утверждение.");
     }
 
     @Test
@@ -179,7 +190,8 @@ class GraphDispatchChainTests {
         assertEquals(
                 1,
                 runTicks(board, world, List.of("minecraft:stone_axe")),
-                "Топор в сундуке: рубка выдана один раз и держится, а не возвращается каждый тик");
+                "Топор в сундуке: рубка выдана один раз и держится, а не возвращается каждый тик"
+                        + " Иначе тест case03b_AxeInChest_ChopAssignedOnceAndKept перестанет ловить эту поломку. При смене case03b_AxeInChest_ChopAssignedOnceAndKept проверь это утверждение.");
     }
 
     @Test
@@ -206,24 +218,44 @@ class GraphDispatchChainTests {
         board.claim(second.id(), id("spirit-2"), 0);
         board.complete(second.id());
 
-        assertTrue(board.reopen(first.id()), "Закрытая работа открывается заново по новой нехватке");
-        assertTrue(board.reopen(second.id()), "Вторая часть открывается вместе с первой");
-        assertEquals(BoardOutcome.ACCEPTED, board.submit(first), "Новая нехватка ставит ту же заявку, а не дубль");
-        assertEquals(BoardOutcome.ACCEPTED, board.submit(second), "Вторая часть тоже возвращается в очередь");
+        assertTrue(
+                board.reopen(first.id()),
+                "Закрытая работа открывается заново по новой нехватке"
+                        + " Иначе тест case04_ReopenedDone_DoesNotSpawnTicketForEverySpirit перестанет ловить эту поломку. При смене case04_ReopenedDone_DoesNotSpawnTicketForEverySpirit проверь это утверждение.");
+        assertTrue(
+                board.reopen(second.id()),
+                "Вторая часть открывается вместе с первой"
+                        + " Иначе тест case04_ReopenedDone_DoesNotSpawnTicketForEverySpirit перестанет ловить эту поломку. При смене case04_ReopenedDone_DoesNotSpawnTicketForEverySpirit проверь это утверждение.");
+        assertEquals(
+                BoardOutcome.ACCEPTED,
+                board.submit(first),
+                "Новая нехватка ставит ту же заявку, а не дубль"
+                        + " Иначе тест case04_ReopenedDone_DoesNotSpawnTicketForEverySpirit перестанет ловить эту поломку. При смене case04_ReopenedDone_DoesNotSpawnTicketForEverySpirit проверь это утверждение.");
+        assertEquals(
+                BoardOutcome.ACCEPTED,
+                board.submit(second),
+                "Вторая часть тоже возвращается в очередь"
+                        + " Иначе тест case04_ReopenedDone_DoesNotSpawnTicketForEverySpirit перестанет ловить эту поломку. При смене case04_ReopenedDone_DoesNotSpawnTicketForEverySpirit проверь это утверждение.");
 
         List<Pair> pairs = dispatch(board, world);
 
-        assertEquals(2, chopPairs(pairs).size(), "Переоткрытие даёт две части, а не билет каждому из пяти: " + pairs);
+        assertEquals(
+                2,
+                chopPairs(pairs).size(),
+                "Переоткрытие даёт две части, а не билет каждому из пяти: " + pairs
+                        + " Иначе тест case04_ReopenedDone_DoesNotSpawnTicketForEverySpirit перестанет ловить эту поломку. При смене case04_ReopenedDone_DoesNotSpawnTicketForEverySpirit проверь это утверждение.");
         assertEquals(
                 pairs.size(),
                 pairs.stream().map(Pair::spirit).distinct().count(),
-                "Один дух не берёт обе части одновременно: " + pairs);
+                "Один дух не берёт обе части одновременно: " + pairs
+                        + " Иначе тест case04_ReopenedDone_DoesNotSpawnTicketForEverySpirit перестанет ловить эту поломку. При смене case04_ReopenedDone_DoesNotSpawnTicketForEverySpirit проверь это утверждение.");
         assertEquals(
                 2,
                 board.all().stream()
                         .filter(ticket -> ticket.id().startsWith("graph:chop_oak_log"))
                         .count(),
-                "На доске живут только две части рубки, без копий на остальных духов: " + board.all());
+                "На доске живут только две части рубки, без копий на остальных духов: " + board.all()
+                        + " Иначе тест case04_ReopenedDone_DoesNotSpawnTicketForEverySpirit перестанет ловить эту поломку. При смене case04_ReopenedDone_DoesNotSpawnTicketForEverySpirit проверь это утверждение.");
     }
 
     @Test
@@ -243,14 +275,24 @@ class GraphDispatchChainTests {
                 .forEach(board::submit);
         List<Pair> pairs = dispatch(board, world);
 
-        assertEquals(1, chopPairs(pairs).size(), "Один топор из сундука закрывает рубку одного духа: " + pairs);
+        assertEquals(
+                1,
+                chopPairs(pairs).size(),
+                "Один топор из сундука закрывает рубку одного духа: " + pairs
+                        + " Иначе тест case05_OneAxeForTwoSpirits_TakeFromChestAndCraftShortfall перестанет ловить эту поломку. При смене case05_OneAxeForTwoSpirits_TakeFromChestAndCraftShortfall проверь это утверждение.");
         assertEquals(
                 1,
                 craftShortfall,
-                "Недостаёт ровно один топор на двоих — крафтится один, а не по топору на каждого: " + result.post());
+                "Недостаёт ровно один топор на двоих — крафтится один, а не по топору на каждого: " + result.post()
+                        + " Иначе тест case05_OneAxeForTwoSpirits_TakeFromChestAndCraftShortfall перестанет ловить эту поломку. При смене case05_OneAxeForTwoSpirits_TakeFromChestAndCraftShortfall проверь это утверждение.");
         assertTrue(
                 pairs.stream().anyMatch(pair -> pair.ticket().contains("_axe")),
-                "Недостающий топор крафтит второй дух, а не простаивает: " + pairs);
-        assertEquals(2, pairs.stream().map(Pair::spirit).distinct().count(), "Работу делят оба духа: " + pairs);
+                "Недостающий топор крафтит второй дух, а не простаивает: " + pairs
+                        + " Иначе тест case05_OneAxeForTwoSpirits_TakeFromChestAndCraftShortfall перестанет ловить эту поломку. При смене case05_OneAxeForTwoSpirits_TakeFromChestAndCraftShortfall проверь это утверждение.");
+        assertEquals(
+                2,
+                pairs.stream().map(Pair::spirit).distinct().count(),
+                "Работу делят оба духа: " + pairs
+                        + " Иначе тест case05_OneAxeForTwoSpirits_TakeFromChestAndCraftShortfall перестанет ловить эту поломку. При смене case05_OneAxeForTwoSpirits_TakeFromChestAndCraftShortfall проверь это утверждение.");
     }
 }

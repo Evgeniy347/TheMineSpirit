@@ -34,7 +34,11 @@ class WarehouseChainScenarioTests {
     @Test
     void stageTwoStage_StrategistOrder_MakesWarehouseTask() {
         Board board = stageOneDone();
-        assertEquals(2, SettlementStage.of(board.ledger()), "Этап 1 закрыт — поселение переходит на этап 2");
+        assertEquals(
+                2,
+                SettlementStage.of(board.ledger()),
+                "Этап 1 закрыт — поселение переходит на этап 2"
+                        + " Иначе тест stageTwoStage_StrategistOrder_MakesWarehouseTask перестанет ловить эту поломку. При смене stageTwoStage_StrategistOrder_MakesWarehouseTask проверь это утверждение.");
 
         GraphWorld world = GraphWorld.settled();
         world.stage = 2;
@@ -46,10 +50,12 @@ class WarehouseChainScenarioTests {
 
         assertTrue(
                 plan.task("building:warehouse").isPresent(),
-                "После решения стратега граф ставит задание на склад: " + plan.tasks());
+                "После решения стратега граф ставит задание на склад: " + plan.tasks()
+                        + " Иначе тест stageTwoStage_StrategistOrder_MakesWarehouseTask перестанет ловить эту поломку. При смене stageTwoStage_StrategistOrder_MakesWarehouseTask проверь это утверждение.");
         assertFalse(
                 plan.task("building:warehouse_2").isPresent(),
-                "Второй уровень не ставится одновременно с первым: " + plan.tasks());
+                "Второй уровень не ставится одновременно с первым: " + plan.tasks()
+                        + " Иначе тест stageTwoStage_StrategistOrder_MakesWarehouseTask перестанет ловить эту поломку. При смене stageTwoStage_StrategistOrder_MakesWarehouseTask проверь это утверждение.");
     }
 
     @Test
@@ -62,16 +68,21 @@ class WarehouseChainScenarioTests {
 
         assertTrue(
                 plan.task("building:warehouse").isEmpty(),
-                "Без решения стратега граф не строит склад сам: " + plan.tasks());
+                "Без решения стратега граф не строит склад сам: " + plan.tasks()
+                        + " Иначе тест noStrategistOrder_WarehouseMissing_NoWarehouseTask перестанет ловить эту поломку. При смене noStrategistOrder_WarehouseMissing_NoWarehouseTask проверь это утверждение.");
         assertTrue(
                 plan.notices().stream().anyMatch(notice -> "warehouse".equals(notice.building())),
-                "Склад без решения остаётся заявкой стратегу: " + plan.notices());
+                "Склад без решения остаётся заявкой стратегу: " + plan.notices()
+                        + " Иначе тест noStrategistOrder_WarehouseMissing_NoWarehouseTask перестанет ловить эту поломку. При смене noStrategistOrder_WarehouseMissing_NoWarehouseTask проверь это утверждение.");
     }
 
     @Test
     void warehouseTask_StrategistOrder_HasMaterialsAndSite() {
         Map<String, Integer> materials = UpgradePlan.required(null, WarehouseRules.scheme(1));
-        assertFalse(materials.isEmpty(), "Склад уровня 1 называет материалы по схеме");
+        assertFalse(
+                materials.isEmpty(),
+                "Склад уровня 1 называет материалы по схеме"
+                        + " Иначе тест warehouseTask_StrategistOrder_HasMaterialsAndSite перестанет ловить эту поломку. При смене warehouseTask_StrategistOrder_HasMaterialsAndSite проверь это утверждение.");
 
         TaskNode plan = TicketPlans.plan(
                 BoardCase.BUILD_WAREHOUSE, 1, TicketTarget.at(SITE).withScheme(WarehouseRules.scheme(1)));
@@ -80,8 +91,16 @@ class WarehouseChainScenarioTests {
                 .findFirst()
                 .orElseThrow();
 
-        assertEquals(WarehouseRules.scheme(1), build.params().get("file"), "Строится схема склада первого уровня");
-        assertEquals(SITE.x(), build.params().get("x"), "Место строительства приходит из решения стратега");
+        assertEquals(
+                WarehouseRules.scheme(1),
+                build.params().get("file"),
+                "Строится схема склада первого уровня"
+                        + " Иначе тест warehouseTask_StrategistOrder_HasMaterialsAndSite перестанет ловить эту поломку. При смене warehouseTask_StrategistOrder_HasMaterialsAndSite проверь это утверждение.");
+        assertEquals(
+                SITE.x(),
+                build.params().get("x"),
+                "Место строительства приходит из решения стратега"
+                        + " Иначе тест warehouseTask_StrategistOrder_HasMaterialsAndSite перестанет ловить эту поломку. При смене warehouseTask_StrategistOrder_HasMaterialsAndSite проверь это утверждение.");
     }
 
     @Test
@@ -94,8 +113,12 @@ class WarehouseChainScenarioTests {
 
         assertTrue(
                 plan.task("building:warehouse_2").isPresent(),
-                "Первый уровень стоит — граф берёт второй: " + plan.tasks());
-        assertTrue(plan.task("building:warehouse").isEmpty(), "Первый уровень заново не строится");
+                "Первый уровень стоит — граф берёт второй: " + plan.tasks()
+                        + " Иначе тест stageTwoUpgrade_FirstLevelBuilt_SecondTaskAppears перестанет ловить эту поломку. При смене stageTwoUpgrade_FirstLevelBuilt_SecondTaskAppears проверь это утверждение.");
+        assertTrue(
+                plan.task("building:warehouse").isEmpty(),
+                "Первый уровень заново не строится"
+                        + " Иначе тест stageTwoUpgrade_FirstLevelBuilt_SecondTaskAppears перестанет ловить эту поломку. При смене stageTwoUpgrade_FirstLevelBuilt_SecondTaskAppears проверь это утверждение.");
     }
 
     @Test
@@ -113,7 +136,10 @@ class WarehouseChainScenarioTests {
                 ChestClearance.Decision decision = ChestClearance.decide(
                         chest, false, List.of(new ContainerSnapshot(WAREHOUSE_CELL, warehouse)), List.of(), 0);
                 if (decision.action() == ChestClearance.Action.DRAIN) {
-                    assertFalse(ChestClearance.empty(chest), "Вынос бывает только из непустого сундука");
+                    assertFalse(
+                            ChestClearance.empty(chest),
+                            "Вынос бывает только из непустого сундука"
+                                    + " Иначе тест extraChests_ItemsMovedToWarehouse_CountsPreserved перестанет ловить эту поломку. При смене extraChests_ItemsMovedToWarehouse_CountsPreserved проверь это утверждение.");
                     for (ChestClearance.Move move : decision.moves()) {
                         store(warehouse, move.item(), move.count());
                     }
@@ -123,8 +149,12 @@ class WarehouseChainScenarioTests {
                 assertEquals(
                         ChestClearance.Action.REMOVE,
                         decision.action(),
-                        "После выноса сундук пуст и только тогда ломается");
-                assertTrue(ChestClearance.empty(chest), "Ломать непустой сундук запрещено");
+                        "После выноса сундук пуст и только тогда ломается"
+                                + " При смене extraChests_ItemsMovedToWarehouse_CountsPreserved проверь это утверждение.");
+                assertTrue(
+                        ChestClearance.empty(chest),
+                        "Ломать непустой сундук запрещено"
+                                + " Иначе тест extraChests_ItemsMovedToWarehouse_CountsPreserved перестанет ловить эту поломку. При смене extraChests_ItemsMovedToWarehouse_CountsPreserved проверь это утверждение.");
                 break;
             }
         }
@@ -132,7 +162,8 @@ class WarehouseChainScenarioTests {
         assertEquals(
                 before,
                 contents(List.of(new ContainerSnapshot(WAREHOUSE_CELL, warehouse))),
-                "Число предметов по типам в складе совпадает с исходным: вещи не потеряны");
+                "Число предметов по типам в складе совпадает с исходным: вещи не потеряны"
+                        + " Иначе тест extraChests_ItemsMovedToWarehouse_CountsPreserved перестанет ловить эту поломку. При смене extraChests_ItemsMovedToWarehouse_CountsPreserved проверь это утверждение.");
     }
 
     @Test
@@ -140,16 +171,28 @@ class WarehouseChainScenarioTests {
         ContainerSnapshot source = chest(new Stack("dirt", 0, 5, 64));
         ContainerSnapshot full = full();
         ChestClearance.Decision wait = ChestClearance.decide(source, false, List.of(full), List.of(), 0);
-        assertEquals(ChestClearance.Action.WAIT, wait.action(), "Полный склад без досок — снос ждёт");
+        assertEquals(
+                ChestClearance.Action.WAIT,
+                wait.action(),
+                "Полный склад без досок — снос ждёт"
+                        + " Иначе тест fullWarehouse_Waits_ThenAddsChestAndDrains перестанет ловить эту поломку. При смене fullWarehouse_Waits_ThenAddsChestAndDrains проверь это утверждение.");
 
         ChestClearance.Decision add = ChestClearance.decide(source, false, List.of(full), List.of(WAREHOUSE_CELL), 8);
-        assertEquals(ChestClearance.Action.ADD_CHEST, add.action(), "Есть доски и клетка — сначала ставим сундук");
+        assertEquals(
+                ChestClearance.Action.ADD_CHEST,
+                add.action(),
+                "Есть доски и клетка — сначала ставим сундук"
+                        + " Иначе тест fullWarehouse_Waits_ThenAddsChestAndDrains перестанет ловить эту поломку. При смене fullWarehouse_Waits_ThenAddsChestAndDrains проверь это утверждение.");
 
         List<Stack> warehouse = slots();
         warehouse.add(new Stack("cobblestone", 0, 64, 64));
         ContainerSnapshot empty = new ContainerSnapshot(WAREHOUSE_CELL, slots());
         ChestClearance.Decision drain = ChestClearance.decide(source, false, List.of(empty), List.of(), 0);
-        assertEquals(ChestClearance.Action.DRAIN, drain.action(), "После нового сундука место есть — выносим");
+        assertEquals(
+                ChestClearance.Action.DRAIN,
+                drain.action(),
+                "После нового сундука место есть — выносим"
+                        + " Иначе тест fullWarehouse_Waits_ThenAddsChestAndDrains перестанет ловить эту поломку. При смене fullWarehouse_Waits_ThenAddsChestAndDrains проверь это утверждение.");
     }
 
     private static Board stageOneDone() {
@@ -218,7 +261,11 @@ class WarehouseChainScenarioTests {
                 left -= part;
             }
         }
-        assertEquals(0, left, "Склад обязан вместить все вынесенные вещи");
+        assertEquals(
+                0,
+                left,
+                "Склад обязан вместить все вынесенные вещи"
+                        + " Иначе тест store перестанет ловить эту поломку. При смене store проверь это утверждение.");
     }
 
     private static Map<String, Integer> contents(List<ContainerSnapshot> chests) {

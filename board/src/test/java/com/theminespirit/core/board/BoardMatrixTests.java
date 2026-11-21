@@ -44,6 +44,7 @@ class BoardMatrixTests {
         assertEquals(
                 List.of(),
                 diverged.subList(0, Math.min(6, diverged.size())),
-                "Доска расходится со спецификацией выдачи в " + diverged.size() + " ситуациях кейса " + boardCase);
+                "Доска расходится со спецификацией выдачи в " + diverged.size() + " ситуациях кейса " + boardCase
+                        + " Иначе тест matrix_EverySituation_MatchesSpec перестанет ловить эту поломку. При смене matrix_EverySituation_MatchesSpec проверь это утверждение.");
     }
 }

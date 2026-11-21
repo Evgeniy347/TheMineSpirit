@@ -19,7 +19,11 @@ class SchematicMaterialsTests {
             throw new IllegalStateException("файл неизвестной схемы не должен читаться");
         });
 
-        assertEquals(Map.of(), need, "неизвестная схема (ремонт без файла) не требует материалов и не читает файл");
+        assertEquals(
+                Map.of(),
+                need,
+                "неизвестная схема (ремонт без файла) не требует материалов и не читает файл"
+                        + " Иначе тест count_UnknownSchematic_NeedsNothingWithoutLoadingFile перестанет ловить эту поломку. При смене count_UnknownSchematic_NeedsNothingWithoutLoadingFile проверь это утверждение.");
     }
 
     @Test
@@ -27,7 +31,8 @@ class SchematicMaterialsTests {
         assertEquals(
                 Map.of(),
                 SchematicMaterials.count(Optional.of(BuildingType.UNDERGROUND), () -> Map.of("stone", 5)),
-                "подземная схема строится из своей проходки");
+                "подземная схема строится из своей проходки"
+                        + " Иначе тест count_UndergroundSchematic_NeedsNothing перестанет ловить эту поломку. При смене count_UndergroundSchematic_NeedsNothing проверь это утверждение.");
     }
 
     @Test
@@ -35,7 +40,11 @@ class SchematicMaterialsTests {
         Map<String, Integer> need =
                 SchematicMaterials.count(Optional.of(BuildingType.HOUSING), () -> Map.of("oak_planks", 12));
 
-        assertEquals(Map.of("oak_planks", 12), need, "наземная схема требует свои блоки");
+        assertEquals(
+                Map.of("oak_planks", 12),
+                need,
+                "наземная схема требует свои блоки"
+                        + " Иначе тест count_SurfaceSchematic_CountsBlocks перестанет ловить эту поломку. При смене count_SurfaceSchematic_CountsBlocks проверь это утверждение.");
     }
 
     @Test
@@ -50,7 +59,8 @@ class SchematicMaterialsTests {
                 preset.materials(),
                 need,
                 "Материалы известного пресета берутся готовыми: пересчёт блоков схемы на каждый провал "
-                        + "ремонта — заметная работа на больших схемах, а материалы уже лежат в пресете");
+                        + "ремонта — заметная работа на больших схемах, а материалы уже лежат в пресете"
+                        + " Иначе тест of_KnownPreset_ReusesMaterialsWithoutCountingBlocksAgain перестанет ловить эту поломку. При смене of_KnownPreset_ReusesMaterialsWithoutCountingBlocksAgain проверь это утверждение.");
     }
 
     @Test
@@ -62,7 +72,8 @@ class SchematicMaterialsTests {
                 SchematicMaterials.of(Optional.of(preset), () -> {
                     throw new IllegalStateException("подземная схема не читает блоки");
                 }),
-                "Подземная схема строится своей проходкой: её материалы не запрашиваются, даже если пресет их помнит");
+                "Подземная схема строится своей проходкой: её материалы не запрашиваются, даже если пресет их помнит"
+                        + " Иначе тест of_UndergroundPreset_NeedsNothingWithoutCounting перестанет ловить эту поломку. При смене of_UndergroundPreset_NeedsNothingWithoutCounting проверь это утверждение.");
     }
 
     @Test
@@ -70,13 +81,22 @@ class SchematicMaterialsTests {
         assertEquals(
                 Map.of("oak_fence", 32),
                 SchematicMaterials.of(Optional.empty(), () -> Map.of("oak_fence", 32)),
-                "Файл без пресета считается из схемы: иначе ремонт не узнает, что докупить");
+                "Файл без пресета считается из схемы: иначе ремонт не узнает, что докупить"
+                        + " При смене of_UnknownFile_CountsBlocksOnce проверь это утверждение.");
     }
 
     @Test
     void known_RepairWithoutSchematicFile_IsUnknown() {
-        assertEquals(false, SchematicMaterials.known(Optional.empty()), "ремонт без файла схемы не сверяется с миром");
-        assertEquals(true, SchematicMaterials.known(Optional.of(BuildingType.HOUSING)), "схема каталога сверяется");
+        assertEquals(
+                false,
+                SchematicMaterials.known(Optional.empty()),
+                "ремонт без файла схемы не сверяется с миром"
+                        + " Иначе тест known_RepairWithoutSchematicFile_IsUnknown перестанет ловить эту поломку. При смене known_RepairWithoutSchematicFile_IsUnknown проверь это утверждение.");
+        assertEquals(
+                true,
+                SchematicMaterials.known(Optional.of(BuildingType.HOUSING)),
+                "схема каталога сверяется"
+                        + " Иначе тест known_RepairWithoutSchematicFile_IsUnknown перестанет ловить эту поломку. При смене known_RepairWithoutSchematicFile_IsUnknown проверь это утверждение.");
     }
 
     private static Preset preset(BuildingType type, Map<String, Integer> materials) {

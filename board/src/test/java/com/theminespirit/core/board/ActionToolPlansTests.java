@@ -28,16 +28,27 @@ class ActionToolPlansTests {
         assertEquals(
                 List.of("withdraw", "withdraw"),
                 calls.stream().map(ScriptCall::script).toList(),
-                "Инструмент только берут из сундуков: крафт ставит граф отдельным узлом, а не местный acquire");
-        assertEquals("auto", calls.get(0).params().get("container"), "Сначала ближний сундук");
-        assertEquals("warehouse", calls.get(1).params().get("container"), "Затем склад поселения");
+                "Инструмент только берут из сундуков: крафт ставит граф отдельным узлом, а не местный acquire"
+                        + " Иначе тест assertToolSteps перестанет ловить эту поломку. При смене assertToolSteps проверь это утверждение.");
+        assertEquals(
+                "auto",
+                calls.get(0).params().get("container"),
+                "Сначала ближний сундук"
+                        + " Иначе тест assertToolSteps перестанет ловить эту поломку. При смене assertToolSteps проверь это утверждение.");
+        assertEquals(
+                "warehouse",
+                calls.get(1).params().get("container"),
+                "Затем склад поселения"
+                        + " Иначе тест assertToolSteps перестанет ловить эту поломку. При смене assertToolSteps проверь это утверждение.");
         assertTrue(
                 calls.stream().allMatch(call -> kind.equals(call.params().get("item"))),
-                "Ищут инструмент нужного вида целиком, а не выбранный заранее материал: " + calls);
+                "Ищут инструмент нужного вида целиком, а не выбранный заранее материал: " + calls
+                        + " Иначе тест assertToolSteps перестанет ловить эту поломку. При смене assertToolSteps проверь это утверждение.");
         assertTrue(
                 calls.stream()
                         .allMatch(
                                 call -> Integer.valueOf(1).equals(call.params().get("count"))),
-                "Нужен один инструмент");
+                "Нужен один инструмент"
+                        + " Иначе тест assertToolSteps перестанет ловить эту поломку. При смене assertToolSteps проверь это утверждение.");
     }
 }

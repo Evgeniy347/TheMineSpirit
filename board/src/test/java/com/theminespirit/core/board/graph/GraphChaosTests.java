@@ -41,7 +41,11 @@ class GraphChaosTests {
                 found.add(GraphChaos.names(combo) + ": ни одного выполнимого");
             }
         }
-        assertEquals(List.of(), head(found), "Тройки мутаций: мир встал (" + found.size() + " из " + COMBOS + ")");
+        assertEquals(
+                List.of(),
+                head(found),
+                "Тройки мутаций: мир встал (" + found.size() + " из " + COMBOS + ")"
+                        + " Иначе тест triples_Sampled_NoStallNoGap перестанет ловить эту поломку. При смене triples_Sampled_NoStallNoGap проверь это утверждение.");
     }
 
     @Test
@@ -58,7 +62,11 @@ class GraphChaosTests {
                 stuck.add("сид " + (baseSeed + seed) + " " + GraphChaos.names(combo) + ": " + outcome.stuck());
             }
         }
-        assertEquals(List.of(), head(stuck), "Наборы из 3–6 мутаций: поселение застряло (" + stuck.size() + ")");
+        assertEquals(
+                List.of(),
+                head(stuck),
+                "Наборы из 3–6 мутаций: поселение застряло (" + stuck.size() + ")"
+                        + " Иначе тест combos_ThreeToSix_SimulationFinishes перестанет ловить эту поломку. При смене combos_ThreeToSix_SimulationFinishes проверь это утверждение.");
     }
 
     @Test
@@ -75,7 +83,10 @@ class GraphChaosTests {
             }
         }
         assertEquals(
-                List.of(), head(stuck), "Хаос (события, износ, рост духов): поселение застряло (" + stuck.size() + ")");
+                List.of(),
+                head(stuck),
+                "Хаос (события, износ, рост духов): поселение застряло (" + stuck.size() + ")"
+                        + " Иначе тест chaos_EventsWearGrowth_SimulationFinishes перестанет ловить эту поломку. При смене chaos_EventsWearGrowth_SimulationFinishes проверь это утверждение.");
     }
 
     @Test
@@ -95,7 +106,11 @@ class GraphChaosTests {
                 }
             }
         }
-        assertEquals(List.of(), head(stuck), "Веса ±30 %: поселение застряло (" + stuck.size() + ")");
+        assertEquals(
+                List.of(),
+                head(stuck),
+                "Веса ±30 %: поселение застряло (" + stuck.size() + ")"
+                        + " Иначе тест weights_Perturbed30_SimulationFinishes перестанет ловить эту поломку. При смене weights_Perturbed30_SimulationFinishes проверь это утверждение.");
     }
 
     @Test
@@ -119,7 +134,10 @@ class GraphChaosTests {
         }
         Files.createDirectories(METRICS.getParent());
         Files.writeString(METRICS, report, StandardCharsets.UTF_8);
-        assertTrue(Files.exists(METRICS), "Метрики пути записаны в " + METRICS);
+        assertTrue(
+                Files.exists(METRICS),
+                "Метрики пути записаны в " + METRICS
+                        + " Иначе тест metrics_Baselines_WriteReport перестанет ловить эту поломку. При смене metrics_Baselines_WriteReport проверь это утверждение.");
     }
 
     private static void row(StringBuilder report, String name, GraphSimulation.Outcome outcome) {

@@ -34,12 +34,14 @@ class PathAuditTests {
                 0,
                 gap.placed().getOrDefault("dirt", 0),
                 "Тропа, висящая блоком над улицей, — не покрытие: аудит обязан требовать тропу на уровне земли. "
-                        + "Поставлено: " + gap.placed() + ", не хватает: " + gap.missingCells());
+                        + "Поставлено: " + gap.placed() + ", не хватает: " + gap.missingCells()
+                        + " Иначе тест streets_FloatingPathAboveLevel_NotCountedAsPlaced перестанет ловить эту поломку. При смене streets_FloatingPathAboveLevel_NotCountedAsPlaced проверь это утверждение.");
         assertEquals(
                 "minecraft:" + DIRT_PATH,
                 gap.missingCells().get(PATH),
                 "Клетка улицы на уровне земли пуста, а тропа висит над ней: аудит обязан назвать недостающую "
-                        + "клетку " + PATH + ". Не хватает: " + gap.missingCells());
+                        + "клетку " + PATH + ". Не хватает: " + gap.missingCells()
+                        + " Иначе тест streets_FloatingPathAboveLevel_NotCountedAsPlaced перестанет ловить эту поломку. При смене streets_FloatingPathAboveLevel_NotCountedAsPlaced проверь это утверждение.");
     }
 
     @Test
@@ -52,7 +54,8 @@ class PathAuditTests {
         assertEquals(
                 pathColumns().size(),
                 gap.placed().getOrDefault("dirt", 0),
-                "Все клетки тропы в поверхности — это готовая улица: " + gap.missingCells());
+                "Все клетки тропы в поверхности — это готовая улица: " + gap.missingCells()
+                        + " Иначе тест streets_PathInSurface_CountedAsPlaced перестанет ловить эту поломку. При смене streets_PathInSurface_CountedAsPlaced проверь это утверждение.");
     }
 
     @Test
@@ -62,19 +65,30 @@ class PathAuditTests {
 
         BuildGap.Gap gap = BuildGap.trace(call, "oak", new AllSunkPathProbe(), new PresetSchemes());
 
-        assertEquals(10, gap.done(), "Гравийные края на месте — готова только часть улицы: " + gap.missing());
+        assertEquals(
+                10,
+                gap.done(),
+                "Гравийные края на месте — готова только часть улицы: " + gap.missing()
+                        + " Иначе тест streets_AllSunkPaths_DoNotCountAsUnbuilt перестанет ловить эту поломку. При смене streets_AllSunkPaths_DoNotCountAsUnbuilt проверь это утверждение.");
         assertEquals(
                 15,
                 gap.shortage(),
-                "Все пятнадцать троп утоплены на блок ниже клетки плана — это работа по подъёму: " + gap.missing());
-        assertEquals(15, gap.lifted().size(), "Утопленные тропы в недостаче помечены как подъём: " + gap.lifted());
+                "Все пятнадцать троп утоплены на блок ниже клетки плана — это работа по подъёму: " + gap.missing()
+                        + " Иначе тест streets_AllSunkPaths_DoNotCountAsUnbuilt перестанет ловить эту поломку. При смене streets_AllSunkPaths_DoNotCountAsUnbuilt проверь это утверждение.");
+        assertEquals(
+                15,
+                gap.lifted().size(),
+                "Утопленные тропы в недостаче помечены как подъём: " + gap.lifted()
+                        + " Иначе тест streets_AllSunkPaths_DoNotCountAsUnbuilt перестанет ловить эту поломку. При смене streets_AllSunkPaths_DoNotCountAsUnbuilt проверь это утверждение.");
         assertEquals(
                 0,
                 gap.structuralShortage(),
-                "За улицей нет ни одной потерянной клетки: вся недостача — перекос троп, а не дыры");
+                "За улицей нет ни одной потерянной клетки: вся недостача — перекос троп, а не дыры"
+                        + " Иначе тест streets_AllSunkPaths_DoNotCountAsUnbuilt перестанет ловить эту поломку. При смене streets_AllSunkPaths_DoNotCountAsUnbuilt проверь это утверждение.");
         assertFalse(
                 StageAudit.unbuilt(gap.structuralShortage(), gap.total(), 50),
-                "Перекос тропы — ремонт, а не разрушение: улицу не перестраивают заново из-за поднятия троп");
+                "Перекос тропы — ремонт, а не разрушение: улицу не перестраивают заново из-за поднятия троп"
+                        + " Иначе тест streets_AllSunkPaths_DoNotCountAsUnbuilt перестанет ловить эту поломку. При смене streets_AllSunkPaths_DoNotCountAsUnbuilt проверь это утверждение.");
     }
 
     @Test
@@ -84,12 +98,25 @@ class PathAuditTests {
 
         BuildGap.Gap gap = BuildGap.trace(call, "oak", new EmptyPathCellsProbe(), new PresetSchemes());
 
-        assertEquals(15, gap.shortage(), "Пятнадцати троп нет вовсе: " + gap.missing());
-        assertEquals(0, gap.lifted().size(), "Старой тропы ниже клетки нет — поднимать нечего: " + gap.lifted());
-        assertEquals(15, gap.structuralShortage(), "Все пятнадцать троп — настоящая недостача улицы");
+        assertEquals(
+                15,
+                gap.shortage(),
+                "Пятнадцати троп нет вовсе: " + gap.missing()
+                        + " Иначе тест streets_EmptyPathCells_StillUnbuilt перестанет ловить эту поломку. При смене streets_EmptyPathCells_StillUnbuilt проверь это утверждение.");
+        assertEquals(
+                0,
+                gap.lifted().size(),
+                "Старой тропы ниже клетки нет — поднимать нечего: " + gap.lifted()
+                        + " Иначе тест streets_EmptyPathCells_StillUnbuilt перестанет ловить эту поломку. При смене streets_EmptyPathCells_StillUnbuilt проверь это утверждение.");
+        assertEquals(
+                15,
+                gap.structuralShortage(),
+                "Все пятнадцать троп — настоящая недостача улицы"
+                        + " Иначе тест streets_EmptyPathCells_StillUnbuilt перестанет ловить эту поломку. При смене streets_EmptyPathCells_StillUnbuilt проверь это утверждение.");
         assertTrue(
                 StageAudit.unbuilt(gap.structuralShortage(), gap.total(), 50),
-                "Пустая клетка тропы без старой тропы ниже — недостроенная улица, её этап переоткрывается");
+                "Пустая клетка тропы без старой тропы ниже — недостроенная улица, её этап переоткрывается"
+                        + " Иначе тест streets_EmptyPathCells_StillUnbuilt перестанет ловить эту поломку. При смене streets_EmptyPathCells_StillUnbuilt проверь это утверждение.");
     }
 
     private static final class AllSunkPathProbe implements BuildGap.Probe {
@@ -171,12 +198,14 @@ class PathAuditTests {
                 0,
                 gap.placed().getOrDefault("dirt", 0),
                 "Тропа, утопленная ниже уровня схемы, — ступенька, а не покрытие: аудит обязан требовать тропу в "
-                        + "клетке плана. Поставлено: " + gap.placed() + ", не хватает: " + gap.missingCells());
+                        + "клетке плана. Поставлено: " + gap.placed() + ", не хватает: " + gap.missingCells()
+                        + " Иначе тест streets_SunkPathBelowLevel_NotCounted перестанет ловить эту поломку. При смене streets_SunkPathBelowLevel_NotCounted проверь это утверждение.");
         assertEquals(
                 "minecraft:" + DIRT_PATH,
                 gap.missingCells().get(PATH),
                 "Клетка улицы на уровне плана пуста, а тропа лежит ниже: аудит обязан назвать недостающую клетку "
-                        + PATH + ". Не хватает: " + gap.missingCells());
+                        + PATH + ". Не хватает: " + gap.missingCells()
+                        + " Иначе тест streets_SunkPathBelowLevel_NotCounted перестанет ловить эту поломку. При смене streets_SunkPathBelowLevel_NotCounted проверь это утверждение.");
     }
 
     private static final class SunkMappedPathProbe implements BuildGap.Probe {

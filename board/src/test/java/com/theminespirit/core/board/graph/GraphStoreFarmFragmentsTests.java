@@ -12,25 +12,51 @@ class GraphStoreFarmFragmentsTests {
 
     @Test
     void storeFragment_StoreNodes_AreDeclared() {
-        assertTrue(GRAPH.items().containsKey("food_reserve"), "Узел запаса еды объявлен во фрагменте склада");
-        assertTrue(GRAPH.items().containsKey("logistics"), "Узел логистики объявлен во фрагменте склада");
+        assertTrue(
+                GRAPH.items().containsKey("food_reserve"),
+                "Узел запаса еды объявлен во фрагменте склада"
+                        + " Иначе тест storeFragment_StoreNodes_AreDeclared перестанет ловить эту поломку. При смене storeFragment_StoreNodes_AreDeclared проверь это утверждение.");
+        assertTrue(
+                GRAPH.items().containsKey("logistics"),
+                "Узел логистики объявлен во фрагменте склада"
+                        + " Иначе тест storeFragment_StoreNodes_AreDeclared перестанет ловить эту поломку. При смене storeFragment_StoreNodes_AreDeclared проверь это утверждение.");
         assertEquals(
                 List.of("coal", "charcoal", "oak_planks", "oak_log"),
                 GRAPH.groups().get("#fuel"),
-                "Группа топлива объявлена один раз и в своём файле");
+                "Группа топлива объявлена один раз и в своём файле"
+                        + " Иначе тест storeFragment_StoreNodes_AreDeclared перестанет ловить эту поломку. При смене storeFragment_StoreNodes_AreDeclared проверь это утверждение.");
 
         SupplyGraph.Building storage = GRAPH.buildings().get("storage_space");
-        assertTrue(storage != null && storage.optional(), "Новая пара сундуков — необязательная постройка");
-        assertTrue(GRAPH.implemented("storage_space"), "Новая пара сундуков исполняется узлом STOCK_CHESTS");
+        assertTrue(
+                storage != null && storage.optional(),
+                "Новая пара сундуков — необязательная постройка"
+                        + " Иначе тест storeFragment_StoreNodes_AreDeclared перестанет ловить эту поломку. При смене storeFragment_StoreNodes_AreDeclared проверь это утверждение.");
+        assertTrue(
+                GRAPH.implemented("storage_space"),
+                "Новая пара сундуков исполняется узлом STOCK_CHESTS"
+                        + " Иначе тест storeFragment_StoreNodes_AreDeclared перестанет ловить эту поломку. При смене storeFragment_StoreNodes_AreDeclared проверь это утверждение.");
 
-        assertTrue(GRAPH.way("transfer_item").isPresent(), "Путь переноса объявлен");
-        assertTrue(GRAPH.way("sort_chest").isPresent(), "Путь сортировки объявлен");
-        assertTrue(GRAPH.implemented("transfer_item"), "Перенос исполняется действием склада");
-        assertTrue(GRAPH.implemented("sort_chest"), "Сортировка исполняется действием склада");
+        assertTrue(
+                GRAPH.way("transfer_item").isPresent(),
+                "Путь переноса объявлен"
+                        + " Иначе тест storeFragment_StoreNodes_AreDeclared перестанет ловить эту поломку. При смене storeFragment_StoreNodes_AreDeclared проверь это утверждение.");
+        assertTrue(
+                GRAPH.way("sort_chest").isPresent(),
+                "Путь сортировки объявлен"
+                        + " Иначе тест storeFragment_StoreNodes_AreDeclared перестанет ловить эту поломку. При смене storeFragment_StoreNodes_AreDeclared проверь это утверждение.");
+        assertTrue(
+                GRAPH.implemented("transfer_item"),
+                "Перенос исполняется действием склада"
+                        + " Иначе тест storeFragment_StoreNodes_AreDeclared перестанет ловить эту поломку. При смене storeFragment_StoreNodes_AreDeclared проверь это утверждение.");
+        assertTrue(
+                GRAPH.implemented("sort_chest"),
+                "Сортировка исполняется действием склада"
+                        + " Иначе тест storeFragment_StoreNodes_AreDeclared перестанет ловить эту поломку. При смене storeFragment_StoreNodes_AreDeclared проверь это утверждение.");
         assertEquals(
                 "food_reserve",
                 GRAPH.way("restock_food").orElseThrow().makes(),
-                "Пополнение еды закрывает недобор food_reserve");
+                "Пополнение еды закрывает недобор food_reserve"
+                        + " Иначе тест storeFragment_StoreNodes_AreDeclared перестанет ловить эту поломку. При смене storeFragment_StoreNodes_AreDeclared проверь это утверждение.");
     }
 
     @Test
@@ -42,39 +68,72 @@ class GraphStoreFarmFragmentsTests {
                 "storage_mixed",
                 "furnace_ready",
                 "furnace_needs_fuel")) {
-            assertTrue(GRAPH.events().containsKey(event), "Событие входа склада объявлено: " + event);
+            assertTrue(
+                    GRAPH.events().containsKey(event),
+                    "Событие входа склада объявлено: " + event
+                            + " Иначе тест storeFragment_InputEvents_AreDeclared перестанет ловить эту поломку. При смене storeFragment_InputEvents_AreDeclared проверь это утверждение.");
         }
         GraphEvent ready = GRAPH.events().get("furnace_ready");
-        assertEquals("take_smelted", ready.tasks().get(0).id(), "Забрать готовое — отдельная работа печи");
+        assertEquals(
+                "take_smelted",
+                ready.tasks().get(0).id(),
+                "Забрать готовое — отдельная работа печи"
+                        + " Иначе тест storeFragment_InputEvents_AreDeclared перестанет ловить эту поломку. При смене storeFragment_InputEvents_AreDeclared проверь это утверждение.");
         GraphEvent fuel = GRAPH.events().get("furnace_needs_fuel");
-        assertEquals("load_furnace", fuel.tasks().get(0).id(), "Положить в печь — отдельная работа печи");
-        assertTrue(fuel.tasks().get(0).consumes().containsKey("#fuel"), "Загрузка печи расходует топливо");
+        assertEquals(
+                "load_furnace",
+                fuel.tasks().get(0).id(),
+                "Положить в печь — отдельная работа печи"
+                        + " Иначе тест storeFragment_InputEvents_AreDeclared перестанет ловить эту поломку. При смене storeFragment_InputEvents_AreDeclared проверь это утверждение.");
+        assertTrue(
+                fuel.tasks().get(0).consumes().containsKey("#fuel"),
+                "Загрузка печи расходует топливо"
+                        + " Иначе тест storeFragment_InputEvents_AreDeclared перестанет ловить эту поломку. При смене storeFragment_InputEvents_AreDeclared проверь это утверждение.");
     }
 
     @Test
     void farmFragment_FarmNodes_AreDeclared() {
-        assertTrue(GRAPH.items().containsKey("farmland"), "Узел пашни объявлен во фрагменте фермы");
-        assertTrue(GRAPH.items().containsKey("herd_fed"), "Узел кормления стада объявлен");
+        assertTrue(
+                GRAPH.items().containsKey("farmland"),
+                "Узел пашни объявлен во фрагменте фермы"
+                        + " Иначе тест farmFragment_FarmNodes_AreDeclared перестанет ловить эту поломку. При смене farmFragment_FarmNodes_AreDeclared проверь это утверждение.");
+        assertTrue(
+                GRAPH.items().containsKey("herd_fed"),
+                "Узел кормления стада объявлен"
+                        + " Иначе тест farmFragment_FarmNodes_AreDeclared перестанет ловить эту поломку. При смене farmFragment_FarmNodes_AreDeclared проверь это утверждение.");
         assertEquals(
                 List.of("wheat", "carrot", "potato", "beetroot"),
                 GRAPH.groups().get("#crops"),
-                "Группа урожая объявлена во фрагменте фермы");
+                "Группа урожая объявлена во фрагменте фермы"
+                        + " Иначе тест farmFragment_FarmNodes_AreDeclared перестанет ловить эту поломку. При смене farmFragment_FarmNodes_AreDeclared проверь это утверждение.");
 
         SupplyGraph.Building field = GRAPH.buildings().get("wheat_field");
         assertTrue(
                 field != null && field.stage() == 1 && field.optional(),
-                "Грядка пшеницы этапа 1 — необязательная постройка, чтобы не требовать её каждый цикл");
-        assertTrue(GRAPH.implemented("wheat_field"), "Грядка строится действием build_farm");
+                "Грядка пшеницы этапа 1 — необязательная постройка, чтобы не требовать её каждый цикл"
+                        + " Иначе тест farmFragment_FarmNodes_AreDeclared перестанет ловить эту поломку. При смене farmFragment_FarmNodes_AreDeclared проверь это утверждение.");
+        assertTrue(
+                GRAPH.implemented("wheat_field"),
+                "Грядка строится действием build_farm"
+                        + " Иначе тест farmFragment_FarmNodes_AreDeclared перестанет ловить эту поломку. При смене farmFragment_FarmNodes_AreDeclared проверь это утверждение.");
 
         assertEquals(
-                "wheat_field", GRAPH.way("plant_crop").orElseThrow().building(), "Посев привязан к грядке пшеницы");
+                "wheat_field",
+                GRAPH.way("plant_crop").orElseThrow().building(),
+                "Посев привязан к грядке пшеницы"
+                        + " Иначе тест farmFragment_FarmNodes_AreDeclared перестанет ловить эту поломку. При смене farmFragment_FarmNodes_AreDeclared проверь это утверждение.");
         assertTrue(
                 GRAPH.way("feed_animals").orElseThrow().consumes().containsKey("#crops"),
-                "Кормление стада расходует урожай");
+                "Кормление стада расходует урожай"
+                        + " Иначе тест farmFragment_FarmNodes_AreDeclared перестанет ловить эту поломку. При смене farmFragment_FarmNodes_AreDeclared проверь это утверждение.");
         assertTrue(
                 GRAPH.way("lure_animal").orElseThrow().consumes().containsKey("wheat"),
-                "Приманка животного расходует пшеницу");
-        assertTrue(GRAPH.way("milk_animal").orElseThrow().needs().containsKey("herd_cow"), "Дойка требует живое стадо");
+                "Приманка животного расходует пшеницу"
+                        + " Иначе тест farmFragment_FarmNodes_AreDeclared перестанет ловить эту поломку. При смене farmFragment_FarmNodes_AreDeclared проверь это утверждение.");
+        assertTrue(
+                GRAPH.way("milk_animal").orElseThrow().needs().containsKey("herd_cow"),
+                "Дойка требует живое стадо"
+                        + " Иначе тест farmFragment_FarmNodes_AreDeclared перестанет ловить эту поломку. При смене farmFragment_FarmNodes_AreDeclared проверь это утверждение.");
     }
 
     @Test
@@ -88,10 +147,12 @@ class GraphStoreFarmFragmentsTests {
         assertTrue(
                 plan.tasks().stream().anyMatch(task -> "building:wheat_field".equals(task.id())),
                 "Грядка этапа 1 не строится сама собой: при наличии земли она становится заданием, "
-                        + "даже если семян ещё нет — их добудет граф: " + plan.tasks());
+                        + "даже если семян ещё нет — их добудет граф: " + plan.tasks()
+                        + " Иначе тест farmFragment_DirtWithoutSeeds_StillPlansWheatFieldAndSeedGathering перестанет ловить эту поломку. При смене farmFragment_DirtWithoutSeeds_StillPlansWheatFieldAndSeedGathering проверь это утверждение.");
         assertTrue(
                 plan.tasks().stream().anyMatch(task -> task.id().startsWith("gather_seeds")),
-                "Нехватку семян грядка заказывает через граф, а не ждёт их случайно: " + plan.tasks());
+                "Нехватку семян грядка заказывает через граф, а не ждёт их случайно: " + plan.tasks()
+                        + " Иначе тест farmFragment_DirtWithoutSeeds_StillPlansWheatFieldAndSeedGathering перестанет ловить эту поломку. При смене farmFragment_DirtWithoutSeeds_StillPlansWheatFieldAndSeedGathering проверь это утверждение.");
     }
 
     @Test
@@ -105,13 +166,16 @@ class GraphStoreFarmFragmentsTests {
         assertTrue(
                 plan.tasks().stream().anyMatch(task -> "building:wheat_field".equals(task.id())),
                 "Грядка этапа 1 в плане поселения обязана строиться и без остатка земли в запасе: иначе улицы "
-                        + "съедают всю землю, а грядка не заказывается никогда (obsrest B11): " + plan.tasks());
+                        + "съедают всю землю, а грядка не заказывается никогда (obsrest B11): " + plan.tasks()
+                        + " При смене farmFragment_PlannedWheatFieldWithoutMaterials_IsStillRequested проверь это утверждение.");
         assertTrue(
                 plan.tasks().stream().anyMatch(task -> task.id().startsWith("dig_dirt")),
-                "Нехватку земли для грядки граф добывает сам, а не ждёт случайного остатка: " + plan.tasks());
+                "Нехватку земли для грядки граф добывает сам, а не ждёт случайного остатка: " + plan.tasks()
+                        + " Иначе тест farmFragment_PlannedWheatFieldWithoutMaterials_IsStillRequested перестанет ловить эту поломку. При смене farmFragment_PlannedWheatFieldWithoutMaterials_IsStillRequested проверь это утверждение.");
         assertTrue(
                 plan.tasks().stream().anyMatch(task -> task.id().startsWith("gather_seeds")),
-                "Нехватку семян для грядки граф добывает сам, а не ждёт случайного остатка: " + plan.tasks());
+                "Нехватку семян для грядки граф добывает сам, а не ждёт случайного остатка: " + plan.tasks()
+                        + " Иначе тест farmFragment_PlannedWheatFieldWithoutMaterials_IsStillRequested перестанет ловить эту поломку. При смене farmFragment_PlannedWheatFieldWithoutMaterials_IsStillRequested проверь это утверждение.");
     }
 
     @Test
@@ -127,20 +191,29 @@ class GraphStoreFarmFragmentsTests {
                 result.post().stream().anyMatch(ticket -> "graph:building:wheat_field".equals(ticket.id())),
                 "Грядка этапа 1 с землёй в запасе обязана стать билетом доски: PLANNED без задания — "
                         + "сад не строится (observe25 B11): "
-                        + result.post().stream().map(GraphTickets.Ticket::id).toList());
+                        + result.post().stream().map(GraphTickets.Ticket::id).toList()
+                        + " Иначе тест farmFragment_DirtWithoutSeeds_PostsWheatFieldTicket перестанет ловить эту поломку. При смене farmFragment_DirtWithoutSeeds_PostsWheatFieldTicket проверь это утверждение.");
     }
 
     @Test
     void farmFragment_FarmEvents_AreDeclared() {
         for (String event :
                 List.of("crop_ready", "crop_dry", "field_empty", "animal_starving", "pen_full", "orchard_empty")) {
-            assertTrue(GRAPH.events().containsKey(event), "Событие входа фермы объявлено: " + event);
+            assertTrue(
+                    GRAPH.events().containsKey(event),
+                    "Событие входа фермы объявлено: " + event
+                            + " Иначе тест farmFragment_FarmEvents_AreDeclared перестанет ловить эту поломку. При смене farmFragment_FarmEvents_AreDeclared проверь это утверждение.");
         }
         GraphEvent orchard = GRAPH.events().get("orchard_empty");
-        assertEquals("replant_orchard", orchard.tasks().get(0).id(), "После рубки в саду — отдельная посадка");
+        assertEquals(
+                "replant_orchard",
+                orchard.tasks().get(0).id(),
+                "После рубки в саду — отдельная посадка"
+                        + " Иначе тест farmFragment_FarmEvents_AreDeclared перестанет ловить эту поломку. При смене farmFragment_FarmEvents_AreDeclared проверь это утверждение.");
         assertNull(
                 orchard.tasks().get(0).building(),
-                "Посадка не ждёт готовой постройки сада: клетка сада свободна — саженец ставится сразу");
+                "Посадка не ждёт готовой постройки сада: клетка сада свободна — саженец ставится сразу"
+                        + " Иначе тест farmFragment_FarmEvents_AreDeclared перестанет ловить эту поломку. При смене farmFragment_FarmEvents_AreDeclared проверь это утверждение.");
     }
 
     @Test
@@ -155,13 +228,22 @@ class GraphStoreFarmFragmentsTests {
                 "feed_animals",
                 "lure_animal",
                 "milk_animal")) {
-            assertTrue(GRAPH.way(way).isPresent(), "Путь объявлен в данных, вес проверяет SupplyGraph.Way: " + way);
+            assertTrue(
+                    GRAPH.way(way).isPresent(),
+                    "Путь объявлен в данных, вес проверяет SupplyGraph.Way: " + way
+                            + " Иначе тест newNodes_StartWeights_ArePositive перестанет ловить эту поломку. При смене newNodes_StartWeights_ArePositive проверь это утверждение.");
         }
         for (String building : List.of("storage_space", "wheat_field")) {
-            assertTrue(GRAPH.buildings().get(building).base() > 0, "Стартовый вес постройки положителен: " + building);
+            assertTrue(
+                    GRAPH.buildings().get(building).base() > 0,
+                    "Стартовый вес постройки положителен: " + building
+                            + " Иначе тест newNodes_StartWeights_ArePositive перестанет ловить эту поломку. При смене newNodes_StartWeights_ArePositive проверь это утверждение.");
         }
         for (String item : List.of("food_reserve", "logistics", "farmland", "herd_fed")) {
-            assertTrue(GRAPH.items().get(item).base() > 0, "Стартовый вес предмета положителен: " + item);
+            assertTrue(
+                    GRAPH.items().get(item).base() > 0,
+                    "Стартовый вес предмета положителен: " + item
+                            + " Иначе тест newNodes_StartWeights_ArePositive перестанет ловить эту поломку. При смене newNodes_StartWeights_ArePositive проверь это утверждение.");
         }
     }
 }

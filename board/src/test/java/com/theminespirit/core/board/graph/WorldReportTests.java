@@ -46,18 +46,50 @@ class WorldReportTests {
 
         WorldReport report = WorldReport.of(facts);
 
-        assertEquals(3, report.strayBlocks(), "лишних блоков — сумма по кускам");
-        assertEquals(1, report.strayGroups(), "кусков лишнего — по связным находкам");
-        assertEquals(2, report.pits(), "ямы берутся из рельефа");
-        assertEquals(2, report.mounds(), "насыпи — из состава срезки");
-        assertEquals(9, report.natural(), "природный склон отдаётся отдельно и не считается работой");
-        assertEquals(4, report.hanging(), "висящее берётся из рельефа");
-        assertEquals(2, report.damaged(), "повреждёнными считаются известные постройки с уроном, а не неизвестные");
-        assertTrue(!report.unknown(), "загруженный мир не помечается неизвестным");
+        assertEquals(
+                3,
+                report.strayBlocks(),
+                "лишних блоков — сумма по кускам"
+                        + " Иначе тест worldFacts_StraysTerrainAndDamage_AreCounted перестанет ловить эту поломку. При смене worldFacts_StraysTerrainAndDamage_AreCounted проверь это утверждение.");
+        assertEquals(
+                1,
+                report.strayGroups(),
+                "кусков лишнего — по связным находкам"
+                        + " Иначе тест worldFacts_StraysTerrainAndDamage_AreCounted перестанет ловить эту поломку. При смене worldFacts_StraysTerrainAndDamage_AreCounted проверь это утверждение.");
+        assertEquals(
+                2,
+                report.pits(),
+                "ямы берутся из рельефа"
+                        + " Иначе тест worldFacts_StraysTerrainAndDamage_AreCounted перестанет ловить эту поломку. При смене worldFacts_StraysTerrainAndDamage_AreCounted проверь это утверждение.");
+        assertEquals(
+                2,
+                report.mounds(),
+                "насыпи — из состава срезки"
+                        + " Иначе тест worldFacts_StraysTerrainAndDamage_AreCounted перестанет ловить эту поломку. При смене worldFacts_StraysTerrainAndDamage_AreCounted проверь это утверждение.");
+        assertEquals(
+                9,
+                report.natural(),
+                "природный склон отдаётся отдельно и не считается работой"
+                        + " Иначе тест worldFacts_StraysTerrainAndDamage_AreCounted перестанет ловить эту поломку. При смене worldFacts_StraysTerrainAndDamage_AreCounted проверь это утверждение.");
+        assertEquals(
+                4,
+                report.hanging(),
+                "висящее берётся из рельефа"
+                        + " Иначе тест worldFacts_StraysTerrainAndDamage_AreCounted перестанет ловить эту поломку. При смене worldFacts_StraysTerrainAndDamage_AreCounted проверь это утверждение.");
+        assertEquals(
+                2,
+                report.damaged(),
+                "повреждёнными считаются известные постройки с уроном, а не неизвестные"
+                        + " Иначе тест worldFacts_StraysTerrainAndDamage_AreCounted перестанет ловить эту поломку. При смене worldFacts_StraysTerrainAndDamage_AreCounted проверь это утверждение.");
+        assertTrue(
+                !report.unknown(),
+                "загруженный мир не помечается неизвестным"
+                        + " Иначе тест worldFacts_StraysTerrainAndDamage_AreCounted перестанет ловить эту поломку. При смене worldFacts_StraysTerrainAndDamage_AreCounted проверь это утверждение.");
         assertEquals(
                 List.of("hut", "warehouse"),
                 report.buildings().stream().map(WorldReport.Damaged::id).toList(),
-                "повреждённые постройки называются по id и идут по алфавиту: наблюдатель видит, что чинить");
+                "повреждённые постройки называются по id и идут по алфавиту: наблюдатель видит, что чинить"
+                        + " Иначе тест worldFacts_StraysTerrainAndDamage_AreCounted перестанет ловить эту поломку. При смене worldFacts_StraysTerrainAndDamage_AreCounted проверь это утверждение.");
     }
 
     @Test
@@ -83,7 +115,8 @@ class WorldReportTests {
                 "183 (minecraft:oak_leaves=120, minecraft:oak_log=63)",
                 report.hangingText(),
                 "Наблюдатель видит не только число висящих, но и типы блоков: иначе непонятно, что и зачем "
-                        + "убирает clear_floating");
+                        + "убирает clear_floating"
+                        + " При смене hangingText_WithComposition_ListsTypesAndCounts проверь это утверждение.");
     }
 
     @Test
@@ -94,6 +127,9 @@ class WorldReportTests {
                         new GraphSiteFacts.Terrain(0, 0, 0, 0, 0, Map.of(), Map.of(), Map.of(), true),
                         Map.of()));
 
-        assertTrue(WorldReport.of(facts).unknown(), "незагруженные чанки видны наблюдателю как неизвестность");
+        assertTrue(
+                WorldReport.of(facts).unknown(),
+                "незагруженные чанки видны наблюдателю как неизвестность"
+                        + " Иначе тест of_UnknownTerrain_IsReported перестанет ловить эту поломку. При смене of_UnknownTerrain_IsReported проверь это утверждение.");
     }
 }

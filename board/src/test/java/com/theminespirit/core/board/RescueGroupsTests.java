@@ -27,11 +27,27 @@ class RescueGroupsTests {
 
         List<RescueGroups.Group> groups = RescueGroups.form(members, OPEN);
 
-        assertEquals(1, groups.size(), "Шесть духов в одной яме — один план выхода, а не шесть");
+        assertEquals(
+                1,
+                groups.size(),
+                "Шесть духов в одной яме — один план выхода, а не шесть"
+                        + " Иначе тест form_SixSpiritsInOnePit_OneGroupWithTooledLeader перестанет ловить эту поломку. При смене form_SixSpiritsInOnePit_OneGroupWithTooledLeader проверь это утверждение.");
         RescueGroups.Group group = groups.get(0);
-        assertEquals(member(3, PIT, 3, 0).id(), group.leader(), "Ведущий — дух с лучшей киркой");
-        assertEquals(6, group.members().size(), "Все шестеро в группе: никто не ищет выход сам");
-        assertEquals(5, group.followers().size(), "Пятеро идут следом по готовому пути");
+        assertEquals(
+                member(3, PIT, 3, 0).id(),
+                group.leader(),
+                "Ведущий — дух с лучшей киркой"
+                        + " Иначе тест form_SixSpiritsInOnePit_OneGroupWithTooledLeader перестанет ловить эту поломку. При смене form_SixSpiritsInOnePit_OneGroupWithTooledLeader проверь это утверждение.");
+        assertEquals(
+                6,
+                group.members().size(),
+                "Все шестеро в группе: никто не ищет выход сам"
+                        + " Иначе тест form_SixSpiritsInOnePit_OneGroupWithTooledLeader перестанет ловить эту поломку. При смене form_SixSpiritsInOnePit_OneGroupWithTooledLeader проверь это утверждение.");
+        assertEquals(
+                5,
+                group.followers().size(),
+                "Пятеро идут следом по готовому пути"
+                        + " Иначе тест form_SixSpiritsInOnePit_OneGroupWithTooledLeader перестанет ловить эту поломку. При смене form_SixSpiritsInOnePit_OneGroupWithTooledLeader проверь это утверждение.");
     }
 
     @Test
@@ -44,13 +60,18 @@ class RescueGroupsTests {
 
         List<RescueGroups.Group> groups = RescueGroups.form(members, OPEN);
 
-        assertEquals(2, groups.size(), "Духи из разных областей не тянут один план через полкарты");
+        assertEquals(
+                2,
+                groups.size(),
+                "Духи из разных областей не тянут один план через полкарты"
+                        + " Иначе тест form_TwoClustersFarApart_TwoGroups перестанет ловить эту поломку. При смене form_TwoClustersFarApart_TwoGroups проверь это утверждение.");
         assertTrue(
                 groups.stream()
                         .anyMatch(group -> group.leader()
                                 .equals(member(3, new BlockCoord(100, 40, -5), 2, 0)
                                         .id())),
-                "В дальней группе ведущий с киркой");
+                "В дальней группе ведущий с киркой"
+                        + " Иначе тест form_TwoClustersFarApart_TwoGroups перестанет ловить эту поломку. При смене form_TwoClustersFarApart_TwoGroups проверь это утверждение.");
     }
 
     @Test
@@ -67,11 +88,13 @@ class RescueGroupsTests {
         assertEquals(
                 1,
                 groups.size(),
-                "Духи в одной пещере на расстоянии 9 связаны проходом: один план и один ведущий, а не два");
+                "Духи в одной пещере на расстоянии 9 связаны проходом: один план и один ведущий, а не два"
+                        + " Иначе тест form_SameCaveNineApart_OneGroupByPassage перестанет ловить эту поломку. При смене form_SameCaveNineApart_OneGroupByPassage проверь это утверждение.");
         assertEquals(
                 member(2, new BlockCoord(9, 40, 0), 2, 4).id(),
                 groups.get(0).leader(),
-                "В связанной пещере ведущий — дух с киркой, даже если он дальше от входа");
+                "В связанной пещере ведущий — дух с киркой, даже если он дальше от входа"
+                        + " Иначе тест form_SameCaveNineApart_OneGroupByPassage перестанет ловить эту поломку. При смене form_SameCaveNineApart_OneGroupByPassage проверь это утверждение.");
     }
 
     @Test
@@ -84,7 +107,11 @@ class RescueGroupsTests {
 
         List<RescueGroups.Group> groups = RescueGroups.form(members, cave::contains);
 
-        assertEquals(2, groups.size(), "Близость без прохода — не одна пещера: сквозь стену план не общий");
+        assertEquals(
+                2,
+                groups.size(),
+                "Близость без прохода — не одна пещера: сквозь стену план не общий"
+                        + " Иначе тест form_CloseButWallBetween_TwoGroups перестанет ловить эту поломку. При смене form_CloseButWallBetween_TwoGroups проверь это утверждение.");
     }
 
     @Test
@@ -97,7 +124,11 @@ class RescueGroupsTests {
 
         List<RescueGroups.Group> groups = RescueGroups.form(members, cell -> cell.x() != 1 && cave.contains(cell));
 
-        assertEquals(2, groups.size(), "Незагруженный чанк — «неизвестно», а не проход: духи остаются в своих группах");
+        assertEquals(
+                2,
+                groups.size(),
+                "Незагруженный чанк — «неизвестно», а не проход: духи остаются в своих группах"
+                        + " Иначе тест form_UnknownChunkBetween_DoesNotConnect перестанет ловить эту поломку. При смене form_UnknownChunkBetween_DoesNotConnect проверь это утверждение.");
     }
 
     @Test
@@ -109,12 +140,16 @@ class RescueGroupsTests {
         assertEquals(
                 member(1, PIT, 1, 0).id(),
                 groups.get(0).leader(),
-                "Ведущий — владелец кирки, а не самый богатый блоками: передавать инструмент через группу не нужно");
+                "Ведущий — владелец кирки, а не самый богатый блоками: передавать инструмент через группу не нужно"
+                        + " Иначе тест form_PickaxeOwner_LeadsEvenWithFewerBlocks перестанет ловить эту поломку. При смене form_PickaxeOwner_LeadsEvenWithFewerBlocks проверь это утверждение.");
     }
 
     @Test
     void form_Empty_NoGroups() {
-        assertTrue(RescueGroups.form(List.of(), OPEN).isEmpty(), "Пустой список духов не даёт групп");
+        assertTrue(
+                RescueGroups.form(List.of(), OPEN).isEmpty(),
+                "Пустой список духов не даёт групп"
+                        + " Иначе тест form_Empty_NoGroups перестанет ловить эту поломку. При смене form_Empty_NoGroups проверь это утверждение.");
     }
 
     @Test
@@ -124,7 +159,8 @@ class RescueGroupsTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> RescueGroups.form(List.of(member, member), OPEN),
-                "Один дух не может быть в двух группах: спасение адресное");
+                "Один дух не может быть в двух группах: спасение адресное"
+                        + " Иначе тест form_DuplicateSpirit_Rejected перестанет ловить эту поломку. При смене form_DuplicateSpirit_Rejected проверь это утверждение.");
     }
 
     @Test
@@ -144,7 +180,8 @@ class RescueGroupsTests {
                 walkers,
                 "Ведомый в шахте не получает walk(home): шахту закрывают за спиной ведущего, и путь, "
                         + "посчитанный по открытому проходу, кончается DeadEndRefusal. Идут сами только те, "
-                        + "кто уже на поверхности; остальные ждут ведущего");
+                        + "кто уже на поверхности; остальные ждут ведущего"
+                        + " Иначе тест walkers_OnlyReachableAndOnSurface_GoHomeByThemselves перестанет ловить эту поломку. При смене walkers_OnlyReachableAndOnSurface_GoHomeByThemselves проверь это утверждение.");
     }
 
     @Test
@@ -160,7 +197,8 @@ class RescueGroupsTests {
                 List.of(follower),
                 walkers,
                 "Ведущий в шахте не уходит пешком: путь по открытому проходу исчезнет после засыпки, "
-                        + "а группа останется без того, кто прокладывает выход");
+                        + "а группа останется без того, кто прокладывает выход"
+                        + " Иначе тест walkers_LeaderWithoutSurface_IsNotSentHomeAlone перестанет ловить эту поломку. При смене walkers_LeaderWithoutSurface_IsNotSentHomeAlone проверь это утверждение.");
     }
 
     private static RescueGroups.Member member(int id, BlockCoord at, int toolTier, int blocks) {

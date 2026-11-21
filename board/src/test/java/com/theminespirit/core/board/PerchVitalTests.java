@@ -21,11 +21,18 @@ class PerchVitalTests {
 
     @Test
     void perchNeed_Table_GatedWithRescuePath() {
-        assertTrue(PERCH.gate(), "Дух на своих подмостях не берёт обычную работу: сначала спуск");
-        assertTrue(PERCH.allows("graph:rescue_spirit"), "Путь нужды — спасение со спуском по своему столбу");
+        assertTrue(
+                PERCH.gate(),
+                "Дух на своих подмостях не берёт обычную работу: сначала спуск"
+                        + " Иначе тест perchNeed_Table_GatedWithRescuePath перестанет ловить эту поломку. При смене perchNeed_Table_GatedWithRescuePath проверь это утверждение.");
+        assertTrue(
+                PERCH.allows("graph:rescue_spirit"),
+                "Путь нужды — спасение со спуском по своему столбу"
+                        + " Иначе тест perchNeed_Table_GatedWithRescuePath перестанет ловить эту поломку. При смене perchNeed_Table_GatedWithRescuePath проверь это утверждение.");
         assertTrue(
                 PERCH.allows("repair:clear_grounds"),
-                "Подмости строили ради расчистки: продолжить её с вершины — тоже путь нужды");
+                "Подмости строили ради расчистки: продолжить её с вершины — тоже путь нужды"
+                        + " Иначе тест perchNeed_Table_GatedWithRescuePath перестанет ловить эту поломку. При смене perchNeed_Table_GatedWithRescuePath проверь это утверждение.");
     }
 
     @Test
@@ -39,15 +46,18 @@ class PerchVitalTests {
                                 VitalNeeds.needs())
                         .isPresent(),
                 "spirit-4 10.11: перебитый на вершине столба y=98, дух получал сундуки и ягоды внизу, все падали "
-                        + "«маршрут не найден», и через 10 минут граф перестал давать ему работу — стоял часами");
+                        + "«маршрут не найден», и через 10 минут граф перестал давать ему работу — стоял часами"
+                        + " Иначе тест perched_AfterInterruption_OrdinaryWorkRefusedUntilDescended перестанет ловить эту поломку. При смене perched_AfterInterruption_OrdinaryWorkRefusedUntilDescended проверь это утверждение.");
         assertFalse(
                 VitalGate.refusal(ticket("graph:rescue_spirit", BoardCase.RESCUE_SPIRIT), live, VitalNeeds.needs())
                         .isPresent(),
-                "Спасение со спуском выдаётся");
+                "Спасение со спуском выдаётся"
+                        + " Иначе тест perched_AfterInterruption_OrdinaryWorkRefusedUntilDescended перестанет ловить эту поломку. При смене perched_AfterInterruption_OrdinaryWorkRefusedUntilDescended проверь это утверждение.");
         assertFalse(
                 VitalGate.refusal(ticket("repair:clear_grounds", BoardCase.REPAIR_BUILDING), live, VitalNeeds.needs())
                         .isPresent(),
-                "Свою расчистку с подмостей можно продолжить");
+                "Свою расчистку с подмостей можно продолжить"
+                        + " Иначе тест perched_AfterInterruption_OrdinaryWorkRefusedUntilDescended перестанет ловить эту поломку. При смене perched_AfterInterruption_OrdinaryWorkRefusedUntilDescended проверь это утверждение.");
     }
 
     @Test
@@ -57,14 +67,16 @@ class PerchVitalTests {
         assertFalse(
                 VitalGate.refusal(ticket("graph:event:hungry:eat", BoardCase.EAT_TO_FULL), live, VitalNeeds.needs())
                         .isPresent(),
-                "Голод на подмостях: поесть из инвентаря можно");
+                "Голод на подмостях: поесть из инвентаря можно"
+                        + " Иначе тест hungry_OnScaffold_EatsInPlaceButDoesNotWalkAway перестанет ловить эту поломку. При смене hungry_OnScaffold_EatsInPlaceButDoesNotWalkAway проверь это утверждение.");
         assertTrue(
                 VitalGate.refusal(
                                 ticket("graph:event:storage_mixed:sort_chest:1", BoardCase.ACTIVITY_UNLOAD),
                                 live,
                                 VitalNeeds.needs())
                         .isPresent(),
-                "Работа внизу всё равно ждёт спуска");
+                "Работа внизу всё равно ждёт спуска"
+                        + " Иначе тест hungry_OnScaffold_EatsInPlaceButDoesNotWalkAway перестанет ловить эту поломку. При смене hungry_OnScaffold_EatsInPlaceButDoesNotWalkAway проверь это утверждение.");
     }
 
     @Test
@@ -75,6 +87,7 @@ class PerchVitalTests {
                                 Map.of(),
                                 VitalNeeds.needs())
                         .isPresent(),
-                "После спуска нужда гаснет: обратная связь возвращает духа к работе");
+                "После спуска нужда гаснет: обратная связь возвращает духа к работе"
+                        + " Иначе тест descended_NeedGone_WorkReturns перестанет ловить эту поломку. При смене descended_NeedGone_WorkReturns проверь это утверждение.");
     }
 }

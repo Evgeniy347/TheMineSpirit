@@ -32,20 +32,26 @@ class StallWatchTests {
                 reportedAt > 0,
                 "Дух стоял " + frozen + " тиков на " + live.get("feet") + " без прогресса ("
                         + live.get("outcome").asText() + "), а отчёт о застое не напечатался: доска отменяет "
-                        + "скрипт на том же тике");
+                        + "скрипт на том же тике"
+                        + " Иначе тест stalled_LiveMineFrozenAtZero_ReportsBeforeBoardCancel перестанет ловить эту поломку. При смене stalled_LiveMineFrozenAtZero_ReportsBeforeBoardCancel проверь это утверждение.");
         assertTrue(
                 reportedAt < TaskStall.NO_PROGRESS_TICKS,
                 "Отчёт о застое обязан печататься раньше отмены доской: порог " + TaskStall.NO_PROGRESS_TICKS
-                        + " тиков, а отчёт пришёл на " + reportedAt);
+                        + " тиков, а отчёт пришёл на " + reportedAt
+                        + " Иначе тест stalled_LiveMineFrozenAtZero_ReportsBeforeBoardCancel перестанет ловить эту поломку. При смене stalled_LiveMineFrozenAtZero_ReportsBeforeBoardCancel проверь это утверждение.");
     }
 
     @Test
     void stalled_ProgressSignatureGrows_ResetsTimer() {
         StallWatch watch = new StallWatch();
 
-        assertFalse(watch.stalled(0, 1L), "Первый замер прогресса не может сразу считаться застоем");
+        assertFalse(
+                watch.stalled(0, 1L),
+                "Первый замер прогресса не может сразу считаться застоем"
+                        + " Иначе тест stalled_ProgressSignatureGrows_ResetsTimer перестанет ловить эту поломку. При смене stalled_ProgressSignatureGrows_ResetsTimer проверь это утверждение.");
         assertFalse(
                 watch.stalled(TaskStall.NO_PROGRESS_TICKS + 1, 2L),
-                "Сдвиг подписи прогресса сбрасывает застой: шахта копает, это не молчаливое стояние");
+                "Сдвиг подписи прогресса сбрасывает застой: шахта копает, это не молчаливое стояние"
+                        + " Иначе тест stalled_ProgressSignatureGrows_ResetsTimer перестанет ловить эту поломку. При смене stalled_ProgressSignatureGrows_ResetsTimer проверь это утверждение.");
     }
 }

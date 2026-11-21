@@ -36,10 +36,22 @@ class ForceloadWatchTests {
                         forced(CHUNK_ZERO))
                 .orElseThrow();
 
-        assertTrue(text.contains("цель задания first:build_mine"), "WARN обязан назвать задание: " + text);
-        assertTrue(text.contains("(20, 64, 5)"), "WARN обязан назвать координаты цели: " + text);
-        assertTrue(text.contains("чанк [1, 0]"), "WARN обязан назвать чанк цели: " + text);
-        assertFalse(text.contains("дух spirit-3"), "Дух внутри forceload — о нём предупреждать не надо: " + text);
+        assertTrue(
+                text.contains("цель задания first:build_mine"),
+                "WARN обязан назвать задание: " + text
+                        + " Иначе тест check_GoalOutside_NamesGoalAndChunk перестанет ловить эту поломку. При смене check_GoalOutside_NamesGoalAndChunk проверь это утверждение.");
+        assertTrue(
+                text.contains("(20, 64, 5)"),
+                "WARN обязан назвать координаты цели: " + text
+                        + " Иначе тест check_GoalOutside_NamesGoalAndChunk перестанет ловить эту поломку. При смене check_GoalOutside_NamesGoalAndChunk проверь это утверждение.");
+        assertTrue(
+                text.contains("чанк [1, 0]"),
+                "WARN обязан назвать чанк цели: " + text
+                        + " Иначе тест check_GoalOutside_NamesGoalAndChunk перестанет ловить эту поломку. При смене check_GoalOutside_NamesGoalAndChunk проверь это утверждение.");
+        assertFalse(
+                text.contains("дух spirit-3"),
+                "Дух внутри forceload — о нём предупреждать не надо: " + text
+                        + " Иначе тест check_GoalOutside_NamesGoalAndChunk перестанет ловить эту поломку. При смене check_GoalOutside_NamesGoalAndChunk проверь это утверждение.");
     }
 
     @Test
@@ -49,11 +61,13 @@ class ForceloadWatchTests {
         assertTrue(
                 watch.check(SPIRIT, "spirit-3", new BlockCoord(5, 64, 5), null, null, forced())
                         .isPresent(),
-                "Первый выход за forceload обязан дать предупреждение");
+                "Первый выход за forceload обязан дать предупреждение"
+                        + " Иначе тест check_RepeatedOutsideState_DoesNotRepeatWarning перестанет ловить эту поломку. При смене check_RepeatedOutsideState_DoesNotRepeatWarning проверь это утверждение.");
         assertEquals(
                 Optional.empty(),
                 watch.check(SPIRIT, "spirit-3", new BlockCoord(6, 64, 5), null, null, forced()),
-                "Тот же выход за forceload не должен повторяться каждую проверку");
+                "Тот же выход за forceload не должен повторяться каждую проверку"
+                        + " Иначе тест check_RepeatedOutsideState_DoesNotRepeatWarning перестанет ловить эту поломку. При смене check_RepeatedOutsideState_DoesNotRepeatWarning проверь это утверждение.");
     }
 
     @Test
@@ -62,14 +76,17 @@ class ForceloadWatchTests {
         BlockCoord position = new BlockCoord(6, 64, 5);
         assertTrue(
                 watch.check(SPIRIT, "spirit-3", position, null, null, forced()).isPresent(),
-                "Первый выход за forceload обязан дать предупреждение");
+                "Первый выход за forceload обязан дать предупреждение"
+                        + " Иначе тест check_BackInsideThenOutside_WarnsAgain перестанет ловить эту поломку. При смене check_BackInsideThenOutside_WarnsAgain проверь это утверждение.");
         assertEquals(
                 Optional.empty(),
                 watch.check(SPIRIT, "spirit-3", position, null, null, forced(CHUNK_ZERO)),
-                "Возврат в forceload снимает пометку, но не пишет WARN");
+                "Возврат в forceload снимает пометку, но не пишет WARN"
+                        + " Иначе тест check_BackInsideThenOutside_WarnsAgain перестанет ловить эту поломку. При смене check_BackInsideThenOutside_WarnsAgain проверь это утверждение.");
 
         assertTrue(
                 watch.check(SPIRIT, "spirit-3", position, null, null, forced()).isPresent(),
-                "Повторный выход после возврата — снова WARN");
+                "Повторный выход после возврата — снова WARN"
+                        + " Иначе тест check_BackInsideThenOutside_WarnsAgain перестанет ловить эту поломку. При смене check_BackInsideThenOutside_WarnsAgain проверь это утверждение.");
     }
 }

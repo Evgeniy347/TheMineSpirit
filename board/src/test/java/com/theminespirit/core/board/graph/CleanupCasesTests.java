@@ -21,11 +21,15 @@ class CleanupCasesTests {
         GraphPlan plan = PlanCaseFacts.plan(GraphWorld.settled(), facts);
 
         GraphPlan.Task demolition = PlanCaseFacts.task(plan, "event:demolish_stray:demolish_stray");
-        assertTrue(demolition.feasible(), "Лишний забор вне плана обязан получить задание сноса: " + plan.tasks());
+        assertTrue(
+                demolition.feasible(),
+                "Лишний забор вне плана обязан получить задание сноса: " + plan.tasks()
+                        + " Иначе тест cleanup_StrayFence_PostsDemolition перестанет ловить эту поломку. При смене cleanup_StrayFence_PostsDemolition проверь это утверждение.");
         assertEquals(
                 BoardCase.DISMANTLE_SHELTER,
                 demolition.boardCase(),
-                "Снос лишнего идёт кейсом уборки, иначе задание не находит исполнителя");
+                "Снос лишнего идёт кейсом уборки, иначе задание не находит исполнителя"
+                        + " При смене cleanup_StrayFence_PostsDemolition проверь это утверждение.");
     }
 
     @Test
@@ -38,11 +42,15 @@ class CleanupCasesTests {
         GraphPlan plan = PlanCaseFacts.plan(GraphWorld.settled(), facts);
 
         GraphPlan.Task cleanup = PlanCaseFacts.task(plan, "event:clear_floating:clear_floating");
-        assertTrue(cleanup.feasible(), "Пень — бревно без дерева — убирается заданием висящего: " + plan.tasks());
+        assertTrue(
+                cleanup.feasible(),
+                "Пень — бревно без дерева — убирается заданием висящего: " + plan.tasks()
+                        + " Иначе тест cleanup_Stump_PostsFloatingCleanup перестанет ловить эту поломку. При смене cleanup_Stump_PostsFloatingCleanup проверь это утверждение.");
         assertEquals(
                 BoardCase.CLEAR_GROUNDS,
                 cleanup.boardCase(),
-                "Уборка пня идёт кейсом расчистки, а не отдельной выдуманной работой");
+                "Уборка пня идёт кейсом расчистки, а не отдельной выдуманной работой"
+                        + " Иначе тест cleanup_Stump_PostsFloatingCleanup перестанет ловить эту поломку. При смене cleanup_Stump_PostsFloatingCleanup проверь это утверждение.");
     }
 
     @Test
@@ -56,7 +64,8 @@ class CleanupCasesTests {
 
         assertTrue(
                 PlanCaseFacts.posted(plan, "event:clear_floating:clear_floating"),
-                "Висящая крона после рубки ставит уборку, а не остаётся висеть навсегда: " + plan.tasks());
+                "Висящая крона после рубки ставит уборку, а не остаётся висеть навсегда: " + plan.tasks()
+                        + " Иначе тест cleanup_HangingCrown_PostsFloatingCleanup перестанет ловить эту поломку. При смене cleanup_HangingCrown_PostsFloatingCleanup проверь это утверждение.");
     }
 
     @Test
@@ -66,11 +75,15 @@ class CleanupCasesTests {
         GraphPlan plan = PlanCaseFacts.plan(GraphWorld.settled(), facts);
 
         GraphPlan.Task restore = PlanCaseFacts.task(plan, "event:restore_trace:restore_trace");
-        assertTrue(restore.feasible(), "Следы pillar/bridge возвращаются заданием restore_trace: " + plan.tasks());
+        assertTrue(
+                restore.feasible(),
+                "Следы pillar/bridge возвращаются заданием restore_trace: " + plan.tasks()
+                        + " Иначе тест cleanup_PillarTrace_PostsRestoreTrace перестанет ловить эту поломку. При смене cleanup_PillarTrace_PostsRestoreTrace проверь это утверждение.");
         assertEquals(
                 BoardCase.FILL_CRATER,
                 restore.boardCase(),
-                "Возврат следа идёт засыпкой/ремонтом кейса FILL_CRATER, а не новой работой");
+                "Возврат следа идёт засыпкой/ремонтом кейса FILL_CRATER, а не новой работой"
+                        + " Иначе тест cleanup_PillarTrace_PostsRestoreTrace перестанет ловить эту поломку. При смене cleanup_PillarTrace_PostsRestoreTrace проверь это утверждение.");
     }
 
     @Test
@@ -84,12 +97,20 @@ class CleanupCasesTests {
         GraphPlan plan = PlanCaseFacts.plan(world, facts);
 
         GraphPlan.Task backfill = PlanCaseFacts.task(plan, "event:backfill:backfill");
-        assertTrue(backfill.feasible(), "Яма от духа на участке засыпается при запасе земли: " + plan.tasks());
+        assertTrue(
+                backfill.feasible(),
+                "Яма от духа на участке засыпается при запасе земли: " + plan.tasks()
+                        + " Иначе тест cleanup_PitInSettlement_PostsBackfill перестанет ловить эту поломку. При смене cleanup_PitInSettlement_PostsBackfill проверь это утверждение.");
         assertEquals(
                 BoardCase.FILL_CRATER,
                 backfill.boardCase(),
-                "Засыпка ямы идёт кейсом FILL_CRATER: иначе землю некому носить");
-        assertEquals(Map.of("dirt", 4), backfill.consumes(), "Засыпка просит землю, а не любой материал");
+                "Засыпка ямы идёт кейсом FILL_CRATER: иначе землю некому носить"
+                        + " При смене cleanup_PitInSettlement_PostsBackfill проверь это утверждение.");
+        assertEquals(
+                Map.of("dirt", 4),
+                backfill.consumes(),
+                "Засыпка просит землю, а не любой материал"
+                        + " Иначе тест cleanup_PitInSettlement_PostsBackfill перестанет ловить эту поломку. При смене cleanup_PitInSettlement_PostsBackfill проверь это утверждение.");
     }
 
     @Test
@@ -104,7 +125,8 @@ class CleanupCasesTests {
 
         assertFalse(
                 PlanCaseFacts.task(plan, "event:level_lot:level_lot").feasible(),
-                "Выравнивание без земли не крутится: узел ждёт материал, а не падает по кругу: " + plan.tasks());
+                "Выравнивание без земли не крутится: узел ждёт материал, а не падает по кругу: " + plan.tasks()
+                        + " Иначе тест cleanup_NoDirtForMound_LevelLotWaitsForMaterial перестанет ловить эту поломку. При смене cleanup_NoDirtForMound_LevelLotWaitsForMaterial проверь это утверждение.");
     }
 
     @Test
@@ -118,10 +140,12 @@ class CleanupCasesTests {
 
         assertFalse(
                 PlanCaseFacts.posted(plan, "event:level_lot:level_lot"),
-                "Холм вне участка — природный рельеф, а не работа: его не срезают: " + plan.tasks());
+                "Холм вне участка — природный рельеф, а не работа: его не срезают: " + plan.tasks()
+                        + " Иначе тест cleanup_NaturalSlopeOnly_DoesNoLeveling перестанет ловить эту поломку. При смене cleanup_NaturalSlopeOnly_DoesNoLeveling проверь это утверждение.");
         assertFalse(
                 PlanCaseFacts.posted(plan, "event:backfill:backfill"),
-                "Природная впадина без ям и подсыпки не превращается в засыпку: " + plan.tasks());
+                "Природная впадина без ям и подсыпки не превращается в засыпку: " + plan.tasks()
+                        + " Иначе тест cleanup_NaturalSlopeOnly_DoesNoLeveling перестанет ловить эту поломку. При смене cleanup_NaturalSlopeOnly_DoesNoLeveling проверь это утверждение.");
     }
 
     @Test
@@ -137,10 +161,12 @@ class CleanupCasesTests {
 
         assertTrue(
                 PlanCaseFacts.posted(plan, "event:backfill:backfill"),
-                "Ямы на лоте засыпаются до стройки: " + plan.tasks());
+                "Ямы на лоте засыпаются до стройки: " + plan.tasks()
+                        + " Иначе тест cleanup_PitsAndMoundsOnLot_PostsBothWorks перестанет ловить эту поломку. При смене cleanup_PitsAndMoundsOnLot_PostsBothWorks проверь это утверждение.");
         assertTrue(
                 PlanCaseFacts.posted(plan, "event:level_lot:level_lot"),
-                "Насыпь на лоте срезается до стройки: " + plan.tasks());
+                "Насыпь на лоте срезается до стройки: " + plan.tasks()
+                        + " Иначе тест cleanup_PitsAndMoundsOnLot_PostsBothWorks перестанет ловить эту поломку. При смене cleanup_PitsAndMoundsOnLot_PostsBothWorks проверь это утверждение.");
     }
 
     @Test
@@ -155,10 +181,12 @@ class CleanupCasesTests {
 
         assertTrue(
                 PlanCaseFacts.posted(plan, "event:backfill:backfill"),
-                "Земля есть на складе — засыпка выполнима без новой добычи: " + plan.tasks());
+                "Земля есть на складе — засыпка выполнима без новой добычи: " + plan.tasks()
+                        + " Иначе тест cleanup_FillDirtInStock_DoesNotDigAgain перестанет ловить эту поломку. При смене cleanup_FillDirtInStock_DoesNotDigAgain проверь это утверждение.");
         assertTrue(
                 plan.tasks().stream().noneMatch(task -> task.feasible() && "dirt".equals(task.makes())),
                 "Земли в сундуках хватает — добыча земли не ставится, иначе сундуки пополняются землёй "
-                        + "вместо расхода: " + plan.tasks());
+                        + "вместо расхода: " + plan.tasks()
+                        + " При смене cleanup_FillDirtInStock_DoesNotDigAgain проверь это утверждение.");
     }
 }

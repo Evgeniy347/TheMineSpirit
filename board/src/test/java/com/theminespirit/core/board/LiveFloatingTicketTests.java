@@ -46,28 +46,31 @@ class LiveFloatingTicketTests {
                         + "не достанет ствол на y=85..97. План: " + calls));
         assertTrue(
                 ((Integer) pillar.params().get("height")) >= 10,
-                "Опора обязана довести духа до верхних брёвен y≈97, а не на пару блоков. План: " + pillar.params());
+                "Опора обязана довести духа до верхних брёвен y≈97, а не на пару блоков. План: " + pillar.params()
+                        + " Иначе тест liveFloatingCrownTicket_Plan_BuildsSupportAndChopsWholeTree перестанет ловить эту поломку. При смене liveFloatingCrownTicket_Plan_BuildsSupportAndChopsWholeTree проверь это утверждение.");
         assertTrue(
                 calls.stream()
                         .anyMatch(call -> "acquire".equals(call.script())
                                 && "minecraft:dirt".equals(call.params().get("item"))),
                 "У духа в кроне пустой инвентарь: план обязан сначала взять землю (сундуки двора/добыча), "
                         + "иначе pillar_up падает «нет материала для столба» — так observe16 и остался без [clear]. "
-                        + "План: " + calls);
+                        + "План: " + calls
+                        + " При смене liveFloatingCrownTicket_Plan_BuildsSupportAndChopsWholeTree проверь это утверждение.");
         assertEquals(
                 "minecraft:dirt",
                 pillar.params().get("block"),
-                "pillar_up обязан ставить именно добытую землю, а не выбирать пустой булыжник. План: "
-                        + pillar.params());
+                "pillar_up обязан ставить именно добытую землю, а не выбирать пустой булыжник. План: " + pillar.params()
+                        + " Иначе тест liveFloatingCrownTicket_Plan_BuildsSupportAndChopsWholeTree перестанет ловить эту поломку. При смене liveFloatingCrownTicket_Plan_BuildsSupportAndChopsWholeTree проверь это утверждение.");
         assertTrue(
                 calls.stream().anyMatch(call -> "pillar_down".equals(call.script())),
-                "Временную опору надо разобрать, иначе уборка оставит в поселении свой столб. План: " + calls);
+                "Временную опору надо разобрать, иначе уборка оставит в поселении свой столб. План: " + calls
+                        + " При смене liveFloatingCrownTicket_Plan_BuildsSupportAndChopsWholeTree проверь это утверждение.");
         assertTrue(
                 calls.stream()
                         .anyMatch(call -> "clear_area".equals(call.script())
                                 && ((Integer) call.params().get("y2")) >= 96),
-                "Рубка обязана доставать до верхних брёвен и листвы y≈97, а не только до нижнего блока. План: "
-                        + calls);
+                "Рубка обязана доставать до верхних брёвен и листвы y≈97, а не только до нижнего блока. План: " + calls
+                        + " Иначе тест liveFloatingCrownTicket_Plan_BuildsSupportAndChopsWholeTree перестанет ловить эту поломку. При смене liveFloatingCrownTicket_Plan_BuildsSupportAndChopsWholeTree проверь это утверждение.");
     }
 
     @Test
@@ -84,7 +87,10 @@ class LiveFloatingTicketTests {
         List<ScriptCall> clears = calls(plan).stream()
                 .filter(call -> "clear_area".equals(call.script()))
                 .toList();
-        assertTrue(!clears.isEmpty(), "План уборки обязан содержать clear_area. План: " + calls(plan));
+        assertTrue(
+                !clears.isEmpty(),
+                "План уборки обязан содержать clear_area. План: " + calls(plan)
+                        + " Иначе тест liveWideTidySet_Plan_SplitsClearBoxesUnderScriptLimit перестанет ловить эту поломку. При смене liveWideTidySet_Plan_SplitsClearBoxesUnderScriptLimit проверь это утверждение.");
         for (ScriptCall call : clears) {
             int volume =
                     ((Integer) call.params().get("x2") - (Integer) call.params().get("x1") + 1)
@@ -98,7 +104,8 @@ class LiveFloatingTicketTests {
                     volume <= CatalogLimits.BUILD_VOLUME_MAX,
                     "Живой тикет собрал пятна по всей базе: clear_area с объёмом " + volume + " больше предела "
                             + CatalogLimits.BUILD_VOLUME_MAX + " падает с IllegalArgumentException (observe16: "
-                            + "«Объём clear_area 4352 больше предела 4096»). План: " + clears);
+                            + "«Объём clear_area 4352 больше предела 4096»). План: " + clears
+                            + " Иначе тест liveWideTidySet_Plan_SplitsClearBoxesUnderScriptLimit перестанет ловить эту поломку. При смене liveWideTidySet_Plan_SplitsClearBoxesUnderScriptLimit проверь это утверждение.");
         }
     }
 

@@ -70,7 +70,8 @@ class GraphWorldTagTests {
                 "Округа для путей графа: красный песок отдельно, глина, вода для рыбалки, цветы, грибы, бамбук, "
                         + "ламинария, лианы, грязь и корни мангров, найденная алмазная руда, живность. Порода дерева "
                         + "идёт не от блока-бревна (постройки из брёвен — не лес): её даёт разобранное дерево "
-                        + "TreeSight: " + world);
+                        + "TreeSight: " + world
+                        + " Иначе тест world_BlocksAndCreatures_TagsOfGraphWays перестанет ловить эту поломку. При смене world_BlocksAndCreatures_TagsOfGraphWays проверь это утверждение.");
     }
 
     @Test
@@ -86,19 +87,23 @@ class GraphWorldTagTests {
                 "mud", "mangrove_swamp",
                 "mangrove_roots", "mangrove_swamp");
 
-        tags.forEach((block, tag) -> assertEquals(
-                Set.of(tag),
-                GraphNames.blockWorld(block),
-                "Блок " + block + " — метка мира " + tag + " для пути графа: иначе путь не активируется"));
+        tags.forEach(
+                (block, tag) -> assertEquals(
+                        Set.of(tag),
+                        GraphNames.blockWorld(block),
+                        "Блок " + block + " — метка мира " + tag + " для пути графа: иначе путь не активируется"
+                                + " При смене blockWorld_FlowerMushroomAndBiomeBearing_ReturnsWayTag проверь это утверждение."));
         assertEquals(
                 Set.of(),
                 GraphNames.blockWorld("stone"),
-                "Обычный камень не метка мира: лишние теги активировали бы пути там, где ресурса нет");
+                "Обычный камень не метка мира: лишние теги активировали бы пути там, где ресурса нет"
+                        + " Иначе тест blockWorld_FlowerMushroomAndBiomeBearing_ReturnsWayTag перестанет ловить эту поломку. При смене blockWorld_FlowerMushroomAndBiomeBearing_ReturnsWayTag проверь это утверждение.");
         assertEquals(
                 Set.of(),
                 GraphNames.blockWorld("jungle_log"),
                 "Бревно постройки — не дерево: порода приходит только от разобранного дерева, иначе граф рубит "
-                        + "свои стены (живой провал 11.11 у (-180,70,-505))");
+                        + "свои стены (живой провал 11.11 у (-180,70,-505))"
+                        + " При смене blockWorld_FlowerMushroomAndBiomeBearing_ReturnsWayTag проверь это утверждение.");
     }
 
     @Test
@@ -106,11 +111,13 @@ class GraphWorldTagTests {
         assertEquals(
                 Set.of("emerald_ore"),
                 GraphNames.blockWorld("emerald_ore"),
-                "Изумрудная руда — метка мира emerald_ore: без неё путь mine_emerald не активируется");
+                "Изумрудная руда — метка мира emerald_ore: без неё путь mine_emerald не активируется"
+                        + " Иначе тест blockWorld_EmeraldOre_TagForMineEmerald перестанет ловить эту поломку. При смене blockWorld_EmeraldOre_TagForMineEmerald проверь это утверждение.");
         assertEquals(
                 Set.of("emerald_ore"),
                 GraphNames.blockWorld("deepslate_emerald_ore"),
-                "Глубинносланцевая изумрудная руда — та же метка мира emerald_ore");
+                "Глубинносланцевая изумрудная руда — та же метка мира emerald_ore"
+                        + " Иначе тест blockWorld_EmeraldOre_TagForMineEmerald перестанет ловить эту поломку. При смене blockWorld_EmeraldOre_TagForMineEmerald проверь это утверждение.");
     }
 
     @Test
@@ -123,6 +130,7 @@ class GraphWorldTagTests {
                         GraphNames.blockWorld("pointed_dripstone"),
                         GraphNames.blockWorld("moss_block")),
                 "Жеода, карстовая пещера и пышная пещера узнаются по своим блокам: без метки мира пути "
-                        + "mine_amethyst, mine_dripstone и forage_moss_block не активируются");
+                        + "mine_amethyst, mine_dripstone и forage_moss_block не активируются"
+                        + " Иначе тест world_GeodeDripstoneLushBlocks_Tags перестанет ловить эту поломку. При смене world_GeodeDripstoneLushBlocks_Tags проверь это утверждение.");
     }
 }

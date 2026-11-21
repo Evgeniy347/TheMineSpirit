@@ -32,11 +32,16 @@ class BoardRestartStateLiveTests {
         long[] clock = {second.get("tick").asLong()};
         Board board = new Board(() -> clock[0]);
         BoardTicket ticket = ticket(task(boardJson, "graph:strip_oak_log"));
-        assertEquals(BoardOutcome.ACCEPTED, board.submit(ticket), "Живое задание обтёсывания принимается доской");
+        assertEquals(
+                BoardOutcome.ACCEPTED,
+                board.submit(ticket),
+                "Живое задание обтёсывания принимается доской"
+                        + " Иначе тест restore_StuckMarkAndCasePause_SurviveServerRestart перестанет ловить эту поломку. При смене restore_StuckMarkAndCasePause_SurviveServerRestart проверь это утверждение.");
         assertEquals(
                 BoardOutcome.CLAIMED,
                 board.claim(ticket.id(), spirit, clock[0]),
-                "Живой ticket выдаётся своему духу spirit-2");
+                "Живой ticket выдаётся своему духу spirit-2"
+                        + " Иначе тест restore_StuckMarkAndCasePause_SurviveServerRestart перестанет ловить эту поломку. При смене restore_StuckMarkAndCasePause_SurviveServerRestart проверь это утверждение.");
         board.fail(
                 ticket.id(),
                 new StockView(Map.of()),
@@ -49,11 +54,13 @@ class BoardRestartStateLiveTests {
         assertTrue(
                 restored.stuck().isStuck(spirit, clock[0]),
                 "Метка «застрял» обязана пережить перезапуск сервера: иначе дух снова получает задания "
-                        + "и падает (observe14 A7/N22)");
+                        + "и падает (observe14 A7/N22)"
+                        + " При смене restore_StuckMarkAndCasePause_SurviveServerRestart проверь это утверждение.");
         assertFalse(
                 restored.availableTo(spirit, BoardCase.GATHER_MATERIALS, clock[0]),
                 "Пауза кейса после провала обязана пережить перезапуск: иначе сразу после старта задание снова "
-                        + "выдаётся тому же духу (observe14 A7/N25)");
+                        + "выдаётся тому же духу (observe14 A7/N25)"
+                        + " При смене restore_StuckMarkAndCasePause_SurviveServerRestart проверь это утверждение.");
     }
 
     @Test
@@ -74,11 +81,13 @@ class BoardRestartStateLiveTests {
             assertEquals(
                     BoardOutcome.ACCEPTED,
                     board.submit(ticket),
-                    "Живой repair:level:23333410 ставится на попытку " + (attempt + 1));
+                    "Живой repair:level:23333410 ставится на попытку " + (attempt + 1)
+                            + " Иначе тест restore_BlockedTicket_KeepsPauseAndTimeout перестанет ловить эту поломку. При смене restore_BlockedTicket_KeepsPauseAndTimeout проверь это утверждение.");
             assertEquals(
                     BoardOutcome.CLAIMED,
                     board.claim(ticket.id(), UUID.randomUUID(), clock[0]),
-                    "Попытка " + (attempt + 1) + " выдана духу");
+                    "Попытка " + (attempt + 1) + " выдана духу"
+                            + " Иначе тест restore_BlockedTicket_KeepsPauseAndTimeout перестанет ловить эту поломку. При смене restore_BlockedTicket_KeepsPauseAndTimeout проверь это утверждение.");
             assertTrue(
                     board.fail(
                             ticket.id(),
@@ -87,14 +96,16 @@ class BoardRestartStateLiveTests {
                             attempt + 1 == BoardTuning.ticketFailLimit()
                                     ? new GraphBlock.Item("cobblestone", 1)
                                     : null),
-                    "Попытка " + (attempt + 1) + " провалена");
+                    "Попытка " + (attempt + 1) + " провалена"
+                            + " Иначе тест restore_BlockedTicket_KeepsPauseAndTimeout перестанет ловить эту поломку. При смене restore_BlockedTicket_KeepsPauseAndTimeout проверь это утверждение.");
             clock[0] += BoardTuning.caseFailPauseCapTicks();
             board.prune(clock[0]);
         }
         assertEquals(
                 BoardStatus.BLOCKED,
                 board.statusOf(ticket.id()).orElse(null),
-                "После " + BoardTuning.ticketFailLimit() + " провалов живое задание заблокировано");
+                "После " + BoardTuning.ticketFailLimit() + " провалов живое задание заблокировано"
+                        + " Иначе тест restore_BlockedTicket_KeepsPauseAndTimeout перестанет ловить эту поломку. При смене restore_BlockedTicket_KeepsPauseAndTimeout проверь это утверждение.");
 
         long blockedAt = clock[0];
         Board restored = new Board(() -> clock[0]);
@@ -102,28 +113,33 @@ class BoardRestartStateLiveTests {
         assertEquals(
                 BoardStatus.BLOCKED,
                 restored.statusOf(ticket.id()).orElse(null),
-                "BLOCKED обязан пережить перезапуск, а не стать снова PENDING/ASSIGNED (observe14 A7/N25)");
+                "BLOCKED обязан пережить перезапуск, а не стать снова PENDING/ASSIGNED (observe14 A7/N25)"
+                        + " Иначе тест restore_BlockedTicket_KeepsPauseAndTimeout перестанет ловить эту поломку. При смене restore_BlockedTicket_KeepsPauseAndTimeout проверь это утверждение.");
         assertEquals(
                 BoardOutcome.BLOCKED,
                 restored.claim(ticket.id(), UUID.randomUUID(), clock[0]),
-                "До конца паузы заблокированное задание не выдаётся даже после загрузки состояния");
+                "До конца паузы заблокированное задание не выдаётся даже после загрузки состояния"
+                        + " Иначе тест restore_BlockedTicket_KeepsPauseAndTimeout перестанет ловить эту поломку. При смене restore_BlockedTicket_KeepsPauseAndTimeout проверь это утверждение.");
         String card = BoardWhy.waitReason(restored, ticket, stock, clock[0]).orElse(null);
         assertTrue(
                 card != null && card.contains("заблокировано"),
-                "Карточка после загрузки называет причину блокировки: " + card);
+                "Карточка после загрузки называет причину блокировки: " + card
+                        + " Иначе тест restore_BlockedTicket_KeepsPauseAndTimeout перестанет ловить эту поломку. При смене restore_BlockedTicket_KeepsPauseAndTimeout проверь это утверждение.");
 
         clock[0] = blockedAt + BoardTuning.caseFailPauseCapTicks();
         restored.claimable(stock, clock[0]);
         assertEquals(
                 BoardStatus.BLOCKED,
                 restored.statusOf(ticket.id()).orElse(null),
-                "Таймер не снимает блокировку после перезапуска: снимает только выполненное условие");
+                "Таймер не снимает блокировку после перезапуска: снимает только выполненное условие"
+                        + " Иначе тест restore_BlockedTicket_KeepsPauseAndTimeout перестанет ловить эту поломку. При смене restore_BlockedTicket_KeepsPauseAndTimeout проверь это утверждение.");
 
         restored.claimable(new StockView(Map.of("cobblestone", 1)), clock[0]);
         assertEquals(
                 BoardStatus.PENDING,
                 restored.statusOf(ticket.id()).orElse(null),
-                "Предмет появился — блокировка снята проверкой условия, а не временем");
+                "Предмет появился — блокировка снята проверкой условия, а не временем"
+                        + " Иначе тест restore_BlockedTicket_KeepsPauseAndTimeout перестанет ловить эту поломку. При смене restore_BlockedTicket_KeepsPauseAndTimeout проверь это утверждение.");
     }
 
     @Test
@@ -133,7 +149,11 @@ class BoardRestartStateLiveTests {
         long[] clock = {bot.get("tick").asLong()};
         Board board = new Board(() -> clock[0]);
         BoardTicket ticket = ticket(task(boardJson, "graph:strip_oak_log"));
-        assertEquals(BoardOutcome.ACCEPTED, board.submit(ticket), "Живое задание принимается доской");
+        assertEquals(
+                BoardOutcome.ACCEPTED,
+                board.submit(ticket),
+                "Живое задание принимается доской"
+                        + " Иначе тест waitReason_StaleBusyNote_NotShownAfterPause перестанет ловить эту поломку. При смене waitReason_StaleBusyNote_NotShownAfterPause проверь это утверждение.");
         board.noteWait(ticket.id(), "spirit-2 — занят: acquire/goto");
 
         clock[0] += BoardTuning.boardIntervalTicks();
@@ -143,7 +163,8 @@ class BoardRestartStateLiveTests {
         assertTrue(
                 card == null || !card.contains("занят"),
                 "Устаревшая причина «занят» не показывается: дух уже idle, а доска держит старый script/activity "
-                        + "(observe14 A11); карточка: " + card);
+                        + "(observe14 A11); карточка: " + card
+                        + " Иначе тест waitReason_StaleBusyNote_NotShownAfterPause перестанет ловить эту поломку. При смене waitReason_StaleBusyNote_NotShownAfterPause проверь это утверждение.");
     }
 
     @Test
@@ -164,12 +185,16 @@ class BoardRestartStateLiveTests {
         for (int attempt = 0; attempt < BoardTuning.ticketFailLimit(); attempt++) {
             if (attempt == 0) {
                 assertEquals(
-                        BoardOutcome.ACCEPTED, board.submit(ticket), "Живой сад ставится на попытку " + (attempt + 1));
+                        BoardOutcome.ACCEPTED,
+                        board.submit(ticket),
+                        "Живой сад ставится на попытку " + (attempt + 1)
+                                + " Иначе тест blockedTicket_SameStockAtAssignment_DoesNotUnblockImmediately перестанет ловить эту поломку. При смене blockedTicket_SameStockAtAssignment_DoesNotUnblockImmediately проверь это утверждение.");
             }
             assertEquals(
                     BoardOutcome.CLAIMED,
                     board.claim(ticket.id(), UUID.randomUUID(), clock[0]),
-                    "Попытка " + (attempt + 1) + " выдана духу");
+                    "Попытка " + (attempt + 1) + " выдана духу"
+                            + " Иначе тест blockedTicket_SameStockAtAssignment_DoesNotUnblockImmediately перестанет ловить эту поломку. При смене blockedTicket_SameStockAtAssignment_DoesNotUnblockImmediately проверь это утверждение.");
             assertTrue(
                     board.fail(
                             ticket.id(),
@@ -178,19 +203,22 @@ class BoardRestartStateLiveTests {
                             attempt + 1 == BoardTuning.ticketFailLimit()
                                     ? new GraphBlock.Item("cobblestone", 1)
                                     : null),
-                    "Попытка " + (attempt + 1) + " провалена");
+                    "Попытка " + (attempt + 1) + " провалена"
+                            + " Иначе тест blockedTicket_SameStockAtAssignment_DoesNotUnblockImmediately перестанет ловить эту поломку. При смене blockedTicket_SameStockAtAssignment_DoesNotUnblockImmediately проверь это утверждение.");
             if (attempt + 1 < BoardTuning.ticketFailLimit()) {
                 clock[0] += BoardTuning.caseFailPauseCapTicks();
                 assertEquals(
                         BoardOutcome.ACCEPTED,
                         board.submit(ticket),
-                        "Этапное задание переоткрывается перед следующей попыткой");
+                        "Этапное задание переоткрывается перед следующей попыткой"
+                                + " Иначе тест blockedTicket_SameStockAtAssignment_DoesNotUnblockImmediately перестанет ловить эту поломку. При смене blockedTicket_SameStockAtAssignment_DoesNotUnblockImmediately проверь это утверждение.");
             }
         }
         assertEquals(
                 BoardStatus.BLOCKED,
                 board.statusOf(ticket.id()).orElse(null),
-                "После " + BoardTuning.ticketFailLimit() + " провалов сад заблокирован");
+                "После " + BoardTuning.ticketFailLimit() + " провалов сад заблокирован"
+                        + " Иначе тест blockedTicket_SameStockAtAssignment_DoesNotUnblockImmediately перестанет ловить эту поломку. При смене blockedTicket_SameStockAtAssignment_DoesNotUnblockImmediately проверь это утверждение.");
 
         board.claimable(stock, clock[0]);
 
@@ -198,7 +226,8 @@ class BoardRestartStateLiveTests {
                 BoardStatus.BLOCKED,
                 board.statusOf(ticket.id()).orElse(null),
                 "Тот же запас, что при блокировке, не снимает BLOCKED: раньше «изменилось: failures=0» "
-                        + "возникало от сравнения запаса с потребностью (observe15 B3)");
+                        + "возникало от сравнения запаса с потребностью (observe15 B3)"
+                        + " Иначе тест blockedTicket_SameStockAtAssignment_DoesNotUnblockImmediately перестанет ловить эту поломку. При смене blockedTicket_SameStockAtAssignment_DoesNotUnblockImmediately проверь это утверждение.");
     }
 
     private static JsonNode read(String name) throws IOException {

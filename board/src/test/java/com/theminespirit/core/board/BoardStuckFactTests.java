@@ -54,10 +54,12 @@ class BoardStuckFactTests {
         assertTrue(
                 board.stuck().isStuck(SPIRIT, 0),
                 "Провал движения ставит метку духу, даже если задание ждало материал: spirit-6 стоял на площадке "
-                        + "час, потому что «пути нет» приходило с блокировкой Item, и метка не ставилась");
+                        + "час, потому что «пути нет» приходило с блокировкой Item, и метка не ставилась"
+                        + " При смене fail_NoPathFactFromMovement_MarksSpiritEvenWhenNeedIsItem проверь это утверждение.");
         assertTrue(
                 board.stuck().of(SPIRIT, 0).orElseThrow().noPath(),
-                "Метка несёт факт «пути нет»: по нему граф ставит rescue, а не повторяет ту же работу");
+                "Метка несёт факт «пути нет»: по нему граф ставит rescue, а не повторяет ту же работу"
+                        + " Иначе тест fail_NoPathFactFromMovement_MarksSpiritEvenWhenNeedIsItem перестанет ловить эту поломку. При смене fail_NoPathFactFromMovement_MarksSpiritEvenWhenNeedIsItem проверь это утверждение.");
     }
 
     @Test
@@ -69,6 +71,7 @@ class BoardStuckFactTests {
         assertFalse(
                 board.stuck().isStuck(SPIRIT, 0),
                 "Нехватка материала — не «пути нет»: иначе дух с меткой не получит задачу добыть материал "
-                        + "и будет ждать rescue там, где он не нужен");
+                        + "и будет ждать rescue там, где он не нужен"
+                        + " При смене fail_ItemNeedWithoutMovementFact_DoesNotMarkSpirit проверь это утверждение.");
     }
 }

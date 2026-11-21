@@ -31,7 +31,8 @@ class ToolTicketPlansTests {
                         .anyMatch(call ->
                                 "minecraft:wooden_hoe".equals(call.params().get("item"))),
                 "Тяпка не входит в набор инструментов доски: её крафт идёт общим путём с целью craft, "
-                        + "иначе gear_craft_hoe остаётся без исполнителя, а пашню нечем делать");
+                        + "иначе gear_craft_hoe остаётся без исполнителя, а пашню нечем делать"
+                        + " При смене gatherMaterials_WithCraftItem_CraftsHoe проверь это утверждение.");
     }
 
     @Test
@@ -44,7 +45,8 @@ class ToolTicketPlansTests {
                 calls(plan, "craft").stream()
                         .anyMatch(call ->
                                 "minecraft:stone_pickaxe".equals(call.params().get("item"))),
-                "Кирка для шахты крафтится своим кейсом: задание без шага craft оставило бы духа без инструмента");
+                "Кирка для шахты крафтится своим кейсом: задание без шага craft оставило бы духа без инструмента"
+                        + " Иначе тест plan_CraftStonePickaxe_CraftsNamedItem перестанет ловить эту поломку. При смене plan_CraftStonePickaxe_CraftsNamedItem проверь это утверждение.");
     }
 
     @Test
@@ -63,10 +65,12 @@ class ToolTicketPlansTests {
         assertTrue(
                 first instanceof SequenceNode && scripts(first).contains("clear_area"),
                 "Грядка на неровной земле сначала выравнивается: иначе пашня ставится в воздух/камень — "
-                        + scripts(first));
+                        + scripts(first)
+                        + " При смене plan_PlacedWithLeveling_LevelsBeforeBuild проверь это утверждение.");
         assertTrue(
                 scripts(plan).contains("build_schematic"),
-                "После выравнивания грядка строится по схеме — " + scripts(plan));
+                "После выравнивания грядка строится по схеме — " + scripts(plan)
+                        + " Иначе тест plan_PlacedWithLeveling_LevelsBeforeBuild перестанет ловить эту поломку. При смене plan_PlacedWithLeveling_LevelsBeforeBuild проверь это утверждение.");
     }
 
     private static List<ScriptCall> calls(TaskNode root, String script) {

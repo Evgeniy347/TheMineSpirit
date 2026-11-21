@@ -18,26 +18,43 @@ class RoutePathTests {
         List<BlockCoord> tiles = RoutePath.tiles(FROM, TO);
         Set<BlockCoord> cells = Set.copyOf(tiles);
 
-        assertTrue(cells.contains(FROM), "Тропа начинается у поселения");
-        assertTrue(cells.contains(TO), "Тропа доходит до точки биома");
+        assertTrue(
+                cells.contains(FROM),
+                "Тропа начинается у поселения"
+                        + " Иначе тест tiles_FromSettlementToPoint_BothEndsInside перестанет ловить эту поломку. При смене tiles_FromSettlementToPoint_BothEndsInside проверь это утверждение.");
+        assertTrue(
+                cells.contains(TO),
+                "Тропа доходит до точки биома"
+                        + " Иначе тест tiles_FromSettlementToPoint_BothEndsInside перестанет ловить эту поломку. При смене tiles_FromSettlementToPoint_BothEndsInside проверь это утверждение.");
     }
 
     @Test
     void tiles_AlongRoute_AreThreeWideAndUnique() {
         List<BlockCoord> tiles = RoutePath.tiles(FROM, TO);
 
-        assertEquals(tiles.size(), Set.copyOf(tiles).size(), "Клетки тропы не повторяются: лишний проход не нужен");
+        assertEquals(
+                tiles.size(),
+                Set.copyOf(tiles).size(),
+                "Клетки тропы не повторяются: лишний проход не нужен"
+                        + " Иначе тест tiles_AlongRoute_AreThreeWideAndUnique перестанет ловить эту поломку. При смене tiles_AlongRoute_AreThreeWideAndUnique проверь это утверждение.");
         Set<Integer> zAtStart = tiles.stream()
                 .filter(cell -> cell.x() == 0 && cell.z() >= -1 && cell.z() <= 1)
                 .map(BlockCoord::z)
                 .collect(Collectors.toSet());
-        assertEquals(Set.of(-1, 0, 1), zAtStart, "Дорожка трёхклеточной ширины: дух не идёт по кромке");
+        assertEquals(
+                Set.of(-1, 0, 1),
+                zAtStart,
+                "Дорожка трёхклеточной ширины: дух не идёт по кромке"
+                        + " Иначе тест tiles_AlongRoute_AreThreeWideAndUnique перестанет ловить эту поломку. При смене tiles_AlongRoute_AreThreeWideAndUnique проверь это утверждение.");
     }
 
     @Test
     void tiles_SamePoint_SingleColumn() {
         List<BlockCoord> tiles = RoutePath.tiles(FROM, FROM);
 
-        assertTrue(tiles.contains(FROM), "Точка совпала с поселением — тропа всё равно отмечает место");
+        assertTrue(
+                tiles.contains(FROM),
+                "Точка совпала с поселением — тропа всё равно отмечает место"
+                        + " Иначе тест tiles_SamePoint_SingleColumn перестанет ловить эту поломку. При смене tiles_SamePoint_SingleColumn проверь это утверждение.");
     }
 }

@@ -33,13 +33,29 @@ class BuildGapUnloadedTests {
 
         BuildGap.Gap gap = BuildGap.trace(plan, "oak", new Probe(loaded, last), NoSchemes.INSTANCE);
 
-        assertEquals(3, gap.unknown(), "Три клетки из фикстуры в незагруженных чанках — это unknown, а не дыры");
-        assertFalse(gap.confident(), "Пока чанк не загружен, аудит не делает вывода о постройке");
-        assertEquals(1, gap.total(), "В план входит только загруженная клетка: незагруженные не считаются");
-        assertEquals(1, gap.shortage(), "Загруженная клетка пустая — её и называют недостающей");
+        assertEquals(
+                3,
+                gap.unknown(),
+                "Три клетки из фикстуры в незагруженных чанках — это unknown, а не дыры"
+                        + " Иначе тест trace_ChunksNotLoaded_UnknownInsteadOfMissing перестанет ловить эту поломку. При смене trace_ChunksNotLoaded_UnknownInsteadOfMissing проверь это утверждение.");
+        assertFalse(
+                gap.confident(),
+                "Пока чанк не загружен, аудит не делает вывода о постройке"
+                        + " Иначе тест trace_ChunksNotLoaded_UnknownInsteadOfMissing перестанет ловить эту поломку. При смене trace_ChunksNotLoaded_UnknownInsteadOfMissing проверь это утверждение.");
+        assertEquals(
+                1,
+                gap.total(),
+                "В план входит только загруженная клетка: незагруженные не считаются"
+                        + " Иначе тест trace_ChunksNotLoaded_UnknownInsteadOfMissing перестанет ловить эту поломку. При смене trace_ChunksNotLoaded_UnknownInsteadOfMissing проверь это утверждение.");
+        assertEquals(
+                1,
+                gap.shortage(),
+                "Загруженная клетка пустая — её и называют недостающей"
+                        + " Иначе тест trace_ChunksNotLoaded_UnknownInsteadOfMissing перестанет ловить эту поломку. При смене trace_ChunksNotLoaded_UnknownInsteadOfMissing проверь это утверждение.");
         assertFalse(
                 gap.missingCells().containsKey(new BlockCoord(-167, 69, -526)),
-                "Клетка незагруженного чанка не попадает в список «нет блока»: иначе ремонт снесёт готовое");
+                "Клетка незагруженного чанка не попадает в список «нет блока»: иначе ремонт снесёт готовое"
+                        + " При смене trace_ChunksNotLoaded_UnknownInsteadOfMissing проверь это утверждение.");
     }
 
     @Test
@@ -50,9 +66,20 @@ class BuildGapUnloadedTests {
 
         BuildGap.Gap gap = BuildGap.trace(dirt(all.keySet()), "oak", new Probe(all, null), NoSchemes.INSTANCE);
 
-        assertTrue(gap.confident(), "Все чанки загружены — выводу о постройке ничего не мешает");
-        assertEquals(all.size(), gap.unknown() + gap.total(), "Каждая клетка либо известна, либо неизвестна");
-        assertEquals(all.size(), gap.shortage(), "Все четыре клетки пустые — четыре недостающих");
+        assertTrue(
+                gap.confident(),
+                "Все чанки загружены — выводу о постройке ничего не мешает"
+                        + " Иначе тест trace_AllChunksLoaded_MissingCounted перестанет ловить эту поломку. При смене trace_AllChunksLoaded_MissingCounted проверь это утверждение.");
+        assertEquals(
+                all.size(),
+                gap.unknown() + gap.total(),
+                "Каждая клетка либо известна, либо неизвестна"
+                        + " Иначе тест trace_AllChunksLoaded_MissingCounted перестанет ловить эту поломку. При смене trace_AllChunksLoaded_MissingCounted проверь это утверждение.");
+        assertEquals(
+                all.size(),
+                gap.shortage(),
+                "Все четыре клетки пустые — четыре недостающих"
+                        + " Иначе тест trace_AllChunksLoaded_MissingCounted перестанет ловить эту поломку. При смене trace_AllChunksLoaded_MissingCounted проверь это утверждение.");
     }
 
     private static TaskNode dirt(Set<BlockCoord> cells) {

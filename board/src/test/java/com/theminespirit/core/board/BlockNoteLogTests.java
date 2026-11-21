@@ -25,7 +25,9 @@ class BlockNoteLogTests {
                 .orElseThrow();
 
         assertTrue(
-                summary.changed(), "Первая блокировка задания печатается сразу: иначе о ней узнают только из сводки");
+                summary.changed(),
+                "Первая блокировка задания печатается сразу: иначе о ней узнают только из сводки"
+                        + " При смене observe_FirstBlock_IsPrinted проверь это утверждение.");
     }
 
     @Test
@@ -41,7 +43,8 @@ class BlockNoteLogTests {
                                 "craft:x",
                                 List.of("failures=5", "last=нет пути", "history=a; b")),
                         20),
-                "Повторная блокировка по той же причине не печатается: меняющиеся failures/history — не новая причина");
+                "Повторная блокировка по той же причине не печатается: меняющиеся failures/history — не новая причина"
+                        + " Иначе тест observe_RepeatedBlockWithSameCause_IsSilent перестанет ловить эту поломку. При смене observe_RepeatedBlockWithSameCause_IsSilent проверь это утверждение.");
     }
 
     @Test
@@ -54,7 +57,8 @@ class BlockNoteLogTests {
                 Optional.empty(),
                 log.observe(entry(BoardLog.Event.BLOCKED, "craft:x", List.of("failures=5", "last=нет пути")), 30),
                 "Цикл BLOCKED→UNBLOCKED→BLOCKED с той же причиной не печатается снова: каналы блокировки и "
-                        + "разблокировки помнят своё состояние");
+                        + "разблокировки помнят своё состояние"
+                        + " Иначе тест observe_BlockUnblockCycle_DoesNotPrintEachCycle перестанет ловить эту поломку. При смене observe_BlockUnblockCycle_DoesNotPrintEachCycle проверь это утверждение.");
     }
 
     @Test
@@ -66,7 +70,8 @@ class BlockNoteLogTests {
                 log.observe(entry(BoardLog.Event.BLOCKED, "craft:x", List.of("failures=5", "last=нет инструмента")), 20)
                         .orElseThrow()
                         .changed(),
-                "Смена причины блокировки печатается сразу: иначе отладка идёт по старой причине");
+                "Смена причины блокировки печатается сразу: иначе отладка идёт по старой причине"
+                        + " При смене observe_ChangedCause_IsPrintedImmediately проверь это утверждение.");
     }
 
     @Test
@@ -79,8 +84,15 @@ class BlockNoteLogTests {
                         entry(BoardLog.Event.BLOCKED, "craft:x", List.of("last=нет пути")), 200)
                 .orElseThrow();
 
-        assertFalse(summary.changed(), "Сводка повторов помечена повтором, а не новой блокировкой");
-        assertEquals(2, summary.count(), "Сводка называет число повторов канала блокировки за окно");
+        assertFalse(
+                summary.changed(),
+                "Сводка повторов помечена повтором, а не новой блокировкой"
+                        + " Иначе тест observe_AfterWindow_ReturnsSummary перестанет ловить эту поломку. При смене observe_AfterWindow_ReturnsSummary проверь это утверждение.");
+        assertEquals(
+                2,
+                summary.count(),
+                "Сводка называет число повторов канала блокировки за окно"
+                        + " Иначе тест observe_AfterWindow_ReturnsSummary перестанет ловить эту поломку. При смене observe_AfterWindow_ReturnsSummary проверь это утверждение.");
     }
 
     @Test
@@ -93,6 +105,7 @@ class BlockNoteLogTests {
                 log.observe(entry(BoardLog.Event.BLOCKED, "craft:x", List.of("last=нет пути")), 20)
                         .orElseThrow()
                         .changed(),
-                "Задание, ушедшее с доски, забыто: вернувшись, его блокировка снова первая");
+                "Задание, ушедшее с доски, забыто: вернувшись, его блокировка снова первая"
+                        + " Иначе тест retain_ForgottenTicket_StartsChangedAgain перестанет ловить эту поломку. При смене retain_ForgottenTicket_StartsChangedAgain проверь это утверждение.");
     }
 }

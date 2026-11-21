@@ -17,8 +17,12 @@ class MoreGraphTests {
             SupplyGraph.Way path = GRAPH.way(way).orElseThrow();
             assertTrue(
                     GRAPH.items().containsKey(path.makes()),
-                    "Путь " + way + " объявляет узел " + path.makes() + " во фрагменте more");
-            assertTrue(GRAPH.items().get(path.makes()).base() > 0, "Стартовый вес узла положителен: " + path.makes());
+                    "Путь " + way + " объявляет узел " + path.makes() + " во фрагменте more"
+                            + " Иначе тест moreFragment_Nodes_AreDeclaredWithStartingWeights перестанет ловить эту поломку. При смене moreFragment_Nodes_AreDeclaredWithStartingWeights проверь это утверждение.");
+            assertTrue(
+                    GRAPH.items().get(path.makes()).base() > 0,
+                    "Стартовый вес узла положителен: " + path.makes()
+                            + " Иначе тест moreFragment_Nodes_AreDeclaredWithStartingWeights перестанет ловить эту поломку. При смене moreFragment_Nodes_AreDeclaredWithStartingWeights проверь это утверждение.");
         }
     }
 
@@ -36,8 +40,14 @@ class MoreGraphTests {
                 "more_secure_door",
                 "more_secure_hopper",
                 "more_share_reserve")) {
-            assertTrue(GRAPH.way(way).isPresent(), "Путь объявлен в данных, вес проверяет SupplyGraph.Way: " + way);
-            assertTrue(GRAPH.implemented(way), "Действие связано с исполнением: " + way);
+            assertTrue(
+                    GRAPH.way(way).isPresent(),
+                    "Путь объявлен в данных, вес проверяет SupplyGraph.Way: " + way
+                            + " Иначе тест moreFragment_ImplementedPaths_HaveExecution перестанет ловить эту поломку. При смене moreFragment_ImplementedPaths_HaveExecution проверь это утверждение.");
+            assertTrue(
+                    GRAPH.implemented(way),
+                    "Действие связано с исполнением: " + way
+                            + " Иначе тест moreFragment_ImplementedPaths_HaveExecution перестанет ловить эту поломку. При смене moreFragment_ImplementedPaths_HaveExecution проверь это утверждение.");
         }
     }
 
@@ -52,11 +62,13 @@ class MoreGraphTests {
             assertTrue(
                     GRAPH.way(way).isEmpty(),
                     "Путь " + way + " — правило выбора (не идти, подождать, не дублировать): "
-                            + "оно живёт поправкой в graph.json.choice, а не работой духа");
+                            + "оно живёт поправкой в graph.json.choice, а не работой духа"
+                            + " Иначе тест moreFragment_ControlRules_LiveInChoiceNotInWays перестанет ловить эту поломку. При смене moreFragment_ControlRules_LiveInChoiceNotInWays проверь это утверждение.");
         }
         assertTrue(
                 GRAPH.costs().choice() != null,
-                "Поправки выбора загружены из графа: иначе тюнинг весов некуда вписать");
+                "Поправки выбора загружены из графа: иначе тюнинг весов некуда вписать"
+                        + " При смене moreFragment_ControlRules_LiveInChoiceNotInWays проверь это утверждение.");
     }
 
     @Test
@@ -70,7 +82,8 @@ class MoreGraphTests {
 
             assertTrue(
                     plan.task(signal.getValue()).isPresent(),
-                    "Вход " + signal.getKey() + " обязан выбрать путь " + signal.getValue() + ": " + plan.tasks());
+                    "Вход " + signal.getKey() + " обязан выбрать путь " + signal.getValue() + ": " + plan.tasks()
+                            + " Иначе тест eachSignal_InputPresent_SelectsItsPath перестанет ловить эту поломку. При смене eachSignal_InputPresent_SelectsItsPath проверь это утверждение.");
         }
     }
 
@@ -82,7 +95,10 @@ class MoreGraphTests {
         GraphPlan plan = world.plan();
 
         for (String way : SIGNALS.values()) {
-            assertTrue(plan.task(way).isEmpty(), "Без входа области more задачи нет: " + way);
+            assertTrue(
+                    plan.task(way).isEmpty(),
+                    "Без входа области more задачи нет: " + way
+                            + " Иначе тест noMoreSignal_InputAbsent_NoMoreTasks перестанет ловить эту поломку. При смене noMoreSignal_InputAbsent_NoMoreTasks проверь это утверждение.");
         }
     }
 
@@ -96,7 +112,8 @@ class MoreGraphTests {
 
             assertTrue(
                     plan.task(SIGNALS.get(signal)).isPresent(),
-                    "Сигнал защиты " + signal + " обязан дать свой путь: " + plan.tasks());
+                    "Сигнал защиты " + signal + " обязан дать свой путь: " + plan.tasks()
+                            + " Иначе тест securitySignals_EachSignal_FindsOwnRepairPath перестанет ловить эту поломку. При смене securitySignals_EachSignal_FindsOwnRepairPath проверь это утверждение.");
         }
     }
 

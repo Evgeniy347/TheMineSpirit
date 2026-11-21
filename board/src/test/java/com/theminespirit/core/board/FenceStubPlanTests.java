@@ -17,18 +17,24 @@ class FenceStubPlanTests {
         TaskNode node = FenceStubPlan.of(ORIGIN, 1, "oak");
         ScriptCall call = (ScriptCall) node;
 
-        assertEquals("build_schematic", call.script(), "Заглушка ставится схемой, как и весь забор этапа");
+        assertEquals(
+                "build_schematic",
+                call.script(),
+                "Заглушка ставится схемой, как и весь забор этапа"
+                        + " Иначе тест of_FirstStage_UsesSingleFencePost перестанет ловить эту поломку. При смене of_FirstStage_UsesSingleFencePost проверь это утверждение.");
         assertEquals(
                 "fence_post",
                 call.params().get("file"),
-                "Событие ставит один столб в опасной колонке, а не кольцо 23×23: кольцо оставлено REST/демо");
+                "Событие ставит один столб в опасной колонке, а не кольцо 23×23: кольцо оставлено REST/демо"
+                        + " Иначе тест of_FirstStage_UsesSingleFencePost перестанет ловить эту поломку. При смене of_FirstStage_UsesSingleFencePost проверь это утверждение.");
         assertEquals(
                 Map.of("x", -170, "y", 70, "z", -489),
                 Map.of(
                         "x", call.params().get("x"),
                         "y", call.params().get("y"),
                         "z", call.params().get("z")),
-                "Заглушка стоит в основании колонки опасности: координаты берутся из SiteLevels.fenceOrigin");
+                "Заглушка стоит в основании колонки опасности: координаты берутся из SiteLevels.fenceOrigin"
+                        + " Иначе тест of_FirstStage_UsesSingleFencePost перестанет ловить эту поломку. При смене of_FirstStage_UsesSingleFencePost проверь это утверждение.");
     }
 
     @Test
@@ -38,7 +44,8 @@ class FenceStubPlanTests {
         assertEquals(
                 "wall_3_post",
                 call.params().get("file"),
-                "Со второго этапа ограда — стена: заглушка обязана быть стенным столбом, а не забором прошлого этапа");
+                "Со второго этапа ограда — стена: заглушка обязана быть стенным столбом, а не забором прошлого этапа"
+                        + " Иначе тест of_SecondStage_UsesSingleWallPost перестанет ловить эту поломку. При смене of_SecondStage_UsesSingleWallPost проверь это утверждение.");
     }
 
     @Test
@@ -46,9 +53,14 @@ class FenceStubPlanTests {
         ScriptCall wood = (ScriptCall) FenceStubPlan.of(ORIGIN, 1, "birch");
         ScriptCall any = (ScriptCall) FenceStubPlan.of(ORIGIN, 1, null);
 
-        assertEquals("birch", wood.params().get("wood"), "Порода поселения передаётся схеме заглушки");
+        assertEquals(
+                "birch",
+                wood.params().get("wood"),
+                "Порода поселения передаётся схеме заглушки"
+                        + " Иначе тест of_WoodAndNoWood_BothValidPlans перестанет ловить эту поломку. При смене of_WoodAndNoWood_BothValidPlans проверь это утверждение.");
         assertFalse(
                 any.params().containsKey("wood"),
-                "Без породы схема берёт свою: пустое имя породы сломало бы build_schematic");
+                "Без породы схема берёт свою: пустое имя породы сломало бы build_schematic"
+                        + " Иначе тест of_WoodAndNoWood_BothValidPlans перестанет ловить эту поломку. При смене of_WoodAndNoWood_BothValidPlans проверь это утверждение.");
     }
 }

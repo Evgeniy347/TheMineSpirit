@@ -36,12 +36,14 @@ class TransferDriftLiveTests {
                 found.isPresent(),
                 "spirit-3 по передаче " + live.get("ticket") + " прошёл z −595…−638 и вернулся в −595 "
                         + "(observe12 N17): колебание обязано ловиться, иначе маршрут к " + live.get("goal")
-                        + " не перестраивается");
+                        + " не перестраивается"
+                        + " При смене observe_LiveDeliverReturnedToSamePlace_IsDrift проверь это утверждение.");
         assertTrue(
                 found.orElseThrow().path() > found.orElseThrow().net() * 3,
                 "Колебание — это длинный путь с малым смещением: путь "
                         + found.orElseThrow().path() + ", смещение "
-                        + found.orElseThrow().net());
+                        + found.orElseThrow().net()
+                        + " Иначе тест observe_LiveDeliverReturnedToSamePlace_IsDrift перестанет ловить эту поломку. При смене observe_LiveDeliverReturnedToSamePlace_IsDrift проверь это утверждение.");
     }
 
     @Test
@@ -55,7 +57,8 @@ class TransferDriftLiveTests {
 
         assertTrue(
                 found.isEmpty(),
-                "Ровный путь к цели не колебание: иначе TransferWatch перестраивал бы каждый нормальный перенос");
+                "Ровный путь к цели не колебание: иначе TransferWatch перестраивал бы каждый нормальный перенос"
+                        + " При смене observe_StraightDelivery_IsNotDrift проверь это утверждение.");
     }
 
     private static BlockCoord coord(JsonNode node) {

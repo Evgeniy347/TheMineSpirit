@@ -30,12 +30,18 @@ class GraphDemandMechanismTests {
             assertEquals(
                     1,
                     stone.size(),
-                    "Прогон " + run + ": нехватка камня — одна заявка, а не по заявке на духа: " + result.post());
+                    "Прогон " + run + ": нехватка камня — одна заявка, а не по заявке на духа: " + result.post()
+                            + " Иначе тест demand_RepeatedTenTimes_OneRequestNoMoreThanTarget перестанет ловить эту поломку. При смене demand_RepeatedTenTimes_OneRequestNoMoreThanTarget проверь это утверждение.");
             assertTrue(
                     stone.get(0).count() <= GraphTickets.COUNT_MAX,
-                    "Прогон " + run + ": заявка не больше цели/потолка: " + stone.get(0));
+                    "Прогон " + run + ": заявка не больше цели/потолка: " + stone.get(0)
+                            + " Иначе тест demand_RepeatedTenTimes_OneRequestNoMoreThanTarget перестанет ловить эту поломку. При смене demand_RepeatedTenTimes_OneRequestNoMoreThanTarget проверь это утверждение.");
             if (previous >= 0) {
-                assertEquals(previous, stone.get(0).count(), "Прогон " + run + ": повторный спрос не растит заявку");
+                assertEquals(
+                        previous,
+                        stone.get(0).count(),
+                        "Прогон " + run + ": повторный спрос не растит заявку"
+                                + " Иначе тест demand_RepeatedTenTimes_OneRequestNoMoreThanTarget перестанет ловить эту поломку. При смене demand_RepeatedTenTimes_OneRequestNoMoreThanTarget проверь это утверждение.");
             }
             previous = stone.get(0).count();
         }
@@ -43,7 +49,9 @@ class GraphDemandMechanismTests {
         world.with("cobblestone", 64);
         GraphPlan full = plan(world, facts(TWO));
         assertTrue(
-                full.task("mine_cobble").isEmpty(), "Цель достигнута — добыча камня не заказывается: " + full.tasks());
+                full.task("mine_cobble").isEmpty(),
+                "Цель достигнута — добыча камня не заказывается: " + full.tasks()
+                        + " Иначе тест demand_RepeatedTenTimes_OneRequestNoMoreThanTarget перестанет ловить эту поломку. При смене demand_RepeatedTenTimes_OneRequestNoMoreThanTarget проверь это утверждение.");
         GraphTickets.Result closed = GraphTickets.of(
                 world.graph,
                 world.state().withFacts(facts(TWO), world.graph.costs().life()),
@@ -51,7 +59,8 @@ class GraphDemandMechanismTests {
         assertTrue(
                 closed.post().stream()
                         .noneMatch(ticket -> "cobblestone".equals(ticket.task().makes())),
-                "Цель достигнута — заявок на камень нет: " + closed.post());
+                "Цель достигнута — заявок на камень нет: " + closed.post()
+                        + " Иначе тест demand_RepeatedTenTimes_OneRequestNoMoreThanTarget перестанет ловить эту поломку. При смене demand_RepeatedTenTimes_OneRequestNoMoreThanTarget проверь это утверждение.");
     }
 
     @Test
@@ -59,20 +68,25 @@ class GraphDemandMechanismTests {
         GraphWorld world = stageTwo().with("cobblestone", 0);
         GraphPlan lacking = plan(world, facts(TWO));
         int raised = lacking.priority("mine_cobble");
-        assertTrue(raised > 0, "Нехватка поднимает источник камня: " + lacking.tasks());
+        assertTrue(
+                raised > 0,
+                "Нехватка поднимает источник камня: " + lacking.tasks()
+                        + " Иначе тест demand_Disappeared_PriorityReturnsAndComesBack перестанет ловить эту поломку. При смене demand_Disappeared_PriorityReturnsAndComesBack проверь это утверждение.");
 
         world.with("cobblestone", 64);
         GraphPlan stocked = plan(world, facts(TWO));
         assertTrue(
                 stocked.task("mine_cobble").isEmpty(),
-                "Нехватка исчезла — приоритет источника вернулся к нулю: " + stocked.tasks());
+                "Нехватка исчезла — приоритет источника вернулся к нулю: " + stocked.tasks()
+                        + " Иначе тест demand_Disappeared_PriorityReturnsAndComesBack перестанет ловить эту поломку. При смене demand_Disappeared_PriorityReturnsAndComesBack проверь это утверждение.");
 
         world.with("cobblestone", 0);
         GraphPlan again = plan(world, facts(TWO));
         assertEquals(
                 raised,
                 again.priority("mine_cobble"),
-                "Нехватка вернулась — приоритет источника тот же: " + again.tasks());
+                "Нехватка вернулась — приоритет источника тот же: " + again.tasks()
+                        + " Иначе тест demand_Disappeared_PriorityReturnsAndComesBack перестанет ловить эту поломку. При смене demand_Disappeared_PriorityReturnsAndComesBack проверь это утверждение.");
     }
 
     @Test
@@ -97,10 +111,19 @@ class GraphDemandMechanismTests {
                 .findFirst()
                 .orElse(0);
 
-        assertEquals(16, oneCount, "Одному духу цель еды на этапе 2 — 16: " + single.post());
-        assertEquals(32, twoCount, "Двум духам цель еды на этапе 2 — 32: " + pair.post());
+        assertEquals(
+                16,
+                oneCount,
+                "Одному духу цель еды на этапе 2 — 16: " + single.post()
+                        + " Иначе тест demand_TargetGrowsWithSpirits_RequestCoversWholeShortage перестанет ловить эту поломку. При смене demand_TargetGrowsWithSpirits_RequestCoversWholeShortage проверь это утверждение.");
+        assertEquals(
+                32,
+                twoCount,
+                "Двум духам цель еды на этапе 2 — 32: " + pair.post()
+                        + " Иначе тест demand_TargetGrowsWithSpirits_RequestCoversWholeShortage перестанет ловить эту поломку. При смене demand_TargetGrowsWithSpirits_RequestCoversWholeShortage проверь это утверждение.");
         assertTrue(
                 twoCount > oneCount,
-                "Цель по типу растёт с числом духов, а не фиксирована: " + oneCount + " → " + twoCount);
+                "Цель по типу растёт с числом духов, а не фиксирована: " + oneCount + " → " + twoCount
+                        + " Иначе тест demand_TargetGrowsWithSpirits_RequestCoversWholeShortage перестанет ловить эту поломку. При смене demand_TargetGrowsWithSpirits_RequestCoversWholeShortage проверь это утверждение.");
     }
 }

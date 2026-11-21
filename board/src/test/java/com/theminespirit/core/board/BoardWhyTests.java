@@ -35,7 +35,8 @@ class BoardWhyTests {
         assertTrue(
                 reason.filter(text -> text.contains("пауз")).isPresent(),
                 "PENDING-задание держателя на паузе кейса объясняет простой (INC-23: 15 минут догадок), "
-                        + "фактически " + reason);
+                        + "фактически " + reason
+                        + " Иначе тест waitReason_HolderPausedAfterFailure_NamesPause перестанет ловить эту поломку. При смене waitReason_HolderPausedAfterFailure_NamesPause проверь это утверждение.");
     }
 
     @Test
@@ -48,7 +49,8 @@ class BoardWhyTests {
                 Optional.of("не хватает материалов: cobblestone×8 (в сундуках двора и у духов 0, добыть или сделать "
                         + "ещё 8)"),
                 BoardWhy.waitReason(board, gated, EMPTY, 0),
-                "Гейт материалов называет, что принести: материал×количество, сколько уже есть и сколько добыть");
+                "Гейт материалов называет, что принести: материал×количество, сколько уже есть и сколько добыть"
+                        + " Иначе тест waitReason_MissingMaterials_NamesShortage перестанет ловить эту поломку. При смене waitReason_MissingMaterials_NamesShortage проверь это утверждение.");
     }
 
     @Test
@@ -60,6 +62,7 @@ class BoardWhyTests {
         assertEquals(
                 Optional.empty(),
                 BoardWhy.waitReason(board, ready, EMPTY, 0),
-                "Готовое задание ждёт только свободного духа — причины ядра нет");
+                "Готовое задание ждёт только свободного духа — причины ядра нет"
+                        + " Иначе тест waitReason_ReadyTicket_Empty перестанет ловить эту поломку. При смене waitReason_ReadyTicket_Empty проверь это утверждение.");
     }
 }

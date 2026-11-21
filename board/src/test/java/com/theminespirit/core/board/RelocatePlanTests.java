@@ -42,13 +42,17 @@ class RelocatePlanTests {
         for (BoardCase boardCase : RelocatePlan.BUILDING_CASES) {
             assertTrue(
                     RelocatePlan.buildingCase(boardCase),
-                    "Кейс " + boardCase + " — постройка: его можно переносить (если не неподвижен)");
+                    "Кейс " + boardCase + " — постройка: его можно переносить (если не неподвижен)"
+                            + " Иначе тест buildingCase_FromLiterals_MatchesSet перестанет ловить эту поломку. При смене buildingCase_FromLiterals_MatchesSet проверь это утверждение.");
         }
         assertFalse(
                 RelocatePlan.buildingCase(BoardCase.FILL_CRATER),
-                "Воронка — не постройка: переносить её нельзя, иначе доска гоняла бы духа " + "переносить яму");
+                "Воронка — не постройка: переносить её нельзя, иначе доска гоняла бы духа " + "переносить яму"
+                        + " При смене buildingCase_FromLiterals_MatchesSet проверь это утверждение.");
         assertFalse(
-                RelocatePlan.buildingCase(BoardCase.EAT_TO_FULL), "Еда — не постройка: перенос еды не имеет смысла");
+                RelocatePlan.buildingCase(BoardCase.EAT_TO_FULL),
+                "Еда — не постройка: перенос еды не имеет смысла"
+                        + " Иначе тест buildingCase_FromLiterals_MatchesSet перестанет ловить эту поломку. При смене buildingCase_FromLiterals_MatchesSet проверь это утверждение.");
     }
 
     @Test
@@ -56,15 +60,17 @@ class RelocatePlanTests {
         assertTrue(
                 RelocatePlan.immovable(BoardCase.BUILD_MINE),
                 "Вход в шахту неподвижен: его нельзя переносить, иначе доска снесла бы "
-                        + "работающую шахту (ответ владельца 16.10)");
+                        + "работающую шахту (ответ владельца 16.10)"
+                        + " При смене immovable_FromClasspath_ContainsMine проверь это утверждение.");
         assertFalse(
                 RelocatePlan.immovable(BoardCase.BUILD_PEN),
-                "Загон переносим: его строят по месту и переставляют по решению стратега");
+                "Загон переносим: его строят по месту и переставляют по решению стратега"
+                        + " Иначе тест immovable_FromClasspath_ContainsMine перестанет ловить эту поломку. При смене immovable_FromClasspath_ContainsMine проверь это утверждение.");
         assertEquals(
                 List.of("BUILD_MINE"),
                 List.copyOf(RelocatePlan.immovableNames()),
-                "Неподвижный список — данные board.json: пока только вход в шахту, растёт "
-                        + "данными без правки кода");
+                "Неподвижный список — данные board.json: пока только вход в шахту, растёт " + "данными без правки кода"
+                        + " Иначе тест immovable_FromClasspath_ContainsMine перестанет ловить эту поломку. При смене immovable_FromClasspath_ContainsMine проверь это утверждение.");
     }
 
     @Test
@@ -72,14 +78,17 @@ class RelocatePlanTests {
         IllegalArgumentException failure = assertThrows(
                 IllegalArgumentException.class,
                 () -> RelocatePlan.assertMovable(BoardCase.BUILD_MINE),
-                "Перенос входа в шахту обязан падать: неподвижную постройку не переносят");
+                "Перенос входа в шахту обязан падать: неподвижную постройку не переносят"
+                        + " Иначе тест assertMovable_ImmovableMine_ThrowsNamingCase перестанет ловить эту поломку. При смене assertMovable_ImmovableMine_ThrowsNamingCase проверь это утверждение.");
 
         assertTrue(
                 failure.getMessage().contains("BUILD_MINE"),
-                "Сообщение обязано называть неподвижный кейс: " + failure.getMessage());
+                "Сообщение обязано называть неподвижный кейс: " + failure.getMessage()
+                        + " Иначе тест assertMovable_ImmovableMine_ThrowsNamingCase перестанет ловить эту поломку. При смене assertMovable_ImmovableMine_ThrowsNamingCase проверь это утверждение.");
         assertTrue(
                 failure.getMessage().contains("неподвижна"),
-                "Сообщение обязано называть причину отказа: " + failure.getMessage());
+                "Сообщение обязано называть причину отказа: " + failure.getMessage()
+                        + " Иначе тест assertMovable_ImmovableMine_ThrowsNamingCase перестанет ловить эту поломку. При смене assertMovable_ImmovableMine_ThrowsNamingCase проверь это утверждение.");
     }
 
     @Test
@@ -87,11 +96,13 @@ class RelocatePlanTests {
         IllegalArgumentException failure = assertThrows(
                 IllegalArgumentException.class,
                 () -> RelocatePlan.assertMovable(BoardCase.FILL_CRATER),
-                "Перенос не-постройки обязан падать: переносить можно только строения");
+                "Перенос не-постройки обязан падать: переносить можно только строения"
+                        + " Иначе тест assertMovable_NonBuilding_ThrowsNamingCase перестанет ловить эту поломку. При смене assertMovable_NonBuilding_ThrowsNamingCase проверь это утверждение.");
 
         assertTrue(
                 failure.getMessage().contains("FILL_CRATER"),
-                "Сообщение обязано называть кейс: " + failure.getMessage());
+                "Сообщение обязано называть кейс: " + failure.getMessage()
+                        + " Иначе тест assertMovable_NonBuilding_ThrowsNamingCase перестанет ловить эту поломку. При смене assertMovable_NonBuilding_ThrowsNamingCase проверь это утверждение.");
     }
 
     @Test
@@ -106,7 +117,8 @@ class RelocatePlanTests {
 
         assertTrue(
                 scripts.contains("clear_area") && scripts.contains("build_schematic"),
-                "Перенос загона сносит старое место и строит новое: оба участка в одном плане");
+                "Перенос загона сносит старое место и строит новое: оба участка в одном плане"
+                        + " Иначе тест plan_PenRelocate_BothSites перестанет ловить эту поломку. При смене plan_PenRelocate_BothSites проверь это утверждение.");
     }
 
     @Test
@@ -114,7 +126,8 @@ class RelocatePlanTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> RelocatePlan.plan(BoardCase.BUILD_MINE, movableTarget()),
-                "План переноса входа в шахту обязан падать: постройка неподвижна");
+                "План переноса входа в шахту обязан падать: постройка неподвижна"
+                        + " Иначе тест plan_ImmovableMine_Throws перестанет ловить эту поломку. При смене plan_ImmovableMine_Throws проверь это утверждение.");
     }
 
     @Test
@@ -124,7 +137,8 @@ class RelocatePlanTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> RelocatePlan.plan(BoardCase.BUILD_PEN, same),
-                "Перенос из точки в ту же точку обязан падать: сносить и строить на одном месте нечего");
+                "Перенос из точки в ту же точку обязан падать: сносить и строить на одном месте нечего"
+                        + " Иначе тест plan_FromEqualsTo_Throws перестанет ловить эту поломку. При смене plan_FromEqualsTo_Throws проверь это утверждение.");
     }
 
     @Test
@@ -132,15 +146,18 @@ class RelocatePlanTests {
         assertThrows(
                 NullPointerException.class,
                 () -> RelocatePlan.buildingCase(null),
-                "Кейс null обязан отвергаться: проверка постройки идёт по имени кейса");
+                "Кейс null обязан отвергаться: проверка постройки идёт по имени кейса"
+                        + " Иначе тест plan_NullArgs_AreRejected перестанет ловить эту поломку. При смене plan_NullArgs_AreRejected проверь это утверждение.");
         assertThrows(
                 NullPointerException.class,
                 () -> RelocatePlan.immovable(null),
-                "Кейс null обязан отвергаться: проверка неподвижности идёт по имени кейса");
+                "Кейс null обязан отвергаться: проверка неподвижности идёт по имени кейса"
+                        + " Иначе тест plan_NullArgs_AreRejected перестанет ловить эту поломку. При смене plan_NullArgs_AreRejected проверь это утверждение.");
         assertThrows(
                 NullPointerException.class,
                 () -> RelocatePlan.assertMovable(null),
-                "Кейс null обязан отвергаться: переносить нечего");
+                "Кейс null обязан отвергаться: переносить нечего"
+                        + " Иначе тест plan_NullArgs_AreRejected перестанет ловить эту поломку. При смене plan_NullArgs_AreRejected проверь это утверждение.");
     }
 
     @Property
@@ -155,7 +172,8 @@ class RelocatePlanTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> RelocatePlan.plan(boardCase, movableTarget()),
-                "Непостройку переносить нельзя: " + boardCase);
+                "Непостройку переносить нельзя: " + boardCase
+                        + " Иначе тест plan_NonBuilding_AlwaysThrows перестанет ловить эту поломку. При смене plan_NonBuilding_AlwaysThrows проверь это утверждение.");
     }
 
     @Provide

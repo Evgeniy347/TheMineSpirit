@@ -25,7 +25,8 @@ class ChainPressureScenarioTests {
         assertTrue(
                 chop.priority() > hut.priority() && planks.priority() > hut.priority(),
                 "Хижина без дерева сама невелика, но давит на рубку и доски: они раньше хижины. " + ORDER_HINT + ": "
-                        + plan.tasks());
+                        + plan.tasks()
+                        + " Иначе тест hutWithoutWood_PressesChoppingAndPlanks_HutItselfStaysBehind перестанет ловить эту поломку. При смене hutWithoutWood_PressesChoppingAndPlanks_HutItselfStaysBehind проверь это утверждение.");
     }
 
     @Test
@@ -35,7 +36,8 @@ class ChainPressureScenarioTests {
 
         assertTrue(
                 plan.raised("building:orchard_oak"),
-                "Нехватка дерева давит на сад: без сада рубить скоро будет нечего. " + ORDER_HINT + ": " + ids(plan));
+                "Нехватка дерева давит на сад: без сада рубить скоро будет нечего. " + ORDER_HINT + ": " + ids(plan)
+                        + " Иначе тест orchard_WoodLacking_IsRaised перестанет ловить эту поломку. При смене orchard_WoodLacking_IsRaised проверь это утверждение.");
     }
 
     @Test
@@ -44,11 +46,16 @@ class ChainPressureScenarioTests {
         GraphPlan plan = plan(world, facts(named(spirit("spirit-1"), spirit("spirit-2"))));
 
         GraphPlan.Task iron = task(plan, "mine_iron");
-        assertTrue(iron.raised(), "Нехватка железа поднимает добычу руды: " + ids(plan));
+        assertTrue(
+                iron.raised(),
+                "Нехватка железа поднимает добычу руды: " + ids(plan)
+                        + " Иначе тест mineIron_OreLacking_AheadOfMineBuilding перестанет ловить эту поломку. При смене mineIron_OreLacking_AheadOfMineBuilding проверь это утверждение.");
         plan.task("building:mine")
-                .ifPresent(mine -> assertTrue(
-                        mine.priority() < iron.priority(),
-                        "Шахта как постройка невелика, давление идёт в добычу руды. " + ORDER_HINT + ": "
-                                + plan.tasks()));
+                .ifPresent(
+                        mine -> assertTrue(
+                                mine.priority() < iron.priority(),
+                                "Шахта как постройка невелика, давление идёт в добычу руды. " + ORDER_HINT + ": "
+                                        + plan.tasks()
+                                        + " Иначе тест mineIron_OreLacking_AheadOfMineBuilding перестанет ловить эту поломку. При смене mineIron_OreLacking_AheadOfMineBuilding проверь это утверждение."));
     }
 }

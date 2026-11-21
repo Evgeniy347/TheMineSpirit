@@ -14,9 +14,11 @@ class GraphAccessTests {
         assertTrue(
                 access > plan.priority("event:level_lot:level_lot") && access >= GraphWorld.best(plan, "mine_"),
                 "Нет прохода к сундукам и дверям — проход выше выравнивания по плану и обычной работы: "
-                        + CrossScene.ranked(plan));
+                        + CrossScene.ranked(plan)
+                        + " Иначе тест plan_AccessBlocked_WalkwayAboveLevelingAndWork перестанет ловить эту поломку. При смене plan_AccessBlocked_WalkwayAboveLevelingAndWork проверь это утверждение.");
         assertTrue(
                 access < GraphPriorities.life(GraphWorld.GRAPH),
-                "Проход — верх полосы работы, ниже нужд и жизни: " + access);
+                "Проход — верх полосы работы, ниже нужд и жизни: " + access
+                        + " Иначе тест plan_AccessBlocked_WalkwayAboveLevelingAndWork перестанет ловить эту поломку. При смене plan_AccessBlocked_WalkwayAboveLevelingAndWork проверь это утверждение.");
     }
 }

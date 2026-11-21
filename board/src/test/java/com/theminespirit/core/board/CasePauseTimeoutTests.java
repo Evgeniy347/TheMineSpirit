@@ -35,7 +35,10 @@ class CasePauseTimeoutTests {
                 now += BoardBackoff.pauseTicks(attempt);
             }
         }
-        assertTrue(book.detached(SPIRIT, CASE), "До предела провалов снятия ещё нет");
+        assertTrue(
+                book.detached(SPIRIT, CASE),
+                "До предела провалов снятия ещё нет"
+                        + " Иначе тест механику перестанет ловить эту поломку. При смене механику проверь это утверждение.");
         return now;
     }
 
@@ -48,12 +51,17 @@ class CasePauseTimeoutTests {
 
         assertFalse(
                 book.available(SPIRIT, CASE, release - 1),
-                "За тик до таймаута снятый кейс не возвращается духу: иначе снятие не откатывает цикл");
+                "За тик до таймаута снятый кейс не возвращается духу: иначе снятие не откатывает цикл"
+                        + " При смене detached_SameItemRepeated_FreesAfterTimeout проверь это утверждение.");
         assertTrue(
                 book.available(SPIRIT, CASE, release),
                 "По таймауту снятие кончается: иначе один провал навсегда паркует духа без задачи "
-                        + "(живой прогон: activity=SMELT, script=null, 40 минут простоя)");
-        assertFalse(book.detached(SPIRIT, CASE), "После таймаута дух снова не считается снятым с кейса");
+                        + "(живой прогон: activity=SMELT, script=null, 40 минут простоя)"
+                        + " При смене detached_SameItemRepeated_FreesAfterTimeout проверь это утверждение.");
+        assertFalse(
+                book.detached(SPIRIT, CASE),
+                "После таймаута дух снова не считается снятым с кейса"
+                        + " Иначе тест detached_SameItemRepeated_FreesAfterTimeout перестанет ловить эту поломку. При смене detached_SameItemRepeated_FreesAfterTimeout проверь это утверждение.");
     }
 
     @Test
@@ -65,10 +73,12 @@ class CasePauseTimeoutTests {
         assertTrue(
                 book.releaseDetached() == 1,
                 "Запасное действие при простое всех духов снимает ровно одно снятие с кейса: иначе город "
-                        + "стоит до таймаута");
+                        + "стоит до таймаута"
+                        + " При смене detached_AllSpiritsIdle_ReleasesWithoutWaitingForTimeout проверь это утверждение.");
         assertTrue(
                 book.available(SPIRIT, ticket, detachedAt),
-                "После запасного действия дух снова берёт кейс, не дожидаясь таймаута");
+                "После запасного действия дух снова берёт кейс, не дожидаясь таймаута"
+                        + " Иначе тест detached_AllSpiritsIdle_ReleasesWithoutWaitingForTimeout перестанет ловить эту поломку. При смене detached_AllSpiritsIdle_ReleasesWithoutWaitingForTimeout проверь это утверждение.");
     }
 
     @Test
@@ -79,11 +89,16 @@ class CasePauseTimeoutTests {
 
         assertFalse(
                 book.available(SPIRIT, planks, detachedAt),
-                "Тот же предмет после снятия не выдаётся сразу: пауза держит до таймаута");
+                "Тот же предмет после снятия не выдаётся сразу: пауза держит до таймаута"
+                        + " Иначе тест detached_OtherItem_TriesImmediately перестанет ловить эту поломку. При смене detached_OtherItem_TriesImmediately проверь это утверждение.");
         assertTrue(
                 book.available(SPIRIT, gather("graph:make:oak_log"), detachedAt),
                 "Смена условий (другой предмет добычи) снимает снятие сразу: дух не ждёт таймаут "
-                        + "на недостижимом предмете, когда рядом есть другой");
-        assertFalse(book.detached(SPIRIT, CASE), "Новый предмет сбрасывает и отметку снятия кейса");
+                        + "на недостижимом предмете, когда рядом есть другой"
+                        + " Иначе тест detached_OtherItem_TriesImmediately перестанет ловить эту поломку. При смене detached_OtherItem_TriesImmediately проверь это утверждение.");
+        assertFalse(
+                book.detached(SPIRIT, CASE),
+                "Новый предмет сбрасывает и отметку снятия кейса"
+                        + " Иначе тест detached_OtherItem_TriesImmediately перестанет ловить эту поломку. При смене detached_OtherItem_TriesImmediately проверь это утверждение.");
     }
 }

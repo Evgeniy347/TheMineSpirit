@@ -23,42 +23,76 @@ class DigGraphPlannerTests {
         assertTrue(
                 ids(plan).contains("restore_trace"),
                 "Открытый пролом плана обязан дать узел restore_trace даже свободному духу: заделку клеток "
-                        + "вне досягаемости духа ставит доска, а не тишина; иначе дыра в постройке остаётся навсегда");
+                        + "вне досягаемости духа ставит доска, а не тишина; иначе дыра в постройке остаётся навсегда"
+                        + " При смене planBreach_FreeSpirit_GetsRestoreTraceTicket проверь это утверждение.");
     }
 
     @Test
     void digOut_SealedSpirit_AddsDigAndRestore() {
         GraphPlan plan = plan("sealed");
 
-        assertTrue(ids(plan).contains("dig_out"), "Замурованный дух получает узел dig_out");
-        assertTrue(ids(plan).contains("restore_trace"), "После прохода обязателен restore_trace");
-        assertFalse(ids(plan).contains("pillar"), "Для замурованного не выбирают столб");
-        assertFalse(ids(plan).contains("bridge"), "Для замурованного не выбирают мост");
+        assertTrue(
+                ids(plan).contains("dig_out"),
+                "Замурованный дух получает узел dig_out"
+                        + " Иначе тест digOut_SealedSpirit_AddsDigAndRestore перестанет ловить эту поломку. При смене digOut_SealedSpirit_AddsDigAndRestore проверь это утверждение.");
+        assertTrue(
+                ids(plan).contains("restore_trace"),
+                "После прохода обязателен restore_trace"
+                        + " Иначе тест digOut_SealedSpirit_AddsDigAndRestore перестанет ловить эту поломку. При смене digOut_SealedSpirit_AddsDigAndRestore проверь это утверждение.");
+        assertFalse(
+                ids(plan).contains("pillar"),
+                "Для замурованного не выбирают столб"
+                        + " Иначе тест digOut_SealedSpirit_AddsDigAndRestore перестанет ловить эту поломку. При смене digOut_SealedSpirit_AddsDigAndRestore проверь это утверждение.");
+        assertFalse(
+                ids(plan).contains("bridge"),
+                "Для замурованного не выбирают мост"
+                        + " Иначе тест digOut_SealedSpirit_AddsDigAndRestore перестанет ловить эту поломку. При смене digOut_SealedSpirit_AddsDigAndRestore проверь это утверждение.");
     }
 
     @Test
     void digOut_PitSpirit_AddsPillarAndRestore() {
         GraphPlan plan = plan("pit");
 
-        assertTrue(ids(plan).contains("pillar"), "Из ямы выбирают подъём столбом");
-        assertTrue(ids(plan).contains("restore_trace"), "Подъём из ямы тоже возвращает след");
-        assertFalse(ids(plan).contains("dig_out"), "Для ямы копание не выбирают");
+        assertTrue(
+                ids(plan).contains("pillar"),
+                "Из ямы выбирают подъём столбом"
+                        + " Иначе тест digOut_PitSpirit_AddsPillarAndRestore перестанет ловить эту поломку. При смене digOut_PitSpirit_AddsPillarAndRestore проверь это утверждение.");
+        assertTrue(
+                ids(plan).contains("restore_trace"),
+                "Подъём из ямы тоже возвращает след"
+                        + " Иначе тест digOut_PitSpirit_AddsPillarAndRestore перестанет ловить эту поломку. При смене digOut_PitSpirit_AddsPillarAndRestore проверь это утверждение.");
+        assertFalse(
+                ids(plan).contains("dig_out"),
+                "Для ямы копание не выбирают"
+                        + " Иначе тест digOut_PitSpirit_AddsPillarAndRestore перестанет ловить эту поломку. При смене digOut_PitSpirit_AddsPillarAndRestore проверь это утверждение.");
     }
 
     @Test
     void digOut_WaterSpirit_AddsBridgeAndRestore() {
         GraphPlan plan = plan("water");
 
-        assertTrue(ids(plan).contains("bridge"), "Через воду выбирают мост");
-        assertTrue(ids(plan).contains("restore_trace"), "Мост после прохода разбирают");
+        assertTrue(
+                ids(plan).contains("bridge"),
+                "Через воду выбирают мост"
+                        + " Иначе тест digOut_WaterSpirit_AddsBridgeAndRestore перестанет ловить эту поломку. При смене digOut_WaterSpirit_AddsBridgeAndRestore проверь это утверждение.");
+        assertTrue(
+                ids(plan).contains("restore_trace"),
+                "Мост после прохода разбирают"
+                        + " Иначе тест digOut_WaterSpirit_AddsBridgeAndRestore перестанет ловить эту поломку. При смене digOut_WaterSpirit_AddsBridgeAndRestore проверь это утверждение.");
     }
 
     @Test
     void digOut_UntrappedSpirit_NoDigNodes() {
         GraphPlan plan = GraphWorld.settled().facts(facts(spirit(false, null))).plan();
 
-        assertFalse(ids(plan).contains("dig_out"), "Свободный дух не копает");
-        assertFalse(ids(plan).contains("restore_trace"), "Без прохода нечего восстанавливать");
+        assertFalse(
+                ids(plan).contains("dig_out"),
+                "Свободный дух не копает"
+                        + " Иначе тест digOut_UntrappedSpirit_NoDigNodes перестанет ловить эту поломку. При смене digOut_UntrappedSpirit_NoDigNodes проверь это утверждение.");
+        assertFalse(
+                ids(plan).contains("restore_trace"),
+                "Без прохода нечего восстанавливать"
+                        + " Иначе тест digOut_UntrappedSpirit_NoDigNodes перестанет ловить эту поломку. При смене digOut_UntrappedSpirit_NoDigNodes проверь это утверждение.");
     }
 
     @Test
@@ -66,15 +100,31 @@ class DigGraphPlannerTests {
         GraphPlan plan =
                 GraphWorld.settled().facts(facts(stuck(false, true, null))).plan();
 
-        assertTrue(ids(plan).contains("rescue_spirit"), "Застрявший дух получает узел жизни rescue_spirit");
-        assertTrue(ids(plan).contains("restore_trace"), "После выхода след возвращают: restore_trace");
-        assertFalse(ids(plan).contains("dig_out"), "Свободному (не замурованному) духу копание не навязывают");
+        assertTrue(
+                ids(plan).contains("rescue_spirit"),
+                "Застрявший дух получает узел жизни rescue_spirit"
+                        + " Иначе тест stuckSpirit_NotTrapped_GetsRescueAndRestore перестанет ловить эту поломку. При смене stuckSpirit_NotTrapped_GetsRescueAndRestore проверь это утверждение.");
+        assertTrue(
+                ids(plan).contains("restore_trace"),
+                "После выхода след возвращают: restore_trace"
+                        + " Иначе тест stuckSpirit_NotTrapped_GetsRescueAndRestore перестанет ловить эту поломку. При смене stuckSpirit_NotTrapped_GetsRescueAndRestore проверь это утверждение.");
+        assertFalse(
+                ids(plan).contains("dig_out"),
+                "Свободному (не замурованному) духу копание не навязывают"
+                        + " Иначе тест stuckSpirit_NotTrapped_GetsRescueAndRestore перестанет ловить эту поломку. При смене stuckSpirit_NotTrapped_GetsRescueAndRestore проверь это утверждение.");
         GraphPlan.Task rescue = plan.tasks().stream()
                 .filter(task -> "rescue_spirit".equals(task.id()))
                 .findFirst()
                 .orElseThrow();
-        assertTrue(rescue.feasible(), "Задание спасения выполнимо без материалов: " + rescue);
-        assertEquals(List.of(), CrossScene.workNotBehind(plan, rescue), "Жизнь выше обычной работы: " + plan.tasks());
+        assertTrue(
+                rescue.feasible(),
+                "Задание спасения выполнимо без материалов: " + rescue
+                        + " Иначе тест stuckSpirit_NotTrapped_GetsRescueAndRestore перестанет ловить эту поломку. При смене stuckSpirit_NotTrapped_GetsRescueAndRestore проверь это утверждение.");
+        assertEquals(
+                List.of(),
+                CrossScene.workNotBehind(plan, rescue),
+                "Жизнь выше обычной работы: " + plan.tasks()
+                        + " Иначе тест stuckSpirit_NotTrapped_GetsRescueAndRestore перестанет ловить эту поломку. При смене stuckSpirit_NotTrapped_GetsRescueAndRestore проверь это утверждение.");
     }
 
     @Test
@@ -82,11 +132,20 @@ class DigGraphPlannerTests {
         GraphPlan plan =
                 GraphWorld.settled().facts(facts(stuck(true, true, "sealed"))).plan();
 
-        assertTrue(ids(plan).contains("rescue_spirit"), "Замурованный и застрявший дух получает rescue_spirit");
-        assertTrue(ids(plan).contains("dig_out"), "Замуровка по-прежнему даёт dig_out");
+        assertTrue(
+                ids(plan).contains("rescue_spirit"),
+                "Замурованный и застрявший дух получает rescue_spirit"
+                        + " Иначе тест stuckAndTrappedSpirit_RescueWork_OutranksDig перестанет ловить эту поломку. При смене stuckAndTrappedSpirit_RescueWork_OutranksDig проверь это утверждение.");
+        assertTrue(
+                ids(plan).contains("dig_out"),
+                "Замуровка по-прежнему даёт dig_out"
+                        + " Иначе тест stuckAndTrappedSpirit_RescueWork_OutranksDig перестанет ловить эту поломку. При смене stuckAndTrappedSpirit_RescueWork_OutranksDig проверь это утверждение.");
         int rescue = priority(plan, "rescue_spirit");
         int dig = priority(plan, "dig_out");
-        assertTrue(rescue > dig, "Выход жизни важнее обычного копания: rescue " + rescue + " > dig " + dig);
+        assertTrue(
+                rescue > dig,
+                "Выход жизни важнее обычного копания: rescue " + rescue + " > dig " + dig
+                        + " Иначе тест stuckAndTrappedSpirit_RescueWork_OutranksDig перестанет ловить эту поломку. При смене stuckAndTrappedSpirit_RescueWork_OutranksDig проверь это утверждение.");
     }
 
     private static int priority(GraphPlan plan, String id) {
@@ -102,16 +161,22 @@ class DigGraphPlannerTests {
         assertEquals(
                 DigFacts.PILLAR_ITEM,
                 DigFacts.node(DigFacts.trap(DigFacts.Cause.PIT)),
-                "Причина pit ведёт к подъёму столбом");
+                "Причина pit ведёт к подъёму столбом"
+                        + " Иначе тест digFacts_CauseMapping_ChoosesNode перестанет ловить эту поломку. При смене digFacts_CauseMapping_ChoosesNode проверь это утверждение.");
         assertEquals(
                 DigFacts.BRIDGE_ITEM,
                 DigFacts.node(DigFacts.trap(DigFacts.Cause.WATER)),
-                "Причина water ведёт к мосту");
-        assertNull(DigFacts.trap(DigFacts.Cause.OPEN), "Свободный проход не имеет причины");
+                "Причина water ведёт к мосту"
+                        + " Иначе тест digFacts_CauseMapping_ChoosesNode перестанет ловить эту поломку. При смене digFacts_CauseMapping_ChoosesNode проверь это утверждение.");
+        assertNull(
+                DigFacts.trap(DigFacts.Cause.OPEN),
+                "Свободный проход не имеет причины"
+                        + " Иначе тест digFacts_CauseMapping_ChoosesNode перестанет ловить эту поломку. При смене digFacts_CauseMapping_ChoosesNode проверь это утверждение.");
         assertNull(
                 DigFacts.trap(DigFacts.Cause.WALL),
                 "Стена рядом — не замуровка: дух под крышей или в пещере не копает выход, "
-                        + "иначе граф каждый цикл ставит dig_out без исполнителя");
+                        + "иначе граф каждый цикл ставит dig_out без исполнителя"
+                        + " При смене digFacts_CauseMapping_ChoosesNode проверь это утверждение.");
     }
 
     private static GraphPlan plan(String trap) {

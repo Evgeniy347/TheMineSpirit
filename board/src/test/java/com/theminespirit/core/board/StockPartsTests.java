@@ -15,12 +15,18 @@ class StockPartsTests {
                 30,
                 parts.total().available().getOrDefault("oak_log", 0),
                 "нехватка материалов считается по сундукам и инвентарям духов сразу (аномалия 7: warehouse_1 "
-                        + "ждал oak_log×8, а у spirit-1 лежало 25): иначе доска просит то, что духи уже несут");
+                        + "ждал oak_log×8, а у spirit-1 лежало 25): иначе доска просит то, что духи уже несут"
+                        + " При смене total_ChestsAndCarried_SumsBoth проверь это утверждение.");
         assertEquals(
                 86,
                 parts.total().available().getOrDefault("oak_planks", 0),
-                "инвентарь духа входит в общий запас по каждому предмету, а не только по брёвнам");
-        assertEquals(5, parts.chests().available().get("oak_log"), "часть снимка «в сундуках» остаётся отдельной");
+                "инвентарь духа входит в общий запас по каждому предмету, а не только по брёвнам"
+                        + " Иначе тест total_ChestsAndCarried_SumsBoth перестанет ловить эту поломку. При смене total_ChestsAndCarried_SumsBoth проверь это утверждение.");
+        assertEquals(
+                5,
+                parts.chests().available().get("oak_log"),
+                "часть снимка «в сундуках» остаётся отдельной"
+                        + " Иначе тест total_ChestsAndCarried_SumsBoth перестанет ловить эту поломку. При смене total_ChestsAndCarried_SumsBoth проверь это утверждение.");
     }
 
     @Test
@@ -33,7 +39,8 @@ class StockPartsTests {
                 25,
                 free.available().getOrDefault("oak_log", 0),
                 "бронь списывается только с сундуков: предметы в инвентаре духа другой дух из сундука не возьмёт, "
-                        + "и они не должны пропадать из свободного запаса");
+                        + "и они не должны пропадать из свободного запаса"
+                        + " Иначе тест free_ReserveEatsChestsOnly_CarriedStays перестанет ловить эту поломку. При смене free_ReserveEatsChestsOnly_CarriedStays проверь это утверждение.");
     }
 
     @Test
@@ -45,6 +52,7 @@ class StockPartsTests {
         assertEquals(
                 0,
                 free.available().getOrDefault("oak_planks", 0),
-                "бронь больше сундуков не делает отрицательный запас: свободного просто нет");
+                "бронь больше сундуков не делает отрицательный запас: свободного просто нет"
+                        + " Иначе тест free_ChestReserveLargerThanStock_NotNegative перестанет ловить эту поломку. При смене free_ChestReserveLargerThanStock_NotNegative проверь это утверждение.");
     }
 }

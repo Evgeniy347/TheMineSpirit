@@ -13,9 +13,18 @@ import org.junit.jupiter.api.Test;
 class More6RulesTests {
     @Test
     void population_FewerSpiritsThanHousing_Shortage() {
-        assertTrue(More6Rules.population(2, 3).shortage(), "Свободное жильё зовёт нового духа");
-        assertFalse(More6Rules.population(3, 3).shortage(), "Полное жильё новых не зовёт");
-        assertFalse(More6Rules.population(4, 3).shortage(), "Лишних духов жильё не отменяет");
+        assertTrue(
+                More6Rules.population(2, 3).shortage(),
+                "Свободное жильё зовёт нового духа"
+                        + " Иначе тест population_FewerSpiritsThanHousing_Shortage перестанет ловить эту поломку. При смене population_FewerSpiritsThanHousing_Shortage проверь это утверждение.");
+        assertFalse(
+                More6Rules.population(3, 3).shortage(),
+                "Полное жильё новых не зовёт"
+                        + " Иначе тест population_FewerSpiritsThanHousing_Shortage перестанет ловить эту поломку. При смене population_FewerSpiritsThanHousing_Shortage проверь это утверждение.");
+        assertFalse(
+                More6Rules.population(4, 3).shortage(),
+                "Лишних духов жильё не отменяет"
+                        + " Иначе тест population_FewerSpiritsThanHousing_Shortage перестанет ловить эту поломку. При смене population_FewerSpiritsThanHousing_Shortage проверь это утверждение.");
     }
 
     @Test
@@ -28,22 +37,26 @@ class More6RulesTests {
                 1,
                 More6Rules.risk(List.of(spirit("weak-far", 60, 64, 0, 8, List.of())), home, threats)
                         .weakFar(),
-                "Слабый дух далеко от дома — риск дальней работы");
+                "Слабый дух далеко от дома — риск дальней работы"
+                        + " Иначе тест risk_WeakFarAndThreatened_Counted перестанет ловить эту поломку. При смене risk_WeakFarAndThreatened_Counted проверь это утверждение.");
         assertEquals(
                 1,
                 More6Rules.risk(List.of(spirit("weak-threat", 70, 64, 4, 20, brokenArmor())), home, threats)
                         .weakThreat(),
-                "Слабый по броне дух рядом с угрозой — риск опасной работы");
+                "Слабый по броне дух рядом с угрозой — риск опасной работы"
+                        + " Иначе тест risk_WeakFarAndThreatened_Counted перестанет ловить эту поломку. При смене risk_WeakFarAndThreatened_Counted проверь это утверждение.");
         assertEquals(
                 0,
                 More6Rules.risk(List.of(spirit("healthy-far", 60, 64, 0, 20, List.of())), home, threats)
                         .weakFar(),
-                "Здорового духа далеко от дома риск не поднимает");
+                "Здорового духа далеко от дома риск не поднимает"
+                        + " Иначе тест risk_WeakFarAndThreatened_Counted перестанет ловить эту поломку. При смене risk_WeakFarAndThreatened_Counted проверь это утверждение.");
         assertEquals(
                 0,
                 More6Rules.risk(List.of(spirit("weak-near", 4, 64, 0, 8, List.of())), home, threats)
                         .weakFar(),
-                "Слабый, но рядом с домом — не дальняя работа");
+                "Слабый, но рядом с домом — не дальняя работа"
+                        + " Иначе тест risk_WeakFarAndThreatened_Counted перестанет ловить эту поломку. При смене risk_WeakFarAndThreatened_Counted проверь это утверждение.");
     }
 
     @Test
@@ -53,7 +66,11 @@ class More6RulesTests {
                 "barn", building("barn", 100, false),
                 "well", building("well", 30, true));
 
-        assertEquals(1, More6Rules.unfinished(buildings).partial(), "Начатая постройка важнее новой");
+        assertEquals(
+                1,
+                More6Rules.unfinished(buildings).partial(),
+                "Начатая постройка важнее новой"
+                        + " Иначе тест unfinished_PartialAudit_Counted перестанет ловить эту поломку. При смене unfinished_PartialAudit_Counted проверь это утверждение.");
     }
 
     @Test
@@ -63,7 +80,8 @@ class More6RulesTests {
         assertEquals(
                 5,
                 More6Rules.carried(carried, Set.of("oak_log", "cobblestone")).materials(),
-                "Считать надо только материалы построек, а не всё подряд");
+                "Считать надо только материалы построек, а не всё подряд"
+                        + " Иначе тест carried_NeededItems_Counted перестанет ловить эту поломку. При смене carried_NeededItems_Counted проверь это утверждение.");
     }
 
     @Test
@@ -74,32 +92,61 @@ class More6RulesTests {
                 "well", Map.of("oak_log", 4),
                 "fence", Map.of("stick", 2));
 
-        assertEquals(1, More6Rules.demand(materials).repeated(), "Один ресурс в трёх постройках — постоянный запас");
+        assertEquals(
+                1,
+                More6Rules.demand(materials).repeated(),
+                "Один ресурс в трёх постройках — постоянный запас"
+                        + " Иначе тест demand_ItemInManyBuildings_Counted перестанет ловить эту поломку. При смене demand_ItemInManyBuildings_Counted проверь это утверждение.");
         assertEquals(
                 0,
                 More6Rules.demand(Map.of("hut", Map.of("oak_log", 1), "barn", Map.of("oak_log", 1)))
                         .repeated(),
-                "Два запроса — ещё не повтор");
+                "Два запроса — ещё не повтор"
+                        + " Иначе тест demand_ItemInManyBuildings_Counted перестанет ловить эту поломку. При смене demand_ItemInManyBuildings_Counted проверь это утверждение.");
     }
 
     @Test
     void loose_Threshold_IsPile() {
-        assertFalse(More6Rules.loose(3).present(), "Три предмета — не скопление");
-        assertTrue(More6Rules.loose(4).present(), "Четыре предмета — уже скопление");
+        assertFalse(
+                More6Rules.loose(3).present(),
+                "Три предмета — не скопление"
+                        + " Иначе тест loose_Threshold_IsPile перестанет ловить эту поломку. При смене loose_Threshold_IsPile проверь это утверждение.");
+        assertTrue(
+                More6Rules.loose(4).present(),
+                "Четыре предмета — уже скопление"
+                        + " Иначе тест loose_Threshold_IsPile перестанет ловить эту поломку. При смене loose_Threshold_IsPile проверь это утверждение.");
     }
 
     @Test
     void fluids_DryFieldAndLava_Flagged() {
-        assertTrue(More6Rules.fluids(1, 0).water(), "Сухое поле требует источника воды");
-        assertFalse(More6Rules.fluids(0, 1).water(), "Политое поле воды не просит");
-        assertTrue(More6Rules.fluids(0, 1).lava(), "Известная лава — ресурс для топлива");
+        assertTrue(
+                More6Rules.fluids(1, 0).water(),
+                "Сухое поле требует источника воды"
+                        + " Иначе тест fluids_DryFieldAndLava_Flagged перестанет ловить эту поломку. При смене fluids_DryFieldAndLava_Flagged проверь это утверждение.");
+        assertFalse(
+                More6Rules.fluids(0, 1).water(),
+                "Политое поле воды не просит"
+                        + " Иначе тест fluids_DryFieldAndLava_Flagged перестанет ловить эту поломку. При смене fluids_DryFieldAndLava_Flagged проверь это утверждение.");
+        assertTrue(
+                More6Rules.fluids(0, 1).lava(),
+                "Известная лава — ресурс для топлива"
+                        + " Иначе тест fluids_DryFieldAndLava_Flagged перестанет ловить эту поломку. При смене fluids_DryFieldAndLava_Flagged проверь это утверждение.");
     }
 
     @Test
     void idle_LongestIdle_Flagged() {
-        assertFalse(More6Rules.idle(199, 1).present(), "Короткий простой — ещё не повод");
-        assertTrue(More6Rules.idle(200, 1).present(), "Долгий простой поднимает выполнимую работу");
-        assertFalse(More6Rules.idle(200, 0).present(), "Без простаивающих духов события нет");
+        assertFalse(
+                More6Rules.idle(199, 1).present(),
+                "Короткий простой — ещё не повод"
+                        + " Иначе тест idle_LongestIdle_Flagged перестанет ловить эту поломку. При смене idle_LongestIdle_Flagged проверь это утверждение.");
+        assertTrue(
+                More6Rules.idle(200, 1).present(),
+                "Долгий простой поднимает выполнимую работу"
+                        + " Иначе тест idle_LongestIdle_Flagged перестанет ловить эту поломку. При смене idle_LongestIdle_Flagged проверь это утверждение.");
+        assertFalse(
+                More6Rules.idle(200, 0).present(),
+                "Без простаивающих духов события нет"
+                        + " Иначе тест idle_LongestIdle_Flagged перестанет ловить эту поломку. При смене idle_LongestIdle_Flagged проверь это утверждение.");
     }
 
     @Test
@@ -127,12 +174,17 @@ class More6RulesTests {
                         More6Rules.LAVA_NEEDED,
                         More6Rules.REPEAT_DEMAND,
                         More6Rules.SPIRIT_IDLE)),
-                "Каждый вход области даёт своё событие: " + events);
+                "Каждый вход области даёт своё событие: " + events
+                        + " Иначе тест events_AllSignals_AddExpected перестанет ловить эту поломку. При смене events_AllSignals_AddExpected проверь это утверждение.");
     }
 
     @Test
     void events_EmptySignals_AddNothing() {
-        assertEquals(Set.of(), More6Rules.events(More6Rules.empty()), "Пустой вход не ставит работ");
+        assertEquals(
+                Set.of(),
+                More6Rules.events(More6Rules.empty()),
+                "Пустой вход не ставит работ"
+                        + " Иначе тест events_EmptySignals_AddNothing перестанет ловить эту поломку. При смене events_EmptySignals_AddNothing проверь это утверждение.");
     }
 
     @Test
@@ -148,7 +200,11 @@ class More6RulesTests {
                 new More6Rules.Demand(0),
                 new More6Rules.Idle(0, 0));
 
-        assertEquals(Set.of(), More6Rules.events(quiet), "Лава сама по себе не повод, если станции исправны");
+        assertEquals(
+                Set.of(),
+                More6Rules.events(quiet),
+                "Лава сама по себе не повод, если станции исправны"
+                        + " Иначе тест events_LavaNeedsBrokenStation_NotJustSource перестанет ловить эту поломку. При смене events_LavaNeedsBrokenStation_NotJustSource проверь это утверждение.");
     }
 
     @Test
@@ -156,17 +212,23 @@ class More6RulesTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new More6Rules.Population(-1, 0),
-                "Отрицательное число духов не имеет смысла");
+                "Отрицательное число духов не имеет смысла"
+                        + " Иначе тест signals_Negative_Rejected перестанет ловить эту поломку. При смене signals_Negative_Rejected проверь это утверждение.");
         assertThrows(
-                IllegalArgumentException.class, () -> new More6Rules.Risk(-1, 0), "Отрицательный риск не имеет смысла");
+                IllegalArgumentException.class,
+                () -> new More6Rules.Risk(-1, 0),
+                "Отрицательный риск не имеет смысла"
+                        + " Иначе тест signals_Negative_Rejected перестанет ловить эту поломку. При смене signals_Negative_Rejected проверь это утверждение.");
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new More6Rules.Stations(-1, 0),
-                "Отрицательное число сломанных станций не имеет смысла");
+                "Отрицательное число сломанных станций не имеет смысла"
+                        + " Иначе тест signals_Negative_Rejected перестанет ловить эту поломку. При смене signals_Negative_Rejected проверь это утверждение.");
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new More6Rules.Idle(-1, 0),
-                "Отрицательный простой не имеет смысла");
+                "Отрицательный простой не имеет смысла"
+                        + " Иначе тест signals_Negative_Rejected перестанет ловить эту поломку. При смене signals_Negative_Rejected проверь это утверждение.");
     }
 
     private static GraphFacts.Spirit spirit(

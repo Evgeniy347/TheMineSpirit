@@ -20,7 +20,8 @@ class GraphHarvestPlannerTests {
             String way = "gather_" + tree + "_sapling";
             assertTrue(
                     plan.task(way).filter(GraphPlan.Task::implemented).isPresent(),
-                    "Нет саженцев " + tree + " — путь " + way + " есть и реализован: " + plan.task(way));
+                    "Нет саженцев " + tree + " — путь " + way + " есть и реализован: " + plan.task(way)
+                            + " Иначе тест plan_NoSaplings_AllSpeciesGatherImplemented перестанет ловить эту поломку. При смене plan_NoSaplings_AllSpeciesGatherImplemented проверь это утверждение.");
         }
     }
 
@@ -30,7 +31,8 @@ class GraphHarvestPlannerTests {
 
         assertTrue(
                 plan.task("collect_apple").filter(GraphPlan.Task::implemented).isPresent(),
-                "Нет яблок — путь collect_apple есть и реализован: " + plan.task("collect_apple"));
+                "Нет яблок — путь collect_apple есть и реализован: " + plan.task("collect_apple")
+                        + " Иначе тест plan_NoApples_CollectAppleImplemented перестанет ловить эту поломку. При смене plan_NoApples_CollectAppleImplemented проверь это утверждение.");
     }
 
     @Test
@@ -41,6 +43,7 @@ class GraphHarvestPlannerTests {
 
         assertTrue(
                 plan.task("strip_oak_log").filter(GraphPlan.Task::implemented).isPresent(),
-                "Нет обтёсанных брёвен — путь strip_oak_log есть и реализован: " + plan.task("strip_oak_log"));
+                "Нет обтёсанных брёвен — путь strip_oak_log есть и реализован: " + plan.task("strip_oak_log")
+                        + " Иначе тест plan_NoStrippedLogs_StripImplemented перестанет ловить эту поломку. При смене plan_NoStrippedLogs_StripImplemented проверь это утверждение.");
     }
 }

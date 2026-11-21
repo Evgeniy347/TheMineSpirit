@@ -54,27 +54,34 @@ class CrossLifeWorkScenarioTests {
         assertEquals(
                 List.of(),
                 ahead(plan, defend),
-                "Раненый дух под двумя мобами обязан получить защиту жизни на потолке графа: " + ids(plan));
+                "Раненый дух под двумя мобами обязан получить защиту жизни на потолке графа: " + ids(plan)
+                        + " Иначе тест chop_ThreatAtChopper_DefendAtCeilingAndChopStaysPosted перестанет ловить эту поломку. При смене chop_ThreatAtChopper_DefendAtCeilingAndChopStaysPosted проверь это утверждение.");
         assertFalse(
-                chops.isEmpty(), "Угроза не отменяет рубку: работа остаётся на доске рядом с защитой: " + ids(plan));
+                chops.isEmpty(),
+                "Угроза не отменяет рубку: работа остаётся на доске рядом с защитой: " + ids(plan)
+                        + " Иначе тест chop_ThreatAtChopper_DefendAtCeilingAndChopStaysPosted перестанет ловить эту поломку. При смене chop_ThreatAtChopper_DefendAtCeilingAndChopStaysPosted проверь это утверждение.");
         assertTrue(
                 defend.priority() > task(plan, chops.get(0)).priority(),
-                "Защита жизни выше рубки: дух сначала отбивается, потом валит лес: " + ids(plan));
+                "Защита жизни выше рубки: дух сначала отбивается, потом валит лес: " + ids(plan)
+                        + " Иначе тест chop_ThreatAtChopper_DefendAtCeilingAndChopStaysPosted перестанет ловить эту поломку. При смене chop_ThreatAtChopper_DefendAtCeilingAndChopStaysPosted проверь это утверждение.");
         assertEquals(
                 defend.id(),
                 tickets(world, facts).post().get(0).task().id(),
                 "Первым на доску ставится defend, а не дальняя рубка: "
                         + tickets(world, facts).post().stream()
                                 .map(GraphTickets.Ticket::id)
-                                .toList());
+                                .toList()
+                        + " Иначе тест chop_ThreatAtChopper_DefendAtCeilingAndChopStaysPosted перестанет ловить эту поломку. При смене chop_ThreatAtChopper_DefendAtCeilingAndChopStaysPosted проверь это утверждение.");
         assertEquals(
                 BoardCase.ACTIVITY_DEFEND,
                 BoardActivities.caseOfScript("defend").orElseThrow(),
-                "Защита выполняется скриптом defend, а не новой выдуманной механикой");
+                "Защита выполняется скриптом defend, а не новой выдуманной механикой"
+                        + " Иначе тест chop_ThreatAtChopper_DefendAtCeilingAndChopStaysPosted перестанет ловить эту поломку. При смене chop_ThreatAtChopper_DefendAtCeilingAndChopStaysPosted проверь это утверждение.");
         assertTrue(
                 scripts(BoardCase.GATHER_MATERIALS, chopTarget()).contains("chop_tree"),
                 "После защиты механика рубки валит дерево скриптом chop_tree, а не ждёт опасность: "
-                        + scripts(BoardCase.GATHER_MATERIALS, chopTarget()));
+                        + scripts(BoardCase.GATHER_MATERIALS, chopTarget())
+                        + " Иначе тест chop_ThreatAtChopper_DefendAtCeilingAndChopStaysPosted перестанет ловить эту поломку. При смене chop_ThreatAtChopper_DefendAtCeilingAndChopStaysPosted проверь это утверждение.");
     }
 
     @Test
@@ -96,21 +103,39 @@ class CrossLifeWorkScenarioTests {
         GraphPlan.Task backfill = task(plan, "event:backfill:backfill");
         GraphPlan.Task escape = task(plan, "dig_out");
 
-        assertTrue(rescue.feasible(), "Застрявший дух получает спасателя: " + ids(plan));
-        assertTrue(repair.feasible(), "Повреждённая хижина не забыта из-за спасателя: " + ids(plan));
-        assertTrue(backfill.feasible(), "Яма на участке засыпается параллельно спасению: " + ids(plan));
-        assertTrue(escape.feasible(), "Дух в клетке получает собственный выход dig_out: " + ids(plan));
-        assertTrue(rescue.priority() > repair.priority(), "Спасение жизни выше ремонта хижины: " + ids(plan));
+        assertTrue(
+                rescue.feasible(),
+                "Застрявший дух получает спасателя: " + ids(plan)
+                        + " Иначе тест pit_InPlanCell_EscapeAndRescuePostedBesideRepairAndBackfill перестанет ловить эту поломку. При смене pit_InPlanCell_EscapeAndRescuePostedBesideRepairAndBackfill проверь это утверждение.");
+        assertTrue(
+                repair.feasible(),
+                "Повреждённая хижина не забыта из-за спасателя: " + ids(plan)
+                        + " Иначе тест pit_InPlanCell_EscapeAndRescuePostedBesideRepairAndBackfill перестанет ловить эту поломку. При смене pit_InPlanCell_EscapeAndRescuePostedBesideRepairAndBackfill проверь это утверждение.");
+        assertTrue(
+                backfill.feasible(),
+                "Яма на участке засыпается параллельно спасению: " + ids(plan)
+                        + " Иначе тест pit_InPlanCell_EscapeAndRescuePostedBesideRepairAndBackfill перестанет ловить эту поломку. При смене pit_InPlanCell_EscapeAndRescuePostedBesideRepairAndBackfill проверь это утверждение.");
+        assertTrue(
+                escape.feasible(),
+                "Дух в клетке получает собственный выход dig_out: " + ids(plan)
+                        + " Иначе тест pit_InPlanCell_EscapeAndRescuePostedBesideRepairAndBackfill перестанет ловить эту поломку. При смене pit_InPlanCell_EscapeAndRescuePostedBesideRepairAndBackfill проверь это утверждение.");
+        assertTrue(
+                rescue.priority() > repair.priority(),
+                "Спасение жизни выше ремонта хижины: " + ids(plan)
+                        + " Иначе тест pit_InPlanCell_EscapeAndRescuePostedBesideRepairAndBackfill перестанет ловить эту поломку. При смене pit_InPlanCell_EscapeAndRescuePostedBesideRepairAndBackfill проверь это утверждение.");
         assertEquals(
                 BoardCase.ACTIVITY_ESCAPE,
                 BoardActivities.caseOfScript("dig_out").orElseThrow(),
-                "Выход из клетки — действие escape, а не стройка и не добыча");
+                "Выход из клетки — действие escape, а не стройка и не добыча"
+                        + " Иначе тест pit_InPlanCell_EscapeAndRescuePostedBesideRepairAndBackfill перестанет ловить эту поломку. При смене pit_InPlanCell_EscapeAndRescuePostedBesideRepairAndBackfill проверь это утверждение.");
         assertTrue(
                 scripts(BoardCase.RESCUE_SPIRIT).contains("clear_area"),
-                "Спасатель разбирает клетку скриптом clear_area: " + scripts(BoardCase.RESCUE_SPIRIT));
+                "Спасатель разбирает клетку скриптом clear_area: " + scripts(BoardCase.RESCUE_SPIRIT)
+                        + " Иначе тест pit_InPlanCell_EscapeAndRescuePostedBesideRepairAndBackfill перестанет ловить эту поломку. При смене pit_InPlanCell_EscapeAndRescuePostedBesideRepairAndBackfill проверь это утверждение.");
         assertTrue(
                 scripts(BoardCase.REPAIR_BUILDING).contains("build_schematic"),
-                "Ремонт хижины идёт схемой build_schematic, а не засыпкой: " + scripts(BoardCase.REPAIR_BUILDING));
+                "Ремонт хижины идёт схемой build_schematic, а не засыпкой: " + scripts(BoardCase.REPAIR_BUILDING)
+                        + " Иначе тест pit_InPlanCell_EscapeAndRescuePostedBesideRepairAndBackfill перестанет ловить эту поломку. При смене pit_InPlanCell_EscapeAndRescuePostedBesideRepairAndBackfill проверь это утверждение.");
     }
 
     @Test
@@ -151,22 +176,26 @@ class CrossLifeWorkScenarioTests {
         assertTrue(
                 round.choose(boardTicket(retreat, Optional.of(id("spirit-2"))), List.of(builder))
                         .isPresent(),
-                "Жизнь выше стройки: занятый дух бросает хижину и уходит от мобов");
+                "Жизнь выше стройки: занятый дух бросает хижину и уходит от мобов"
+                        + " Иначе тест flee_WhileBuilding_RetreatPreemptsBuildAndBuildReturnsToBoard перестанет ловить эту поломку. При смене flee_WhileBuilding_RetreatPreemptsBuildAndBuildReturnsToBoard проверь это утверждение.");
         assertEquals(
                 List.of(build.id()),
                 round.drainDisplaced(id("spirit-2")).stream()
                         .map(BoardTicket::id)
                         .toList(),
-                "Вытесненная стройка возвращается на доску, а не пропадает");
+                "Вытесненная стройка возвращается на доску, а не пропадает"
+                        + " Иначе тест flee_WhileBuilding_RetreatPreemptsBuildAndBuildReturnsToBoard перестанет ловить эту поломку. При смене flee_WhileBuilding_RetreatPreemptsBuildAndBuildReturnsToBoard проверь это утверждение.");
         assertEquals(
                 BoardStatus.PENDING,
                 board.statusOf(build.id()).orElseThrow(),
-                "Стройка больше не держится за убегающим духом: её возьмёт другой или он сам после бегства");
+                "Стройка больше не держится за убегающим духом: её возьмёт другой или он сам после бегства"
+                        + " Иначе тест flee_WhileBuilding_RetreatPreemptsBuildAndBuildReturnsToBoard перестанет ловить эту поломку. При смене flee_WhileBuilding_RetreatPreemptsBuildAndBuildReturnsToBoard проверь это утверждение.");
         assertTrue(
                 round.refusal(boardTicket(retreat, Optional.of(id("spirit-2"))), builder)
                         .isEmpty(),
                 "После вытеснения строитель свободен для бегства: "
-                        + round.refusal(boardTicket(retreat, Optional.of(id("spirit-2"))), builder));
+                        + round.refusal(boardTicket(retreat, Optional.of(id("spirit-2"))), builder)
+                        + " Иначе тест flee_WhileBuilding_RetreatPreemptsBuildAndBuildReturnsToBoard перестанет ловить эту поломку. При смене flee_WhileBuilding_RetreatPreemptsBuildAndBuildReturnsToBoard проверь это утверждение.");
     }
 
     @Test
@@ -182,20 +211,25 @@ class CrossLifeWorkScenarioTests {
 
         assertTrue(
                 plan.tasks().stream().noneMatch(task -> task.id().startsWith("chop_") && task.feasible()),
-                "Ночью граф не отправляет духа за далёким деревом: " + ids(plan));
+                "Ночью граф не отправляет духа за далёким деревом: " + ids(plan)
+                        + " Иначе тест night_FarChopAndNearBuild_NoDistantChoppingButBuildStays перестанет ловить эту поломку. При смене night_FarChopAndNearBuild_NoDistantChoppingButBuildStays проверь это утверждение.");
         assertTrue(
                 plan.task("building:hut").filter(GraphPlan.Task::feasible).isPresent(),
-                "Ночью ближняя стройка на участке остаётся работой: " + ids(plan));
+                "Ночью ближняя стройка на участке остаётся работой: " + ids(plan)
+                        + " Иначе тест night_FarChopAndNearBuild_NoDistantChoppingButBuildStays перестанет ловить эту поломку. При смене night_FarChopAndNearBuild_NoDistantChoppingButBuildStays проверь это утверждение.");
         assertTrue(
                 tasksFor(plan, BoardCase.ACTIVITY_GUARD).size() >= 2,
-                "Ночью граф ставит охрану поселения и сундуков: " + ids(plan));
+                "Ночью граф ставит охрану поселения и сундуков: " + ids(plan)
+                        + " Иначе тест night_FarChopAndNearBuild_NoDistantChoppingButBuildStays перестанет ловить эту поломку. При смене night_FarChopAndNearBuild_NoDistantChoppingButBuildStays проверь это утверждение.");
         assertTrue(
                 scripts(BoardCase.BUILD_HOUSE).contains("build_schematic"),
-                "Стройка выполняется схемой build_schematic: " + scripts(BoardCase.BUILD_HOUSE));
+                "Стройка выполняется схемой build_schematic: " + scripts(BoardCase.BUILD_HOUSE)
+                        + " Иначе тест night_FarChopAndNearBuild_NoDistantChoppingButBuildStays перестанет ловить эту поломку. При смене night_FarChopAndNearBuild_NoDistantChoppingButBuildStays проверь это утверждение.");
         assertEquals(
                 BoardCase.ACTIVITY_MOVE,
                 BoardActivities.caseOfScript("walk_careful").orElseThrow(),
-                "Далёкий маршрут ночью — отдельное осторожное движение, а не рубка");
+                "Далёкий маршрут ночью — отдельное осторожное движение, а не рубка"
+                        + " Иначе тест night_FarChopAndNearBuild_NoDistantChoppingButBuildStays перестанет ловить эту поломку. При смене night_FarChopAndNearBuild_NoDistantChoppingButBuildStays проверь это утверждение.");
     }
 
     @Test
@@ -217,16 +251,27 @@ class CrossLifeWorkScenarioTests {
         GraphPlan.Task guard = task(plan, "event:night:more4_guard_settlement");
 
         assertEquals(
-                List.of(), ahead(plan, defend), "Ночной моб у раненого духа поднимает защиту на потолок: " + ids(plan));
-        assertTrue(sleep.priority() < defend.priority(), "Сон не важнее боя с мобом: " + ids(plan));
-        assertTrue(guard.priority() < defend.priority(), "Охрана поселения ниже защиты жизни: " + ids(plan));
+                List.of(),
+                ahead(plan, defend),
+                "Ночной моб у раненого духа поднимает защиту на потолок: " + ids(plan)
+                        + " Иначе тест night_ThreatAtWounded_DefendAboveSleepAndGuard перестанет ловить эту поломку. При смене night_ThreatAtWounded_DefendAboveSleepAndGuard проверь это утверждение.");
+        assertTrue(
+                sleep.priority() < defend.priority(),
+                "Сон не важнее боя с мобом: " + ids(plan)
+                        + " Иначе тест night_ThreatAtWounded_DefendAboveSleepAndGuard перестанет ловить эту поломку. При смене night_ThreatAtWounded_DefendAboveSleepAndGuard проверь это утверждение.");
+        assertTrue(
+                guard.priority() < defend.priority(),
+                "Охрана поселения ниже защиты жизни: " + ids(plan)
+                        + " Иначе тест night_ThreatAtWounded_DefendAboveSleepAndGuard перестанет ловить эту поломку. При смене night_ThreatAtWounded_DefendAboveSleepAndGuard проверь это утверждение.");
         assertEquals(
                 BoardCase.ACTIVITY_REST,
                 BoardActivities.caseOfScript("sleep").orElseThrow(),
-                "Сон выполняется кейсом отдыха, а не боем");
+                "Сон выполняется кейсом отдыха, а не боем"
+                        + " Иначе тест night_ThreatAtWounded_DefendAboveSleepAndGuard перестанет ловить эту поломку. При смене night_ThreatAtWounded_DefendAboveSleepAndGuard проверь это утверждение.");
         assertEquals(
                 BoardCase.ACTIVITY_GUARD,
                 BoardActivities.caseOfScript("patrol").orElseThrow(),
-                "Охрана выполняется патрулём, а не защитой конкретного духа");
+                "Охрана выполняется патрулём, а не защитой конкретного духа"
+                        + " Иначе тест night_ThreatAtWounded_DefendAboveSleepAndGuard перестанет ловить эту поломку. При смене night_ThreatAtWounded_DefendAboveSleepAndGuard проверь это утверждение.");
     }
 }

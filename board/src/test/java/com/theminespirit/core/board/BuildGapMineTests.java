@@ -53,13 +53,15 @@ class BuildGapMineTests {
         assertTrue(
                 missingFloors > 0,
                 "Живая доска observe12 требует cobblestone=" + missingFloors
-                        + " на восстановление шахты: без непустого требования тест не проверяет дефект");
+                        + " на восстановление шахты: без непустого требования тест не проверяет дефект"
+                        + " Иначе тест trace_LiveMineGap_NamesEveryMissingFloorAndNeedsCobblestone перестанет ловить эту поломку. При смене trace_LiveMineGap_NamesEveryMissingFloorAndNeedsCobblestone проверь это утверждение.");
 
         MineLayout layout = layout();
         assertTrue(
                 layout.floors().size() > missingFloors,
                 "Пол шахты (" + layout.floors().size() + ") обязан быть больше недостачи (" + missingFloors
-                        + "), иначе нечего проверять");
+                        + "), иначе нечего проверять"
+                        + " При смене trace_LiveMineGap_NamesEveryMissingFloorAndNeedsCobblestone проверь это утверждение.");
 
         Set<BlockCoord> absent = new HashSet<>(layout.floors().subList(0, missingFloors));
         TaskNode plan = minePlan();
@@ -68,27 +70,33 @@ class BuildGapMineTests {
         assertEquals(
                 layout.floors().size() + layout.air().size(),
                 gap.total(),
-                "Готовность шахты — воздух проходки и пол вместе: иначе граф, план и доска снова считают по-разному");
+                "Готовность шахты — воздух проходки и пол вместе: иначе граф, план и доска снова считают по-разному"
+                        + " При смене trace_LiveMineGap_NamesEveryMissingFloorAndNeedsCobblestone проверь это утверждение.");
         assertEquals(
                 missingFloors,
                 gap.shortage(),
                 "Недостача шахты считается по блокам мира, а не по журналу: живая доска видит те же " + missingFloors
-                        + " блоков, что и аудит");
+                        + " блоков, что и аудит"
+                        + " Иначе тест trace_LiveMineGap_NamesEveryMissingFloorAndNeedsCobblestone перестанет ловить эту поломку. При смене trace_LiveMineGap_NamesEveryMissingFloorAndNeedsCobblestone проверь это утверждение.");
         assertEquals(
                 Map.of("cobblestone", missingFloors),
                 gap.missingItems(),
-                "Недостающие полы шахты — это cobblestone: столько и должно уйти в requiredItems восстановления");
+                "Недостающие полы шахты — это cobblestone: столько и должно уйти в requiredItems восстановления"
+                        + " Иначе тест trace_LiveMineGap_NamesEveryMissingFloorAndNeedsCobblestone перестанет ловить эту поломку. При смене trace_LiveMineGap_NamesEveryMissingFloorAndNeedsCobblestone проверь это утверждение.");
         assertEquals(
                 Map.of("cobblestone", missingFloors),
                 BuildGap.need(plan, gap, FAKE),
                 "Ремонт шахты обязан требовать ровно недостающие полы: пустой список материалов превращал "
-                        + "repair:build_mine в «план 0 блоков»");
+                        + "repair:build_mine в «план 0 блоков»"
+                        + " Иначе тест trace_LiveMineGap_NamesEveryMissingFloorAndNeedsCobblestone перестанет ловить эту поломку. При смене trace_LiveMineGap_NamesEveryMissingFloorAndNeedsCobblestone проверь это утверждение.");
         assertFalse(
                 gap.missing().isEmpty(),
-                "Недостача шахты обязана называть блоки: [layout] печатал «недостающие []» при 57 пропавших");
+                "Недостача шахты обязана называть блоки: [layout] печатал «недостающие []» при 57 пропавших"
+                        + " Иначе тест trace_LiveMineGap_NamesEveryMissingFloorAndNeedsCobblestone перестанет ловить эту поломку. При смене trace_LiveMineGap_NamesEveryMissingFloorAndNeedsCobblestone проверь это утверждение.");
         assertTrue(
                 gap.missing().stream().allMatch(line -> line.contains("cobblestone")),
-                "Каждая строка недостачи шахты называет блок пола: " + gap.missing());
+                "Каждая строка недостачи шахты называет блок пола: " + gap.missing()
+                        + " Иначе тест trace_LiveMineGap_NamesEveryMissingFloorAndNeedsCobblestone перестанет ловить эту поломку. При смене trace_LiveMineGap_NamesEveryMissingFloorAndNeedsCobblestone проверь это утверждение.");
     }
 
     private static MineLayout layout() {
@@ -152,11 +160,16 @@ class BuildGapMineTests {
         MineLayout layout = layout();
         BuildGap.Gap gap = BuildGap.trace(minePlan(), "oak", probe(layout, Set.of()), schemes(layout));
 
-        assertEquals(0, gap.shortage(), "Достроенная шахта не имеет недостачи");
+        assertEquals(
+                0,
+                gap.shortage(),
+                "Достроенная шахта не имеет недостачи"
+                        + " Иначе тест trace_CompleteMine_ShortageZero перестанет ловить эту поломку. При смене trace_CompleteMine_ShortageZero проверь это утверждение.");
         assertEquals(
                 Map.of(),
                 BuildGap.need(minePlan(), gap, FAKE),
-                "Достроенной шахте не нужны материалы: пустая недостача не тянет ремонт");
+                "Достроенной шахте не нужны материалы: пустая недостача не тянет ремонт"
+                        + " Иначе тест trace_CompleteMine_ShortageZero перестанет ловить эту поломку. При смене trace_CompleteMine_ShortageZero проверь это утверждение.");
     }
 
     @Test
@@ -169,10 +182,18 @@ class BuildGapMineTests {
         assertEquals(
                 layout.floors().size() + layout.air().size(),
                 gap.done(),
-                "Клетка руды в проходке считается выполненной: задание left_ore ждёт кирку, а постройка идёт в обход");
-        assertEquals(0, gap.shortage(), "Руда в спуске не должна держать готовность шахты ниже 100%");
+                "Клетка руды в проходке считается выполненной: задание left_ore ждёт кирку, а постройка идёт в обход"
+                        + " Иначе тест trace_OreInDescentWithoutPickaxe_CountsAsDone перестанет ловить эту поломку. При смене trace_OreInDescentWithoutPickaxe_CountsAsDone проверь это утверждение.");
         assertEquals(
-                Map.of(), BuildGap.need(minePlan(), gap, FAKE), "Руде не нужен булыжник: ремонт шахты её не требует");
+                0,
+                gap.shortage(),
+                "Руда в спуске не должна держать готовность шахты ниже 100%"
+                        + " Иначе тест trace_OreInDescentWithoutPickaxe_CountsAsDone перестанет ловить эту поломку. При смене trace_OreInDescentWithoutPickaxe_CountsAsDone проверь это утверждение.");
+        assertEquals(
+                Map.of(),
+                BuildGap.need(minePlan(), gap, FAKE),
+                "Руде не нужен булыжник: ремонт шахты её не требует"
+                        + " Иначе тест trace_OreInDescentWithoutPickaxe_CountsAsDone перестанет ловить эту поломку. При смене trace_OreInDescentWithoutPickaxe_CountsAsDone проверь это утверждение.");
     }
 
     @Test
@@ -183,7 +204,11 @@ class BuildGapMineTests {
 
         BuildGap.Gap gap = BuildGap.trace(minePlan(), "oak", probeWithOre(layout, floorOre, wallOre), schemes(layout));
 
-        assertEquals(0, gap.shortage(), "Руда в полу и стенке спуска считается выполненной клеткой: 100% без кирки");
+        assertEquals(
+                0,
+                gap.shortage(),
+                "Руда в полу и стенке спуска считается выполненной клеткой: 100% без кирки"
+                        + " Иначе тест trace_OreInWallAndFloor_CountsAsDone перестанет ловить эту поломку. При смене trace_OreInWallAndFloor_CountsAsDone проверь это утверждение.");
     }
 
     private static BuildGap.Probe probeWithOre(MineLayout layout, BlockCoord... ores) {

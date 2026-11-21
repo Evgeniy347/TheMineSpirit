@@ -44,12 +44,14 @@ class StageOneAcceptanceTests {
 
         assertTrue(
                 outcome.finished(),
-                "Три духа с запасом проходят этап 1 без затора: " + outcome.stuck() + "; шагов " + outcome.steps());
+                "Три духа с запасом проходят этап 1 без затора: " + outcome.stuck() + "; шагов " + outcome.steps()
+                        + " Иначе тест simulate_ThreeSpiritsAndStock_ReachesStageTwoWithoutBlocked перестанет ловить эту поломку. При смене simulate_ThreeSpiritsAndStock_ReachesStageTwoWithoutBlocked проверь это утверждение.");
         assertEquals(
                 2,
                 outcome.reachedStage(),
                 "Расчистка, шахта, забор, сад, хижина, двор, свет и улицы закрывают этап 1 — поселение переходит "
-                        + "на этап 2; шагов этапа 1 " + outcome.stageSteps().getOrDefault(1, 0));
+                        + "на этап 2; шагов этапа 1 " + outcome.stageSteps().getOrDefault(1, 0)
+                        + " Иначе тест simulate_ThreeSpiritsAndStock_ReachesStageTwoWithoutBlocked перестанет ловить эту поломку. При смене simulate_ThreeSpiritsAndStock_ReachesStageTwoWithoutBlocked проверь это утверждение.");
     }
 
     @Test
@@ -67,17 +69,20 @@ class StageOneAcceptanceTests {
         assertEquals(
                 List.of(),
                 blocked,
-                "Ни один шаг этапа 1 не уходит в BLOCKED: доска с запасом и тремя духами доводит этап до конца");
+                "Ни один шаг этапа 1 не уходит в BLOCKED: доска с запасом и тремя духами доводит этап до конца"
+                        + " Иначе тест board_ThreeSpiritsAndStock_StageOneReachesSecondStageWithoutBlocked перестанет ловить эту поломку. При смене board_ThreeSpiritsAndStock_StageOneReachesSecondStageWithoutBlocked проверь это утверждение.");
         assertEquals(
                 2,
                 scenario.settlementStage(),
                 "Все шаги этапа 1 закрыты — поселение переходит на этап 2: "
                         + scenario.tickets().stream()
                                 .map(ticket -> ticket.id() + "=" + scenario.status(ticket.id()))
-                                .toList());
+                                .toList()
+                        + " Иначе тест board_ThreeSpiritsAndStock_StageOneReachesSecondStageWithoutBlocked перестанет ловить эту поломку. При смене board_ThreeSpiritsAndStock_StageOneReachesSecondStageWithoutBlocked проверь это утверждение.");
         assertTrue(
                 scenario.anomalies().isEmpty(),
-                "Выдача не отказывает годным духам и не оставляет задание без владельца: " + scenario.anomalies());
+                "Выдача не отказывает годным духам и не оставляет задание без владельца: " + scenario.anomalies()
+                        + " Иначе тест board_ThreeSpiritsAndStock_StageOneReachesSecondStageWithoutBlocked перестанет ловить эту поломку. При смене board_ThreeSpiritsAndStock_StageOneReachesSecondStageWithoutBlocked проверь это утверждение.");
     }
 
     @Test
@@ -97,11 +102,13 @@ class StageOneAcceptanceTests {
         assertTrue(
                 maxOpen <= limit,
                 "На этапе 1 одновременно открыто не больше лимита (" + limit + "): иначе 10–20 шагов висят "
-                        + "PENDING за тремя занятыми духами; открыто " + maxOpen);
+                        + "PENDING за тремя занятыми духами; открыто " + maxOpen
+                        + " При смене board_StageOne_NoStepWaitsBehindBusySpirits проверь это утверждение.");
         assertTrue(
                 longestWait <= BoardTuning.boardIntervalTicks(),
                 "Шаг этапа 1 не ждёт в PENDING дольше одного раунда доски: иначе доска голодает за занятыми "
-                        + "духами (в живом прогоне «занят» >600 тиков); ждал " + longestWait + " тиков");
+                        + "духами (в живом прогоне «занят» >600 тиков); ждал " + longestWait + " тиков"
+                        + " При смене board_StageOne_NoStepWaitsBehindBusySpirits проверь это утверждение.");
         assertEquals(
                 2,
                 scenario.settlementStage(),
@@ -109,7 +116,8 @@ class StageOneAcceptanceTests {
                         + scenario.tickets().stream()
                                 .filter(ticket -> StageTicket.stage(ticket.id()))
                                 .map(ticket -> ticket.id() + "=" + scenario.status(ticket.id()))
-                                .toList());
+                                .toList()
+                        + " Иначе тест board_StageOne_NoStepWaitsBehindBusySpirits перестанет ловить эту поломку. При смене board_StageOne_NoStepWaitsBehindBusySpirits проверь это утверждение.");
     }
 
     @Test
@@ -140,11 +148,13 @@ class StageOneAcceptanceTests {
                 Built.PLANNED,
                 built.get("chests"),
                 "Двор с чужими сундуками не считается построенным: иначе шаг двора не переиздаётся и ремонт не "
-                        + "запускается, а приёмка этапа 1 считает двор готовым при 0%: " + built);
+                        + "запускается, а приёмка этапа 1 считает двор готовым при 0%: " + built
+                        + " При смене board_StageOne_DamagedYardIsNotBuiltByOldChests проверь это утверждение.");
         assertEquals(
                 Built.PLANNED,
                 built.get("furnace"),
-                "Печь не на месте схемы двора — двор не построен, даже если шаги в журнале сделаны: " + built);
+                "Печь не на месте схемы двора — двор не построен, даже если шаги в журнале сделаны: " + built
+                        + " Иначе тест board_StageOne_DamagedYardIsNotBuiltByOldChests перестанет ловить эту поломку. При смене board_StageOne_DamagedYardIsNotBuiltByOldChests проверь это утверждение.");
     }
 
     @Test
@@ -158,12 +168,14 @@ class StageOneAcceptanceTests {
                         .anyMatch(call -> "craft".equals(call.script())
                                 && String.valueOf(call.params().get("item")).endsWith("_fence")),
                 "Строитель ограды крафтит забор из своего дерева: забор в общем сундуке ждёт передачу от другого "
-                        + "духа — часть ограды стоит, а этап 1 не закрывается (забор). План: " + calls);
+                        + "духа — часть ограды стоит, а этап 1 не закрывается (забор). План: " + calls
+                        + " Иначе тест plan_FencePart_CraftsFromOwnWoodInsteadOfWithdraw перестанет ловить эту поломку. При смене plan_FencePart_CraftsFromOwnWoodInsteadOfWithdraw проверь это утверждение.");
         assertTrue(
                 calls.stream()
                         .noneMatch(call -> "withdraw".equals(call.script())
                                 && String.valueOf(call.params().get("item")).endsWith("_fence")),
-                "Забор не забирают из сундука: доски лежат у другого духа, часть ждёт передачу. План: " + calls);
+                "Забор не забирают из сундука: доски лежат у другого духа, часть ждёт передачу. План: " + calls
+                        + " Иначе тест plan_FencePart_CraftsFromOwnWoodInsteadOfWithdraw перестанет ловить эту поломку. При смене plan_FencePart_CraftsFromOwnWoodInsteadOfWithdraw проверь это утверждение.");
     }
 
     @Test
@@ -174,10 +186,12 @@ class StageOneAcceptanceTests {
         assertFalse(
                 calls.stream().anyMatch(call -> "chop_tree".equals(call.script())),
                 "Необязательные саженцы не стоят перед стройкой: иначе сад валится «нет прогресса» на рубке, "
-                        + "хотя дорожки и факелы можно ставить сразу. План: " + calls);
+                        + "хотя дорожки и факелы можно ставить сразу. План: " + calls
+                        + " При смене planOrchard_OptionalSaplings_DoNotBlockBuild проверь это утверждение.");
         assertTrue(
                 calls.stream().anyMatch(call -> "build_schematic".equals(call.script())),
-                "Стройка сада идёт без ожидания необязательных саженцев. План: " + calls);
+                "Стройка сада идёт без ожидания необязательных саженцев. План: " + calls
+                        + " Иначе тест planOrchard_OptionalSaplings_DoNotBlockBuild перестанет ловить эту поломку. При смене planOrchard_OptionalSaplings_DoNotBlockBuild проверь это утверждение.");
     }
 
     private static TaskNode plan(BoardCase boardCase, List<SchemeBuild> builds) {

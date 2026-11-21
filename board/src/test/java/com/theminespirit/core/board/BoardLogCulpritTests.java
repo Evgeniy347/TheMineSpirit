@@ -26,7 +26,8 @@ class BoardLogCulpritTests {
                 "more3_fence:-183,69,-505",
                 BoardLog.culprit(List.of(fence)),
                 "Строка [plot-edit] обязана называть задание, которым сломан блок плана: в observe23 было видно "
-                        + "только духа, и причину искали по всему логу");
+                        + "только духа, и причину искали по всему логу"
+                        + " Иначе тест culprit_AssignedTicket_NamesTaskCulprit перестанет ловить эту поломку. При смене culprit_AssignedTicket_NamesTaskCulprit проверь это утверждение.");
     }
 
     @Test
@@ -34,7 +35,8 @@ class BoardLogCulpritTests {
         assertEquals(
                 "—",
                 BoardLog.culprit(List.of()),
-                "Без задания в строке обязан стоять прочерк: пустое место читается как забытое поле");
+                "Без задания в строке обязан стоять прочерк: пустое место читается как забытое поле"
+                        + " Иначе тест culprit_NoAssignedTicket_Dash перестанет ловить эту поломку. При смене culprit_NoAssignedTicket_Dash проверь это утверждение.");
     }
 
     @Test
@@ -42,7 +44,8 @@ class BoardLogCulpritTests {
         assertEquals(
                 "repair:build_house",
                 BoardLog.culpritOrAction("repair:build_house", "dig_out"),
-                "Задание доски сильнее имени скрипта: id задания — главная причина правки плана");
+                "Задание доски сильнее имени скрипта: id задания — главная причина правки плана"
+                        + " Иначе тест culpritOrAction_AssignedTicket_KeepsId перестанет ловить эту поломку. При смене culpritOrAction_AssignedTicket_KeepsId проверь это утверждение.");
     }
 
     @Test
@@ -51,7 +54,8 @@ class BoardLogCulpritTests {
                 "самоспасение: dig_out",
                 BoardLog.culpritOrAction(null, "dig_out"),
                 "Самоспасение не ставит задание доски, но [plot-edit] обязан назвать действие, которым сломан "
-                        + "план: в observe24 стояло «задание —», и причину искали по всему логу");
+                        + "план: в observe24 стояло «задание —», и причину искали по всему логу"
+                        + " Иначе тест culpritOrAction_SelfEscapeWithoutTicket_NamesRescueAction перестанет ловить эту поломку. При смене culpritOrAction_SelfEscapeWithoutTicket_NamesRescueAction проверь это утверждение.");
     }
 
     @Test
@@ -59,6 +63,7 @@ class BoardLogCulpritTests {
         assertEquals(
                 "—",
                 BoardLog.culpritOrAction("—", null),
-                "Без задания и действия остаётся прочерк: пустое место читается как забытое поле");
+                "Без задания и действия остаётся прочерк: пустое место читается как забытое поле"
+                        + " Иначе тест culpritOrAction_NoTicketAndNoScript_Dash перестанет ловить эту поломку. При смене culpritOrAction_NoTicketAndNoScript_Dash проверь это утверждение.");
     }
 }

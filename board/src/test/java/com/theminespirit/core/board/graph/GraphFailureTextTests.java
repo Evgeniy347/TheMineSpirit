@@ -16,7 +16,8 @@ class GraphFailureTextTests {
         assertEquals(
                 "",
                 GraphFailureText.line(List.of()),
-                "Пустая память неудач не печатает строку: иначе лог заполняется «память неудач: » без данных");
+                "Пустая память неудач не печатает строку: иначе лог заполняется «память неудач: » без данных"
+                        + " При смене line_EmptyMemory_IsEmpty проверь это утверждение.");
     }
 
     @Test
@@ -27,10 +28,12 @@ class GraphFailureTextTests {
 
         assertTrue(
                 line.indexOf("mine_coal") >= 0 && line.indexOf("mine_coal") < line.indexOf("chop_tree"),
-                "Сначала цель с большим штрафом: иначе строка прячет главную причину простоя: " + line);
+                "Сначала цель с большим штрафом: иначе строка прячет главную причину простоя: " + line
+                        + " При смене line_PenaltiesDiffer_NamesTargetAndNeedBiggestFirst проверь это утверждение.");
         assertTrue(
                 line.contains("mine_coal → 12,40,-7: Item[item=coal, count=6], штраф 7.25, провалов 5"),
-                "Строка памяти называет узел, цель, нужду, штраф и число провалов: " + line);
+                "Строка памяти называет узел, цель, нужду, штраф и число провалов: " + line
+                        + " Иначе тест line_PenaltiesDiffer_NamesTargetAndNeedBiggestFirst перестанет ловить эту поломку. При смене line_PenaltiesDiffer_NamesTargetAndNeedBiggestFirst проверь это утверждение.");
     }
 
     @Test
@@ -45,9 +48,12 @@ class GraphFailureTextTests {
         assertTrue(
                 line.endsWith("… ещё 2"),
                 "Строка не обрезает молча: после " + GraphFailureText.SHOWN + " записей видно, сколько осталось: "
-                        + line);
+                        + line
+                        + " Иначе тест line_MoreThanShown_AddsRemainder перестанет ловить эту поломку. При смене line_MoreThanShown_AddsRemainder проверь это утверждение.");
         assertTrue(
-                !line.contains("node0 "), "В строку не попадает запись с наименьшим штрафом при переполнении: " + line);
+                !line.contains("node0 "),
+                "В строку не попадает запись с наименьшим штрафом при переполнении: " + line
+                        + " Иначе тест line_MoreThanShown_AddsRemainder перестанет ловить эту поломку. При смене line_MoreThanShown_AddsRemainder проверь это утверждение.");
     }
 
     @Test
@@ -55,7 +61,8 @@ class GraphFailureTextTests {
         assertTrue(
                 GraphFailureText.line(List.of(failure("rescue", "", new GraphBlock.Path(""), 1, 1)))
                         .contains("rescue → -: Path[point=]"),
-                "Пустая цель печатается прочерком, а не двойным пробелом: иначе строку не прочитать");
+                "Пустая цель печатается прочерком, а не двойным пробелом: иначе строку не прочитать"
+                        + " При смене line_BlankTarget_ShowsDash проверь это утверждение.");
     }
 
     private static GraphFeedback.Failure failure(

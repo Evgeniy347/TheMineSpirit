@@ -54,25 +54,35 @@ class CrossRouteStageScenarioTests {
 
         GraphPlan.Task bridge = task(first, "bridge");
         GraphPlan.Task trace = task(first, "restore_trace");
-        assertTrue(bridge.feasible(), "Доски есть — мост из воды выполним сразу: " + ids(first));
-        assertTrue(trace.feasible(), "Возврат следа остаётся в плане: " + ids(first));
+        assertTrue(
+                bridge.feasible(),
+                "Доски есть — мост из воды выполним сразу: " + ids(first)
+                        + " Иначе тест pit_WaterAtBottom_BridgeUsesPlanksAndTraceStaysPlanned перестанет ловить эту поломку. При смене pit_WaterAtBottom_BridgeUsesPlanksAndTraceStaysPlanned проверь это утверждение.");
+        assertTrue(
+                trace.feasible(),
+                "Возврат следа остаётся в плане: " + ids(first)
+                        + " Иначе тест pit_WaterAtBottom_BridgeUsesPlanksAndTraceStaysPlanned перестанет ловить эту поломку. При смене pit_WaterAtBottom_BridgeUsesPlanksAndTraceStaysPlanned проверь это утверждение.");
         assertTrue(
                 first.task("building:hut").filter(GraphPlan.Task::feasible).isPresent(),
-                "Стройка дома ждёт, но не отменяется: " + ids(first));
+                "Стройка дома ждёт, но не отменяется: " + ids(first)
+                        + " Иначе тест pit_WaterAtBottom_BridgeUsesPlanksAndTraceStaysPlanned перестанет ловить эту поломку. При смене pit_WaterAtBottom_BridgeUsesPlanksAndTraceStaysPlanned проверь это утверждение.");
 
         GraphPlan.Task ready = task(first, "bridge");
         assertEquals(
                 Map.of("#planks", 8),
                 ready.consumes(),
-                "Мост тратит восемь досок, и это видно графу как конкуренцию со стройкой: " + ready);
+                "Мост тратит восемь досок, и это видно графу как конкуренцию со стройкой: " + ready
+                        + " Иначе тест pit_WaterAtBottom_BridgeUsesPlanksAndTraceStaysPlanned перестанет ловить эту поломку. При смене pit_WaterAtBottom_BridgeUsesPlanksAndTraceStaysPlanned проверь это утверждение.");
         assertEquals(
                 BoardCase.ACTIVITY_MOVE,
                 BoardActivities.caseOfScript("bridge").orElseThrow(),
-                "Мост — движение с изменением мира узла bridge, а не стройка дома");
+                "Мост — движение с изменением мира узла bridge, а не стройка дома"
+                        + " Иначе тест pit_WaterAtBottom_BridgeUsesPlanksAndTraceStaysPlanned перестанет ловить эту поломку. При смене pit_WaterAtBottom_BridgeUsesPlanksAndTraceStaysPlanned проверь это утверждение.");
         assertEquals(
                 BoardCase.ACTIVITY_MOVE,
                 BoardActivities.caseOfScript("goto").orElseThrow(),
-                "Подход к яме остаётся обычным движением без ломания мира");
+                "Подход к яме остаётся обычным движением без ломания мира"
+                        + " Иначе тест pit_WaterAtBottom_BridgeUsesPlanksAndTraceStaysPlanned перестанет ловить эту поломку. При смене pit_WaterAtBottom_BridgeUsesPlanksAndTraceStaysPlanned проверь это утверждение.");
     }
 
     @Test
@@ -96,20 +106,24 @@ class CrossRouteStageScenarioTests {
 
         assertFalse(
                 plan.task("building:hut").filter(GraphPlan.Task::feasible).isPresent(),
-                "Незагруженный чанк — «неизвестно», а не «постройки нет»: дом не перестраивают вслепую: " + ids(plan));
+                "Незагруженный чанк — «неизвестно», а не «постройки нет»: дом не перестраивают вслепую: " + ids(plan)
+                        + " Иначе тест chunks_UnknownLot_NoBlindRebuildButKnownRepairStays перестанет ловить эту поломку. При смене chunks_UnknownLot_NoBlindRebuildButKnownRepairStays проверь это утверждение.");
         assertFalse(
                 plan.task("event:repair_hut:repair:hut")
                         .filter(GraphPlan.Task::feasible)
                         .isPresent(),
-                "Ремонт неизвестной постройки тоже не ставится: " + ids(plan));
+                "Ремонт неизвестной постройки тоже не ставится: " + ids(plan)
+                        + " Иначе тест chunks_UnknownLot_NoBlindRebuildButKnownRepairStays перестанет ловить эту поломку. При смене chunks_UnknownLot_NoBlindRebuildButKnownRepairStays проверь это утверждение.");
         assertTrue(
                 plan.task("event:repair_fence:repair:fence")
                         .filter(GraphPlan.Task::feasible)
                         .isPresent(),
-                "Известный побитый забор чинится рядом с неизвестным домом: " + ids(plan));
+                "Известный побитый забор чинится рядом с неизвестным домом: " + ids(plan)
+                        + " Иначе тест chunks_UnknownLot_NoBlindRebuildButKnownRepairStays перестанет ловить эту поломку. При смене chunks_UnknownLot_NoBlindRebuildButKnownRepairStays проверь это утверждение.");
         assertTrue(
                 plan.task("mine_coal").filter(GraphPlan.Task::feasible).isPresent(),
-                "Остальные работы не пропадают из-за одного неизвестного участка: " + ids(plan));
+                "Остальные работы не пропадают из-за одного неизвестного участка: " + ids(plan)
+                        + " Иначе тест chunks_UnknownLot_NoBlindRebuildButKnownRepairStays перестанет ловить эту поломку. При смене chunks_UnknownLot_NoBlindRebuildButKnownRepairStays проверь это утверждение.");
     }
 
     @Test
@@ -129,11 +143,13 @@ class CrossRouteStageScenarioTests {
 
         assertTrue(
                 plan.task("rescue_spirit").filter(GraphPlan.Task::feasible).isPresent(),
-                "Спасение в графе: " + ids(plan));
+                "Спасение в графе: " + ids(plan)
+                        + " Иначе тест pit_StuckSpirit_RescuePostedAndOrdinaryWorkRefused перестанет ловить эту поломку. При смене pit_StuckSpirit_RescuePostedAndOrdinaryWorkRefused проверь это утверждение.");
         assertTrue(
                 result.post().stream().anyMatch(ticket -> ticket.id().startsWith("graph:rescue_spirit")),
                 "Спасение стоит на доске: "
-                        + result.post().stream().map(GraphTickets.Ticket::id).toList());
+                        + result.post().stream().map(GraphTickets.Ticket::id).toList()
+                        + " Иначе тест pit_StuckSpirit_RescuePostedAndOrdinaryWorkRefused перестанет ловить эту поломку. При смене pit_StuckSpirit_RescuePostedAndOrdinaryWorkRefused проверь это утверждение.");
 
         Board board = board(world, result);
         board.stuck().see(id("spirit-2"), PIT, board.now());
@@ -156,11 +172,13 @@ class CrossRouteStageScenarioTests {
         assertTrue(
                 round.choose(boardTicket(chop), List.of(stuck)).isEmpty(),
                 "Застрявший дух не получает обычную рубку, пока не вышел: "
-                        + round.why(boardTicket(chop), List.of(stuck)));
+                        + round.why(boardTicket(chop), List.of(stuck))
+                        + " Иначе тест pit_StuckSpirit_RescuePostedAndOrdinaryWorkRefused перестанет ловить эту поломку. При смене pit_StuckSpirit_RescuePostedAndOrdinaryWorkRefused проверь это утверждение.");
         Optional<String> why = round.refusal(boardTicket(chop), stuck);
         assertTrue(
                 why.isPresent() && why.orElseThrow().contains("не двигается"),
-                "Причина отказа называет застревание, а не молчит: " + why);
+                "Причина отказа называет застревание, а не молчит: " + why
+                        + " Иначе тест pit_StuckSpirit_RescuePostedAndOrdinaryWorkRefused перестанет ловить эту поломку. При смене pit_StuckSpirit_RescuePostedAndOrdinaryWorkRefused проверь это утверждение.");
 
         DispatchRound.Candidate helper = new DispatchRound.Candidate(
                 id("spirit-1"),
@@ -174,11 +192,13 @@ class CrossRouteStageScenarioTests {
         assertTrue(
                 round.choose(boardTicket(ticketFor(result, "graph:rescue_spirit")), List.of(helper))
                         .isPresent(),
-                "Свободный второй дух берёт спасение застрявшего");
+                "Свободный второй дух берёт спасение застрявшего"
+                        + " Иначе тест pit_StuckSpirit_RescuePostedAndOrdinaryWorkRefused перестанет ловить эту поломку. При смене pit_StuckSpirit_RescuePostedAndOrdinaryWorkRefused проверь это утверждение.");
         assertEquals(
                 BoardCase.RESCUE_SPIRIT,
                 plan.task("rescue_spirit").orElseThrow().boardCase(),
-                "Спасение остаётся отдельным кейсом, а не обычной работой");
+                "Спасение остаётся отдельным кейсом, а не обычной работой"
+                        + " Иначе тест pit_StuckSpirit_RescuePostedAndOrdinaryWorkRefused перестанет ловить эту поломку. При смене pit_StuckSpirit_RescuePostedAndOrdinaryWorkRefused проверь это утверждение.");
     }
 
     @Test
@@ -200,19 +220,37 @@ class CrossRouteStageScenarioTests {
         GraphPlan.Task backfill = task(plan, "event:backfill:backfill");
         GraphPlan.Task house = task(plan, "building:hut");
 
-        assertTrue(chop.feasible(), "Брёвен нет — рубка на доске: " + ids(plan));
-        assertTrue(floating.feasible(), "Висящая крона после рубки получает уборку: " + ids(plan));
-        assertTrue(backfill.feasible(), "Яма на участке засыпается рядом с уборкой кроны: " + ids(plan));
-        assertTrue(house.feasible(), "Стройка дома не отменяется уборкой висящего: " + ids(plan));
-        assertFalse(GraphStageGate.lotsReady(facts), "Яма на участке не даёт этапу закрыться, пока засыпка не сделана");
+        assertTrue(
+                chop.feasible(),
+                "Брёвен нет — рубка на доске: " + ids(plan)
+                        + " Иначе тест chop_HangingCanopyAfterChop_ClearFloatingAndHouseStayPosted перестанет ловить эту поломку. При смене chop_HangingCanopyAfterChop_ClearFloatingAndHouseStayPosted проверь это утверждение.");
+        assertTrue(
+                floating.feasible(),
+                "Висящая крона после рубки получает уборку: " + ids(plan)
+                        + " Иначе тест chop_HangingCanopyAfterChop_ClearFloatingAndHouseStayPosted перестанет ловить эту поломку. При смене chop_HangingCanopyAfterChop_ClearFloatingAndHouseStayPosted проверь это утверждение.");
+        assertTrue(
+                backfill.feasible(),
+                "Яма на участке засыпается рядом с уборкой кроны: " + ids(plan)
+                        + " Иначе тест chop_HangingCanopyAfterChop_ClearFloatingAndHouseStayPosted перестанет ловить эту поломку. При смене chop_HangingCanopyAfterChop_ClearFloatingAndHouseStayPosted проверь это утверждение.");
+        assertTrue(
+                house.feasible(),
+                "Стройка дома не отменяется уборкой висящего: " + ids(plan)
+                        + " Иначе тест chop_HangingCanopyAfterChop_ClearFloatingAndHouseStayPosted перестанет ловить эту поломку. При смене chop_HangingCanopyAfterChop_ClearFloatingAndHouseStayPosted проверь это утверждение.");
+        assertFalse(
+                GraphStageGate.lotsReady(facts),
+                "Яма на участке не даёт этапу закрыться, пока засыпка не сделана"
+                        + " Иначе тест chop_HangingCanopyAfterChop_ClearFloatingAndHouseStayPosted перестанет ловить эту поломку. При смене chop_HangingCanopyAfterChop_ClearFloatingAndHouseStayPosted проверь это утверждение.");
         assertTrue(
                 scripts(BoardCase.GATHER_MATERIALS, chopTarget()).contains("chop_tree"),
-                "Рубка валит дерево целиком скриптом chop_tree: " + scripts(BoardCase.GATHER_MATERIALS, chopTarget()));
+                "Рубка валит дерево целиком скриптом chop_tree: " + scripts(BoardCase.GATHER_MATERIALS, chopTarget())
+                        + " Иначе тест chop_HangingCanopyAfterChop_ClearFloatingAndHouseStayPosted перестанет ловить эту поломку. При смене chop_HangingCanopyAfterChop_ClearFloatingAndHouseStayPosted проверь это утверждение.");
         assertTrue(
                 scripts(BoardCase.CLEAR_GROUNDS).contains("clear_area"),
-                "Уборка кроны ломает блоки скриптом clear_area: " + scripts(BoardCase.CLEAR_GROUNDS));
+                "Уборка кроны ломает блоки скриптом clear_area: " + scripts(BoardCase.CLEAR_GROUNDS)
+                        + " При смене chop_HangingCanopyAfterChop_ClearFloatingAndHouseStayPosted проверь это утверждение.");
         assertTrue(
                 scripts(BoardCase.BUILD_HOUSE).contains("build_schematic"),
-                "Дом строится схемой build_schematic: " + scripts(BoardCase.BUILD_HOUSE));
+                "Дом строится схемой build_schematic: " + scripts(BoardCase.BUILD_HOUSE)
+                        + " Иначе тест chop_HangingCanopyAfterChop_ClearFloatingAndHouseStayPosted перестанет ловить эту поломку. При смене chop_HangingCanopyAfterChop_ClearFloatingAndHouseStayPosted проверь это утверждение.");
     }
 }

@@ -61,7 +61,8 @@ class CaseMaterialsTests {
                 Map.of("oak_planks", 16),
                 CaseMaterials.craftNeed(plan, FAKE, "minecraft:chest"),
                 "Передача крафтеру — ингредиенты всех крафтов предмета, без чужих шагов: набор на один крафт "
-                        + "ронял «craft torch ×8: coal 1 из 2»");
+                        + "ронял «craft torch ×8: coal 1 из 2»"
+                        + " Иначе тест craftNeed_PlanWithOtherCrafts_CountsOnlyItemTimesCrafts перестанет ловить эту поломку. При смене craftNeed_PlanWithOtherCrafts_CountsOnlyItemTimesCrafts проверь это утверждение.");
     }
 
     @Test
@@ -72,7 +73,8 @@ class CaseMaterialsTests {
                 Map.of("oak_planks", 16),
                 need,
                 "Сундук крафтится по одному за крафт из 8 досок: на два нужно 16 досок, иначе "
-                        + "гейт пропустит кейс без половины материала");
+                        + "гейт пропустит кейс без половины материала"
+                        + " При смене need_CraftCase_MultipliesIngredientsByCrafts проверь это утверждение.");
     }
 
     @Test
@@ -83,7 +85,8 @@ class CaseMaterialsTests {
                 Map.of("oak_planks", 4),
                 need,
                 "Палки идут по 4 за крафт из 2 досок: на 5 нужно два крафта и 4 доски, "
-                        + "иначе не хватит на последнюю палку");
+                        + "иначе не хватит на последнюю палку"
+                        + " При смене need_CraftWithOutput_RoundsCraftsUp проверь это утверждение.");
     }
 
     @Test
@@ -94,7 +97,8 @@ class CaseMaterialsTests {
         assertEquals(
                 Map.of("oak_fence", 32),
                 need,
-                "Забор строится схемой: гейт считает материалы схемы, а не число в коде");
+                "Забор строится схемой: гейт считает материалы схемы, а не число в коде"
+                        + " Иначе тест need_Schematic_CountsBlocks перестанет ловить эту поломку. При смене need_Schematic_CountsBlocks проверь это утверждение.");
     }
 
     @Test
@@ -107,7 +111,8 @@ class CaseMaterialsTests {
                 Map.of("torch", 2),
                 CaseMaterials.need(plan, FAKE),
                 "Каждая постановка факела требует по факелу: имя приводится к короткому виду "
-                        + "как ключ снимка запасов");
+                        + "как ключ снимка запасов"
+                        + " Иначе тест need_PlaceBlock_CountsEveryPlacement перестанет ловить эту поломку. При смене need_PlaceBlock_CountsEveryPlacement проверь это утверждение.");
     }
 
     @Test
@@ -127,7 +132,8 @@ class CaseMaterialsTests {
                 Map.of("dirt", 12),
                 CaseMaterials.need(plan, FAKE),
                 "Заделка пролома площадью — один fill: материалов нужно по числу клеток области, иначе "
-                        + "граф не поднимет 12 блоков и задание упадёт на нехватке материала");
+                        + "граф не поднимет 12 блоков и задание упадёт на нехватке материала"
+                        + " При смене need_Fill_CountsWholeArea проверь это утверждение.");
     }
 
     @Test
@@ -147,7 +153,8 @@ class CaseMaterialsTests {
                 IllegalArgumentException.class,
                 () -> CaseMaterials.need(plan, FAKE),
                 "Перевёрнутая область fill — ошибка плана, а не ноль материалов: молчаливый 0 снова уронит "
-                        + "ремонт в нехватку блока");
+                        + "ремонт в нехватку блока"
+                        + " Иначе тест need_FillBrokenArea_IsReported перестанет ловить эту поломку. При смене need_FillBrokenArea_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -161,7 +168,8 @@ class CaseMaterialsTests {
                 CaseMaterials.need(fallback, FAKE),
                 "Ветки fallback — замена друг другу: доска требует только первую (уголь), а не обе. "
                         + "Иначе древесный уголь (обжиг, не добыча) появляется в requiredItems и добыча "
-                        + "проваливает сад 0/24 (наблюдение 7)");
+                        + "проваливает сад 0/24 (наблюдение 7)"
+                        + " При смене need_FallbackAlternatives_RequiresPrimaryOnly проверь это утверждение.");
     }
 
     @Test
@@ -174,7 +182,8 @@ class CaseMaterialsTests {
                 Map.of("oak_log", 1),
                 CaseMaterials.need(fallback, FAKE),
                 "Если первая ветка ничего не берёт со склада (рубка), нужду задаёт следующая: иначе "
-                        + "добыча брёвен теряла бы материал из гейта");
+                        + "добыча брёвен теряла бы материал из гейта"
+                        + " При смене need_FallbackFirstWithoutMaterial_UsesNextBranch проверь это утверждение.");
     }
 
     @Test
@@ -182,7 +191,11 @@ class CaseMaterialsTests {
         Map<String, Integer> need =
                 CaseMaterials.need(new ScriptCall("acquire", Map.of("item", "dirt", "count", 5)), FAKE);
 
-        assertEquals(Map.of("dirt", 5), need, "Шаг acquire требует предмет со склада: гейт обязан его учесть");
+        assertEquals(
+                Map.of("dirt", 5),
+                need,
+                "Шаг acquire требует предмет со склада: гейт обязан его учесть"
+                        + " Иначе тест need_AcquireStep_CountsItem перестанет ловить эту поломку. При смене need_AcquireStep_CountsItem проверь это утверждение.");
     }
 
     @Test
@@ -194,7 +207,8 @@ class CaseMaterialsTests {
         assertEquals(
                 Map.of(),
                 CaseMaterials.need(plan, FAKE),
-                "Шаги без материалов (зачистка, спуск) не рождают нужды: пустой гейт — " + "задание выполнимо сразу");
+                "Шаги без материалов (зачистка, спуск) не рождают нужды: пустой гейт — " + "задание выполнимо сразу"
+                        + " Иначе тест need_UnknownSteps_Ignored перестанет ловить эту поломку. При смене need_UnknownSteps_Ignored проверь это утверждение.");
     }
 
     @Test
@@ -205,7 +219,8 @@ class CaseMaterialsTests {
                 Map.of("oak_planks", 4),
                 need,
                 "Ингредиент с полным id приводится к короткому виду: иначе гейт не увидит "
-                        + "склад, ключи которого короткие, и будет требовать доски вечно");
+                        + "склад, ключи которого короткие, и будет требовать доски вечно"
+                        + " При смене need_PrefixedIngredient_IsNormalized проверь это утверждение.");
     }
 
     @Test
@@ -213,7 +228,8 @@ class CaseMaterialsTests {
         assertThrows(
                 NullPointerException.class,
                 () -> CaseMaterials.need(null, FAKE),
-                "Без плана нечего считать: null обязан падать, а не молча давать пустой гейт");
+                "Без плана нечего считать: null обязан падать, а не молча давать пустой гейт"
+                        + " Иначе тест need_NullPlan_Rejected перестанет ловить эту поломку. При смене need_NullPlan_Rejected проверь это утверждение.");
     }
 
     @Test
@@ -221,7 +237,8 @@ class CaseMaterialsTests {
         assertThrows(
                 NullPointerException.class,
                 () -> CaseMaterials.need(craft("chest", 1), null),
-                "Без источника рецепт не прочитать: null обязан падать, а не молча давать пустой гейт");
+                "Без источника рецепт не прочитать: null обязан падать, а не молча давать пустой гейт"
+                        + " Иначе тест need_NullSource_Rejected перестанет ловить эту поломку. При смене need_NullSource_Rejected проверь это утверждение.");
     }
 
     @Test
@@ -231,7 +248,8 @@ class CaseMaterialsTests {
         assertEquals(
                 Map.of(),
                 ResourceGate.missing(new StockNeed(need), new StockView(Map.of("oak_planks", 16))),
-                "Полный запас закрывает нужду кейса: добыча не ставится, шаг берётся в работу сразу");
+                "Полный запас закрывает нужду кейса: добыча не ставится, шаг берётся в работу сразу"
+                        + " Иначе тест gate_FullStock_LeavesNothingMissing перестанет ловить эту поломку. При смене gate_FullStock_LeavesNothingMissing проверь это утверждение.");
     }
 
     @Test
@@ -241,7 +259,8 @@ class CaseMaterialsTests {
         assertEquals(
                 Map.of("oak_planks", 6),
                 ResourceGate.missing(new StockNeed(need), new StockView(Map.of("oak_planks", 10))),
-                "Недостача — разница нужды и запаса: нужно 16 досок, есть 10 — добыть 6");
+                "Недостача — разница нужды и запаса: нужно 16 досок, есть 10 — добыть 6"
+                        + " Иначе тест gate_PartialStock_ReportsShortage перестанет ловить эту поломку. При смене gate_PartialStock_ReportsShortage проверь это утверждение.");
     }
 
     @Test
@@ -252,7 +271,8 @@ class CaseMaterialsTests {
                 Map.of(),
                 need,
                 "Неизвестный рецепт не даёт материалов: молчаливая догадка подставила бы "
-                        + "чужую нужду, а несостоявшийся рецепт ничего не требует");
+                        + "чужую нужду, а несостоявшийся рецепт ничего не требует"
+                        + " Иначе тест need_CraftWithoutKnownRecipe_Ignored перестанет ловить эту поломку. При смене need_CraftWithoutKnownRecipe_Ignored проверь это утверждение.");
     }
 
     @Property
@@ -263,7 +283,11 @@ class CaseMaterialsTests {
         assertTrue(
                 table >= 4 && chest >= 8,
                 "Нужда в досках положительна при любом числе крафтов: стол — 4 доски, " + "сундук — 8 (получено "
-                        + table + " и " + chest + ")");
-        assertTrue(chest >= table, "Сундук не может требовать меньше досок, чем стол того же числа крафтов");
+                        + table + " и " + chest + ")"
+                        + " Иначе тест need_AnyCraft_StaysPositive перестанет ловить эту поломку. При смене need_AnyCraft_StaysPositive проверь это утверждение.");
+        assertTrue(
+                chest >= table,
+                "Сундук не может требовать меньше досок, чем стол того же числа крафтов"
+                        + " Иначе тест need_AnyCraft_StaysPositive перестанет ловить эту поломку. При смене need_AnyCraft_StaysPositive проверь это утверждение.");
     }
 }

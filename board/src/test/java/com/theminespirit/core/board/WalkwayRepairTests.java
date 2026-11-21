@@ -28,18 +28,22 @@ class WalkwayRepairTests {
 
         assertFalse(
                 report.rebuild(),
-                "Перекос тропы — не разрушение: утопленную тропу поднимают в клетку плана, а не перестраивают");
+                "Перекос тропы — не разрушение: утопленную тропу поднимают в клетку плана, а не перестраивают"
+                        + " Иначе тест audit_SunkWalkway_LiftsWithoutRebuild перестанет ловить эту поломку. При смене audit_SunkWalkway_LiftsWithoutRebuild проверь это утверждение.");
         assertEquals(
                 0,
                 report.missing(),
-                "Утопленная тропа под клеткой плана — работа подъёма, а не потерянная клетка схемы");
+                "Утопленная тропа под клеткой плана — работа подъёма, а не потерянная клетка схемы"
+                        + " Иначе тест audit_SunkWalkway_LiftsWithoutRebuild перестанет ловить эту поломку. При смене audit_SunkWalkway_LiftsWithoutRebuild проверь это утверждение.");
         assertTrue(
                 report.damaged(),
-                "Подъём обязан попасть в правки ремонта: иначе тропа останется ступенькой, отчёт " + report);
+                "Подъём обязан попасть в правки ремонта: иначе тропа останется ступенькой, отчёт " + report
+                        + " При смене audit_SunkWalkway_LiftsWithoutRebuild проверь это утверждение.");
         assertEquals(
                 List.of(new RepairAudit.Fix(plan, RepairAudit.Action.PLACE, "minecraft:dirt_path", AIR, 0)),
                 report.fixes(),
-                "Ремонт получает клетку тропы и её блок: подъём исполняет та же постановка дорожки");
+                "Ремонт получает клетку тропы и её блок: подъём исполняет та же постановка дорожки"
+                        + " Иначе тест audit_SunkWalkway_LiftsWithoutRebuild перестанет ловить эту поломку. При смене audit_SunkWalkway_LiftsWithoutRebuild проверь это утверждение.");
     }
 
     @Test
@@ -51,8 +55,15 @@ class WalkwayRepairTests {
 
         RepairAudit.Report report = repairAudit(scheme, world);
 
-        assertEquals(1, report.missing(), "Тропы нет и старой тропы под клеткой нет — клетка потеряна");
-        assertTrue(report.rebuild(), "Потеря всей схемы — перестройка, а не подъём утопленной тропы");
+        assertEquals(
+                1,
+                report.missing(),
+                "Тропы нет и старой тропы под клеткой нет — клетка потеряна"
+                        + " Иначе тест audit_MissingWalkwayWithoutOldPath_Rebuilds перестанет ловить эту поломку. При смене audit_MissingWalkwayWithoutOldPath_Rebuilds проверь это утверждение.");
+        assertTrue(
+                report.rebuild(),
+                "Потеря всей схемы — перестройка, а не подъём утопленной тропы"
+                        + " Иначе тест audit_MissingWalkwayWithoutOldPath_Rebuilds перестанет ловить эту поломку. При смене audit_MissingWalkwayWithoutOldPath_Rebuilds проверь это утверждение.");
     }
 
     private static BlockCoord plan() {

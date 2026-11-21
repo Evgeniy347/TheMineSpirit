@@ -20,7 +20,8 @@ class GraphBuildingMaterialsTests {
         assertEquals(
                 Map.of("dirt", 3),
                 materials.get("hut"),
-                "недостающие блоки через blockItems превращаются в предметы для ремонта");
+                "недостающие блоки через blockItems превращаются в предметы для ремонта"
+                        + " Иначе тест materials_MissingBlocks_BecomeItems перестанет ловить эту поломку. При смене materials_MissingBlocks_BecomeItems проверь это утверждение.");
     }
 
     @Test
@@ -30,7 +31,8 @@ class GraphBuildingMaterialsTests {
 
         assertTrue(
                 GraphBuildingMaterials.of(facts, GRAPH).isEmpty(),
-                "пока чанки не загружены, материалы не выдумываются: ремонт не должен начинаться вслепую");
+                "пока чанки не загружены, материалы не выдумываются: ремонт не должен начинаться вслепую"
+                        + " Иначе тест materials_UnknownChunks_GiveNothing перестанет ловить эту поломку. При смене materials_UnknownChunks_GiveNothing проверь это утверждение.");
     }
 
     @Test
@@ -40,7 +42,8 @@ class GraphBuildingMaterialsTests {
 
         assertTrue(
                 GraphBuildingMaterials.of(facts, GRAPH).isEmpty(),
-                "лишнее убирают отдельным путём ремонта, а не закупкой материалов: недостачи нет");
+                "лишнее убирают отдельным путём ремонта, а не закупкой материалов: недостачи нет"
+                        + " Иначе тест materials_CleanBuilding_GivesNothing перестанет ловить эту поломку. При смене materials_CleanBuilding_GivesNothing проверь это утверждение.");
     }
 
     @Test
@@ -55,7 +58,8 @@ class GraphBuildingMaterialsTests {
                 Map.of("dirt", 5),
                 merged.get("hut"),
                 "Частично построенный дом ремонтируют недостающими блоками аудита: полный набор схемы "
-                        + "заставил бы духа тащить лишнее и снова строить целое");
+                        + "заставил бы духа тащить лишнее и снова строить целое"
+                        + " Иначе тест merged_PartialBuilding_AuditMissingWinsOverScheme перестанет ловить эту поломку. При смене merged_PartialBuilding_AuditMissingWinsOverScheme проверь это утверждение.");
     }
 
     @Test
@@ -69,7 +73,8 @@ class GraphBuildingMaterialsTests {
         assertEquals(
                 Map.of("oak_log", 12, "oak_planks", 30),
                 merged.get("hut"),
-                "Не начатая постройка строится по объявленному набору схемы: аудит нуля не заменяет стройку");
+                "Не начатая постройка строится по объявленному набору схемы: аудит нуля не заменяет стройку"
+                        + " Иначе тест merged_NotStartedBuilding_KeepsDeclaredScheme перестанет ловить эту поломку. При смене merged_NotStartedBuilding_KeepsDeclaredScheme проверь это утверждение.");
     }
 
     private static GraphFacts facts(GraphFacts.Building building) {

@@ -19,7 +19,8 @@ class GraphOrdersTests {
         assertTrue(
                 with > without && with > 0,
                 "Недостача заказа игрока идёт с приоритетом игрока (maxPriority): добыча угля обязана подняться, "
-                        + "было " + without + ", стало " + with);
+                        + "было " + without + ", стало " + with
+                        + " Иначе тест plan_OrderShortage_RaisesGatherToPlayerPriority перестанет ловить эту поломку. При смене plan_OrderShortage_RaisesGatherToPlayerPriority проверь это утверждение.");
     }
 
     @Test
@@ -32,7 +33,8 @@ class GraphOrdersTests {
         assertTrue(
                 result.post().stream()
                         .anyMatch(ticket -> "coal".equals(ticket.task().makes()) && ticket.count() >= 12),
-                "Задание доски на уголь обязано покрыть заказ (12), иначе заказ ждёт лишние круги: " + result.post());
+                "Задание доски на уголь обязано покрыть заказ (12), иначе заказ ждёт лишние круги: " + result.post()
+                        + " При смене tickets_OrderShortage_CountCoversOrder проверь это утверждение.");
     }
 
     @Test
@@ -43,7 +45,8 @@ class GraphOrdersTests {
 
         assertTrue(
                 plan.notices().stream().anyMatch(notice -> notice.reason().contains("unobtainium")),
-                "Предмет заказа, которого нет в графе, не теряется молча: стратег получает просьбу " + plan.notices());
+                "Предмет заказа, которого нет в графе, не теряется молча: стратег получает просьбу " + plan.notices()
+                        + " Иначе тест plan_OrderItemUnknownToGraph_Notice перестанет ловить эту поломку. При смене plan_OrderItemUnknownToGraph_Notice проверь это утверждение.");
     }
 
     private static int bestPriority(GraphPlan plan, String item) {

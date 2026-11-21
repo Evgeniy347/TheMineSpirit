@@ -21,11 +21,13 @@ class BuildingWoodTests {
         assertEquals(
                 "spruce",
                 woods.of(HOUSE).orElseThrow(),
-                "Порода хижины выбирается по её запасу и пишется на неё: иначе хижина и ограда делят одну породу");
+                "Порода хижины выбирается по её запасу и пишется на неё: иначе хижина и ограда делят одну породу"
+                        + " При смене choose_TwoBuildingsDifferentStock_EachKeepsOwnSpecies проверь это утверждение.");
         assertEquals(
                 "birch",
                 woods.of(FENCE).orElseThrow(),
-                "Ограда, начатая при другом запасе, берёт свою породу: порода решается на постройку");
+                "Ограда, начатая при другом запасе, берёт свою породу: порода решается на постройку"
+                        + " Иначе тест choose_TwoBuildingsDifferentStock_EachKeepsOwnSpecies перестанет ловить эту поломку. При смене choose_TwoBuildingsDifferentStock_EachKeepsOwnSpecies проверь это утверждение.");
     }
 
     @Test
@@ -37,7 +39,8 @@ class BuildingWoodTests {
         assertEquals(
                 "spruce",
                 woods.with(HOUSE, later).of(HOUSE).orElseThrow(),
-                "Расход запаса не меняет породу начатой постройки: смена посреди стройки даёт пёструю хижину");
+                "Расход запаса не меняет породу начатой постройки: смена посреди стройки даёт пёструю хижину"
+                        + " Иначе тест with_StockSpentAfterChoice_SpeciesStays перестанет ловить эту поломку. При смене with_StockSpentAfterChoice_SpeciesStays проверь это утверждение.");
     }
 
     @Test
@@ -46,12 +49,14 @@ class BuildingWoodTests {
                 "jungle",
                 BuildingWood.choose(Map.of("oak_log", 2), Map.of("jungle_log", 5), "minecraft:taiga", RULES)
                         .species(),
-                "Мал запас — решают деревья вокруг: рубить придётся их");
+                "Мал запас — решают деревья вокруг: рубить придётся их"
+                        + " Иначе тест choose_NoStockNoTrees_FallsToTreesThenBiome перестанет ловить эту поломку. При смене choose_NoStockNoTrees_FallsToTreesThenBiome проверь это утверждение.");
         assertEquals(
                 "spruce",
                 BuildingWood.choose(Map.of(), Map.of(), "minecraft:taiga", RULES)
                         .species(),
-                "Нет ни запаса, ни деревьев — решает биом: тайге ель");
+                "Нет ни запаса, ни деревьев — решает биом: тайге ель"
+                        + " Иначе тест choose_NoStockNoTrees_FallsToTreesThenBiome перестанет ловить эту поломку. При смене choose_NoStockNoTrees_FallsToTreesThenBiome проверь это утверждение.");
     }
 
     @Test
@@ -62,7 +67,8 @@ class BuildingWoodTests {
         assertEquals(
                 "birch",
                 woods.rebuilt(HOUSE).with(HOUSE, birch).of(HOUSE).orElseThrow(),
-                "Перестройка снимает выбор: новая хижина выбирает породу заново");
+                "Перестройка снимает выбор: новая хижина выбирает породу заново"
+                        + " Иначе тест rebuilt_ChosenBuilding_ChoosesAgain перестанет ловить эту поломку. При смене rebuilt_ChosenBuilding_ChoosesAgain проверь это утверждение.");
     }
 
     @Test
@@ -73,12 +79,14 @@ class BuildingWoodTests {
                 "oak",
                 choice.species(),
                 "Порода готового дома не меняется от нового запаса: в observe23 дом 100/100 из дуба посреди "
-                        + "работы «переключился» на тропическую древесину и дух разобрал стену");
+                        + "работы «переключился» на тропическую древесину и дух разобрал стену"
+                        + " Иначе тест fixed_StandingOakHouseWithJungleStock_KeepsOak перестанет ловить эту поломку. При смене fixed_StandingOakHouseWithJungleStock_KeepsOak проверь это утверждение.");
         assertEquals(
                 "постройка уже стоит: порода закреплена, 97 блоков oak",
                 choice.reason(),
                 "Причина закрепления обязана называть число стоящих блоков: по ней видно, что породу взяли "
-                        + "из мира, а не из запаса");
+                        + "из мира, а не из запаса"
+                        + " Иначе тест fixed_StandingOakHouseWithJungleStock_KeepsOak перестанет ловить эту поломку. При смене fixed_StandingOakHouseWithJungleStock_KeepsOak проверь это утверждение.");
     }
 
     @Test
@@ -87,7 +95,8 @@ class BuildingWoodTests {
         assertEquals(
                 "birch",
                 BuildingWood.fixed(Map.of(), fresh).species(),
-                "Новая постройка выбирает породу по запасу: закреплять нечего, пока в клетках ничего не стоит");
+                "Новая постройка выбирает породу по запасу: закреплять нечего, пока в клетках ничего не стоит"
+                        + " Иначе тест fixed_EmptyStanding_UsesFreshChoice перестанет ловить эту поломку. При смене fixed_EmptyStanding_UsesFreshChoice проверь это утверждение.");
     }
 
     @Test
@@ -96,6 +105,7 @@ class BuildingWoodTests {
         assertEquals(
                 "spruce",
                 BuildingWood.fixed(Map.of("oak", 3, "spruce", 8), fresh).species(),
-                "Порода стоящей постройки — та, которой больше: одиночная доска чужой породы не перекрашивает дом");
+                "Порода стоящей постройки — та, которой больше: одиночная доска чужой породы не перекрашивает дом"
+                        + " Иначе тест fixed_StandingBlocksOfTwoSpecies_TakesMajority перестанет ловить эту поломку. При смене fixed_StandingBlocksOfTwoSpecies_TakesMajority проверь это утверждение.");
     }
 }

@@ -30,12 +30,19 @@ class RouteTicketPlansTests {
 
         TaskNode task = TicketPlans.plan(BoardCase.BUILD_STREETS, target);
 
-        assertTrue(!calls(task, "fill").isEmpty(), "Тропа кладёт блок дороги в подготовленную клетку: " + task);
-        assertTrue(!calls(task, "clear_area").isEmpty(), "Сначала снимают верхний слой и траву, потом кладут дорогу");
+        assertTrue(
+                !calls(task, "fill").isEmpty(),
+                "Тропа кладёт блок дороги в подготовленную клетку: " + task
+                        + " Иначе тест buildStreets_RoutePath_TakesBlocksClearsAndFills перестанет ловить эту поломку. При смене buildStreets_RoutePath_TakesBlocksClearsAndFills проверь это утверждение.");
+        assertTrue(
+                !calls(task, "clear_area").isEmpty(),
+                "Сначала снимают верхний слой и траву, потом кладут дорогу"
+                        + " Иначе тест buildStreets_RoutePath_TakesBlocksClearsAndFills перестанет ловить эту поломку. При смене buildStreets_RoutePath_TakesBlocksClearsAndFills проверь это утверждение.");
         assertEquals(
                 "minecraft:dirt",
                 calls(task, "acquire").get(0).params().get("item"),
-                "Материал дороги берётся из плана: без запаса fill нечего ставить");
+                "Материал дороги берётся из плана: без запаса fill нечего ставить"
+                        + " Иначе тест buildStreets_RoutePath_TakesBlocksClearsAndFills перестанет ловить эту поломку. При смене buildStreets_RoutePath_TakesBlocksClearsAndFills проверь это утверждение.");
     }
 
     @Test
@@ -47,13 +54,31 @@ class RouteTicketPlansTests {
         TaskNode task = TicketPlans.plan(BoardCase.GATHER_MATERIALS, target);
 
         List<ScriptCall> clears = calls(task, "clear_area");
-        assertEquals(2, clears.size(), "Верхний и нижний слой снимаются по слою: " + task);
-        assertEquals(66, clears.get(0).params().get("y1"), "Первым идёт верхний слой");
+        assertEquals(
+                2,
+                clears.size(),
+                "Верхний и нижний слой снимаются по слою: " + task
+                        + " Иначе тест gatherMaterials_RouteDig_ClearsLayersThenDepositsSand перестанет ловить эту поломку. При смене gatherMaterials_RouteDig_ClearsLayersThenDepositsSand проверь это утверждение.");
+        assertEquals(
+                66,
+                clears.get(0).params().get("y1"),
+                "Первым идёт верхний слой"
+                        + " Иначе тест gatherMaterials_RouteDig_ClearsLayersThenDepositsSand перестанет ловить эту поломку. При смене gatherMaterials_RouteDig_ClearsLayersThenDepositsSand проверь это утверждение.");
         assertTrue(
-                !calls(task, "collect_drops").isEmpty(), "Дроп добычи собирают на месте: иначе песок останется в яме");
+                !calls(task, "collect_drops").isEmpty(),
+                "Дроп добычи собирают на месте: иначе песок останется в яме"
+                        + " При смене gatherMaterials_RouteDig_ClearsLayersThenDepositsSand проверь это утверждение.");
         ScriptCall deposit = calls(task, "deposit").get(0);
-        assertEquals("sand", deposit.params().get("item"), "Дух несёт песок на склад: " + deposit);
-        assertEquals(8, deposit.params().get("count"), "Несёт не больше задания и не меньше одного");
+        assertEquals(
+                "sand",
+                deposit.params().get("item"),
+                "Дух несёт песок на склад: " + deposit
+                        + " Иначе тест gatherMaterials_RouteDig_ClearsLayersThenDepositsSand перестанет ловить эту поломку. При смене gatherMaterials_RouteDig_ClearsLayersThenDepositsSand проверь это утверждение.");
+        assertEquals(
+                8,
+                deposit.params().get("count"),
+                "Несёт не больше задания и не меньше одного"
+                        + " Иначе тест gatherMaterials_RouteDig_ClearsLayersThenDepositsSand перестанет ловить эту поломку. При смене gatherMaterials_RouteDig_ClearsLayersThenDepositsSand проверь это утверждение.");
     }
 
     private static List<ScriptCall> calls(TaskNode task, String script) {

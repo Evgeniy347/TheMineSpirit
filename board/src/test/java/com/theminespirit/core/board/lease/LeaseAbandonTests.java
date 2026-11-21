@@ -33,7 +33,8 @@ class LeaseAbandonTests {
         assertEquals(
                 LeaseStatus.DONE,
                 book.require(lease.id()).status(),
-                "снятая аренда закрыта (DONE), а не брошена: иначе откат снова возьмёт её в работу по кругу");
+                "снятая аренда закрыта (DONE), а не брошена: иначе откат снова возьмёт её в работу по кругу"
+                        + " При смене abandon_OrphanedLease_FreesCellsForClearing проверь это утверждение.");
     }
 
     @Test
@@ -46,7 +47,8 @@ class LeaseAbandonTests {
                 IllegalStateException.class,
                 () -> book.abandon(lease.id()),
                 "действующую аренду снимать нельзя: под хозяином его же столб, и расчистка выбьет опору."
-                        + " Проверить при смене: LeaseData.undoFailed проверяет статус ORPHANED");
+                        + " Проверить при смене: LeaseData.undoFailed проверяет статус ORPHANED"
+                        + " Иначе тест abandon_ActiveLease_Refused перестанет ловить эту поломку.");
     }
 
     @Test
@@ -54,9 +56,11 @@ class LeaseAbandonTests {
         assertTrue(
                 LeaseUndoLimit.exhausted(3, 3),
                 "после undoMaxFailures неудачных откатов (board.json) аренду снимают: бесконечные попытки держат"
-                        + " клетки и тратят духов. Проверить при смене: undoMaxFailures");
+                        + " клетки и тратят духов. Проверить при смене: undoMaxFailures"
+                        + " Иначе тест exhausted_FailuresAtLimit_GivesUp перестанет ловить эту поломку.");
         assertFalse(
                 LeaseUndoLimit.exhausted(2, 3),
-                "до предела откат ещё пробуют: временная помеха (дух рядом, моб) не должна сносить защиту сразу");
+                "до предела откат ещё пробуют: временная помеха (дух рядом, моб) не должна сносить защиту сразу"
+                        + " Иначе тест exhausted_FailuresAtLimit_GivesUp перестанет ловить эту поломку. При смене exhausted_FailuresAtLimit_GivesUp проверь это утверждение.");
     }
 }

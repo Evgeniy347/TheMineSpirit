@@ -66,7 +66,8 @@ class StageCatalogTests {
                 problems,
                 "Каждый id плана этапа 2 обязан разрешаться в кейс доски, схему и непустой план задания на своём "
                         + "участке; иначе доска молча отбрасывает постройку и этап не собрать: " + problems
-                        + "; не поместилось: " + town.unplaced());
+                        + "; не поместилось: " + town.unplaced()
+                        + " При смене stagePlan_EveryId_HasCaseSchemeAndPlanInItsSlot проверь это утверждение.");
     }
 
     @Test
@@ -109,7 +110,8 @@ class StageCatalogTests {
                 List.of(),
                 problems,
                 "Обязательные и желательные постройки этапов 3–4 обязаны иметь кейс постройки плана, схему и "
-                        + "запись в town.json; иначе этап не закрыть, а вкладка покажет пустую строку: " + problems);
+                        + "запись в town.json; иначе этап не закрыть, а вкладка покажет пустую строку: " + problems
+                        + " При смене stageRequirements_StagesThreeAndFour_HaveCaseSchemeAndPlanEntry проверь это утверждение.");
     }
 
     @Test
@@ -117,7 +119,8 @@ class StageCatalogTests {
         assertFalse(
                 StageCatalog.watcherOwned(BoardCase.BUILD_PEN),
                 "Курятник и загоны строит граф узлами building:chicken_coop/pen_*, а сторож больше не ставит "
-                        + "им задание: иначе этап 2 проходит мимо графа");
+                        + "им задание: иначе этап 2 проходит мимо графа"
+                        + " При смене watcherOwned_Pen_IsBuiltByGraph проверь это утверждение.");
     }
 
     @Test
@@ -128,7 +131,8 @@ class StageCatalogTests {
         assertEquals(
                 Optional.of(new BlockCoord(place.x(), town.anchor().y(), place.z())),
                 StageCatalog.origin("family_house_a", town, town.anchor().y()),
-                "Постройка этапа 2 ставится в свой слот плана, а не на двор этапа 1");
+                "Постройка этапа 2 ставится в свой слот плана, а не на двор этапа 1"
+                        + " Иначе тест origin_PlacementOfPlanId_IsTopLeftOfItsSlot перестанет ловить эту поломку. При смене origin_PlacementOfPlanId_IsTopLeftOfItsSlot проверь это утверждение.");
     }
 
     private static boolean builds(TaskNode task, String scheme, BlockCoord origin) {

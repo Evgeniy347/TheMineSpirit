@@ -18,7 +18,8 @@ class FarmRulesTests {
         assertEquals(
                 Map.of("herd_cow", 3, "herd_sheep", 2, "herd_chicken", 5),
                 counts,
-                "Вид животного переводится в узел стада");
+                "Вид животного переводится в узел стада"
+                        + " Иначе тест herdCounts_KnownSpecies_TranslateToHerds перестанет ловить эту поломку. При смене herdCounts_KnownSpecies_TranslateToHerds проверь это утверждение.");
     }
 
     @Test
@@ -32,9 +33,18 @@ class FarmRulesTests {
                 8,
                 new FarmRules.Signals(false, false, true));
 
-        assertTrue(events.contains("crop_ready"), "Спелые грядки — событие сбора");
-        assertTrue(events.contains("crop_dry"), "Сухая земля — событие полива");
-        assertTrue(events.contains("field_empty"), "Свободная клетка и семена — событие посева");
+        assertTrue(
+                events.contains("crop_ready"),
+                "Спелые грядки — событие сбора"
+                        + " Иначе тест events_ReadyCropsAndDryField_AreAdded перестанет ловить эту поломку. При смене events_ReadyCropsAndDryField_AreAdded проверь это утверждение.");
+        assertTrue(
+                events.contains("crop_dry"),
+                "Сухая земля — событие полива"
+                        + " Иначе тест events_ReadyCropsAndDryField_AreAdded перестанет ловить эту поломку. При смене events_ReadyCropsAndDryField_AreAdded проверь это утверждение.");
+        assertTrue(
+                events.contains("field_empty"),
+                "Свободная клетка и семена — событие посева"
+                        + " Иначе тест events_ReadyCropsAndDryField_AreAdded перестанет ловить эту поломку. При смене events_ReadyCropsAndDryField_AreAdded проверь это утверждение.");
     }
 
     @Test
@@ -48,7 +58,10 @@ class FarmRulesTests {
                 0,
                 new FarmRules.Signals(false, false, true));
 
-        assertTrue(events.contains("pen_full"), "Стадо на пределе HerdCaps — событие забоя/расширения");
+        assertTrue(
+                events.contains("pen_full"),
+                "Стадо на пределе HerdCaps — событие забоя/расширения"
+                        + " Иначе тест events_HerdAtCap_AddsPenFull перестанет ловить эту поломку. При смене events_HerdAtCap_AddsPenFull проверь это утверждение.");
     }
 
     @Test
@@ -62,7 +75,10 @@ class FarmRulesTests {
                 0,
                 new FarmRules.Signals(false, false, false));
 
-        assertTrue(events.contains("animal_starving"), "Животные без еды — событие кормления");
+        assertTrue(
+                events.contains("animal_starving"),
+                "Животные без еды — событие кормления"
+                        + " Иначе тест events_AnimalsWithoutFeed_AddsStarving перестанет ловить эту поломку. При смене events_AnimalsWithoutFeed_AddsStarving проверь это утверждение.");
     }
 
     @Test
@@ -78,7 +94,13 @@ class FarmRulesTests {
                 0,
                 new FarmRules.Signals(false, true, true));
 
-        assertTrue(empty.contains("orchard_empty"), "Пустая клетка сада и саженец — событие посадки");
-        assertFalse(withTree.contains("orchard_empty"), "Занятая клетка сада не требует посадки");
+        assertTrue(
+                empty.contains("orchard_empty"),
+                "Пустая клетка сада и саженец — событие посадки"
+                        + " Иначе тест events_EmptyOrchardWithSapling_AddsReplant перестанет ловить эту поломку. При смене events_EmptyOrchardWithSapling_AddsReplant проверь это утверждение.");
+        assertFalse(
+                withTree.contains("orchard_empty"),
+                "Занятая клетка сада не требует посадки"
+                        + " Иначе тест events_EmptyOrchardWithSapling_AddsReplant перестанет ловить эту поломку. При смене events_EmptyOrchardWithSapling_AddsReplant проверь это утверждение.");
     }
 }

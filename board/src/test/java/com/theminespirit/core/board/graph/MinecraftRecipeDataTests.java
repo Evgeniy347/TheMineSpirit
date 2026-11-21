@@ -25,7 +25,8 @@ class MinecraftRecipeDataTests {
                 pinned,
                 MinecraftRecipeData.selectJar(artifacts, "1.21.1"),
                 "Нужен jar закреплённой версии Minecraft, а не самый свежий по времени: свежий jar может быть "
-                        + "другой версией с другими рецептами, и выгрузка графа поедет");
+                        + "другой версией с другими рецептами, и выгрузка графа поедет"
+                        + " Иначе тест selectJar_PinnedVersionOlderThanOther_ReturnsPinned перестанет ловить эту поломку. При смене selectJar_PinnedVersionOlderThanOther_ReturnsPinned проверь это утверждение.");
     }
 
     @Test
@@ -35,10 +36,12 @@ class MinecraftRecipeDataTests {
         IllegalStateException error = assertThrows(
                 IllegalStateException.class,
                 () -> MinecraftRecipeData.selectJar(artifacts, "1.21.1"),
-                "Отсутствие jar закреплённой версии — ошибка, а не подмена другим jar");
+                "Отсутствие jar закреплённой версии — ошибка, а не подмена другим jar"
+                        + " Иначе тест selectJar_MissingPinnedVersion_ThrowsWithVersion перестанет ловить эту поломку. При смене selectJar_MissingPinnedVersion_ThrowsWithVersion проверь это утверждение.");
         assertTrue(
                 error.getMessage().contains("minecraft_1.21.1_client.jar"),
-                "Сообщение обязано называть точный jar закреплённой версии: " + error.getMessage());
+                "Сообщение обязано называть точный jar закреплённой версии: " + error.getMessage()
+                        + " Иначе тест selectJar_MissingPinnedVersion_ThrowsWithVersion перестанет ловить эту поломку. При смене selectJar_MissingPinnedVersion_ThrowsWithVersion проверь это утверждение.");
     }
 
     @Test
@@ -52,7 +55,8 @@ class MinecraftRecipeDataTests {
         assertEquals(
                 expected,
                 MinecraftRecipeData.pinnedVersion(),
-                "Версия jar берётся из закреплённой настройки проекта, а не угадывается по кэшу");
+                "Версия jar берётся из закреплённой настройки проекта, а не угадывается по кэшу"
+                        + " Иначе тест pinnedVersion_GradleProperties_MatchesProjectVersion перестанет ловить эту поломку. При смене pinnedVersion_GradleProperties_MatchesProjectVersion проверь это утверждение.");
     }
 
     @Test
@@ -66,6 +70,7 @@ class MinecraftRecipeDataTests {
         }
         assertTrue(
                 missing.isEmpty(),
-                "Из клиентского jar закреплённой версии прочитаны не все ванильные рецепты, нет:" + missing);
+                "Из клиентского jar закреплённой версии прочитаны не все ванильные рецепты, нет:" + missing
+                        + " Иначе тест recipes_LoadedFromPinnedJar_ContainVanillaRecipes перестанет ловить эту поломку. При смене recipes_LoadedFromPinnedJar_ContainVanillaRecipes проверь это утверждение.");
     }
 }

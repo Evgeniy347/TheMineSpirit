@@ -35,13 +35,24 @@ class DispatchPreemptionTests {
 
         Optional<DispatchRound.Candidate> chosen = round.choose(retreat, List.of(chopper));
 
-        assertTrue(chosen.isPresent(), "Жизнь выше работы: рубящий дух берёт бегство, а не ждёт конца рубки");
+        assertTrue(
+                chosen.isPresent(),
+                "Жизнь выше работы: рубящий дух берёт бегство, а не ждёт конца рубки"
+                        + " Иначе тест choose_RetreatAboveWork_ReturnsWorkToBoard перестанет ловить эту поломку. При смене choose_RetreatAboveWork_ReturnsWorkToBoard проверь это утверждение.");
         assertEquals(
                 List.of(chop.id()),
                 round.drainDisplaced(spirit).stream().map(BoardTicket::id).toList(),
-                "Вытесненная работа названа, чтобы мод остановил действие духа");
-        assertEquals(BoardStatus.PENDING, board.statusOf(chop.id()).orElseThrow(), "Работа вернулась на доску");
-        assertTrue(round.drainDisplaced(spirit).isEmpty(), "Снятую работу отдают один раз");
+                "Вытесненная работа названа, чтобы мод остановил действие духа"
+                        + " Иначе тест choose_RetreatAboveWork_ReturnsWorkToBoard перестанет ловить эту поломку. При смене choose_RetreatAboveWork_ReturnsWorkToBoard проверь это утверждение.");
+        assertEquals(
+                BoardStatus.PENDING,
+                board.statusOf(chop.id()).orElseThrow(),
+                "Работа вернулась на доску"
+                        + " Иначе тест choose_RetreatAboveWork_ReturnsWorkToBoard перестанет ловить эту поломку. При смене choose_RetreatAboveWork_ReturnsWorkToBoard проверь это утверждение.");
+        assertTrue(
+                round.drainDisplaced(spirit).isEmpty(),
+                "Снятую работу отдают один раз"
+                        + " Иначе тест choose_RetreatAboveWork_ReturnsWorkToBoard перестанет ловить эту поломку. При смене choose_RetreatAboveWork_ReturnsWorkToBoard проверь это утверждение.");
     }
 
     @Test
@@ -65,12 +76,17 @@ class DispatchPreemptionTests {
 
         assertTrue(
                 round.choose(retreat(100), List.of(fighter)).isEmpty(),
-                "Бегство не вытесняет равную по весу защиту: дерущийся дух не бросает бой без причины");
+                "Бегство не вытесняет равную по весу защиту: дерущийся дух не бросает бой без причины"
+                        + " Иначе тест choose_EqualHeldLife_DoesNotPreempt перестанет ловить эту поломку. При смене choose_EqualHeldLife_DoesNotPreempt проверь это утверждение.");
         assertEquals(
                 BoardStatus.ASSIGNED,
                 board.statusOf(defend.id()).orElseThrow(),
-                "Защита остаётся за духом: доска не снимает равную работу");
-        assertTrue(round.drainDisplaced(spirit).isEmpty(), "Ничего не вытеснено");
+                "Защита остаётся за духом: доска не снимает равную работу"
+                        + " Иначе тест choose_EqualHeldLife_DoesNotPreempt перестанет ловить эту поломку. При смене choose_EqualHeldLife_DoesNotPreempt проверь это утверждение.");
+        assertTrue(
+                round.drainDisplaced(spirit).isEmpty(),
+                "Ничего не вытеснено"
+                        + " Иначе тест choose_EqualHeldLife_DoesNotPreempt перестанет ловить эту поломку. При смене choose_EqualHeldLife_DoesNotPreempt проверь это утверждение.");
     }
 
     @Test
@@ -104,11 +120,13 @@ class DispatchPreemptionTests {
 
         assertTrue(
                 round.choose(mine, List.of(chopper)).isEmpty(),
-                "Обычная работа не вытесняет занятого духа: иначе дух метался бы между задачами");
+                "Обычная работа не вытесняет занятого духа: иначе дух метался бы между задачами"
+                        + " При смене choose_NormalWorkWhileChopping_WaitsForEnd проверь это утверждение.");
         assertEquals(
                 BoardStatus.ASSIGNED,
                 board.statusOf(chop.id()).orElseThrow(),
-                "Рубка остаётся за духом: обычная работа ждёт");
+                "Рубка остаётся за духом: обычная работа ждёт"
+                        + " Иначе тест choose_NormalWorkWhileChopping_WaitsForEnd перестанет ловить эту поломку. При смене choose_NormalWorkWhileChopping_WaitsForEnd проверь это утверждение.");
     }
 
     private static BoardTicket retreat(int priority) {

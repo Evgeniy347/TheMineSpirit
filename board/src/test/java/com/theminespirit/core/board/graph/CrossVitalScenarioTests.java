@@ -57,13 +57,16 @@ class CrossVitalScenarioTests {
         assertTrue(
                 hunt.priority() >= ceiling - VitalNeeds.BAND,
                 "Жизненная нужда держится в верхней полосе приоритетов, а не тонет среди обычных работ: охота "
-                        + hunt.priority() + ", потолок " + ceiling);
+                        + hunt.priority() + ", потолок " + ceiling
+                        + " Иначе тест assertStageOneVitalPriorities перестанет ловить эту поломку. При смене assertStageOneVitalPriorities проверь это утверждение.");
         assertTrue(
                 wait.priority() < hunt.priority(),
-                "Внутри полосы нужды порядок сохраняется: ожидание " + wait.priority() + ", охота " + hunt.priority());
+                "Внутри полосы нужды порядок сохраняется: ожидание " + wait.priority() + ", охота " + hunt.priority()
+                        + " Иначе тест assertStageOneVitalPriorities перестанет ловить эту поломку. При смене assertStageOneVitalPriorities проверь это утверждение.");
         assertTrue(
                 hunt.priority() > mine.priority(),
-                "Добыча еды выше шахты: охота " + hunt.priority() + ", шахта " + mine.priority());
+                "Добыча еды выше шахты: охота " + hunt.priority() + ", шахта " + mine.priority()
+                        + " Иначе тест assertStageOneVitalPriorities перестанет ловить эту поломку. При смене assertStageOneVitalPriorities проверь это утверждение.");
 
         GraphTickets.Result result = tickets(world, facts);
         Board board = board(world, result);
@@ -87,7 +90,8 @@ class CrossVitalScenarioTests {
                         .orElse("")
                         .contains("голод"),
                 "Голодному духу не выдаётся шахта, пока нужда жива: "
-                        + round.refusal(boardTicket(ticketFor(result, mineId)), hungry));
+                        + round.refusal(boardTicket(ticketFor(result, mineId)), hungry)
+                        + " Иначе тест assertStageOneVitalPriorities перестанет ловить эту поломку. При смене assertStageOneVitalPriorities проверь это утверждение.");
         BoardTicket defend = new BoardTicket(
                 "graph:event:life_threat:defend",
                 BoardCase.ACTIVITY_DEFEND,
@@ -100,25 +104,30 @@ class CrossVitalScenarioTests {
                 Map.of());
         assertTrue(
                 round.refusal(defend, hungry).isEmpty(),
-                "Защита жизни — исключение VitalGate: голодный дух всё равно защищается");
+                "Защита жизни — исключение VitalGate: голодный дух всё равно защищается"
+                        + " Иначе тест assertStageOneVitalPriorities перестанет ловить эту поломку. При смене assertStageOneVitalPriorities проверь это утверждение.");
         assertFalse(
                 VitalGate.blocksWork(defend, hungry.needs()),
-                "Живая нужда не отменяет защиту жизни и не снимает её с духа");
+                "Живая нужда не отменяет защиту жизни и не снимает её с духа"
+                        + " Иначе тест assertStageOneVitalPriorities перестанет ловить эту поломку. При смене assertStageOneVitalPriorities проверь это утверждение.");
         assertTrue(
                 VitalGate.blocksWork(boardTicket(ticketFor(result, mineId)), hungry.needs()),
-                "Обычная работа при живой нужде блокируется и снимается с духа");
+                "Обычная работа при живой нужде блокируется и снимается с духа"
+                        + " Иначе тест assertStageOneVitalPriorities перестанет ловить эту поломку. При смене assertStageOneVitalPriorities проверь это утверждение.");
         assertTrue(
                 round.refusal(boardTicket(ticketFor(result, mineId)), injured)
                         .orElse("")
                         .contains("ранение"),
                 "Раненому духу не выдаётся шахта, пока нужда жива: "
-                        + round.refusal(boardTicket(ticketFor(result, mineId)), injured));
+                        + round.refusal(boardTicket(ticketFor(result, mineId)), injured)
+                        + " Иначе тест assertStageOneVitalPriorities перестанет ловить эту поломку. При смене assertStageOneVitalPriorities проверь это утверждение.");
         assertEquals(
                 "spirit-3",
                 round.choose(boardTicket(ticketFor(result, mineId)), candidates)
                         .map(DispatchRound.Candidate::name)
                         .orElse(""),
-                "Шахту получает только здоровый и сытый дух: " + candidates);
+                "Шахту получает только здоровый и сытый дух: " + candidates
+                        + " Иначе тест assertStageOneVitalPriorities перестанет ловить эту поломку. При смене assertStageOneVitalPriorities проверь это утверждение.");
 
         assertDisplacedMineReturns(result, board, mineId, candidates, hunt);
     }
@@ -138,15 +147,18 @@ class CrossVitalScenarioTests {
                 busy.choose(boardTicket(ticketFor(result, GraphTickets.id(hunt))), busyCandidates)
                         .map(DispatchRound.Candidate::name)
                         .orElse(""),
-                "Голодный дух бросает шахту ради еды, а не дорабатывает смену голодным: " + busyCandidates);
+                "Голодный дух бросает шахту ради еды, а не дорабатывает смену голодным: " + busyCandidates
+                        + " Иначе тест assertDisplacedMineReturns перестанет ловить эту поломку. При смене assertDisplacedMineReturns проверь это утверждение.");
         assertEquals(
                 List.of(mineId),
                 busy.drainDisplaced(id("spirit-1")).stream().map(t -> t.id()).toList(),
-                "Вытесненная шахта возвращается на доску, а не остаётся за голодным духом");
+                "Вытесненная шахта возвращается на доску, а не остаётся за голодным духом"
+                        + " Иначе тест assertDisplacedMineReturns перестанет ловить эту поломку. При смене assertDisplacedMineReturns проверь это утверждение.");
         assertEquals(
                 BoardStatus.PENDING,
                 board.statusOf(mineId).orElseThrow(),
-                "Шахта после вытеснения снова ждёт свободного духа: " + board.statusOf(mineId));
+                "Шахта после вытеснения снова ждёт свободного духа: " + board.statusOf(mineId)
+                        + " Иначе тест assertDisplacedMineReturns перестанет ловить эту поломку. При смене assertDisplacedMineReturns проверь это утверждение.");
     }
 
     private static void assertBareWorldKeepsDiagnosis() {
@@ -157,10 +169,12 @@ class CrossVitalScenarioTests {
 
         assertTrue(
                 barePlan.notices().stream().anyMatch(notice -> notice.reason().contains("голод")),
-                "Без еды и источника граф оставляет стратегу диагноз, а не молчит: " + barePlan.notices());
+                "Без еды и источника граф оставляет стратегу диагноз, а не молчит: " + barePlan.notices()
+                        + " Иначе тест assertBareWorldKeepsDiagnosis перестанет ловить эту поломку. При смене assertBareWorldKeepsDiagnosis проверь это утверждение.");
         assertTrue(
                 barePlan.task("event:hungry:wait_food").stream().anyMatch(GraphPlan.Task::feasible),
-                "Ждать еду — выполнимый запасной путь нужды: " + ids(barePlan));
+                "Ждать еду — выполнимый запасной путь нужды: " + ids(barePlan)
+                        + " Иначе тест assertBareWorldKeepsDiagnosis перестанет ловить эту поломку. При смене assertBareWorldKeepsDiagnosis проверь это утверждение.");
     }
 
     private static void assertLiveSnapshotHonorsGate() {
@@ -180,14 +194,16 @@ class CrossVitalScenarioTests {
                         .refusal(boardTicket(ticketFor(liveResult, GraphTickets.id(liveWork))), liveCandidates.get(0))
                         .orElse("")
                         .contains("голод"),
-                "На живом снимке этапа 1 голодному духу тоже не достаётся обычная работа");
+                "На живом снимке этапа 1 голодному духу тоже не достаётся обычная работа"
+                        + " Иначе тест assertLiveSnapshotHonorsGate перестанет ловить эту поломку. При смене assertLiveSnapshotHonorsGate проверь это утверждение.");
         assertEquals(
                 "spirit-2",
                 liveRound
                         .choose(boardTicket(ticketFor(liveResult, GraphTickets.id(liveWork))), liveCandidates)
                         .map(DispatchRound.Candidate::name)
                         .orElse(""),
-                "На живом снимке обычную работу получает сытый дух: " + liveCandidates);
+                "На живом снимке обычную работу получает сытый дух: " + liveCandidates
+                        + " Иначе тест assertLiveSnapshotHonorsGate перестанет ловить эту поломку. При смене assertLiveSnapshotHonorsGate проверь это утверждение.");
     }
 
     @Test
@@ -206,20 +222,34 @@ class CrossVitalScenarioTests {
         GraphPlan.Task mine = task(plan, "mine_coal");
         int need = GraphPriorities.need(GraphWorld.GRAPH);
 
-        assertTrue(harvest.feasible(), "Поле построено — урожай можно собрать: " + ids(plan));
-        assertEquals(BoardCase.GATHER_MATERIALS, harvest.boardCase(), "Сбор урожая — работа фермы, а не охота");
-        assertEquals(need, hunt.priority(), "Охота — верх полосы потребности: " + hunt.priority());
+        assertTrue(
+                harvest.feasible(),
+                "Поле построено — урожай можно собрать: " + ids(plan)
+                        + " Иначе тест vital_StageTwoCoalEmpty_GateKeepsFoodOverSaturatedMine перестанет ловить эту поломку. При смене vital_StageTwoCoalEmpty_GateKeepsFoodOverSaturatedMine проверь это утверждение.");
+        assertEquals(
+                BoardCase.GATHER_MATERIALS,
+                harvest.boardCase(),
+                "Сбор урожая — работа фермы, а не охота"
+                        + " Иначе тест vital_StageTwoCoalEmpty_GateKeepsFoodOverSaturatedMine перестанет ловить эту поломку. При смене vital_StageTwoCoalEmpty_GateKeepsFoodOverSaturatedMine проверь это утверждение.");
+        assertEquals(
+                need,
+                hunt.priority(),
+                "Охота — верх полосы потребности: " + hunt.priority()
+                        + " Иначе тест vital_StageTwoCoalEmpty_GateKeepsFoodOverSaturatedMine перестанет ловить эту поломку. При смене vital_StageTwoCoalEmpty_GateKeepsFoodOverSaturatedMine проверь это утверждение.");
         assertTrue(
                 hunt.priority() > mine.priority(),
-                "Охота выше насыщенной шахты на этапе 2: охота " + hunt.priority() + ", шахта " + mine.priority());
+                "Охота выше насыщенной шахты на этапе 2: охота " + hunt.priority() + ", шахта " + mine.priority()
+                        + " Иначе тест vital_StageTwoCoalEmpty_GateKeepsFoodOverSaturatedMine перестанет ловить эту поломку. При смене vital_StageTwoCoalEmpty_GateKeepsFoodOverSaturatedMine проверь это утверждение.");
         for (GraphPlan.Task food : List.of(hunt, fish, harvest, wait)) {
             assertTrue(
                     food.priority() >= need - VitalNeeds.BAND,
-                    "Еда держится в полосе потребности: " + food.id() + " " + food.priority());
+                    "Еда держится в полосе потребности: " + food.id() + " " + food.priority()
+                            + " Иначе тест vital_StageTwoCoalEmpty_GateKeepsFoodOverSaturatedMine перестанет ловить эту поломку. При смене vital_StageTwoCoalEmpty_GateKeepsFoodOverSaturatedMine проверь это утверждение.");
         }
         assertTrue(
                 mine.priority() <= GraphPriorities.work(GraphWorld.GRAPH),
-                "Шахта остаётся обычной работой под полосой потребности: шахта " + mine.priority());
+                "Шахта остаётся обычной работой под полосой потребности: шахта " + mine.priority()
+                        + " Иначе тест vital_StageTwoCoalEmpty_GateKeepsFoodOverSaturatedMine перестанет ловить эту поломку. При смене vital_StageTwoCoalEmpty_GateKeepsFoodOverSaturatedMine проверь это утверждение.");
         GraphTickets.Result result = tickets(world, facts);
         List<DispatchRound.Candidate> candidates = candidates(
                 world,
@@ -231,12 +261,14 @@ class CrossVitalScenarioTests {
                         .orElse("")
                         .contains("голод"),
                 "VitalGate не отдаёт шахту голодному, пока есть путь к еде: "
-                        + round.refusal(boardTicket(ticketFor(result, GraphTickets.id(mine))), candidates.get(0)));
+                        + round.refusal(boardTicket(ticketFor(result, GraphTickets.id(mine))), candidates.get(0))
+                        + " Иначе тест vital_StageTwoCoalEmpty_GateKeepsFoodOverSaturatedMine перестанет ловить эту поломку. При смене vital_StageTwoCoalEmpty_GateKeepsFoodOverSaturatedMine проверь это утверждение.");
         assertEquals(
                 hunt.id(),
                 result.post().get(0).task().id(),
                 "Первым на доске добыть еду, а не копать: "
-                        + result.post().stream().map(GraphTickets.Ticket::id).toList());
+                        + result.post().stream().map(GraphTickets.Ticket::id).toList()
+                        + " Иначе тест vital_StageTwoCoalEmpty_GateKeepsFoodOverSaturatedMine перестанет ловить эту поломку. При смене vital_StageTwoCoalEmpty_GateKeepsFoodOverSaturatedMine проверь это утверждение.");
     }
 
     @Test
@@ -256,6 +288,7 @@ class CrossVitalScenarioTests {
                                 candidates.get(0))
                         .orElse("")
                         .contains("голод"),
-                "Пути к еде на доске нет: простой её не добудет, дух работает, а граф поднимает источник");
+                "Пути к еде на доске нет: простой её не добудет, дух работает, а граф поднимает источник"
+                        + " Иначе тест vital_HungryWithoutPathOnBoard_KeepsWorkingAndWorkIsNotBlocked перестанет ловить эту поломку. При смене vital_HungryWithoutPathOnBoard_KeepsWorkingAndWorkIsNotBlocked проверь это утверждение.");
     }
 }

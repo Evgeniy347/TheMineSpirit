@@ -27,7 +27,8 @@ class BoardCaseV2Tests {
                 BoardCase.values().length,
                 "Кейсов доски — 88: 82 прежних плюс BUILD_PLACED, четыре занятия вне очереди (стройка, перемещение, "
                         + "осмотр, общение) и ACTIVITY_UNDO — работа по откату временной правки. "
-                        + "Новый кейс без приоритета, гейта и плана роняет сортировку выдачи");
+                        + "Новый кейс без приоритета, гейта и плана роняет сортировку выдачи"
+                        + " Иначе тест cases_TotalCount_IsEightyEight перестанет ловить эту поломку. При смене cases_TotalCount_IsEightyEight проверь это утверждение.");
     }
 
     @Test
@@ -42,7 +43,8 @@ class BoardCaseV2Tests {
                 sorted,
                 names,
                 "Константы BoardCase объявлены по алфавиту: обход values() обязан быть упорядочен "
-                        + "(детерминизм набора на любой JVM), новый кейс встаёт на своё место, а не в конец");
+                        + "(детерминизм набора на любой JVM), новый кейс встаёт на своё место, а не в конец"
+                        + " Иначе тест cases_Values_AreAlphabetical перестанет ловить эту поломку. При смене cases_Values_AreAlphabetical проверь это утверждение.");
     }
 
     @Test
@@ -51,7 +53,8 @@ class BoardCaseV2Tests {
             assertTrue(
                     BoardConfig.readFromClasspath().priorities().containsKey(boardCase.name()),
                     "Кейс " + boardCase + " обязан иметь строку в таблице приоритетов: "
-                            + "кейс-сирота роняет сортировку выдачи");
+                            + "кейс-сирота роняет сортировку выдачи"
+                            + " Иначе тест cases_EveryCase_HasPriority перестанет ловить эту поломку. При смене cases_EveryCase_HasPriority проверь это утверждение.");
         }
     }
 
@@ -66,12 +69,14 @@ class BoardCaseV2Tests {
             assertTrue(
                     plan != null,
                     "Кейс " + boardCase + " обязан иметь план или быть названным во внешнем списке "
-                            + "TicketPlans.EXTERNAL_CASES: выдача задания без плана оставляет духа без задачи");
+                            + "TicketPlans.EXTERNAL_CASES: выдача задания без плана оставляет духа без задачи"
+                            + " Иначе тест cases_EveryCase_HasPlanOrIsExternal перестанет ловить эту поломку. При смене cases_EveryCase_HasPlanOrIsExternal проверь это утверждение.");
         }
         assertTrue(
                 TicketPlans.EXTERNAL_CASES.contains(BoardCase.EAT_TO_FULL),
                 "EAT_TO_FULL — внешний кейс без плана: дух ест сам скриптом eat из личного инвентаря, "
-                        + "план доски ему не нужен");
+                        + "план доски ему не нужен"
+                        + " Иначе тест cases_EveryCase_HasPlanOrIsExternal перестанет ловить эту поломку. При смене cases_EveryCase_HasPlanOrIsExternal проверь это утверждение.");
     }
 
     @Property
@@ -84,7 +89,10 @@ class BoardCaseV2Tests {
         }
 
         assertEquals(
-                1, matches, "Каждое имя кейса встречается ровно один раз: дубль имени сломал бы таблицу приоритетов");
+                1,
+                matches,
+                "Каждое имя кейса встречается ровно один раз: дубль имени сломал бы таблицу приоритетов"
+                        + " Иначе тест cases_AllNames_AreDistinct перестанет ловить эту поломку. При смене cases_AllNames_AreDistinct проверь это утверждение.");
     }
 
     @Provide
@@ -106,7 +114,8 @@ class BoardCaseV2Tests {
                 sorted,
                 values,
                 "Обход values() упорядочен по имени константы: порядок влияет на детерминизм "
-                        + "перебора кейсов источниками доски");
+                        + "перебора кейсов источниками доски"
+                        + " Иначе тест cases_Values_AreSortedByName перестанет ловить эту поломку. При смене cases_Values_AreSortedByName проверь это утверждение.");
     }
 
     private static TicketTarget target() {

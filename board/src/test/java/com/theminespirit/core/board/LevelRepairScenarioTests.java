@@ -35,14 +35,16 @@ class LevelRepairScenarioTests {
                         .filter(script -> !"wait".equals(script))
                         .toList(),
                 "Восстановление выравнивания: лишний блок срезается, земля на все дыры — одной партией, дыры "
-                        + "засыпаются; иначе аудит ровности не возвращает участок к плану");
+                        + "засыпаются; иначе аудит ровности не возвращает участок к плану"
+                        + " При смене plan_HoleAndExtra_CutThenBatchedLayersBottomUp проверь это утверждение.");
         assertEquals(
                 List.of(62, 63),
                 calls.stream()
                         .filter(call -> "fill".equals(call.script()))
                         .map(call -> call.params().get("y1"))
                         .toList(),
-                "Дыра засыпается снизу вверх: верхняя клетка без опоры под ней не встаёт");
+                "Дыра засыпается снизу вверх: верхняя клетка без опоры под ней не встаёт"
+                        + " Иначе тест plan_HoleAndExtra_CutThenBatchedLayersBottomUp перестанет ловить эту поломку. При смене plan_HoleAndExtra_CutThenBatchedLayersBottomUp проверь это утверждение.");
     }
 
     @Test
@@ -61,7 +63,8 @@ class LevelRepairScenarioTests {
 
         assertTrue(
                 target.details().contains("pit=2 клеток, 6 блоков, глубина 3"),
-                "На доске видно, что засыпают: число клеток, блоков и глубину ямы — " + target.details());
+                "На доске видно, что засыпают: число клеток, блоков и глубину ямы — " + target.details()
+                        + " Иначе тест plan_CraterPitAndPlotLeveling_ShareBottomUpLayers перестанет ловить эту поломку. При смене plan_CraterPitAndPlotLeveling_ShareBottomUpLayers проверь это утверждение.");
         TaskNode plan = TicketPlans.plan(BoardCase.FILL_CRATER, target);
         List<ScriptCall> calls = new ArrayList<>();
         collect(plan, calls);
@@ -76,15 +79,21 @@ class LevelRepairScenarioTests {
         assertEquals(
                 List.of(64, 64, 65, 65, 66, 66),
                 filledLayers,
-                "Засыпка ямы идёт теми же слоями снизу вверх, что и выравнивание участка: сначала весь низ");
-        assertEquals(plotLayers, filledLayers, "Один движок слоёв: порядок подсыпки участка и ямы совпадает");
+                "Засыпка ямы идёт теми же слоями снизу вверх, что и выравнивание участка: сначала весь низ"
+                        + " Иначе тест plan_CraterPitAndPlotLeveling_ShareBottomUpLayers перестанет ловить эту поломку. При смене plan_CraterPitAndPlotLeveling_ShareBottomUpLayers проверь это утверждение.");
+        assertEquals(
+                plotLayers,
+                filledLayers,
+                "Один движок слоёв: порядок подсыпки участка и ямы совпадает"
+                        + " Иначе тест plan_CraterPitAndPlotLeveling_ShareBottomUpLayers перестанет ловить эту поломку. При смене plan_CraterPitAndPlotLeveling_ShareBottomUpLayers проверь это утверждение.");
         assertEquals(
                 List.of("goto", "acquire", "fill", "fill", "fill", "fill", "fill", "fill"),
                 calls.stream()
                         .map(ScriptCall::script)
                         .filter(script -> !"wait".equals(script))
                         .toList(),
-                "Земля набирается до начала слоя: иначе дух встанет в яму без материала");
+                "Земля набирается до начала слоя: иначе дух встанет в яму без материала"
+                        + " При смене plan_CraterPitAndPlotLeveling_ShareBottomUpLayers проверь это утверждение.");
     }
 
     @Test
@@ -95,10 +104,19 @@ class LevelRepairScenarioTests {
                 1,
                 leveling.cut().size(),
                 "Клетки одной колонки — одна работа: иначе дух строит подмости на "
-                        + "каждую клетку и они сами становятся столбами (419 → 717 в зоне 10.11)");
+                        + "каждую клетку и они сами становятся столбами (419 → 717 в зоне 10.11)"
+                        + " При смене plan_ExtrasInOneColumn_OneClearAreaTopDown проверь это утверждение.");
         PlotLeveling.Box column = leveling.cut().get(0);
-        assertEquals(70, column.y1(), "Разбор столба начинается снизу ящика, а подъём считается от верхней цели");
-        assertEquals(72, column.y2(), "Верхняя клетка столба — цель подъёма");
+        assertEquals(
+                70,
+                column.y1(),
+                "Разбор столба начинается снизу ящика, а подъём считается от верхней цели"
+                        + " Иначе тест plan_ExtrasInOneColumn_OneClearAreaTopDown перестанет ловить эту поломку. При смене plan_ExtrasInOneColumn_OneClearAreaTopDown проверь это утверждение.");
+        assertEquals(
+                72,
+                column.y2(),
+                "Верхняя клетка столба — цель подъёма"
+                        + " Иначе тест plan_ExtrasInOneColumn_OneClearAreaTopDown перестанет ловить эту поломку. При смене plan_ExtrasInOneColumn_OneClearAreaTopDown проверь это утверждение.");
         TaskNode plan = TicketPlans.plan(
                 BoardCase.REPAIR_BUILDING, 1, TicketTarget.at(ANCHOR).withLeveling(leveling));
         List<ScriptCall> clears = new ArrayList<>();
@@ -106,8 +124,16 @@ class LevelRepairScenarioTests {
         List<ScriptCall> cut = clears.stream()
                 .filter(call -> "clear_area".equals(call.script()))
                 .toList();
-        assertEquals(1, cut.size(), "Один clear_area на высокий столб, а не на каждую клетку");
-        assertEquals(72, cut.get(0).params().get("y2"), "Верх ящика равен верхней цели: подъём доводит духа до неё");
+        assertEquals(
+                1,
+                cut.size(),
+                "Один clear_area на высокий столб, а не на каждую клетку"
+                        + " Иначе тест plan_ExtrasInOneColumn_OneClearAreaTopDown перестанет ловить эту поломку. При смене plan_ExtrasInOneColumn_OneClearAreaTopDown проверь это утверждение.");
+        assertEquals(
+                72,
+                cut.get(0).params().get("y2"),
+                "Верх ящика равен верхней цели: подъём доводит духа до неё"
+                        + " Иначе тест plan_ExtrasInOneColumn_OneClearAreaTopDown перестанет ловить эту поломку. При смене plan_ExtrasInOneColumn_OneClearAreaTopDown проверь это утверждение.");
     }
 
     @Test
@@ -127,9 +153,18 @@ class LevelRepairScenarioTests {
                 2,
                 cut.size(),
                 "Плита из двух колонок — две работы: дух поднимается к своей колонке, а не пытается достать "
-                        + "дальние клетки плиты с одной стоянки («нет подхода» к y=97 в живом журнале)");
-        assertEquals(70, cut.get(0).params().get("y1"), "Колонка режется от нижней клетки плиты");
-        assertEquals(71, cut.get(0).params().get("y2"), "и до верхней: один подъём на всю колонку");
+                        + "дальние клетки плиты с одной стоянки («нет подхода» к y=97 в живом журнале)"
+                        + " Иначе тест plan_SlabCut_SplitIntoColumnsForOneClimbEach перестанет ловить эту поломку. При смене plan_SlabCut_SplitIntoColumnsForOneClimbEach проверь это утверждение.");
+        assertEquals(
+                70,
+                cut.get(0).params().get("y1"),
+                "Колонка режется от нижней клетки плиты"
+                        + " Иначе тест plan_SlabCut_SplitIntoColumnsForOneClimbEach перестанет ловить эту поломку. При смене plan_SlabCut_SplitIntoColumnsForOneClimbEach проверь это утверждение.");
+        assertEquals(
+                71,
+                cut.get(0).params().get("y2"),
+                "и до верхней: один подъём на всю колонку"
+                        + " Иначе тест plan_SlabCut_SplitIntoColumnsForOneClimbEach перестанет ловить эту поломку. При смене plan_SlabCut_SplitIntoColumnsForOneClimbEach проверь это утверждение.");
     }
 
     @Test
@@ -140,7 +175,8 @@ class LevelRepairScenarioTests {
         assertEquals(
                 List.of(new PlotLeveling.Box(3, 75, 3, 3, 75, 3), new PlotLeveling.Box(3, 70, 3, 3, 70, 3)),
                 leveling.cut(),
-                "Клетки колонки через разрыв (сундук или постройка) — два бокса: разрыв в срез не попадает");
+                "Клетки колонки через разрыв (сундук или постройка) — два бокса: разрыв в срез не попадает"
+                        + " Иначе тест plan_GapInColumn_NotCutAsOneBox перестанет ловить эту поломку. При смене plan_GapInColumn_NotCutAsOneBox проверь это утверждение.");
     }
 
     @Test
@@ -153,8 +189,13 @@ class LevelRepairScenarioTests {
                 2,
                 progress.done(),
                 "Срезаны две верхние клетки — прогресс обязан это показать: одна защищённая клетка внизу "
-                        + "не держит весь столб на нуле");
-        assertEquals(3, progress.total(), "Колонка из трёх клеток — три клетки работы выравнивания");
+                        + "не держит весь столб на нуле"
+                        + " Иначе тест progress_CutColumn_CountsEachCutCell перестанет ловить эту поломку. При смене progress_CutColumn_CountsEachCutCell проверь это утверждение.");
+        assertEquals(
+                3,
+                progress.total(),
+                "Колонка из трёх клеток — три клетки работы выравнивания"
+                        + " Иначе тест progress_CutColumn_CountsEachCutCell перестанет ловить эту поломку. При смене progress_CutColumn_CountsEachCutCell проверь это утверждение.");
     }
 
     @Test
@@ -172,11 +213,17 @@ class LevelRepairScenarioTests {
                 4,
                 progress.total(),
                 "Ремонт выравнивания — это 2 лишних блока срезать и 2 дыры засыпать: план из 0 блоков "
-                        + "ошибочно закрывал его как «нечего строить»");
-        assertEquals(2, progress.done(), "Срезан один лишний блок и засыпана одна дыра: готовность по факту мира");
+                        + "ошибочно закрывал его как «нечего строить»"
+                        + " Иначе тест progress_LevelingRepair_CountsCutAndFillCells перестанет ловить эту поломку. При смене progress_LevelingRepair_CountsCutAndFillCells проверь это утверждение.");
+        assertEquals(
+                2,
+                progress.done(),
+                "Срезан один лишний блок и засыпана одна дыра: готовность по факту мира"
+                        + " Иначе тест progress_LevelingRepair_CountsCutAndFillCells перестанет ловить эту поломку. При смене progress_LevelingRepair_CountsCutAndFillCells проверь это утверждение.");
         assertTrue(
                 StageAudit.nothingToBuild(progress.total()).isEmpty(),
-                "У ремонта выравнивания есть работа — «стройка закрыта без работы» больше не срабатывает");
+                "У ремонта выравнивания есть работа — «стройка закрыта без работы» больше не срабатывает"
+                        + " Иначе тест progress_LevelingRepair_CountsCutAndFillCells перестанет ловить эту поломку. При смене progress_LevelingRepair_CountsCutAndFillCells проверь это утверждение.");
     }
 
     @Test
@@ -192,11 +239,13 @@ class LevelRepairScenarioTests {
                 List.of(new PlotLeveling.Box(4, 70, 4, 4, 70, 4)),
                 leveling.cut(),
                 "Срезка выравнивания не берёт клетку дома: защита участка откажет в ломке (160 отказов "
-                        + "repair:clear_grounds у дома 18.11), а задание повторяется каждые 10 секунд");
+                        + "repair:clear_grounds у дома 18.11), а задание повторяется каждые 10 секунд"
+                        + " Иначе тест leveling_PlannedCells_ExcludedFromCutAndFill перестанет ловить эту поломку. При смене leveling_PlannedCells_ExcludedFromCutAndFill проверь это утверждение.");
         assertEquals(
                 List.of(new PlotLeveling.Box(7, 69, 7, 7, 69, 7)),
                 leveling.fill(),
-                "Подсыпка в клетку дома тоже не планируется: план постройки ставит свои блоки сам");
+                "Подсыпка в клетку дома тоже не планируется: план постройки ставит свои блоки сам"
+                        + " Иначе тест leveling_PlannedCells_ExcludedFromCutAndFill перестанет ловить эту поломку. При смене leveling_PlannedCells_ExcludedFromCutAndFill проверь это утверждение.");
     }
 
     private static void collect(TaskNode node, List<ScriptCall> out) {

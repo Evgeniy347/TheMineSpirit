@@ -18,7 +18,8 @@ class DemolitionKeyTests {
         assertEquals(
                 first,
                 second,
-                "Один билет на кусок: пока начальная клетка та же, набор уборки не рождает новый demolish:<id>");
+                "Один билет на кусок: пока начальная клетка та же, набор уборки не рождает новый demolish:<id>"
+                        + " Иначе тест idFor_PieceAnchor_StableWhenSetShrinks перестанет ловить эту поломку. При смене idFor_PieceAnchor_StableWhenSetShrinks проверь это утверждение.");
     }
 
     @Test
@@ -32,8 +33,12 @@ class DemolitionKeyTests {
         assertEquals(
                 List.of(anchor, new BlockCoord(-168, 73, -485)),
                 piece,
-                "Билет берёт кусок под одну область clear_area (радиус 4 и три слоя), а не весь участок");
-        assertTrue(!piece.contains(far), "Далёкая клетка — другой кусок со своим билетом");
+                "Билет берёт кусок под одну область clear_area (радиус 4 и три слоя), а не весь участок"
+                        + " Иначе тест piece_NearCells_TakesOnlyOneClearArea перестанет ловить эту поломку. При смене piece_NearCells_TakesOnlyOneClearArea проверь это утверждение.");
+        assertTrue(
+                !piece.contains(far),
+                "Далёкая клетка — другой кусок со своим билетом"
+                        + " Иначе тест piece_NearCells_TakesOnlyOneClearArea перестанет ловить эту поломку. При смене piece_NearCells_TakesOnlyOneClearArea проверь это утверждение.");
     }
 
     @Test
@@ -51,12 +56,14 @@ class DemolitionKeyTests {
 
         assertTrue(
                 DemolitionKey.withinStand(stand, List.of(firstTree, secondTree)),
-                "Два дерева в радиусе 4 от общего стенда — один пакет уборки");
+                "Два дерева в радиусе 4 от общего стенда — один пакет уборки"
+                        + " Иначе тест treePiece_NeighbourTrees_ShareOneStandWithoutCuttingTrunks перестанет ловить эту поломку. При смене treePiece_NeighbourTrees_ShareOneStandWithoutCuttingTrunks проверь это утверждение.");
         assertEquals(
                 cells,
                 DemolitionKey.treePiece(cells, stand),
                 "Пакет нескольких деревьев у общего стенда не режет стволы по высоте: иначе от дерева остаётся "
-                        + "только верхушка");
+                        + "только верхушка"
+                        + " При смене treePiece_NeighbourTrees_ShareOneStandWithoutCuttingTrunks проверь это утверждение.");
     }
 
     @Test
@@ -64,6 +71,7 @@ class DemolitionKeyTests {
         BlockCoord stand = new BlockCoord(0, 64, 0);
         assertTrue(
                 !DemolitionKey.withinStand(stand, List.of(new BlockCoord(0, 65, 0), new BlockCoord(10, 65, 0))),
-                "Дерево за радиусом стенда — отдельный билет: общий стенд до него не достаёт");
+                "Дерево за радиусом стенда — отдельный билет: общий стенд до него не достаёт"
+                        + " Иначе тест withinStand_TreeFarFromStand_IsAnotherTicket перестанет ловить эту поломку. При смене withinStand_TreeFarFromStand_IsAnotherTicket проверь это утверждение.");
     }
 }

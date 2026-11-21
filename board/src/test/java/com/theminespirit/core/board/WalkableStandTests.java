@@ -19,7 +19,8 @@ class WalkableStandTests {
         assertEquals(
                 Optional.of(inside),
                 WalkableStand.near(CHEST, Set.of(inside, outside)),
-                "сундук внутри склада: стоянка на полу внутри, а не на земле за стеной");
+                "сундук внутри склада: стоянка на полу внутри, а не на земле за стеной"
+                        + " Иначе тест near_ChestInsideBuilding_PicksFloorInsideNotGroundOutside перестанет ловить эту поломку. При смене near_ChestInsideBuilding_PicksFloorInsideNotGroundOutside проверь это утверждение.");
     }
 
     @Test
@@ -27,6 +28,7 @@ class WalkableStandTests {
         assertTrue(
                 WalkableStand.near(CHEST, Set.of(new BlockCoord(-168, 60, -488)))
                         .isEmpty(),
-                "слишком далеко");
+                "слишком далеко"
+                        + " Иначе тест near_NothingInReach_IsEmpty перестанет ловить эту поломку. При смене near_NothingInReach_IsEmpty проверь это утверждение.");
     }
 }

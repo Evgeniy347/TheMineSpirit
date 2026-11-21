@@ -41,7 +41,10 @@ class BoardScenarioTests {
                 }
             }
         });
-        assertTrue(found.isEmpty(), "Задание держит погибший дух: " + first(found));
+        assertTrue(
+                found.isEmpty(),
+                "Задание держит погибший дух: " + first(found)
+                        + " Иначе тест scenarios_DeadHolder_Released перестанет ловить эту поломку. При смене scenarios_DeadHolder_Released проверь это утверждение.");
     }
 
     @Tag("mutation")
@@ -54,7 +57,10 @@ class BoardScenarioTests {
                                 new BoardScenario.Anomaly("OVER_HOLD", scenario.seed, round, spirit + "=" + count));
                     }
                 }));
-        assertTrue(found.isEmpty(), "Дух держит больше заданий, чем позволяет maxActivePerSpirit: " + first(found));
+        assertTrue(
+                found.isEmpty(),
+                "Дух держит больше заданий, чем позволяет maxActivePerSpirit: " + first(found)
+                        + " Иначе тест scenarios_Spirit_HoldsAtMostLimit перестанет ловить эту поломку. При смене scenarios_Spirit_HoldsAtMostLimit проверь это утверждение.");
     }
 
     @Tag("mutation")
@@ -71,7 +77,10 @@ class BoardScenarioTests {
                 }
             }
         });
-        assertTrue(found.isEmpty(), "Свободный годный дух стоит при выдаваемом задании: " + first(found));
+        assertTrue(
+                found.isEmpty(),
+                "Свободный годный дух стоит при выдаваемом задании: " + first(found)
+                        + " Иначе тест scenarios_FreeSpirit_NotIdleWithFittingWork перестанет ловить эту поломку. При смене scenarios_FreeSpirit_NotIdleWithFittingWork проверь это утверждение.");
     }
 
     @Tag("mutation")
@@ -95,7 +104,10 @@ class BoardScenarioTests {
                 }
             }
         });
-        assertTrue(found.isEmpty(), "Задание навсегда ждёт проваленного или снятого предшественника: " + first(found));
+        assertTrue(
+                found.isEmpty(),
+                "Задание навсегда ждёт проваленного или снятого предшественника: " + first(found)
+                        + " Иначе тест scenarios_PendingTicket_NotStuckOnDeadDependency перестанет ловить эту поломку. При смене scenarios_PendingTicket_NotStuckOnDeadDependency проверь это утверждение.");
     }
 
     @Test
@@ -112,14 +124,16 @@ class BoardScenarioTests {
         assertTrue(
                 most <= limit,
                 "На этапе 1 одновременно открыто не больше лимита (" + limit + " шагов на трёх духов): "
-                        + "сверх лимита шаги висят PENDING за занятыми духами; открыто " + most);
+                        + "сверх лимита шаги висят PENDING за занятыми духами; открыто " + most
+                        + " Иначе тест stageOne_OpenCases_NotAboveSpiritCapacity перестанет ловить эту поломку. При смене stageOne_OpenCases_NotAboveSpiritCapacity проверь это утверждение.");
         assertEquals(
                 2,
                 scenario.settlementStage(),
                 "Очередь открывается по мере освобождения духов и всё равно закрывает этап 1: "
                         + scenario.tickets().stream()
                                 .map(ticket -> ticket.id() + "=" + scenario.status(ticket.id()))
-                                .toList());
+                                .toList()
+                        + " Иначе тест stageOne_OpenCases_NotAboveSpiritCapacity перестанет ловить эту поломку. При смене stageOne_OpenCases_NotAboveSpiritCapacity проверь это утверждение.");
     }
 
     @Test
@@ -145,6 +159,7 @@ class BoardScenarioTests {
         assertEquals(
                 List.of(),
                 inverted,
-                "Изготовление инструмента обязано перевешивать задание, которому он нужен: иначе дух копает руками");
+                "Изготовление инструмента обязано перевешивать задание, которому он нужен: иначе дух копает руками"
+                        + " При смене priorities_ToolCraft_NotBelowCaseNeedingTool проверь это утверждение.");
     }
 }

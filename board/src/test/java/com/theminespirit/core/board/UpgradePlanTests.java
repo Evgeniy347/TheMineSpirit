@@ -34,7 +34,8 @@ class UpgradePlanTests {
                 difference("storage_v1", "storage_v2"),
                 need,
                 "Уровень 2 склада требует только то, чего нет в уровне 1: полный набор второй схемы "
-                        + "заставил бы духа носить заново уже стоящие блоки");
+                        + "заставил бы духа носить заново уже стоящие блоки"
+                        + " Иначе тест required_WarehouseSecondLevel_IsSchemeDifference перестанет ловить эту поломку. При смене required_WarehouseSecondLevel_IsSchemeDifference проверь это утверждение.");
     }
 
     @Test
@@ -43,7 +44,8 @@ class UpgradePlanTests {
                 difference("hut_1", "stone_house"),
                 UpgradePlan.required("hut_1", "stone_house"),
                 "Каменный дом уровня 2 требует разницу с хижиной уровня 1: общие брёвна и доски не "
-                        + "заказываются заново");
+                        + "заказываются заново"
+                        + " Иначе тест required_HouseSecondLevel_IsStoneHouseMinusHut перестанет ловить эту поломку. При смене required_HouseSecondLevel_IsStoneHouseMinusHut проверь это утверждение.");
     }
 
     @Test
@@ -51,19 +53,24 @@ class UpgradePlanTests {
         assertEquals(
                 UpgradePlan.materials("storage_v2"),
                 UpgradePlan.required(null, "storage_v2"),
-                "Первая постройка уровня требует всю схему: вычитать нечего");
+                "Первая постройка уровня требует всю схему: вычитать нечего"
+                        + " Иначе тест required_WithoutPreviousLevel_IsWholeScheme перестанет ловить эту поломку. При смене required_WithoutPreviousLevel_IsWholeScheme проверь это утверждение.");
     }
 
     @Test
     void difference_WarehouseSecondLevel_HasNoZeroOrForeignItems() {
         Map<String, Integer> need = UpgradePlan.difference("storage_v1", "storage_v2");
 
-        need.forEach((item, count) ->
-                assertTrue(count > 0, "Разница схем не содержит нулевых остатков: '" + item + "' = " + count));
+        need.forEach(
+                (item, count) -> assertTrue(
+                        count > 0,
+                        "Разница схем не содержит нулевых остатков: '" + item + "' = " + count
+                                + " Иначе тест difference_WarehouseSecondLevel_HasNoZeroOrForeignItems перестанет ловить эту поломку. При смене difference_WarehouseSecondLevel_HasNoZeroOrForeignItems проверь это утверждение."));
         assertTrue(
                 need.keySet().stream()
                         .allMatch(item -> UpgradePlan.materials("storage_v2").containsKey(item)),
-                "В разнице нет предметов, которых нет в новой схеме: " + need.keySet());
+                "В разнице нет предметов, которых нет в новой схеме: " + need.keySet()
+                        + " Иначе тест difference_WarehouseSecondLevel_HasNoZeroOrForeignItems перестанет ловить эту поломку. При смене difference_WarehouseSecondLevel_HasNoZeroOrForeignItems проверь это утверждение.");
     }
 
     @Test
@@ -73,11 +80,13 @@ class UpgradePlanTests {
         assertEquals(
                 WarehouseRules.site(home, 1),
                 WarehouseRules.site(home, 2),
-                "Склад уровня 2 ставится на якорь уровня 1: улучшение на месте не занимает второй участок");
+                "Склад уровня 2 ставится на якорь уровня 1: улучшение на месте не занимает второй участок"
+                        + " Иначе тест site_WarehouseSecondLevel_StaysAtFirstAnchor перестанет ловить эту поломку. При смене site_WarehouseSecondLevel_StaysAtFirstAnchor проверь это утверждение.");
         assertEquals(
                 home,
                 WarehouseRules.site(home, 4),
-                "Все уровни склада стоят на одном якоре: переносить и освобождать участки больше не нужно");
+                "Все уровни склада стоят на одном якоре: переносить и освобождать участки больше не нужно"
+                        + " Иначе тест site_WarehouseSecondLevel_StaysAtFirstAnchor перестанет ловить эту поломку. При смене site_WarehouseSecondLevel_StaysAtFirstAnchor проверь это утверждение.");
     }
 
     @Test
@@ -89,11 +98,18 @@ class UpgradePlanTests {
             assertEquals(
                     ANCHOR.x(),
                     build.params().get("x"),
-                    "Уровень " + level + " склада строится на том же якоре по X: второго участка нет");
+                    "Уровень " + level + " склада строится на том же якоре по X: второго участка нет"
+                            + " Иначе тест plan_WarehouseSecondLevel_BuildsAtSameAnchor перестанет ловить эту поломку. При смене plan_WarehouseSecondLevel_BuildsAtSameAnchor проверь это утверждение.");
             assertEquals(
-                    ANCHOR.y(), build.params().get("y"), "Уровень " + level + " склада строится на том же якоре по Y");
+                    ANCHOR.y(),
+                    build.params().get("y"),
+                    "Уровень " + level + " склада строится на том же якоре по Y"
+                            + " Иначе тест plan_WarehouseSecondLevel_BuildsAtSameAnchor перестанет ловить эту поломку. При смене plan_WarehouseSecondLevel_BuildsAtSameAnchor проверь это утверждение.");
             assertEquals(
-                    ANCHOR.z(), build.params().get("z"), "Уровень " + level + " склада строится на том же якоре по Z");
+                    ANCHOR.z(),
+                    build.params().get("z"),
+                    "Уровень " + level + " склада строится на том же якоре по Z"
+                            + " Иначе тест plan_WarehouseSecondLevel_BuildsAtSameAnchor перестанет ловить эту поломку. При смене plan_WarehouseSecondLevel_BuildsAtSameAnchor проверь это утверждение.");
         }
     }
 
@@ -110,10 +126,14 @@ class UpgradePlanTests {
                             (Integer) build.params().get("x"),
                             (Integer) build.params().get("y"),
                             (Integer) build.params().get("z")),
-                    "Дом уровня " + level + " ставится на тот же якорь: улучшение не ищет второй участок");
+                    "Дом уровня " + level + " ставится на тот же якорь: улучшение не ищет второй участок"
+                            + " Иначе тест plan_HouseSecondAndThirdLevels_BuildAtSameAnchor перестанет ловить эту поломку. При смене plan_HouseSecondAndThirdLevels_BuildAtSameAnchor проверь это утверждение.");
         }
         assertNotEquals(
-                schemes.get(0), schemes.get(1), "Дом уровня 2 строится не схемой хижины: уровень N+1 берёт свою схему");
+                schemes.get(0),
+                schemes.get(1),
+                "Дом уровня 2 строится не схемой хижины: уровень N+1 берёт свою схему"
+                        + " Иначе тест plan_HouseSecondAndThirdLevels_BuildAtSameAnchor перестанет ловить эту поломку. При смене plan_HouseSecondAndThirdLevels_BuildAtSameAnchor проверь это утверждение.");
     }
 
     @Test
@@ -138,7 +158,8 @@ class UpgradePlanTests {
                 bed,
                 order.get(0),
                 "Кровать снимается до сноса остальных блоков: иначе она сгорит/пропадёт вместе со стенами "
-                        + "и духам негде спать");
+                        + "и духам негде спать"
+                        + " При смене dismantleShelter_WithBedAndWall_ClearsBedFirst проверь это утверждение.");
     }
 
     private static Map<String, Integer> difference(String previous, String next) {

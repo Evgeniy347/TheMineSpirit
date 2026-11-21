@@ -25,9 +25,19 @@ class GraphTreeCasesTests {
 
         GraphPlan.Task chop = plan.task("chop_oak_log")
                 .orElseThrow(() -> new AssertionError("Без брёвен граф обязан поставить рубку: " + ids(plan)));
-        assertEquals(BoardCase.GATHER_MATERIALS, chop.boardCase(), "Рубка идёт общим сбором материалов");
-        assertTrue(chop.feasible(), "Дуб в округе и топор у духа — рубка выполнима: " + chop);
-        assertTrue(chop.consumes().isEmpty(), "Рубка ничего не расходует: дерево берут из мира, а не из сундука");
+        assertEquals(
+                BoardCase.GATHER_MATERIALS,
+                chop.boardCase(),
+                "Рубка идёт общим сбором материалов"
+                        + " Иначе тест plan_WholeTreeChop_IsSingleTreeJobWithReplantAndCollect перестанет ловить эту поломку. При смене plan_WholeTreeChop_IsSingleTreeJobWithReplantAndCollect проверь это утверждение.");
+        assertTrue(
+                chop.feasible(),
+                "Дуб в округе и топор у духа — рубка выполнима: " + chop
+                        + " Иначе тест plan_WholeTreeChop_IsSingleTreeJobWithReplantAndCollect перестанет ловить эту поломку. При смене plan_WholeTreeChop_IsSingleTreeJobWithReplantAndCollect проверь это утверждение.");
+        assertTrue(
+                chop.consumes().isEmpty(),
+                "Рубка ничего не расходует: дерево берут из мира, а не из сундука"
+                        + " Иначе тест plan_WholeTreeChop_IsSingleTreeJobWithReplantAndCollect перестанет ловить эту поломку. При смене plan_WholeTreeChop_IsSingleTreeJobWithReplantAndCollect проверь это утверждение.");
 
         long jobs = tickets(world.state()).post().stream()
                 .filter(ticket -> "chop_oak_log".equals(ticket.node()))
@@ -39,7 +49,8 @@ class GraphTreeCasesTests {
                         + "верхушка остаётся висеть. Задания: "
                         + tickets(world.state()).post().stream()
                                 .map(GraphTickets.Ticket::id)
-                                .toList());
+                                .toList()
+                        + " При смене plan_WholeTreeChop_IsSingleTreeJobWithReplantAndCollect проверь это утверждение.");
     }
 
     @Test
@@ -54,15 +65,17 @@ class GraphTreeCasesTests {
                 2,
                 chop.params().get("count"),
                 "8 брёвен — это 2 целых дерева по 4 бревна, а не 8 отдельных блоков: рубить по бревну нельзя, "
-                        + "верхушка останется висеть. Параметры: " + chop.params());
+                        + "верхушка останется висеть. Параметры: " + chop.params()
+                        + " Иначе тест plan_OakLogBatch_ChopTreeAsksWholeTreesAndReplants перестанет ловить эту поломку. При смене plan_OakLogBatch_ChopTreeAsksWholeTreesAndReplants проверь это утверждение.");
         assertEquals(
                 true,
                 chop.params().get("replant"),
-                "Лес восстанавливают посадкой после рубки: иначе вырубка не заканчивается. Параметры: "
-                        + chop.params());
+                "Лес восстанавливают посадкой после рубки: иначе вырубка не заканчивается. Параметры: " + chop.params()
+                        + " При смене plan_OakLogBatch_ChopTreeAsksWholeTreesAndReplants проверь это утверждение.");
         assertTrue(
                 calls.stream().anyMatch(call -> "acquire".equals(call.script())),
-                "Если рубить нечего, план обязан добрать брёвна сбором, а не падать: " + calls);
+                "Если рубить нечего, план обязан добрать брёвна сбором, а не падать: " + calls
+                        + " Иначе тест plan_OakLogBatch_ChopTreeAsksWholeTreesAndReplants перестанет ловить эту поломку. При смене plan_OakLogBatch_ChopTreeAsksWholeTreesAndReplants проверь это утверждение.");
     }
 
     @Test
@@ -76,8 +89,12 @@ class GraphTreeCasesTests {
         assertEquals(
                 BoardCase.HARVEST_ORCHARD,
                 harvest.boardCase(),
-                "Деревья сада снимаются заданием сада (с посадкой на место), а не общим сбором материалов");
-        assertTrue(harvest.feasible(), "Сад созрел — сбор урожая выполним: " + harvest);
+                "Деревья сада снимаются заданием сада (с посадкой на место), а не общим сбором материалов"
+                        + " Иначе тест plan_OrchardTreeGrown_OwnHarvestWayCutsGardenTree перестанет ловить эту поломку. При смене plan_OrchardTreeGrown_OwnHarvestWayCutsGardenTree проверь это утверждение.");
+        assertTrue(
+                harvest.feasible(),
+                "Сад созрел — сбор урожая выполним: " + harvest
+                        + " Иначе тест plan_OrchardTreeGrown_OwnHarvestWayCutsGardenTree перестанет ловить эту поломку. При смене plan_OrchardTreeGrown_OwnHarvestWayCutsGardenTree проверь это утверждение.");
     }
 
     @Test
@@ -88,7 +105,8 @@ class GraphTreeCasesTests {
         assertTrue(
                 !plan.raised("harvest_orchard_oak"),
                 "Построенный сад без выросшего дерева не рубится: метку мира orchard:oak даёт только ствол "
-                        + "на месте саженца. Задания: " + ids(plan));
+                        + "на месте саженца. Задания: " + ids(plan)
+                        + " Иначе тест plan_OrchardBuiltWithoutGrownTree_NoHarvestWay перестанет ловить эту поломку. При смене plan_OrchardBuiltWithoutGrownTree_NoHarvestWay проверь это утверждение.");
     }
 
     @Test
@@ -104,10 +122,12 @@ class GraphTreeCasesTests {
                 false,
                 chop.params().get("replant"),
                 "Сбор саженцев не сажает их на месте срубленного дерева вне сада: посадка — только в сад плана. "
-                        + "Параметры: " + chop.params());
+                        + "Параметры: " + chop.params()
+                        + " Иначе тест plan_SaplingGather_DoesNotReplantFelledSpot перестанет ловить эту поломку. При смене plan_SaplingGather_DoesNotReplantFelledSpot проверь это утверждение.");
         assertTrue(
                 calls.stream().anyMatch(call -> "gather".equals(call.script())),
-                "После рубки саженцы собирают с листвы отдельным шагом: " + calls);
+                "После рубки саженцы собирают с листвы отдельным шагом: " + calls
+                        + " Иначе тест plan_SaplingGather_DoesNotReplantFelledSpot перестанет ловить эту поломку. При смене plan_SaplingGather_DoesNotReplantFelledSpot проверь это утверждение.");
     }
 
     @Test
@@ -119,14 +139,23 @@ class GraphTreeCasesTests {
         GraphPlan.Task replant = plan.task("event:orchard_empty:replant_orchard")
                 .orElseThrow(() ->
                         new AssertionError("Сад пуст, саженцы есть — обязана стоять посадка в сад: " + ids(plan)));
-        assertEquals(BoardCase.BUILD_ORCHARD, replant.boardCase(), "Посадка в сад идёт заданием сада");
-        assertTrue(replant.feasible(), "Саженцы в запасе — посадка выполнима: " + replant);
+        assertEquals(
+                BoardCase.BUILD_ORCHARD,
+                replant.boardCase(),
+                "Посадка в сад идёт заданием сада"
+                        + " Иначе тест plan_OrchardEmptyWithSaplings_ReplantsWithoutWaitingBuild перестанет ловить эту поломку. При смене plan_OrchardEmptyWithSaplings_ReplantsWithoutWaitingBuild проверь это утверждение.");
+        assertTrue(
+                replant.feasible(),
+                "Саженцы в запасе — посадка выполнима: " + replant
+                        + " Иначе тест plan_OrchardEmptyWithSaplings_ReplantsWithoutWaitingBuild перестанет ловить эту поломку. При смене plan_OrchardEmptyWithSaplings_ReplantsWithoutWaitingBuild проверь это утверждение.");
         assertTrue(
                 !plan.raised("gather_oak_sapling"),
-                "Саженцев хватает — рубка леса ради них не ставится: " + plan.task("gather_oak_sapling"));
+                "Саженцев хватает — рубка леса ради них не ставится: " + plan.task("gather_oak_sapling")
+                        + " Иначе тест plan_OrchardEmptyWithSaplings_ReplantsWithoutWaitingBuild перестанет ловить эту поломку. При смене plan_OrchardEmptyWithSaplings_ReplantsWithoutWaitingBuild проверь это утверждение.");
         assertTrue(
                 !plan.raised("chop_oak_log"),
-                "Брёвен достаточно — фоновая рубка не мешает посадке сада: " + plan.task("chop_oak_log"));
+                "Брёвен достаточно — фоновая рубка не мешает посадке сада: " + plan.task("chop_oak_log")
+                        + " Иначе тест plan_OrchardEmptyWithSaplings_ReplantsWithoutWaitingBuild перестанет ловить эту поломку. При смене plan_OrchardEmptyWithSaplings_ReplantsWithoutWaitingBuild проверь это утверждение.");
     }
 
     @Test
@@ -138,7 +167,8 @@ class GraphTreeCasesTests {
         assertTrue(
                 plan.task("event:orchard_empty:replant_orchard").isEmpty(),
                 "Сад полон — посадки нет: повторная посадка на занятые клетки тратит саженцы впустую. Задания: "
-                        + ids(plan));
+                        + ids(plan)
+                        + " Иначе тест plan_OrchardComplete_NoReplantWork перестанет ловить эту поломку. При смене plan_OrchardComplete_NoReplantWork проверь это утверждение.");
     }
 
     @Test
@@ -155,8 +185,12 @@ class GraphTreeCasesTests {
         assertEquals(
                 BoardCase.HARVEST_ORCHARD,
                 replant.boardCase(),
-                "Восстановление леса идёт через сад плана, а не новой рубкой дикого леса");
-        assertTrue(replant.feasible(), "Саженцы в запасе — посадка выполнима: " + replant);
+                "Восстановление леса идёт через сад плана, а не новой рубкой дикого леса"
+                        + " Иначе тест plan_ForestDepleted_ReplantsOnlyInOrchard перестанет ловить эту поломку. При смене plan_ForestDepleted_ReplantsOnlyInOrchard проверь это утверждение.");
+        assertTrue(
+                replant.feasible(),
+                "Саженцы в запасе — посадка выполнима: " + replant
+                        + " Иначе тест plan_ForestDepleted_ReplantsOnlyInOrchard перестанет ловить эту поломку. При смене plan_ForestDepleted_ReplantsOnlyInOrchard проверь это утверждение.");
     }
 
     @Test
@@ -166,7 +200,8 @@ class GraphTreeCasesTests {
 
         assertTrue(
                 !plan.raised("chop_oak_log"),
-                "Дубов в округе нет — рубку не ставят: дух не ищет дерево, которого нет. Задания: " + ids(plan));
+                "Дубов в округе нет — рубку не ставят: дух не ищет дерево, которого нет. Задания: " + ids(plan)
+                        + " Иначе тест plan_NoOakInWorld_NoChopTask перестанет ловить эту поломку. При смене plan_NoOakInWorld_NoChopTask проверь это утверждение.");
     }
 
     @Test
@@ -187,6 +222,7 @@ class GraphTreeCasesTests {
         assertEquals(
                 BoardCase.CLEAR_GROUNDS,
                 cleanup.task().boardCase(),
-                "Уборку висящего исполняет расчистка участка, иначе верхушка висит вечно");
+                "Уборку висящего исполняет расчистка участка, иначе верхушка висит вечно"
+                        + " При смене terrain_HangingAfterChop_ClearFloatingPosted проверь это утверждение.");
     }
 }

@@ -25,14 +25,24 @@ class GearFragmentTests {
 
         for (String node : GEAR) {
             GraphEvent event = graph.events().get(node);
-            assertTrue(event != null, "Узел снаряжения '" + node + "' объявлен фрагментом gear.json");
-            assertFalse(event.tasks().isEmpty(), "Узел снаряжения '" + node + "' несёт задание-заглушку");
-            assertTrue(event.tasks().get(0).implemented(), "Узел снаряжения '" + node + "' исполняется действием");
+            assertTrue(
+                    event != null,
+                    "Узел снаряжения '" + node + "' объявлен фрагментом gear.json"
+                            + " Иначе тест defaultGraph_GearNodes_Declared перестанет ловить эту поломку. При смене defaultGraph_GearNodes_Declared проверь это утверждение.");
+            assertFalse(
+                    event.tasks().isEmpty(),
+                    "Узел снаряжения '" + node + "' несёт задание-заглушку"
+                            + " Иначе тест defaultGraph_GearNodes_Declared перестанет ловить эту поломку. При смене defaultGraph_GearNodes_Declared проверь это утверждение.");
+            assertTrue(
+                    event.tasks().get(0).implemented(),
+                    "Узел снаряжения '" + node + "' исполняется действием"
+                            + " Иначе тест defaultGraph_GearNodes_Declared перестанет ловить эту поломку. При смене defaultGraph_GearNodes_Declared проверь это утверждение.");
         }
         assertEquals(
                 "equip_best",
                 graph.events().get(GearInputs.EQUIP_BEST).tasks().get(0).id(),
-                "Задание экипировки называет узел");
+                "Задание экипировки называет узел"
+                        + " Иначе тест defaultGraph_GearNodes_Declared перестанет ловить эту поломку. При смене defaultGraph_GearNodes_Declared проверь это утверждение.");
         assertEquals(
                 "craft_tool:pickaxe",
                 graph.events()
@@ -40,7 +50,8 @@ class GearFragmentTests {
                         .tasks()
                         .get(0)
                         .id(),
-                "Задание кирки называет вид инструмента");
+                "Задание кирки называет вид инструмента"
+                        + " Иначе тест defaultGraph_GearNodes_Declared перестанет ловить эту поломку. При смене defaultGraph_GearNodes_Declared проверь это утверждение.");
     }
 
     @Test
@@ -52,7 +63,10 @@ class GearFragmentTests {
                 continue;
             }
             for (String pushed : graph.events().get(node).push().keySet()) {
-                assertTrue(known(graph, pushed), "Набор '" + node + "' подталкивает неизвестный узел " + pushed);
+                assertTrue(
+                        known(graph, pushed),
+                        "Набор '" + node + "' подталкивает неизвестный узел " + pushed
+                                + " Иначе тест defaultGraph_GearKitPush_NamesKnownNodes перестанет ловить эту поломку. При смене defaultGraph_GearKitPush_NamesKnownNodes проверь это утверждение.");
             }
         }
     }
@@ -66,7 +80,8 @@ class GearFragmentTests {
         assertTrue(
                 plan.tasks().stream().anyMatch(task -> task.id().matches("craft_(wooden|stone)_hoe@spirit-1")),
                 "Дух без тяпки получает её крафт по графу: без узла craft_tool:hoe пашню нечем делать — "
-                        + taskIds(plan));
+                        + taskIds(plan)
+                        + " Иначе тест plan_SpiritWithoutHoe_GetsHoeCraft перестанет ловить эту поломку. При смене plan_SpiritWithoutHoe_GetsHoeCraft проверь это утверждение.");
     }
 
     @Test
@@ -78,7 +93,8 @@ class GearFragmentTests {
         assertTrue(
                 plan.tasks().stream().anyMatch(task -> task.id().matches("craft_(wooden|stone)_pickaxe@spirit-1")),
                 "Дух без кирки получает её крафт по графу: иначе шахта ждёт инструмент, которого никто не делает — "
-                        + taskIds(plan));
+                        + taskIds(plan)
+                        + " При смене plan_SpiritWithoutPickaxe_GetsPickaxeCraft проверь это утверждение.");
     }
 
     @Test
@@ -111,7 +127,10 @@ class GearFragmentTests {
 
         GraphPlan.Task stub = plan.task("event:gear_craft_pickaxe:craft_tool:pickaxe")
                 .orElseThrow(() -> new AssertionError("Нет задания запаса кирки: " + taskIds(plan)));
-        assertTrue(stub.implemented(), "Крафт кирки из входов снаряжения исполняется действием");
+        assertTrue(
+                stub.implemented(),
+                "Крафт кирки из входов снаряжения исполняется действием"
+                        + " Иначе тест planner_GearInputs_AddUnimplementedStubs перестанет ловить эту поломку. При смене planner_GearInputs_AddUnimplementedStubs проверь это утверждение.");
     }
 
     private static List<String> taskIds(GraphPlan plan) {

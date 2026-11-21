@@ -14,28 +14,32 @@ class GraphAuditTests {
     void settles_KnownPartial_True() {
         assertTrue(
                 GraphAudit.settles(state(Built.PLANNED, PlanCaseFacts.building("hut", 95, 5, Map.of(), false)), "hut"),
-                "Аудит с прогрессом решает судьбу постройки: полную стройку не ставят поверх 95%");
+                "Аудит с прогрессом решает судьбу постройки: полную стройку не ставят поверх 95%"
+                        + " Иначе тест settles_KnownPartial_True перестанет ловить эту поломку. При смене settles_KnownPartial_True проверь это утверждение.");
     }
 
     @Test
     void settles_Unknown_True() {
         assertTrue(
                 GraphAudit.settles(state(Built.PLANNED, PlanCaseFacts.building("hut", 0, 0, Map.of(), true)), "hut"),
-                "Неизвестный аудит не даёт строить вслепую: работа ждёт загрузки чанка");
+                "Неизвестный аудит не даёт строить вслепую: работа ждёт загрузки чанка"
+                        + " Иначе тест settles_Unknown_True перестанет ловить эту поломку. При смене settles_Unknown_True проверь это утверждение.");
     }
 
     @Test
     void settles_NotStarted_False() {
         assertFalse(
                 GraphAudit.settles(state(Built.PLANNED, PlanCaseFacts.building("hut", 0, 0, Map.of(), false)), "hut"),
-                "Ноль процентов по аудиту — обычная стройка, её нельзя отменять");
+                "Ноль процентов по аудиту — обычная стройка, её нельзя отменять"
+                        + " Иначе тест settles_NotStarted_False перестанет ловить эту поломку. При смене settles_NotStarted_False проверь это утверждение.");
     }
 
     @Test
     void settles_Built_False() {
         assertFalse(
                 GraphAudit.settles(state(Built.BUILT, PlanCaseFacts.building("hut", 100, 0, Map.of(), false)), "hut"),
-                "Готовая постройка не удерживает стройку: аудит решает только спорные случаи");
+                "Готовая постройка не удерживает стройку: аудит решает только спорные случаи"
+                        + " Иначе тест settles_Built_False перестанет ловить эту поломку. При смене settles_Built_False проверь это утверждение.");
     }
 
     private static GraphState state(Built built, GraphFacts.Building hut) {

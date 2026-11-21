@@ -39,7 +39,8 @@ class StageRetryTests {
                 Optional.of(BoardStatus.FAILED),
                 board.statusOf(ID),
                 "Проваленный шаг первого этапа остаётся на доске: иначе сад с 0 из 24 исчезает с доски (404) "
-                        + "и этап 1 не закрыть");
+                        + "и этап 1 не закрыть"
+                        + " При смене prune_FailedFirstStep_KeptForRetry проверь это утверждение.");
     }
 
     @Test
@@ -55,10 +56,12 @@ class StageRetryTests {
                 BoardOutcome.ACCEPTED,
                 board.submit(ticket(now[0])),
                 "Проваленный шаг первого этапа доска переиздаёт после отката: задание не пропадает, "
-                        + "а возвращается в очередь");
+                        + "а возвращается в очередь"
+                        + " Иначе тест submit_FailedFirstStep_RepostedAfterBackoff перестанет ловить эту поломку. При смене submit_FailedFirstStep_RepostedAfterBackoff проверь это утверждение.");
         assertEquals(
                 Optional.of(BoardStatus.PENDING),
                 board.statusOf(ID),
-                "Переизданный шаг снова ждёт выдачи, как и положено шагу, который ещё не построен");
+                "Переизданный шаг снова ждёт выдачи, как и положено шагу, который ещё не построен"
+                        + " Иначе тест submit_FailedFirstStep_RepostedAfterBackoff перестанет ловить эту поломку. При смене submit_FailedFirstStep_RepostedAfterBackoff проверь это утверждение.");
     }
 }

@@ -25,12 +25,21 @@ class FenceRepairsTests {
 
         FenceRepairs.Batch batch = FenceRepairs.of(breaks);
 
-        assertEquals(List.of(C, A, B), batch.cells(), "Клетки ограды идут по x, y, z: порядок общий для всех духов");
+        assertEquals(
+                List.of(C, A, B),
+                batch.cells(),
+                "Клетки ограды идут по x, y, z: порядок общий для всех духов"
+                        + " Иначе тест of_UnsortedBreaks_OrdersCellsAndBlocksTogether перестанет ловить эту поломку. При смене of_UnsortedBreaks_OrdersCellsAndBlocksTogether проверь это утверждение.");
         assertEquals(
                 List.of("minecraft:cobblestone_wall", "minecraft:oak_fence", "minecraft:oak_fence"),
                 batch.blocks(),
-                "Блок клетки обязан переезжать вместе с ней: иначе дух починит пролом чужим блоком");
-        assertEquals(C, batch.first(), "Дух идёт к первой клетке: без неё план стартует в пустоту");
+                "Блок клетки обязан переезжать вместе с ней: иначе дух починит пролом чужим блоком"
+                        + " При смене of_UnsortedBreaks_OrdersCellsAndBlocksTogether проверь это утверждение.");
+        assertEquals(
+                C,
+                batch.first(),
+                "Дух идёт к первой клетке: без неё план стартует в пустоту"
+                        + " Иначе тест of_UnsortedBreaks_OrdersCellsAndBlocksTogether перестанет ловить эту поломку. При смене of_UnsortedBreaks_OrdersCellsAndBlocksTogether проверь это утверждение.");
     }
 
     @Test
@@ -38,7 +47,8 @@ class FenceRepairsTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> FenceRepairs.of(Map.of()),
-                "Пустой реестр проломов не ставит задание: доска и так не должна получать пустую работу");
+                "Пустой реестр проломов не ставит задание: доска и так не должна получать пустую работу"
+                        + " Иначе тест of_EmptyBreaks_Rejected перестанет ловить эту поломку. При смене of_EmptyBreaks_Rejected проверь это утверждение.");
     }
 
     @Test
@@ -46,7 +56,8 @@ class FenceRepairsTests {
         assertEquals(
                 Map.of("minecraft:oak_log", 12),
                 FenceRepairs.scale(Map.of("minecraft:oak_log", 4), 3),
-                "Расход на клетку масштабируется числом клеток: иначе гейт ресурсов пропустит недобор");
+                "Расход на клетку масштабируется числом клеток: иначе гейт ресурсов пропустит недобор"
+                        + " При смене scale_PerCellNeed_MultipliesByCells проверь это утверждение.");
     }
 
     @Test
@@ -56,7 +67,8 @@ class FenceRepairsTests {
 
         assertTrue(
                 FenceRepairs.coveredBy(target, Map.of(A, "minecraft:oak_fence", B, "minecraft:oak_fence")),
-                "Клетки из цели задания уже учтены: новый тикет на них ставить незачем");
+                "Клетки из цели задания уже учтены: новый тикет на них ставить незачем"
+                        + " Иначе тест coveredBy_SameCells_True перестанет ловить эту поломку. При смене coveredBy_SameCells_True проверь это утверждение.");
     }
 
     @Test
@@ -65,7 +77,8 @@ class FenceRepairsTests {
 
         assertFalse(
                 FenceRepairs.coveredBy(target, Map.of(A, "minecraft:oak_fence", C, "minecraft:oak_fence")),
-                "Новый пролом вне цели обязан переоткрывать задание: иначе он останется незамеченным");
+                "Новый пролом вне цели обязан переоткрывать задание: иначе он останется незамеченным"
+                        + " При смене coveredBy_NewCell_False проверь это утверждение.");
     }
 
     @Test
@@ -74,13 +87,15 @@ class FenceRepairsTests {
 
         assertFalse(
                 FenceRepairs.coveredBy(target, Map.of(A, "minecraft:cobblestone_wall")),
-                "Смена блока клетки — новая работа: цель с другим блоком не покрывает пролом");
+                "Смена блока клетки — новая работа: цель с другим блоком не покрывает пролом"
+                        + " Иначе тест coveredBy_OtherBlock_False перестанет ловить эту поломку. При смене coveredBy_OtherBlock_False проверь это утверждение.");
     }
 
     @Test
     void coveredBy_LegacyTarget_False() {
         assertFalse(
                 FenceRepairs.coveredBy(TicketTarget.at(A), Map.of(A, "minecraft:oak_fence")),
-                "Цель без клеток не покрывает проломы: ограду ставят только через агрегат");
+                "Цель без клеток не покрывает проломы: ограду ставят только через агрегат"
+                        + " Иначе тест coveredBy_LegacyTarget_False перестанет ловить эту поломку. При смене coveredBy_LegacyTarget_False проверь это утверждение.");
     }
 }

@@ -65,23 +65,36 @@ class CrossPathScenarioTests {
         int refused = 0;
         for (Map.Entry<String, String> entry : work.entrySet()) {
             GraphPlan.Task task = task(plan, entry.getKey());
-            assertTrue(task.feasible(), entry.getValue() + " должна быть выполнимой работой: " + ids(plan));
+            assertTrue(
+                    task.feasible(),
+                    entry.getValue() + " должна быть выполнимой работой: " + ids(plan)
+                            + " Иначе тест path_NoPathMark_RefusesEveryGraphTaskButRescue перестанет ловить эту поломку. При смене path_NoPathMark_RefusesEveryGraphTaskButRescue проверь это утверждение.");
             GraphTickets.Ticket ticket = ticketFor(result, GraphTickets.id(task));
             Optional<String> why = round.refusal(boardTicket(ticket), stuck);
-            assertTrue(why.isPresent(), entry.getValue() + " не достаётся духу без пути: " + ticket.id() + " — " + why);
+            assertTrue(
+                    why.isPresent(),
+                    entry.getValue() + " не достаётся духу без пути: " + ticket.id() + " — " + why
+                            + " Иначе тест path_NoPathMark_RefusesEveryGraphTaskButRescue перестанет ловить эту поломку. При смене path_NoPathMark_RefusesEveryGraphTaskButRescue проверь это утверждение.");
             assertTrue(
                     why.orElseThrow().contains("пути нет"),
-                    entry.getValue() + " отказ называет отсутствие пути, а не молчит: " + why);
+                    entry.getValue() + " отказ называет отсутствие пути, а не молчит: " + why
+                            + " Иначе тест path_NoPathMark_RefusesEveryGraphTaskButRescue перестанет ловить эту поломку. При смене path_NoPathMark_RefusesEveryGraphTaskButRescue проверь это утверждение.");
             refused++;
         }
-        assertEquals(12, refused, "Метка noPath проверяется на всех узлах работы, а не на одном");
+        assertEquals(
+                12,
+                refused,
+                "Метка noPath проверяется на всех узлах работы, а не на одном"
+                        + " Иначе тест path_NoPathMark_RefusesEveryGraphTaskButRescue перестанет ловить эту поломку. При смене path_NoPathMark_RefusesEveryGraphTaskButRescue проверь это утверждение.");
         assertTrue(
                 plan.task("rescue_spirit").filter(GraphPlan.Task::feasible).isPresent(),
-                "Застрявший дух не остаётся без спасения: граф ставит rescue: " + ids(plan));
+                "Застрявший дух не остаётся без спасения: граф ставит rescue: " + ids(plan)
+                        + " Иначе тест path_NoPathMark_RefusesEveryGraphTaskButRescue перестанет ловить эту поломку. При смене path_NoPathMark_RefusesEveryGraphTaskButRescue проверь это утверждение.");
         assertTrue(
                 result.post().stream().anyMatch(ticket -> ticket.id().startsWith("graph:rescue_spirit")),
                 "Спасение стоит на доске рядом с работой: "
-                        + result.post().stream().map(GraphTickets.Ticket::id).toList());
+                        + result.post().stream().map(GraphTickets.Ticket::id).toList()
+                        + " Иначе тест path_NoPathMark_RefusesEveryGraphTaskButRescue перестанет ловить эту поломку. При смене path_NoPathMark_RefusesEveryGraphTaskButRescue проверь это утверждение.");
     }
 
     @Test
@@ -111,18 +124,24 @@ class CrossPathScenarioTests {
 
         assertFalse(
                 task(plan, "event:field_empty:plant_crop").feasible(),
-                "Поле в незагруженном чанке не сеется вслепую: граф держит посев невыполнимым: " + ids(plan));
+                "Поле в незагруженном чанке не сеется вслепую: граф держит посев невыполнимым: " + ids(plan)
+                        + " Иначе тест path_UnknownFieldAndTerrain_GraphWaitsInsteadOfGuessing перестанет ловить эту поломку. При смене path_UnknownFieldAndTerrain_GraphWaitsInsteadOfGuessing проверь это утверждение.");
         assertTrue(
                 task(plan, "event:backfill:backfill").feasible(),
-                "Рельеф помечен неизвестным, но граф всё равно ставит засыпку ямы: " + ids(plan));
+                "Рельеф помечен неизвестным, но граф всё равно ставит засыпку ямы: " + ids(plan)
+                        + " Иначе тест path_UnknownFieldAndTerrain_GraphWaitsInsteadOfGuessing перестанет ловить эту поломку. При смене path_UnknownFieldAndTerrain_GraphWaitsInsteadOfGuessing проверь это утверждение.");
         assertTrue(
                 plan.task("building:hut").filter(GraphPlan.Task::feasible).isEmpty(),
-                "Неизвестный дом не перестраивается вслепую: " + ids(plan));
+                "Неизвестный дом не перестраивается вслепую: " + ids(plan)
+                        + " Иначе тест path_UnknownFieldAndTerrain_GraphWaitsInsteadOfGuessing перестанет ловить эту поломку. При смене path_UnknownFieldAndTerrain_GraphWaitsInsteadOfGuessing проверь это утверждение.");
         assertFalse(
-                GraphStageGate.lotsReady(facts), "Неизвестный рельеф не считается ровным участком: этап ждёт аудита");
+                GraphStageGate.lotsReady(facts),
+                "Неизвестный рельеф не считается ровным участком: этап ждёт аудита"
+                        + " Иначе тест path_UnknownFieldAndTerrain_GraphWaitsInsteadOfGuessing перестанет ловить эту поломку. При смене path_UnknownFieldAndTerrain_GraphWaitsInsteadOfGuessing проверь это утверждение.");
         assertTrue(
                 plan.task("mine_coal").filter(GraphPlan.Task::feasible).isPresent(),
-                "Остальная работа не пропадает из-за неизвестного участка: " + ids(plan));
+                "Остальная работа не пропадает из-за неизвестного участка: " + ids(plan)
+                        + " Иначе тест path_UnknownFieldAndTerrain_GraphWaitsInsteadOfGuessing перестанет ловить эту поломку. При смене path_UnknownFieldAndTerrain_GraphWaitsInsteadOfGuessing проверь это утверждение.");
     }
 
     private static GraphWorld richWorld() {

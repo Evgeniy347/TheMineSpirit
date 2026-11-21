@@ -36,7 +36,8 @@ class BoardEventsTests {
                 List.of(new Seen(BoardLog.Event.SUBMITTED, "t", null)),
                 seen,
                 "Постановка задания пишет ровно одну строку SUBMITTED без духа: по ней журнал помнит, "
-                        + "откуда взялось задание, а повторная заявка того же id не плодит строк");
+                        + "откуда взялось задание, а повторная заявка того же id не плодит строк"
+                        + " Иначе тест submit_NewTicket_WritesOneSubmittedWithoutHolder перестанет ловить эту поломку. При смене submit_NewTicket_WritesOneSubmittedWithoutHolder проверь это утверждение.");
     }
 
     @Test
@@ -52,7 +53,8 @@ class BoardEventsTests {
                 List.of(new Seen(BoardLog.Event.ASSIGNED, "t", SPIRIT)),
                 seen,
                 "Выдача пишет ровно одну строку ASSIGNED с держателем: повторный claim того же духа "
-                        + "не второй переход");
+                        + "не второй переход"
+                        + " Иначе тест claim_NewAssignment_WritesOneAssignedLine перестанет ловить эту поломку. При смене claim_NewAssignment_WritesOneAssignedLine проверь это утверждение.");
     }
 
     @Test
@@ -70,7 +72,8 @@ class BoardEventsTests {
         assertEquals(
                 List.of(new Seen(BoardLog.Event.DONE, "done", SPIRIT), new Seen(BoardLog.Event.FAILED, "fail", SPIRIT)),
                 seen,
-                "Завершение и провал пишут по одной строке с держателем: журнал видит, чем кончилось дело");
+                "Завершение и провал пишут по одной строке с держателем: журнал видит, чем кончилось дело"
+                        + " Иначе тест completeAndFail_BothTerminal_WriteOneLineEach перестанет ловить эту поломку. При смене completeAndFail_BothTerminal_WriteOneLineEach проверь это утверждение.");
     }
 
     @Test
@@ -85,8 +88,8 @@ class BoardEventsTests {
         assertEquals(
                 List.of(new Seen(BoardLog.Event.DETACHED, "crater", null)),
                 seen,
-                "Снятие по актуальности пишет DETACHED, а постоянное задание с причиной always "
-                        + "не снимается вовсе");
+                "Снятие по актуальности пишет DETACHED, а постоянное задание с причиной always " + "не снимается вовсе"
+                        + " Иначе тест retain_DeadCause_WritesDetachedAndKeepsAlways перестанет ловить эту поломку. При смене retain_DeadCause_WritesDetachedAndKeepsAlways проверь это утверждение.");
     }
 
     @Test
@@ -104,6 +107,7 @@ class BoardEventsTests {
                         new Seen(BoardLog.Event.CANCELLED, "dismantle", null)),
                 seen,
                 "Каскад снимает зависимое задание отдельной строкой CANCELLED: журнал различает "
-                        + "потерянную причину и снятого зависимого");
+                        + "потерянную причину и снятого зависимого"
+                        + " Иначе тест retain_Cascade_DetachesRootAndCancelsDependant перестанет ловить эту поломку. При смене retain_Cascade_DetachesRootAndCancelsDependant проверь это утверждение.");
     }
 }

@@ -30,7 +30,8 @@ class GatherCasePauseTests {
         assertEquals(
                 BoardOutcome.CLAIMED,
                 board.claim(id, spirit, now),
-                "Задание " + id + " выдано духу: иначе провал не к чему привязать");
+                "Задание " + id + " выдано духу: иначе провал не к чему привязать"
+                        + " При смене failOnce проверь это утверждение. Иначе поломка пройдёт незамеченной в прогоне.");
         board.fail(id);
     }
 
@@ -46,7 +47,8 @@ class GatherCasePauseTests {
                 BoardOutcome.CLAIMED,
                 board.claim("supply_gather:cobblestone", SPIRIT, now[0]),
                 "Простаивающий дух обязан взять добычу другого предмета: пауза кейса после провалов досок не "
-                        + "должна голодить все 11 PENDING GATHER_MATERIALS");
+                        + "должна голодить все 11 PENDING GATHER_MATERIALS"
+                        + " Иначе тест pause_OtherItemFailed_DoesNotStarveIdleSpirit перестанет ловить эту поломку. При смене pause_OtherItemFailed_DoesNotStarveIdleSpirit проверь это утверждение.");
     }
 
     @Test
@@ -61,6 +63,7 @@ class GatherCasePauseTests {
                 BoardOutcome.SPIRIT_PAUSED,
                 board.claim("graph:make:oak_planks:2", SPIRIT, now[0]),
                 "Тот же предмет после провала не выдаётся за тик до конца паузы: иначе дух долбит "
-                        + "недостижимый источник без отката");
+                        + "недостижимый источник без отката"
+                        + " При смене pause_SameItemFailed_StillHoldsSpirit проверь это утверждение.");
     }
 }

@@ -18,12 +18,14 @@ class MineDescentBottomTests {
                 -57,
                 stand.y(),
                 "Низ спуска — над полом нижней ступени y=−58, где больше всего алмазов (схема mine_descent_v1): уровни шахты 2–3 "
-                        + "расширяются оттуда, а не у дома");
+                        + "расширяются оттуда, а не у дома"
+                        + " Иначе тест standOf_SurfaceHome_BottomStepAtYMinus58AwayFromHome перестанет ловить эту поломку. При смене standOf_SurfaceHome_BottomStepAtYMinus58AwayFromHome проверь это утверждение.");
         int dx = stand.x() - home.x();
         int dz = stand.z() - home.z();
         assertTrue(
                 dx * dx + dz * dz > 100,
-                "Низ спуска далеко от дома (" + stand + "): выработка у дома на поверхности сносила верстак");
+                "Низ спуска далеко от дома (" + stand + "): выработка у дома на поверхности сносила верстак"
+                        + " Иначе тест standOf_SurfaceHome_BottomStepAtYMinus58AwayFromHome перестанет ловить эту поломку. При смене standOf_SurfaceHome_BottomStepAtYMinus58AwayFromHome проверь это утверждение.");
     }
 
     @Test
@@ -36,6 +38,7 @@ class MineDescentBottomTests {
                 -57,
                 stand.y(),
                 "Вход уже ниже цели спуска (мир GameTest у дна): 0 ступеней, низ спуска — вход, а не исключение "
-                        + "«повтор требует 111 сегментов»");
+                        + "«повтор требует 111 сегментов»"
+                        + " Иначе тест standOf_EntranceBelowTarget_ZeroStepsAtEntrance перестанет ловить эту поломку. При смене standOf_EntranceBelowTarget_ZeroStepsAtEntrance проверь это утверждение.");
     }
 }

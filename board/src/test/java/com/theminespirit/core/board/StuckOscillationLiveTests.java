@@ -31,7 +31,8 @@ class StuckOscillationLiveTests {
         assertTrue(
                 stuck.isStuck(spirit, 100),
                 "spirit-1 в observe13 ходил между " + first + " и " + second + " в воде: это колебание, а не "
-                        + "движение; снятие метки на любой смене клетки снова отдаёт ему задания (N23)");
+                        + "движение; снятие метки на любой смене клетки снова отдаёт ему задания (N23)"
+                        + " Иначе тест see_LiveOscillationInsideArea_KeepsStuckMark перестанет ловить эту поломку. При смене see_LiveOscillationInsideArea_KeepsStuckMark проверь это утверждение.");
     }
 
     @Test
@@ -48,10 +49,12 @@ class StuckOscillationLiveTests {
 
         assertFalse(
                 stuck.drainChanges().stream().anyMatch(change -> !change.marked()),
-                "Сдвиг внутри ямы не выдаётся за выход: метка снимается только по поверхности (observe24 B1)");
+                "Сдвиг внутри ямы не выдаётся за выход: метка снимается только по поверхности (observe24 B1)"
+                        + " Иначе тест see_SpiritWanderingFarInsidePit_KeepsStuckMark перестанет ловить эту поломку. При смене see_SpiritWanderingFarInsidePit_KeepsStuckMark проверь это утверждение.");
         assertTrue(
                 stuck.isStuck(spirit, 100),
-                "Ушёл далеко, но остался в ловушке: метка держится, иначе дух снова получит работу в яме");
+                "Ушёл далеко, но остался в ловушке: метка держится, иначе дух снова получит работу в яме"
+                        + " При смене see_SpiritWanderingFarInsidePit_KeepsStuckMark проверь это утверждение.");
     }
 
     @Test
@@ -68,7 +71,8 @@ class StuckOscillationLiveTests {
 
         assertFalse(
                 stuck.isStuck(spirit, 100),
-                "Дух вышел на поверхность: метка застревания снимается, иначе он навсегда выпадает из раздачи");
+                "Дух вышел на поверхность: метка застревания снимается, иначе он навсегда выпадает из раздачи"
+                        + " При смене see_SpiritReachedSurface_ClearsStuckMark проверь это утверждение.");
     }
 
     private static BlockCoord coord(JsonNode node) {

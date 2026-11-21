@@ -23,12 +23,18 @@ class RepairPlanTests {
         assertEquals(
                 Optional.of(ANCHOR),
                 repair.map(TicketTarget::target),
-                "Восстановление ограды без плана — по её схеме от цели задания: иначе REPAIR_BUILDING строит не там (INC-60)");
-        assertEquals(Optional.of("fence"), repair.map(TicketTarget::schemeFile), "Восстановление ограды — схема fence");
+                "Восстановление ограды без плана — по её схеме от цели задания: иначе REPAIR_BUILDING строит не там (INC-60)"
+                        + " При смене target_FencePlan_RepairBySchemeAtFenceOrigin проверь это утверждение.");
+        assertEquals(
+                Optional.of("fence"),
+                repair.map(TicketTarget::schemeFile),
+                "Восстановление ограды — схема fence"
+                        + " Иначе тест target_FencePlan_RepairBySchemeAtFenceOrigin перестанет ловить эту поломку. При смене target_FencePlan_RepairBySchemeAtFenceOrigin проверь это утверждение.");
         assertEquals(
                 Optional.of("jungle"),
                 repair.map(TicketTarget::wood),
-                "Порода плана сохраняется: восстановление jungle-ограды не ставит дуб (INC-58)");
+                "Порода плана сохраняется: восстановление jungle-ограды не ставит дуб (INC-58)"
+                        + " Иначе тест target_FencePlan_RepairBySchemeAtFenceOrigin перестанет ловить эту поломку. При смене target_FencePlan_RepairBySchemeAtFenceOrigin проверь это утверждение.");
     }
 
     @Test
@@ -36,7 +42,8 @@ class RepairPlanTests {
         assertTrue(
                 RepairPlan.target(TicketPlans.plan(BoardCase.LIGHTING, 1, TicketTarget.at(ANCHOR)))
                         .isEmpty(),
-                "У света нет схемы: его DONE при пустом мире снова ставит шаг света, а не восстановление");
+                "У света нет схемы: его DONE при пустом мире снова ставит шаг света, а не восстановление"
+                        + " Иначе тест target_LightingPlan_NoRepairScheme перестанет ловить эту поломку. При смене target_LightingPlan_NoRepairScheme проверь это утверждение.");
     }
 
     private static BoardTicket repair(String id) {
@@ -58,7 +65,8 @@ class RepairPlanTests {
                 RepairPlan.goalless(repair("repair:build_house"), null)
                         && RepairPlan.goalless(repair("repair:level:14419043"), TicketTarget.at(ANCHOR)),
                 "Ремонт без схемы, выравнивания и места этапа снимается, а не висит с ERROR «план не собран» "
-                        + "(INC-93: старые ремонты после смены схем)");
+                        + "(INC-93: старые ремонты после смены схем)"
+                        + " Иначе тест goalless_RepairWithoutTargetAfterSchemeChange_True перестанет ловить эту поломку. При смене goalless_RepairWithoutTargetAfterSchemeChange_True проверь это утверждение.");
     }
 
     @Test
@@ -66,6 +74,7 @@ class RepairPlanTests {
         assertFalse(
                 RepairPlan.goalless(
                         repair("repair:build_house"), TicketTarget.at(ANCHOR).withScheme("fence")),
-                "Ремонт со схемой — живая цель: его не снимают");
+                "Ремонт со схемой — живая цель: его не снимают"
+                        + " Иначе тест goalless_RepairWithScheme_False перестанет ловить эту поломку. При смене goalless_RepairWithScheme_False проверь это утверждение.");
     }
 }
