@@ -38,23 +38,6 @@ class SettlementScanTests {
     }
 
     @Test
-    void scan_PlayerBlockOrPlanCell_IsNotStray() {
-        Fake world = new Fake();
-        world.put(1, LEVEL, 1, "minecraft:oak_fence");
-        world.player.add(new BlockCoord(1, LEVEL, 1));
-        world.put(2, LEVEL, 1, "minecraft:cobblestone");
-        world.planned.add(new BlockCoord(2, LEVEL, 1));
-
-        SettlementScan.Strays found = scan(world, ColumnMask.rect(0, 0, 4, 4));
-
-        assertEquals(
-                List.of(),
-                found.strays(),
-                "блок игрока и клетка плана не считаются лишними"
-                        + " Иначе тест scan_PlayerBlockOrPlanCell_IsNotStray перестанет ловить эту поломку. При смене scan_PlayerBlockOrPlanCell_IsNotStray проверь это утверждение.");
-    }
-
-    @Test
     void scan_NaturalDipOutsideLot_IsNotPit() {
         Fake world = new Fake();
         world.hole(4, 3);
@@ -253,16 +236,6 @@ class SettlementScanTests {
         public OptionalInt dugTop(int x, int z) {
             Integer top = dug.get(new ColumnMask.Cell(x, z));
             return top == null ? OptionalInt.empty() : OptionalInt.of(top);
-        }
-
-        @Override
-        public boolean playerPlaced(int x, int y, int z) {
-            return player.contains(new BlockCoord(x, y, z));
-        }
-
-        @Override
-        public boolean spiritMarked(int x, int y, int z) {
-            return spirit.contains(new BlockCoord(x, y, z));
         }
 
         @Override

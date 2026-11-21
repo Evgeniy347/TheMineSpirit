@@ -18,7 +18,6 @@ import com.theminespirit.neoforge.board.PlotCellStructure;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
 import com.theminespirit.neoforge.board.WarehouseOrderStore;
 import com.theminespirit.neoforge.inventory.ContainerAccess;
-import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.Comparator;
 import java.util.List;
 import net.minecraft.core.BlockPos;
@@ -68,8 +67,6 @@ final class ChestSalvageScene {
         helper.assertTrue(opened instanceof ContainerAccess.Opened, "Склад для разгрузки обязан открываться");
         warehouse = ((ContainerAccess.Opened) opened).container();
         warehouse.clearContent();
-        PlacedBlocksData.get(level).markSpirit(left);
-        PlacedBlocksData.get(level).markSpirit(right);
         checkProtection();
         ChestBlockEntity first = (ChestBlockEntity) level.getBlockEntity(left);
         ChestBlockEntity second = (ChestBlockEntity) level.getBlockEntity(right);

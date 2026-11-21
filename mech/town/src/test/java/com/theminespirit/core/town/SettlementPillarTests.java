@@ -116,16 +116,6 @@ class SettlementPillarTests {
         }
 
         @Override
-        public boolean playerPlaced(int x, int y, int z) {
-            return false;
-        }
-
-        @Override
-        public boolean spiritMarked(int x, int y, int z) {
-            return false;
-        }
-
-        @Override
         public boolean temporary(int x, int y, int z) {
             return false;
         }

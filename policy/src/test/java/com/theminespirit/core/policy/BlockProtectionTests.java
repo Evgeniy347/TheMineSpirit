@@ -45,52 +45,36 @@ class BlockProtectionTests {
         return list;
     }
 
-    private static Arguments row(
-            String name, String block, List<String> neighbours, boolean placed, boolean zone, PolicyId refusedBy) {
-        return Arguments.of(name, block, neighbours, placed, zone, refusedBy);
+    private static Arguments row(String name, String block, List<String> neighbours, boolean zone, PolicyId refusedBy) {
+        return Arguments.of(name, block, neighbours, zone, refusedBy);
     }
 
     static Stream<Arguments> table() {
         List<String> cave = around(0, "", "minecraft:stone");
         return Stream.of(
-                row("бревно в лесу", "minecraft:oak_log", forest(), false, false, null),
-                row(
-                        "бревно в доме из досок и стекла",
-                        "minecraft:oak_log",
-                        house(),
-                        false,
-                        false,
-                        PolicyId.PLAYER_BUILDINGS),
-                row(
-                        "бревно, поставленное игроком, в лесу",
-                        "minecraft:oak_log",
-                        forest(),
-                        true,
-                        false,
-                        PolicyId.PLAYER_BUILDINGS),
-                row("камень в защищённой зоне", "minecraft:stone", cave, false, true, PolicyId.PROTECTED_ZONE),
-                row("булыжник в защищённой зоне", "minecraft:cobblestone", cave, false, true, PolicyId.PROTECTED_ZONE),
-                row("сундук", "minecraft:chest", cave, false, false, PolicyId.PROTECTED_BLOCKS),
-                row("рамка портала края", "minecraft:end_portal_frame", cave, false, false, PolicyId.PROTECTED_BLOCKS),
-                row("маяк", "minecraft:beacon", cave, false, false, PolicyId.PROTECTED_BLOCKS),
+                row("бревно в лесу", "minecraft:oak_log", forest(), false, null),
+                row("бревно в доме из досок и стекла", "minecraft:oak_log", house(), false, PolicyId.PLAYER_BUILDINGS),
+                row("камень в защищённой зоне", "minecraft:stone", cave, true, PolicyId.PROTECTED_ZONE),
+                row("булыжник в защищённой зоне", "minecraft:cobblestone", cave, true, PolicyId.PROTECTED_ZONE),
+                row("сундук", "minecraft:chest", cave, false, PolicyId.PROTECTED_BLOCKS),
+                row("рамка портала края", "minecraft:end_portal_frame", cave, false, PolicyId.PROTECTED_BLOCKS),
+                row("маяк", "minecraft:beacon", cave, false, PolicyId.PROTECTED_BLOCKS),
                 row(
                         "укреплённый глубинный сланец",
                         "minecraft:reinforced_deepslate",
                         cave,
                         false,
-                        false,
                         PolicyId.PROTECTED_BLOCKS),
-                row("магнетит", "minecraft:lodestone", cave, false, false, PolicyId.PROTECTED_BLOCKS),
-                row("якорь возрождения", "minecraft:respawn_anchor", cave, false, false, PolicyId.PROTECTED_BLOCKS),
-                row("алмазная руда в пещере", "minecraft:diamond_ore", cave, false, false, null),
-                row("красная руда — не механизм", "minecraft:redstone_ore", cave, false, false, null),
-                row("глубинная железная руда", "minecraft:deepslate_iron_ore", cave, false, false, null),
-                row("песок в пустыне", "minecraft:sand", around(0, "", "minecraft:sand"), false, false, null),
+                row("магнетит", "minecraft:lodestone", cave, false, PolicyId.PROTECTED_BLOCKS),
+                row("якорь возрождения", "minecraft:respawn_anchor", cave, false, PolicyId.PROTECTED_BLOCKS),
+                row("алмазная руда в пещере", "minecraft:diamond_ore", cave, false, null),
+                row("красная руда — не механизм", "minecraft:redstone_ore", cave, false, null),
+                row("глубинная железная руда", "minecraft:deepslate_iron_ore", cave, false, null),
+                row("песок в пустыне", "minecraft:sand", around(0, "", "minecraft:sand"), false, null),
                 row(
                         "камень у чужой стены из 5 блоков",
                         "minecraft:stone",
                         around(5, "minecraft:bricks", "minecraft:stone"),
-                        false,
                         false,
                         null),
                 row(
@@ -98,13 +82,11 @@ class BlockProtectionTests {
                         "minecraft:stone",
                         around(6, "minecraft:bricks", "minecraft:stone"),
                         false,
-                        false,
                         PolicyId.PLAYER_BUILDINGS),
                 row(
                         "камень у стены из 26 блоков",
                         "minecraft:stone",
                         around(26, "minecraft:bricks", "minecraft:stone"),
-                        false,
                         false,
                         PolicyId.PLAYER_BUILDINGS),
                 row(
@@ -112,13 +94,11 @@ class BlockProtectionTests {
                         "minecraft:stone",
                         around(6, "othermod:weird_block", "minecraft:stone"),
                         false,
-                        false,
                         PolicyId.PLAYER_BUILDINGS),
                 row(
                         "неизвестный блок мода: 5 штук",
                         "minecraft:stone",
                         around(5, "othermod:weird_block", "minecraft:stone"),
-                        false,
                         false,
                         null),
                 row(
@@ -126,20 +106,17 @@ class BlockProtectionTests {
                         "minecraft:oak_log",
                         around(26, "minecraft:barrier", "minecraft:barrier"),
                         false,
-                        false,
                         null),
                 row(
                         "воздух вокруг не считается постройкой",
                         "minecraft:stone",
                         around(0, "", "minecraft:air"),
                         false,
-                        false,
                         null),
                 row(
                         "сундук в защищённой зоне: чёрный список раньше зоны",
                         "minecraft:chest",
                         cave,
-                        false,
                         true,
                         PolicyId.PROTECTED_BLOCKS),
                 row(
@@ -147,13 +124,11 @@ class BlockProtectionTests {
                         "minecraft:stone",
                         cave,
                         true,
-                        true,
                         PolicyId.PROTECTED_ZONE),
                 row(
                         "бревно игрока в доме: игрок раньше здания",
                         "minecraft:oak_log",
                         house(),
-                        true,
                         false,
                         PolicyId.PLAYER_BUILDINGS));
     }
@@ -161,8 +136,9 @@ class BlockProtectionTests {
     @ParameterizedTest(name = "{0}")
     @MethodSource("table")
     void check_Row_RefusesByTheFirstMatchingRule(
-            String name, String block, List<String> neighbours, boolean placed, boolean zone, PolicyId refusedBy) {
-        BlockProtection.Decision decision = protection.check(block, neighbours, placed, zone);
+            String name, String block, List<String> neighbours, boolean zone, PolicyId refusedBy) {
+        BlockProtection.Decision decision =
+                protection.check(block, neighbours, new BlockProtection.Placement(zone, false));
 
         if (refusedBy == null) {
             assertEquals(
@@ -187,8 +163,8 @@ class BlockProtectionTests {
 
     @Test
     void check_ChestInPlainCave_ReasonComesFromGatherPolicy() {
-        BlockProtection.Refused refused =
-                (BlockProtection.Refused) protection.check("minecraft:chest", forest(), false, false);
+        BlockProtection.Refused refused = (BlockProtection.Refused)
+                protection.check("minecraft:chest", forest(), new BlockProtection.Placement(false, false));
 
         assertEquals(
                 ((GatherPolicy.Refused) GatherPolicy.check("minecraft:chest")).reason(),
@@ -199,8 +175,8 @@ class BlockProtectionTests {
 
     @Test
     void check_BuildingRefusal_NamesCountAndThreshold() {
-        BlockProtection.Refused refused =
-                (BlockProtection.Refused) protection.check("minecraft:oak_log", house(), false, false);
+        BlockProtection.Refused refused = (BlockProtection.Refused)
+                protection.check("minecraft:oak_log", house(), new BlockProtection.Placement(false, false));
 
         assertEquals(
                 "вокруг блока 'minecraft:oak_log' 14 искусственных блоков из 26 (порог 6, например 'minecraft:oak_planks'): это постройка игрока",
@@ -213,7 +189,8 @@ class BlockProtectionTests {
     void check_WrongNeighbourCount_ThrowsWithCount() {
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,
-                () -> protection.check("minecraft:stone", List.of("minecraft:air"), false, false),
+                () -> protection.check(
+                        "minecraft:stone", List.of("minecraft:air"), new BlockProtection.Placement(false, false)),
                 "25 или 27 соседей — ошибка вызова, иначе защита считает постройку по неполному кубу 3×3×3 "
                         + "и слепнет. При смене NEIGHBOUR_COUNT проверь отказ на одном соседе");
 

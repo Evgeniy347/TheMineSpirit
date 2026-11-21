@@ -11,7 +11,6 @@ import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.BoardRegistry;
 import com.theminespirit.neoforge.board.BoardService;
-import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -54,9 +53,6 @@ public final class BoardV2GameTests {
         helper.setBlock(oldOne, Blocks.OAK_FENCE);
         helper.setBlock(oldTwo, Blocks.OAK_FENCE);
         helper.setBlock(oldThree, Blocks.OAK_FENCE);
-        markSpirit(helper, oldOne);
-        markSpirit(helper, oldTwo);
-        markSpirit(helper, oldThree);
         BlockCoord from = absolute(helper, new BlockPos(2, 1, 6));
         BlockCoord to = absolute(helper, new BlockPos(4, 1, 1));
         String id = "relocate_pen";
@@ -117,10 +113,6 @@ public final class BoardV2GameTests {
                 board.board().cancel(ticket.id());
             }
         }
-    }
-
-    private static void markSpirit(GameTestHelper helper, BlockPos relative) {
-        PlacedBlocksData.get(helper.getLevel()).markSpirit(helper.absolutePos(relative));
     }
 
     private static int countFence(GameTestHelper helper, BlockCoord origin, int width, int depth) {

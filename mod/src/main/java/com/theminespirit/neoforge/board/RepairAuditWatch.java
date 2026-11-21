@@ -10,9 +10,6 @@ import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.repair.RepairData;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.neoforge.SchematicResources;
-import com.theminespirit.neoforge.policy.PlacedBlocksData;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -20,8 +17,6 @@ import net.minecraft.server.level.ServerLevel;
 import org.jspecify.annotations.Nullable;
 
 final class RepairAuditWatch {
-    private static final Map<BlockCoord, Long> FIRST_SEEN = new HashMap<>();
-
     private RepairAuditWatch() {}
 
     static Schematic wanted(String scheme, String wood) {
@@ -38,9 +33,7 @@ final class RepairAuditWatch {
                 site.houseOrigin(),
                 BuildRotation.NONE,
                 new LevelWorld(level),
-                RepairData.loadDefault(),
-                FIRST_SEEN,
-                now);
+                RepairData.loadDefault());
     }
 
     private record LevelWorld(ServerLevel level) implements RepairAudit.WorldView {
@@ -50,11 +43,6 @@ final class RepairAuditWatch {
                     .getKey(level.getBlockState(new BlockPos(cell.x(), cell.y(), cell.z()))
                             .getBlock())
                     .toString();
-        }
-
-        @Override
-        public boolean playerPlaced(BlockCoord cell) {
-            return PlacedBlocksData.get(level).isMarked(new BlockPos(cell.x(), cell.y(), cell.z()));
         }
 
         @Override

@@ -23,7 +23,7 @@ class RepairAuditTests {
         world.put(ORIGIN, AIR);
         world.put(new BlockCoord(11, 64, 10), "minecraft:oak_planks");
         world.put(new BlockCoord(12, 64, 10), "minecraft:cobblestone");
-        RepairAudit.Report report = repairAudit(scheme(), world, Set.of(), Map.of(), 100);
+        RepairAudit.Report report = repairAudit(scheme(), world, Set.of());
         assertEquals(
                 3,
                 report.total(),
@@ -36,7 +36,7 @@ class RepairAuditTests {
                 report.rebuild(),
                 "Одного блока из трёх мало для перестройки: порог из repair.json выше Иначе тест audit_MissingBlock_PlacesBySchemeAndRepairsToIt перестанет ловить эту поломку. При смене audit_MissingBlock_PlacesBySchemeAndRepairsToIt проверь это утверждение.");
         assertEquals(
-                List.of(new RepairAudit.Fix(ORIGIN, RepairAudit.Action.PLACE, "minecraft:cobblestone", AIR, 0)),
+                List.of(new RepairAudit.Fix(ORIGIN, RepairAudit.Action.PLACE, "minecraft:cobblestone", AIR)),
                 report.fixes(),
                 "Аудит обязан вернуть клетку и блок схемы: без этого ремонт не знает, что ставить При смене audit_MissingBlock_PlacesBySchemeAndRepairsToIt проверь это утверждение.");
         for (RepairAudit.Fix fix : report.fixes()) {
@@ -44,18 +44,14 @@ class RepairAuditTests {
         }
         assertEquals(
                 List.of(),
-                repairAudit(scheme(), world, Set.of(), Map.of(), 100).fixes(),
+                repairAudit(scheme(), world, Set.of()).fixes(),
                 "Ремонт возвращает постройку к схеме: после правок мир совпадает со схемой Иначе тест audit_MissingBlock_PlacesBySchemeAndRepairsToIt перестанет ловить эту поломку. При смене audit_MissingBlock_PlacesBySchemeAndRepairsToIt проверь это утверждение.");
     }
 
     private static RepairAudit.Report repairAudit(
-            Schematic scheme,
-            Map<BlockCoord, String> world,
-            Set<BlockCoord> player,
-            Map<BlockCoord, Long> firstSeen,
-            long now) {
+            Schematic scheme, Map<BlockCoord, String> world, Set<BlockCoord> player) {
         return RepairAudit.audit(
-                scheme, ORIGIN, BuildRotation.NONE, new MapWorld(world, player), RepairData.defaults(), firstSeen, now);
+                scheme, ORIGIN, BuildRotation.NONE, new MapWorld(world, player), RepairData.defaults());
     }
 
     private static Schematic scheme() {
@@ -73,11 +69,6 @@ class RepairAuditTests {
         @Override
         public String blockAt(BlockCoord cell) {
             return blocks.getOrDefault(cell, AIR);
-        }
-
-        @Override
-        public boolean playerPlaced(BlockCoord cell) {
-            return player.contains(cell);
         }
     }
 }

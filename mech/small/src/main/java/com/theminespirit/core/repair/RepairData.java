@@ -13,8 +13,6 @@ public record RepairData(
         int maxDurabilityPercent,
         int auditIntervalTicks,
         int cellBudgetPerTick,
-        int warnTicks,
-        int warnRepeatTicks,
         int rebuildPercent,
         List<String> softBlocks,
         Priorities priorities) {
@@ -25,8 +23,6 @@ public record RepairData(
     public static final int PERCENT_DEFAULT = 90;
     public static final int AUDIT_INTERVAL_DEFAULT = 24000;
     public static final int CELL_BUDGET_DEFAULT = 256;
-    public static final int WARN_TICKS_DEFAULT = 3600;
-    public static final int WARN_REPEAT_DEFAULT = 1200;
     public static final int REBUILD_PERCENT_DEFAULT = 50;
 
     private static final TableSlot<RepairData> SOURCE = new TableSlot<>(RepairData::load);
@@ -35,8 +31,6 @@ public record RepairData(
             "maxDurabilityPercent",
             "auditIntervalTicks",
             "cellBudgetPerTick",
-            "warnTicks",
-            "warnRepeatTicks",
             "rebuildPercent",
             "softBlocks",
             "priorities");
@@ -58,8 +52,6 @@ public record RepairData(
             PERCENT_DEFAULT,
             AUDIT_INTERVAL_DEFAULT,
             CELL_BUDGET_DEFAULT,
-            WARN_TICKS_DEFAULT,
-            WARN_REPEAT_DEFAULT,
             REBUILD_PERCENT_DEFAULT,
             SOFT_DEFAULT,
             new Priorities(95, 70, 60, 30));
@@ -78,12 +70,6 @@ public record RepairData(
         checkPercent(rebuildPercent, "Порог перестройки");
         checkPositive(auditIntervalTicks, "Интервал обхода");
         checkPositive(cellBudgetPerTick, "Бюджет клеток на тик");
-        checkPositive(warnTicks, "Срок предупреждения");
-        checkPositive(warnRepeatTicks, "Повтор предупреждения");
-        if (warnRepeatTicks > warnTicks) {
-            throw new IllegalArgumentException("Повтор предупреждения " + warnRepeatTicks + " тиков дольше срока "
-                    + warnTicks + ": игрок не успел бы увидеть напоминание до сноса");
-        }
         softBlocks = List.copyOf(Objects.requireNonNull(
                 softBlocks, "Мягкие блоки не могут быть null: пустой список задают пустым списком"));
         for (String block : softBlocks) {
@@ -99,8 +85,6 @@ public record RepairData(
                 maxDurabilityPercent,
                 DEFAULTS.auditIntervalTicks(),
                 DEFAULTS.cellBudgetPerTick(),
-                DEFAULTS.warnTicks(),
-                DEFAULTS.warnRepeatTicks(),
                 DEFAULTS.rebuildPercent(),
                 DEFAULTS.softBlocks(),
                 DEFAULTS.priorities());
@@ -135,8 +119,6 @@ public record RepairData(
                     percent,
                     optionalInteger(root, "auditIntervalTicks", origin, DEFAULTS.auditIntervalTicks()),
                     optionalInteger(root, "cellBudgetPerTick", origin, DEFAULTS.cellBudgetPerTick()),
-                    optionalInteger(root, "warnTicks", origin, DEFAULTS.warnTicks()),
-                    optionalInteger(root, "warnRepeatTicks", origin, DEFAULTS.warnRepeatTicks()),
                     optionalInteger(root, "rebuildPercent", origin, DEFAULTS.rebuildPercent()),
                     softBlocks(root, origin),
                     priorities(root.get("priorities"), origin));

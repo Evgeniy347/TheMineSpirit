@@ -213,40 +213,6 @@ class LeaseBookTests {
     }
 
     @Test
-    void legacy_FirstMigration_MakesSingleOrphanedLease() {
-        LeaseBook book = new LeaseBook();
-        BlockCoord one = new BlockCoord(1, 64, 1);
-        BlockCoord two = new BlockCoord(2, 64, 1);
-
-        Lease legacy = book.legacy(List.of(one, two), 42);
-
-        assertEquals(
-                LeaseStatus.ORPHANED,
-                legacy.status(),
-                "Старые T-метки не имеют живого владельца: их убирает граф"
-                        + " Иначе тест legacy_FirstMigration_MakesSingleOrphanedLease перестанет ловить эту поломку. При смене legacy_FirstMigration_MakesSingleOrphanedLease проверь это утверждение.");
-        assertEquals(
-                LeaseBook.LEGACY_PURPOSE,
-                legacy.purpose(),
-                "Миграция узнаётся по единому назначению legacy"
-                        + " Иначе тест legacy_FirstMigration_MakesSingleOrphanedLease перестанет ловить эту поломку. При смене legacy_FirstMigration_MakesSingleOrphanedLease проверь это утверждение.");
-        assertEquals(
-                2,
-                legacy.cells().size(),
-                "В одну аренду сливаются все старые метки"
-                        + " Иначе тест legacy_FirstMigration_MakesSingleOrphanedLease перестанет ловить эту поломку. При смене legacy_FirstMigration_MakesSingleOrphanedLease проверь это утверждение.");
-        assertTrue(
-                book.isOrphaned(one) && book.isOrphaned(two),
-                "Старые метки видны скану как брошенные"
-                        + " Иначе тест legacy_FirstMigration_MakesSingleOrphanedLease перестанет ловить эту поломку. При смене legacy_FirstMigration_MakesSingleOrphanedLease проверь это утверждение.");
-        assertEquals(
-                legacy.id(),
-                book.legacy(List.of(one), 43).id(),
-                "Повторная миграция не плодит вторую legacy-аренду"
-                        + " Иначе тест legacy_FirstMigration_MakesSingleOrphanedLease перестанет ловить эту поломку. При смене legacy_FirstMigration_MakesSingleOrphanedLease проверь это утверждение.");
-    }
-
-    @Test
     void record_CellFromOrphanedLease_Rejected() {
         LeaseBook book = new LeaseBook();
         Lease broken = book.open(SPIRIT, "t1", "bridge", 10);

@@ -12,8 +12,8 @@ import org.junit.jupiter.api.Test;
 
 class OpenPrefixesTests {
     private static final String BACKFILL = "world:backfill:";
-    private static final String TRACE = "world:trace:";
-    private static final List<String> PREFIXES = List.of(BACKFILL, TRACE);
+    private static final String PLAN_BREACH = "world:plan_breach:";
+    private static final List<String> PREFIXES = List.of(BACKFILL, PLAN_BREACH);
     private static final UUID SPIRIT = new UUID(0, 1);
 
     @Test
@@ -21,7 +21,7 @@ class OpenPrefixesTests {
         Board board = board();
         submit(board, "world:backfill:1,64,2");
         submit(board, "world:backfill:3,64,4");
-        submit(board, "world:trace:5,64,6");
+        submit(board, "world:plan_breach:5,64,6");
         submit(board, "graph:hut");
 
         OpenPrefixes open = OpenPrefixes.of(board, PREFIXES);
@@ -33,8 +33,8 @@ class OpenPrefixesTests {
                         + " Иначе тест of_OpenTickets_CountsEachTrackedPrefix перестанет ловить эту поломку. При смене of_OpenTickets_CountsEachTrackedPrefix проверь это утверждение.");
         assertEquals(
                 1,
-                open.open(TRACE),
-                "След считается отдельно от ям: у них разные порции"
+                open.open(PLAN_BREACH),
+                "Пролом плана считается отдельно от ям: у них разные порции"
                         + " Иначе тест of_OpenTickets_CountsEachTrackedPrefix перестанет ловить эту поломку. При смене of_OpenTickets_CountsEachTrackedPrefix проверь это утверждение.");
     }
 
@@ -43,7 +43,7 @@ class OpenPrefixesTests {
         Board board = board();
         submit(board, "world:backfill:1,64,2");
         submit(board, "world:backfill:3,64,4");
-        submit(board, "world:trace:5,64,6");
+        submit(board, "world:plan_breach:5,64,6");
         assertEquals(
                 BoardOutcome.CLAIMED,
                 board.claim("world:backfill:1,64,2", SPIRIT, 0L),
@@ -53,7 +53,7 @@ class OpenPrefixesTests {
                 board.complete("world:backfill:1,64,2"),
                 "Завершение задачи доски принято: билет был выдан духу"
                         + " Иначе тест of_DoneAndCancelledTickets_DoNotTakeBatchSlots перестанет ловить эту поломку. При смене of_DoneAndCancelledTickets_DoNotTakeBatchSlots проверь это утверждение.");
-        board.cancel("world:trace:5,64,6");
+        board.cancel("world:plan_breach:5,64,6");
 
         OpenPrefixes open = OpenPrefixes.of(board, PREFIXES);
 
@@ -64,8 +64,8 @@ class OpenPrefixesTests {
                         + " При смене of_DoneAndCancelledTickets_DoNotTakeBatchSlots проверь это утверждение.");
         assertEquals(
                 0,
-                open.open(TRACE),
-                "Отменённый след не занимает место: иначе новые следы не поставить"
+                open.open(PLAN_BREACH),
+                "Отменённый пролом не занимает место: иначе новые проломы не поставить"
                         + " При смене of_DoneAndCancelledTickets_DoNotTakeBatchSlots проверь это утверждение.");
     }
 
@@ -73,14 +73,14 @@ class OpenPrefixesTests {
     void of_SimilarId_DoesNotMatchPrefix() {
         Board board = board();
         submit(board, "world:traceX:1,64,2");
-        submit(board, "world:trace:1,64,2");
+        submit(board, "world:plan_breach:1,64,2");
 
         OpenPrefixes open = OpenPrefixes.of(board, PREFIXES);
 
         assertEquals(
                 1,
-                open.open(TRACE),
-                "Похожий id не считается следом: префикс задаёт начало, а не вхождение"
+                open.open(PLAN_BREACH),
+                "Похожий id не считается проломом: префикс задаёт начало, а не вхождение"
                         + " Иначе тест of_SimilarId_DoesNotMatchPrefix перестанет ловить эту поломку. При смене of_SimilarId_DoesNotMatchPrefix проверь это утверждение.");
     }
 
@@ -100,7 +100,7 @@ class OpenPrefixesTests {
                         + " Иначе тест posted_AfterOurOwnSubmission_AddsSlotWithoutRescan перестанет ловить эту поломку. При смене posted_AfterOurOwnSubmission_AddsSlotWithoutRescan проверь это утверждение.");
         assertEquals(
                 0,
-                open.open(TRACE),
+                open.open(PLAN_BREACH),
                 "Чужой префикс счёт не сдвигает"
                         + " Иначе тест posted_AfterOurOwnSubmission_AddsSlotWithoutRescan перестанет ловить эту поломку. При смене posted_AfterOurOwnSubmission_AddsSlotWithoutRescan проверь это утверждение.");
     }

@@ -187,7 +187,6 @@ class GraphFactsCopyGuardTests {
                         4,
                         3,
                         5,
-                        1,
                         Map.of("minecraft:dirt", 2),
                         Map.of("minecraft:dirt", 2),
                         Map.of("minecraft:oak_log", 1),

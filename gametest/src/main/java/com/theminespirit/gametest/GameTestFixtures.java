@@ -11,7 +11,6 @@ import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.SpiritTaskStore;
 import com.theminespirit.neoforge.board.BoardRegistry;
 import com.theminespirit.neoforge.coordinator.CoordinatorRegistry;
-import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import com.theminespirit.neoforge.respawn.SpiritRespawnStore;
 import java.util.ArrayList;
 import java.util.List;
@@ -88,7 +87,6 @@ final class GameTestFixtures {
         CoordinatorRegistry.clear();
         forgetChests(level);
         SpiritRespawnStore.get(level).clear();
-        PlacedBlocksData placed = PlacedBlocksData.get(level);
         MineOreLedger ores = MineOreLedger.get(level);
         AABB box = area(helper, clearHeight).inflate(0, STAGE_BELOW, 0);
         for (BlockCoord ore : List.copyOf(ores.ores().keySet())) {
@@ -96,10 +94,7 @@ final class GameTestFixtures {
                 ores.forget(ore);
             }
         }
-        BlockPos.betweenClosedStream(box.contract(1.0E-3, 1.0E-3, 1.0E-3)).forEach(pos -> {
-            placed.unmark(pos);
-            placed.unmarkSpirit(pos);
-        });
+        BlockPos.betweenClosedStream(box.contract(1.0E-3, 1.0E-3, 1.0E-3)).forEach(pos -> {});
     }
 
     static void forgetChests(ServerLevel level) {

@@ -30,7 +30,7 @@ class StageLevelingSpiritsTests {
                 List.of(),
                 List.of(),
                 new GraphSiteFacts.Terrain(
-                        1, 0, 3, 1, 0, Map.of("minecraft:dirt", 2), Map.of("minecraft:dirt", 2), Map.of()),
+                        1, 0, 3, 1, Map.of("minecraft:dirt", 2), Map.of("minecraft:dirt", 2), Map.of()),
                 Map.of());
         GraphPlan plan = plan(world, defect);
 

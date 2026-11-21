@@ -43,7 +43,7 @@ class CrossBattleWorkScenarioPart3Tests {
                         threat("mob-a", "spirit-1", GraphFacts.TargetKind.SPIRIT, 1),
                         threat("mob-b", "spirit-1", GraphFacts.TargetKind.SPIRIT, 2)),
                 List.of(),
-                new GraphSiteFacts.Terrain(2, 0, 0, 2, 0, Map.of(), Map.of("minecraft:dirt", 4), Map.of()),
+                new GraphSiteFacts.Terrain(2, 0, 0, 2, Map.of(), Map.of("minecraft:dirt", 4), Map.of()),
                 Map.of());
         GraphPlan plan = plan(world, facts);
         GraphPlan.Task defend = task(plan, "event:life_threat:defend");

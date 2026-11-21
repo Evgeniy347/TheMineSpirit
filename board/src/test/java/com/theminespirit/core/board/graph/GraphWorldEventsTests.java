@@ -25,7 +25,7 @@ class GraphWorldEventsTests {
     void facts_StraysTerrainAndDamage_GiveNodes() {
         GraphFacts facts = facts(
                 List.of(new GraphSiteFacts.Stray("s", "wall", new GraphFacts.Position(1, 64, 1), "spirit-1")),
-                new GraphSiteFacts.Terrain(2, 3, 4, 5, 6),
+                new GraphSiteFacts.Terrain(2, 3, 4, 5),
                 Map.of(
                         "hut",
                         new GraphFacts.Building(
@@ -48,10 +48,6 @@ class GraphWorldEventsTests {
         assertTrue(
                 events.contains(GraphWorldEvents.LEVEL_LOT),
                 "Перепад требует выравнивания"
-                        + " Иначе тест facts_StraysTerrainAndDamage_GiveNodes перестанет ловить эту поломку. При смене facts_StraysTerrainAndDamage_GiveNodes проверь это утверждение.");
-        assertTrue(
-                events.contains(GraphWorldEvents.RESTORE_TRACE),
-                "Следы требуют возврата как было"
                         + " Иначе тест facts_StraysTerrainAndDamage_GiveNodes перестанет ловить эту поломку. При смене facts_StraysTerrainAndDamage_GiveNodes проверь это утверждение.");
         assertTrue(
                 events.contains("repair_hut"),
@@ -100,7 +96,7 @@ class GraphWorldEventsTests {
         GraphFacts facts = facts(
                 List.of(),
                 new GraphSiteFacts.Terrain(
-                        0, 0, 0, 0, 0, Map.of("minecraft:dirt", 2), Map.of(), Map.of("minecraft:oak_log", 4), false),
+                        0, 0, 0, 0, Map.of("minecraft:dirt", 2), Map.of(), Map.of("minecraft:oak_log", 4), false),
                 Map.of());
 
         Set<String> events = GraphWorldEvents.of(facts);
@@ -118,9 +114,7 @@ class GraphWorldEventsTests {
     @Test
     void facts_NaturalSlopeOnly_GivesNoLevelLot() {
         GraphFacts facts = facts(
-                List.of(),
-                new GraphSiteFacts.Terrain(0, 0, 0, 0, 0, Map.of(), Map.of(), Map.of(), false, 3263),
-                Map.of());
+                List.of(), new GraphSiteFacts.Terrain(0, 0, 0, 0, Map.of(), Map.of(), Map.of(), false, 3263), Map.of());
 
         Set<String> events = GraphWorldEvents.of(facts);
 
@@ -138,7 +132,7 @@ class GraphWorldEventsTests {
     void facts_FillComposition_GivesBackfill() {
         GraphFacts facts = facts(
                 List.of(),
-                new GraphSiteFacts.Terrain(0, 0, 0, 0, 0, Map.of(), Map.of("minecraft:dirt", 3), Map.of(), false),
+                new GraphSiteFacts.Terrain(0, 0, 0, 0, Map.of(), Map.of("minecraft:dirt", 3), Map.of(), false),
                 Map.of());
 
         assertTrue(
@@ -152,7 +146,7 @@ class GraphWorldEventsTests {
         GraphState state = new GraphState(
                         Map.of(), 1, Map.of("spirit-1", Map.of()), Map.of(), Map.of(), 60, Set.of("night"), Set.of())
                 .withFacts(
-                        facts(List.of(), new GraphSiteFacts.Terrain(1, 0, 0, 2, 0), Map.of()),
+                        facts(List.of(), new GraphSiteFacts.Terrain(1, 0, 0, 2), Map.of()),
                         GraphWorld.GRAPH.costs().life());
 
         assertTrue(

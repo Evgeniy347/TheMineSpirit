@@ -12,6 +12,8 @@ import com.theminespirit.core.town.api.PlanBuilding;
 import com.theminespirit.neoforge.LevelSafetyView;
 import com.theminespirit.neoforge.board.PlotBreakLog;
 import com.theminespirit.neoforge.board.PlotCellStructure;
+import com.theminespirit.neoforge.board.SettlementPlotStore;
+import com.theminespirit.neoforge.lease.LeaseData;
 import java.util.Collections;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
@@ -55,7 +57,7 @@ final class ProtectionDecide {
             return new BlockProtection.Refused(PolicyId.PROTECTED_ZONE, carried.orElseThrow());
         }
         Level level = gate.spirit().level();
-        if (unprotectedTree(level, pos, request.state())) {
+        if (OrchardTrees.treePart(request.state()) && PlotProtection.treeObstacle(true, false)) {
             return new BlockProtection.Allowed();
         }
         PlotOutcome plot = plotCheck(request, level, coord);
@@ -73,14 +75,6 @@ final class ProtectionDecide {
             return new BlockProtection.Refused(PolicyId.DROP, unsafe.reason());
         }
         return decision;
-    }
-
-    private static boolean unprotectedTree(Level level, BlockPos pos, BlockState state) {
-        if (!OrchardTrees.treePart(state) || !(level instanceof ServerLevel server)) {
-            return false;
-        }
-        PlacedBlocksData placed = PlacedBlocksData.get(server);
-        return PlotProtection.treeObstacle(true, placed.isMarked(pos) || placed.isSpiritMarked(pos));
     }
 
     private PlotOutcome plotCheck(Request request, Level level, BlockCoord coord) {
@@ -143,17 +137,20 @@ final class ProtectionDecide {
             return ProtectionGate.PROTECTION.check(
                     ProtectionGate.blockId(state),
                     Collections.nCopies(BlockProtection.NEIGHBOUR_COUNT, ProtectionGate.AIR_ID),
-                    new BlockProtection.Placement(false, inProtectedZone, unprotectArea));
+                    new BlockProtection.Placement(inProtectedZone, unprotectArea));
         }
-        PlotMarks.Marks marks = PlotMarks.of(level, pos, coord);
-        SettlementBreak.Origin origin = marks.placedByPlayer()
-                ? SettlementBreak.Origin.PLAYER
-                : marks.spiritMarked() ? SettlementBreak.Origin.SPIRIT : SettlementBreak.Origin.UNKNOWN;
+        ServerLevel server = level instanceof ServerLevel found ? found : null;
+        boolean own = server != null && LeaseData.get(server).isActive(pos);
+        boolean onPlot = server != null
+                && SettlementPlotStore.liveSite(server)
+                        .map(site -> site.inside(coord.x(), coord.z()))
+                        .orElse(false);
+        SettlementBreak.Origin origin = own ? SettlementBreak.Origin.SPIRIT : SettlementBreak.Origin.UNKNOWN;
         return SettlementBreak.decide(
                 ProtectionGate.PROTECTION,
                 new SettlementBreak.Facts(
                         origin,
-                        marks.onPlot(),
+                        onPlot,
                         false,
                         ProtectionGate.blockId(state),
                         inProtectedZone,

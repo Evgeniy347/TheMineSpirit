@@ -42,7 +42,6 @@ public final class Walkways {
                 if (!world.open(cell.x(), y, cell.z())
                         && !world.planned(cell.x(), y, cell.z())
                         && !world.registered(cell.x(), y, cell.z())
-                        && !world.playerPlaced(cell.x(), y, cell.z())
                         && !keep.test(world.blockId(cell.x(), y, cell.z()))) {
                     cut.add(new BlockCoord(cell.x(), y, cell.z()));
                 }

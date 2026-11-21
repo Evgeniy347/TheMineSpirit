@@ -12,7 +12,6 @@ import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
-import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.BlockPos;
@@ -150,7 +149,6 @@ final class Replanter {
             skipped++;
             return;
         }
-        PlacedBlocksData.get((ServerLevel) level).markSpirit(cell);
         SpiritGesture.workOn(spirit, cell);
         level.gameEvent(GameEvent.BLOCK_PLACE, cell, GameEvent.Context.of(spirit, saplingState));
         planted++;

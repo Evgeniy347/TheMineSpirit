@@ -35,25 +35,17 @@ class BlockProtectionUseTests {
         List<String> wild = around(0, "", "minecraft:stone");
         List<String> house = around(8, "minecraft:oak_planks", "minecraft:stone");
         return Stream.of(
-                Arguments.of("рычаг в поле", wild, false, false, false, null),
-                Arguments.of("кнопка в поле", wild, false, false, false, null),
-                Arguments.of("дверь в поле", wild, false, false, false, null),
-                Arguments.of("рычаг в доме из восьми блоков", house, false, false, false, PolicyId.PLAYER_BUILDINGS),
-                Arguments.of("рычаг, поставленный игроком", wild, true, false, false, PolicyId.PLAYER_BUILDINGS),
-                Arguments.of("рычаг в защищённой зоне", wild, false, true, false, PolicyId.PROTECTED_ZONE),
-                Arguments.of(
-                        "рычаг игрока, но в зоне: зона раньше игрока",
-                        wild,
-                        true,
-                        true,
-                        false,
-                        PolicyId.PROTECTED_ZONE),
-                Arguments.of("рычаг, поставленный игроком, но в разрешённой области", wild, true, false, true, null),
-                Arguments.of("рычаг в разрешённой области: здания рядом не мешают", house, false, false, true, null),
+                Arguments.of("рычаг в поле", wild, false, false, null),
+                Arguments.of("кнопка в поле", wild, false, false, null),
+                Arguments.of("дверь в поле", wild, false, false, null),
+                Arguments.of("рычаг в доме из восьми блоков", house, false, false, PolicyId.PLAYER_BUILDINGS),
+                Arguments.of("рычаг в защищённой зоне", wild, true, false, PolicyId.PROTECTED_ZONE),
+                Arguments.of("рычаг игрока, но в зоне: зона раньше игрока", wild, true, false, PolicyId.PROTECTED_ZONE),
+                Arguments.of("рычаг, поставленный игроком, но в разрешённой области", wild, false, true, null),
+                Arguments.of("рычаг в разрешённой области: здания рядом не мешают", house, false, true, null),
                 Arguments.of(
                         "рычаг игрока в защищённой зоне и разрешённой области: зона сильнее",
                         wild,
-                        true,
                         true,
                         true,
                         PolicyId.PROTECTED_ZONE));
@@ -62,14 +54,9 @@ class BlockProtectionUseTests {
     @ParameterizedTest(name = "{0}")
     @MethodSource("table")
     void checkUse_Table_RefusesOnlyPlayerMechanisms(
-            String name,
-            List<String> neighbours,
-            boolean placed,
-            boolean zone,
-            boolean unprotectArea,
-            PolicyId refusedBy) {
+            String name, List<String> neighbours, boolean zone, boolean unprotectArea, PolicyId refusedBy) {
         BlockProtection.Decision decision =
-                protection.checkUse(neighbours, new BlockProtection.Placement(placed, zone, unprotectArea));
+                protection.checkUse(neighbours, new BlockProtection.Placement(zone, unprotectArea));
 
         if (refusedBy == null) {
             assertInstanceOf(
@@ -96,8 +83,8 @@ class BlockProtectionUseTests {
 
     @Test
     void checkUse_DeniedByBreakList_IsStillUsable() {
-        BlockProtection.Decision decision = protection.checkUse(
-                around(0, "", "minecraft:stone"), new BlockProtection.Placement(false, false, false));
+        BlockProtection.Decision decision =
+                protection.checkUse(around(0, "", "minecraft:stone"), new BlockProtection.Placement(false, false));
 
         assertInstanceOf(
                 BlockProtection.Allowed.class,
@@ -111,7 +98,7 @@ class BlockProtectionUseTests {
     void checkUse_WrongNeighbourCount_IsRejected() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> protection.checkUse(List.of("minecraft:air"), new BlockProtection.Placement(false, false, false)),
+                () -> protection.checkUse(List.of("minecraft:air"), new BlockProtection.Placement(false, false)),
                 "Список соседей обязан быть 26: иное число значит, что постройку считают не по 3×3×3, и защита "
                         + "слепнет, иначе проверка пропустит чужое. При смене NEIGHBOUR_COUNT проверь, что размер списка валидируется");
     }
@@ -120,7 +107,7 @@ class BlockProtectionUseTests {
     void checkUse_NullNeighbours_IsRejected() {
         assertThrows(
                 NullPointerException.class,
-                () -> protection.checkUse(null, new BlockProtection.Placement(false, false, false)),
+                () -> protection.checkUse(null, new BlockProtection.Placement(false, false)),
                 "Без списка соседей нельзя отличить постройку от природы: null обязан отказывать, а не молча "
                         + "пропускать проверку, иначе дух снесёт чужое. При смене checkUse проверь null до обращения к списку");
     }

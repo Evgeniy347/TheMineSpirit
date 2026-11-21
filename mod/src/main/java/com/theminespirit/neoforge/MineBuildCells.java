@@ -10,7 +10,6 @@ import com.theminespirit.core.mining.MineFluids;
 import com.theminespirit.core.mining.MinePlan;
 import com.theminespirit.core.mining.api.MineOres;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -150,9 +149,6 @@ final class MineBuildCells {
                 plugs++;
             }
             return false;
-        }
-        if (level instanceof ServerLevel server && PlacedBlocksData.get(server).isSpiritMarked(toPos(cell))) {
-            PlacedBlocksData.get(server).unmarkSpirit(toPos(cell));
         }
         BlockState state = level.getBlockState(toPos(cell));
         MineOres.Decision decision = MineOres.decideDescent(BlockStates.idOf(state), picks(state));

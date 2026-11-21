@@ -56,6 +56,7 @@ final class SchematicResult {
             }
             host.tally.supplies(host.placed, 0);
             logRemovals();
+            host.commitClearLease();
             host.outcome = ScriptStatus.SUCCEEDED;
             return host.outcome;
         }
@@ -168,6 +169,7 @@ final class SchematicResult {
     }
 
     void cancel() {
+        host.orphanClearLease();
         host.supplyWalk = null;
         if (host.planPending != null) {
             host.planPending.cancel(false);

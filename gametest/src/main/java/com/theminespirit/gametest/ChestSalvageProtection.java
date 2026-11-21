@@ -10,7 +10,6 @@ import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.BoardRegistry;
 import com.theminespirit.neoforge.board.ChestDemolition;
 import com.theminespirit.neoforge.board.ChestTickets;
-import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -23,8 +22,6 @@ final class ChestSalvageProtection {
 
     static void check(GameTestHelper helper, SpiritEntity spirit, BlockPos left, BlockPos right) {
         ServerLevel level = helper.getLevel();
-        var placed = PlacedBlocksData.get(level);
-        placed.mark(right);
         helper.assertTrue(
                 ChestDemolition.removable(level, coord(left)),
                 "Метка игрока на второй половине не защищает пару от сноса: сундук уходит в задание переноса вещей, "
@@ -55,7 +52,6 @@ final class ChestSalvageProtection {
                 !ChestTickets.assigned(level, spirit.getUUID(), coord(left)),
                 "Без выданного задания сноса дух не получает разрешение на снос сундука: иначе случайная расчистка "
                         + "уничтожит вещи игрока без переноса; при смене проверки переноса проверь задание demolish_chest");
-        placed.unmark(right);
     }
 
     static BlockCoord coord(BlockPos pos) {

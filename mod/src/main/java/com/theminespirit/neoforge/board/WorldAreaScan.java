@@ -13,7 +13,6 @@ import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.neoforge.BlockStates;
 import com.theminespirit.neoforge.SettlementChestStore;
 import com.theminespirit.neoforge.lease.LeaseData;
-import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -154,27 +153,13 @@ final class WorldAreaScan {
         }
 
         @Override
-        public boolean playerPlaced(int x, int y, int z) {
-            return PlacedBlocksData.get(level).isMarked(new BlockPos(x, y, z));
-        }
-
-        @Override
-        public boolean spiritMarked(int x, int y, int z) {
-            return PlacedBlocksData.get(level).isSpiritMarked(new BlockPos(x, y, z));
-        }
-
-        @Override
         public boolean temporary(int x, int y, int z) {
             BlockPos pos = new BlockPos(x, y, z);
             LeaseData leases = LeaseData.get(level);
             if (leases.isActive(pos)) {
                 return false;
             }
-            if (leases.isOrphaned(pos)) {
-                return true;
-            }
-            PlacedBlocksData placed = PlacedBlocksData.get(level);
-            return placed.isSpiritMarked(pos) && TemporaryBlocks.legacyMovement(blockId(x, y, z));
+            return leases.isOrphaned(pos);
         }
 
         @Override

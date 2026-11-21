@@ -30,7 +30,7 @@ class CrossSettlementScenarioTests {
                 named(spirit("spirit-1"), spirit("spirit-2")),
                 List.of(),
                 List.of(),
-                new GraphSiteFacts.Terrain(2, 0, 0, 2, 0, Map.of(), Map.of("minecraft:dirt", 4), Map.of()),
+                new GraphSiteFacts.Terrain(2, 0, 0, 2, Map.of(), Map.of("minecraft:dirt", 4), Map.of()),
                 Map.of());
         GraphPlan plan = plan(world, facts);
 

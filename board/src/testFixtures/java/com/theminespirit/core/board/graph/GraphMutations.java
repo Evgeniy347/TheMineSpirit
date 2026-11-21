@@ -175,7 +175,7 @@ final class GraphMutations {
                 Map.of(),
                 Map.of(),
                 strays,
-                new Terrain(0, 180, 0, 0, 0, Map.of(), Map.of(), Map.of(), false, 3263),
+                new Terrain(0, 180, 0, 0, Map.of(), Map.of(), Map.of(), false, 3263),
                 new StageReqs(Map.of(), Map.of()),
                 GraphFeedback.none(),
                 List.of(),

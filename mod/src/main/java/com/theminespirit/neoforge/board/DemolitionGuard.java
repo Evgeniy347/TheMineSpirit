@@ -5,9 +5,7 @@ import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.policy.SettlementBreak;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.BuildingSeeds;
-import com.theminespirit.core.town.FloatingBlocks;
 import com.theminespirit.neoforge.BlockStates;
-import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.BlockPos;
@@ -21,52 +19,18 @@ final class DemolitionGuard {
     private DemolitionGuard() {}
 
     static boolean protectedForDemolish(ServerLevel level, BlockCoord at, String blockId, PlotPlanBlocks.Plan plan) {
-        return protectedForDemolish(level, at, blockId, plan, false);
-    }
-
-    static boolean protectedForDemolish(
-            ServerLevel level, BlockCoord at, String blockId, PlotPlanBlocks.Plan plan, boolean ignorePlayerMark) {
         BlockPos pos = new BlockPos(at.x(), at.y(), at.z());
-        PlacedBlocksData placed = PlacedBlocksData.get(level);
-        if (placed.isSpiritMarked(pos)) {
-            return false;
-        }
         List<String> ids = neighbours(level, pos);
-        SettlementBreak.Origin origin = placed.isMarked(pos) && !ignorePlayerMark
-                ? SettlementBreak.Origin.PLAYER
-                : SettlementBreak.Origin.UNKNOWN;
-        SettlementBreak.Facts facts = new SettlementBreak.Facts(origin, true, plan.planned(at), blockId, false, false);
+        SettlementBreak.Facts facts = new SettlementBreak.Facts(
+                SettlementBreak.Origin.UNKNOWN, true, plan.planned(at), blockId, false, false);
         BlockProtection.Decision decision = SettlementBreak.decide(PROTECTION, facts, () -> ids);
         return decision instanceof BlockProtection.Refused || BuildingSeeds.adjacentToStructure(ids);
     }
 
     static boolean protectedStray(ServerLevel level, BlockCoord at, String blockId) {
         BlockPos pos = new BlockPos(at.x(), at.y(), at.z());
-        if (PlacedBlocksData.get(level).isMarked(pos)) {
-            return true;
-        }
         BlockProtection.Decision hard = PROTECTION.checkOwn(blockId, false);
         return hard instanceof BlockProtection.Refused || BuildingSeeds.adjacentToStructure(neighbours(level, pos));
-    }
-
-    static void claimStray(ServerLevel level, BlockCoord at) {
-        BlockPos pos = new BlockPos(at.x(), at.y(), at.z());
-        PlacedBlocksData placed = PlacedBlocksData.get(level);
-        if (!placed.isMarked(pos)) {
-            placed.markSpirit(pos);
-        }
-    }
-
-    static void claimForCleanup(ServerLevel level, PlotPlanBlocks.Plan plan, FloatingBlocks.Finding finding) {
-        PlacedBlocksData placed = PlacedBlocksData.get(level);
-        for (BlockCoord cell : finding.cells()) {
-            BlockPos pos = new BlockPos(cell.x(), cell.y(), cell.z());
-            String id = BlockStates.idOf(level.getBlockState(pos));
-            if (protectedForDemolish(level, cell, id, plan, true)) {
-                continue;
-            }
-            placed.markSpirit(pos);
-        }
     }
 
     private static List<String> neighbours(ServerLevel level, BlockPos pos) {

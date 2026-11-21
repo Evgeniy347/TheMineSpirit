@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import net.minecraft.core.BlockPos;
 import org.slf4j.Logger;
 
 final class SchematicWorkPhase {
@@ -220,7 +221,9 @@ final class SchematicWorkPhase {
         SpiritReach reach = SpiritReach.current();
         ReachPlanner.World world = host.placement.clearWorld();
         for (BlockCoord cell : ReachPlanner.workableNow(reach, host.feet(), clear, world)) {
-            BlockBreaker.Begin begin = host.breaker.beginRepair(SchematicSite.toPos(cell));
+            BlockPos pos = SchematicSite.toPos(cell);
+            host.clearLease().broken(pos, host.level.getBlockState(pos));
+            BlockBreaker.Begin begin = host.breaker.beginRepair(pos);
             switch (begin) {
                 case BlockBreaker.Started ignored -> {
                     host.breaking = cell;

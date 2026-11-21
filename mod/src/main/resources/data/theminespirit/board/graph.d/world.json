@@ -251,10 +251,10 @@
         "cut_above_fill_below"
       ]
     },
-    "restore_trace": {
+    "plan_breach": {
       "tasks": [
         {
-          "id": "restore_trace",
+          "id": "plan_breach",
           "case": "FILL_CRATER",
           "base": 45,
           "consumes": {

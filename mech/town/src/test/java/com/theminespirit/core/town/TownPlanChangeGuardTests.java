@@ -258,14 +258,7 @@ class TownPlanChangeGuardTests {
                     public String blockAt(BlockCoord cell) {
                         return world.getOrDefault(cell, "air");
                     }
-
-                    @Override
-                    public boolean playerPlaced(BlockCoord cell) {
-                        return false;
-                    }
                 },
-                RepairData.defaults(),
-                Map.of(),
-                100);
+                RepairData.defaults());
     }
 }

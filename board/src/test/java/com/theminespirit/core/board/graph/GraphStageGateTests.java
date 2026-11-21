@@ -136,7 +136,7 @@ class GraphStageGateTests {
     }
 
     private static GraphSiteFacts.Terrain terrain(Map<String, Integer> cut, Map<String, Integer> fill) {
-        return new GraphSiteFacts.Terrain(0, 0, 0, 0, 0, cut, fill, Map.of(), false);
+        return new GraphSiteFacts.Terrain(0, 0, 0, 0, cut, fill, Map.of(), false);
     }
 
     private static GraphFacts facts(

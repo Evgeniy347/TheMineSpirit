@@ -2,8 +2,6 @@
   "maxDurabilityPercent": 90,
   "auditIntervalTicks": 24000,
   "cellBudgetPerTick": 256,
-  "warnTicks": 3600,
-  "warnRepeatTicks": 1200,
   "rebuildPercent": 50,
   "softBlocks": [
     "poppy",

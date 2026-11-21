@@ -97,7 +97,6 @@ class WorldAreaInputsTests {
                 List.of(
                         new StrayGroups.Cell(new BlockCoord(1, 64, 1), "minecraft:oak_fence"),
                         new StrayGroups.Cell(new BlockCoord(2, 64, 1), "minecraft:oak_fence")),
-                List.of(),
                 0);
         List<WorldAreaInputs.Placed> placed =
                 List.of(new WorldAreaInputs.Placed(new BlockCoord(2, 64, 1), "oak_fence", "spirit-1"));
@@ -124,7 +123,7 @@ class WorldAreaInputsTests {
     @Test
     void terrain_UnknownChunk_IsNotReportedFlat() {
         GraphSiteFacts.Terrain terrain = WorldAreaInputs.terrain(
-                List.of(), Map.of(), List.of(), 0, 0, new WorldAreaInputs.Marks(Map.of(), Map.of(), Map.of()), true);
+                List.of(), Map.of(), List.of(), 0, new WorldAreaInputs.Marks(Map.of(), Map.of(), Map.of()), true);
 
         assertTrue(
                 terrain.unknown(),
@@ -147,8 +146,7 @@ class WorldAreaInputsTests {
                 List.of(new BlockCoord(1, 63, 1), new BlockCoord(2, 63, 2)),
                 depths,
                 List.of(new BlockCoord(3, 66, 3)),
-                4,
-                7);
+                4);
 
         assertEquals(
                 2,
@@ -170,11 +168,6 @@ class WorldAreaInputsTests {
                 terrain.hanging(),
                 "Висящее переносится"
                         + " Иначе тест terrain_HolesAndExtras_CountDepthAndDrop перестанет ловить эту поломку. При смене terrain_HolesAndExtras_CountDepthAndDrop проверь это утверждение.");
-        assertEquals(
-                7,
-                terrain.traces(),
-                "Следы вне плана переносятся"
-                        + " Иначе тест terrain_HolesAndExtras_CountDepthAndDrop перестанет ловить эту поломку. При смене terrain_HolesAndExtras_CountDepthAndDrop проверь это утверждение.");
         assertTrue(
                 terrain.pits() > 0,
                 "Неровный участок виден по ямам, а не по выдуманному флагу"
@@ -184,13 +177,7 @@ class WorldAreaInputsTests {
     @Test
     void terrain_NaturalSlope_IsNotWork() {
         GraphSiteFacts.Terrain terrain = WorldAreaInputs.terrain(
-                List.of(),
-                Map.of(),
-                List.of(),
-                0,
-                0,
-                new WorldAreaInputs.Marks(Map.of(), Map.of(), Map.of(), 17),
-                false);
+                List.of(), Map.of(), List.of(), 0, new WorldAreaInputs.Marks(Map.of(), Map.of(), Map.of(), 17), false);
 
         assertEquals(
                 17,
@@ -205,7 +192,7 @@ class WorldAreaInputsTests {
 
     @Test
     void terrain_EmptyOrNegative_Handled() {
-        GraphSiteFacts.Terrain flat = WorldAreaInputs.terrain(List.of(), Map.of(), List.of(), 0, 0);
+        GraphSiteFacts.Terrain flat = WorldAreaInputs.terrain(List.of(), Map.of(), List.of(), 0);
 
         assertEquals(
                 GraphSiteFacts.Terrain.empty(),
@@ -214,7 +201,7 @@ class WorldAreaInputsTests {
                         + " Иначе тест terrain_EmptyOrNegative_Handled перестанет ловить эту поломку. При смене terrain_EmptyOrNegative_Handled проверь это утверждение.");
         assertThrows(
                 IllegalArgumentException.class,
-                () -> WorldAreaInputs.terrain(List.of(), Map.of(), List.of(), -1, 0),
+                () -> WorldAreaInputs.terrain(List.of(), Map.of(), List.of(), -1),
                 "Отрицательное висящее не имеет смысла"
                         + " Иначе тест terrain_EmptyOrNegative_Handled перестанет ловить эту поломку. При смене terrain_EmptyOrNegative_Handled проверь это утверждение.");
     }

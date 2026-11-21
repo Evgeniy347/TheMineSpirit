@@ -94,7 +94,7 @@ class CrossLifeWorkScenarioTests {
                         spirit(new CrossScene.SpiritSpec("spirit-2", 20, 20, true, true, null, List.of(), List.of()))),
                 List.of(),
                 List.of(),
-                new GraphSiteFacts.Terrain(2, 0, 0, 2, 0, Map.of(), Map.of("minecraft:dirt", 4), Map.of()),
+                new GraphSiteFacts.Terrain(2, 0, 0, 2, Map.of(), Map.of("minecraft:dirt", 4), Map.of()),
                 Map.of("hut", damaged("hut", 20, 0, Map.of("oak_log", 20))));
         GraphPlan plan = plan(world, facts);
 

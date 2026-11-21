@@ -1,7 +1,6 @@
 package com.theminespirit.core.town;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.observation.BlockCoord;
@@ -62,20 +61,6 @@ class LiveFloatingBlockTests {
                 "Листва -166,96,-510 соединена с кроной только листвой, а не бревном: BFS обязан ходить "
                         + "по листве, иначе живая крона остаётся OTHER и в уборку не попадает (observe15 B7, 203 листа)"
                         + " При смене liveFarCrownLeaf_FloatingTree_IsReported проверь это утверждение.");
-    }
-
-    @Test
-    void liveStump_FewAdjacentLogs_IsIsolated() throws IOException {
-        LiveFloatingWorld world = LiveFloatingWorld.load();
-
-        assertTrue(
-                TreeSupport.isolatedLog(new BlockCoord(-156, 70, -497), world::isLog),
-                "Одинокий пенёк окупаемой вырубки не должен считаться постройкой игрока: под ним нет ствола"
-                        + " Иначе тест liveStump_FewAdjacentLogs_IsIsolated перестанет ловить эту поломку. При смене liveStump_FewAdjacentLogs_IsIsolated проверь это утверждение.");
-        assertFalse(
-                TreeSupport.isolatedLog(new BlockCoord(-163, 90, -507), world::isLog),
-                "Бревно в 2x2 стволе не одиноко: его нельзя выдавать за отдельный пенёк и сносить как остаток"
-                        + " Иначе тест liveStump_FewAdjacentLogs_IsIsolated перестанет ловить эту поломку. При смене liveStump_FewAdjacentLogs_IsIsolated проверь это утверждение.");
     }
 
     @Test

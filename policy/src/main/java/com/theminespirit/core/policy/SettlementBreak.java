@@ -14,7 +14,6 @@ public final class SettlementBreak {
     }
 
     public enum Origin {
-        PLAYER,
         SPIRIT,
         UNKNOWN
     }
@@ -102,8 +101,7 @@ public final class SettlementBreak {
                 protection.check(
                         facts.blockId(),
                         neighbours.get(),
-                        new BlockProtection.Placement(
-                                facts.origin() == Origin.PLAYER, facts.inProtectedZone(), facts.unprotectArea()));
+                        new BlockProtection.Placement(facts.inProtectedZone(), facts.unprotectArea()));
         };
     }
 
@@ -116,8 +114,7 @@ public final class SettlementBreak {
         return protection.check(
                 facts.blockId(),
                 neighbours.get(),
-                new BlockProtection.Placement(
-                        facts.origin() == Origin.PLAYER, facts.inProtectedZone(), facts.unprotectArea()));
+                new BlockProtection.Placement(facts.inProtectedZone(), facts.unprotectArea()));
     }
 
     private static boolean foreign(PlanBuilding own, PlanBuilding cell) {
@@ -129,9 +126,6 @@ public final class SettlementBreak {
     public static Check of(Origin origin, Place place) {
         if (place == Place.PLAN) {
             return Check.OWN;
-        }
-        if (origin == Origin.PLAYER) {
-            return Check.DEFAULT;
         }
         if (place == Place.PLOT) {
             return Check.SETTLEMENT;

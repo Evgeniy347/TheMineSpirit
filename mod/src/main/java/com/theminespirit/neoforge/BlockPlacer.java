@@ -8,7 +8,6 @@ import com.theminespirit.core.policy.api.PolicyId;
 import com.theminespirit.core.town.PlotProtection;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
-import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.List;
 import java.util.Objects;
 import net.minecraft.core.BlockPos;
@@ -156,9 +155,6 @@ public final class BlockPlacer {
             }
         }
         if (new FarmActions(spirit).till(target)) {
-            if (level instanceof ServerLevel server) {
-                PlacedBlocksData.get(server).markSpirit(target);
-            }
             return new Started(target.immutable());
         }
         return new Refused(

@@ -4,7 +4,6 @@ import com.theminespirit.core.building.SchematicBlocks;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.neoforge.board.PlotCellStructure;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
-import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
@@ -21,11 +20,10 @@ final class PlanCells {
             return false;
         }
         return SettlementPlotStore.liveSite(server)
-                        .filter(site -> PlotCellStructure.isStructure(server, pos)
-                                && !oldFill(level, site, pos)
-                                && (site.ringPost(pos.getX(), pos.getZ()) || !debris(level, pos)))
-                        .isPresent()
-                && PlacedBlocksData.get(server).isSpiritMarked(pos);
+                .filter(site -> PlotCellStructure.isStructure(server, pos)
+                        && !oldFill(level, site, pos)
+                        && (site.ringPost(pos.getX(), pos.getZ()) || !debris(level, pos)))
+                .isPresent();
     }
 
     private static boolean debris(Level level, BlockPos pos) {

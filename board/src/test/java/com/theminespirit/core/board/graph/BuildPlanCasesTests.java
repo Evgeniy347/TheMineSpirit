@@ -149,7 +149,7 @@ class BuildPlanCasesTests {
                         "fence", PlanCaseFacts.building("fence", 0, Map.of(), true)),
                 List.of(),
                 new GraphSiteFacts.Terrain(
-                        1, 0, 3, 1, 0, Map.of("minecraft:dirt", 4), Map.of("minecraft:dirt", 2), Map.of()));
+                        1, 0, 3, 1, Map.of("minecraft:dirt", 4), Map.of("minecraft:dirt", 2), Map.of()));
 
         GraphPlan plan = PlanCaseFacts.plan(world, facts);
 

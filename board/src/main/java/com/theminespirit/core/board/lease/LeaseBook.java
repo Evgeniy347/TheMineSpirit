@@ -15,9 +15,6 @@ import java.util.UUID;
 import org.jspecify.annotations.Nullable;
 
 public final class LeaseBook {
-    public static final String LEGACY_ID = "legacy";
-    public static final String LEGACY_PURPOSE = "legacy";
-
     private final Map<String, Lease> leases = new LinkedHashMap<>();
     private final Map<BlockCoord, String> activeCells = new HashMap<>();
     private final Map<BlockCoord, String> orphanedCells = new HashMap<>();
@@ -26,22 +23,6 @@ public final class LeaseBook {
         String id = UUID.randomUUID().toString();
         Lease lease = Lease.opened(id, spirit, ticket, purpose, since);
         leases.put(id, lease);
-        return lease;
-    }
-
-    public Lease legacy(List<BlockCoord> cells, long since) {
-        Objects.requireNonNull(cells, "Клетки старых временных меток не могут быть null: мигрировать нечего");
-        Lease existing = leases.get(LEGACY_ID);
-        if (existing != null) {
-            if (!LEGACY_PURPOSE.equals(existing.purpose())) {
-                throw new IllegalStateException("id '" + LEGACY_ID + "' уже занят арендой '" + existing.purpose()
-                        + "': старые метки нельзя слить в чужую аренду");
-            }
-            return existing;
-        }
-        List<LeaseCell> legacyCells = cells.stream().map(LeaseCell::placed).toList();
-        Lease lease = new Lease(LEGACY_ID, null, null, LEGACY_PURPOSE, LeaseStatus.ORPHANED, since, legacyCells);
-        restore(lease);
         return lease;
     }
 

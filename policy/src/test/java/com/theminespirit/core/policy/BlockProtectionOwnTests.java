@@ -18,8 +18,8 @@ class BlockProtectionOwnTests {
 
     @Test
     void checkOwn_OwnWallInsideOwnBuild_IsAllowed() {
-        BlockProtection.Decision refused =
-                protection.check("minecraft:cobblestone", BlockProtectionTests.house(), false, false);
+        BlockProtection.Decision refused = protection.check(
+                "minecraft:cobblestone", BlockProtectionTests.house(), new BlockProtection.Placement(false, false));
 
         assertInstanceOf(
                 BlockProtection.Refused.class,

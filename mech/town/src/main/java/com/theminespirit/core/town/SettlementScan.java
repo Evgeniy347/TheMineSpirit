@@ -13,8 +13,6 @@ import org.jspecify.annotations.Nullable;
 public final class SettlementScan {
     public static final int PIT_DEPTH_MAX = 64;
     private static final int STRAY_ABOVE = 32;
-    private static final int TRACE_DEPTH = 16;
-    private static final int TRACE_SHALLOW = 4;
 
     public interface World {
         boolean loaded(int x, int z);
@@ -31,10 +29,6 @@ public final class SettlementScan {
 
         OptionalInt dugTop(int x, int z);
 
-        boolean playerPlaced(int x, int y, int z);
-
-        boolean spiritMarked(int x, int y, int z);
-
         boolean temporary(int x, int y, int z);
 
         boolean registered(int x, int y, int z);
@@ -47,7 +41,6 @@ public final class SettlementScan {
             List<BlockCoord> mounds,
             List<BlockCoord> pillars,
             List<StrayGroups.Cell> strays,
-            List<BlockCoord> traces,
             int unknown,
             int natural) {
         public Strays {
@@ -55,7 +48,6 @@ public final class SettlementScan {
             mounds = List.copyOf(Objects.requireNonNull(mounds, "Насыпи не могут быть null"));
             pillars = List.copyOf(Objects.requireNonNull(pillars, "Столбы не могут быть null"));
             strays = List.copyOf(Objects.requireNonNull(strays, "Лишнее не может быть null"));
-            traces = List.copyOf(Objects.requireNonNull(traces, "Следы не могут быть null"));
             if (unknown < 0 || natural < 0) {
                 throw new IllegalArgumentException("Неизвестных колонок " + unknown + " и природного " + natural
                         + ": отсутствие — ноль, а не минус");
@@ -63,26 +55,21 @@ public final class SettlementScan {
         }
 
         public Strays(
-                Map<BlockCoord, Integer> pits,
-                List<BlockCoord> mounds,
-                List<StrayGroups.Cell> strays,
-                List<BlockCoord> traces,
-                int unknown) {
-            this(pits, mounds, List.of(), strays, traces, unknown, 0);
+                Map<BlockCoord, Integer> pits, List<BlockCoord> mounds, List<StrayGroups.Cell> strays, int unknown) {
+            this(pits, mounds, List.of(), strays, unknown, 0);
         }
 
         public Strays(
                 Map<BlockCoord, Integer> pits,
                 List<BlockCoord> mounds,
                 List<StrayGroups.Cell> strays,
-                List<BlockCoord> traces,
                 int unknown,
                 int natural) {
-            this(pits, mounds, List.of(), strays, traces, unknown, natural);
+            this(pits, mounds, List.of(), strays, unknown, natural);
         }
 
         public static Strays empty() {
-            return new Strays(Map.of(), List.of(), List.of(), List.of(), List.of(), 0, 0);
+            return new Strays(Map.of(), List.of(), List.of(), List.of(), 0, 0);
         }
     }
 
@@ -96,7 +83,6 @@ public final class SettlementScan {
         List<BlockCoord> mounds = new ArrayList<>();
         List<BlockCoord> pillars = new ArrayList<>();
         List<StrayGroups.Cell> strays = new ArrayList<>();
-        List<BlockCoord> traces = new ArrayList<>();
         int unknown = 0;
         int natural = 0;
         for (ColumnMask.Cell column : columns) {
@@ -113,9 +99,7 @@ public final class SettlementScan {
             if (lot.isPresent()) {
                 int lotLevel = lot.getAsInt();
                 BlockCoord ground = new BlockCoord(x, lotLevel - 1, z);
-                if (surface < lotLevel - 1
-                        && !plannedRange(world, x, z, surface + 1, lotLevel - 1)
-                        && !markedRange(world, x, z, surface + 1, lotLevel - 1)) {
+                if (surface < lotLevel - 1 && !plannedRange(world, x, z, surface + 1, lotLevel - 1)) {
                     pits.put(ground, lotLevel - 1 - surface);
                 }
                 List<BlockCoord> raised = new ArrayList<>();
@@ -125,30 +109,19 @@ public final class SettlementScan {
                 natural += naturalBlocks(world, rules, x, z, level, surface, null);
                 if (dug.isPresent()
                         && surface < dug.getAsInt()
-                        && !plannedRange(world, x, z, surface + 1, dug.getAsInt())
-                        && !markedRange(world, x, z, surface + 1, dug.getAsInt())) {
+                        && !plannedRange(world, x, z, surface + 1, dug.getAsInt())) {
                     pits.put(new BlockCoord(x, dug.getAsInt(), z), dug.getAsInt() - surface);
                 }
             }
-            boolean deep = surface < level - 1 || dug.isPresent();
-            int from = deep ? level - TRACE_DEPTH : Math.min(level - TRACE_SHALLOW, surface);
             int above = top < level ? level - 1 : Math.max(level + STRAY_ABOVE, surface);
-            for (int y = from; y <= above; y++) {
+            for (int y = level - 1; y <= above; y++) {
                 BlockCoord at = new BlockCoord(x, y, z);
-                boolean open = world.open(x, y, z);
-                if (open) {
-                    if (y < level - 1 && world.spiritMarked(x, y, z)) {
-                        traces.add(at);
-                    }
-                    continue;
-                }
-                if (y < level - 1) {
+                if (world.open(x, y, z)) {
                     continue;
                 }
                 String id = world.blockId(x, y, z);
                 if (world.plant(id)
                         || world.planned(x, y, z)
-                        || world.playerPlaced(x, y, z)
                         || world.registered(x, y, z)
                         || (!world.temporary(x, y, z) && !rules.stray(id))) {
                     continue;
@@ -163,7 +136,7 @@ public final class SettlementScan {
                 }
             }
         }
-        return new Strays(pits, mounds, pillars, strays, traces, unknown, natural);
+        return new Strays(pits, mounds, pillars, strays, unknown, natural);
     }
 
     private static void raisedInto(
@@ -184,7 +157,7 @@ public final class SettlementScan {
                 continue;
             }
             String id = world.blockId(x, y, z);
-            if (!rules.natural(id) || world.plant(id) || world.playerPlaced(x, y, z)) {
+            if (!rules.natural(id) || world.plant(id)) {
                 continue;
             }
             found++;
@@ -198,15 +171,6 @@ public final class SettlementScan {
     private static boolean plannedRange(World world, int x, int z, int from, int to) {
         for (int y = from; y <= to; y++) {
             if (world.planned(x, y, z)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static boolean markedRange(World world, int x, int z, int from, int to) {
-        for (int y = from; y <= to; y++) {
-            if (world.spiritMarked(x, y, z)) {
                 return true;
             }
         }

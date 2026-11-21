@@ -19,7 +19,6 @@ import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.StrayGroups;
 import com.theminespirit.core.town.TownSnapshot;
 import com.theminespirit.neoforge.SchematicResources;
-import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -147,9 +146,7 @@ final class BuildingAudit {
                     new BlockCoord(at.x(), at.y(), at.z()),
                     BuildRotation.NONE,
                     new AuditWorld(level),
-                    RepairData.loadDefault(),
-                    new HashMap<>(),
-                    now);
+                    RepairData.loadDefault());
             SCHEMES.put(key, report);
         }
         return report(report);
@@ -166,7 +163,7 @@ final class BuildingAudit {
                     if (!air(fix.found())) {
                         wrong++;
                     }
-                } else if (fix.action() != RepairAudit.Action.WARN) {
+                } else {
                     extra.merge(id(fix.found()), 1, Integer::sum);
                 }
             }
@@ -239,11 +236,6 @@ final class BuildingAudit {
                     .getKey(level.getBlockState(new BlockPos(cell.x(), cell.y(), cell.z()))
                             .getBlock())
                     .toString();
-        }
-
-        @Override
-        public boolean playerPlaced(BlockCoord cell) {
-            return PlacedBlocksData.get(level).isMarked(new BlockPos(cell.x(), cell.y(), cell.z()));
         }
 
         @Override

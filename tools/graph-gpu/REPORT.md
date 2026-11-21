@@ -354,7 +354,6 @@ Python-модель уже читала аудит (`GraphBuildingMaterials`, `G
 - жизнь без штрафа: `failure_count` не считает `rescue_spirit` и `event:life_*` (тест на равный приоритет);
 - природный рельеф — не работа: `terrain.natural` не поднимает `level_lot`/`backfill`;
 - спасение снимает застревание, выход из ловушки — замуровку: `GraphWorld.rescued()/freed()` и
-  `GraphSimulation.finish` теперь как Python (иначе Java повторяла `rescue_spirit`/`restore_trace`, 15 вместо 2);
 - `search.py --fixed` понимает шаблоны (`event:*`, `way:CRAFT_*`); раньше заморозка молча не работала.
 
 **Живой этап 1.** Новый вход `GraphMutations.liveStageOne()` (выгружается в `TestResults/graph-export/live1.json`,

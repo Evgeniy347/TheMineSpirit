@@ -33,8 +33,8 @@ class RepairOrderTests {
     void audit_LiveHutMissingTwelfth_NeedsRepairWithoutRebuild() {
         Schematic hut = load(HUT);
         WorldView world = damagedWorld(hut, missingCells(hut));
-        RepairAudit.Report report = RepairAudit.audit(
-                hut, HUT_ORIGIN, BuildRotation.NONE, world, RepairData.defaults(), new HashMap<>(), NOW);
+        RepairAudit.Report report =
+                RepairAudit.audit(hut, HUT_ORIGIN, BuildRotation.NONE, world, RepairData.defaults());
 
         assertTrue(
                 report.damaged(),
@@ -134,11 +134,6 @@ class RepairOrderTests {
             @Override
             public String blockAt(BlockCoord cell) {
                 return placed.getOrDefault(cell, "minecraft:air");
-            }
-
-            @Override
-            public boolean playerPlaced(BlockCoord cell) {
-                return false;
             }
         };
     }

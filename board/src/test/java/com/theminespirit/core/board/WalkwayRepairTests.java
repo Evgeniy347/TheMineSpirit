@@ -40,7 +40,7 @@ class WalkwayRepairTests {
                 "Подъём обязан попасть в правки ремонта: иначе тропа останется ступенькой, отчёт " + report
                         + " При смене audit_SunkWalkway_LiftsWithoutRebuild проверь это утверждение.");
         assertEquals(
-                List.of(new RepairAudit.Fix(plan, RepairAudit.Action.PLACE, "minecraft:dirt_path", AIR, 0)),
+                List.of(new RepairAudit.Fix(plan, RepairAudit.Action.PLACE, "minecraft:dirt_path", AIR)),
                 report.fixes(),
                 "Ремонт получает клетку тропы и её блок: подъём исполняет та же постановка дорожки"
                         + " Иначе тест audit_SunkWalkway_LiftsWithoutRebuild перестанет ловить эту поломку. При смене audit_SunkWalkway_LiftsWithoutRebuild проверь это утверждение.");
@@ -71,19 +71,13 @@ class WalkwayRepairTests {
     }
 
     private static RepairAudit.Report repairAudit(Schematic scheme, Map<BlockCoord, String> world) {
-        return RepairAudit.audit(
-                scheme, ORIGIN, BuildRotation.NONE, new MapWorld(world), RepairData.defaults(), Map.of(), 100);
+        return RepairAudit.audit(scheme, ORIGIN, BuildRotation.NONE, new MapWorld(world), RepairData.defaults());
     }
 
     private record MapWorld(Map<BlockCoord, String> blocks) implements RepairAudit.WorldView {
         @Override
         public String blockAt(BlockCoord cell) {
             return blocks.getOrDefault(cell, AIR);
-        }
-
-        @Override
-        public boolean playerPlaced(BlockCoord cell) {
-            return false;
         }
     }
 }

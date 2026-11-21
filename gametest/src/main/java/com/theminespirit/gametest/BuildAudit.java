@@ -4,17 +4,12 @@ import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicBlocks;
 import com.theminespirit.core.building.api.BuildRotation;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.neoforge.BlockItems;
 import com.theminespirit.neoforge.BlockStates;
-import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import net.minecraft.core.BlockPos;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.state.BlockState;
@@ -64,32 +59,9 @@ public final class BuildAudit {
             Level level, Schematic schematic, BlockCoord origin, BuildRotation rotation, Before before, int skipped) {
         List<String> problems = new ArrayList<>();
         List<Schematic.PlacedEntry> entries = schematic.entries(origin, rotation);
-        Set<BlockCoord> expectedCells = new HashSet<>();
         for (Schematic.PlacedEntry entry : entries) {
-            expectedCells.add(entry.pos());
-        }
-        for (Schematic.PlacedEntry entry : entries) {
-            if (!entry.optional()) {
+            if (!entry.optional() && !wasAlready(entry, before)) {
                 auditCell(level, entry, rotation, problems);
-            }
-        }
-        for (Map.Entry<BlockCoord, BlockState> snapshot : before.states().entrySet()) {
-            BlockCoord cell = snapshot.getKey();
-            BlockState current = level.getBlockState(new BlockPos(cell.x(), cell.y(), cell.z()));
-            if (!current.equals(snapshot.getValue()) && !expectedCells.contains(cell)) {
-                problems.add("лишний блок духа в " + cell + ": был "
-                        + snapshot.getValue().getBlock() + ", стал " + current.getBlock());
-            }
-        }
-        for (Schematic.PlacedEntry entry : entries) {
-            BlockCoord cell = entry.pos();
-            if (!entry.optional()
-                    && BlockItems.hasBlockItem(entry.block())
-                    && !wasAlready(entry, before)
-                    && !(level instanceof ServerLevel server
-                            && PlacedBlocksData.get(server)
-                                    .isSpiritMarked(new BlockPos(cell.x(), cell.y(), cell.z())))) {
-                problems.add("клетка " + cell + " не помечена духом: постановка не учтена");
             }
         }
         if (skipped != 0) {

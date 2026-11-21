@@ -6,7 +6,6 @@ import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.api.PlanBuilding;
 import com.theminespirit.neoforge.board.PlotPlanBlocks.Plan;
-import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.Map;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
@@ -28,13 +27,10 @@ public final class PlotCellStructure {
         if (site == null || !site.protectionCell(pos.getX(), pos.getY(), pos.getZ())) {
             return false;
         }
-        PlacedBlocksData placed = PlacedBlocksData.get(level);
         BlockCoord cell = new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
-        Mark mark = placed.isSpiritMarked(pos) ? Mark.SPIRIT : placed.isMarked(pos) ? Mark.MARKED : Mark.NONE;
-        boolean planned = plan(site).blocks().containsKey(cell)
+        return plan(site).blocks().containsKey(cell)
                 || (site.protectionBuilding(cell.x(), cell.y(), cell.z()) == PlanBuilding.MINE
                         && mineFloors(site).contains(cell));
-        return structure(planned, mark);
     }
 
     static boolean plannedChest(ServerLevel level, BlockCoord cell) {
@@ -44,16 +40,6 @@ public final class PlotCellStructure {
         }
         String block = plan(site).blocks().get(cell);
         return block != null && block.endsWith("chest");
-    }
-
-    enum Mark {
-        NONE,
-        SPIRIT,
-        MARKED
-    }
-
-    static boolean structure(boolean planned, Mark mark) {
-        return planned || mark == Mark.MARKED;
     }
 
     private static @Nullable StageSite site(ServerLevel level) {

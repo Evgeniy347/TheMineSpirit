@@ -31,7 +31,6 @@ final class FloatingScanCycle {
     static final int SLICES_PER_STEP = FloatingSweep.SLICES_PER_STEP;
     static final int STEP_EVERY_TICKS = FloatingSweep.STEP_EVERY_TICKS;
     private static final int WHOLE_CYCLE = 1_000_000;
-    private static final int LEGACY_EVERY = 25;
     private static final Map<ResourceKey<Level>, FloatingScanCycle> CYCLES = new HashMap<>();
 
     private record Area(int minX, int minZ, int width, int depth, int bottom, int top) {}
@@ -41,7 +40,6 @@ final class FloatingScanCycle {
     private List<FloatingBlocks.Finding> pending = new ArrayList<>();
     private List<FloatingBlocks.Finding> published = List.of();
     private Set<BlockCoord> seen = new LinkedHashSet<>();
-    private int placedSteps;
 
     private FloatingScanCycle() {}
 
@@ -94,8 +92,7 @@ final class FloatingScanCycle {
         for (SectionSlice slice : slices(area, bottom, top, WHOLE_CYCLE)) {
             scanSlice(level, area, slice, scan, candidates, seen, found);
         }
-        collectPlaced(level, region, new Bounds(bottom, top), scan, seen, found, true);
-        collectPlaced(level, region, new Bounds(bottom, top), scan, seen, found, false);
+        collectPlaced(level, region, new Bounds(bottom, top), scan, seen, found);
         return List.copyOf(found);
     }
 
@@ -111,10 +108,7 @@ final class FloatingScanCycle {
         for (SectionSlice slice : batch.slices()) {
             scanSlice(level, area, slice, scan, candidates, seen, pending);
         }
-        collectPlaced(level, region, new Bounds(bottom, top), scan, seen, pending, true);
-        if (++placedSteps % LEGACY_EVERY == 0) {
-            collectPlaced(level, region, new Bounds(bottom, top), scan, seen, pending, false);
-        }
+        collectPlaced(level, region, new Bounds(bottom, top), scan, seen, pending);
         if (batch.cycleDone()) {
             published = List.copyOf(pending);
             pending = new ArrayList<>();
@@ -131,7 +125,6 @@ final class FloatingScanCycle {
         pending = new ArrayList<>();
         published = List.of();
         seen = new LinkedHashSet<>();
-        placedSteps = 0;
     }
 
     private static List<SectionSlice> slices(ColumnMask area, int bottom, int top, int perStep) {
@@ -196,9 +189,8 @@ final class FloatingScanCycle {
             Bounds bounds,
             FloatingScan.Scan scan,
             Set<BlockCoord> seen,
-            List<FloatingBlocks.Finding> found,
-            boolean temporary) {
-        for (BlockCoord cell : temporary ? FloatingScan.placed(level, area) : FloatingScan.legacy(level, area)) {
+            List<FloatingBlocks.Finding> found) {
+        for (BlockCoord cell : FloatingScan.placed(level, area)) {
             if (cell.y() >= bounds.bottom()
                     && cell.y() <= bounds.top()
                     && area.contains(cell.x(), cell.z())

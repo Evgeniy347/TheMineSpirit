@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.policy;
 
 import com.theminespirit.core.policy.BlockProtection;
+import com.theminespirit.neoforge.lease.LeaseData;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.BlockPos;
@@ -18,7 +19,7 @@ final class ProtectionNeighbours {
                     if (dx != 0 || dy != 0 || dz != 0) {
                         BlockPos near = pos.offset(dx, dy, dz);
                         boolean spirits = level instanceof ServerLevel server
-                                && PlacedBlocksData.get(server).isSpiritMarked(near);
+                                && LeaseData.get(server).isActive(near);
                         ids.add(spirits ? NATURAL_STAND_IN : ProtectionGate.blockId(level.getBlockState(near)));
                     }
                 }

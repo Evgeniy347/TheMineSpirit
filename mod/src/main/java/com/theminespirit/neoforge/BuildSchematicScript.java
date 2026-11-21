@@ -24,6 +24,7 @@ import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.policy.RemovalLog;
 import com.theminespirit.core.script.api.BuildSchematicParams;
 import com.theminespirit.core.town.PlotProtection;
+import com.theminespirit.neoforge.lease.LeaseRun;
 import com.theminespirit.neoforge.movement.PathNetworkService;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -78,6 +79,10 @@ final class BuildSchematicScript implements ScriptInstance {
     String failureReason;
     String lastRefusal = "";
     TaskRunner supplyRunner;
+
+    @Nullable
+    LeaseRun clearLease;
+
     int crafts;
     int trips;
     int standsChosen;
@@ -186,6 +191,27 @@ final class BuildSchematicScript implements ScriptInstance {
 
     Optional<ScriptStatus> placeOne(Schematic.PlacedEntry entry) {
         return placement.placeOne(entry);
+    }
+
+    LeaseRun clearLease() {
+        if (clearLease == null) {
+            clearLease = LeaseRun.open(spirit, "build");
+        }
+        return clearLease;
+    }
+
+    void commitClearLease() {
+        if (clearLease != null) {
+            clearLease.commit();
+            clearLease = null;
+        }
+    }
+
+    void orphanClearLease() {
+        if (clearLease != null) {
+            clearLease.orphan();
+            clearLease = null;
+        }
     }
 
     ReachPlanner.World placeWorld(Map<BlockCoord, Schematic.PlacedEntry> byCell, boolean outsideOnly) {

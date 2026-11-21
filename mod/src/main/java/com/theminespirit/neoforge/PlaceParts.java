@@ -1,8 +1,6 @@
 package com.theminespirit.neoforge;
 
-import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import net.minecraft.core.BlockPos;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -28,13 +26,6 @@ final class PlaceParts {
                 SoundSource.BLOCKS,
                 (sound.getVolume() + 1.0F) / 2.0F,
                 sound.getPitch() * 0.8F);
-        if (level instanceof ServerLevel server) {
-            PlacedBlocksData.get(server).markSpirit(target);
-            BlockPos second = secondPart(target, state);
-            if (second != null) {
-                PlacedBlocksData.get(server).markSpirit(second);
-            }
-        }
     }
 
     static boolean firstOfTwoParts(BlockState state) {

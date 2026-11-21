@@ -6,8 +6,8 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.lease.LeaseData;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
-import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
@@ -18,10 +18,12 @@ final class ClearTargets {
     private final Level level;
     private final @Nullable LeaseBook leases;
     private final boolean keepGround;
+    private final @Nullable String exemptLease;
 
-    ClearTargets(Level level, UUID owner, boolean keepGround) {
+    ClearTargets(Level level, @Nullable String exemptLease, boolean keepGround) {
         this.level = level;
         this.keepGround = keepGround;
+        this.exemptLease = exemptLease;
         this.leases =
                 level instanceof ServerLevel server ? LeaseData.get(server).book() : null;
     }
@@ -35,7 +37,7 @@ final class ClearTargets {
         if (leases == null) {
             return false;
         }
-        return offLimits(leases.owner(cell));
+        return offLimits(leases.owner(cell).filter(lease -> !Objects.equals(lease.id(), exemptLease)));
     }
 
     static boolean offLimits(Optional<?> leaseOwner) {

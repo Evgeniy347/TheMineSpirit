@@ -78,7 +78,6 @@ final class WorldAreaInputs {
                 found.pits(),
                 raised,
                 FloatingBlocks.hangingCount(floating),
-                found.traces().size(),
                 new Marks(
                         blockCounts(level, raised),
                         found.pits().isEmpty()
@@ -137,8 +136,8 @@ final class WorldAreaInputs {
     }
 
     static GraphSiteFacts.Terrain terrain(
-            List<BlockCoord> holes, Map<BlockCoord, Integer> depths, List<BlockCoord> extras, int hanging, int traces) {
-        return terrain(holes, depths, extras, hanging, traces, new Marks(Map.of(), Map.of(), Map.of()));
+            List<BlockCoord> holes, Map<BlockCoord, Integer> depths, List<BlockCoord> extras, int hanging) {
+        return terrain(holes, depths, extras, hanging, new Marks(Map.of(), Map.of(), Map.of()));
     }
 
     static GraphSiteFacts.Terrain terrain(
@@ -146,9 +145,8 @@ final class WorldAreaInputs {
             Map<BlockCoord, Integer> depths,
             List<BlockCoord> extras,
             int hanging,
-            int traces,
             Marks marks) {
-        return terrain(holes, depths, extras, hanging, traces, marks, false);
+        return terrain(holes, depths, extras, hanging, marks, false);
     }
 
     static GraphSiteFacts.Terrain terrain(
@@ -156,12 +154,11 @@ final class WorldAreaInputs {
             Map<BlockCoord, Integer> depths,
             List<BlockCoord> extras,
             int hanging,
-            int traces,
             Marks marks,
             boolean unknown) {
-        if (hanging < 0 || traces < 0 || marks.natural() < 0) {
-            throw new IllegalArgumentException("Висящее " + hanging + ", следы " + traces + " и природное "
-                    + marks.natural() + " не бывают отрицательными: отсутствие — ноль");
+        if (hanging < 0 || marks.natural() < 0) {
+            throw new IllegalArgumentException("Висящее " + hanging + " и природное " + marks.natural()
+                    + " не бывают отрицательными: отсутствие — ноль");
         }
         int deepest = depths.values().stream().mapToInt(Integer::intValue).max().orElse(0);
         int heightDrop = 0;
@@ -175,7 +172,6 @@ final class WorldAreaInputs {
                 hanging,
                 heightDrop,
                 deepest,
-                traces,
                 marks.cut(),
                 marks.fill(),
                 marks.floating(),

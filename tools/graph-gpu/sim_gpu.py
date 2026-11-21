@@ -200,8 +200,6 @@ class World:
         elif name == "level_lot":
             self._terrain("heightDrop", 0, absolute=True)
             self._terrain_map("cut")
-        elif name == "restore_trace":
-            self._terrain("traces", -1)
 
     def _gear_crafted(self, kind):
         spirits = (self.facts.get("spirits") or {}).values()
@@ -261,8 +259,6 @@ class World:
                 if spirit.get("stuck"):
                     spirit["stuck"] = False
                     break
-        elif makes == "trail_clean":
-            self._terrain("traces", -1)
         at = task_id.find("@")
         way = self.graph.way(task_id if at < 0 else task_id[:at])
         actual = ((facts.get("stageReqs") or {}).get("actual"))
@@ -553,7 +549,6 @@ def _field_world(graph):
 
 def _dig_world(graph):
     world = ready_world(graph)
-    world.stock["trail_clean"] = 0
     world.with_facts({"spirits": {
         "spirit-1": {"id": "spirit-1", "position": {"x": 0, "y": 64, "z": 0},
                      "trapped": True, "trap": "sealed"},

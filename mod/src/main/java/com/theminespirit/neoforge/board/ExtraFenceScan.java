@@ -6,7 +6,6 @@ import com.theminespirit.core.town.FenceDemolition;
 import com.theminespirit.core.town.OrchardPlot;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.neoforge.BlockStates;
-import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -27,7 +26,6 @@ final class ExtraFenceScan {
     static void collect(DemolitionCollect.Ctx ctx, List<BlockCoord> fences, List<String> notes) {
         ServerLevel level = ctx.level();
         StageSite site = ctx.site();
-        PlacedBlocksData placed = PlacedBlocksData.get(level);
         Set<Long> ring = keys(site.ring().posts());
         Set<Long> orchards = orchardKeys(site);
         List<BlockCoord> orchardStubs = new ArrayList<>();
@@ -52,14 +50,8 @@ final class ExtraFenceScan {
                     continue;
                 }
                 BlockCoord at = new BlockCoord(x, y, z);
-                FenceDemolition.StubFacts facts = new FenceDemolition.StubFacts(
-                        ctx.plan().planned(at),
-                        inPlacement,
-                        inOrchard,
-                        false,
-                        false,
-                        placed.isSpiritMarked(pos),
-                        placed.isMarked(pos));
+                FenceDemolition.StubFacts facts =
+                        new FenceDemolition.StubFacts(ctx.plan().planned(at), inPlacement, inOrchard, false, false);
                 if (!FenceDemolition.stub(BlockStates.idOf(state), facts)
                         || fences.contains(at)
                         || hidden(ctx.unreachable().failureCount(at))

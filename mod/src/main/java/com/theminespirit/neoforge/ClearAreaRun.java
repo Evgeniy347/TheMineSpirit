@@ -264,6 +264,7 @@ final class ClearAreaRun {
             return;
         }
         brokenKind = ClearBlocked.blockAt(session.level, session.currentTarget);
+        session.permit.record(session.level, ClearAreaSession.toPos(session.currentTarget));
         session.state = ClearAreaSession.State.BREAK;
     }
 

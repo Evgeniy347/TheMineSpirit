@@ -11,7 +11,6 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.FloatingBlocks;
 import com.theminespirit.core.town.FloatingCleanup;
 import com.theminespirit.core.town.StageSite;
-import com.theminespirit.core.town.TreeSupport;
 import com.theminespirit.neoforge.BlockStates;
 import com.theminespirit.neoforge.SettlementChestStore;
 import java.util.ArrayList;
@@ -20,7 +19,6 @@ import java.util.List;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.tags.BlockTags;
 import net.minecraft.world.Container;
 import org.slf4j.Logger;
 
@@ -144,7 +142,6 @@ final class DemolitionCollect {
                         found.notes.add(at + " — " + finding.reason() + ": стоянка рядом есть — в уборку");
                     }
                     found.remove.addAll(finding.cells());
-                    DemolitionGuard.claimForCleanup(level, ctx.plan(), finding);
                     if (finding.kind() == FloatingBlocks.Kind.TREE && found.placement == null) {
                         found.placement = DemolitionTickets.treePlacement(treeStand, finding);
                         found.treeCells = List.copyOf(finding.cells());
@@ -179,12 +176,9 @@ final class DemolitionCollect {
         boolean plannedFence =
                 finding.kind() == FloatingBlocks.Kind.FENCE && site.fenceStrip().contains(at.x(), at.z());
         boolean needed = finding.kind() == FloatingBlocks.Kind.STATION && needed(level, plan, finding.blockId());
-        boolean stump = finding.kind() == FloatingBlocks.Kind.STUMP
-                && TreeSupport.isolatedLog(
-                        at, cell -> level.getBlockState(pos(cell)).is(BlockTags.LOGS));
         return new FloatingCleanup.Rooms(
                 yardReady,
-                DemolitionGuard.protectedForDemolish(level, at, finding.blockId(), plan, stump),
+                DemolitionGuard.protectedForDemolish(level, at, finding.blockId(), plan),
                 empty(level, at),
                 needed,
                 reachable,

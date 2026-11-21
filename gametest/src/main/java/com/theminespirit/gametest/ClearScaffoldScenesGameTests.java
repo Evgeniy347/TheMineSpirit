@@ -10,7 +10,6 @@ import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.lease.LeaseData;
 import com.theminespirit.neoforge.lease.LeaseRun;
-import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
@@ -65,11 +64,9 @@ public final class ClearScaffoldScenesGameTests {
         SpiritEntity lower = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(7, 1, 2));
         lower.getInventory().addItem(new ItemStack(Items.IRON_SHOVEL));
         LeaseRun owned = LeaseRun.open(spirit, "scaffold");
-        PlacedBlocksData placed = PlacedBlocksData.get(helper.getLevel());
         for (int dy = 0; dy < OWNED_HEIGHT; dy++) {
             BlockPos cell = OWNED.above(dy);
             helper.setBlock(cell, Blocks.DIRT);
-            placed.markSpirit(helper.absolutePos(cell));
             owned.placed(helper.absolutePos(cell), "minecraft:dirt");
         }
         owned.orphan();

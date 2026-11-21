@@ -114,7 +114,7 @@ class CrossPathScenarioTests {
                 Map.of(),
                 Map.of("field", unknown("field"), "hut", unknown("hut")),
                 List.of(),
-                new GraphSiteFacts.Terrain(2, 0, 0, 2, 0, Map.of(), Map.of("minecraft:dirt", 4), Map.of(), true),
+                new GraphSiteFacts.Terrain(2, 0, 0, 2, Map.of(), Map.of("minecraft:dirt", 4), Map.of(), true),
                 new GraphSiteFacts.StageReqs(Map.of(), Map.of()),
                 GraphFeedback.none(),
                 List.of(),
@@ -179,7 +179,7 @@ class CrossPathScenarioTests {
                 threats,
                 List.of(chest(Map.of("food", 8, "oak_log", 8))),
                 new GraphSiteFacts.Terrain(
-                        2, 6, 0, 2, 1, Map.of(), Map.of("minecraft:dirt", 4), Map.of("minecraft:oak_leaves", 6)),
+                        2, 6, 0, 2, Map.of(), Map.of("minecraft:dirt", 4), Map.of("minecraft:oak_leaves", 6)),
                 Map.of(
                         "hut", damaged("hut", 20, 0, Map.of("oak_log", 20)),
                         "fence", damaged("fence", 40, 3, Map.of("oak_fence", 5))));

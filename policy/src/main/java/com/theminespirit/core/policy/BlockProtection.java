@@ -130,12 +130,7 @@ public final class BlockProtection implements StrayRules {
         return maxUnprotectVolume;
     }
 
-    public Decision check(String blockId, List<String> neighbours, boolean playerPlaced, boolean inProtectedZone) {
-        return check(blockId, neighbours, new Placement(playerPlaced, inProtectedZone, false));
-    }
-
     public Decision check(String blockId, List<String> neighbours, Placement placement) {
-        boolean playerPlaced = placement.playerPlaced();
         boolean inProtectedZone = placement.inProtectedZone();
         boolean unprotectArea = placement.unprotectArea();
         Objects.requireNonNull(blockId, "Id блока не может быть null: без него неизвестно, что проверять");
@@ -161,11 +156,6 @@ public final class BlockProtection implements StrayRules {
         if (unprotectArea) {
             return new Allowed();
         }
-        if (playerPlaced) {
-            return new Refused(
-                    PolicyId.PLAYER_BUILDINGS,
-                    "блок '" + blockId + "' поставил игрок: чужие постройки дух не разбирает");
-        }
         int artificial = 0;
         String example = null;
         for (String neighbour : neighbours) {
@@ -184,7 +174,6 @@ public final class BlockProtection implements StrayRules {
     }
 
     public Decision checkUse(List<String> neighbours, Placement placement) {
-        boolean playerPlaced = placement.playerPlaced();
         boolean inProtectedZone = placement.inProtectedZone();
         boolean unprotectArea = placement.unprotectArea();
         Objects.requireNonNull(neighbours, "Список соседей не может быть null: по нему отличают постройку от природы");
@@ -198,10 +187,6 @@ public final class BlockProtection implements StrayRules {
         }
         if (unprotectArea) {
             return new Allowed();
-        }
-        if (playerPlaced) {
-            return new Refused(
-                    PolicyId.PLAYER_BUILDINGS, "блок поставил игрок: чужие механизмы дух не трогает без разрешения");
         }
         int artificial = 0;
         String example = null;
@@ -220,5 +205,5 @@ public final class BlockProtection implements StrayRules {
         return new Allowed();
     }
 
-    public record Placement(boolean playerPlaced, boolean inProtectedZone, boolean unprotectArea) {}
+    public record Placement(boolean inProtectedZone, boolean unprotectArea) {}
 }

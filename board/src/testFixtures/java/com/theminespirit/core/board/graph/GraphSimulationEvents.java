@@ -26,8 +26,7 @@ final class GraphSimulationEvents {
             removeStray(world);
         } else if (GraphWorldEvents.BACKFILL.equals(event)
                 || GraphWorldEvents.CLEAR_FLOATING.equals(event)
-                || GraphWorldEvents.LEVEL_LOT.equals(event)
-                || GraphWorldEvents.RESTORE_TRACE.equals(event)) {
+                || GraphWorldEvents.LEVEL_LOT.equals(event)) {
             terrain(world, event);
         }
     }
@@ -122,7 +121,6 @@ final class GraphSimulationEvents {
         int pits = terrain.pits();
         int hanging = terrain.hanging();
         int heightDrop = terrain.heightDrop();
-        int traces = terrain.traces();
         Map<String, Integer> cut = terrain.cut();
         Map<String, Integer> fill = terrain.fill();
         Map<String, Integer> floating = terrain.floating();
@@ -135,8 +133,6 @@ final class GraphSimulationEvents {
         } else if (GraphWorldEvents.LEVEL_LOT.equals(event)) {
             heightDrop = 0;
             cut = Map.of();
-        } else {
-            traces = Math.max(0, traces - 1);
         }
         world.facts = withTerrain(
                 facts,
@@ -145,7 +141,6 @@ final class GraphSimulationEvents {
                         hanging,
                         heightDrop,
                         terrain.deepestPit(),
-                        traces,
                         cut,
                         fill,
                         floating,

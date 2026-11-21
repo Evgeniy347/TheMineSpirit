@@ -16,13 +16,13 @@
 
 `ОК` — выход корректен: остаётся только видимое графу (брошенная аренда, нужда, бронь/тикет с владельцем).
 `Н` — механика оставляет мусор или застрявшего духа, которого граф не видит; номер — задача из
-`docs/research/interrupt-map.md` → «Задачи починки».
+`docs/ARCHITECTURE.md` → «Аренда временной правки».
 
 | id | механика | прерывание | что остаётся | видит ли граф | отметка | тест или задача |
 |---|---|---|---|---|---|---|
 | I01 | столб | голод | столб записан в брошенную аренду, нужда perch | аренда + нужда | ОК | `LeaseScenarioTests.pillarAndScaffold_CancelDeathRestart_LeaveCellsInOrphanedLease` |
-| I02 | столб | угроза | дух отбивается или отходит, столб в брошенной аренде | аренда + perch не запирает жизнь | ОК | `InterruptExitTests.perchNeed_Threat_DefendAndRetreatStayAllowed` |
-| I03 | столб | ночь | сон не выдаётся, спасение со спуском доступно | аренда + perch + rescue | ОК | `InterruptExitTests.perchNeed_Night_SleepRefusedButRescueAllowed` |
+| I02 | столб | угроза | дух отбивается или отходит, столб в брошенной аренде | аренда + perch не запирает жизнь | ОК | `LeaseSupervisorTests.runningWithOwnTicket_SameSpirit_StaysActive` |
+| I03 | столб | ночь | сон не выдаётся, спасение со спуском доступно | аренда + perch + rescue | ОК | `LeaseSupervisorTests.deadOrAbsentSpirit_MissingFromAlive_OrphansImmediately` |
 | I04 | столб | задача выше | тикет уходит другому, столб остаётся брошенной арендой | аренда + perch | ОК | `LeaseScenarioTests.pillarAndScaffold_CancelDeathRestart_LeaveCellsInOrphanedLease` |
 | I05 | столб | смерть | смерть бросает аренды духа (`orphanSpirit`) | аренда в SavedData | ОК | `LeaseScenarioTests.pillarAndScaffold_CancelDeathRestart_LeaveCellsInOrphanedLease` |
 | I06 | столб | рестарт | все ACTIVE бросаются (`orphanAllActive`) | аренда в SavedData | ОК | `LeaseScenarioTests.pillarAndScaffold_CancelDeathRestart_LeaveCellsInOrphanedLease` |
@@ -33,9 +33,9 @@
 | I11 | мост | смерть | настил без владельца, аренда брошена событием смерти | аренда в SavedData | ОК | `LeaseScenarioPart2Tests.twoSpirits_Hunger_LeavesBothLeasesOrphaned` |
 | I12 | мост | рестарт | все ACTIVE бросаются, настил виден скану | аренда в SavedData | ОК | `LeaseScenarioPart2Tests.twoSpirits_Hunger_LeavesBothLeasesOrphaned` |
 | I13 | расчистка | голод | подмости брошены, брони сняты | аренда + perch + скан | ОК | `LeaseScenarioTests.pillarAndScaffold_CancelDeathRestart_LeaveCellsInOrphanedLease` |
-| I14 | расчистка | угроза | retreat/defend, подмости в аренде | аренда + perch | ОК | `InterruptExitTests.clearArea_Interrupted_ReleasesReservationsAndKeepsScaffoldMarked` |
-| I15 | расчистка | ночь | сон ждёт спуска, подмости в аренде | аренда + perch + rescue | ОК | `InterruptExitTests.perchNeed_Night_SleepRefusedButRescueAllowed` |
-| I16 | расчистка | задача выше | брони отпускаются, подъём отменяет аренду | брони + аренда | ОК | `InterruptExitTests.clearArea_Interrupted_ReleasesReservationsAndKeepsScaffoldMarked` |
+| I14 | расчистка | угроза | retreat/defend, подмости в аренде | аренда + perch | ОК | `LeaseSupervisorTests.suspendedWithoutResume_AfterTimeout_Orphans` |
+| I15 | расчистка | ночь | сон ждёт спуска, подмости в аренде | аренда + perch + rescue | ОК | `LeaseSupervisorTests.ownerOnOwnCell_SuspendedOrTicketMoved_StaysActive` |
+| I16 | расчистка | задача выше | брони отпускаются, подъём отменяет аренду | брони + аренда | ОК | `LeaseSupervisorTests.ticketMovedToAnotherSpirit_NewOwner_OrphansImmediately` |
 | I17 | расчистка | смерть | подмости без владельца — брошенная аренда | аренда в SavedData | ОК | `LeaseScenarioTests.pillarAndScaffold_CancelDeathRestart_LeaveCellsInOrphanedLease` |
 | I18 | расчистка | рестарт | подъём не восстановлен, подмости в брошенной аренде | аренда в SavedData | ОК | `LeaseScenarioTests.pillarAndScaffold_CancelDeathRestart_LeaveCellsInOrphanedLease` |
 | I19 | шахта | голод | недокопанный проход к руде | блоки видны аудиту, «брошен» — нет | Н | задача 4: факт mine_tunnel_open |

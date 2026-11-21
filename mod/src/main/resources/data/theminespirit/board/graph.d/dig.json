@@ -17,12 +17,6 @@
       "base": 25,
       "stage": 1,
       "implemented": true
-    },
-    "trail_clean": {
-      "xmin": 0,
-      "base": 21,
-      "stage": 1,
-      "implemented": true
     }
   },
   "ways": [
@@ -58,18 +52,6 @@
         "#planks": 4
       },
       "ticks": 400,
-      "implemented": true
-    },
-    {
-      "id": "restore_trace",
-      "case": "FILL_CRATER",
-      "makes": "trail_clean",
-      "yield": 1,
-      "weight": 1.0,
-      "consumes": {
-        "#stone_crafting": 1
-      },
-      "ticks": 200,
       "implemented": true
     }
   ]

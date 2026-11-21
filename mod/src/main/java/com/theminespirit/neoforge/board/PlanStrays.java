@@ -55,7 +55,6 @@ final class PlanStrays {
                 notes.add(at + " — " + cell.blockId() + " вне плана внутри ограды: в уборку");
             }
             remove.add(at);
-            DemolitionGuard.claimStray(level, at);
         }
         return new Result(remove, notes, unreachable, guarded);
     }

@@ -158,7 +158,6 @@ public final class BoardGameTests {
         Lease orphan = data.book().open(spirit, null, "bridge", 20);
         data.book().record(orphan.id(), LeaseCell.state(new BlockCoord(2, 64, 0), "open", "closed"));
         data.book().orphan(orphan.id());
-        data.migrateLegacy(List.of(new BlockCoord(3, 64, 0)), 30);
 
         CompoundTag saved = data.save(new CompoundTag(), helper.getLevel().registryAccess());
         LeaseData loaded = LeaseData.load(saved, helper.getLevel().registryAccess());
@@ -168,9 +167,6 @@ public final class BoardGameTests {
                 "Аренды временных правок обязаны пережить перезапуск: иначе брошенные подмости и мосты исчезнут "
                         + "из скана, а действующие потеряют владельца; в NBT "
                         + loaded.book().all());
-        helper.assertTrue(
-                loaded.migrated(),
-                "Признак миграции старых T-меток обязан пережить перезапуск: иначе они мигрируют снова");
     }
 
     private static void assertFailuresSurviveReload(GameTestHelper helper) {

@@ -13,7 +13,6 @@ import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.BoardService;
 import com.theminespirit.neoforge.lease.LeaseData;
 import com.theminespirit.neoforge.lease.LeaseRun;
-import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -35,11 +34,9 @@ final class DigOutPillarScene {
         List<BlockPos> column = new ArrayList<>();
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), base.above(5));
         LeaseRun lease = LeaseRun.open(spirit, "scaffold");
-        PlacedBlocksData placed = PlacedBlocksData.get(helper.getLevel());
         for (int dy = 0; dy < 5; dy++) {
             BlockPos cell = base.above(dy);
             helper.setBlock(cell, Blocks.DIRT);
-            placed.markSpirit(helper.absolutePos(cell));
             lease.placed(helper.absolutePos(cell), "minecraft:dirt");
             column.add(cell);
         }

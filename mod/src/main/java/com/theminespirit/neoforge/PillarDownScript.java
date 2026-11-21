@@ -8,7 +8,6 @@ import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.api.CatalogLimits;
 import com.theminespirit.neoforge.lease.LeaseRun;
-import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -56,16 +55,16 @@ public final class PillarDownScript implements ScriptInstance {
     }
 
     private void scan() {
-        if (!(spirit.level() instanceof ServerLevel server)) {
+        if (!(spirit.level() instanceof ServerLevel)) {
             return;
         }
         Level level = spirit.level();
-        PlacedBlocksData data = PlacedBlocksData.get(server);
         BlockPos feet = spirit.blockPosition();
         int floor = Math.max(level.getMinBuildHeight() + 1, feet.getY() - CatalogLimits.COUNT_MAX);
         for (int y = feet.getY() - 1; y >= floor; y--) {
             BlockPos pos = new BlockPos(feet.getX(), y, feet.getZ());
-            if (data.isOwn(pos) && !level.getBlockState(pos).isAir()) {
+            if (LeaseRun.ownedAnywhereAt(spirit, pos) != null
+                    && !level.getBlockState(pos).isAir()) {
                 own.add(new BlockCoord(pos.getX(), pos.getY(), pos.getZ()));
             }
         }
@@ -89,14 +88,11 @@ public final class PillarDownScript implements ScriptInstance {
     }
 
     public static boolean ownBelow(SpiritEntity spirit) {
-        if (!(spirit.level() instanceof ServerLevel server)) {
-            return false;
-        }
         BlockPos below = spirit.blockPosition().below();
         if (spirit.level().getBlockState(below).isAir()) {
             return false;
         }
-        return PlacedBlocksData.get(server).isOwn(below) || LeaseRun.ownedAnywhereAt(spirit, below) != null;
+        return LeaseRun.ownedAnywhereAt(spirit, below) != null;
     }
 
     private ScriptStatus fail(String reason) {

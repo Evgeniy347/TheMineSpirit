@@ -4,7 +4,6 @@ import com.mojang.logging.LogUtils;
 import com.theminespirit.core.building.EarthCover;
 import com.theminespirit.core.movement.EscapeRestore;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -72,9 +71,6 @@ final class DigOutRestore {
                 continue;
             }
             SpiritBlocks.restore((ServerLevel) spirit.level(), cell, entry.getValue(), spirit, "DIG_OUT_BACKFILL");
-            if (level instanceof ServerLevel server) {
-                PlacedBlocksData.get(server).markSpirit(cell);
-            }
             iterator.remove();
             returnedCells.add(cell);
             restored++;

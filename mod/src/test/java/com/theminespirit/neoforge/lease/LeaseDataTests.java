@@ -33,7 +33,6 @@ class LeaseDataTests {
         Lease orphan = data.book().open(null, null, "bridge", 20);
         data.book().record(orphan.id(), LeaseCell.state(new BlockCoord(4, 64, 0), "lit", "unlit"));
         data.book().orphan(orphan.id());
-        data.migrateLegacy(List.of(new BlockCoord(5, 64, 0)), 30);
 
         CompoundTag saved = data.save(new CompoundTag(), RegistryAccess.EMPTY);
         LeaseData loaded = LeaseData.load(saved, null);
@@ -44,11 +43,6 @@ class LeaseDataTests {
                 "Аренды обязаны пережить перезапуск клетка в клетку: иначе брошенные подмости и мосты исчезнут "
                         + "из скана, а действующие потеряют владельца; в NBT "
                         + loaded.book().all()
-                        + " При смене saveLoad_AllCellKindsAndNullOwners_SurviveRestart проверь это утверждение.");
-        assertTrue(
-                loaded.migrated(),
-                "Признак миграции старых T-меток обязан пережить перезапуск: иначе они мигрируют снова и "
-                        + "перезапишут аренду legacy"
                         + " При смене saveLoad_AllCellKindsAndNullOwners_SurviveRestart проверь это утверждение.");
     }
 

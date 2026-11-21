@@ -37,7 +37,7 @@ class WorldReportTests {
                 List.of(new GraphSiteFacts.Stray(
                         "stray:fence", "fence", new GraphFacts.Position(1, 64, 1), null, Map.of("oak_fence", 3))),
                 new GraphSiteFacts.Terrain(
-                        2, 4, 3, 5, 1, Map.of("minecraft:dirt", 2), Map.of("minecraft:dirt", 2), Map.of(), false, 9),
+                        2, 4, 3, 5, Map.of("minecraft:dirt", 2), Map.of("minecraft:dirt", 2), Map.of(), false, 9),
                 new GraphSiteFacts.StageReqs(Map.of(), Map.of()),
                 GraphFeedback.none(),
                 List.of(),
@@ -102,7 +102,6 @@ class WorldReportTests {
                                 183,
                                 0,
                                 0,
-                                0,
                                 Map.of(),
                                 Map.of(),
                                 Map.of("minecraft:oak_leaves", 120, "minecraft:oak_log", 63),
@@ -124,7 +123,7 @@ class WorldReportTests {
         GraphFacts facts = GraphFacts.empty()
                 .withWorld(new GraphWorldFacts(
                         List.of(),
-                        new GraphSiteFacts.Terrain(0, 0, 0, 0, 0, Map.of(), Map.of(), Map.of(), true),
+                        new GraphSiteFacts.Terrain(0, 0, 0, 0, Map.of(), Map.of(), Map.of(), true),
                         Map.of()));
 
         assertTrue(

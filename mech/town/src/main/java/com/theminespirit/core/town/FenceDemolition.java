@@ -8,13 +8,7 @@ public final class FenceDemolition {
     private static final IdFilter FENCES = IdFilter.of(List.of("*_fence", "*_fence_gate"));
 
     public record StubFacts(
-            boolean planned,
-            boolean inPlacement,
-            boolean inOrchard,
-            boolean inFenceStrip,
-            boolean inRing,
-            boolean spiritMarked,
-            boolean playerMarked) {}
+            boolean planned, boolean inPlacement, boolean inOrchard, boolean inFenceStrip, boolean inRing) {}
 
     private FenceDemolition() {}
 
@@ -28,8 +22,6 @@ public final class FenceDemolition {
         Objects.requireNonNull(blockId, "Id блока не может быть null: снос заглушки решается по виду блока");
         Objects.requireNonNull(facts, "Признаки клетки не могут быть null: без них не отличить заглушку от плана");
         return FENCES.matches(blockId)
-                && facts.spiritMarked()
-                && !facts.playerMarked()
                 && !facts.planned()
                 && !facts.inFenceStrip()
                 && !facts.inRing()

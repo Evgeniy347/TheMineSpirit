@@ -66,19 +66,12 @@ public class ClearAreaSession {
 
     final BuildResult tally = new BuildResult();
     final boolean demolish;
+    final DemolitionPermit permit;
     final ClearBlocked blocked;
     final TreeFelling felling;
     ClearScaffoldWork scaffold;
     private final Map<State, Integer> phaseTicks = new EnumMap<>(State.class);
     private ClearAreaRun run;
-
-    public ClearAreaSession(SpiritEntity spirit, BuildBox box) {
-        this(spirit, box, false);
-    }
-
-    public ClearAreaSession(SpiritEntity spirit, BuildBox box, boolean demolish) {
-        this(spirit, box, demolish, false);
-    }
 
     public ClearAreaSession(SpiritEntity spirit, BuildBox box, boolean demolish, boolean keepGround) {
         this.spirit = spirit;
@@ -89,8 +82,10 @@ public class ClearAreaSession {
         this.breaker = new BlockBreaker(spirit);
         this.approach = new Approach(spirit);
         this.reservations = BuildReservationHub.forLevel(level);
-        this.targets = new ClearTargets(level, spirit.getUUID(), keepGround);
         this.demolish = demolish;
+        this.permit = DemolitionPermit.open(spirit, demolish);
+        this.permit.claim(level, remaining);
+        this.targets = new ClearTargets(level, permit.leaseId(), keepGround);
         this.blocked = new ClearBlocked(level, box);
         this.felling = new TreeFelling(new LevelTreeView(level, TreeBlocks.logs(TreeSpecies.ALL)));
         this.felling.extend(remaining);
@@ -123,6 +118,7 @@ public class ClearAreaSession {
         approach.cancel();
         if (collector != null) collector.cancel();
         reservations.releaseAll(spirit.getUUID());
+        if (outcome == Outcome.RUNNING) permit.orphan();
     }
 
     public void suspend() {
@@ -145,10 +141,6 @@ public class ClearAreaSession {
     public ScriptInstance.Progress progress() {
         int total = Math.max(ClearSummary.volume(box), 1);
         return new ScriptInstance.Progress(Math.min(removed + skippedTotal(), total), total);
-    }
-
-    public int removed() {
-        return removed;
     }
 
     public int skippedTotal() {
@@ -220,11 +212,10 @@ public class ClearAreaSession {
             return;
         }
         if (removed == 0 && skippedTotal() - protectedSkipped - excludedSkipped > 0) {
-            fail(ClearSummary.of(this) + "; не убран ни один блок");
-            return;
-        }
-        if (demolish && removed == 0 && skippedTotal() - protectedSkipped - excludedSkipped > 0) {
-            fail(ClearSummary.of(this) + "; разбор не убрал ни одного блока: остатки нечем снять или они защищены");
+            fail(ClearSummary.of(this)
+                    + (demolish
+                            ? "; разбор не убрал ни одного блока: остатки нечем снять или они защищены"
+                            : "; не убран ни один блок"));
             return;
         }
         if (removed == 0 && skippedTotal() == 0) {
@@ -248,6 +239,7 @@ public class ClearAreaSession {
                             runner().vanished()),
                     ClearSummary.of(this));
         }
+        permit.commit();
         outcome = Outcome.SUCCEEDED;
     }
 
@@ -263,6 +255,7 @@ public class ClearAreaSession {
         outcome = Outcome.FAILED;
         tally.failed();
         cancel();
+        permit.orphan();
         return outcome;
     }
 

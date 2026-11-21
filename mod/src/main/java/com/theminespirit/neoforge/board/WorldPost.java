@@ -20,7 +20,6 @@ import com.theminespirit.core.town.PitGroups;
 import com.theminespirit.core.town.PlotLeveling;
 import com.theminespirit.core.town.SettlementScan;
 import com.theminespirit.core.town.StageSite;
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,12 +33,9 @@ final class WorldPost {
     static final String REPAIR_NODE = "repair:";
     static final String BACKFILL_PREFIX = "world:backfill:";
     static final List<String> OPEN_PREFIXES =
-            List.of(BACKFILL_PREFIX, "world:trace:", PlanBreachPost.PREFIX, AccessPost.PREFIX, AccessPost.CHEST_PREFIX);
+            List.of(BACKFILL_PREFIX, PlanBreachPost.PREFIX, AccessPost.PREFIX, AccessPost.CHEST_PREFIX);
     static final int BATCH = 8;
     private static final String REPAIR = REPAIR_NODE;
-    private static final Comparator<BlockCoord> ORDER = Comparator.comparingInt(BlockCoord::y)
-            .thenComparingInt(BlockCoord::x)
-            .thenComparingInt(BlockCoord::z);
     private static final Set<BlockCoord> PLANNED_SKIPPED = ConcurrentHashMap.newKeySet();
     private static final Logger LOGGER = LogUtils.getLogger();
 
@@ -65,7 +61,7 @@ final class WorldPost {
 
     static boolean handles(String node) {
         return switch (node) {
-            case "backfill", "level_lot", "restore_trace", "remove_route" -> true;
+            case "backfill", "level_lot", "plan_breach", "remove_route" -> true;
             default -> node.startsWith("repair:");
         };
     }
@@ -134,11 +130,7 @@ final class WorldPost {
         return switch (ticket.node()) {
             case "backfill" -> holes(post, ticket, found, priority);
             case "level_lot" -> MoundLots.post(post, ticket, found, priority, BATCH);
-            case "restore_trace" -> {
-                boolean plan = PlanBreachPost.post(post, ticket);
-                boolean trace = traces(post, ticket, found, priority);
-                yield plan || trace;
-            }
+            case "plan_breach" -> PlanBreachPost.post(post, ticket);
             case "remove_route" -> removeRoute(post, ticket, priority);
             default -> false;
         };
@@ -224,37 +216,6 @@ final class WorldPost {
             post.submit(
                     post.ticket(id, BoardCase.REPAIR_BUILDING, Optional.empty(), priority, ticket.id(), Map.of()),
                     TicketTarget.at(first).withLeveling(stale.trail().removal()));
-            posted = true;
-        }
-        return posted;
-    }
-
-    private static boolean traces(
-            GraphPost post, GraphTickets.Ticket ticket, SettlementScan.Strays found, int priority) {
-        if (found.traces().isEmpty()) {
-            return false;
-        }
-        int room = room(post.openCount("world:trace:"), BATCH);
-        if (room == 0) {
-            return true;
-        }
-        boolean posted = false;
-        for (BlockCoord at : found.traces().stream().sorted(ORDER).limit(room).toList()) {
-            String id = "world:trace:" + key(at);
-            if (post.done(id) || post.open(id)) {
-                posted = true;
-                continue;
-            }
-            TicketTarget target = TicketTarget.at(at).withCraterBlocks(1);
-            post.submit(
-                    post.ticket(
-                            id,
-                            BoardCase.FILL_CRATER,
-                            Optional.empty(),
-                            priority,
-                            ticket.id(),
-                            CraterNeed.fillNeed(target)),
-                    target);
             posted = true;
         }
         return posted;

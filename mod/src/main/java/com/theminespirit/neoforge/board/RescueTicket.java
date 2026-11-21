@@ -10,8 +10,8 @@ import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.neoforge.DigOutScript;
 import com.theminespirit.neoforge.PickaxeCheck;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.lease.LeaseData;
 import com.theminespirit.neoforge.movement.RouteLevelView;
-import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -87,11 +87,10 @@ final class RescueTicket {
     }
 
     private static PillarDescent.@Nullable Plan ownPillar(ServerLevel level, SpiritEntity spirit, BlockCoord at) {
-        PlacedBlocksData placed = PlacedBlocksData.get(level);
         return PillarDescent.plan(
                         new RouteLevelView(spirit),
                         at,
-                        cell -> placed.isOwn(new BlockPos(cell.x(), cell.y(), cell.z())),
+                        cell -> LeaseData.get(level).isActive(new BlockPos(cell.x(), cell.y(), cell.z())),
                         64)
                 .orElse(null);
     }

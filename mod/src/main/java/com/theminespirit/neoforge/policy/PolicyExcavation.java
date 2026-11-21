@@ -1,6 +1,5 @@
 package com.theminespirit.neoforge.policy;
 
-import com.theminespirit.core.mining.api.MineObstruction;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.policy.api.PolicyId;
@@ -9,14 +8,12 @@ import com.theminespirit.core.town.PlanBuildings;
 import com.theminespirit.core.town.PlotProtection;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.api.PlanBuilding;
-import com.theminespirit.neoforge.BlockStates;
 import com.theminespirit.neoforge.BuildPlanOwner;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.ChestDemolition;
 import com.theminespirit.neoforge.board.ChestTickets;
-import com.theminespirit.neoforge.board.MineSnapshots;
-import com.theminespirit.neoforge.board.PlotBreakLog;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
+import com.theminespirit.neoforge.lease.LeaseData;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
@@ -82,7 +79,7 @@ final class PolicyExcavation {
             }
         }
         if (spirit.level() instanceof ServerLevel server
-                && PlacedBlocksData.get(server).isSpiritMarked(pos)
+                && LeaseData.get(server).isActive(pos)
                 && !foreignPlan(server, pos, ownBuilding)) {
             return new BlockProtection.Allowed();
         }
@@ -91,24 +88,6 @@ final class PolicyExcavation {
     }
 
     static BlockProtection.Decision excavate(ProtectionGate gate, SpiritEntity spirit, BlockPos pos, BlockState state) {
-        if (spirit.level() instanceof ServerLevel server) {
-            PlacedBlocksData placed = PlacedBlocksData.get(server);
-            if ((placed.isSpiritMarked(pos) || placed.isMarked(pos))
-                    && !mineVoid(server, pos)
-                    && !MineObstruction.clearable(BlockStates.idOf(state))) {
-                PlotBreakLog.refused(
-                        server,
-                        pos,
-                        spirit,
-                        PlotProtection.Action.DIG.name(),
-                        PlotProtection.Ground.PLAN_EXCAVATE,
-                        "клетка " + pos.toShortString() + " уже облицована по плану: шахту копают до облицовки, "
-                                + "готовый блок не выламывают");
-                return new BlockProtection.Refused(
-                        PolicyId.PROTECTED_BLOCKS,
-                        "клетка " + pos.toShortString() + " уже облицована по плану: готовый блок шахты не выламывают");
-            }
-        }
         return gate.decide(
                 pos,
                 state,
@@ -117,12 +96,5 @@ final class PolicyExcavation {
                 PlanBuilding.MINE,
                 PlotProtection.Action.DIG,
                 PlotProtection.Ground.PLAN_EXCAVATE);
-    }
-
-    private static boolean mineVoid(ServerLevel server, BlockPos pos) {
-        BlockCoord cell = new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
-        return MineSnapshots.geometry(server)
-                .map(mine -> mine.air().contains(cell))
-                .orElse(false);
     }
 }

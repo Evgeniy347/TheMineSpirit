@@ -5,7 +5,6 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.tactics.api.adapter.Visibility;
 import com.theminespirit.core.town.PlotProtection;
 import com.theminespirit.neoforge.lease.LeaseRun;
-import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.BlockPos;
@@ -66,7 +65,7 @@ final class PillarDismantler {
         while (cursor < pending.size()) {
             BlockCoord cell = pending.get(cursor++);
             BlockPos pos = new BlockPos(cell.x(), cell.y(), cell.z());
-            if (!isOwnMarked(pos)) {
+            if (!isOwn(pos)) {
                 continue;
             }
             if (PlanCells.keep(level, pos)) {
@@ -75,7 +74,6 @@ final class PillarDismantler {
             }
             BlockState state = level.getBlockState(pos);
             if (state.isAir()) {
-                unmark(pos);
                 forget(pos);
                 continue;
             }
@@ -92,7 +90,6 @@ final class PillarDismantler {
             }
             SpiritBlocks.destroy((ServerLevel) spirit.level(), pos, false, spirit, "PILLAR_DOWN");
             SpiritGesture.workOn(spirit, pos);
-            unmark(pos);
             forget(pos);
             if (!Items.AIR.equals(item)) {
                 ItemStack leftover = spirit.getInventory().addItem(new ItemStack(item));
@@ -158,14 +155,7 @@ final class PillarDismantler {
         }
     }
 
-    private boolean isOwnMarked(BlockPos pos) {
-        return level instanceof ServerLevel server
-                && (PlacedBlocksData.get(server).isOwn(pos) || (lease != null && lease.contains(pos)));
-    }
-
-    private void unmark(BlockPos pos) {
-        if (level instanceof ServerLevel server) {
-            PlacedBlocksData.get(server).unmarkSpirit(pos);
-        }
+    private boolean isOwn(BlockPos pos) {
+        return lease != null && lease.contains(pos);
     }
 }

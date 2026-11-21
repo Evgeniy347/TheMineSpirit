@@ -20,8 +20,6 @@ import com.theminespirit.neoforge.LevelTreeView;
 import com.theminespirit.neoforge.PlotGround;
 import com.theminespirit.neoforge.SettlementChestStore;
 import com.theminespirit.neoforge.lease.LeaseData;
-import com.theminespirit.neoforge.policy.PlacedBlocksData;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -122,25 +120,6 @@ public final class FloatingScan {
                 .toList();
     }
 
-    static List<BlockCoord> legacy(ServerLevel level, ColumnMask area) {
-        return marked(level, area);
-    }
-
-    private static List<BlockCoord> marked(ServerLevel level, ColumnMask area) {
-        PlacedBlocksData placed = PlacedBlocksData.get(level);
-        List<BlockCoord> cells = new ArrayList<>();
-        int x1 = area.minX() >> 4;
-        int z1 = area.minZ() >> 4;
-        int x2 = (area.minX() + area.width() - 1) >> 4;
-        int z2 = (area.minZ() + area.depth() - 1) >> 4;
-        for (int cx = x1; cx <= x2; cx++) {
-            for (int cz = z1; cz <= z2; cz++) {
-                cells.addAll(placed.spiritMarkedIn(cx, cz));
-            }
-        }
-        return cells;
-    }
-
     static final class Scan implements FloatingBlocks.World {
         private static final Set<Block> LOGS = BuiltInRegistries.BLOCK.stream()
                 .filter(block -> block.defaultBlockState().is(BlockTags.LOGS))
@@ -201,9 +180,7 @@ public final class FloatingScan {
             if (leases.isOrphaned(pos)) {
                 return true;
             }
-            PlacedBlocksData placed = PlacedBlocksData.get(level);
-            return placed.isSpiritMarked(pos)
-                    && TemporaryBlocks.legacyMovement(BlockStates.idOf(level.getBlockState(pos)));
+            return false;
         }
 
         @Override

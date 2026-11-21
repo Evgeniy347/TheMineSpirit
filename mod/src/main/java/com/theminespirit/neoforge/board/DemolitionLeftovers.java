@@ -6,7 +6,6 @@ import com.theminespirit.core.town.FenceDemolition;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.neoforge.BlockStates;
 import com.theminespirit.neoforge.SpiritEntity;
-import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.ChestBlock;
@@ -38,9 +37,8 @@ final class DemolitionLeftovers {
         if (state.getBlock() instanceof ChestBlock && !ChestDemolition.removable(level, at)) {
             return "сундук в плане склада/двора или с неизвестным содержимым — его переносит задание сноса";
         }
-        if (!PlacedBlocksData.get(level).isSpiritMarked(new BlockPos(at.x(), at.y(), at.z()))
-                && DemolitionGuard.protectedStray(level, at, blockId)) {
-            return "постройка игрока или защищённый блок";
+        if (DemolitionGuard.protectedStray(level, at, blockId)) {
+            return "защищённый блок";
         }
         return null;
     }

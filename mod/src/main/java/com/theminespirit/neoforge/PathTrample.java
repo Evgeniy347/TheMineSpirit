@@ -4,7 +4,6 @@ import com.theminespirit.core.board.ActionToolPlans;
 import com.theminespirit.core.building.PathGround;
 import com.theminespirit.core.building.SchematicActions;
 import com.theminespirit.core.plan.TaskNode;
-import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -95,9 +94,6 @@ final class PathTrample {
         SpiritGesture.workOn(spirit, ground);
         SpiritBlocks.record((ServerLevel) spirit.level(), ground, before, spirit, "PATH_TRAMPLE");
         shovel.hurtAndBreak(1, spirit, EquipmentSlot.MAINHAND);
-        if (level instanceof ServerLevel server) {
-            PlacedBlocksData.get(server).markSpirit(ground);
-        }
         return new BlockPlacer.Started(ground.immutable());
     }
 

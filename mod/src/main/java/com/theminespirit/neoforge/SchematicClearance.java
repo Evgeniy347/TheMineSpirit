@@ -11,7 +11,7 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.api.PlanBuilding;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
-import com.theminespirit.neoforge.policy.PlacedBlocksData;
+import com.theminespirit.neoforge.lease.LeaseData;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
@@ -97,7 +97,7 @@ final class SchematicClearance {
         if (own == PlanBuilding.NONE) {
             return;
         }
-        PlacedBlocksData placed = PlacedBlocksData.get(server);
+        LeaseData leases = LeaseData.get(server);
         List<BlockCoord> previous = new ArrayList<>();
         for (int y = site.minY; y <= site.maxY + StageSite.BUILDING_HEIGHT; y++) {
             for (int x = site.minX; x <= site.maxX; x++) {
@@ -106,8 +106,7 @@ final class SchematicClearance {
                         continue;
                     }
                     BlockPos pos = new BlockPos(x, y, z);
-                    if (placed.isSpiritMarked(pos)
-                            && !site.level.getBlockState(pos).isAir()) {
+                    if (leases.isActive(pos) && !site.level.getBlockState(pos).isAir()) {
                         previous.add(new BlockCoord(x, y, z));
                     }
                 }

@@ -15,6 +15,7 @@ import com.theminespirit.core.town.api.PlanBuilding;
 import com.theminespirit.neoforge.BuildPlanOwner;
 import com.theminespirit.neoforge.LevelSafetyView;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.lease.LeaseData;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -177,18 +178,15 @@ public final class ProtectionGate {
             return zone;
         }
         Level level = spirit.level();
-        if (level instanceof ServerLevel server && PlacedBlocksData.get(server).isSpiritMarked(pos)) {
+        if (level instanceof ServerLevel server && LeaseData.get(server).isActive(pos)) {
             return new BlockProtection.Allowed();
         }
         String dimension = level.dimension().location().toString();
         boolean inProtectedZone = PolicyConfig.zones().contains(dimension, coord);
         boolean unprotectArea = level instanceof ServerLevel server
                 && UnprotectService.of(server.getServer()).covers(dimension, coord, System.currentTimeMillis());
-        boolean placedByPlayer = level instanceof ServerLevel server
-                && PlacedBlocksData.get(server).isMarked(pos);
         return PROTECTION.checkUse(
-                neighbours.ids(level, pos),
-                new BlockProtection.Placement(placedByPlayer, inProtectedZone, unprotectArea));
+                neighbours.ids(level, pos), new BlockProtection.Placement(inProtectedZone, unprotectArea));
     }
 
     public BlockProtection.Decision checkPortalTarget(BlockCoord target) {

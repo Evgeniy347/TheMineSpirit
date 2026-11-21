@@ -87,7 +87,6 @@ final class GraphBaseWorlds {
                         120,
                         50,
                         5,
-                        30,
                         Map.of("minecraft:dirt", 100),
                         Map.of("minecraft:dirt", 200),
                         Map.of("minecraft:oak_log", 50),

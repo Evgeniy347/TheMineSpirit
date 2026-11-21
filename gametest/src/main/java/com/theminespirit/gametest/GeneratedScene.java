@@ -4,12 +4,10 @@ import com.mojang.logging.LogUtils;
 import com.theminespirit.core.scene.SceneBlock;
 import com.theminespirit.core.scene.SceneGenerator;
 import com.theminespirit.core.scene.ScenePlan;
-import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -37,14 +35,9 @@ final class GeneratedScene {
                 column(helper, plan, x, z);
             }
         }
-        ServerLevel level = helper.getLevel();
-        PlacedBlocksData placed = PlacedBlocksData.get(level);
         for (SceneBlock block : plan.blocks()) {
             BlockPos pos = at(block.x(), block.y(), block.z());
             helper.setBlock(pos, state(block.block()));
-            if (block.settlement()) {
-                placed.markSpirit(helper.absolutePos(pos));
-            }
         }
         return plan;
     }

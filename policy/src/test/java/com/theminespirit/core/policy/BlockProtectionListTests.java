@@ -49,7 +49,8 @@ class BlockProtectionListTests {
                 "minecraft:repeater"
             })
     void check_DenyListBlock_IsRefusedAsProtectedBlock(String block) {
-        BlockProtection.Decision decision = protection.check(block, BlockProtectionTests.forest(), false, false);
+        BlockProtection.Decision decision =
+                protection.check(block, BlockProtectionTests.forest(), new BlockProtection.Placement(false, false));
 
         BlockProtection.Refused refused = assertInstanceOf(
                 BlockProtection.Refused.class,
@@ -84,8 +85,10 @@ class BlockProtectionListTests {
                 "minecraft:sugar_cane"
             })
     void check_NaturalBlockInNature_IsAllowed(String block) {
-        BlockProtection.Decision decision =
-                protection.check(block, BlockProtectionTests.around(0, "", "minecraft:stone"), false, false);
+        BlockProtection.Decision decision = protection.check(
+                block,
+                BlockProtectionTests.around(0, "", "minecraft:stone"),
+                new BlockProtection.Placement(false, false));
 
         assertEquals(
                 new BlockProtection.Allowed(),

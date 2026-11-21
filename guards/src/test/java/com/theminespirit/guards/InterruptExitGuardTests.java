@@ -122,11 +122,11 @@ class InterruptExitGuardTests {
                 "neoforge/PillarColumn.java",
                 "GoneScript",
                 "cancel: ничего",
-                "InterruptExitTests.pillarUp_InterruptedOnTop_TemporaryMarksAndPerchNeedStayVisible",
+                "LeaseSupervisorTests.ticketMovedToAnotherSpirit_NewOwner_OrphansImmediately",
                 "столб"));
         Map<String, String> tests = Map.of(
-                "InterruptExitTests",
-                "class InterruptExitTests { void pillarUp_InterruptedOnTop_TemporaryMarksAndPerchNeedStayVisible() {} }");
+                "LeaseSupervisorTests",
+                "class LeaseSupervisorTests { void ticketMovedToAnotherSpirit_NewOwner_OrphansImmediately() {} }");
 
         assertTrue(
                 issues(Set.of("neoforge/PillarColumn.java"), rows, main, tests, Map.of()).stream()

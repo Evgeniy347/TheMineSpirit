@@ -28,8 +28,8 @@ class WorldPostTests {
                 "Выравнивание — узел мира"
                         + " Иначе тест handles_WorldCleanupAndRepairNodes_AreRecognized перестанет ловить эту поломку. При смене handles_WorldCleanupAndRepairNodes_AreRecognized проверь это утверждение.");
         assertTrue(
-                WorldPost.handles("restore_trace"),
-                "Возврат следа — узел мира"
+                WorldPost.handles("plan_breach"),
+                "Заделка пролома плана — узел мира"
                         + " Иначе тест handles_WorldCleanupAndRepairNodes_AreRecognized перестанет ловить эту поломку. При смене handles_WorldCleanupAndRepairNodes_AreRecognized проверь это утверждение.");
         assertTrue(
                 WorldPost.handles("remove_route"),

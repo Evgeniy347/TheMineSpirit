@@ -18,14 +18,8 @@ class RepairAuditPart2Tests {
     private static final BlockCoord ORIGIN = new BlockCoord(10, 64, 10);
     private static final String AIR = "minecraft:air";
 
-    private static RepairAudit.Report repairAudit(
-            Schematic scheme,
-            Map<BlockCoord, String> world,
-            Set<BlockCoord> player,
-            Map<BlockCoord, Long> firstSeen,
-            long now) {
-        return RepairAudit.audit(
-                scheme, ORIGIN, BuildRotation.NONE, new MapWorld(world, player), RepairData.defaults(), firstSeen, now);
+    private static RepairAudit.Report repairAudit(Schematic scheme, Map<BlockCoord, String> world) {
+        return RepairAudit.audit(scheme, ORIGIN, BuildRotation.NONE, new MapWorld(world), RepairData.defaults());
     }
 
     private static Schematic scheme() {
@@ -60,15 +54,10 @@ class RepairAuditPart2Tests {
         return world;
     }
 
-    private record MapWorld(Map<BlockCoord, String> blocks, Set<BlockCoord> player) implements RepairAudit.WorldView {
+    private record MapWorld(Map<BlockCoord, String> blocks) implements RepairAudit.WorldView {
         @Override
         public String blockAt(BlockCoord cell) {
             return blocks.getOrDefault(cell, AIR);
-        }
-
-        @Override
-        public boolean playerPlaced(BlockCoord cell) {
-            return player.contains(cell);
         }
     }
 
@@ -86,17 +75,12 @@ class RepairAuditPart2Tests {
             }
 
             @Override
-            public boolean playerPlaced(BlockCoord cell) {
-                return false;
-            }
-
-            @Override
             public boolean loaded(BlockCoord cell) {
                 return !unloaded.contains(cell);
             }
         };
         RepairAudit.Report report =
-                RepairAudit.audit(scheme(), ORIGIN, BuildRotation.NONE, view, RepairData.defaults(), Map.of(), 100);
+                RepairAudit.audit(scheme(), ORIGIN, BuildRotation.NONE, view, RepairData.defaults());
         assertEquals(
                 2,
                 report.unknown(),
@@ -110,34 +94,12 @@ class RepairAuditPart2Tests {
     }
 
     @Test
-    void audit_PlayerBlock_WarnsForWarnTicksThenRemoves() {
-        Map<BlockCoord, String> world = new HashMap<>();
-        world.put(ORIGIN, "minecraft:dirt");
-        world.put(new BlockCoord(11, 64, 10), "minecraft:oak_planks");
-        world.put(new BlockCoord(12, 64, 10), "minecraft:cobblestone");
-        Map<BlockCoord, Long> firstSeen = new HashMap<>();
-        firstSeen.put(ORIGIN, 1000L);
-        RepairAudit.Report early = repairAudit(scheme(), world, Set.of(ORIGIN), firstSeen, 4599);
-        assertEquals(
-                List.of(new RepairAudit.Fix(
-                        ORIGIN, RepairAudit.Action.WARN, "minecraft:cobblestone", "minecraft:dirt", 4600)),
-                early.fixes(),
-                "Блок игрока не убирается сразу: 3600 тиков из данных — три минуты на уборку Иначе тест audit_PlayerBlock_WarnsForWarnTicksThenRemoves перестанет ловить эту поломку. При смене audit_PlayerBlock_WarnsForWarnTicksThenRemoves проверь это утверждение.");
-        RepairAudit.Report due = repairAudit(scheme(), world, Set.of(ORIGIN), firstSeen, 4600);
-        assertEquals(
-                List.of(new RepairAudit.Fix(
-                        ORIGIN, RepairAudit.Action.REMOVE, "minecraft:cobblestone", "minecraft:dirt", 4600)),
-                due.fixes(),
-                "Через три минуты предупреждения блок игрока убирается: постройка возвращается к схеме Иначе тест audit_PlayerBlock_WarnsForWarnTicksThenRemoves перестанет ловить эту поломку. При смене audit_PlayerBlock_WarnsForWarnTicksThenRemoves проверь это утверждение.");
-    }
-
-    @Test
     void audit_MoreThanRebuildPercentMissing_RebuildsWithoutFixes() {
         Map<BlockCoord, String> world = new HashMap<>();
         world.put(ORIGIN, AIR);
         world.put(new BlockCoord(11, 64, 10), AIR);
         world.put(new BlockCoord(12, 64, 10), "minecraft:cobblestone");
-        RepairAudit.Report report = repairAudit(scheme(), world, Set.of(), Map.of(), 100);
+        RepairAudit.Report report = repairAudit(scheme(), world);
         assertTrue(
                 report.rebuild(),
                 "Два блока из трёх — больше 50% из repair.json: это перестройка, не ремонт Иначе тест audit_MoreThanRebuildPercentMissing_RebuildsWithoutFixes перестанет ловить эту поломку. При смене audit_MoreThanRebuildPercentMissing_RebuildsWithoutFixes проверь это утверждение.");
@@ -152,7 +114,7 @@ class RepairAuditPart2Tests {
         Map<BlockCoord, String> world = fourBlockWorld();
         world.put(ORIGIN, AIR);
         world.put(new BlockCoord(11, 64, 10), AIR);
-        RepairAudit.Report report = repairAudit(fourBlockScheme(), world, Set.of(), Map.of(), 100);
+        RepairAudit.Report report = repairAudit(fourBlockScheme(), world);
         assertEquals(
                 2,
                 report.missing(),
@@ -174,10 +136,10 @@ class RepairAuditPart2Tests {
         world.put(ORIGIN, "minecraft:cobblestone");
         world.put(new BlockCoord(11, 64, 10), "minecraft:dirt");
         world.put(new BlockCoord(12, 64, 10), "minecraft:cobblestone");
-        RepairAudit.Report report = repairAudit(scheme, world, Set.of(), Map.of(), 100);
+        RepairAudit.Report report = repairAudit(scheme, world);
         assertEquals(
                 List.of(new RepairAudit.Fix(
-                        new BlockCoord(11, 64, 10), RepairAudit.Action.CLEAR, AIR, "minecraft:dirt", 0)),
+                        new BlockCoord(11, 64, 10), RepairAudit.Action.CLEAR, AIR, "minecraft:dirt")),
                 report.fixes(),
                 "Природный блок там, где схема требует воздух, убирается: иначе проход остаётся завален При смене audit_ExpectedAirOccupiedByNatural_ClearsIt проверь это утверждение.");
     }
@@ -198,17 +160,16 @@ class RepairAuditPart2Tests {
         world.put(new BlockCoord(11, 64, 10), "minecraft:cobblestone");
         world.put(new BlockCoord(12, 64, 10), "minecraft:cobblestone");
         world.put(new BlockCoord(11, 65, 10), "minecraft:cobblestone");
-        RepairAudit.Report report = repairAudit(scheme, world, Set.of(), Map.of(), 100);
+        RepairAudit.Report report = repairAudit(scheme, world);
         assertTrue(
                 report.fixes()
-                        .contains(
-                                new RepairAudit.Fix(ORIGIN, RepairAudit.Action.PLACE, "minecraft:cobblestone", AIR, 0)),
+                        .contains(new RepairAudit.Fix(ORIGIN, RepairAudit.Action.PLACE, "minecraft:cobblestone", AIR)),
                 "Постройка на другой высоте: на единой высоте клетка пуста — её ставят заново:  Иначе тест audit_BuildingAtWrongHeight_MissingBelowAndExtraAbove перестанет ловить эту поломку. При смене audit_BuildingAtWrongHeight_MissingBelowAndExtraAbove проверь это утверждение."
                         + report.fixes());
         assertTrue(
                 report.fixes()
                         .contains(new RepairAudit.Fix(
-                                new BlockCoord(11, 65, 10), RepairAudit.Action.CLEAR, AIR, "minecraft:cobblestone", 0)),
+                                new BlockCoord(11, 65, 10), RepairAudit.Action.CLEAR, AIR, "minecraft:cobblestone")),
                 "Блок, стоящий не на единой высоте, становится extra (снос): иначе дом остался бы повисшим:  При смене audit_BuildingAtWrongHeight_MissingBelowAndExtraAbove проверь это утверждение."
                         + report.fixes());
     }
@@ -218,7 +179,7 @@ class RepairAuditPart2Tests {
         Schematic scheme = new Schematic(1, 1, 1, List.of(new Schematic.Entry(0, 0, 0, "poppy")));
         Map<BlockCoord, String> world = new HashMap<>();
         world.put(ORIGIN, AIR);
-        RepairAudit.Report report = repairAudit(scheme, world, Set.of(), Map.of(), 100);
+        RepairAudit.Report report = repairAudit(scheme, world);
         assertEquals(
                 0,
                 report.missing(),
@@ -240,14 +201,6 @@ class RepairAuditPart2Tests {
                 256,
                 rules.cellBudgetPerTick(),
                 "Бюджет обхода — число из repair.json Иначе тест defaults_AuditNumbers_ComeFromData перестанет ловить эту поломку. При смене defaults_AuditNumbers_ComeFromData проверь это утверждение.");
-        assertEquals(
-                3600,
-                rules.warnTicks(),
-                "Предупреждение игроку — три минуты (3600 тиков) из данных Иначе тест defaults_AuditNumbers_ComeFromData перестанет ловить эту поломку. При смене defaults_AuditNumbers_ComeFromData проверь это утверждение.");
-        assertEquals(
-                1200,
-                rules.warnRepeatTicks(),
-                "Напоминание — раз в минуту (1200 тиков) из данных Иначе тест defaults_AuditNumbers_ComeFromData перестанет ловить эту поломку. При смене defaults_AuditNumbers_ComeFromData проверь это утверждение.");
         assertEquals(
                 50,
                 rules.rebuildPercent(),

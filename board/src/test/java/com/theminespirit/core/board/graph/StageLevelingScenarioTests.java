@@ -19,7 +19,7 @@ class StageLevelingScenarioTests {
         GraphFacts defect = facts(
                 building(),
                 new GraphSiteFacts.Terrain(
-                        1, 0, 0, 1, 0, Map.of("minecraft:dirt", 1), Map.of("minecraft:dirt", 1), Map.of(), false),
+                        1, 0, 0, 1, Map.of("minecraft:dirt", 1), Map.of("minecraft:dirt", 1), Map.of(), false),
                 List.of());
 
         assertFalse(

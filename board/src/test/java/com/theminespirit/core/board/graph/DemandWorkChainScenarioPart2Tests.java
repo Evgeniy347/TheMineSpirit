@@ -290,9 +290,5 @@ class DemandWorkChainScenarioPart2Tests {
                 task(stocked, "pillar").feasible(),
                 "Доски есть — выход столбом выполним:  Иначе тест case33_NoStairsOutOfPit_PlanksAndStoneRaised перестанет ловить эту поломку. При смене case33_NoStairsOutOfPit_PlanksAndStoneRaised проверь это утверждение."
                         + ids(stocked));
-        assertTrue(
-                task(stocked, "restore_trace").feasible(),
-                "След возвращается камнем:  Иначе тест case33_NoStairsOutOfPit_PlanksAndStoneRaised перестанет ловить эту поломку. При смене case33_NoStairsOutOfPit_PlanksAndStoneRaised проверь это утверждение."
-                        + ids(stocked));
     }
 }

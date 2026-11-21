@@ -53,14 +53,9 @@ class CrossRouteStageScenarioTests {
         GraphPlan first = plan(world, facts);
 
         GraphPlan.Task bridge = task(first, "bridge");
-        GraphPlan.Task trace = task(first, "restore_trace");
         assertTrue(
                 bridge.feasible(),
                 "Доски есть — мост из воды выполним сразу: " + ids(first)
-                        + " Иначе тест pit_WaterAtBottom_BridgeUsesPlanksAndTraceStaysPlanned перестанет ловить эту поломку. При смене pit_WaterAtBottom_BridgeUsesPlanksAndTraceStaysPlanned проверь это утверждение.");
-        assertTrue(
-                trace.feasible(),
-                "Возврат следа остаётся в плане: " + ids(first)
                         + " Иначе тест pit_WaterAtBottom_BridgeUsesPlanksAndTraceStaysPlanned перестанет ловить эту поломку. При смене pit_WaterAtBottom_BridgeUsesPlanksAndTraceStaysPlanned проверь это утверждение.");
         assertTrue(
                 first.task("building:hut").filter(GraphPlan.Task::feasible).isPresent(),
@@ -136,7 +131,7 @@ class CrossRouteStageScenarioTests {
                         spirit(new CrossScene.SpiritSpec("spirit-2", 20, 20, true, true, null, List.of(), List.of()))),
                 List.of(),
                 List.of(),
-                new GraphSiteFacts.Terrain(2, 0, 0, 2, 0, Map.of(), Map.of("minecraft:dirt", 2), Map.of()),
+                new GraphSiteFacts.Terrain(2, 0, 0, 2, Map.of(), Map.of("minecraft:dirt", 2), Map.of()),
                 Map.of());
         GraphPlan plan = plan(world, facts);
         GraphTickets.Result result = tickets(world, facts);
@@ -211,7 +206,7 @@ class CrossRouteStageScenarioTests {
                 List.of(),
                 List.of(),
                 new GraphSiteFacts.Terrain(
-                        2, 6, 0, 2, 0, Map.of(), Map.of("minecraft:dirt", 4), Map.of("minecraft:oak_leaves", 6)),
+                        2, 6, 0, 2, Map.of(), Map.of("minecraft:dirt", 4), Map.of("minecraft:oak_leaves", 6)),
                 Map.of());
         GraphPlan plan = plan(world, facts);
 

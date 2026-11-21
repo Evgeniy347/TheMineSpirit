@@ -19,8 +19,8 @@ import com.theminespirit.core.route.RouteThrottle;
 import com.theminespirit.core.route.StuckTargets;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.TickWatch;
+import com.theminespirit.neoforge.lease.LeaseData;
 import com.theminespirit.neoforge.log.SpiritWorldLog;
-import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import org.jspecify.annotations.Nullable;
@@ -144,7 +144,7 @@ public final class RouteDetour {
         if (!(spirit.level() instanceof ServerLevel server)) {
             return false;
         }
-        return PlacedBlocksData.get(server).isOwn(new BlockPos(cell.x(), cell.y(), cell.z()));
+        return LeaseData.get(server).isActive(new BlockPos(cell.x(), cell.y(), cell.z()));
     }
 
     private static void packLocal(LevelNavWorld live, NavCachedWorld cache, BlockCoord from) {

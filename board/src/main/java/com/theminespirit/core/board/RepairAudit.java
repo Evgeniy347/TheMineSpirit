@@ -23,12 +23,10 @@ public final class RepairAudit {
 
     public enum Action {
         PLACE,
-        CLEAR,
-        WARN,
-        REMOVE
+        CLEAR
     }
 
-    public record Fix(BlockCoord cell, Action action, String wanted, String found, long removeAt) {
+    public record Fix(BlockCoord cell, Action action, String wanted, String found) {
         public Fix {
             Objects.requireNonNull(cell, "Клетка правки не может быть null: иначе неясно, что чинить");
             Objects.requireNonNull(action, "Действие правки не может быть null: без него ремонт не начнётся");
@@ -58,27 +56,18 @@ public final class RepairAudit {
     public interface WorldView {
         String blockAt(BlockCoord cell);
 
-        boolean playerPlaced(BlockCoord cell);
-
         default boolean loaded(BlockCoord cell) {
             return true;
         }
     }
 
     public static Report audit(
-            Schematic schematic,
-            BlockCoord origin,
-            BuildRotation rotation,
-            WorldView world,
-            RepairData rules,
-            Map<BlockCoord, Long> firstSeen,
-            long now) {
+            Schematic schematic, BlockCoord origin, BuildRotation rotation, WorldView world, RepairData rules) {
         Objects.requireNonNull(schematic, "Схема ремонта не может быть null: чинить не по чему");
         Objects.requireNonNull(origin, "Начало постройки не может быть null: без него клетки схемы не найти");
         Objects.requireNonNull(rotation, "Поворот постройки не может быть null: иначе схема ляжет не туда");
         Objects.requireNonNull(world, "Мир ремонта не может быть null: сравнивать не с чем");
         Objects.requireNonNull(rules, "Правила ремонта не могут быть null: пороги берутся из данных");
-        Objects.requireNonNull(firstSeen, "Первые отметки предупреждений не могут быть null: пустые — пустая карта");
         Map<BlockCoord, String> expected = expected(schematic, origin, rotation);
         Set<String> soft = soft(rules);
         List<Fix> fixes = new ArrayList<>();
@@ -96,11 +85,11 @@ public final class RepairAudit {
                 continue;
             }
             if (SchematicActions.isWalkway(wanted) && SchematicActions.isWalkway(world.blockAt(below(cell)))) {
-                fixes.add(fix(cell, wanted, found, world, rules, firstSeen, now));
+                fixes.add(fix(cell, wanted, found));
                 continue;
             }
             missing++;
-            fixes.add(fix(cell, wanted, found, world, rules, firstSeen, now));
+            fixes.add(fix(cell, wanted, found));
         }
         if (rebuild(missing, expected.size(), rules.rebuildPercent())) {
             return new Report(expected.size(), missing, unknown == 0, List.of(), unknown);
@@ -111,7 +100,7 @@ public final class RepairAudit {
             if (occupiedByScheme.contains(cell) || AIR.equals(found)) {
                 continue;
             }
-            fixes.add(fix(cell, AIR, found, world, rules, firstSeen, now));
+            fixes.add(fix(cell, AIR, found));
         }
         fixes.sort(Comparator.comparingInt((Fix fix) -> fix.cell().y())
                 .thenComparingInt(fix -> fix.cell().x())
@@ -158,22 +147,9 @@ public final class RepairAudit {
         return soft;
     }
 
-    private static Fix fix(
-            BlockCoord cell,
-            String wanted,
-            String found,
-            WorldView world,
-            RepairData rules,
-            Map<BlockCoord, Long> firstSeen,
-            long now) {
-        if (world.playerPlaced(cell)) {
-            long first = firstSeen.getOrDefault(cell, now);
-            long removeAt = first + rules.warnTicks();
-            Action action = now >= removeAt ? Action.REMOVE : Action.WARN;
-            return new Fix(cell, action, name(wanted), name(found), removeAt);
-        }
+    private static Fix fix(BlockCoord cell, String wanted, String found) {
         Action action = AIR.equals(wanted) ? Action.CLEAR : Action.PLACE;
-        return new Fix(cell, action, name(wanted), name(found), 0);
+        return new Fix(cell, action, name(wanted), name(found));
     }
 
     private static boolean same(String wanted, String found) {

@@ -8,7 +8,7 @@ public final class GraphWorldEvents {
     public static final String BACKFILL = "backfill";
     public static final String CLEAR_FLOATING = "clear_floating";
     public static final String LEVEL_LOT = "level_lot";
-    public static final String RESTORE_TRACE = "restore_trace";
+    public static final String PLAN_BREACH = "plan_breach";
     public static final String REMOVE_ROUTE = "remove_route";
     public static final String UNDO_LEASE = "undo_lease";
     public static final String REPAIR = "repair_";
@@ -30,8 +30,8 @@ public final class GraphWorldEvents {
         if (terrain.heightDrop() > 0 || !terrain.cut().isEmpty()) {
             events.add(LEVEL_LOT);
         }
-        if (terrain.traces() > 0) {
-            events.add(RESTORE_TRACE);
+        if (!facts.planBreaches().isEmpty()) {
+            events.add(PLAN_BREACH);
         }
         if (!facts.leases().isEmpty()) {
             events.add(UNDO_LEASE);

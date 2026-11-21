@@ -14,8 +14,7 @@ class WorldFragmentTests {
             GraphWorldEvents.DEMOLISH_STRAY,
             GraphWorldEvents.BACKFILL,
             GraphWorldEvents.CLEAR_FLOATING,
-            GraphWorldEvents.LEVEL_LOT,
-            GraphWorldEvents.RESTORE_TRACE);
+            GraphWorldEvents.LEVEL_LOT);
 
     @Test
     void defaultGraph_CleanupNodes_Declared() {

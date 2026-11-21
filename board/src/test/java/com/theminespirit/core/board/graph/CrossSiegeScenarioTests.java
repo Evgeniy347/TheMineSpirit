@@ -40,7 +40,7 @@ class CrossSiegeScenarioTests {
                         new GraphFacts.Position(1, 64, 1),
                         "spirit-1",
                         Map.of("minecraft:chest", 1))),
-                new GraphSiteFacts.Terrain(2, 0, 0, 2, 0, Map.of(), Map.of("minecraft:dirt", 2), Map.of()),
+                new GraphSiteFacts.Terrain(2, 0, 0, 2, Map.of(), Map.of("minecraft:dirt", 2), Map.of()),
                 new GraphSiteFacts.StageReqs(Map.of(), Map.of()),
                 GraphFeedback.none(),
                 List.of(),

@@ -115,17 +115,6 @@ class LeaseSupervisorTests {
     }
 
     @Test
-    void legacyWithoutOwner_AlreadyOrphaned_StaysOutOfActive() {
-        LeaseBook book = new LeaseBook();
-        book.legacy(List.of(new BlockCoord(1, 64, 1)), 10);
-
-        assertTrue(
-                book.active().isEmpty(),
-                "Legacy-аренда уже брошена: у неё нет владельца, проверять нечего. Сломается: старые метки попадут в"
-                        + " активные и никогда не откатятся. Проверить при смене: LeaseBook.legacy");
-    }
-
-    @Test
     void ownerOnOwnCell_SuspendedOrTicketMoved_StaysActive() {
         LeaseBook book = new LeaseBook();
         open(book, SPIRIT, "t1");

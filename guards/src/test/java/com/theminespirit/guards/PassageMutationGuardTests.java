@@ -37,7 +37,7 @@ class PassageMutationGuardTests {
         assertEquals(
                 List.of(),
                 offenders,
-                "Проход сквозь мир решает граф (узлы dig_out, bridge, pillar, restore_trace), а код доски и "
+                "Проход сквозь мир решает граф (узлы dig_out, bridge, pillar), а код доски и "
                         + "навигации только читает мир и отдаёт факты. Цена нарушения: дух роет или строит мимо "
                         + "плана. Ломать и ставить блоки можно только в исполнителе действия. Нарушители"
                         + " При смене decisionLayers_WorldMutationApis_AreAbsent проверь это утверждение.");

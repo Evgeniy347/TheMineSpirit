@@ -150,10 +150,6 @@ class CrossMovementPlanTests {
                 task(first, "pillar").feasible(),
                 "Доски есть — выход столбом выполним сразу, без ожидания возврата следа: " + ids(first)
                         + " Иначе тест pit_PillarOpensFromPlanks_AndRestoreTraceStaysPlanned перестанет ловить эту поломку. При смене pit_PillarOpensFromPlanks_AndRestoreTraceStaysPlanned проверь это утверждение.");
-        assertTrue(
-                task(first, "restore_trace").feasible(),
-                "Возврат следа остаётся в плане: " + ids(first)
-                        + " Иначе тест pit_PillarOpensFromPlanks_AndRestoreTraceStaysPlanned перестанет ловить эту поломку. При смене pit_PillarOpensFromPlanks_AndRestoreTraceStaysPlanned проверь это утверждение.");
         List<String> pillar = new ArrayList<>();
         collect(ActivityPlans.pillar(3, "oak_planks").task(), pillar);
         assertEquals(

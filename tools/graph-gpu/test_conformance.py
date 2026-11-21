@@ -297,10 +297,10 @@ def dig_inputs(graph, facts):
 def test_dig_inputs():
     graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
     tasks = dig_inputs(graph, {"spirits": {"spirit-1": {"trapped": True, "trap": "sealed"}}})
-    assert "dig_out" in tasks and "restore_trace" in tasks,         "дух без пути обязан дать dig_out и restore_trace"
+    assert "dig_out" in tasks,         "дух без пути обязан дать dig_out"
     stuck = dig_inputs(graph, {"spirits": {"spirit-1": {"trapped": False, "stuck": True}}})
-    assert "rescue_spirit" in stuck and "restore_trace" in stuck,         "застрявший без замуровки дух обязан дать rescue_spirit и restore_trace: " + str(stuck)
-    print("OK: вход копания даёт узлы dig_out и restore_trace")
+    assert "rescue_spirit" in stuck,         "застрявший без замуровки дух обязан дать rescue_spirit: " + str(stuck)
+    print("OK: вход копания даёт узел dig_out")
 
 
 def test_area_nodes():
@@ -356,7 +356,7 @@ def test_world_fragment():
         os.path.join(ROOT, "mod", "src", "main", "resources", "data", "theminespirit", "board", "graph.json"),
         RECIPES,
         FRAGMENTS)
-    for node in ("demolish_stray", "backfill", "clear_floating", "level_lot", "restore_trace"):
+    for node in ("demolish_stray", "backfill", "clear_floating", "level_lot"):
         assert node in graph.events, "Python-модель обязана читать узел мира '" + node + "' из фрагмента"
         task = graph.events[node]["tasks"][0]
         assert task["id"] == node, "Задание узла мира называет узел: " + node
@@ -381,7 +381,7 @@ def test_world_inputs():
                                   "extra": {}, "wrong": 0, "auditPercent": 75, "unknown": False}},
         },
     })
-    for node in ("demolish_stray", "backfill", "clear_floating", "level_lot", "restore_trace", "repair_hut"):
+    for node in ("demolish_stray", "backfill", "clear_floating", "level_lot", "repair_hut"):
         assert node in state.events, "Вход участка добавляет узел '" + node + "' в выбор"
     unknown = State({"stage": 1, "kits": {"spirit-1": {}}, "facts": {
         "buildings": {"hut": {"id": "hut", "damage": 5, "unknown": True}}}})
@@ -820,8 +820,8 @@ def test_block_feedback():
 def test_baseline_trail():
     graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
     outcome = sim_gpu.run(sim_gpu.baselines(graph)[0], limit=4000)
-    assert outcome["steps"] == 1847 and outcome["ticks"] == 316440, \
-        "Пустой мир обязан повторить Java (1847 шагов, 316 440 тиков), а не решение линейной системы: " \
+    assert outcome["steps"] == 1844 and outcome["ticks"] == 316000, \
+        "Пустой мир обязан повторить Java (1844 шага, 316 000 тиков), а не решение линейной системы: " \
         + str((outcome["steps"], outcome["ticks"]))
     print("OK: пустой мир совпадает с Java (расходящийся поток решается итерациями)")
 
@@ -909,7 +909,6 @@ def test_input_worlds():
     dig = [step[1] for step in outcome["trail"]]
     assert any(task in ("dig_out", "bridge", "pillar") for task in dig), \
         "Мир 'dig' не даёт дорогого пути выхода: " + str(dig)
-    assert "restore_trace" in dig, "Выход из ямы обязан требовать возврата следа: " + str(dig)
     print("OK: стартовые миры областей дают задания новых узлов")
 
 

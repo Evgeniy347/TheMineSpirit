@@ -38,7 +38,7 @@ class Observe10ProtectionTests {
         BlockProtection.Decision decision = SettlementBreak.decide(
                 protection,
                 new SettlementBreak.Facts(
-                        SettlementBreak.Origin.PLAYER,
+                        SettlementBreak.Origin.UNKNOWN,
                         torch.get("onPlot").asBoolean(),
                         torch.get("inPlan").asBoolean(),
                         torch.get("block").asText(),
@@ -62,7 +62,7 @@ class Observe10ProtectionTests {
         BlockProtection.Decision decision = SettlementBreak.decide(
                 protection,
                 new SettlementBreak.Facts(
-                        SettlementBreak.Origin.PLAYER,
+                        SettlementBreak.Origin.UNKNOWN,
                         plan.get("torch").get("onPlot").asBoolean(),
                         false,
                         plan.get("torch").get("block").asText(),

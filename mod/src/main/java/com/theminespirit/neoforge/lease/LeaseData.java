@@ -9,7 +9,6 @@ import com.theminespirit.core.board.lease.LeaseKind;
 import com.theminespirit.core.board.lease.LeaseStatus;
 import com.theminespirit.core.board.lease.LeaseUndoLimit;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -31,7 +30,6 @@ public final class LeaseData extends SavedData {
 
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final String LEASES = "Leases";
-    private static final String MIGRATED = "Migrated";
     private static final String ID = "Id";
     private static final String SPIRIT = "Spirit";
     private static final String TICKET = "Ticket";
@@ -52,19 +50,12 @@ public final class LeaseData extends SavedData {
     private final LeaseBook book = new LeaseBook();
     private final Map<String, Integer> undoFailures = new HashMap<>();
     private final Map<String, Long> suspendedSince = new HashMap<>();
-    private boolean migrated;
 
     public LeaseData() {}
 
     public static LeaseData get(ServerLevel level) {
         Objects.requireNonNull(level, "Уровень не может быть null: книга аренд хранится в мире");
-        LeaseData data = level.getDataStorage().computeIfAbsent(FACTORY, NAME);
-        if (!data.migrated) {
-            PlacedBlocksData placed = PlacedBlocksData.get(level);
-            data.migrateLegacy(placed.temporaryCells(), level.getGameTime());
-            placed.clearLegacy();
-        }
-        return data;
+        return level.getDataStorage().computeIfAbsent(FACTORY, NAME);
     }
 
     public LeaseBook book() {
@@ -73,25 +64,6 @@ public final class LeaseData extends SavedData {
 
     public Map<String, Long> suspendedSince() {
         return suspendedSince;
-    }
-
-    public boolean migrated() {
-        return migrated;
-    }
-
-    public int migrateLegacy(List<BlockCoord> cells, long since) {
-        Objects.requireNonNull(cells, "Клетки старых временных меток не могут быть null: мигрировать нечего");
-        if (migrated) {
-            return 0;
-        }
-        int count = 0;
-        if (!cells.isEmpty()) {
-            book.legacy(cells, since);
-            count = cells.size();
-        }
-        migrated = true;
-        setDirty();
-        return count;
     }
 
     public boolean undoFailed(String id, int maxFailures, String reason) {
@@ -143,7 +115,6 @@ public final class LeaseData extends SavedData {
 
     @Override
     public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
-        tag.putBoolean(MIGRATED, migrated);
         ListTag leases = new ListTag();
         for (LeaseCodec.LeaseRow row : LeaseCodec.encode(book)) {
             leases.add(writeLease(row));
@@ -154,7 +125,6 @@ public final class LeaseData extends SavedData {
 
     public static LeaseData load(CompoundTag tag, HolderLookup.Provider registries) {
         LeaseData data = new LeaseData();
-        data.migrated = tag.getBoolean(MIGRATED);
         ListTag leases = tag.getList(LEASES, Tag.TAG_COMPOUND);
         for (int index = 0; index < leases.size(); index++) {
             data.book.restore(readLease(leases.getCompound(index)));

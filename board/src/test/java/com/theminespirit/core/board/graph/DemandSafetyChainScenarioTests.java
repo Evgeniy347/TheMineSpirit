@@ -68,10 +68,7 @@ class DemandSafetyChainScenarioTests {
                 task(plan, "mine_cobble").raised(),
                 "Булыжника нет — поднимается шахта камня:  Иначе тест case15_TrappedInWater_RescueBlocksRaisedAndBridgeWaitsForPlanks перестанет ловить эту поломку. При смене case15_TrappedInWater_RescueBlocksRaisedAndBridgeWaitsForPlanks проверь это утверждение."
                         + ids(plan));
-        world.with("oak_log", 160)
-                .with("oak_planks", 128)
-                .with("cobblestone", 160)
-                .with("trail_clean", 1);
+        world.with("oak_log", 160).with("oak_planks", 128).with("cobblestone", 160);
         GraphPlan stocked = plan(world, facts);
         assertTrue(
                 task(stocked, "bridge").feasible(),

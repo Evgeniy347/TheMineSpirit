@@ -24,10 +24,6 @@ final class DigOperations {
                 String node = DigFacts.node(spirit.trap());
                 push.push(null, node, base(graph, node));
             }
-            push.push(null, DigFacts.TRAIL_CLEAN, base(graph, DigFacts.TRAIL_CLEAN));
-        }
-        if (!state.facts().planBreaches().isEmpty()) {
-            push.push(null, DigFacts.TRAIL_CLEAN, base(graph, DigFacts.TRAIL_CLEAN));
         }
     }
 

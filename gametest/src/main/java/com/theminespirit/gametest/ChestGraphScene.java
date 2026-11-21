@@ -14,7 +14,6 @@ import com.theminespirit.neoforge.board.BoardService;
 import com.theminespirit.neoforge.board.ChestDemolition;
 import com.theminespirit.neoforge.board.ChestOpenScan;
 import com.theminespirit.neoforge.board.GraphSource;
-import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -140,17 +139,14 @@ final class ChestGraphScene {
     }
 
     private static void checkSurfaceLevel(GameTestHelper helper, ServerLevel level, int x, int y, int z) {
-        PlacedBlocksData placed = PlacedBlocksData.get(level);
         level.setBlockAndUpdate(new BlockPos(x, y - 1, z), Blocks.STONE.defaultBlockState());
         level.setBlockAndUpdate(new BlockPos(x, y, z), Blocks.CHEST.defaultBlockState());
-        placed.mark(new BlockPos(x, y, z));
         helper.assertTrue(
                 ChestDemolition.removable(level, new BlockCoord(x, y, z)),
                 "Сундук игрока на полу поселения уходит в задание переноса вещей: метка игрока не защищает, "
                         + "иначе ремонт плановой клетки падает каждый цикл, а содержимое недоступно поселению; "
                         + "при смене проверки сноса сундука проверь выдачу задания demolish_chest");
         level.setBlockAndUpdate(new BlockPos(x, y + 2, z), Blocks.CHEST.defaultBlockState());
-        placed.mark(new BlockPos(x, y + 2, z));
         helper.assertTrue(
                 ChestDemolition.removable(level, new BlockCoord(x, y + 2, z)),
                 "Сундук в воздухе выше высоты поселения +1 под снос, даже если его поставил дух");
@@ -168,12 +164,10 @@ final class ChestGraphScene {
         level.setBlockAndUpdate(new BlockPos(x, y + 1, z), Blocks.AIR.defaultBlockState());
         level.setBlockAndUpdate(new BlockPos(x, y + 3, z), Blocks.AIR.defaultBlockState());
         level.setBlockAndUpdate(new BlockPos(x, y - 1, z), Blocks.CHEST.defaultBlockState());
-        placed.mark(new BlockPos(x, y - 1, z));
         helper.assertTrue(
                 ChestDemolition.removable(level, new BlockCoord(x, y - 1, z)),
                 "Сундук ниже поверхности поселения под снос, даже если его поставил дух");
         for (int dy : new int[] {-1, 0, 2}) {
-            placed.unmark(new BlockPos(x, y + dy, z));
             level.setBlockAndUpdate(new BlockPos(x, y + dy, z), Blocks.AIR.defaultBlockState());
         }
     }

@@ -37,7 +37,7 @@ class CleanupCasesTests {
         GraphFacts facts = PlanCaseFacts.facts(
                 Map.of(),
                 List.of(),
-                new GraphSiteFacts.Terrain(0, 1, 0, 0, 0, Map.of(), Map.of(), Map.of("minecraft:oak_log", 1)));
+                new GraphSiteFacts.Terrain(0, 1, 0, 0, Map.of(), Map.of(), Map.of("minecraft:oak_log", 1)));
 
         GraphPlan plan = PlanCaseFacts.plan(GraphWorld.settled(), facts);
 
@@ -58,7 +58,7 @@ class CleanupCasesTests {
         GraphFacts facts = PlanCaseFacts.facts(
                 Map.of(),
                 List.of(),
-                new GraphSiteFacts.Terrain(0, 6, 0, 0, 0, Map.of(), Map.of(), Map.of("minecraft:oak_leaves", 6)));
+                new GraphSiteFacts.Terrain(0, 6, 0, 0, Map.of(), Map.of(), Map.of("minecraft:oak_leaves", 6)));
 
         GraphPlan plan = PlanCaseFacts.plan(GraphWorld.settled(), facts);
 
@@ -69,30 +69,12 @@ class CleanupCasesTests {
     }
 
     @Test
-    void cleanup_PillarTrace_PostsRestoreTrace() {
-        GraphFacts facts = PlanCaseFacts.facts(Map.of(), List.of(), new GraphSiteFacts.Terrain(0, 0, 0, 0, 3));
-
-        GraphPlan plan = PlanCaseFacts.plan(GraphWorld.settled(), facts);
-
-        GraphPlan.Task restore = PlanCaseFacts.task(plan, "event:restore_trace:restore_trace");
-        assertTrue(
-                restore.feasible(),
-                "Следы pillar/bridge возвращаются заданием restore_trace: " + plan.tasks()
-                        + " Иначе тест cleanup_PillarTrace_PostsRestoreTrace перестанет ловить эту поломку. При смене cleanup_PillarTrace_PostsRestoreTrace проверь это утверждение.");
-        assertEquals(
-                BoardCase.FILL_CRATER,
-                restore.boardCase(),
-                "Возврат следа идёт засыпкой/ремонтом кейса FILL_CRATER, а не новой работой"
-                        + " Иначе тест cleanup_PillarTrace_PostsRestoreTrace перестанет ловить эту поломку. При смене cleanup_PillarTrace_PostsRestoreTrace проверь это утверждение.");
-    }
-
-    @Test
     void cleanup_PitInSettlement_PostsBackfill() {
         GraphWorld world = GraphWorld.settled().with("dirt", 64);
         GraphFacts facts = PlanCaseFacts.facts(
                 Map.of(),
                 List.of(),
-                new GraphSiteFacts.Terrain(2, 0, 0, 2, 0, Map.of(), Map.of("minecraft:dirt", 3), Map.of()));
+                new GraphSiteFacts.Terrain(2, 0, 0, 2, Map.of(), Map.of("minecraft:dirt", 3), Map.of()));
 
         GraphPlan plan = PlanCaseFacts.plan(world, facts);
 
@@ -119,7 +101,7 @@ class CleanupCasesTests {
         GraphFacts facts = PlanCaseFacts.facts(
                 Map.of(),
                 List.of(),
-                new GraphSiteFacts.Terrain(0, 0, 2, 0, 0, Map.of("minecraft:dirt", 2), Map.of(), Map.of(), false));
+                new GraphSiteFacts.Terrain(0, 0, 2, 0, Map.of("minecraft:dirt", 2), Map.of(), Map.of(), false));
 
         GraphPlan plan = PlanCaseFacts.plan(world, facts);
 
@@ -132,9 +114,7 @@ class CleanupCasesTests {
     @Test
     void cleanup_NaturalSlopeOnly_DoesNoLeveling() {
         GraphFacts facts = PlanCaseFacts.facts(
-                Map.of(),
-                List.of(),
-                new GraphSiteFacts.Terrain(0, 0, 0, 0, 0, Map.of(), Map.of(), Map.of(), false, 3264));
+                Map.of(), List.of(), new GraphSiteFacts.Terrain(0, 0, 0, 0, Map.of(), Map.of(), Map.of(), false, 3264));
 
         GraphPlan plan = PlanCaseFacts.plan(GraphWorld.settled(), facts);
 
@@ -155,7 +135,7 @@ class CleanupCasesTests {
                 Map.of(),
                 List.of(),
                 new GraphSiteFacts.Terrain(
-                        2, 0, 3, 2, 0, Map.of("minecraft:dirt", 4), Map.of("minecraft:dirt", 2), Map.of()));
+                        2, 0, 3, 2, Map.of("minecraft:dirt", 4), Map.of("minecraft:dirt", 2), Map.of()));
 
         GraphPlan plan = PlanCaseFacts.plan(world, facts);
 
@@ -175,7 +155,7 @@ class CleanupCasesTests {
         GraphFacts facts = PlanCaseFacts.facts(
                 Map.of(),
                 List.of(),
-                new GraphSiteFacts.Terrain(2, 0, 0, 2, 0, Map.of(), Map.of("minecraft:dirt", 2), Map.of()));
+                new GraphSiteFacts.Terrain(2, 0, 0, 2, Map.of(), Map.of("minecraft:dirt", 2), Map.of()));
 
         GraphPlan plan = PlanCaseFacts.plan(world, facts);
 

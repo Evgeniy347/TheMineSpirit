@@ -14,7 +14,6 @@ import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SchematicResources;
 import com.theminespirit.neoforge.SettlementChestStore;
 import com.theminespirit.neoforge.SpiritEntity;
-import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -155,7 +154,6 @@ public final class WarehouseGameTests {
         BlockPos warehouse = new BlockPos(13, 1, 4);
         helper.setBlock(source, Blocks.CHEST);
         helper.setBlock(warehouse, Blocks.CHEST);
-        PlacedBlocksData.get(level).markSpirit(helper.absolutePos(source));
         ChestBlockEntity sourceChest = (ChestBlockEntity) level.getBlockEntity(helper.absolutePos(source));
         sourceChest.setItem(0, new ItemStack(Items.DIRT, 5));
         sourceChest.setItem(1, new ItemStack(Items.OAK_LOG, 3));

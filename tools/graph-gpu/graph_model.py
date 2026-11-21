@@ -977,8 +977,8 @@ class State:
             derived.append("clear_floating")
         if int(self.terrain.get("heightDrop", 0)) > 0 or self.terrain.get("cut"):
             derived.append("level_lot")
-        if int(self.terrain.get("traces", 0)) > 0:
-            derived.append("restore_trace")
+        if self.facts.get("planBreaches"):
+            derived.append("plan_breach")
         for building_id, building in self.building_facts.items():
             if building.get("unknown", False):
                 continue
@@ -1250,7 +1250,6 @@ class Planner:
                 cause = spirit.get("trap")
                 node = "pillar_open" if cause == "pit" else "bridge_open" if cause == "water" else "dig_open"
                 self.push(None, node, self.node_weight(node))
-            self.push(None, "trail_clean", self.node_weight("trail_clean"))
 
     def store_roots(self):
         graph = self.graph

@@ -188,7 +188,7 @@ class SettlementBreakProtectionTests {
         BlockProtection.Decision decision = SettlementBreak.decide(
                 protection,
                 new SettlementBreak.Facts(
-                        SettlementBreak.Origin.PLAYER,
+                        SettlementBreak.Origin.UNKNOWN,
                         true,
                         true,
                         "minecraft:oak_planks",

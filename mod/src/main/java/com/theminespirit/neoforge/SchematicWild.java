@@ -3,12 +3,10 @@ package com.theminespirit.neoforge;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicActions;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
@@ -19,11 +17,7 @@ final class SchematicWild {
 
     static boolean log(Level level, Set<BlockCoord> schemeCells, BlockCoord cell) {
         BlockPos pos = SchematicSite.toPos(cell);
-        boolean placed = level instanceof ServerLevel server
-                && PlacedBlocksData.get(server).isMarked(pos);
-        return !schemeCells.contains(cell)
-                && !placed
-                && level.getBlockState(pos).is(BlockTags.LOGS);
+        return !schemeCells.contains(cell) && level.getBlockState(pos).is(BlockTags.LOGS);
     }
 
     static List<BlockCoord> clearCells(Level level, Set<BlockCoord> cells, List<Schematic.PlacedEntry> entries) {
