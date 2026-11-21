@@ -40,6 +40,10 @@ public final class BuildGap {
             return passable(at);
         }
 
+        default boolean deferred(BlockCoord at) {
+            return false;
+        }
+
         default String rawBlock(BlockCoord at) {
             return block(at);
         }
@@ -201,9 +205,10 @@ public final class BuildGap {
             String item = bare(WoodSpecies.swap(SchematicBlocks.itemOf(block), wood));
             String standing = probe.block(at);
             boolean walkway = SchematicActions.isWalkway(block);
-            boolean done = walkway
-                    ? SchematicGround.walkwayPlaced(block, probe.rawBlock(at))
-                    : BlockMatch.matches(standing, item);
+            boolean done = probe.deferred(at)
+                    || (walkway
+                            ? SchematicGround.walkwayPlaced(block, probe.rawBlock(at))
+                            : BlockMatch.matches(standing, item));
             if (!done && walkway && SchematicActions.isWalkway(probe.rawBlock(below(at)))) {
                 lifted.add(at);
             }

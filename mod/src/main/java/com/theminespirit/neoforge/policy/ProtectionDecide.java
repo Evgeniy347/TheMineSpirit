@@ -126,7 +126,8 @@ final class ProtectionDecide {
         BlockState state = request.state();
         boolean inProtectedZone = plot.inProtectedZone();
         boolean unprotectArea = plot.unprotectArea();
-        if (request.ground() == PlotProtection.Ground.PLAN_EXCAVATE) {
+        if (request.ground() == PlotProtection.Ground.PLAN_EXCAVATE
+                || request.ground() == PlotProtection.Ground.CHEST_SALVAGE) {
             return new BlockProtection.Allowed();
         }
         if (request.demolish()

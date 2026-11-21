@@ -19,7 +19,6 @@ import com.theminespirit.core.town.StageWork;
 import com.theminespirit.neoforge.BlockStates;
 import com.theminespirit.neoforge.SettlementChestStore;
 import com.theminespirit.neoforge.inventory.ContainerAccess;
-import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import com.theminespirit.neoforge.policy.PolicyConfig;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,7 +35,7 @@ import org.slf4j.Logger;
 
 public final class ChestDemolition {
     static final String EVENT = "demolish_chest";
-    private static final String TICKET = "demolish_chest:";
+    static final String TICKET = "demolish_chest:";
     private static final String CHEST = "warehouse_chest:";
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final StateChangeLog CHANGES = new StateChangeLog();
@@ -49,14 +48,8 @@ public final class ChestDemolition {
             return false;
         }
         BoardLedger ledger = BoardRegistry.get(level).board().ledger();
-        var site = SettlementPlotStore.liveSite(level);
         for (BlockCoord cell : chestCells(level, at)) {
-            BlockPos block = new BlockPos(cell.x(), cell.y(), cell.z());
-            boolean marked = PlacedBlocksData.get(level).isMarked(block)
-                    && site.map(place -> WarehouseLocations.onSettlementFloor(level, place, cell))
-                            .orElse(true);
             if (WarehouseLocations.planned(level, ledger, cell)
-                    || marked
                     || PolicyConfig.zones()
                             .contains(level.dimension().location().toString(), cell)) {
                 return false;
@@ -201,7 +194,7 @@ public final class ChestDemolition {
                 });
     }
 
-    private static List<BlockCoord> chestCells(ServerLevel level, BlockCoord at) {
+    static List<BlockCoord> chestCells(ServerLevel level, BlockCoord at) {
         List<BlockCoord> cells = new ArrayList<>(2);
         cells.add(at);
         BlockState state = level.getBlockState(new BlockPos(at.x(), at.y(), at.z()));

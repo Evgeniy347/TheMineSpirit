@@ -13,6 +13,7 @@ import com.theminespirit.neoforge.BlockStates;
 import com.theminespirit.neoforge.BuildPlanOwner;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.ChestDemolition;
+import com.theminespirit.neoforge.board.ChestTickets;
 import com.theminespirit.neoforge.board.MineSnapshots;
 import com.theminespirit.neoforge.board.PlotBreakLog;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
@@ -56,7 +57,17 @@ final class PolicyExcavation {
             if (!ChestDemolition.removable(server, cell)) {
                 return new BlockProtection.Refused(
                         PolicyId.PROTECTED_BLOCKS,
-                        "сундук или его вторая половина входит в план, защищён игроком либо содержимое неизвестно");
+                        "сундук в клетке плана склада/двора либо содержимое неизвестно — его переносит задание сноса");
+            }
+            if (ChestTickets.assigned(server, spirit.getUUID(), cell)) {
+                return gate.decide(
+                        pos,
+                        state,
+                        false,
+                        true,
+                        PlanBuilding.NONE,
+                        PlotProtection.Action.BREAK,
+                        PlotProtection.Ground.CHEST_SALVAGE);
             }
             PlanBuilding building = planBuilding(server, cell);
             if (building != PlanBuilding.NONE) {

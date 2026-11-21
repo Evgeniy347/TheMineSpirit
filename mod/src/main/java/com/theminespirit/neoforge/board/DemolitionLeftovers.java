@@ -36,7 +36,7 @@ final class DemolitionLeftovers {
             return "блок постройки плана поселения";
         }
         if (state.getBlock() instanceof ChestBlock && !ChestDemolition.removable(level, at)) {
-            return "сундук в плане, защищён игроком или с неизвестным содержимым — его сперва переносят";
+            return "сундук в плане склада/двора или с неизвестным содержимым — его переносит задание сноса";
         }
         if (!PlacedBlocksData.get(level).isSpiritMarked(new BlockPos(at.x(), at.y(), at.z()))
                 && DemolitionGuard.protectedStray(level, at, blockId)) {
