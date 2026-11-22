@@ -4,7 +4,7 @@ core/board/BoardTests.java	967
 core/board/TicketPlansTests.java	1232
 core/plan/PlanValidatorRulesTests.java	359
 core/planner/FallbackPlannerTests.java	326
-core/planner/ResourceResolverTests.java	569
+core/planner/ResourceResolverTests.java	545
 core/tactics/FactorTests.java	422
 core/tactics/TacticsConfigTests.java	370
 gametest/DemoAuditGameTests.java	1101
