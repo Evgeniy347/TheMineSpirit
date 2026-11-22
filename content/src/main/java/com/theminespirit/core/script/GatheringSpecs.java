@@ -45,7 +45,8 @@ final class GatheringSpecs {
                                         CatalogLimits.DROP_RADIUS_MAX,
                                         CatalogLimits.DROP_RADIUS_DEFAULT),
                                 ParamSpec.textList(FILTER, false),
-                                ParamSpec.enumeration("overflow", false, List.of("fail", "by_value"), "by_value")),
+                                ParamSpec.enumeration(
+                                        "overflow", false, List.of("fail", "by_value", "return_to_base"), "by_value")),
                         List.of("в инвентаре есть место"),
                         List.of(
                                 "предметы по фильтру в радиусе подобраны",

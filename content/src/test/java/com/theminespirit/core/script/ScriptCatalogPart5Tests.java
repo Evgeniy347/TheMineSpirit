@@ -44,9 +44,9 @@ class ScriptCatalogPart5Tests {
                 "overflow у collect_drops необязателен: по умолчанию действует поведение «берём ценное, "
                         + "дешёвое оставляем» Иначе тест defaultCatalog_CollectDrops_OverflowDefaultsToByValue перестанет ловить эту поломку. При смене defaultCatalog_CollectDrops_OverflowDefaultsToByValue проверь это утверждение.");
         assertEquals(
-                List.of("fail", "by_value"),
+                List.of("fail", "by_value", "return_to_base"),
                 overflow.values(),
-                "У overflow два режима: fail — прежний отказ при полном инвентаре, by_value — подмена по ценности Иначе тест defaultCatalog_CollectDrops_OverflowDefaultsToByValue перестанет ловить эту поломку. При смене defaultCatalog_CollectDrops_OverflowDefaultsToByValue проверь это утверждение.");
+                "У overflow три режима: fail — отказ, by_value — подмена по ценности, return_to_base — вынос на базу Иначе тест defaultCatalog_CollectDrops_OverflowDefaultsToByValue перестанет ловить эту поломку. При смене defaultCatalog_CollectDrops_OverflowDefaultsToByValue проверь это утверждение.");
         assertEquals(
                 "by_value",
                 overflow.defaultValue(),
