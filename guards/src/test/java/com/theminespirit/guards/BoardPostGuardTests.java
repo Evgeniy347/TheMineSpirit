@@ -44,6 +44,8 @@ class BoardPostGuardTests {
     private static final Map<String, String> EXECUTORS = Map.of(
             "ExtraOrchardPost.java",
             "исполнитель билета графа: сад по узлу harvest_orchard",
+            "StoragePlanWatch.java",
+            "исполнитель узла warehouse: участки трёх складов этапа 1 выдаются по плану, а не порогом",
             "PlanDemolition.java",
             "исполнитель билета графа: снос по узлу demolish_stray/clear_floating",
             "UndoLeasePost.java",

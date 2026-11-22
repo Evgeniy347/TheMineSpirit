@@ -162,6 +162,7 @@ public final class BoardSources {
                         now),
                 Set.of()));
         guard.run("demand", () -> demand.tick(level, service, spirits, now));
+        guard.run("storage", () -> StoragePlanWatch.tick(level, service));
         live.addAll(guard.call("transfer", () -> TransferWatch.liveCauses(service), Set.of()));
         guard.run("transfer_drift", () -> transferDrift.tick(level, service, spirits));
         live.addAll(guard.call("left_ore", () -> LeftOreWatch.tick(level), Set.of()));

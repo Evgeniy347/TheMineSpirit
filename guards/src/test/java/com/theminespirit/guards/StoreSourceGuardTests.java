@@ -42,22 +42,6 @@ class StoreSourceGuardTests {
     }
 
     @Test
-    void storagePlanWatch_OnlyPlansLots_NoOwnTick() {
-        String sources = SOURCES.get(BOARD.resolve("StoragePlanWatch.java"));
-
-        List<String> found = new ArrayList<>();
-        found.addAll(found(sources, "static void tick("));
-        found.addAll(found(sources, "static void request("));
-        assertEquals(
-                List.of(),
-                found,
-                "StoragePlanWatch только выставляет BUILD_PLACED по участкам плана: порог и место сундуков "
-                        + "выбирает схема склада, сторож не строит и не ставит сундуки сам. "
-                        + "Нарушители: StoragePlanWatch.tick, StoragePlanWatch.request"
-                        + " При смене storagePlanWatch_OnlyPlansLots_NoOwnTick проверь это утверждение.");
-    }
-
-    @Test
     void yardFloorWatch_OwnTick_IsRemoved() {
         String sources = SOURCES.get(BOARD.resolve("YardFloorWatch.java"));
 
