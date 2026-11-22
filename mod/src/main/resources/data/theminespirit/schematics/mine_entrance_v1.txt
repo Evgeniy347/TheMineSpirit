@@ -2,7 +2,7 @@
 name: "Вход в шахту v1 (навес 3×3, спуск шириной 1)"
 type: infrastructure
 stage: 0
-size: 3x3x3   # Ш×В×Д   # Ш×В×Д
+size: 3x3x3   # Ш×В×Д
 entrance: 1,0,1
 exemptions:
   - rule: closed_walls

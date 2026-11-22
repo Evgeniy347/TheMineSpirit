@@ -2,7 +2,7 @@
 name: "Загон 7×7 (забор + калитка)"
 type: farm
 stage: 1
-size: 16x2x16  # Ш×В×Д   # Ш×В×Д
+size: 16x2x16  # Ш×В×Д
 plot: 16x16
 entrance: 7,0,4
 exemptions:

@@ -2,7 +2,7 @@
 name: "Колодец 3×3"
 type: infrastructure
 stage: 1
-size: 16x3x16  # Ш×В×Д   # Ш×В×Д
+size: 16x3x16  # Ш×В×Д
 plot: 16x16
 entrance: 7,1,7
 exemptions:
