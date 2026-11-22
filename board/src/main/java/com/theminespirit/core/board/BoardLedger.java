@@ -22,7 +22,10 @@ public final class BoardLedger {
     }
 
     public StageGate stageGate() {
-        return gate == null ? SettlementStage.gate(this) : gate;
+        if (gate == null) {
+            gate = SettlementStage.gate(this);
+        }
+        return gate;
     }
 
     public Optional<StageGate> confirmedGate() {
@@ -79,11 +82,13 @@ public final class BoardLedger {
 
     public void note(BoardCase boardCase, int level) {
         built.add(key(boardCase, level));
+        gate = null;
     }
 
     public void forget(BoardCase boardCase, int level) {
         Objects.requireNonNull(boardCase, "Кейс снятия отметки не может быть null: без него непонятно, что снимать");
         built.remove(key(boardCase, level));
+        gate = null;
     }
 
     public void complete(BoardCase boardCase, int level) {
@@ -111,14 +116,17 @@ public final class BoardLedger {
 
     public void notePlan(String planId, int level) {
         built.add(planKey(planId, level));
+        gate = null;
     }
 
     public void forgetPlan(String planId, int level) {
         built.remove(planKey(planId, level));
+        gate = null;
     }
 
     public void clear() {
         built.clear();
+        gate = null;
     }
 
     public void restore(Set<String> keys) {
@@ -130,6 +138,7 @@ public final class BoardLedger {
             }
             built.add(key);
         }
+        gate = null;
     }
 
     public boolean has(BoardCase boardCase, int level) {

@@ -2,6 +2,8 @@ package com.theminespirit.core.board;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -94,5 +96,39 @@ class BoardLedgerTests {
                 BoardLedger.parse(null),
                 "Null — не отметка: зависимости без условия проверяют по id"
                         + " Иначе тест parse_BrokenKeys_ReturnEmpty перестанет ловить эту поломку. При смене parse_BrokenKeys_ReturnEmpty проверь это утверждение.");
+    }
+
+    @Test
+    void stageGate_SecondCall_ReturnsCached() {
+        BoardLedger ledger = new BoardLedger();
+
+        StageGate first = ledger.stageGate();
+
+        assertSame(
+                first,
+                ledger.stageGate(),
+                "Гейт этапа пересчитывается один раз: проверка защиты блока не должна заново строить"
+                        + " и сортировать весь остаток этапа на каждом блоке"
+                        + " Иначе тест stageGate_SecondCall_ReturnsCached перестанет ловить эту поломку. При смене stageGate_SecondCall_ReturnsCached проверь это утверждение.");
+    }
+
+    @Test
+    void note_AfterGateBuilt_InvalidatesCache() {
+        BoardLedger ledger = new BoardLedger();
+        StageGate first = ledger.stageGate();
+        ledger.note(BoardCase.BUILD_MINE, 1);
+        BoardLedger fresh = new BoardLedger();
+        fresh.note(BoardCase.BUILD_MINE, 1);
+
+        assertNotSame(
+                first,
+                ledger.stageGate(),
+                "Новая отметка сбрасывает кеш гейта: иначе доска видит старый остаток этапа и задания не идут"
+                        + " Иначе тест note_AfterGateBuilt_InvalidatesCache перестанет ловить эту поломку. При смене note_AfterGateBuilt_InvalidatesCache проверь это утверждение.");
+        assertEquals(
+                fresh.stageGate().missing(),
+                ledger.stageGate().missing(),
+                "После сброса кеша гейт совпадает со свежим журналом с той же отметкой: кеш не меняет смысл этапа"
+                        + " Иначе тест note_AfterGateBuilt_InvalidatesCache перестанет ловить эту поломку. При смене note_AfterGateBuilt_InvalidatesCache проверь это утверждение.");
     }
 }
