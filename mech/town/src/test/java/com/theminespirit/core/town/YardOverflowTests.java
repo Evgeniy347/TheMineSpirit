@@ -100,4 +100,17 @@ class YardOverflowTests {
                         + two.origin()
                         + " Иначе тест yardStock_OverflowSlotAlreadyUsed_NextFreeSlot перестанет ловить эту поломку. При смене yardStock_OverflowSlotAlreadyUsed_NextFreeSlot проверь это утверждение.");
     }
+
+    @Test
+    void yardOverflow_YardArea_GivesMoreThan16Pairs() {
+        List<List<BlockCoord>> overflow = YardScheme.overflowSlots(SITE);
+
+        assertEquals(
+                30,
+                overflow.size(),
+                "двор 7×5 даёт 6 пар в ряд на 5 рядов: прежний предел 16 отрезал 14 мест, и при полном ряде "
+                        + "склад не расширялся, а свободные слоты падали ниже 20%; иначе рост упирается в "
+                        + "пустые клетки двора. При смене схемы yard_1 или MAX_OVERFLOW_PAIRS проверь "
+                        + "YardOverflowTests и живую постановку пар после публикации");
+    }
 }
