@@ -4,9 +4,11 @@ import com.mojang.logging.LogUtils;
 import com.theminespirit.core.chunk.SettlementZone;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
+import com.theminespirit.core.town.ColumnMask;
 import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -44,12 +46,19 @@ public final class SettlementChunkLifecycle {
                     SpiritRegistry.get(level).positions().values();
             TownPlan plan = SettlementPlotStore.get(level).town().orElse(null);
             SettlementZone zone = ZONES.computeIfAbsent(level, key -> new SettlementZone());
+            Set<ColumnMask.Cell> posts = new LinkedHashSet<>();
+            if (plan != null) {
+                posts.addAll(plan.fence().posts());
+            }
+            SettlementPlotStore.liveSite(level)
+                    .ifPresent(site -> posts.addAll(site.ring().posts()));
             boolean changed = zone.update(
                     plan,
                     SettlementAnchorStore.get(level).anchors(),
                     spirits,
                     SpiritConfig.radiusFor(level),
-                    DataTables.INSTANCE.town().current().ground().probeRadius());
+                    DataTables.INSTANCE.town().current().ground().probeRadius(),
+                    posts);
             if (changed) {
                 WorkZoneRegistry.update(level, zone.workZone());
             }

@@ -1,6 +1,7 @@
 package com.theminespirit.core.chunk;
 
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.town.ColumnMask;
 import com.theminespirit.core.town.TownPlan;
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -11,6 +12,7 @@ import org.jspecify.annotations.Nullable;
 public final class SettlementZone {
     private @Nullable TownPlan plan;
     private Set<BlockCoord> anchors = Set.of();
+    private Set<ColumnMask.Cell> posts = Set.of();
     private Set<ChunkCoord> spiritChunks = Set.of();
     private int spiritRadius = -1;
     private int probeRadius = -1;
@@ -22,9 +24,11 @@ public final class SettlementZone {
             Set<BlockCoord> anchors,
             Collection<BlockCoord> spirits,
             int spiritRadius,
-            int probeRadius) {
+            int probeRadius,
+            Collection<ColumnMask.Cell> posts) {
         Objects.requireNonNull(anchors, "anchors не может быть null: без якорей зона поселения пустая, а не null");
         Objects.requireNonNull(spirits, "spirits не может быть null: без духов зона работ — только поселение");
+        Objects.requireNonNull(posts, "posts не может быть null: без столбов ограды их чанки не удержать");
         if (spiritRadius < 0) {
             throw new IllegalArgumentException("Радиус чанков духа не может быть отрицательным: " + spiritRadius);
         }
@@ -32,20 +36,23 @@ public final class SettlementZone {
             throw new IllegalArgumentException("Радиус обмера поселения не может быть отрицательным: " + probeRadius);
         }
         Set<ChunkCoord> chunks = spiritChunks(spirits);
+        Set<ColumnMask.Cell> postSet = Set.copyOf(posts);
         if (Objects.equals(plan, this.plan)
                 && spiritRadius == this.spiritRadius
                 && probeRadius == this.probeRadius
                 && anchors.equals(this.anchors)
+                && postSet.equals(this.posts)
                 && chunks.equals(this.spiritChunks)) {
             return false;
         }
         this.plan = plan;
         this.anchors = Set.copyOf(anchors);
+        this.posts = postSet;
         this.spiritChunks = chunks;
         this.spiritRadius = spiritRadius;
         this.probeRadius = probeRadius;
         this.work = SettlementChunks.workZone(plan, this.anchors, spirits, spiritRadius);
-        this.settlement = SettlementChunks.settlement(plan, this.anchors, probeRadius);
+        this.settlement = SettlementChunks.settlement(plan, this.anchors, probeRadius, this.posts);
         return true;
     }
 

@@ -62,21 +62,28 @@ public final class SettlementChunks {
         return Collections.unmodifiableSet(chunks);
     }
 
-    public static ChunkDiff transition(Set<ChunkCoord> held, Set<ChunkCoord> settlement, boolean anyPlayerOnline) {
-        Objects.requireNonNull(held, "held не может быть null: удержанные чанки задают пустым множеством");
-        Objects.requireNonNull(
-                settlement, "settlement не может быть null: поселение без чанков задают пустым множеством");
-        Set<ChunkCoord> desired = anyPlayerOnline ? settlement : Set.of();
-        return ChunkDiff.between(held, desired);
-    }
-
-    public static Set<ChunkCoord> settlement(@Nullable TownPlan plan, Collection<BlockCoord> anchors, int probeRadius) {
+    public static Set<ChunkCoord> settlement(
+            @Nullable TownPlan plan,
+            Collection<BlockCoord> anchors,
+            int probeRadius,
+            Collection<ColumnMask.Cell> posts) {
         Objects.requireNonNull(anchors, "anchors не может быть null: поселение без якорей держит только участок плана");
+        Objects.requireNonNull(posts, "posts не может быть null: без столбов ограды их чанки не удержать");
         if (probeRadius < 0) {
             throw new IllegalArgumentException("Радиус обмера поселения не может быть отрицательным: " + probeRadius);
         }
         Set<ChunkCoord> chunks = new TreeSet<>(forPlan(plan, anchors, WORK_RADIUS_BLOCKS));
         chunks.addAll(around(anchors, probeRadius));
+        chunks.addAll(postChunks(posts));
+        return Collections.unmodifiableSet(chunks);
+    }
+
+    public static Set<ChunkCoord> postChunks(Collection<ColumnMask.Cell> posts) {
+        Objects.requireNonNull(posts, "posts не может быть null: без столбов ограды их чанки не удержать");
+        Set<ChunkCoord> chunks = new TreeSet<>();
+        for (ColumnMask.Cell post : posts) {
+            chunks.add(new ChunkCoord(post.x() >> 4, post.z() >> 4));
+        }
         return Collections.unmodifiableSet(chunks);
     }
 

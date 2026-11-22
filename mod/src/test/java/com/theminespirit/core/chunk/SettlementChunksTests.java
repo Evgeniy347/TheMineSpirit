@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.town.ColumnMask;
 import com.theminespirit.core.town.Placement;
 import com.theminespirit.core.town.TownFixtures;
 import com.theminespirit.core.town.TownPlan;
@@ -118,56 +119,18 @@ class SettlementChunksTests {
     }
 
     @Test
-    void transition_NoPlayers_RemovesEveryHeldChunk() {
-        Set<ChunkCoord> settlement = SettlementChunks.around(List.of(HOME), SettlementChunks.WORK_RADIUS_BLOCKS);
+    void settlement_FencePostOutsideRegion_HoldsItsChunk() {
+        TownPlan plan = TownFixtures.flatPlan();
+        ColumnMask.Cell post =
+                new ColumnMask.Cell(plan.region().minX() - 40, plan.region().minZ() - 40);
 
-        ChunkDiff diff = SettlementChunks.transition(settlement, settlement, false);
+        Set<ChunkCoord> chunks = SettlementChunks.settlement(plan, List.of(plan.anchor()), 0, List.of(post));
 
-        assertEquals(
-                settlement,
-                diff.toRemove(),
-                "Без игроков на сервере поселение обязано выгрузиться полностью: сервер не тратит ресурсы "
-                        + "на тикающие чанки"
-                        + " Иначе тест transition_NoPlayers_RemovesEveryHeldChunk перестанет ловить эту поломку. При смене transition_NoPlayers_RemovesEveryHeldChunk проверь это утверждение.");
-        assertEquals(
-                Set.of(),
-                diff.toAdd(),
-                "Без игроков добавлять чанки нечего: иначе поселение останется нагруженным навсегда"
-                        + " При смене transition_NoPlayers_RemovesEveryHeldChunk проверь это утверждение.");
-    }
-
-    @Test
-    void transition_FirstPlayerJoins_AddsWholeSettlement() {
-        Set<ChunkCoord> settlement = SettlementChunks.around(List.of(HOME), SettlementChunks.WORK_RADIUS_BLOCKS);
-
-        ChunkDiff diff = SettlementChunks.transition(Set.of(), settlement, true);
-
-        assertEquals(
-                settlement,
-                diff.toAdd(),
-                "С первым игроком (в любом мире) чанки поселения обязаны загрузиться целиком, включая "
-                        + "участки без духов"
-                        + " Иначе тест transition_FirstPlayerJoins_AddsWholeSettlement перестанет ловить эту поломку. При смене transition_FirstPlayerJoins_AddsWholeSettlement проверь это утверждение.");
-        assertEquals(
-                Set.of(),
-                diff.toRemove(),
-                "При входе первого игрока снимать нечего: билеты ставятся на весь набор поселения"
-                        + " Иначе тест transition_FirstPlayerJoins_AddsWholeSettlement перестанет ловить эту поломку. При смене transition_FirstPlayerJoins_AddsWholeSettlement проверь это утверждение.");
-    }
-
-    @Test
-    void transition_LastPlayerLeaves_RemovesChunksAddedForPlayers() {
-        Set<ChunkCoord> settlement = SettlementChunks.around(List.of(HOME), SettlementChunks.WORK_RADIUS_BLOCKS);
-        Set<ChunkCoord> held = ChunkSquare.apply(Set.of(), SettlementChunks.transition(Set.of(), settlement, true));
-
-        ChunkDiff diff = SettlementChunks.transition(held, settlement, false);
-
-        assertEquals(
-                settlement,
-                diff.toRemove(),
-                "После выхода последнего игрока обязаны сняться все билеты, поставленные для поселения: "
-                        + "иначе мир продолжает тикать без игроков"
-                        + " При смене transition_LastPlayerLeaves_RemovesChunksAddedForPlayers проверь это утверждение.");
+        assertTrue(
+                chunks.contains(new ChunkCoord(post.x() >> 4, post.z() >> 4)),
+                "Столб ограды вне участка плана (" + post.x() + ", " + post.z() + ") обязан держать свой чанк: "
+                        + "иначе после рестарта или без игроков чанк выгружается и мир у ограды неизвестен"
+                        + " Иначе тест settlement_FencePostOutsideRegion_HoldsItsChunk перестанет ловить эту поломку. При смене settlement_FencePostOutsideRegion_HoldsItsChunk проверь это утверждение.");
     }
 
     @Test
@@ -181,13 +144,6 @@ class SettlementChunksTests {
                 crowded,
                 "Пятьсот двенадцать духов с одним домом обязаны держать тот же набор чанков, что и один дух: "
                         + "тикеты считаются на поселение, а не на духа"
-                        + " Иначе тест around_ManySpiritsInOneHome_KeepsOneTicketSet перестанет ловить эту поломку. При смене around_ManySpiritsInOneHome_KeepsOneTicketSet проверь это утверждение.");
-        ChunkDiff crowdedDiff = SettlementChunks.transition(Set.of(), crowded, true);
-        assertEquals(
-                one.size(),
-                crowdedDiff.toAdd().size(),
-                "Число операций постановки билетов не должно расти с числом духов: пятьсот духов в одном "
-                        + "поселении ставят столько же билетов, сколько один"
                         + " Иначе тест around_ManySpiritsInOneHome_KeepsOneTicketSet перестанет ловить эту поломку. При смене around_ManySpiritsInOneHome_KeepsOneTicketSet проверь это утверждение.");
     }
 }
