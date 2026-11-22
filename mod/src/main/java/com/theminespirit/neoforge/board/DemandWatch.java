@@ -23,7 +23,7 @@ final class DemandWatch {
     void tick(ServerLevel level, BoardService service, List<? extends SpiritView> spirits, long now) {
         BoardLedger ledger = service.board().ledger();
         DemandRules rules = DataTables.INSTANCE.demand().current();
-        ChestSpaceWatch.Space space = ChestSpaceWatch.space(level);
+        StoragePlanWatch.Space space = StoragePlanWatch.space(level);
         DemandRules.Facts facts = new DemandRules.Facts(
                 spirits.size(),
                 WoolRules.bedCount(service.stock()),

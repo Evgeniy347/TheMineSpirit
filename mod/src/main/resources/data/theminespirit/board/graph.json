@@ -2703,12 +2703,13 @@
     },
     "warehouse": {
       "name": "Склад",
-      "case": "BUILD_WAREHOUSE",
-      "stage": 2,
+      "case": "BUILD_PLACED",
+      "stage": 1,
       "base": 92,
       "materials": {
         "oak_planks": 40,
-        "cobblestone": 32
+        "cobblestone": 32,
+        "chest": 9
       }
     },
     "smithing_table": {
@@ -3380,50 +3381,6 @@
         "player_house_3"
       ],
       "optional": true
-    },
-    "warehouse_2": {
-      "name": "Склад",
-      "case": "BUILD_WAREHOUSE",
-      "stage": 2,
-      "base": 102,
-      "materials": {
-        "oak_planks": 64,
-        "cobblestone": 128,
-        "chest": 16
-      },
-      "requires": [
-        "warehouse"
-      ]
-    },
-    "warehouse_3": {
-      "name": "Склад",
-      "case": "BUILD_WAREHOUSE",
-      "stage": 3,
-      "base": 804,
-      "materials": {
-        "stone_bricks": 128,
-        "chest": 32,
-        "oak_sign": 8,
-        "torch": 4
-      },
-      "requires": [
-        "warehouse_2"
-      ]
-    },
-    "warehouse_4": {
-      "name": "Склад",
-      "case": "BUILD_WAREHOUSE",
-      "stage": 4,
-      "base": 63,
-      "materials": {
-        "stone_bricks": 256,
-        "chest": 64,
-        "oak_sign": 16,
-        "lantern": 8
-      },
-      "requires": [
-        "warehouse_3"
-      ]
     },
     "barn_2": {
       "name": "Амбар",

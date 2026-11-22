@@ -30,6 +30,9 @@ class StageWorldGatePart6Tests {
     private static BoardLedger journalStageTwo() {
         BoardLedger ledger = new BoardLedger();
         FIRST_STAGE.forEach(boardCase -> ledger.note(boardCase, 1));
+        for (String id : new String[] {"storage", "storage_2", "storage_3"}) {
+            ledger.notePlan(id, 1);
+        }
         ledger.note(BoardCase.BUILD_MINE, 2);
         ledger.note(BoardCase.BUILD_HOUSE, 2);
         return ledger;
@@ -127,9 +130,9 @@ class StageWorldGatePart6Tests {
                 gate.stage(),
                 "В мире шахта 96% и двор 91%: этап 1 закрыт не целиком, гейт обязан оставить его открытым Иначе тест gate_LiveObserve18JournalTwo_WorldKeepsFirstStage перестанет ловить эту поломку. При смене gate_LiveObserve18JournalTwo_WorldKeepsFirstStage проверь это утверждение.");
         assertEquals(
-                Map.of("BUILD_MINE", 1, "STOCK_CHESTS", 1),
+                Map.of("BUILD_MINE", 1),
                 gate.missing(),
-                "Причина на доске называет неготовые части мира: шахту и двор Иначе тест gate_LiveObserve18JournalTwo_WorldKeepsFirstStage перестанет ловить эту поломку. При смене gate_LiveObserve18JournalTwo_WorldKeepsFirstStage проверь это утверждение.");
+                "Причина на доске называет неготовую часть мира: шахту Иначе тест gate_LiveObserve18JournalTwo_WorldKeepsFirstStage перестанет ловить эту поломку. При смене gate_LiveObserve18JournalTwo_WorldKeepsFirstStage проверь это утверждение.");
         assertFalse(
                 SettlementStage.allows(BoardCase.BUILD_MINE, 2, gate.stage()),
                 "Пока этап 1 не закрыт целиком, шахта уровня 2 не открывается Иначе тест gate_LiveObserve18JournalTwo_WorldKeepsFirstStage перестанет ловить эту поломку. При смене gate_LiveObserve18JournalTwo_WorldKeepsFirstStage проверь это утверждение.");
@@ -145,13 +148,10 @@ class StageWorldGatePart6Tests {
                 2,
                 gate.stage(),
                 "Все части этапа 1 стоят в мире — этап 2 открыт Иначе тест gate_WorldComplete_OpensSecondStage перестанет ловить эту поломку. При смене gate_WorldComplete_OpensSecondStage проверь это утверждение.");
-        assertTrue(
-                gate.missing().containsKey("BUILD_WAREHOUSE"),
-                "Остаток этапа 2 считает склад уровня 2 Иначе тест gate_WorldComplete_OpensSecondStage перестанет ловить эту поломку. При смене gate_WorldComplete_OpensSecondStage проверь это утверждение.");
         assertEquals(
                 2,
-                gate.missing().get("BUILD_WAREHOUSE"),
-                "Склад этапа 2 — второго уровня Иначе тест gate_WorldComplete_OpensSecondStage перестанет ловить эту поломку. При смене gate_WorldComplete_OpensSecondStage проверь это утверждение.");
+                gate.missing().get("BUILD_MINE"),
+                "Остаток этапа 2 считает шахту второго уровня Иначе тест gate_WorldComplete_OpensSecondStage перестанет ловить эту поломку. При смене gate_WorldComplete_OpensSecondStage проверь это утверждение.");
     }
 
     @Test
@@ -172,6 +172,9 @@ class StageWorldGatePart6Tests {
     void submit_StageGateOverride_LocksNextStage() {
         Board board = new Board(() -> 0L);
         FIRST_STAGE.forEach(boardCase -> board.ledger().note(boardCase, 1));
+        for (String id : new String[] {"storage", "storage_2", "storage_3"}) {
+            board.ledger().notePlan(id, 1);
+        }
         assertEquals(
                 BoardOutcome.ACCEPTED,
                 board.submit(mine(2, "mine_level_2")),

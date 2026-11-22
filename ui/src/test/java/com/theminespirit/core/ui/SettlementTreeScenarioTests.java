@@ -68,6 +68,9 @@ class SettlementTreeScenarioTests {
                 .board(BoardCase.LIGHTING, PERCENT)
                 .board(BoardCase.BUILD_ORCHARD, PERCENT)
                 .board(BoardCase.BUILD_HOUSE, PERCENT)
+                .plan("storage", 1, PERCENT)
+                .plan("storage_2", 1, PERCENT)
+                .plan("storage_3", 1, PERCENT)
                 .build());
 
         assertEquals(

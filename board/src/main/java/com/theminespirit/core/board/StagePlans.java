@@ -30,7 +30,6 @@ public final class StagePlans {
     private static final String TABLE_BLOCK = "crafting_table";
     private static final String COBBLESTONE = NamespacedId.MINECRAFT + "cobblestone";
     private static final String SUPPORT = NamespacedId.MINECRAFT + "dirt";
-    private static final int CHEST_PLANKS = 20;
     private static final int FELL_LAYER = 4;
     private static final int FURNACE_STONE = 8;
 
@@ -136,12 +135,10 @@ public final class StagePlans {
     private static TaskNode chests(TicketTarget target, StageSite site, List<SchemeBuild> builds) {
         List<TaskNode> steps = new ArrayList<>();
         steps.add(PlanSteps.gotoPoint(site.workYard()));
-        steps.add(PlanSteps.withdraw("*_planks", CHEST_PLANKS));
         for (SchemeBuild build : builds) {
-            steps.add(
-                    build.only().contains(TABLE_BLOCK)
-                            ? PlanSteps.craft(TABLE, 1)
-                            : PlanSteps.craft("minecraft:chest", 2));
+            if (build.only().contains(TABLE_BLOCK)) {
+                steps.add(PlanSteps.craft(TABLE, 1));
+            }
             steps.add(PlanSteps.build(build, target.wood()));
         }
         return new SequenceNode(steps);

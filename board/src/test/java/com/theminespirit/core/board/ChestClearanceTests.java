@@ -9,7 +9,6 @@ import com.theminespirit.core.inventory.Stack;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 class ChestClearanceTests {
@@ -18,7 +17,7 @@ class ChestClearanceTests {
 
     @Test
     void decide_EmptyExtraChest_CanBeBroken() {
-        ChestClearance.Decision decision = ChestClearance.decide(snapshot(), false, List.of(empty()), List.of(), 0);
+        ChestClearance.Decision decision = ChestClearance.decide(snapshot(), false, List.of(empty()));
 
         assertEquals(
                 ChestClearance.Action.REMOVE,
@@ -33,8 +32,7 @@ class ChestClearanceTests {
 
     @Test
     void decide_NonEmptyAndWarehouseHasRoom_DrainsBeforeBreak() {
-        ChestClearance.Decision decision =
-                ChestClearance.decide(snapshot(dirt(5), log(3)), false, List.of(empty()), List.of(), 0);
+        ChestClearance.Decision decision = ChestClearance.decide(snapshot(dirt(5), log(3)), false, List.of(empty()));
 
         assertEquals(
                 ChestClearance.Action.DRAIN,
@@ -55,8 +53,7 @@ class ChestClearanceTests {
 
     @Test
     void decide_NonEmptyAndWarehouseFull_WaitsInsteadOfBreaking() {
-        ChestClearance.Decision decision =
-                ChestClearance.decide(snapshot(dirt(5)), false, List.of(full()), List.of(), 0);
+        ChestClearance.Decision decision = ChestClearance.decide(snapshot(dirt(5)), false, List.of(full()));
 
         assertEquals(
                 ChestClearance.Action.WAIT,
@@ -70,62 +67,29 @@ class ChestClearanceTests {
     }
 
     @Test
-    void decide_NonEmptyFullWarehouseWithMixedPlanks_AddsChestFirst() {
-        BlockCoord cell = new BlockCoord(20, 64, 20);
-        int wood = ChestClearance.chestWood(Map.of("oak_planks", 4, "jungle_planks", 4));
-
-        ChestClearance.Decision decision =
-                ChestClearance.decide(snapshot(dirt(5)), false, List.of(full()), List.of(cell), wood);
-
-        assertEquals(
-                ChestClearance.Action.ADD_CHEST,
-                decision.action(),
-                "4 oak + 4 jungle доски — достаточно на сундук: порода не важна"
-                        + " Иначе тест decide_NonEmptyFullWarehouseWithMixedPlanks_AddsChestFirst перестанет ловить эту поломку. При смене decide_NonEmptyFullWarehouseWithMixedPlanks_AddsChestFirst проверь это утверждение.");
-    }
-
-    @Test
-    void chestWood_AnySpeciesAndLogs_AddsUpToCraftableMaterial() {
-        assertEquals(
-                8,
-                ChestClearance.chestWood(Map.of("oak_planks", 4, "jungle_planks", 4)),
-                "Смешанные доски разных пород складываются"
-                        + " Иначе тест chestWood_AnySpeciesAndLogs_AddsUpToCraftableMaterial перестанет ловить эту поломку. При смене chestWood_AnySpeciesAndLogs_AddsUpToCraftableMaterial проверь это утверждение.");
-        assertEquals(
-                16,
-                ChestClearance.chestWood(Map.of("oak_planks", 8, "spruce_log", 2)),
-                "2 бревна любой породы дают ещё 8 досок"
-                        + " Иначе тест chestWood_AnySpeciesAndLogs_AddsUpToCraftableMaterial перестанет ловить эту поломку. При смене chestWood_AnySpeciesAndLogs_AddsUpToCraftableMaterial проверь это утверждение.");
-        assertEquals(
-                4,
-                ChestClearance.chestWood(Map.of("oak_log", 1, "cobblestone", 64)),
-                "Одно бревно — только 4 доски: helper считает материал, а не решает, хватает ли его"
-                        + " Иначе тест chestWood_AnySpeciesAndLogs_AddsUpToCraftableMaterial перестанет ловить эту поломку. При смене chestWood_AnySpeciesAndLogs_AddsUpToCraftableMaterial проверь это утверждение.");
-    }
-
-    @Test
-    void decide_NonEmptyFullWarehouseWithMaterials_AddsChestFirst() {
-        BlockCoord cell = new BlockCoord(20, 64, 20);
-        ChestClearance.Decision decision =
-                ChestClearance.decide(snapshot(dirt(5)), false, List.of(full()), List.of(cell), 8);
-
-        assertEquals(
-                ChestClearance.Action.ADD_CHEST,
-                decision.action(),
-                "Склад полон: сначала ставим сундук в клетку склада, потом выносим вещи"
-                        + " Иначе тест decide_NonEmptyFullWarehouseWithMaterials_AddsChestFirst перестанет ловить эту поломку. При смене decide_NonEmptyFullWarehouseWithMaterials_AddsChestFirst проверь это утверждение.");
-    }
-
-    @Test
     void decide_ChestInsideWarehousePlan_IsKept() {
-        ChestClearance.Decision decision =
-                ChestClearance.decide(snapshot(dirt(5)), true, List.of(empty()), List.of(), 0);
+        ChestClearance.Decision decision = ChestClearance.decide(snapshot(dirt(5)), true, List.of(empty()));
 
         assertEquals(
                 ChestClearance.Action.KEEP,
                 decision.action(),
                 "Сундук в клетке плана склада не снос"
                         + " Иначе тест decide_ChestInsideWarehousePlan_IsKept перестанет ловить эту поломку. При смене decide_ChestInsideWarehousePlan_IsKept проверь это утверждение.");
+    }
+
+    @Test
+    void decide_NoBuiltWarehouse_WaitsEvenIfEmpty() {
+        ChestClearance.Decision decision = ChestClearance.decide(snapshot(dirt(5)), false, List.of());
+
+        assertEquals(
+                ChestClearance.Action.WAIT,
+                decision.action(),
+                "Без построенного склада вещи выносить некуда: сундук ждёт первого склада"
+                        + " Иначе тест decide_NoBuiltWarehouse_WaitsEvenIfEmpty перестанет ловить эту поломку. При смене decide_NoBuiltWarehouse_WaitsEvenIfEmpty проверь это утверждение.");
+        assertFalse(
+                decision.breaks(),
+                "WAIT не даёт права ломать непустой сундук без склада"
+                        + " Иначе тест decide_NoBuiltWarehouse_WaitsEvenIfEmpty перестанет ловить эту поломку. При смене decide_NoBuiltWarehouse_WaitsEvenIfEmpty проверь это утверждение.");
     }
 
     @Test

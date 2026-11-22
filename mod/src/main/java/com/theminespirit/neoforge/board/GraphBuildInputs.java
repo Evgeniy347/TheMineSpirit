@@ -3,8 +3,6 @@ package com.theminespirit.neoforge.board;
 import com.theminespirit.core.board.BoardLedger;
 import com.theminespirit.core.board.StageCatalog;
 import com.theminespirit.core.board.StageRules;
-import com.theminespirit.core.board.WarehouseApproval;
-import com.theminespirit.core.board.WarehouseRules;
 import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.board.graph.GraphState.Built;
 import com.theminespirit.core.board.graph.StageBuilt;
@@ -38,10 +36,6 @@ final class GraphBuildInputs {
         buildings.putAll(planBuilt(level, service, scan, town));
         PlanStatesInputs.apply(level, scan, town, ledger, graph, buildings);
         FarmBuilt.apply(service, level, scan, ledger, graph, town, buildings);
-        WarehouseApproval.apply(
-                buildings,
-                WarehouseRules.builtLevel(ledger),
-                WarehouseOrderStore.get(level).order());
         return buildings;
     }
 

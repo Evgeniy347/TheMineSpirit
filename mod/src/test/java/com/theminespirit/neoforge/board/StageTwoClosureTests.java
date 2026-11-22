@@ -105,6 +105,9 @@ class StageTwoClosureTests {
     private static Board stageTwoReady() {
         Board board = new Board(() -> 0L);
         FIRST_STAGE.forEach(boardCase -> board.ledger().note(boardCase, 1));
+        board.ledger().notePlan("storage", 1);
+        board.ledger().notePlan("storage_2", 1);
+        board.ledger().notePlan("storage_3", 1);
         board.ledger().note(BoardCase.BUILD_MINE, 2);
         board.ledger().note(BoardCase.BUILD_WAREHOUSE, 1);
         board.ledger().note(BoardCase.BUILD_WAREHOUSE, 2);

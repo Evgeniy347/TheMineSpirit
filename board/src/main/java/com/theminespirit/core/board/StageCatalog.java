@@ -10,7 +10,11 @@ import java.util.Objects;
 import java.util.Optional;
 
 public final class StageCatalog {
-    private static final Map<String, String> GRAPH_ALIASES = Map.of("storage", "warehouse", "pen", "pen_cow");
+    private static final Map<String, String> GRAPH_ALIASES = Map.of(
+            "storage", "warehouse",
+            "storage_2", "warehouse",
+            "storage_3", "warehouse",
+            "pen", "pen_cow");
     private static final String GRAPH_BUILDING = "graph:building:";
 
     public record Entry(String id, BoardCase boardCase, String scheme) {

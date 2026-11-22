@@ -1,8 +1,6 @@
 package com.theminespirit.gametest;
 
 import com.theminespirit.core.board.ChestPlans;
-import com.theminespirit.core.board.WarehouseChests;
-import com.theminespirit.core.board.WarehouseOrder;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.BlockProtection;
@@ -12,13 +10,12 @@ import com.theminespirit.core.town.Placement;
 import com.theminespirit.core.town.SettlementPlot;
 import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.core.town.TownStreets;
+import com.theminespirit.neoforge.SettlementChestStore;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.ChestDemolition;
 import com.theminespirit.neoforge.board.PlotCellStructure;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
-import com.theminespirit.neoforge.board.WarehouseOrderStore;
 import com.theminespirit.neoforge.inventory.ContainerAccess;
-import java.util.Comparator;
 import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -67,6 +64,7 @@ final class ChestSalvageScene {
         helper.assertTrue(opened instanceof ContainerAccess.Opened, "Склад для разгрузки обязан открываться");
         warehouse = ((ContainerAccess.Opened) opened).container();
         warehouse.clearContent();
+        SettlementChestStore.get(level).track(helper.absolutePos(new BlockPos(13, 1, 4)));
         checkProtection();
         ChestBlockEntity first = (ChestBlockEntity) level.getBlockEntity(left);
         ChestBlockEntity second = (ChestBlockEntity) level.getBlockEntity(right);
@@ -154,29 +152,9 @@ final class ChestSalvageScene {
                         && second.getLootTable() != null,
                 "Чужая нераскрытая добыча второй половины не генерируется и не разбирается");
         second.setLootTable(null);
-        BlockCoord offset = WarehouseChests.cells(new BlockCoord(0, 0, 0), 1).stream()
-                .min(Comparator.comparingInt(BlockCoord::y))
-                .orElseThrow();
-        BlockCoord origin =
-                new BlockCoord(right.getX() - offset.x(), right.getY() - offset.y(), right.getZ() - offset.z());
-        WarehouseOrderStore orders = WarehouseOrderStore.get(level);
-        orders.order(new WarehouseOrder(1, origin, "проверка", "Защита плановой половины", level.getGameTime()));
         helper.assertTrue(
-                !ChestDemolition.removable(level, coord(left))
-                        && !ChestDemolition.removable(level, coord(right))
-                        && spirit.protectionGate().checkDemolish(left, level.getBlockState(left))
-                                instanceof BlockProtection.Refused,
-                "Даже ещё не построенная плановая половина защищает всю пару, включая старое задание сноса");
-        orders.order(new WarehouseOrder(
-                1,
-                new BlockCoord(origin.x(), origin.y() + 1, origin.z()),
-                "проверка",
-                "Проверка точной высоты плана",
-                level.getGameTime()));
-        helper.assertTrue(
-                ChestDemolition.removable(level, coord(left)),
-                "Сундук ниже всех плановых клеток с теми же XZ не является сундуком плана");
-        orders.clear();
+                ChestDemolition.removable(level, coord(left)) && ChestDemolition.removable(level, coord(right)),
+                "Сундук вне клеток схем склада разбирается без реестра и заказов");
         checkMineFloor();
     }
 

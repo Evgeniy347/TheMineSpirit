@@ -8,14 +8,15 @@ import org.junit.jupiter.api.Test;
 
 class GraphPlannerPart2Tests {
     @Test
-    void plan_StorageFullWarehouseNotPlanned_NoticeForStrategist() {
+    void plan_StorageFullWarehouseNotBuilt_TaskPlanned() {
         GraphWorld world = GraphWorld.settled();
         world.storageFree = 5;
         GraphPlan plan = world.plan();
         assertTrue(
-                plan.notices().stream().anyMatch(notice -> "warehouse".equals(notice.building())),
-                "Склад полон, склада нет в плане — просьба стратегу:  Иначе тест plan_StorageFullWarehouseNotPlanned_NoticeForStrategist перестанет ловить эту поломку. При смене plan_StorageFullWarehouseNotPlanned_NoticeForStrategist проверь это утверждение."
-                        + plan.notices());
+                plan.task("building:warehouse").isPresent(),
+                "Склад первого уровня в плане этапа 1: при нехватке места дух строит склад сам, без просьбы стратегу: "
+                        + plan.tasks().stream().map(GraphPlan.Task::id).toList()
+                        + " При смене plan_StorageFullWarehouseNotBuilt_TaskPlanned проверь это утверждение.");
     }
 
     @Test

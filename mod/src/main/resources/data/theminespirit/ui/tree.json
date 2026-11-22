@@ -27,6 +27,8 @@
     "family_house_b": {"title": "Дом семьи B", "icon": "minecraft:oak_door"},
     "family_house_c": {"title": "Дом семьи C", "icon": "minecraft:oak_door"},
     "storage": {"title": "Склад", "icon": "minecraft:barrel"},
+    "storage_2": {"title": "Склад 2", "icon": "minecraft:barrel"},
+    "storage_3": {"title": "Склад 3", "icon": "minecraft:barrel"},
     "barn": {"title": "Амбар", "icon": "minecraft:hay_block"},
     "field_a": {"title": "Пашня A", "icon": "minecraft:wheat_seeds"},
     "field_b": {"title": "Пашня B", "icon": "minecraft:wheat_seeds"},

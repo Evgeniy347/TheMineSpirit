@@ -101,7 +101,7 @@ public final class PlotPlanBlocks {
     }
 
     private static List<SchemeBuild> yard(StageSite site) {
-        return Stream.of(YardScheme.stock(site, 1), YardScheme.lighting(site), List.of(YardScheme.furnace(site)))
+        return Stream.of(List.of(YardScheme.table(site)), YardScheme.lighting(site), List.of(YardScheme.furnace(site)))
                 .flatMap(List::stream)
                 .toList();
     }

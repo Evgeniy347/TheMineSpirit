@@ -204,9 +204,6 @@ final class FarmPost {
                     need.orElseThrow());
             return true;
         }
-        if ("storage_space".equals(node)) {
-            return ChestSpaceWatch.post(post);
-        }
         if ("smoker".equals(node)) {
             if (!FishingNeeds.wantsSmoker(
                             post.stock.available(),

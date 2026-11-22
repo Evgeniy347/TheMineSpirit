@@ -124,6 +124,9 @@ class StageConfirmationTests {
         StageRules rules = StageRules.load();
         Set<String> first = new HashSet<>();
         rules.stages().get(0).buildings().forEach((boardCase, level) -> first.add(boardCase.name() + ":" + level));
+        first.add("storage:1");
+        first.add("storage_2:1");
+        first.add("storage_3:1");
         StageWorld built = new SetWorld(first);
         StageConfirmation confirmation = new StageConfirmation(1);
 

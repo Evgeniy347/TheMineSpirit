@@ -82,11 +82,11 @@ class GraphLiveStageOneTests {
                 "Этап 1 обходит висящее: " + steps
                         + " Иначе тест simulate_LiveStageOne_ClosesWholeStageOne перестанет ловить эту поломку. При смене simulate_LiveStageOne_ClosesWholeStageOne проверь это утверждение.");
         assertTrue(
-                steps.size() <= 200,
-                "Этап 1 зациклился: " + steps.size() + " заданий"
+                steps.size() <= 240,
+                "Этап 1 зациклился: " + steps.size() + " заданий (три склада дают запас шагов)"
                         + " Иначе тест simulate_LiveStageOne_ClosesWholeStageOne перестанет ловить эту поломку. При смене simulate_LiveStageOne_ClosesWholeStageOne проверь это утверждение.");
         assertTrue(
-                maxRepeat(steps) <= 60,
+                maxRepeat(steps) <= 70,
                 "Одно задание повторяется без продвижения: " + maxRepeat(steps)
                         + " Иначе тест simulate_LiveStageOne_ClosesWholeStageOne перестанет ловить эту поломку. При смене simulate_LiveStageOne_ClosesWholeStageOne проверь это утверждение.");
         assertTrue(

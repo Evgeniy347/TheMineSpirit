@@ -143,7 +143,7 @@ final class GraphPost {
             case HARVEST_ORCHARD -> new GraphHarvestPost(this).orchard(ticket, task);
             case MINE_LEFT_ORE -> new GraphHarvestPost(this).leftOre(ticket, task);
             case CRAFT_TORCHES -> new GraphCrafting(this).torches(ticket, task);
-            case STOCK_CHESTS -> ChestSpaceWatch.post(this);
+            case STOCK_CHESTS -> false;
             case SMELT_CHARCOAL -> new GraphCrafting(this).charcoal(ticket, task);
             case GRIND_BLAZE_POWDER, BREW_POTION, HARVEST_NETHER_WART -> GraphBrew.post(this, ticket, task);
             case ACTIVITY_MOVE -> DigOutPost.digOut(this, service, task);

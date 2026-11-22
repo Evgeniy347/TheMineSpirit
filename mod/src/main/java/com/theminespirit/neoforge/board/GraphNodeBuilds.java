@@ -10,8 +10,8 @@ final class GraphNodeBuilds {
     private GraphNodeBuilds() {}
 
     static boolean post(GraphPost post, GraphTickets.Ticket ticket, GraphPlan.Task task) {
-        if (WarehouseWatch.handles(ticket.node())) {
-            return WarehouseWatch.post(post, ticket);
+        if (StoragePlanWatch.handles(ticket.node())) {
+            return StoragePlanWatch.post(post, ticket);
         }
         SupplyGraph.Building building = post.graph.buildings().get(ticket.node());
         if (building == null) {

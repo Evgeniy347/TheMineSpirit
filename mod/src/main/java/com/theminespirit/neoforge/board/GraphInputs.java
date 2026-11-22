@@ -101,7 +101,7 @@ final class GraphInputs {
                         kits(spirits, graph),
                         buildings,
                         materials(level, service, stock, scan, graph, buildings, facts),
-                        ChestSpaceWatch.space(level).freePercent(),
+                        StoragePlanWatch.space(level).freePercent(),
                         events,
                         around.world(),
                         around.distances(),

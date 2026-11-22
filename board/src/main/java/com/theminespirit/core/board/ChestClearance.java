@@ -2,7 +2,6 @@ package com.theminespirit.core.board;
 
 import com.theminespirit.core.inventory.ContainerSnapshot;
 import com.theminespirit.core.inventory.Stack;
-import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -10,16 +9,10 @@ import java.util.Map;
 import java.util.Objects;
 
 public final class ChestClearance {
-    public static final int CHEST_PLANKS = 8;
-    public static final int PLANKS_PER_LOG = 4;
-    private static final String PLANKS = "_planks";
-    private static final String LOG = "_log";
-
     public enum Action {
         KEEP,
         REMOVE,
         DRAIN,
-        ADD_CHEST,
         WAIT
     }
 
@@ -55,20 +48,9 @@ public final class ChestClearance {
 
     private ChestClearance() {}
 
-    public static Decision decide(
-            ContainerSnapshot chest,
-            boolean inWarehousePlan,
-            List<ContainerSnapshot> warehouse,
-            List<BlockCoord> emptyWarehouseCells,
-            int chestWood) {
+    public static Decision decide(ContainerSnapshot chest, boolean inWarehousePlan, List<ContainerSnapshot> warehouse) {
         Objects.requireNonNull(chest, "Сундук не может быть null: по нему решают, что с ним делать");
         Objects.requireNonNull(warehouse, "Сундуки склада не могут быть null: пустые задают пустым списком");
-        Objects.requireNonNull(
-                emptyWarehouseCells, "Свободные клетки склада не могут быть null: пустые задают пустым списком");
-        if (chestWood < 0) {
-            throw new IllegalArgumentException(
-                    "Материала на сундук " + chestWood + ": количество не бывает отрицательным");
-        }
         if (inWarehousePlan) {
             return new Decision(Action.KEEP, List.of(), 0, 0, "сундук стоит в клетке плана склада — не трогаем");
         }
@@ -86,36 +68,12 @@ public final class ChestClearance {
                     free,
                     "в складе свободно " + free + " слотов, нужно " + needed + " — сначала вынести вещи");
         }
-        if (!emptyWarehouseCells.isEmpty() && chestWood >= CHEST_PLANKS) {
-            return new Decision(
-                    Action.ADD_CHEST,
-                    moves,
-                    needed,
-                    free,
-                    "в складе не хватает места: свободно " + free + " из " + needed
-                            + " слотов — сначала ставим сундук в клетку склада");
-        }
         return new Decision(
                 Action.WAIT,
                 moves,
                 needed,
                 free,
-                "склад полон и нового сундука поставить не из чего: свободно " + free + " из " + needed
-                        + " слотов, на сундук материалов " + chestWood);
-    }
-
-    public static int chestWood(Map<String, Integer> stock) {
-        Objects.requireNonNull(stock, "Запас не может быть null: без него не посчитать материал на сундук");
-        int planks = 0;
-        int logs = 0;
-        for (Map.Entry<String, Integer> entry : stock.entrySet()) {
-            if (entry.getKey().endsWith(PLANKS)) {
-                planks += entry.getValue();
-            } else if (entry.getKey().endsWith(LOG)) {
-                logs += entry.getValue();
-            }
-        }
-        return planks + logs * PLANKS_PER_LOG;
+                "в складе свободно " + free + " из " + needed + " слотов — ждём места для переноса");
     }
 
     public static boolean empty(ContainerSnapshot chest) {

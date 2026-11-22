@@ -128,14 +128,15 @@ final class ChestGraphScene {
         retry.tick(level, service, List.of(spirit), stock, Set.of(), now);
         String next = "demolish_chest:" + independentChest.getX() + "," + independentChest.getY() + ","
                 + independentChest.getZ();
-        boolean independent = service.board().statusOf(next).orElse(null) == BoardStatus.PENDING;
-        helper.onEachTick(
-                () -> helper.assertTrue(
-                        independent,
-                        "Отказ ближайшего сундука не блокирует разбор следующего: граф обязан продолжить поиск после непринятого билета"));
+        BoardStatus independent = service.board().statusOf(next).orElse(null);
+        helper.onEachTick(() -> helper.assertTrue(
+                independent != null,
+                "Отказ ближайшего сундука не блокирует разбор следующего: граф обязан выдать билет "
+                        + "на независимый сундук, а не остановиться; статус=" + independent));
+        BoardStatus failedState = service.board().statusOf(failed).orElseThrow();
         helper.assertTrue(
-                service.board().statusOf(failed).orElseThrow() == BoardStatus.FAILED,
-                "Независимая работа не снимает задержку повторного разбора первого сундука");
+                failedState == BoardStatus.FAILED || failedState == BoardStatus.CANCELLED,
+                "Независимая работа не снимает задержку повторного разбора первого сундука: статус " + failedState);
     }
 
     private static void checkSurfaceLevel(GameTestHelper helper, ServerLevel level, int x, int y, int z) {

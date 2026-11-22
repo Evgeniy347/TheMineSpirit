@@ -115,9 +115,6 @@ public final class StoreRules {
         if (signals.shortfall()) {
             events.add("store_minimum");
         }
-        if (signals.storageFull()) {
-            events.add("storage_full");
-        }
         if (signals.mixed()) {
             events.add("storage_mixed");
         }

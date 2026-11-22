@@ -127,8 +127,8 @@ final class PlanDemolition {
             TownPlan town,
             DemolitionScope scope,
             List<FloatingBlocks.Finding> findings) {
-        boolean yardReady = service.board().ledger().has(BoardCase.STOCK_CHESTS, 1)
-                && service.board().ledger().has(BoardCase.CRAFT_FURNACE, 1);
+        boolean yardReady = StoragePlanWatch.LOTS.stream()
+                .anyMatch(id -> service.board().ledger().hasPlan(id, 1));
         PlotPlanBlocks.Plan plan = PlotPlanBlocks.of(site);
         Collected base = DemolitionCollect.collect(
                 new DemolitionCollect.Ctx(

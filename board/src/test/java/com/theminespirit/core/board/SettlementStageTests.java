@@ -45,12 +45,11 @@ class SettlementStageTests {
         assertEquals(
                 2,
                 SettlementStage.of(ledger),
-                "Расчистка, шахта, забор, сад, дом, склад и улицы 1 — переход на этап 2 Иначе тест of_AllFirstStageBuilt_SecondStage перестанет ловить эту поломку. При смене of_AllFirstStageBuilt_SecondStage проверь это утверждение.");
+                "Расчистка, шахта, забор, сад, дом, три склада и улицы 1 — переход на этап 2 Иначе тест of_AllFirstStageBuilt_SecondStage перестанет ловить эту поломку. При смене of_AllFirstStageBuilt_SecondStage проверь это утверждение.");
         assertEquals(
                 Map.ofEntries(
                         Map.entry("BUILD_MINE", 2),
                         Map.entry("BUILD_STREETS", 2),
-                        Map.entry("BUILD_WAREHOUSE", 2),
                         Map.entry("barn", 1),
                         Map.entry("family_house_a", 1),
                         Map.entry("family_house_b", 1),
@@ -60,7 +59,6 @@ class SettlementStageTests {
                         Map.entry("lumber_yard", 1),
                         Map.entry("pen", 1),
                         Map.entry("plaza", 1),
-                        Map.entry("storage", 1),
                         Map.entry("well", 1),
                         Map.entry("workshop", 1)),
                 SettlementStage.missing(ledger),
@@ -71,8 +69,6 @@ class SettlementStageTests {
     void missing_SecondStageWithoutBarn_StageTwo() {
         BoardLedger ledger = firstStageBuilt();
         ledger.note(BoardCase.BUILD_MINE, 2);
-        ledger.note(BoardCase.BUILD_WAREHOUSE, 1);
-        ledger.note(BoardCase.BUILD_WAREHOUSE, 2);
         ledger.note(BoardCase.BUILD_STREETS, 2);
         ledger.note(BoardCase.BUILD_PEN, 1);
         ledger.restore(Set.of(
@@ -103,6 +99,7 @@ class SettlementStageTests {
     private static BoardLedger firstStageBuilt() {
         BoardLedger ledger = new BoardLedger();
         FIRST_STAGE.forEach(boardCase -> ledger.note(boardCase, 1));
+        SettlementStageTestSupport.noteStorage(ledger);
         return ledger;
     }
 }

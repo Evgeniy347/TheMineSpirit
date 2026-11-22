@@ -15,6 +15,7 @@ import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.core.town.TownPlanner;
 import com.theminespirit.core.town.TownRules;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +28,9 @@ final class TownSurvey {
     static final String JOURNAL_ID = "town";
     private static final Logger LOGGER = LogUtils.getLogger();
     private static BlockCoord warnedAnchor;
+    private static final Set<String> staleIgnored = new HashSet<>();
+    private static final long EXTEND_COOLDOWN = 1200L;
+    private static final HashMap<BlockCoord, Long> lastExtend = new HashMap<>();
 
     private TownSurvey() {}
 
@@ -43,13 +47,13 @@ final class TownSurvey {
                 LOGGER.warn("[plot] план размечен прежним обмером: места построек сохраняются, новый обмер не переносит"
                         + " origin; расширение — только новыми участками");
             }
-            return extend(level, store, stored.orElseThrow(), rules, stages, service);
+            return extend(level, store, stored.orElseThrow(), rules, stages, service, now);
         }
         Optional<SettlementPlot> old = store.plot();
         TerrainGrid grid = GroundProbe.terrain(level, center, rules.ground().probeRadius());
         TownPlan plan = TownPlanner.plan(grid, center, rules, stages);
         store.fixTown(plan);
-        plan = extend(level, store, plan, rules, stages, service);
+        plan = extend(level, store, plan, rules, stages, service, now);
         String cause = old.isPresent()
                 ? "старый участок у " + old.orElseThrow().anchor() + " заменён планом"
                 : "план поселения размечен";
@@ -85,24 +89,35 @@ final class TownSurvey {
             TownPlan plan,
             TownRules rules,
             List<List<String>> stages,
-            BoardService service) {
+            BoardService service,
+            long now) {
         TownPlan current = plan;
         List<String> demanded = demanded(service, current);
         boolean missing = stages.get(0).stream()
                 .filter(id -> !TownPlanner.LINE_ELEMENTS.contains(id))
                 .anyMatch(id -> plan.placement(id).isEmpty() && !plan.unplaced().contains(id));
-        boolean resized = TownPlanner.staleSizes(current, rules);
+        boolean resized = TownPlanner.staleSizes(current, rules) && !staleIgnored.contains(staleKey(current, rules));
         if (demanded.isEmpty() && !missing && !resized) {
             return current;
         }
+        Long last = lastExtend.get(current.anchor());
+        if (last != null && now - last < EXTEND_COOLDOWN) {
+            return current;
+        }
+        lastExtend.put(current.anchor(), now);
         TerrainGrid grid =
                 GroundProbe.terrain(level, current.anchor(), rules.ground().probeRadius());
         if (resized) {
             TownPlan adapted = TownPlanner.readapt(grid, current, rules, built(service, current));
             if (!adapted.equals(current)) {
-                store.refitTown(adapted);
-                LOGGER.info("[plot] участки подогнаны под новые схемы: {}", adapted.unplaced());
-                current = adapted;
+                if (sameLots(adapted, current)) {
+                    staleIgnored.add(staleKey(current, rules));
+                    resized = false;
+                } else {
+                    store.refitTown(adapted);
+                    LOGGER.info("[plot] участки подогнаны под новые схемы: {}", adapted.unplaced());
+                    current = adapted;
+                }
             }
         }
         TownPlan next = TownPlanner.plant(grid, current, rules, stages, demanded, 1);
@@ -111,6 +126,15 @@ final class TownSurvey {
             LOGGER.info("[plot] план расширен: сады {}, не поместилось {}", demanded, next.unplaced());
         }
         return next;
+    }
+
+    private static boolean sameLots(TownPlan first, TownPlan second) {
+        return first.placements().equals(second.placements())
+                && first.unplaced().equals(second.unplaced());
+    }
+
+    private static String staleKey(TownPlan plan, TownRules rules) {
+        return plan.anchor() + "|" + rules;
     }
 
     private static Set<String> built(BoardService service, TownPlan plan) {

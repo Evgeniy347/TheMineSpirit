@@ -36,8 +36,7 @@ class EventTaskHandlersTests {
 
     @Test
     void storeEvents_TaskIdFromGraph_IsHandled() {
-        for (String event :
-                List.of("store_minimum", "transfer_pending", "storage_full", "storage_mixed", "furnace_ready")) {
+        for (String event : List.of("store_minimum", "transfer_pending", "storage_mixed", "furnace_ready")) {
             GraphEvent known = GRAPH.events().get(event);
             assertFalse(
                     known == null || known.tasks().isEmpty(),

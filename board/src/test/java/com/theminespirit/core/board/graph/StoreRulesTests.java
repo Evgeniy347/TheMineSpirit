@@ -182,10 +182,6 @@ class StoreRulesTests {
                 "Недобор минимума — событие входа"
                         + " Иначе тест events_LowMinimumAndStorage_AddsAll перестанет ловить эту поломку. При смене events_LowMinimumAndStorage_AddsAll проверь это утверждение.");
         assertTrue(
-                events.contains("storage_full"),
-                "Мало места — событие склада"
-                        + " Иначе тест events_LowMinimumAndStorage_AddsAll перестанет ловить эту поломку. При смене events_LowMinimumAndStorage_AddsAll проверь это утверждение.");
-        assertTrue(
                 events.contains("storage_mixed"),
                 "Смешанный сундук — событие сортировки"
                         + " Иначе тест events_LowMinimumAndStorage_AddsAll перестанет ловить эту поломку. При смене events_LowMinimumAndStorage_AddsAll проверь это утверждение.");

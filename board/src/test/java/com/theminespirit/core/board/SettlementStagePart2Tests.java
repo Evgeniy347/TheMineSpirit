@@ -32,6 +32,7 @@ class SettlementStagePart2Tests {
     private static BoardLedger firstStageBuilt() {
         BoardLedger ledger = new BoardLedger();
         FIRST_STAGE.forEach(boardCase -> ledger.note(boardCase, 1));
+        SettlementStageTestSupport.noteStorage(ledger);
         return ledger;
     }
 
@@ -56,6 +57,7 @@ class SettlementStagePart2Tests {
                 ledger.note(boardCase, 1);
             }
         }
+        SettlementStageTestSupport.noteStorage(ledger);
         assertEquals(
                 1,
                 SettlementStage.of(ledger),
@@ -102,6 +104,7 @@ class SettlementStagePart2Tests {
         for (BoardCase boardCase : FIRST_STAGE) {
             board.ledger().note(boardCase, 1);
         }
+        SettlementStageTestSupport.noteStorage(board.ledger());
         assertEquals(
                 BoardOutcome.ACCEPTED,
                 board.submit(mine(2)),

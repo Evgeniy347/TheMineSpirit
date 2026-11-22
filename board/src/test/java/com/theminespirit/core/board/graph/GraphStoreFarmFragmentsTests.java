@@ -26,16 +26,6 @@ class GraphStoreFarmFragmentsTests {
                 "Группа топлива объявлена один раз и в своём файле"
                         + " Иначе тест storeFragment_StoreNodes_AreDeclared перестанет ловить эту поломку. При смене storeFragment_StoreNodes_AreDeclared проверь это утверждение.");
 
-        SupplyGraph.Building storage = GRAPH.buildings().get("storage_space");
-        assertTrue(
-                storage != null && storage.optional(),
-                "Новая пара сундуков — необязательная постройка"
-                        + " Иначе тест storeFragment_StoreNodes_AreDeclared перестанет ловить эту поломку. При смене storeFragment_StoreNodes_AreDeclared проверь это утверждение.");
-        assertTrue(
-                GRAPH.implemented("storage_space"),
-                "Новая пара сундуков исполняется узлом STOCK_CHESTS"
-                        + " Иначе тест storeFragment_StoreNodes_AreDeclared перестанет ловить эту поломку. При смене storeFragment_StoreNodes_AreDeclared проверь это утверждение.");
-
         assertTrue(
                 GRAPH.way("transfer_item").isPresent(),
                 "Путь переноса объявлен"
@@ -61,13 +51,8 @@ class GraphStoreFarmFragmentsTests {
 
     @Test
     void storeFragment_InputEvents_AreDeclared() {
-        for (String event : List.of(
-                "store_minimum",
-                "transfer_pending",
-                "storage_full",
-                "storage_mixed",
-                "furnace_ready",
-                "furnace_needs_fuel")) {
+        for (String event :
+                List.of("store_minimum", "transfer_pending", "storage_mixed", "furnace_ready", "furnace_needs_fuel")) {
             assertTrue(
                     GRAPH.events().containsKey(event),
                     "Событие входа склада объявлено: " + event
@@ -233,7 +218,7 @@ class GraphStoreFarmFragmentsTests {
                     "Путь объявлен в данных, вес проверяет SupplyGraph.Way: " + way
                             + " Иначе тест newNodes_StartWeights_ArePositive перестанет ловить эту поломку. При смене newNodes_StartWeights_ArePositive проверь это утверждение.");
         }
-        for (String building : List.of("storage_space", "wheat_field")) {
+        for (String building : List.of("warehouse", "wheat_field")) {
             assertTrue(
                     GRAPH.buildings().get(building).base() > 0,
                     "Стартовый вес постройки положителен: " + building

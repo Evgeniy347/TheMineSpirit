@@ -127,7 +127,7 @@
 | 7-17 | `CrossFarmSupplyScenarioPart2Tests.audit_DamagedHutExtraStray_RepairAndDemolitionBeforeStageClose` | снос лишнего забора и ремонт побитого | снос берёт только чужие постройки | ОК | полный |
 | 7-20 | `CleanupCasesTests.cleanup_StrayFence_PostsDemolition` | лишний забор → `demolish_stray` | кейс сноса разбирает забор | ОК | слабо |
 | 7-21 | `CrossFarmSupplyScenarioPart2Tests.audit_DamagedHutExtraStray_RepairAndDemolitionBeforeStageClose` | лишнее и чужие блоки в аудите | этап не закрыт, снос на доске | ОК | полный |
-| 7-23 | `ChestClearanceTests.decide_NonEmptyFullWarehouseWithMaterials_AddsChestFirst` | задача сноса/выноса ждёт места | склад решает: сначала добавить сундук, потом нести | ОК | слабо |
+| 7-23 | `ChestClearanceTests.decide_NonEmptyAndWarehouseFull_WaitsInsteadOfBreaking` | задача сноса/выноса ждёт места | склад решает: без места сундук ждёт | ОК | слабо |
 | 8-9 | `StoreGraphPart2Tests.plan_ToolMinimumShortage_PostsCraft` | минимум инструмента → крафт | крафт пополняет склад | ОК | слабо |
 | 8-12 | `CrossFarmSupplyScenarioPart2Tests.supply_FullChestFoodIron_FeedRepairAndSpaceStayPosted` | defend 100 и место на складе | бой выше раскладки, склад не мешает обороне | ОК | полный |
 | 8-14 | `CrossHungerScenarioTests.hunger_FoodInChest_GateGivesEatNotMine` | еда в сундуке: обед голодного идёт в полосе потребности, а шахту VitalGate не отдаёт | поесть достаётся голодному | ОК | полный |
@@ -180,9 +180,9 @@
 | 20-22 | `CrossSupplyScenarioTests.social_PlayerNearAndExpedition_ExpeditionOutranksGuard` | поход и охрана — разные узлы графа | механики не смешиваются в одну карточку | ОК | полный |
 | 20-23 | `WarehouseGraphNoticeTests.plan_WarehouseMissingAtStageTwo_StillAsksStrategist` | нет склада — граф просит стратега | уведомление уходит в REST, стройка ждёт | ОК | слабо |
 | 20-24 | `BuildGapUnloadedTests.trace_ChunksNotLoaded_UnknownInsteadOfMissing` | незагруженный чанк — «неизвестно» | недостача не выдумывается, граф ждёт | ОК | слабо |
-| 21-23 | `WarehouseChainScenarioTests.stageTwoStage_StrategistOrder_MakesWarehouseTask` | заказ стратега на этапе 2 → склад | стройка склада идёт по заказу | ОК | полный |
+| 21-23 | `GraphPlannerPart2Tests.plan_StorageFullWarehouseNotBuilt_TaskPlanned` | склад этапа 1 не построен → граф планирует стройку | склад строится по узлу графа | ОК | полный |
 | 21-24 | `GraphStageGateTests.building_UnknownChunks_NotReady` | неизвестные чанки не закрывают постройку | этап ждёт аудита, а не «наверное, готово» | ОК | полный |
-| 22-23 | `WarehouseChainScenarioTests.stageTwoStage_StrategistOrder_MakesWarehouseTask` | заказ стратега и поход/склад | склад строится по узлу, а не по порогу | ОК | полный |
+| 22-23 | `GraphPlannerPart2Tests.plan_WarehouseBuiltStorageFull_NoticeNotRebuild` | склад построен и полон → просьба расширить | склад не строится заново по кругу | ОК | полный |
 | 1-5, 1-11, 1-17 | `CrossMovementPlanTests.movement_WorkCards_MoveToTargetThenAct` | работа ставится графом; маршрут — `goto` | стройка/кормление/забор идут после перехода, без телепорта | ОК | слабо |
 | 4-12, 5-14, 5-17 | `CrossSiegeScenarioTests.siege_LifeAboveWork_WorkStaysPosted` | defend 100 выше шахты 48; еда 55 выше стройки 54; забор 61 выше стройки | бой/еда/забор вытесняют работу, задачи остаются | ОК | полный |
 

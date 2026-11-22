@@ -29,20 +29,6 @@ class WarehouseRulesTests {
     }
 
     @Test
-    void levelOf_NodeWithLevel_ReturnsItsLevel() {
-        assertEquals(
-                1,
-                WarehouseRules.levelOf("warehouse"),
-                "Узел building:warehouse — первый уровень"
-                        + " Иначе тест levelOf_NodeWithLevel_ReturnsItsLevel перестанет ловить эту поломку. При смене levelOf_NodeWithLevel_ReturnsItsLevel проверь это утверждение.");
-        assertEquals(
-                3,
-                WarehouseRules.levelOf("warehouse_3"),
-                "Узел warehouse_3 — третий уровень"
-                        + " Иначе тест levelOf_NodeWithLevel_ReturnsItsLevel перестанет ловить эту поломку. При смене levelOf_NodeWithLevel_ReturnsItsLevel проверь это утверждение.");
-    }
-
-    @Test
     void scheme_EachLevel_NamesItsOwnPreset() {
         assertEquals(
                 "storage_v1",

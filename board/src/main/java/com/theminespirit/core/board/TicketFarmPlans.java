@@ -98,17 +98,6 @@ final class TicketFarmPlans {
                 sequence(
                         gotoTarget(target),
                         new ScriptCall(
-                                CRAFT,
-                                Map.of(
-                                        ITEM,
-                                        "minecraft:chest",
-                                        COUNT,
-                                        2,
-                                        RADIUS,
-                                        CatalogLimits.STATION_RADIUS_DEFAULT,
-                                        PLACE,
-                                        true)),
-                        new ScriptCall(
                                 CRAFT, Map.of(ITEM, "minecraft:crafting_table", COUNT, 1, RADIUS, 1, PLACE, true))),
                 target);
     }

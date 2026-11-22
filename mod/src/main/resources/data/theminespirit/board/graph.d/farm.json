@@ -57,20 +57,6 @@
       },
       "optional": true,
       "implemented": true
-    },
-    "storage_space": {
-      "name": "Место склада",
-      "case": "STOCK_CHESTS",
-      "stage": 1,
-      "base": 70,
-      "materials": {
-        "#planks": 32
-      },
-      "requires": [
-        "chests"
-      ],
-      "optional": true,
-      "implemented": true
     }
   },
   "ways": [
@@ -340,25 +326,6 @@
       },
       "advice": [
         "carry_carried_items_to_chest"
-      ]
-    },
-    "storage_full": {
-      "tasks": [
-        {
-          "id": "add_chest_pair",
-          "case": "STOCK_CHESTS",
-          "base": 55,
-          "consumes": {
-            "#planks": 32
-          }
-        }
-      ],
-      "push": {
-        "building:storage_space": 15,
-        "logistics": 10
-      },
-      "advice": [
-        "add_chest_pair_or_warehouse"
       ]
     },
     "storage_mixed": {

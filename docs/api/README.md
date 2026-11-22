@@ -94,9 +94,6 @@
 | GET | `/v1/settlement/stage` | текущий этап поселения и готовность его построек по миру |
 | POST | `/v1/settlement/stage` | откатить этап поселения (мир и постройки остаются) |
 | PUT | `/v1/settlement/stage` | то же, что `POST` (откат этапа) |
-| GET | `/v1/settlement/warehouse` | нужен ли склад, его уровень, место и материалы |
-| POST | `/v1/settlement/warehouse` | решение стратега: где и какого уровня строить/улучшать склад |
-| PUT | `/v1/settlement/warehouse` | то же, что `POST` (решение о складе) |
 | GET | `/v1/quarry/search` | лучшие области добычи земли/песка по выгодности ([quarry.md](quarry.md)) |
 | GET | `/v1/quarry/status` | места добычи: запас, остаток, состояние и маршрут ([quarry.md](quarry.md)) |
 | POST | `/v1/quarry/site` | установить место добычи решением стратега или игрока |

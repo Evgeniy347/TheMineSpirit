@@ -40,7 +40,7 @@ public final class StageBuilds {
         return switch (boardCase) {
             case BUILD_FENCE -> fence(level, site, part);
             case LIGHTING -> new StageWork(site, List.of(), YardScheme.lighting(site));
-            case STOCK_CHESTS -> new StageWork(site, List.of(), YardScheme.stock(site, part));
+            case STOCK_CHESTS -> new StageWork(site, List.of(), List.of(YardScheme.table(site)));
             case CRAFT_FURNACE -> new StageWork(site, List.of(), List.of(YardScheme.furnace(site)));
             case BUILD_STREETS -> streets(level, site);
             default -> new StageWork(site, List.of());

@@ -3,8 +3,8 @@ package com.theminespirit.neoforge.board;
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardLedger;
 import com.theminespirit.core.board.BoardOutcome;
-import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardStatus;
+import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.ChestClearance;
 import com.theminespirit.core.board.ChestPlans;
 import com.theminespirit.core.board.StateChangeLog;
@@ -35,7 +35,6 @@ import org.slf4j.Logger;
 public final class ChestDemolition {
     static final String EVENT = "demolish_chest";
     static final String TICKET = "demolish_chest:";
-    private static final String CHEST = "warehouse_chest:";
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final StateChangeLog CHANGES = new StateChangeLog();
 
@@ -81,16 +80,13 @@ public final class ChestDemolition {
         extras.sort(
                 (first, second) -> Long.compare(distance(post.scan.home(), first), distance(post.scan.home(), second)));
         List<ContainerSnapshot> warehouse = ChestSnapshots.read(post.level, List.copyOf(cells));
-        List<BlockCoord> emptyCells = emptyCells(post.level, cells);
-        int planks = planks(post);
-        boolean expand = false;
         for (BlockCoord at : extras) {
             Optional<ContainerSnapshot> snapshot = Optional.ofNullable(ChestSnapshots.forDemolition(post.level, at));
             if (snapshot.isEmpty()) {
                 continue;
             }
             ContainerSnapshot chest = snapshot.orElseThrow();
-            ChestClearance.Decision decision = ChestClearance.decide(chest, false, warehouse, emptyCells, planks);
+            ChestClearance.Decision decision = ChestClearance.decide(chest, false, warehouse);
             switch (decision.action()) {
                 case KEEP -> {
                     continue;
@@ -107,16 +103,12 @@ public final class ChestDemolition {
                         return true;
                     }
                 }
-                case ADD_CHEST -> expand = true;
                 case WAIT -> {
                     if (CHANGES.changed("chest-wait:" + at, decision.reason())) {
                         LOGGER.info("[warehouse] сундук {} ждёт: {}", at, decision.reason());
                     }
                 }
             }
-        }
-        if (expand && !busy(post, CHEST) && !emptyCells.isEmpty()) {
-            placeChest(post, ticket, emptyCells.get(0));
         }
         return true;
     }
@@ -140,7 +132,7 @@ public final class ChestDemolition {
                         BoardCase.DISMANTLE_SHELTER,
                         Optional.empty(),
                         ticket.task().priority(),
-                        ticket.id(),
+                        BoardTicket.ALWAYS_CAUSE,
                         Map.of()),
                 TicketTarget.at(at).withPlan(plan).withWork(work));
         if (outcome != BoardOutcome.ACCEPTED) {
@@ -156,21 +148,6 @@ public final class ChestDemolition {
                 decision.neededSlots(),
                 decision.freeSlots());
         return true;
-    }
-
-    private static void placeChest(GraphPost post, GraphTickets.Ticket ticket, BlockCoord cell) {
-        TaskNode plan = ChestPlans.placeOne(cell);
-        String id = CHEST + cell.x() + "," + cell.y() + "," + cell.z();
-        post.submit(
-                post.ticket(
-                        id,
-                        BoardCase.STOCK_CHESTS,
-                        Optional.empty(),
-                        BoardRules.priorityOf(BoardCase.STOCK_CHESTS),
-                        ticket.id(),
-                        Map.of()),
-                TicketTarget.at(cell).withPlan(plan));
-        LOGGER.info("[warehouse] склад полон: новый сундук ставится в клетку склада {}", cell);
     }
 
     private static boolean busy(GraphPost post, String prefix) {
@@ -213,20 +190,6 @@ public final class ChestDemolition {
             covers.add(above);
         }
         return List.copyOf(covers);
-    }
-
-    private static List<BlockCoord> emptyCells(ServerLevel level, Set<BlockCoord> cells) {
-        List<BlockCoord> empty = new ArrayList<>();
-        for (BlockCoord cell : cells) {
-            if (level.getBlockState(new BlockPos(cell.x(), cell.y(), cell.z())).isAir()) {
-                empty.add(cell);
-            }
-        }
-        return List.copyOf(empty);
-    }
-
-    private static int planks(GraphPost post) {
-        return ChestClearance.chestWood(post.stock.available());
     }
 
     private static long distance(BlockCoord from, BlockCoord to) {
