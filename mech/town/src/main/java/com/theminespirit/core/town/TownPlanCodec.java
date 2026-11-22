@@ -47,6 +47,14 @@ public final class TownPlanCodec {
                                     String.valueOf(place.depth()),
                                     place.facing().id())));
         }
+        for (PathLine path : plan.paths()) {
+            lines.add("path" + FIELD + path.id() + FIELD
+                    + String.join(
+                            ";",
+                            path.cells().stream()
+                                    .map(cell -> cell.x() + "," + cell.z())
+                                    .toList()));
+        }
         lines.add("unplaced" + FIELD + String.join(";", plan.unplaced()));
         return String.join("\n", lines);
     }
@@ -55,6 +63,7 @@ public final class TownPlanCodec {
         Objects.requireNonNull(text, "Текст плана не может быть null");
         Map<String, String> single = new LinkedHashMap<>();
         List<Placement> places = new ArrayList<>();
+        List<PathLine> paths = new ArrayList<>();
         for (String line : text.split("\n", -1)) {
             int bar = line.indexOf(FIELD);
             if (bar < 0) {
@@ -64,6 +73,8 @@ public final class TownPlanCodec {
             String value = line.substring(bar + 1);
             if ("place".equals(key)) {
                 places.add(place(value));
+            } else if ("path".equals(key)) {
+                paths.add(path(value));
             } else {
                 single.put(key, value);
             }
@@ -83,7 +94,16 @@ public final class TownPlanCodec {
                 streets,
                 places,
                 fence,
-                words(need(single, "unplaced")));
+                words(need(single, "unplaced")),
+                paths);
+    }
+
+    private static PathLine path(String value) {
+        String[] parts = value.split(FIELD_SPLIT, -1);
+        if (parts.length != 2) {
+            throw broken("path|" + value);
+        }
+        return new PathLine(parts[0], cells(parts[1]));
     }
 
     private static Placement place(String value) {

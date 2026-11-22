@@ -2,10 +2,14 @@ package com.theminespirit.core.town;
 
 import com.theminespirit.core.building.DemoBuildings;
 import com.theminespirit.core.building.PresetLibrary;
+import com.theminespirit.core.building.api.BuildRotation;
 import com.theminespirit.core.observation.BlockCoord;
+import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 public final class StreetWork {
     private StreetWork() {}
@@ -25,10 +29,22 @@ public final class StreetWork {
         List<StreetTile> tiles = StreetLayout.of(presets)
                 .town(town.streets(), town.anchor().x(), town.anchor().z(), rules, within(site));
         int ground = site.anchor().y();
-        return tiles.stream()
+        Set<String> built = new HashSet<>();
+        tiles.forEach(tile -> built.add(tile.x() + ":" + tile.z()));
+        List<SchemeBuild> builds = new ArrayList<>(tiles.stream()
                 .map(tile -> new SchemeBuild(
                         scheme(tile.scheme(), level), new BlockCoord(tile.x(), ground, tile.z()), tile.rotation()))
-                .toList();
+                .toList());
+        for (PathLine path : town.paths()) {
+            for (ColumnMask.Cell cell : path.cells()) {
+                if (built.add(cell.x() + ":" + cell.z())
+                        && !town.placements().stream().anyMatch(place -> place.covers(cell.x(), cell.z()))) {
+                    builds.add(new SchemeBuild(
+                            "street_patch", new BlockCoord(cell.x(), ground, cell.z()), BuildRotation.NONE));
+                }
+            }
+        }
+        return List.copyOf(builds);
     }
 
     public static String scheme(String tile, int level) {

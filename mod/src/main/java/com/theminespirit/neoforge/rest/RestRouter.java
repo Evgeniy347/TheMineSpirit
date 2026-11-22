@@ -13,6 +13,7 @@ import com.theminespirit.core.rest.Router;
 import com.theminespirit.core.rest.SettlementRoutes;
 import com.theminespirit.core.rest.SseSlots;
 import com.theminespirit.core.rest.TaskRoutes;
+import com.theminespirit.core.rest.TownRoutes;
 import com.theminespirit.core.rest.V1Routes;
 import com.theminespirit.core.rest.WorldRoutes;
 import com.theminespirit.neoforge.SpiritScripts;
@@ -52,6 +53,9 @@ public final class RestRouter {
         SettlementRoutes settlementRoutes = new SettlementRoutes(
                 new SpiritSettlementGateway(gateway.server(), gateway.serverCall()), new IdempotencyCache());
         routes.addAll(settlementRoutes.routes());
+        TownRoutes townRoutes =
+                new TownRoutes(new SpiritTownGateway(gateway.server(), gateway.serverCall()), new IdempotencyCache());
+        routes.addAll(townRoutes.routes());
         routes.addAll(new WorldRoutes(new SpiritWorldGateway()).routes());
         return Router.of(routes);
     }
