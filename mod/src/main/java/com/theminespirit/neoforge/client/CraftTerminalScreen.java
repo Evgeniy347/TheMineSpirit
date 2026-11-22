@@ -241,7 +241,7 @@ public final class CraftTerminalScreen extends AbstractContainerScreen<CraftTerm
         boolean right = button == InputConstants.MOUSE_BUTTON_RIGHT;
         if (list.mode() == StockPanel.Mode.ORDERS) {
             list.orderAt(mouseX, mouseY)
-                    .filter(order -> CraftOrdersView.WAITING.equals(order.status()) && right)
+                    .filter(order -> OrdersView.WAITING.equals(order.status()) && right)
                     .ifPresent(order -> send(new Action(Kind.CANCEL, ItemStack.EMPTY, order.id(), false, "")));
             return true;
         }
@@ -314,7 +314,7 @@ public final class CraftTerminalScreen extends AbstractContainerScreen<CraftTerm
         Optional<CraftTerminalChannel.Order> order = list.orderAt(mouseX, mouseY);
         Optional<ItemStack> hovered = list.at(mouseX, mouseY);
         if (order.isPresent()) {
-            graphics.renderComponentTooltip(font, CraftOrdersView.tooltip(order.get()), mouseX, mouseY);
+            graphics.renderComponentTooltip(font, OrdersView.tooltip(order.get()), mouseX, mouseY);
         } else if (hovered.isPresent() && menu.getCarried().isEmpty()) {
             graphics.renderTooltip(font, hovered.get(), mouseX, mouseY);
         } else {

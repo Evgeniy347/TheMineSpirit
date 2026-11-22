@@ -22,6 +22,16 @@ class StockListingTests {
     }
 
     @Test
+    void view_CountSortReversed_FewestFirst() {
+        assertEquals(
+                List.of(2, 0, 3, 1),
+                keys(StockListing.view(ALL, "", StockListing.Sort.COUNT, true)),
+                "Обратное направление поднимает меньшее наверх: иначе Shift-сортировка показывает тот же порядок, "
+                        + "и игрок не отличает её от обычной, а стрелка ▲/▼ врёт. "
+                        + "При смене view_CountSortReversed_FewestFirst проверь это утверждение.");
+    }
+
+    @Test
     void view_NameQuery_FiltersCaseInsensitive() {
         assertEquals(
                 List.of(3, 0),

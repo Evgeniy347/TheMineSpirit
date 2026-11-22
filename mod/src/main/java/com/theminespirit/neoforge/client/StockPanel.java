@@ -197,7 +197,7 @@ final class StockPanel {
         if (mode == Mode.ORDERS) {
             CraftTerminalChannel.Order order = orders.get(entry.key());
             graphics.renderItemDecorations(font, sample, itemX, itemY, compact(order.count()));
-            if (CraftOrdersView.WAITING.equals(order.status())) {
+            if (OrdersView.WAITING.equals(order.status())) {
                 int x = itemX + 11;
                 graphics.drawString(font, "×", x, itemY, 0xFFB71C1C, true);
             }
@@ -219,7 +219,7 @@ final class StockPanel {
             return false;
         }
         CraftTerminalChannel.Order order = orders.get(key.get());
-        if (!CraftOrdersView.WAITING.equals(order.status())) {
+        if (!OrdersView.WAITING.equals(order.status())) {
             return false;
         }
         int column = (int) ((mouseX - x) / CELL);

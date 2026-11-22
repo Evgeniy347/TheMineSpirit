@@ -6,13 +6,13 @@ import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.network.chat.Component;
 
-final class CraftOrdersView {
+final class OrdersView {
     static final String WAITING = "waiting";
     private static final String CANCELLED = "cancelled";
     private static final String INVENTORY = "inventory";
     private static final String KEY = ModIdentity.MOD_ID + ".order.";
 
-    private CraftOrdersView() {}
+    private OrdersView() {}
 
     static List<Component> tooltip(CraftTerminalChannel.Order order) {
         List<Component> lines = new ArrayList<>();
