@@ -14,7 +14,7 @@ import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
 final class ClearReach {
-    private static final double REACH_FROM_PLACE = BlockBreaker.REACH - 0.5;
+    private static final double REACH_FROM_PLACE = BlockBreaker.REACH;
 
     private ClearReach() {}
 

@@ -1,7 +1,6 @@
 package com.theminespirit.neoforge;
 
 import com.mojang.logging.LogUtils;
-import com.theminespirit.core.engine.FailureFact;
 import com.theminespirit.core.mining.ClearOrder;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
@@ -146,10 +145,8 @@ final class ClearSweepRun {
                 BlockPos feet = session.spirit.blockPosition();
                 ClearAnchor.Stand chosen = anchor;
                 if (chosen != null
-                        && feet.getX() == chosen.x()
-                        && feet.getY() == chosen.y()
-                        && feet.getZ() == chosen.z()
-                        && session.spirit.onGround()) {
+                        && session.spirit.onGround()
+                        && ClearArrival.reached(chosen, feet.getX(), feet.getY(), feet.getZ())) {
                     session.state = ClearAreaSession.State.PICK;
                     return;
                 }
@@ -230,7 +227,8 @@ final class ClearSweepRun {
 
     private void startPillarStep() {
         if (!SweepPillar.hasMaterial(session.spirit)) {
-            session.fail("нет земли или булыжника для подъёма: нужен материал", FailureFact.NO_MATERIAL);
+            session.neededMaterial = true;
+            session.state = ClearAreaSession.State.PICK;
             return;
         }
         if (pillar == null) {

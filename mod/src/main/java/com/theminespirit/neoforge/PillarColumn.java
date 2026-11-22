@@ -14,7 +14,6 @@ import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.tags.FluidTags;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
@@ -87,16 +86,6 @@ final class PillarColumn {
         PillarColumn pillar = new PillarColumn(spirit, blockId, 1);
         pillar.waterOk = true;
         return pillar;
-    }
-
-    static String cheapBlock(SpiritEntity spirit) {
-        if (spirit.getInventory().countItem(Items.DIRT) > 0) {
-            return "minecraft:dirt";
-        }
-        if (spirit.getInventory().countItem(Items.COBBLESTONE) > 0) {
-            return "minecraft:cobblestone";
-        }
-        return null;
     }
 
     static int count(SpiritEntity spirit, String blockId) {

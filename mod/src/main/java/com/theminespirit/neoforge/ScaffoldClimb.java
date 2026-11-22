@@ -31,7 +31,7 @@ final class ScaffoldClimb {
     }
 
     ScaffoldClimb(SpiritEntity spirit, int height, BlockPos base, @Nullable LeaseRun lease) {
-        String block = PillarColumn.cheapBlock(spirit);
+        String block = PillarBlocks.cheapBlock(spirit);
         if (block == null) {
             throw new IllegalArgumentException("нет материала для подмостей: нужны земля или булыжник, есть 0");
         }

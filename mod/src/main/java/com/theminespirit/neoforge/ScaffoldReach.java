@@ -174,7 +174,7 @@ final class ScaffoldReach {
     }
 
     private Result raise(int rise) {
-        if (PillarColumn.cheapBlock(spirit) == null) {
+        if (PillarBlocks.cheapBlock(spirit) == null) {
             return failed("нет материала для подмостей — нужны земля или булыжник", FailureFact.NO_MATERIAL);
         }
         climb = new ScaffoldClimb(spirit, rise, lease);

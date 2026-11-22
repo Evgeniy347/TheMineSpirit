@@ -37,7 +37,7 @@ final class ChopScaffold {
         if (rise < 1) {
             return true;
         }
-        if (PillarColumn.cheapBlock(spirit) == null) {
+        if (PillarBlocks.cheapBlock(spirit) == null) {
             failureReason = "нет земли или булыжника на подмости";
             return false;
         }

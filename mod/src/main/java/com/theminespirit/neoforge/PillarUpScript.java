@@ -84,7 +84,7 @@ public final class PillarUpScript implements ScriptInstance {
     }
 
     private boolean startColumn() {
-        String blockId = requestedBlock != null ? requestedBlock : PillarColumn.cheapBlock(spirit);
+        String blockId = requestedBlock != null ? requestedBlock : PillarBlocks.cheapBlock(spirit);
         if (blockId == null) {
             fail("нет материала для столба: нужны земля или булыжник, есть 0");
             return false;

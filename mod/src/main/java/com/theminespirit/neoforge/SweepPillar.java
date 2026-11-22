@@ -47,11 +47,11 @@ final class SweepPillar {
     }
 
     static boolean hasMaterial(SpiritEntity spirit) {
-        return PillarColumn.cheapBlock(spirit) != null;
+        return PillarBlocks.cheapBlock(spirit) != null;
     }
 
     static SweepPillar start(SpiritEntity spirit) {
-        String block = PillarColumn.cheapBlock(spirit);
+        String block = PillarBlocks.cheapBlock(spirit);
         if (block == null) {
             throw new IllegalStateException("нет материала для столба: нужны земля или булыжник");
         }

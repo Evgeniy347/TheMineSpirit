@@ -51,6 +51,7 @@ public class ClearAreaSession {
     protected final BuildReservations reservations;
     protected final ClearTargets targets;
     String neededTool;
+    boolean neededMaterial;
     FailureFact failureFact;
 
     protected State state = State.PICK;

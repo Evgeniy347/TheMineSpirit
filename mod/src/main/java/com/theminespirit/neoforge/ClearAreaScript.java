@@ -25,11 +25,14 @@ import org.jspecify.annotations.Nullable;
 final class ClearAreaScript implements ScriptInstance {
     private static final int MAX_RESTOCKS = 2;
     private static final String BOXES = "boxes";
+    private static final String PILLAR_MATERIAL = "minecraft:dirt";
+    private static final int PILLAR_STOCK = 8;
 
     private final ClearAreaSession session;
     private final SpiritEntity spirit;
     private @Nullable TaskRunner restock;
     private String restockKind;
+    private boolean restockMaterial;
     private int restockAttempts;
 
     ClearAreaScript(SpiritEntity spirit, Map<String, Object> params) {
@@ -52,10 +55,19 @@ final class ClearAreaScript implements ScriptInstance {
             }
             boolean ok = restock.status() == RunStatus.SUCCEEDED;
             String reason = restock.failureReason().orElse("причина неизвестна");
+            boolean material = restockMaterial;
             restock = null;
+            restockMaterial = false;
+            if (!ok && material) {
+                session.fail("материал для столба не добыт: " + reason, FailureFact.NO_MATERIAL);
+                return ScriptStatus.FAILED;
+            }
             if (!ok && session.neededTool != null) {
                 session.fail("инструмент '" + restockKind + "' не добыт: " + reason, FailureFact.NO_TOOL);
                 return ScriptStatus.FAILED;
+            }
+            if (ok && material) {
+                session.neededMaterial = false;
             }
         }
         String needed = session.neededTool;
@@ -69,6 +81,19 @@ final class ClearAreaScript implements ScriptInstance {
         }
         if (needed != null && hasTool(spirit, needed)) {
             session.neededTool = null;
+            restockAttempts = 0;
+        }
+        if (session.neededMaterial && !SweepPillar.hasMaterial(spirit) && restockAttempts < MAX_RESTOCKS) {
+            restock = acquireBlock(PILLAR_MATERIAL, PILLAR_STOCK);
+            restockKind = PILLAR_MATERIAL;
+            restockMaterial = true;
+            restockAttempts++;
+            if (restock != null) {
+                return ScriptStatus.RUNNING;
+            }
+        }
+        if (session.neededMaterial && SweepPillar.hasMaterial(spirit)) {
+            session.neededMaterial = false;
             restockAttempts = 0;
         }
         return switch (session.tick()) {
@@ -125,6 +150,14 @@ final class ClearAreaScript implements ScriptInstance {
     @Override
     public void restoreState(Map<String, Object> state) {
         ClearProgress.restore(session, state);
+    }
+
+    private @Nullable TaskRunner acquireBlock(String id, int count) {
+        int held = BlockItems.countIn(spirit.getInventory(), id);
+        return TaskRunner.start(
+                new ScriptCall("acquire", Map.of("item", id, "count", held + count)),
+                SpiritScripts.registryFor(spirit),
+                ConditionRegistry.of(Map.of()));
     }
 
     private @Nullable TaskRunner acquire(String kind) {
