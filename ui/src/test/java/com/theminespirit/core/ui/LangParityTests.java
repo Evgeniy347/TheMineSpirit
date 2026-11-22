@@ -21,6 +21,7 @@ class LangParityTests {
             "theminespirit.mine.",
             "theminespirit.craft.",
             "theminespirit.order.",
+            "theminespirit.plan.",
             "theminespirit.tree.");
 
     @Test
