@@ -8,7 +8,6 @@ import com.theminespirit.core.building.api.BuildRotation;
 import com.theminespirit.core.building.api.WoodSpecies;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -118,19 +117,13 @@ public final class StageSites {
                 .main()
                 .union(plan.streets().side())
                 .union(plan.streets().ring());
-        ColumnMask built = plan.upToStage(stage).stream()
-                .map(Placement::mask)
-                .reduce(ColumnMask::union)
-                .orElseThrow();
-        ColumnMask core = built.union(ColumnMask.rect(anchor.x(), anchor.z(), anchor.x(), anchor.z()));
-        ColumnMask enclosure =
-                connected(box(core, rules.spacing().stageMargin()).intersect(plan.region()), anchor);
-        FenceLine ring = FenceGates.around(enclosure, plan.streets());
+        ColumnMask enclosure = plan.region();
+        FenceLine ring = plan.fence();
         ColumnMask fenceStrip =
                 FenceStrip.of(ring, rules.spacing().fenceStrip()).intersect(plan.region());
         ColumnMask between = streets.intersect(box(pad, 0));
         ColumnMask level = pad.union(between).union(fenceStrip).intersect(plan.region());
-        ColumnMask zone = enclosure.union(built).intersect(plan.region());
+        ColumnMask zone = enclosure;
         return Optional.of(new Layout(anchor, level, zone, streets, enclosure, fenceStrip, ring));
     }
 
@@ -216,21 +209,5 @@ public final class StageSites {
             }
         }
         return site.enclosure().contains(site.anchor().x(), site.anchor().z());
-    }
-
-    private static ColumnMask connected(ColumnMask mask, BlockCoord anchor) {
-        GridBits bits = new GridBits(mask.width(), mask.depth());
-        BitSet set = new BitSet(bits.size());
-        for (ColumnMask.Cell cell : mask.cells()) {
-            set.set(bits.at(cell.x() - mask.minX(), cell.z() - mask.minZ()));
-        }
-        int dx = anchor.x() - mask.minX();
-        int dz = anchor.z() - mask.minZ();
-        if (!bits.inside(dx, dz) || !set.get(bits.at(dx, dz))) {
-            throw new IllegalArgumentException(
-                    "Якорь " + anchor + " вне огороженной области этапа: дом духов " + "обязан быть внутри ограды");
-        }
-        BitSet kept = bits.fillHoles(bits.component(set, bits.at(dx, dz)));
-        return new ColumnMask(mask.minX(), mask.minZ(), mask.width(), mask.depth(), kept);
     }
 }

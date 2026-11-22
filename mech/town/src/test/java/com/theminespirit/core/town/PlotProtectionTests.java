@@ -74,7 +74,10 @@ class PlotProtectionTests {
 
     @Test
     void check_StreetCell_OrdinaryBreakRefused() {
-        ColumnMask.Cell street = SITE.streets().cells().iterator().next();
+        ColumnMask.Cell street = SITE.streets().cells().stream()
+                .filter(cell -> SITE.planBuilding(cell.x(), SITE.anchor().y(), cell.z()) == PlanBuilding.STREET)
+                .findFirst()
+                .orElseThrow();
         BlockCoord cell = new BlockCoord(street.x(), SITE.anchor().y(), street.z());
 
         PlotProtection.Refused refused = assertInstanceOf(

@@ -210,14 +210,14 @@ class TownPlannerTests {
         Placement third = grown.placement("orchard_jungle_3")
                 .orElseThrow(() -> new AssertionError("Третий сад джунглей не появился: " + grown.unplaced()));
         assertEquals(
-                13,
+                16,
                 second.width(),
-                "Сад породы строится по шаблону orchard_extra шириной 13"
+                "Сад породы строится по шаблону orchard_extra шириной 16 (участок 16×16)"
                         + " Иначе тест plan_SameSpeciesTwice_NumberedPlots перестанет ловить эту поломку. При смене plan_SameSpeciesTwice_NumberedPlots проверь это утверждение.");
         assertEquals(
-                13,
+                16,
                 third.width(),
-                "Второй участок той же породы тоже берёт шаблон orchard_extra"
+                "Второй участок той же породы тоже берёт шаблон orchard_extra 16×16"
                         + " Иначе тест plan_SameSpeciesTwice_NumberedPlots перестанет ловить эту поломку. При смене plan_SameSpeciesTwice_NumberedPlots проверь это утверждение.");
         assertFalse(
                 second.overlaps(third, 0),

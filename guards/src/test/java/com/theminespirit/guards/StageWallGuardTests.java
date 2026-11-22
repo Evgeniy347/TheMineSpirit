@@ -14,21 +14,26 @@ class StageWallGuardTests {
     private static final PresetLibrary PRESETS = DataTables.INSTANCE.presets().current();
 
     @Test
-    void fenceStageTwo_LevelMapping_UsesWallAndGateFragments() {
+    void wallStageThree_LevelMapping_UsesWallAndGateFragments() {
+        assertEquals(
+                StageSchemes.FENCE,
+                StageSchemes.fence(2),
+                "этап 2 ещё держит деревянный забор: каменная стена поднимается на третьем этапе"
+                        + " Иначе тест wallStageThree_LevelMapping_UsesWallAndGateFragments перестанет ловить эту поломку. При смене wallStageThree_LevelMapping_UsesWallAndGateFragments проверь это утверждение.");
         assertEquals(
                 StageSchemes.WALL,
-                StageSchemes.fence(2),
-                "этап 2 поднимает забор до каменной стены: тот же кейс BUILD_FENCE берёт фрагменты стены, а не "
+                StageSchemes.fence(3),
+                "этап 3 поднимает забор до каменной стены: тот же кейс BUILD_FENCE берёт фрагменты стены, а не "
                         + "деревянного забора. Как надо: StageSchemes.fence(stage) для этапа 2 и выше — набор WALL"
-                        + " Иначе тест fenceStageTwo_LevelMapping_UsesWallAndGateFragments перестанет ловить эту поломку. При смене fenceStageTwo_LevelMapping_UsesWallAndGateFragments проверь это утверждение.");
+                        + " Иначе тест wallStageThree_LevelMapping_UsesWallAndGateFragments перестанет ловить эту поломку. При смене wallStageThree_LevelMapping_UsesWallAndGateFragments проверь это утверждение.");
         assertTrue(
                 StageSchemes.WALL.stream().anyMatch(id -> id.startsWith("wall_3")),
-                "у этапа 2 нет ни одного фрагмента каменной стены wall_3: строить финальную границу нечем"
-                        + " Иначе тест fenceStageTwo_LevelMapping_UsesWallAndGateFragments перестанет ловить эту поломку. При смене fenceStageTwo_LevelMapping_UsesWallAndGateFragments проверь это утверждение.");
+                "у этапа 3 нет ни одного фрагмента каменной стены wall_3: строить финальную границу нечем"
+                        + " Иначе тест wallStageThree_LevelMapping_UsesWallAndGateFragments перестанет ловить эту поломку. При смене wallStageThree_LevelMapping_UsesWallAndGateFragments проверь это утверждение.");
         assertTrue(
                 StageSchemes.WALL.stream().anyMatch(id -> id.startsWith("gate_3")),
-                "у этапа 2 нет фрагмента ворот gate_3: калитка забора не держит проход каменной стены"
-                        + " Иначе тест fenceStageTwo_LevelMapping_UsesWallAndGateFragments перестанет ловить эту поломку. При смене fenceStageTwo_LevelMapping_UsesWallAndGateFragments проверь это утверждение.");
+                "у этапа 3 нет фрагмента ворот gate_3: калитка забора не держит проход каменной стены"
+                        + " Иначе тест wallStageThree_LevelMapping_UsesWallAndGateFragments перестанет ловить эту поломку. При смене wallStageThree_LevelMapping_UsesWallAndGateFragments проверь это утверждение.");
         List<String> missing = StageSchemes.WALL.stream()
                 .filter(id -> PRESETS.byId(id).isEmpty())
                 .toList();
@@ -37,7 +42,7 @@ class StageWallGuardTests {
                 missing,
                 "фрагменты стены и ворот названы в StageSchemes, но отсутствуют в presets.json/схемах: "
                         + "строитель упадёт на первой клетке линии. Нет схем"
-                        + " Иначе тест fenceStageTwo_LevelMapping_UsesWallAndGateFragments перестанет ловить эту поломку. При смене fenceStageTwo_LevelMapping_UsesWallAndGateFragments проверь это утверждение.");
+                        + " Иначе тест wallStageThree_LevelMapping_UsesWallAndGateFragments перестанет ловить эту поломку. При смене wallStageThree_LevelMapping_UsesWallAndGateFragments проверь это утверждение.");
     }
 
     @Test

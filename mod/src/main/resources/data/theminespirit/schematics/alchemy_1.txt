@@ -4,8 +4,9 @@ name: "Алхимическая лаборатория, уровень 1"
 type: craft
 stage: 3
 level: 1
-size: 9x10x11   # Ш×В×Д
-entrance: 4,1,1
+size: 16x10x16  # Ш×В×Д
+plot: 16x16
+entrance: 7,1,3
 legend:
   'c': polished_andesite
   'S': stone_bricks
@@ -55,122 +56,142 @@ legend:
   'x': oak_leaves
 layers:
   - y0 цоколь и пол: |
-      aaaapaaaa
-      aaaaaaaaa
-      aaaaaaaaa
-      aaaaaaaaa
-      aaaaaaaaa
-      aaaaaaaaa
-      aaaaaaaaa
-      aaaaaaaaa
-      aaaaaaaaa
-      aaaaaaaaa
-      aaaaaaaaa
+      
+      
+         aaaapaaaa
+         aaaaaaaaa
+         aaaaaaaaa
+         aaaaaaaaa
+         aaaaaaaaa
+         aaaaaaaaa
+         aaaaaaaaa
+         aaaaaaaaa
+         aaaaaaaaa
+         aaaaaaaaa
+         aaaaaaaaa
   - y1 зал: |
       
-       LSLDLSL
-       S  ~  S
-       SvV~ CS
-       S  ~  S
-       S  ~  S
-       SvV~ bS
-       ST ~u S
-       SQQQQQS
-       LSSSSSL
-          .
+      
+         
+          LSLDLSL
+          S  ~  S
+          SvV~ CS
+          S  ~  S
+          S  ~  S
+          SvV~ bS
+          ST ~u S
+          SQQQQQS
+          LSSSSSL
+             .
   - y2: |
       
-       LSLDLSL
-       S     S
-       G     G
-       S     S
-       S     S
-       S     S
-       G     G
-       SQPQOQS
-       LSGSGSL
-          .
+      
+         
+          LSLDLSL
+          S     S
+          G     G
+          S     S
+          S     S
+          S     S
+          G     G
+          SQPQOQS
+          LSGSGSL
+             .
   - y3: |
       
-       LSLSLSL
-       S     S
-       S H H S
-       S     S
-       S     S
-       S     S
-       S H H S
-       S     S
-       LSSSSSL
-          .
+      
+         
+          LSLSLSL
+          S     S
+          S H H S
+          S     S
+          S     S
+          S     S
+          S H H S
+          S     S
+          LSSSSSL
+             .
   - y4: |
       
-       LSLSLSL
-       S     S
-       S z z S
-       S     S
-       S     S
-       S     S
-       S z z S
-       S     S
-       LSSSSSL
-          .
+      
+         
+          LSLSLSL
+          S     S
+          S z z S
+          S     S
+          S     S
+          S     S
+          S z z S
+          S     S
+          LSSSSSL
+             .
   - y5: |
-      #########
-      #########
-      #########
-      #########
-      #########
-      #########
-      #########
-      #########
-      #########
-      #########
-      #########
+      
+      
+         #########
+         #########
+         #########
+         #########
+         #########
+         #########
+         #########
+         #########
+         #########
+         #########
+         #########
   - y6: |
-      txtxtxtxt
-      x1333332x
-      t1#####2t
-      x1#####2x
-      t1#####2t
-      x1#####2x
-      t1#####2t
-      x1#####2x
-      t1#####2t
-      x1444442x
-      txtxtxtxt
+      
+      
+         txtxtxtxt
+         x1333332x
+         t1#####2t
+         x1#####2x
+         t1#####2t
+         x1#####2x
+         t1#####2t
+         x1#####2x
+         t1#####2t
+         x1444442x
+         txtxtxtxt
   - y7: |
       
       
-        13332
-        1###2
-        1###2
-        1###2
-        1###2
-        1###2
-        14442
-      
-          .
+         
+         
+           13332
+           1###2
+           1###2
+           1###2
+           1###2
+           1###2
+           14442
+         
+             .
   - y8: |
       
       
-      
-         132
-         1#2
-         1#2
-         1#2
-         142
-      
-      
-          .
+         
+         
+         
+            132
+            1#2
+            1#2
+            1#2
+            142
+         
+         
+             .
   - y9: |
       
       
-      
-      
-          #
-          #
-          #
-      
-      
-      
-          .
+         
+         
+         
+         
+             #
+             #
+             #
+         
+         
+         
+             .

@@ -25,6 +25,7 @@ public final class SchematicTextParser {
             "level",
             "requires",
             "size",
+            "plot",
             "entrance",
             "legend",
             "exemptions",
@@ -34,6 +35,7 @@ public final class SchematicTextParser {
     static final Pattern LEGEND_LINE = Pattern.compile("^\\s+'(.)':\\s*(.*)$");
     static final Pattern LAYER_LINE = Pattern.compile("^(\\s*)- y(\\d+)(?:\\s+[^:|]*)?:\\s*\\|\\s*$");
     private static final Pattern SIZE = Pattern.compile("^(\\d+)\\s*[x×]\\s*(\\d+)\\s*[x×]\\s*(\\d+)$");
+    private static final Pattern PLOT = Pattern.compile("^(\\d+)\\s*[x×]\\s*(\\d+)$");
     static final Pattern COORDS = Pattern.compile("^(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(\\d+)$");
     static final Pattern BLOCK_SPEC =
             Pattern.compile("^([a-z0-9_.\\-]+(?::[a-z0-9_./\\-]+)?)(?:\\[([^\\]]*)])?(?:\\s+\"([^\"]*)\")?$");
@@ -56,6 +58,8 @@ public final class SchematicTextParser {
     private Optional<String> requires = Optional.empty();
     private int @Nullable [] size;
     private int sizeLine;
+    private int @Nullable [] plot;
+    private int plotLine;
     private @Nullable String entrance;
     private int entranceLine;
     private Schematic.@Nullable Repeat repeat;
@@ -135,6 +139,14 @@ public final class SchematicTextParser {
                 };
                 sizeLine = line;
             }
+            case "plot" -> {
+                Matcher plot = PLOT.matcher(value);
+                if (!plot.matches()) {
+                    throw error(line, "участок '" + value + "' не по формату: ожидается Ш×Д, например 32x32");
+                }
+                this.plot = new int[] {Integer.parseInt(plot.group(1)), Integer.parseInt(plot.group(2))};
+                plotLine = line;
+            }
             case "entrance" -> {
                 entrance = value;
                 entranceLine = line;
@@ -177,6 +189,8 @@ public final class SchematicTextParser {
                         requires,
                         size,
                         sizeLine,
+                        plot,
+                        plotLine,
                         entrance,
                         entranceLine,
                         repeat,

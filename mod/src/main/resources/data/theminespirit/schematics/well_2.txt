@@ -5,8 +5,9 @@ type: infrastructure
 stage: 2
 level: 2
 requires: well
-size: 7x9x7   # Ш×В×Д
-entrance: 3,1,1
+size: 16x9x16  # Ш×В×Д
+plot: 16x16
+entrance: 7,1,5
 exemptions:
   - rule: closed_walls
     reason: "колодец открыт: крыша стоит на четырёх столбах, сплошных стен нет по замыслу"
@@ -27,74 +28,110 @@ legend:
   'O': potted_dandelion
 layers:
   - y0 площадка: |
-         p
-       SSSSS
-       SSSSS
-       SSWSS
-       SSSSS
-       SSSSS
-         .
+      
+      
+      
+      
+             p
+           SSSSS
+           SSSSS
+           SSWSS
+           SSSSS
+           SSSSS
+             .
   - y1 сруб и столбы: |
       
-       t   t
-        ccc
-       uc cP
-        ccc
-       t O t
-         .
+      
+      
+      
+          
+           t   t
+            ccc
+           uc cP
+            ccc
+           t O t
+             .
   - y2: |
       
-       t   t
       
-         H
       
-       t   t
-         .
+      
+          
+           t   t
+          
+             H
+          
+           t   t
+             .
   - y3: |
       
-       t   t
       
-         C
       
-       t   t
-         .
+      
+          
+           t   t
+          
+             C
+          
+           t   t
+             .
   - y4 потолок: |
       
-       #####
-       #####
-       #####
-       #####
-       #####
-         .
+      
+      
+      
+          
+           #####
+           #####
+           #####
+           #####
+           #####
+             .
   - y5 крыша: |
-      e#   #w
-      e#####w
-      e#####w
-      e#####w
-      e#####w
-      e#####w
-      e#   #w
+      
+      
+      
+      
+          e#   #w
+          e#####w
+          e#####w
+          e#####w
+          e#####w
+          e#####w
+          e#   #w
   - y6: |
-       e# #w
-       e###w
-       e###w
-       e###w
-       e###w
-       e###w
-       e# #w
+      
+      
+      
+      
+           e# #w
+           e###w
+           e###w
+           e###w
+           e###w
+           e###w
+           e# #w
   - y7: |
-        e#w
-        e#w
-        e#w
-        e#w
-        e#w
-        e#w
-        e#w
+      
+      
+      
+      
+            e#w
+            e#w
+            e#w
+            e#w
+            e#w
+            e#w
+            e#w
   - y8: |
-         _
-         _
-         _
-         _
-         _
-         _
-         _
+      
+      
+      
+      
+             _
+             _
+             _
+             _
+             _
+             _
+             _

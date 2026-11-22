@@ -54,9 +54,25 @@ class PresetLibraryTestsPart2 {
     void byId_Pen4x5_FourByFiveWithGate() {
         Preset pen = loadReal().byId("pen_4x5").orElseThrow();
 
+        int minX = pen.schematic().blocks().stream()
+                .mapToInt(block -> block.dx())
+                .min()
+                .orElseThrow();
+        int maxX = pen.schematic().blocks().stream()
+                .mapToInt(block -> block.dx())
+                .max()
+                .orElseThrow();
+        int minZ = pen.schematic().blocks().stream()
+                .mapToInt(block -> block.dz())
+                .min()
+                .orElseThrow();
+        int maxZ = pen.schematic().blocks().stream()
+                .mapToInt(block -> block.dz())
+                .max()
+                .orElseThrow();
         assertEquals(
                 List.of(4, 5),
-                List.of(pen.sizeX(), pen.sizeZ()),
+                List.of(maxX - minX + 1, maxZ - minZ + 1),
                 "Загон уровня 1 — минимум 4×5: меньший загон не вместит пару животных для разведения"
                         + " Иначе тест byId_Pen4x5_FourByFiveWithGate перестанет ловить эту поломку. При смене byId_Pen4x5_FourByFiveWithGate проверь это утверждение.");
         assertTrue(
@@ -71,9 +87,9 @@ class PresetLibraryTestsPart2 {
         Preset well = loadReal().byId("well").orElseThrow();
 
         assertEquals(
-                new BlockCoord(1, 1, 1),
+                new BlockCoord(7, 1, 7),
                 well.entry(),
-                "У колодца вход — клетка над водой: спуск к воде, а не в сплошной блок"
+                "У колодца вход сдвинут в центр участка 16×16 и стоит над водой: спуск к воде, а не в сплошной блок"
                         + " Иначе тест entry_WellWaterCenter_IsAboveWater перестанет ловить эту поломку. При смене entry_WellWaterCenter_IsAboveWater проверь это утверждение.");
     }
 

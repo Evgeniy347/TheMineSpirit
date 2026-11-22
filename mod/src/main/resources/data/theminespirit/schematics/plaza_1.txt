@@ -5,8 +5,9 @@ name: "Площадь, уровень 1"
 type: social
 stage: 0
 level: 1
-size: 15x4x16   # Ш×В×Д
-entrance: 7,1,2
+size: 32x4x32  # Ш×В×Д
+plot: 32x32
+entrance: 15,1,10
 exemptions:
   - rule: closed_walls
     reason: "площадь открыта: стен нет по замыслу, это мощёный двор с колодцем"
@@ -26,70 +27,102 @@ legend:
   'A': potted_azure_bluet
 layers:
   - y0 мощение: |
-            ppp
-      ccccccccccccccc
-      cgggggggggggggc
-      cgggggggggggggc
-      cgggggggggggggc
-      cgggggggggggggc
-      cgggggggggggggc
-      cgggggcccgggggc
-      cgggggcWcgggggc
-      cgggggcccgggggc
-      cgggggggggggggc
-      cgggggggggggggc
-      cgggggggggggggc
-      cgggggggggggggc
-      cgggggggggggggc
-      ccccccccccccccc
+      
+      
+      
+      
+      
+      
+      
+      
+                    ppp
+              ccccccccccccccc
+              cgggggggggggggc
+              cgggggggggggggc
+              cgggggggggggggc
+              cgggggggggggggc
+              cgggggggggggggc
+              cgggggcccgggggc
+              cgggggcWcgggggc
+              cgggggcccgggggc
+              cgggggggggggggc
+              cgggggggggggggc
+              cgggggggggggggc
+              cgggggggggggggc
+              cgggggggggggggc
+              ccccccccccccccc
   - y1 колодец и столбы: |
       
       
-       L           L
       
       
-           b l b
-      
-           Pc cO
-          A     P
-           Ac cP
-      
-             O
       
       
-       L           L
-             .
+      
+      
+              
+              
+               L           L
+              
+              
+                   b l b
+              
+                   Pc cO
+                  A     P
+                   Ac cP
+              
+                     O
+              
+              
+               L           L
+                     .
   - y2: |
       
       
-       L           L
       
       
       
       
-            T T
-      
-            T T
       
       
-      
-      
-       L           L
-             .
+              
+              
+               L           L
+              
+              
+              
+              
+                    T T
+              
+                    T T
+              
+              
+              
+              
+               L           L
+                     .
   - y3: |
       
       
-       T           T
       
       
       
       
       
       
-      
-      
-      
-      
-      
-       T           T
-             .
+              
+              
+               T           T
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+               T           T
+                     .

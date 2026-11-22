@@ -38,14 +38,14 @@ class FenceStubPlanTests {
     }
 
     @Test
-    void of_SecondStage_UsesSingleWallPost() {
-        ScriptCall call = (ScriptCall) FenceStubPlan.of(ORIGIN, 2, "spruce");
+    void of_ThirdStage_UsesSingleWallPost() {
+        ScriptCall call = (ScriptCall) FenceStubPlan.of(ORIGIN, 3, "spruce");
 
         assertEquals(
                 "wall_3_post",
                 call.params().get("file"),
-                "Со второго этапа ограда — стена: заглушка обязана быть стенным столбом, а не забором прошлого этапа"
-                        + " Иначе тест of_SecondStage_UsesSingleWallPost перестанет ловить эту поломку. При смене of_SecondStage_UsesSingleWallPost проверь это утверждение.");
+                "С третьего этапа ограда — стена: заглушка обязана быть стенным столбом, а не забором прошлого этапа"
+                        + " Иначе тест of_ThirdStage_UsesSingleWallPost перестанет ловить эту поломку. При смене of_ThirdStage_UsesSingleWallPost проверь это утверждение.");
     }
 
     @Test

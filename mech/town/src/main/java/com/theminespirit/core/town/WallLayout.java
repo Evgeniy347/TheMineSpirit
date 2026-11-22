@@ -45,6 +45,15 @@ public final class WallLayout {
 
     public List<WallPiece> closed(List<ColumnMask.Cell> line, Collection<Integer> gates) {
         int size = line.size();
+        Set<Integer> straight = new LinkedHashSet<>();
+        for (int gate : gates) {
+            if (straight(line, gate)) {
+                straight.add(gate);
+            }
+        }
+        if (!straight.isEmpty() && straight.size() < gates.size()) {
+            gates = straight;
+        }
         Set<Integer> starts = new LinkedHashSet<>();
         int base = gates.stream().mapToInt(Integer::intValue).min().orElse(0);
         for (int back = 0; back < longest; back++) {
@@ -74,6 +83,15 @@ public final class WallLayout {
         } catch (IllegalStateException unfolded) {
             return atomic(line, gates);
         }
+    }
+
+    private static boolean straight(List<ColumnMask.Cell> line, int index) {
+        int size = line.size();
+        ColumnMask.Cell previous = line.get(Math.floorMod(index - 1, size));
+        ColumnMask.Cell current = line.get(Math.floorMod(index, size));
+        ColumnMask.Cell next = line.get(Math.floorMod(index + 1, size));
+        return next.x() - current.x() == current.x() - previous.x()
+                && next.z() - current.z() == current.z() - previous.z();
     }
 
     private List<WallPiece> atomic(List<ColumnMask.Cell> line, Collection<Integer> gates) {

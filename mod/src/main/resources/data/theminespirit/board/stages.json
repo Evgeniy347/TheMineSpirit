@@ -11,7 +11,7 @@
               "pen", "well", "lumber_yard", "workshop"],
      "requires": {"plaza": 1, "family_house_a": 1, "family_house_b": 1, "family_house_c": 1,
                   "barn": 1, "field_a": 1, "field_b": 1, "pen": 1, "well": 1, "lumber_yard": 1, "workshop": 1}},
-    {"stage": 3, "buildings": {"CLEAR_GROUNDS": 1, "BUILD_MINE": 3, "BUILD_STREETS": 2},
+    {"stage": 3, "buildings": {"CLEAR_GROUNDS": 1, "BUILD_MINE": 3, "BUILD_STREETS": 2, "BUILD_FENCE": 3},
      "plan": ["player_house", "forge", "bakery", "apiary", "kennel", "stable", "barracks", "weaver"],
      "requires": {"player_house": 1, "forge": 1, "bakery": 1, "barracks": 1},
      "optional": {"kennel": 1, "stable": 1, "weaver": 1}},

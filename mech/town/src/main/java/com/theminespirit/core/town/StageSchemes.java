@@ -20,11 +20,11 @@ public final class StageSchemes {
     private StageSchemes() {}
 
     public static List<String> fence(int stage) {
-        return stage >= 2 ? WALL : FENCE;
+        return stage >= 3 ? WALL : FENCE;
     }
 
     public static List<String> fenceAtomic(int stage) {
-        if (stage >= 2) {
+        if (stage >= 3) {
             return WALL;
         }
         List<String> atomic = new ArrayList<>(FENCE);
@@ -33,6 +33,6 @@ public final class StageSchemes {
     }
 
     public static String fenceStub(int stage) {
-        return stage >= 2 ? "wall_3_post" : "fence_post";
+        return stage >= 3 ? "wall_3_post" : "fence_post";
     }
 }

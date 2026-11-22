@@ -20,12 +20,12 @@ class StageSchemesTests {
     }
 
     @Test
-    void fenceStub_SecondStage_IsSingleWallPost() {
+    void fenceStub_ThirdStage_IsSingleWallPost() {
         assertEquals(
                 "wall_3_post",
-                StageSchemes.fenceStub(2),
-                "Со второго этапа ограда — стена: заглушка обязана быть стенным столбом той же схемы, а не "
+                StageSchemes.fenceStub(3),
+                "С третьего этапа ограда — стена: заглушка обязана быть стенным столбом той же схемы, а не "
                         + "деревянным забором из прошлого этапа"
-                        + " Иначе тест fenceStub_SecondStage_IsSingleWallPost перестанет ловить эту поломку. При смене fenceStub_SecondStage_IsSingleWallPost проверь это утверждение.");
+                        + " Иначе тест fenceStub_ThirdStage_IsSingleWallPost перестанет ловить эту поломку. При смене fenceStub_ThirdStage_IsSingleWallPost проверь это утверждение.");
     }
 }

@@ -34,12 +34,13 @@ class BuildLimitsTests {
     }
 
     @Test
-    void schematicSizeMax_LimitValue_Equals32() {
+    void schematicSizeMax_LimitValue_Equals64() {
         assertEquals(
-                32,
+                64,
                 CatalogLimits.SCHEMATIC_SIZE_MAX,
-                "Сторона схемы ограничена 32: большая схема не влезает в память площадки, число меняет геймдизайн только с согласия"
-                        + " Иначе тест schematicSizeMax_LimitValue_Equals32 перестанет ловить эту поломку. При смене schematicSizeMax_LimitValue_Equals32 проверь это утверждение.");
+                "Сторона схемы ограничена 64: участки поселения бывают 64×64, а пустые поля схемы не добавляют блоков;"
+                        + " число меняет геймдизайн только с согласия"
+                        + " Иначе тест schematicSizeMax_LimitValue_Equals64 перестанет ловить эту поломку. При смене schematicSizeMax_LimitValue_Equals64 проверь это утверждение.");
     }
 
     @Test

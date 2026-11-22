@@ -5,8 +5,9 @@ type: social
 stage: 3
 level: 2
 requires: training_yard_1
-size: 17x5x17   # Ш×В×Д
-entrance: 8,1,1
+size: 32x5x32  # Ш×В×Д
+plot: 32x32
+entrance: 15,1,8
 exemptions:
   - rule: roof
     reason: "двор под открытым небом; крыша только над трибуной у уровня 4"
@@ -29,59 +30,80 @@ legend:
   'x': moss_carpet
 layers:
   - y0 площадка и крыльцо: |
-      aaaaaaaapaaaaaaaa
-      aaaaaaaaaaaaaaaaa
-      aaaaaaaaaaaaaaaaa
-      aaaaaaaaaaaaaaaaa
-      aaaaaaaaaaaaaaaaa
-      aaaaaaaaaaaaaaaaa
-      aaaaaaaaaaaaaaaaa
-      aaaaaaaaaaaaaaaaa
-      aaaaaaaaaaaaaaaaa
-      aaaaaaaaaaaaaaaaa
-      aaaaaaaaaaaaaaaaa
-      aaaaaaaaaaaaaaaaa
-      aaaaaaaaaaaaaaaaa
-      aaaaaaaaaaaaaaaaa
-      aaaaaaaaaaaaaaaaa
-      aaaaaaaaaaaaaaaaa
-      aaaaaaaaaaaaaaaaa
+      
+      
+      
+      
+      
+      
+      
+             aaaaaaaapaaaaaaaa
+             aaaaaaaaaaaaaaaaa
+             aaaaaaaaaaaaaaaaa
+             aaaaaaaaaaaaaaaaa
+             aaaaaaaaaaaaaaaaa
+             aaaaaaaaaaaaaaaaa
+             aaaaaaaaaaaaaaaaa
+             aaaaaaaaaaaaaaaaa
+             aaaaaaaaaaaaaaaaa
+             aaaaaaaaaaaaaaaaa
+             aaaaaaaaaaaaaaaaa
+             aaaaaaaaaaaaaaaaa
+             aaaaaaaaaaaaaaaaa
+             aaaaaaaaaaaaaaaaa
+             aaaaaaaaaaaaaaaaa
+             aaaaaaaaaaaaaaaaa
+             aaaaaaaaaaaaaaaaa
   - y1 частокол, чучела, стойки: |
       
-       tttttttDttttttt
-       txxxxxxxxxxxxxt
-       tbbxxxxxxxxxhxt
-       txxxxxxxxxxxbxt
-       txxxxxxxxxxxbxt
-       txxxxxxxxxxxxxt
-       txxxhxxxxxhxxxt
-       txxxxxxxxxxxxxt
-       txxxxxxxxxxxxxt
-       tWxxxxxxxxxxxxt
-       tAxxxxxxxxxxxxt
-       txxxxxxxxxxxxxt
-       txhxxxxxxxxxhxt
-       txxxxxxxxxxxxxt
-       ttttttttttttttt
-              .
+      
+      
+      
+      
+      
+      
+             
+              tttttttDttttttt
+              txxxxxxxxxxxxxt
+              tbbxxxxxxxxxhxt
+              txxxxxxxxxxxbxt
+              txxxxxxxxxxxbxt
+              txxxxxxxxxxxxxt
+              txxxhxxxxxhxxxt
+              txxxxxxxxxxxxxt
+              txxxxxxxxxxxxxt
+              tWxxxxxxxxxxxxt
+              tAxxxxxxxxxxxxt
+              txxxxxxxxxxxxxt
+              txhxxxxxxxxxhxt
+              txxxxxxxxxxxxxt
+              ttttttttttttttt
+                     .
   - y2: |
       
-         N   N     N
-      
-       N j         j N
-      
-      
-      
-       N   j     j   N
       
       
       
       
       
-       N j         j N
       
-         N   N     N
-              .
+             
+                N   N     N
+             
+              N j         j N
+             
+             
+             
+              N   j     j   N
+             
+             
+             
+             
+             
+              N j         j N
+             
+                N   N     N
+                     .
   - y3: |
       
       
@@ -90,16 +112,23 @@ layers:
       
       
       
-      
-      
-      
-      
-      
-      
-      
-      
-      
-              .
+             
+             
+             
+             
+             
+             
+             
+             
+             
+             
+             
+             
+             
+             
+             
+             
+                     .
   - y4 навес: |
       
       
@@ -108,13 +137,20 @@ layers:
       
       
       
-      
-      
-      
-      
-      
-      
-      
-      
-      
-              .
+             
+             
+             
+             
+             
+             
+             
+             
+             
+             
+             
+             
+             
+             
+             
+             
+                     .

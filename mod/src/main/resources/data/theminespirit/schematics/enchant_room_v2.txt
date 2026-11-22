@@ -6,8 +6,9 @@ type: craft
 stage: 2
 level: 2
 requires: enchant_room_v1
-size: 11x6x11
-entrance: 4,1,9
+size: 32x6x32
+plot: 32x32
+entrance: 14,1,19
 legend:
   'c': cobblestone
   'S': stone_bricks
@@ -28,74 +29,134 @@ legend:
   'O': potted_dandelion
 layers:
   - y0 булыжный цоколь и дубовый пол: |
-      ccccccccccc
-      c#########c
-      c#########c
-      c#########c
-      c#########c
-      c#########c
-      c#########c
-      c#########c
-      c#########c
-      ccccccccccc
-          pp
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+                ccccccccccc
+                c#########c
+                c#########c
+                c#########c
+                c#########c
+                c#########c
+                c#########c
+                c#########c
+                c#########c
+                ccccccccccc
+                    pp
   - y1 кольцо 10 полок, ковры, кафедра: |
-      SSSSSSSSSSS
-      SKKKKK....S
-      SK...K....S
-      SK.E.K....S
-      S....K....S
-      S.......T.S
-      S.~~~.....S
-      S......l..S
-      S.mmm.....S
-      SSSSDHSSSSS
-          ..
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+                SSSSSSSSSSS
+                SKKKKK....S
+                SK...K....S
+                SK.E.K....S
+                S....K....S
+                S.......T.S
+                S.~~~.....S
+                S......l..S
+                S.mmm.....S
+                SSSSDHSSSSS
+                    ..
   - y2 окна 1×2, свечи, свет: |
-      SSGSSSSSSSS
-      STC.CT....S
-      S.........S
-      G.........G
-      S.........S
-      S.........S
-      G.........G
-      S.........S
-      S.........S
-      SSSSDHSSSSS
-          ..
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+                SSGSSSSSSSS
+                STC.CT....S
+                S.........S
+                G.........G
+                S.........S
+                S.........S
+                G.........G
+                S.........S
+                S.........S
+                SSSSDHSSSSS
+                    ..
   - y3 окна 1×2: |
-      SSGSSSSSSSS
-      S.........S
-      S.........S
-      G.........G
-      S.........S
-      S.........S
-      G.........G
-      S.........S
-      S.........S
-      SSSSSSSSSSS
-          ..
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+                SSGSSSSSSSS
+                S.........S
+                S.........S
+                G.........G
+                S.........S
+                S.........S
+                G.........G
+                S.........S
+                S.........S
+                SSSSSSSSSSS
+                    ..
   - y4 верх стен: |
-      SSSSSSSSSSS
-      S.........S
-      S.........S
-      S.........S
-      S.........S
-      S.........S
-      S.........S
-      S.........S
-      S.........S
-      SSSSSSSSSSS
-          ..
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+                SSSSSSSSSSS
+                S.........S
+                S.........S
+                S.........S
+                S.........S
+                S.........S
+                S.........S
+                S.........S
+                S.........S
+                SSSSSSSSSSS
+                    ..
   - y5 каменная крыша: |
-      SSSSSSSSSSS
-      SSSSSSSSSSS
-      SSSSSSSSSSS
-      SSSSSSSSSSS
-      SSSSSSSSSSS
-      SSSSSSSSSSS
-      SSSSSSSSSSS
-      SSSSSSSSSSS
-      SSSSSSSSSSS
-      SSSSSSSSSSS
-          ..
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+                SSSSSSSSSSS
+                SSSSSSSSSSS
+                SSSSSSSSSSS
+                SSSSSSSSSSS
+                SSSSSSSSSSS
+                SSSSSSSSSSS
+                SSSSSSSSSSS
+                SSSSSSSSSSS
+                SSSSSSSSSSS
+                SSSSSSSSSSS
+                    ..

@@ -4,8 +4,9 @@ name: "Пекарня, уровень 1"
 type: food
 stage: 3
 level: 1
-size: 9x9x9   # Ш×В×Д
-entrance: 4,1,1
+size: 32x9x32  # Ш×В×Д
+plot: 32x32
+entrance: 15,1,12
 legend:
   'S': stone_bricks
   'K': bricks
@@ -18,92 +19,191 @@ legend:
   'T': torch
 layers:
   - y0 пол и крыльцо: |
-      ...._....
-      SSSSSSSSS
-      SSSSSSSSS
-      SSSSSSSSS
-      SSSSSSSSS
-      SSSSSSSSS
-      SSSSSSSSS
-      SSSSSSSSS
-      SSSSSSSSS
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+                 ...._....
+                 SSSSSSSSS
+                 SSSSSSSSS
+                 SSSSSSSSS
+                 SSSSSSSSS
+                 SSSSSSSSS
+                 SSSSSSSSS
+                 SSSSSSSSS
+                 SSSSSSSSS
   - y1 стены, коптильни и печь: |
-      .........
-      SSSSDSSSS
-      Sz.....zS
-      SF......S
-      Sb.....bS
-      S...t...S
-      S.......S
-      S.T...T.S
-      SSSSSSSSS
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+                 .........
+                 SSSSDSSSS
+                 Sz.....zS
+                 SF......S
+                 Sb.....bS
+                 S...t...S
+                 S.......S
+                 S.T...T.S
+                 SSSSSSSSS
   - y2 стены и дверь: |
-      .........
-      SSSSDSSSS
-      S.......S
-      S.......S
-      S.......S
-      S.......S
-      S.......S
-      S.......S
-      SSSSSSSSS
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+                 .........
+                 SSSSDSSSS
+                 S.......S
+                 S.......S
+                 S.......S
+                 S.......S
+                 S.......S
+                 S.......S
+                 SSSSSSSSS
   - y3 стены: |
-      .........
-      SSSSSSSSS
-      S.......S
-      S.......S
-      S.......S
-      S.......S
-      S.......S
-      S.......S
-      SSSSSSSSS
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+                 .........
+                 SSSSSSSSS
+                 S.......S
+                 S.......S
+                 S.......S
+                 S.......S
+                 S.......S
+                 S.......S
+                 SSSSSSSSS
   - y4 потолок: |
-      .........
-      KKKKKKKKK
-      KKKKKKKKK
-      KKKKKKKKK
-      KKKKKKKKK
-      KKKKKKKKK
-      KKKKKKKKK
-      KKKKKKKKK
-      KKKKKKKKK
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+                 .........
+                 KKKKKKKKK
+                 KKKKKKKKK
+                 KKKKKKKKK
+                 KKKKKKKKK
+                 KKKKKKKKK
+                 KKKKKKKKK
+                 KKKKKKKKK
+                 KKKKKKKKK
   - y5 скат: |
-      .........
-      ._KKKKK_.
-      ._KKKKK_.
-      ._KKKKK_.
-      ._KKKKK_.
-      ._KKKKK_.
-      ._KKKKK_.
-      ._KKKKK_.
-      ._KKKKK_.
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+                 .........
+                 ._KKKKK_.
+                 ._KKKKK_.
+                 ._KKKKK_.
+                 ._KKKKK_.
+                 ._KKKKK_.
+                 ._KKKKK_.
+                 ._KKKKK_.
+                 ._KKKKK_.
   - y6 скат: |
-      .........
-      .._KKK_..
-      .._KKK_..
-      .._KKK_..
-      .._KKK_..
-      .._KKK_..
-      .._KKK_..
-      .._KKK_..
-      .._KKK_..
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+                 .........
+                 .._KKK_..
+                 .._KKK_..
+                 .._KKK_..
+                 .._KKK_..
+                 .._KKK_..
+                 .._KKK_..
+                 .._KKK_..
+                 .._KKK_..
   - y7 скат: |
-      .........
-      ..._K_...
-      ..._K_...
-      ..._K_...
-      ..._K_...
-      ..._K_...
-      ..._K_...
-      ..._K_...
-      ..._K_...
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+                 .........
+                 ..._K_...
+                 ..._K_...
+                 ..._K_...
+                 ..._K_...
+                 ..._K_...
+                 ..._K_...
+                 ..._K_...
+                 ..._K_...
   - y8 конёк: |
-      .........
-      ....K....
-      ....K....
-      ....K....
-      ....K....
-      ....K....
-      ....K....
-      ....K....
-      ....K....
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+                 .........
+                 ....K....
+                 ....K....
+                 ....K....
+                 ....K....
+                 ....K....
+                 ....K....
+                 ....K....
+                 ....K....

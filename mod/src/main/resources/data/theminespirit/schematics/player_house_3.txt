@@ -9,8 +9,9 @@ type: housing
 stage: 3
 level: 3
 requires: player_house_2
-size: 22x21x20   # Ш×В×Д
-entrance: 10,1,2
+size: 32x21x32  # Ш×В×Д
+plot: 32x32
+entrance: 15,1,8
 legend:
   'S': stone_bricks
   'Y': chiseled_stone_bricks
@@ -72,442 +73,568 @@ legend:
 layers:
   - y0 цоколь, пол, ступени: |
       
-        P9P9   <pp> 9P9 P
-       SSSSSSSSSSSSSSSSSSSS
-      0S$$$$$aaaYYaaa$$$$$SP
-       S$$$$$aaaYYaaa$$$$$S
-       S$$$$$aaaYYaaa$$$$$S
-       S$$$$$aaaYYaaa$$$$$S
-       S$$$$$aaaYYaaa$$$$$S
-      0S$$$$$aaaYYaaa$$$$$SP
-       S$$$$$aaaYYaaa$$$$$S
-       S$$$$$aaaYYaaa$$$$$S
-      0S$$$$$aaaYYaaa$$$$$SP
-       S$$$$$aaaYYaaa$$$$$S
-       S$$$$$aaaYYaaa$$$$$S
-       S$$$$$aaaaaaaa$$$$$S
-       S$$$$$aaaaaaaa$$$$$S
-       S$$$$$aaaaaaaa$$$$$S
-      0S$$$$$aaaaaaaa$$$$$SP
-       SSSSSSSSSSSSSSSSSSSS
-                      oo
+      
+      
+      
+      
+      
+           
+             P9P9   <pp> 9P9 P
+            SSSSSSSSSSSSSSSSSSSS
+           0S$$$$$aaaYYaaa$$$$$SP
+            S$$$$$aaaYYaaa$$$$$S
+            S$$$$$aaaYYaaa$$$$$S
+            S$$$$$aaaYYaaa$$$$$S
+            S$$$$$aaaYYaaa$$$$$S
+           0S$$$$$aaaYYaaa$$$$$SP
+            S$$$$$aaaYYaaa$$$$$S
+            S$$$$$aaaYYaaa$$$$$S
+           0S$$$$$aaaYYaaa$$$$$SP
+            S$$$$$aaaYYaaa$$$$$S
+            S$$$$$aaaYYaaa$$$$$S
+            S$$$$$aaaaaaaa$$$$$S
+            S$$$$$aaaaaaaa$$$$$S
+            S$$$$$aaaaaaaa$$$$$S
+           0S$$$$$aaaaaaaa$$$$$SP
+            SSSSSSSSSSSSSSSSSSSS
+                           oo
   - y1 первый этаж: |
       
       
-       LSSSSLSSLDELSSLSSSSL
-       Sb  lSP b~~b 0SWV bS
-       SccccS   ~~   S mm S
-       Scttc.   ~~   .httgS
-       ScRRc.   ~~   .httgS
-       SccccS   ~~   S    S
-       SccccS   ~~   S    S
-       SOOOOS   ~~   SFkuTS
-       LSSSSS   ~~   SSS..L
-       SOOOOS   ~~   Smm  S
-       SjjjjS   ~~   SmmRRS
-       Sjjjj.   ~~   .mmSSS
-       SjKjj.  i  i  .mmSSS
-       SjjjjS   ~~   SbmSSS
-       SbjjjS   ~~   SbmSSS
-       SO  OSb MffM bSmmSSS
-       LSSSSLSSMMMMSSLDESSL
-                 .
+      
+      
+      
+      
+           
+           
+            LSSSSLSSLDELSSLSSSSL
+            Sb  lSP b~~b 0SWV bS
+            SccccS   ~~   S mm S
+            Scttc.   ~~   .httgS
+            ScRRc.   ~~   .httgS
+            SccccS   ~~   S    S
+            SccccS   ~~   S    S
+            SOOOOS   ~~   SFkuTS
+            LSSSSS   ~~   SSS..L
+            SOOOOS   ~~   Smm  S
+            SjjjjS   ~~   SmmRRS
+            Sjjjj.   ~~   .mmSSS
+            SjKjj.  i  i  .mmSSS
+            SjjjjS   ~~   SbmSSS
+            SbjjjS   ~~   SbmSSS
+            SO  OSb MffM bSmmSSS
+            LSSSSLSSMMMMSSLDESSL
+                      .
   - y2: |
       
-        d  d         d  d
-       LSGGSLSSLDELSSLGGSSL
-       SP   S        S   PS
-      vS    S        S    Sr
-       G qq .        . qq G
-       G    .        . qq G
-      vS    S        S    Sr
-       S    S        S    S
-       SOOOOS        S    S
-       LSSSSS        SSS..L
-       SOOOOS        S    S
-      vS    S        S    Sr
-       G    .        .  RRG
-       G    .        .  SSG
-      vS    S        S  SSSr
-       S0   S        S9 SSS
-       SO  OSP M  M 9S  SSS
-       LSGGSLGGMMMMGGLDESSL
-        n  nn  n  n  n
+      
+      
+      
+      
+      
+           
+             d  d         d  d
+            LSGGSLSSLDELSSLGGSSL
+            SP   S        S   PS
+           vS    S        S    Sr
+            G qq .        . qq G
+            G    .        . qq G
+           vS    S        S    Sr
+            S    S        S    S
+            SOOOOS        S    S
+            LSSSSS        SSS..L
+            SOOOOS        S    S
+           vS    S        S    Sr
+            G    .        .  RRG
+            G    .        .  SSG
+           vS    S        S  SSSr
+            S0   S        S9 SSS
+            SO  OSP M  M 9S  SSS
+            LSGGSLGGMMMMGGLDESSL
+             n  nn  n  n  n
   - y3: |
       
-        d  d         d  d
-       LSGGSLSSLXXLSSLGGSSL
-       S    S        S    S
-      vS    S        S    Sr
-       G    .        .    G
-       G    .        .    G
-      vS    S        S    Sr
-       S    S        S    S
-       SOOOOS        S    S
-       LSSSSS        SSS..L
-       SOOOOS        S    S
-      vS    S        S    Sr
-       G    .        .    G
-       G    .        .  RRG
-      vS    S        S  SSSr
-       S    S        S  SSS
-       SO  OS  M  M  S  SSS
-       LSGGSLGGMMMMGGLXXSSL
-        n  nn  n  n  n
+      
+      
+      
+      
+      
+           
+             d  d         d  d
+            LSGGSLSSLXXLSSLGGSSL
+            S    S        S    S
+           vS    S        S    Sr
+            G    .        .    G
+            G    .        .    G
+           vS    S        S    Sr
+            S    S        S    S
+            SOOOOS        S    S
+            LSSSSS        SSS..L
+            SOOOOS        S    S
+           vS    S        S    Sr
+            G    .        .    G
+            G    .        .  RRG
+           vS    S        S  SSSr
+            S    S        S  SSS
+            SO  OS  M  M  S  SSS
+            LSGGSLGGMMMMGGLXXSSL
+             n  nn  n  n  n
   - y4: |
       
-        d  d         d  d
-       LSGGSLSSXXXXSSLGGSSL
-       S    S        S    S
-      vS    S        S    Sr
-       G    .        .    G
-       G    .   HH   .    G
-      vS    S        S    Sr
-       S    S        S    S
-       S    S        S    S
-       LSSSSS        SSS..L
-       S    S        S    S
-      vS    S   HH   S    Sr
-       G    .        .    G
-       G    .        .    G
-      vS    S        S  RRSr
-       S    S        S  SSS
-       S    S        S  SSS
-       LSGGSLGGMMMMGGLSSSSL
-        n  nn  n  n  n
+      
+      
+      
+      
+      
+           
+             d  d         d  d
+            LSGGSLSSXXXXSSLGGSSL
+            S    S        S    S
+           vS    S        S    Sr
+            G    .        .    G
+            G    .   HH   .    G
+           vS    S        S    Sr
+            S    S        S    S
+            S    S        S    S
+            LSSSSS        SSS..L
+            S    S        S    S
+           vS    S   HH   S    Sr
+            G    .        .    G
+            G    .        .    G
+           vS    S        S  RRSr
+            S    S        S  SSS
+            S    S        S  SSS
+            LSGGSLGGMMMMGGLSSSSL
+             n  nn  n  n  n
   - y5: |
       
-              H    H
-       LSSSSLSSSSSSSSLSSSSL
-       S    S        S    S
-       S    SH      HS    S
-       S    .        .    S
-       S  H .   AA   .    S
-       S    S        S H  S
-       S    S        S    S
-       S    SH      HS    S
-       LSSSSS        SSS..L
-       S    S        S    S
-       S    S   AA   S    S
-       S    .        .    S
-       S  H .        .    S
-       S    S        SH   S
-       S    S        S  RRS
-       S    S        S  SSS
-       LSSSSLSSMMMMSSLSSSSL
-                 .
+      
+      
+      
+      
+      
+           
+                   H    H
+            LSSSSLSSSSSSSSLSSSSL
+            S    S        S    S
+            S    SH      HS    S
+            S    .        .    S
+            S  H .   AA   .    S
+            S    S        S H  S
+            S    S        S    S
+            S    SH      HS    S
+            LSSSSS        SSS..L
+            S    S        S    S
+            S    S   AA   S    S
+            S    .        .    S
+            S  H .        .    S
+            S    S        SH   S
+            S    S        S  RRS
+            S    S        S  SSS
+            LSSSSLSSMMMMSSLSSSSL
+                      .
   - y6 перекрытие и балкон: |
-             ########
-             ########
-       LXXXXXXXXXXXXXXXXXXL
-       Z$$$$$$$$$$$$$$$$$$Z
-       Z$$$$$$$$$$$$$$$$$$Z
-       Z$$$$$$$$$$$$$$$$$$Z
-       Z$$$$$$$$$$$$$$$$$$Z
-       Z$$$$$$$$$$$$$$$$$$Z
-       Z$$$$$$$$$$$$$$$$$$Z
-       Z$$$$$$$$$$$$$$$$$$Z
-       Z$$$$$$$$$$$$$$$$$$Z
-       Z$$$$$$$$$$$$$$$$$$Z
-       Z$$$$$$$$$$$$$$$$..Z
-       Z$$$$$$$$$$$$$$$$..Z
-       Z$$$$$$$$$$$$$$$$..Z
-       Z$$$$$$$$$$$$$$$$..Z
-       Z$$$$$$$$$$$$$$$$..Z
-       Z$$$$$$$$$$$$$$$$RRZ
-       LXXXXXXXXXXXXXXXXXXL
-                 .
+      
+      
+      
+      
+      
+      
+                  ########
+                  ########
+            LXXXXXXXXXXXXXXXXXXL
+            Z$$$$$$$$$$$$$$$$$$Z
+            Z$$$$$$$$$$$$$$$$$$Z
+            Z$$$$$$$$$$$$$$$$$$Z
+            Z$$$$$$$$$$$$$$$$$$Z
+            Z$$$$$$$$$$$$$$$$$$Z
+            Z$$$$$$$$$$$$$$$$$$Z
+            Z$$$$$$$$$$$$$$$$$$Z
+            Z$$$$$$$$$$$$$$$$$$Z
+            Z$$$$$$$$$$$$$$$$$$Z
+            Z$$$$$$$$$$$$$$$$..Z
+            Z$$$$$$$$$$$$$$$$..Z
+            Z$$$$$$$$$$$$$$$$..Z
+            Z$$$$$$$$$$$$$$$$..Z
+            Z$$$$$$$$$$$$$$$$..Z
+            Z$$$$$$$$$$$$$$$$RRZ
+            LXXXXXXXXXXXXXXXXXXL
+                      .
   - y7 второй этаж: |
-             tttttttt
-        d  d t      td  d
-       LSGGSLSS=DE=SSLGGSSL
-       SJQ~~#b      b#bcclS
-      vS~~~~#        #ccccSr
-       G~~~~.        .cttcG
-       G~~~~.        .cRRcG
-      vS~~~~#  ~~~~  #ccccSr
-       S BB #O ~~~~ O#ccccS
-       SbBBb#O httg O#OOOOS
-       L#####O httg O#####L
-       S    #O ~~~~ O#JQ  S
-      vSmmmm#  ~~~~  # t  Sr
-       Gmmmm.        . t  G
-       Gmmmm.  cccc  . t  G
-      vSmmmm#  cccc  # t  Sr
-       S C  #  cccc  #    S
-       SbCWV#b      b#    S
-       LSGGSLSGSSSSGSLGGSSL
-        n  n         n  n
+      
+      
+      
+      
+      
+      
+                  tttttttt
+             d  d t      td  d
+            LSGGSLSS=DE=SSLGGSSL
+            SJQ~~#b      b#bcclS
+           vS~~~~#        #ccccSr
+            G~~~~.        .cttcG
+            G~~~~.        .cRRcG
+           vS~~~~#  ~~~~  #ccccSr
+            S BB #O ~~~~ O#ccccS
+            SbBBb#O httg O#OOOOS
+            L#####O httg O#####L
+            S    #O ~~~~ O#JQ  S
+           vSmmmm#  ~~~~  # t  Sr
+            Gmmmm.        . t  G
+            Gmmmm.  cccc  . t  G
+           vSmmmm#  cccc  # t  Sr
+            S C  #  cccc  #    S
+            SbCWV#b      b#    S
+            LSGGSLSGSSSSGSLGGSSL
+             n  n         n  n
   - y8: |
       
-        d  d N      Nd  d
-       LSGGSLSS=DE=SSLGGSSL
-       S    #P      0#P   S
-      vS    #        #    Sr
-       G    .        . qq G
-       G    .        .    G
-      vS    #        #    Sr
-       S    #O      O#    S
-       SP  9#O  qq  O#OOOOS
-       L#####O  qq  O#####L
-       S    #O      O#    S
-      vS    #        #    Sr
-       G    .        .    G
-       G    .        .    G
-      vS    #        #    Sr
-       S    #        #    S
-       S0   #9      P#    S
-       LSGGSLSGSSSSGSLGGSSL
-        n  n         n  n
+      
+      
+      
+      
+      
+           
+             d  d N      Nd  d
+            LSGGSLSS=DE=SSLGGSSL
+            S    #P      0#P   S
+           vS    #        #    Sr
+            G    .        . qq G
+            G    .        .    G
+           vS    #        #    Sr
+            S    #O      O#    S
+            SP  9#O  qq  O#OOOOS
+            L#####O  qq  O#####L
+            S    #O      O#    S
+           vS    #        #    Sr
+            G    .        .    G
+            G    .        .    G
+           vS    #        #    Sr
+            S    #        #    S
+            S0   #9      P#    S
+            LSGGSLSGSSSSGSLGGSSL
+             n  n         n  n
   - y9: |
       
       
-      ULSSSSLSSSSSSSSLSSSSLI
-      US    #        #    SI
-      US    #        #    SI
-      US    #        #    SI
-      US    #        #    SI
-      US    #        #    SI
-      US    #        #    SI
-      US    #        #    SI
-      UL#####        #####LI
-      US    #        #    SI
-      US    #        #    SI
-      US    #        #    SI
-      US    #        #    SI
-      US    #        #    SI
-      US    #        #    SI
-      US    #        #    SI
-      ULSSSSLSSSSSSSSLSSSSLI
-                 .
+      
+      
+      
+      
+           
+           
+           ULSSSSLSSSSSSSSLSSSSLI
+           US    #        #    SI
+           US    #        #    SI
+           US    #        #    SI
+           US    #        #    SI
+           US    #        #    SI
+           US    #        #    SI
+           US    #        #    SI
+           UL#####        #####LI
+           US    #        #    SI
+           US    #        #    SI
+           US    #        #    SI
+           US    #        #    SI
+           US    #        #    SI
+           US    #        #    SI
+           US    #        #    SI
+           ULSSSSLSSSSSSSSLSSSSLI
+                      .
   - y10 обвязка и крыша: |
       
-      e#                  #w
-      eLXXXXXXXXXXXXXXXXXXLw
-      eZ                  Zw
-      eZ                  Zw
-      eZ                  Zw
-      eZ                  Zw
-      eZ                  Zw
-      eZ                  Zw
-      eZ                  Zw
-      eZ                  Zw
-      eZ                  Zw
-      eZ                  Zw
-      eZ                  Zw
-      eZ                  Zw
-      eZ                  Zw
-      eZ                  Zw
-      eZ                  Zw
-      eLXXXXXXXXXXXXXXXXXXLw
-      e#                  #w
+      
+      
+      
+      
+      
+           
+           e#                  #w
+           eLXXXXXXXXXXXXXXXXXXLw
+           eZ                  Zw
+           eZ                  Zw
+           eZ                  Zw
+           eZ                  Zw
+           eZ                  Zw
+           eZ                  Zw
+           eZ                  Zw
+           eZ                  Zw
+           eZ                  Zw
+           eZ                  Zw
+           eZ                  Zw
+           eZ                  Zw
+           eZ                  Zw
+           eZ                  Zw
+           eZ                  Zw
+           eLXXXXXXXXXXXXXXXXXXLw
+           e#                  #w
   - y11: |
       
-       e#                #w
-       e##################w
-       e#                #w
-       e#                #w
-       e#                #w
-       e#                #w
-       e#                #w
-       e#                #w
-       e#                #w
-       e#                #w
-       e#                #w
-       e#                #w
-       e#                #w
-       e#                #w
-       e#                #w
-       e#                #w
-       e#                #w
-       e##################w
-       e#                #w
+      
+      
+      
+      
+      
+           
+            e#                #w
+            e##################w
+            e#                #w
+            e#                #w
+            e#                #w
+            e#                #w
+            e#                #w
+            e#                #w
+            e#                #w
+            e#                #w
+            e#                #w
+            e#                #w
+            e#                #w
+            e#                #w
+            e#                #w
+            e#                #w
+            e#                #w
+            e##################w
+            e#                #w
   - y12: |
       
-        e#              #w
-        e################w
-        e#              #w
-        e#              #w
-        e#              #w
-        e#H            H#w
-        e#              #w
-        e#              #w
-        e#              #w
-        e#              #w
-        e#              #w
-        e#              #w
-        e#              #w
-        e#H            H#w
-        e#              #w
-        e#              #w
-        e#              #w
-        e################w
-        e#              #w
+      
+      
+      
+      
+      
+           
+             e#              #w
+             e################w
+             e#              #w
+             e#              #w
+             e#              #w
+             e#H            H#w
+             e#              #w
+             e#              #w
+             e#              #w
+             e#              #w
+             e#              #w
+             e#              #w
+             e#              #w
+             e#H            H#w
+             e#              #w
+             e#              #w
+             e#              #w
+             e################w
+             e#              #w
   - y13: |
       
-         e#            #w
-         e######GG######w
-         e#            #w
-         e#            #w
-         e#     H      #w
-         e#            #w
-         e#            #w
-         e#            #w
-         e#            #w
-         e#            #w
-         e#            #w
-         e#            #w
-         e#            #w
-         e#            #w
-         e#     H      #w
-         e#            #w
-         e#            #w
-         e######GG######w
-         e#            #w
+      
+      
+      
+      
+      
+           
+              e#            #w
+              e######GG######w
+              e#            #w
+              e#            #w
+              e#     H      #w
+              e#            #w
+              e#            #w
+              e#            #w
+              e#            #w
+              e#            #w
+              e#            #w
+              e#            #w
+              e#            #w
+              e#            #w
+              e#     H      #w
+              e#            #w
+              e#            #w
+              e######GG######w
+              e#            #w
   - y14: |
       
-          e#          #w
-          e#####GG#####w
-          e#          #w
-          e#          #w
-          e#    A     #w
-          e#          #w
-          e#          #w
-          e#          #w
-          e#          #w
-          e#          #w
-          e#          #w
-          e#          #w
-          e#          #w
-          e#          #w
-          e#    A     #w
-          e#          #w
-          e#          #w
-          e#####GG#####w
-          e#          #w
+      
+      
+      
+      
+      
+           
+               e#          #w
+               e#####GG#####w
+               e#          #w
+               e#          #w
+               e#    A     #w
+               e#          #w
+               e#          #w
+               e#          #w
+               e#          #w
+               e#          #w
+               e#          #w
+               e#          #w
+               e#          #w
+               e#          #w
+               e#    A     #w
+               e#          #w
+               e#          #w
+               e#####GG#####w
+               e#          #w
   - y15: |
       
-           e#        #w
-           e####GG####w
-           e#        #w
-           e#        #w
-           e#   A    #w
-           e#        #w
-           e#        #w
-           e#        #w
-           e#        #w
-           e#        #w
-           e#        #w
-           e#        #w
-           e#        #w
-           e#        #w
-           e#   A    #w
-           e#        #w
-           e#        #w
-           e####GG####w
-           e#        #w
+      
+      
+      
+      
+      
+           
+                e#        #w
+                e####GG####w
+                e#        #w
+                e#        #w
+                e#   A    #w
+                e#        #w
+                e#        #w
+                e#        #w
+                e#        #w
+                e#        #w
+                e#        #w
+                e#        #w
+                e#        #w
+                e#        #w
+                e#   A    #w
+                e#        #w
+                e#        #w
+                e####GG####w
+                e#        #w
   - y16: |
       
-            e#      #w
-            e########w
-            e#      #w
-            e#      #w
-            e#  A   #w
-            e#      #w
-            e#      #w
-            e#      #w
-            e#      #w
-            e#      #w
-            e#      #w
-            e#      #w
-            e#      #w
-            e#      #w
-            e#  A   #w
-            e#      #w
-            e#      #w
-            e########w
-            e#      #w
+      
+      
+      
+      
+      
+           
+                 e#      #w
+                 e########w
+                 e#      #w
+                 e#      #w
+                 e#  A   #w
+                 e#      #w
+                 e#      #w
+                 e#      #w
+                 e#      #w
+                 e#      #w
+                 e#      #w
+                 e#      #w
+                 e#      #w
+                 e#      #w
+                 e#  A   #w
+                 e#      #w
+                 e#      #w
+                 e########w
+                 e#      #w
   - y17: |
       
-             e#    #w
-             e######w
-             e#    #w
-             e#    #w
-             e# A  #w
-             e#    #w
-             e#    #w
-             e#    #w
-             e#    #w
-             e#    #w
-             e#    #w
-             e#    #w
-             e#    #w
-             e#    #w
-             e# A  #w
-             e#    #w
-             e#    #w
-             e######w
-             e#    #w
+      
+      
+      
+      
+      
+           
+                  e#    #w
+                  e######w
+                  e#    #w
+                  e#    #w
+                  e# A  #w
+                  e#    #w
+                  e#    #w
+                  e#    #w
+                  e#    #w
+                  e#    #w
+                  e#    #w
+                  e#    #w
+                  e#    #w
+                  e#    #w
+                  e# A  #w
+                  e#    #w
+                  e#    #w
+                  e######w
+                  e#    #w
   - y18: |
       
-              e#  #w
-              e####w
-              e#  #w
-              e#  #w
-              e#A #w
-              e#  #w
-              e#  #w
-              e#  #w
-              e#  #w
-              e#  #w
-              e#  #w
-              e#  #w
-              e#  #w
-              e#  #w
-              e#A #w
-              e#  #w
-              e#  #w
-              e####w
-              e#  #w
+      
+      
+      
+      
+      
+           
+                   e#  #w
+                   e####w
+                   e#  #w
+                   e#  #w
+                   e#A #w
+                   e#  #w
+                   e#  #w
+                   e#  #w
+                   e#  #w
+                   e#  #w
+                   e#  #w
+                   e#  #w
+                   e#  #w
+                   e#  #w
+                   e#A #w
+                   e#  #w
+                   e#  #w
+                   e####w
+                   e#  #w
   - y19: |
       
-               e##w
-               e##w
-               e##w
-               e##w
-               e##w
-               e##w
-               e##w
-               e##w
-               e##w
-               e##w
-               e##w
-               e##w
-               e##w
-               e##w
-               e##w
-               e##w
-               e##w
-               e##w
-               e##w
+      
+      
+      
+      
+      
+           
+                    e##w
+                    e##w
+                    e##w
+                    e##w
+                    e##w
+                    e##w
+                    e##w
+                    e##w
+                    e##w
+                    e##w
+                    e##w
+                    e##w
+                    e##w
+                    e##w
+                    e##w
+                    e##w
+                    e##w
+                    e##w
+                    e##w
   - y20: |
       
-                ew
-                ew
-                ew
-                ew
-                ew
-                ew
-                ew
-                ew
-                ew
-                ew
-                ew
-                ew
-                ew
-                ew
-                ew
-                ew
-                ew
-                ew
-                ew
+      
+      
+      
+      
+      
+           
+                     ew
+                     ew
+                     ew
+                     ew
+                     ew
+                     ew
+                     ew
+                     ew
+                     ew
+                     ew
+                     ew
+                     ew
+                     ew
+                     ew
+                     ew
+                     ew
+                     ew
+                     ew
+                     ew

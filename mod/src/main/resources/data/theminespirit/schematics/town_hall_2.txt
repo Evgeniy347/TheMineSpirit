@@ -6,8 +6,9 @@ type: social
 stage: 3
 level: 2
 requires: town_hall_1
-size: 15x11x17   # Ш×В×Д
-entrance: 7,1,1
+size: 32x11x32  # Ш×В×Д
+plot: 32x32
+entrance: 15,1,8
 legend:
   'c': polished_andesite
   'S': stone_bricks
@@ -44,200 +45,277 @@ legend:
   'H': lantern[hanging=true]
 layers:
   - y0 цоколь и пол: |
-      aaaaaaapaaaaaaa
-      aaaaaaaaaaaaaaa
-      aaaaaaaaaaaaaaa
-      aaaaaaaaaaaaaaa
-      aaaaaaaaaaaaaaa
-      aaaaaaaaaaaaaaa
-      aaaaaaaaaaaaaaa
-      aaaaaaaaaaaaaaa
-      aaaaaaaaaaaaaaa
-      aaaaaaaaaaaaaaa
-      aaaaaaaaaaaaaaa
-      aaaaaaaaaaaaaaa
-      aaaaaaaaaaaaaaa
-      aaaaaaaaaaaaaaa
-      aaaaaaaaaaaaaaa
-      aaaaaaaaaaaaaaa
-      aaaaaaaaaaaaaaa
+      
+      
+      
+      
+      
+      
+      
+              aaaaaaapaaaaaaa
+              aaaaaaaaaaaaaaa
+              aaaaaaaaaaaaaaa
+              aaaaaaaaaaaaaaa
+              aaaaaaaaaaaaaaa
+              aaaaaaaaaaaaaaa
+              aaaaaaaaaaaaaaa
+              aaaaaaaaaaaaaaa
+              aaaaaaaaaaaaaaa
+              aaaaaaaaaaaaaaa
+              aaaaaaaaaaaaaaa
+              aaaaaaaaaaaaaaa
+              aaaaaaaaaaaaaaa
+              aaaaaaaaaaaaaaa
+              aaaaaaaaaaaaaaa
+              aaaaaaaaaaaaaaa
+              aaaaaaaaaaaaaaa
   - y1 зал совета: |
       
-       LSSSLSDSLSSSL
-       SM~~~~~~~~Q~S
-       Sb~mmmmmmm~CS
-       Sb~tmmmmmm~QS
-       L~etwmmmmm~~L
-       S~etwmmmmm~~S
-       S~etwmmmmm~~S
-       S~etwmmmmtt~S
-       L~SSSmmSSSS~L
-       S~~tmmmmmm~~S
-       S~~mmmmmmm~~S
-       S~~mmmmmmm~bS
-       LCPlmmmmlm~OL
-       SPQQQQQQQQQBS
-       LSSSLSSSLSSSL
-             .
+      
+      
+      
+      
+      
+      
+              
+               LSSSLSDSLSSSL
+               SM~~~~~~~~Q~S
+               Sb~mmmmmmm~CS
+               Sb~tmmmmmm~QS
+               L~etwmmmmm~~L
+               S~etwmmmmm~~S
+               S~etwmmmmm~~S
+               S~etwmmmmtt~S
+               L~SSSmmSSSS~L
+               S~~tmmmmmm~~S
+               S~~mmmmmmm~~S
+               S~~mmmmmmm~bS
+               LCPlmmmmlm~OL
+               SPQQQQQQQQQBS
+               LSSSLSSSLSSSL
+                     .
   - y2: |
       
-       LSSGLSDSLGSSL
-       S           S
-       S           S
-       G  q        G
-       L  q        L
-       S  q        S
-       S  q        S
-       S  q     qq S
-       L SSS  SSSS L
-       S  q        S
-       S           S
-       G           G
-       L           L
-       S QQQQQQQQQ S
-       LSSGLSSSLGSSL
-             .
+      
+      
+      
+      
+      
+      
+              
+               LSSGLSDSLGSSL
+               S           S
+               S           S
+               G  q        G
+               L  q        L
+               S  q        S
+               S  q        S
+               S  q     qq S
+               L SSS  SSSS L
+               S  q        S
+               S           S
+               G           G
+               L           L
+               S QQQQQQQQQ S
+               LSSGLSSSLGSSL
+                     .
   - y3: |
       
-       LSSGLSSSLGSSL
-       S           S
-       S           S
-       G           G
-       L           L
-       S           S
-       S           S
-       S           S
-       L SSS  SSSS L
-       S           S
-       S           S
-       G           G
-       L           L
-       S QQQQQQQQQ S
-       LSSGLSSSLGSSL
-             .
+      
+      
+      
+      
+      
+      
+              
+               LSSGLSSSLGSSL
+               S           S
+               S           S
+               G           G
+               L           L
+               S           S
+               S           S
+               S           S
+               L SSS  SSSS L
+               S           S
+               S           S
+               G           G
+               L           L
+               S QQQQQQQQQ S
+               LSSGLSSSLGSSL
+                     .
   - y4: |
       
-       LSSSLSSSLSSSL
-       S           S
-       S  H H   H  S
-       S           S
-       L           L
-       S           S
-       S  H H   H  S
-       S           S
-       L SSS  SSSS L
-       S           S
-       S  H H   H  S
-       S           S
-       L           L
-       S           S
-       LSSSLSSSLSSSL
-             .
+      
+      
+      
+      
+      
+      
+              
+               LSSSLSSSLSSSL
+               S           S
+               S  H H   H  S
+               S           S
+               L           L
+               S           S
+               S  H H   H  S
+               S           S
+               L SSS  SSSS L
+               S           S
+               S  H H   H  S
+               S           S
+               L           L
+               S           S
+               LSSSLSSSLSSSL
+                     .
   - y5: |
       
-       LSSSLSSSLSSSL
-       S           S
-       S  z z   z  S
-       S           S
-       L           L
-       S           S
-       S  z z   z  S
-       S           S
-       L SSS  SSSS L
-       S           S
-       S  z z   z  S
-       S           S
-       L           L
-       S           S
-       LSSSLSSSLSSSL
-             .
+      
+      
+      
+      
+      
+      
+              
+               LSSSLSSSLSSSL
+               S           S
+               S  z z   z  S
+               S           S
+               L           L
+               S           S
+               S  z z   z  S
+               S           S
+               L SSS  SSSS L
+               S           S
+               S  z z   z  S
+               S           S
+               L           L
+               S           S
+               LSSSLSSSLSSSL
+                     .
   - y6: |
-      ###############
-      ###############
-      ###############
-      ###############
-      ###############
-      ###############
-      ###############
-      ###############
-      ###############
-      ###############
-      ###############
-      ###############
-      ###############
-      ###############
-      ###############
-      ###############
-      ###############
+      
+      
+      
+      
+      
+      
+      
+              ###############
+              ###############
+              ###############
+              ###############
+              ###############
+              ###############
+              ###############
+              ###############
+              ###############
+              ###############
+              ###############
+              ###############
+              ###############
+              ###############
+              ###############
+              ###############
+              ###############
   - y7: |
-      vtvtvtvtvtvtvtv
-      t1333333333332t
-      v1###########2v
-      t1###########2t
-      v1###########2v
-      t1###########2t
-      v1###########2v
-      t1###########2t
-      v1###########2v
-      t1###########2t
-      v1###########2v
-      t1###########2t
-      v1###########2v
-      t1###########2t
-      v1###########2v
-      t1444444444442t
-      vtvtvtvtvtvtvtv
+      
+      
+      
+      
+      
+      
+      
+              vtvtvtvtvtvtvtv
+              t1333333333332t
+              v1###########2v
+              t1###########2t
+              v1###########2v
+              t1###########2t
+              v1###########2v
+              t1###########2t
+              v1###########2v
+              t1###########2t
+              v1###########2v
+              t1###########2t
+              v1###########2v
+              t1###########2t
+              v1###########2v
+              t1444444444442t
+              vtvtvtvtvtvtvtv
   - y8: |
       
       
-        13333333332
-        1#########2
-        1#########2
-        1#########2
-        1#########2
-        1#########2
-        1#########2
-        1#########2
-        1#########2
-        1#########2
-        1#########2
-        1#########2
-        14444444442
       
-             .
+      
+      
+      
+      
+              
+              
+                13333333332
+                1#########2
+                1#########2
+                1#########2
+                1#########2
+                1#########2
+                1#########2
+                1#########2
+                1#########2
+                1#########2
+                1#########2
+                1#########2
+                14444444442
+              
+                     .
   - y9: |
       
       
       
-         133333332
-         1#######2
-         1#######2
-         1#######2
-         1#######2
-         1#######2
-         1#######2
-         1#######2
-         1#######2
-         1#######2
-         144444442
       
       
-             .
+      
+      
+              
+              
+              
+                 133333332
+                 1#######2
+                 1#######2
+                 1#######2
+                 1#######2
+                 1#######2
+                 1#######2
+                 1#######2
+                 1#######2
+                 1#######2
+                 144444442
+              
+              
+                     .
   - y10: |
       
       
       
       
-          1333332
-          1#####2
-          1#####2
-          1#####2
-          1#####2
-          1#####2
-          1#####2
-          1#####2
-          1444442
       
       
       
-             .
+              
+              
+              
+              
+                  1333332
+                  1#####2
+                  1#####2
+                  1#####2
+                  1#####2
+                  1#####2
+                  1#####2
+                  1#####2
+                  1444442
+              
+              
+              
+                     .

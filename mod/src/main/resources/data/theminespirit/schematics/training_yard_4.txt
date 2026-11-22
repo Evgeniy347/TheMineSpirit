@@ -5,8 +5,9 @@ type: social
 stage: 4
 level: 4
 requires: training_yard_3
-size: 17x6x17   # Ш×В×Д
-entrance: 8,1,1
+size: 32x6x32  # Ш×В×Д
+plot: 32x32
+entrance: 15,1,8
 exemptions:
   - rule: roof
     reason: "двор под открытым небом; крыша только над трибуной у уровня 4"
@@ -29,59 +30,80 @@ legend:
   'x': moss_carpet
 layers:
   - y0 площадка и крыльцо: |
-      aaaaaaaapaaaaaaaa
-      aaaaaaaaaaaaaaaaa
-      aaaaaaaaaaaaaaaaa
-      aaaaaaaaaaaaaaaaa
-      aaaaaaaaaaaaaaaaa
-      aaaaaaaaaaaaaaaaa
-      aaaaaaaaaaaaaaaaa
-      aaaaaaaaaaaaaaaaa
-      aaaaaaaaaaaaaaaaa
-      aaaaaaaaaaaaaaaaa
-      aaaaaaaaaa#aaaaaa
-      aaaaaaaaaaaaaaaaa
-      aaaaaaaaaaaaaaaaa
-      aaaaaaaaaaaaaaaaa
-      aaaaaaaaaaaaaa#aa
-      aaaaaaaaaaaaaaaaa
-      aaaaaaaaaaaaaaaaa
+      
+      
+      
+      
+      
+      
+      
+             aaaaaaaapaaaaaaaa
+             aaaaaaaaaaaaaaaaa
+             aaaaaaaaaaaaaaaaa
+             aaaaaaaaaaaaaaaaa
+             aaaaaaaaaaaaaaaaa
+             aaaaaaaaaaaaaaaaa
+             aaaaaaaaaaaaaaaaa
+             aaaaaaaaaaaaaaaaa
+             aaaaaaaaaaaaaaaaa
+             aaaaaaaaaaaaaaaaa
+             aaaaaaaaaa#aaaaaa
+             aaaaaaaaaaaaaaaaa
+             aaaaaaaaaaaaaaaaa
+             aaaaaaaaaaaaaaaaa
+             aaaaaaaaaaaaaa#aa
+             aaaaaaaaaaaaaaaaa
+             aaaaaaaaaaaaaaaaa
   - y1 частокол, чучела, стойки: |
       
-       tttttttDttttttt
-       txxxxxxxxxxxxxt
-       tbbxxxxxxxxxhxt
-       txxxxxxxxxxxbxt
-       txxxxxxxxxxxbxt
-       txxxxxxxxxxxxxt
-       txxxhxxxxxhxxxt
-       txxxxxxxxxxxxxt
-       txxxxxxxxxxxxxt
-       tWxxxxxxxxxxxxt
-       tAxxxxxxxxLxLxt
-       txxxxxxxxxeeext
-       txhxxxxxxxLxLxt
-       txxxxxxxxxxxxxt
-       ttttttttttttttt
-              .
+      
+      
+      
+      
+      
+      
+             
+              tttttttDttttttt
+              txxxxxxxxxxxxxt
+              tbbxxxxxxxxxhxt
+              txxxxxxxxxxxbxt
+              txxxxxxxxxxxbxt
+              txxxxxxxxxxxxxt
+              txxxhxxxxxhxxxt
+              txxxxxxxxxxxxxt
+              txxxxxxxxxxxxxt
+              tWxxxxxxxxxxxxt
+              tAxxxxxxxxLxLxt
+              txxxxxxxxxeeext
+              txhxxxxxxxLxLxt
+              txxxxxxxxxxxxxt
+              ttttttttttttttt
+                     .
   - y2: |
       
-         N   N     N
-      
-       N j         j N
       
       
       
-       N   j     j   N
       
       
       
-                 L L
-      
-       N j       L L N
-      
-         N   N     N
-              .
+             
+                N   N     N
+             
+              N j         j N
+             
+             
+             
+              N   j     j   N
+             
+             
+             
+                        L L
+             
+              N j       L L N
+             
+                N   N     N
+                     .
   - y3: |
       
       
@@ -90,16 +112,23 @@ layers:
       
       
       
-      
-      
-      
-      
-                 L L
-      
-                 L L
-      
-      
-              .
+             
+             
+             
+             
+             
+             
+             
+             
+             
+             
+             
+                        L L
+             
+                        L L
+             
+             
+                     .
   - y4 навес: |
       
       
@@ -108,16 +137,23 @@ layers:
       
       
       
-      
-      
-      
-                #####
-                #####
-                #####
-                #####
-                #####
-      
-              .
+             
+             
+             
+             
+             
+             
+             
+             
+             
+             
+                       #####
+                       #####
+                       #####
+                       #####
+                       #####
+             
+                     .
   - y5: |
       
       
@@ -126,13 +162,20 @@ layers:
       
       
       
-      
-      
-      
-      
-      
-      
-      
-      
-      
-              .
+             
+             
+             
+             
+             
+             
+             
+             
+             
+             
+             
+             
+             
+             
+             
+             
+                     .
