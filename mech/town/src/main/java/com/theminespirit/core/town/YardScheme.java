@@ -20,7 +20,7 @@ public final class YardScheme {
     public static final List<String> FURNACE = List.of("furnace");
     public static final List<String> TORCH = List.of("torch");
     private static final String LEFT = "left";
-    private static final int MAX_OVERFLOW_PAIRS = 16;
+    private static final int MAX_OVERFLOW_PAIRS = 255;
 
     private YardScheme() {}
 
