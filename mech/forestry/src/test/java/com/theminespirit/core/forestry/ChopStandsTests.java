@@ -233,6 +233,28 @@ class ChopStandsTests {
                         + "духу некуда встать. При смене standPoints проверь строку выше в тесте");
     }
 
+    @Test
+    void standPoints_GroundOnlyHighLog_NoClimbStands() {
+        List<BlockCoord> logs = List.of(new BlockCoord(0, 6, 0), new BlockCoord(0, 7, 0), new BlockCoord(0, 8, 0));
+        Tree hanging = new Tree(new BlockCoord(0, 6, 0), logs);
+        TestView view = new TestView(feet -> feet.y() == 1, cell -> cell.y() >= 1 && cell.y() <= 9);
+
+        List<ChopStands.Stand> stands = ChopStands.standPoints(hanging, view, true);
+
+        assertFalse(
+                stands.isEmpty(),
+                "Висящая верхушка рубится с земли: стоянка на поверхности обязана найтись, " + stands + ", иначе "
+                        + "очистка зоны бросает верхние брёвна. При смене groundOnly проверь строку ниже в тесте");
+        assertTrue(
+                stands.stream().allMatch(stand -> stand.climbFrom() == null),
+                "В режиме земли подъёмов нет: ни одна стоянка не несёт опору подмостей, " + stands + ", иначе дух "
+                        + "снова строит столбы. При смене standPoints проверь строку земли ниже в тесте");
+        assertTrue(
+                stands.stream().anyMatch(stand -> stand.feet().equals(new BlockCoord(0, 1, 0))),
+                "Земля прямо под верхушкой — законная стоянка, " + stands + ", иначе духу некуда встать. При "
+                        + "смене groundBelow проверь строку выше в тесте");
+    }
+
     private static ChopStands.View groundAt(int groundY) {
         return new TestView(
                 feet -> feet.y() == groundY && (feet.x() != 0 || feet.z() != 0), cell -> cell.y() == groundY);

@@ -2,6 +2,9 @@
 # Новый файл в механике со сценарной сюитой должен быть сюитой (*ScenarioTests) или сторожем (*GuardTests);
 # если отдельный файл действительно нужен — допиши путь и короткую причину: путь # причина.
 mech/building/com/theminespirit/core/building/BlockMatchTests.java
+mech/forestry/com/theminespirit/core/forestry/TreeShapeSettlementTests.java # режим SETTLEMENT в детекторе: отдельный класс от старого WILD
+mech/forestry/com/theminespirit/core/forestry/TreeCanopyClearanceTests.java # очистка листвы зоны: отдельная сюита от владения кроной
+mech/town/com/theminespirit/core/town/TreeClearanceTests.java # правила клеток зоны вне плана: сторож политики, не сцена
 mech/building/com/theminespirit/core/building/BlockSightTests.java
 mech/building/com/theminespirit/core/building/BlockSupportTests.java
 mech/building/com/theminespirit/core/building/BuildBoxTests.java

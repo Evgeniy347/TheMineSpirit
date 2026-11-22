@@ -9,12 +9,14 @@ import org.jspecify.annotations.Nullable;
 
 final class ChopPursuit {
     private final SpiritEntity spirit;
+    private final boolean groundOnly;
     private final List<BlockPos> used = new ArrayList<>();
     private @Nullable Tree tree;
     private ChopStand.@Nullable Placement current;
 
-    ChopPursuit(SpiritEntity spirit) {
+    ChopPursuit(SpiritEntity spirit, boolean groundOnly) {
         this.spirit = spirit;
+        this.groundOnly = groundOnly;
     }
 
     void begin(Tree target) {
@@ -24,11 +26,11 @@ final class ChopPursuit {
     }
 
     ChopStand.@Nullable Placement first() {
-        return remember(ChopStand.first(spirit, requireTree()));
+        return remember(ChopStand.first(spirit, requireTree(), groundOnly));
     }
 
     ChopStand.@Nullable Placement next(List<BlockCoord> rest) {
-        return remember(ChopStand.next(spirit, requireTree(), rest, used));
+        return remember(ChopStand.next(spirit, requireTree(), rest, used, groundOnly));
     }
 
     @Nullable

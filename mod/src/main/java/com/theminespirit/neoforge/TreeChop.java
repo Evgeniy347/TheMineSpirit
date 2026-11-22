@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge;
 
 import com.mojang.logging.LogUtils;
+import com.theminespirit.core.forestry.ChopMode;
 import com.theminespirit.core.forestry.ChopPlan;
 import com.theminespirit.core.forestry.Tree;
 import com.theminespirit.core.forestry.api.TreeSpecies;
@@ -36,19 +37,19 @@ final class TreeChop {
     private int standingLogs;
     private @Nullable ChopOutcome refusal;
 
-    TreeChop(SpiritEntity spirit, boolean replant, boolean orchard, TreeView view) {
-        this(spirit, replant, orchard, view, null);
+    TreeChop(SpiritEntity spirit, boolean replant, ChopMode mode, TreeView view) {
+        this(spirit, replant, mode, view, null);
     }
 
-    TreeChop(SpiritEntity spirit, boolean replant, boolean orchard, TreeView view, @Nullable String orchardWood) {
+    TreeChop(SpiritEntity spirit, boolean replant, ChopMode mode, TreeView view, @Nullable String orchardWood) {
         this.spirit = spirit;
         this.breaker = new BlockBreaker(spirit);
         this.scaffold = new ChopScaffold(spirit);
-        this.pass = new ChopPass(spirit, view, orchard, breaker);
-        this.ascent = new ChopAscent(spirit, view, pass, scaffold);
-        this.canopy = new ChopCanopy(spirit, view);
-        this.chopReturn =
-                new ChopReturn(spirit, scaffold, new ChopHarvest(spirit, replant, orchard, view, orchardWood));
+        this.pass = new ChopPass(spirit, view, mode, breaker);
+        this.ascent = new ChopAscent(spirit, view, pass, scaffold, mode == ChopMode.SETTLEMENT);
+        this.canopy = new ChopCanopy(spirit, view, mode);
+        this.chopReturn = new ChopReturn(
+                spirit, scaffold, new ChopHarvest(spirit, replant, mode == ChopMode.ORCHARD, view, orchardWood));
     }
 
     void begin(Tree target) {

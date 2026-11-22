@@ -24,6 +24,12 @@ public final class TreeShape {
     }
 
     public static TreeDetection detect(BlockCoord start, TreeView view, boolean allowNoSoil, boolean orchardCare) {
+        return detect(start, view, allowNoSoil, orchardCare ? ChopMode.ORCHARD : ChopMode.WILD);
+    }
+
+    public static TreeDetection detect(BlockCoord start, TreeView view, boolean allowNoSoil, ChopMode mode) {
+        boolean settlement = mode == ChopMode.SETTLEMENT;
+        boolean orchardCare = mode == ChopMode.ORCHARD;
         if (!view.isLog(start)) {
             throw new IllegalArgumentException("Разбор дерева начинается с бревна, а " + start
                     + " бревном не является: поиск обязан подать координату из найденных брёвен");
@@ -39,21 +45,27 @@ public final class TreeShape {
         while (!queue.isEmpty()) {
             BlockCoord current = queue.poll();
             for (BlockCoord neighbour : neighbours(current)) {
+                if (settlement && !withinClearance(start, neighbour)) {
+                    continue;
+                }
                 if (!examined.add(neighbour)) {
                     continue;
                 }
                 if (view.isLog(neighbour)) {
                     logs.add(neighbour);
-                    if (logs.size() > ChopTuning.MAX_LOGS) {
+                    if (!settlement && logs.size() > ChopTuning.MAX_LOGS) {
                         return new NotATree(NotATree.Reason.TOO_BIG, Set.copyOf(logs));
                     }
                     queue.add(neighbour);
-                } else if (view.isNaturalLeaves(neighbour)) {
+                } else if (!settlement && view.isNaturalLeaves(neighbour)) {
                     leaves.add(neighbour);
-                } else if (view.isArtificial(neighbour)) {
+                } else if (!settlement && view.isArtificial(neighbour)) {
                     builtNearby = true;
                 }
             }
+        }
+        if (settlement) {
+            return new Tree(base(logs), List.copyOf(logs));
         }
         if (!hasAllowedExtent(logs)) {
             return new NotATree(NotATree.Reason.TOO_BIG, Set.copyOf(logs));
@@ -127,6 +139,12 @@ public final class TreeShape {
                         .thenComparingInt(BlockCoord::x)
                         .thenComparingInt(BlockCoord::z))
                 .orElseThrow();
+    }
+
+    private static boolean withinClearance(BlockCoord origin, BlockCoord cell) {
+        return Math.abs(cell.x() - origin.x()) <= ChopTuning.CLEARANCE_RADIUS
+                && Math.abs(cell.y() - origin.y()) <= ChopTuning.CLEARANCE_RADIUS
+                && Math.abs(cell.z() - origin.z()) <= ChopTuning.CLEARANCE_RADIUS;
     }
 
     private static boolean hasAllowedExtent(Set<BlockCoord> logs) {
