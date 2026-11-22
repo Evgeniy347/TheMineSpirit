@@ -48,6 +48,10 @@ final class ClearAnchor {
         return best;
     }
 
+    static int reachFor(int spiritHorizontal) {
+        return Math.min(spiritHorizontal, (int) BlockBreaker.REACH);
+    }
+
     static double distanceSqr(BlockCoord from, Stand stand) {
         double dx = from.x() - stand.x();
         double dy = from.y() - stand.y();

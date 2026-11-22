@@ -89,6 +89,21 @@ class ClearAnchorTests {
     }
 
     @Test
+    void reachFor_SpiritHorizontal_WidensToBreakingReach() {
+        assertEquals(
+                4,
+                ClearAnchor.reachFor(7),
+                "Якорь видит стоянки на всю руку ломки, а не на клетку уже: иначе клетка в четырёх по x "
+                        + "считается недостижимой (живой лог 22.11, grass у -178,69,-517), иначе билет падает "
+                        + "вхолостую. При смене reachFor_SpiritHorizontal_WidensToBreakingReach проверь верхнюю границу");
+        assertEquals(
+                2,
+                ClearAnchor.reachFor(2),
+                "Меньший горизонтальный радиус духа не расширяется: иначе якорь обещает охват, которого нет, "
+                        + "и подход валится. При смене reachFor_SpiritHorizontal_WidensToBreakingReach проверь минимум");
+    }
+
+    @Test
     void best_CellsBeyondHorizontalReach_DoNotScore() {
         ClearAnchor.Stand stand = new ClearAnchor.Stand(0, 64, 0);
         List<BlockCoord> cells = List.of(new BlockCoord(REACH + 1, 64, 0));

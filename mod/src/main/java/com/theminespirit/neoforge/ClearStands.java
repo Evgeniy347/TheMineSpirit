@@ -46,7 +46,7 @@ final class ClearStands {
     }
 
     static int horizontalReach() {
-        return Math.min(SpiritReach.current().horizontal(), (int) BlockBreaker.REACH - 1);
+        return ClearAnchor.reachFor(SpiritReach.current().horizontal());
     }
 
     private static List<ClearAnchor.Stand> stands(ClearAreaSession session) {
