@@ -96,26 +96,27 @@ final class BuildScriptSpecs {
                         List.of(
                                 ParamSpec.integer(
                                         "x1",
-                                        true,
+                                        false,
                                         -CatalogLimits.WORLD_HORIZONTAL_LIMIT,
                                         CatalogLimits.WORLD_HORIZONTAL_LIMIT),
-                                ParamSpec.integer("y1", true, CatalogLimits.WORLD_Y_MIN, CatalogLimits.WORLD_Y_MAX),
+                                ParamSpec.integer("y1", false, CatalogLimits.WORLD_Y_MIN, CatalogLimits.WORLD_Y_MAX),
                                 ParamSpec.integer(
                                         "z1",
-                                        true,
+                                        false,
                                         -CatalogLimits.WORLD_HORIZONTAL_LIMIT,
                                         CatalogLimits.WORLD_HORIZONTAL_LIMIT),
                                 ParamSpec.integer(
                                         "x2",
-                                        true,
+                                        false,
                                         -CatalogLimits.WORLD_HORIZONTAL_LIMIT,
                                         CatalogLimits.WORLD_HORIZONTAL_LIMIT),
-                                ParamSpec.integer("y2", true, CatalogLimits.WORLD_Y_MIN, CatalogLimits.WORLD_Y_MAX),
+                                ParamSpec.integer("y2", false, CatalogLimits.WORLD_Y_MIN, CatalogLimits.WORLD_Y_MAX),
                                 ParamSpec.integer(
                                         "z2",
-                                        true,
+                                        false,
                                         -CatalogLimits.WORLD_HORIZONTAL_LIMIT,
                                         CatalogLimits.WORLD_HORIZONTAL_LIMIT),
+                                ParamSpec.textList("boxes", false),
                                 ParamSpec.bool("demolish", false, false),
                                 ParamSpec.bool("keep_ground", false, false)),
                         List.of(),

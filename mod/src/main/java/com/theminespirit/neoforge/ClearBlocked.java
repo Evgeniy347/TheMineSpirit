@@ -156,8 +156,7 @@ final class ClearBlocked {
 
     void approachFailure(ClearAreaSession session) {
         boolean exhausted = session.approachFailures.recordFailure(session.currentStand, session.currentTarget);
-        boolean retry =
-                !exhausted || (session.scaffold != null && session.scaffold.request(List.of(session.currentTarget)));
+        boolean retry = !exhausted;
         if (retry) {
             BlockCoord target = session.currentTarget;
             session.releaseCurrent();

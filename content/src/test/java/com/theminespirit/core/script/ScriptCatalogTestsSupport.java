@@ -233,7 +233,7 @@ class ScriptCatalogTestsSupport {
                                 new long[] {WORLD_MIN, WORLD_MAX})),
                 spec(
                         "clear_area",
-                        List.of("x1", "y1", "z1", "x2", "y2", "z2"),
+                        List.of(),
                         Map.of(
                                 "x1",
                                 new long[] {WORLD_MIN, WORLD_MAX},

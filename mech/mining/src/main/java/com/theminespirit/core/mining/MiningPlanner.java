@@ -32,19 +32,6 @@ public final class MiningPlanner {
         return plan(from, remaining, view, excluded, reachable, false);
     }
 
-    public static Outcome nextReachable(
-            BlockCoord from,
-            List<BlockCoord> remaining,
-            SafetyView view,
-            Set<BlockCoord> excluded,
-            Predicate<BlockCoord> reachable) {
-        Outcome strict = plan(from, remaining, view, excluded, reachable, true);
-        if (strict instanceof Next) {
-            return strict;
-        }
-        return plan(from, remaining, view, excluded, stand -> true, false);
-    }
-
     private static Outcome plan(
             BlockCoord from,
             List<BlockCoord> remaining,

@@ -18,13 +18,11 @@ import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.reload.DataTables;
-import com.theminespirit.core.script.ClearAreaParams;
 import com.theminespirit.core.script.CoreScripts;
 import com.theminespirit.core.script.api.BuildSchematicParams;
 import com.theminespirit.core.script.api.CatalogLimits;
 import com.theminespirit.core.script.api.ConditionCatalog;
 import com.theminespirit.core.script.api.ScriptSpec;
-import com.theminespirit.core.town.ColumnMask;
 import com.theminespirit.core.town.PlotLeveling;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.StageWork;
@@ -34,7 +32,6 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Deque;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -230,23 +227,6 @@ class TicketPlansTests {
     }
 
     @Test
-    void plan_ClearGrounds_StartsAtFeetLevelAndKeepsGround() {
-        BlockCoord home = new BlockCoord(10, 60, -5);
-
-        List<Integer> bottoms =
-                collectCalls(TicketPlans.plan(BoardCase.CLEAR_GROUNDS, TicketTarget.at(home)), "clear_area").stream()
-                        .map(call -> ClearAreaParams.from(call.params()).y1())
-                        .distinct()
-                        .toList();
-
-        assertEquals(
-                List.of(home.y()),
-                bottoms,
-                "Дом — клетка ног: слой y−1 — земля участка; расчистка с y−1 обходила 33×33 блоков земли по одному "
-                        + "и не кончалась до конца дня (приёмка «джунгли») Иначе тест plan_ClearGrounds_StartsAtFeetLevelAndKeepsGround перестанет ловить эту поломку. При смене plan_ClearGrounds_StartsAtFeetLevelAndKeepsGround проверь это утверждение.");
-    }
-
-    @Test
     void plan_LightingOnPlan_EveryPlannedTorchOffHouse() {
         StageSite site = TownFixtures.flatSite();
         TicketTarget target =
@@ -331,35 +311,6 @@ class TicketPlansTests {
                 collectScripts(plan).contains("clear_area"),
                 "Разбор укрытия — существующий clear_area: второй разборочный скрипт "
                         + "не заводим Иначе тест plan_DismantleShelter_ClearsShelter перестанет ловить эту поломку. При смене plan_DismantleShelter_ClearsShelter проверь это утверждение.");
-    }
-
-    @Test
-    void plan_ClearGrounds_EachCallFitsVolumeLimitAndCoversWholeSite() {
-        BlockCoord center = new BlockCoord(10, 60, -5);
-        TaskNode plan = TicketPlans.plan(BoardCase.CLEAR_GROUNDS, TicketTarget.at(center));
-        List<ScriptCall> calls = collectCalls(plan, "clear_area");
-        Set<String> cells = new HashSet<>();
-        for (ScriptCall call : calls) {
-            ClearAreaParams params = ClearAreaParams.from(call.params());
-            for (int x = params.x1(); x <= params.x2(); x++) {
-                for (int y = params.y1(); y <= params.y2(); y++) {
-                    for (int z = params.z1(); z <= params.z2(); z++) {
-                        cells.add(x + ":" + y + ":" + z);
-                    }
-                }
-            }
-        }
-
-        assertTrue(
-                calls.size() > 1,
-                "Расчистка участка 33×33×4 = 4356 больше предела clear_area 4096: одним вызовом "
-                        + "скрипт падает, поэтому план обязан разбить участок на части, а не "
-                        + "оставлять духа в цикле провалов Иначе тест plan_ClearGrounds_EachCallFitsVolumeLimitAndCoversWholeSite перестанет ловить эту поломку. При смене plan_ClearGrounds_EachCallFitsVolumeLimitAndCoversWholeSite проверь это утверждение.");
-        assertEquals(
-                33 * 33 * 4,
-                cells.size(),
-                "Куски расчистки обязаны покрыть весь участок радиуса 16 без дыр: иначе "
-                        + "факты поселения снова увидят деревья и переоткроют кейс При смене plan_ClearGrounds_EachCallFitsVolumeLimitAndCoversWholeSite проверь это утверждение.");
     }
 
     @Test
@@ -926,53 +877,11 @@ class TicketPlansTests {
                 "Запасной путь без деревьев рядом — acquire, а не провал задания Иначе тест plan_GatherJungleLogs_ChopsTreesThenAcquire перестанет ловить эту поломку. При смене plan_GatherJungleLogs_ChopsTreesThenAcquire проверь это утверждение.");
     }
 
-    @Test
-    void plan_ClearQuarter_OnlyItsLevelingBoxes() {
-        BlockCoord anchor = new BlockCoord(0, 64, 0);
-        PlotLeveling leveling = new PlotLeveling(
-                List.of(
-                        new PlotLeveling.Box(-12, 64, -12, -10, 65, -12),
-                        new PlotLeveling.Box(8, 64, -12, 10, 65, -12)),
-                List.of(new PlotLeveling.Box(3, 60, 4, 4, 63, 4)),
-                "dirt");
-        TicketTarget quarter = TicketTarget.at(anchor).withLeveling(leveling).withCount(3);
-        List<ScriptCall> calls = calls(TicketPlans.plan(BoardCase.CLEAR_GROUNDS, quarter));
-        assertEquals(
-                List.of(8),
-                calls.stream()
-                        .filter(call -> "clear_area".equals(call.script())
-                                && call.params().containsKey("y2"))
-                        .filter(call -> Integer.valueOf(65).equals(call.params().get("y2")))
-                        .map(call -> call.params().get("x1"))
-                        .toList(),
-                "Часть 3 (северо-восток) срезает только свой выступ: выравнивание делится между духами, а не идёт "
-                        + "одним духом в первой части (INC-64) Иначе тест plan_ClearQuarter_OnlyItsLevelingBoxes перестанет ловить эту поломку. При смене plan_ClearQuarter_OnlyItsLevelingBoxes проверь это утверждение.");
-        assertTrue(
-                calls.stream().noneMatch(call -> "fill".equals(call.script())),
-                "Подсыпка центральной части 5 не попадает в часть 3 Иначе тест plan_ClearQuarter_OnlyItsLevelingBoxes перестанет ловить эту поломку. При смене plan_ClearQuarter_OnlyItsLevelingBoxes проверь это утверждение.");
-    }
-
-    @Test
-    void plan_ClearWithFillAndCut_NoClearBelowLevelDigsGround() {
-        BlockCoord anchor = new BlockCoord(0, 70, 0);
-        PlotLeveling leveling = PlotLeveling.plan(anchor, square(anchor, 4), (x, z) -> x < 0 ? 64 : x > 2 ? 73 : 70);
-        TicketTarget whole = TicketTarget.at(anchor).withLeveling(leveling);
-        List<ScriptCall> clears = calls(TicketPlans.plan(BoardCase.CLEAR_GROUNDS, whole)).stream()
-                .filter(call -> "clear_area".equals(call.script()))
-                .toList();
-        assertTrue(
-                clears.stream().anyMatch(call -> ((Integer) call.params().get("y1")) < anchor.y()),
-                "В плане есть расчистка ям под уровнем (ствол, кусты в яме): без неё проверка ниже ничего не доказывает Иначе тест plan_ClearWithFillAndCut_NoClearBelowLevelDigsGround перестанет ловить эту поломку. При смене plan_ClearWithFillAndCut_NoClearBelowLevelDigsGround проверь это утверждение.");
-        for (ScriptCall clear : clears) {
-            boolean below = ((Integer) clear.params().get("y1")) < anchor.y();
-            assertEquals(
-                    below,
-                    Boolean.TRUE.equals(clear.params().get("keep_ground")),
-                    "Расчистка ниже уровня участка " + anchor.y() + " — только яма подсыпки и только с keep_ground: "
-                            + "иначе она снимает уже засыпанную землю, дух роет яму посреди участка и падает в неё "
-                            + "(INC-77); срезка выше уровня землю снимает:  При смене plan_ClearWithFillAndCut_NoClearBelowLevelDigsGround проверь это утверждение."
-                            + clear.params());
-        }
+    private static List<String> boxes(ScriptCall call) {
+        Object value = call.params().get("boxes");
+        return value instanceof List<?> list
+                ? list.stream().map(String.class::cast).toList()
+                : List.of();
     }
 
     @Test
@@ -1190,15 +1099,13 @@ class TicketPlansTests {
     @Test
     void plan_ClearGroundsQuarter_OnlyItsChunk() {
         TaskNode quarter = TicketPlans.plan(BoardCase.CLEAR_GROUNDS, target().withCount(2));
+        TaskNode whole = TicketPlans.plan(BoardCase.CLEAR_GROUNDS, target());
         assertEquals(
                 1,
                 collectCalls(quarter, "clear_area").size(),
-                "Часть расчистки — одна часть 3×3: духи чистят участок параллельно, а не один всё Иначе тест plan_ClearGroundsQuarter_OnlyItsChunk перестанет ловить эту поломку. При смене plan_ClearGroundsQuarter_OnlyItsChunk проверь это утверждение.");
+                "Одно задание со всем перечнем: номер части больше не режет расчистку между духами, иначе части снова расходятся по разным духам и поселение стоит. При смене plan_ClearGroundsQuarter_OnlyItsChunk проверь, что вызов расчистки один");
         assertEquals(
-                GroundsPlan.CLEAR_PARTS,
-                collectCalls(TicketPlans.plan(BoardCase.CLEAR_GROUNDS, target()), "clear_area")
-                        .size(),
-                "Без номера четверти — вся расчистка одним заданием Иначе тест plan_ClearGroundsQuarter_OnlyItsChunk перестанет ловить эту поломку. При смене plan_ClearGroundsQuarter_OnlyItsChunk проверь это утверждение.");
+                1, collectCalls(whole, "clear_area").size(), "Вся расчистка — одним заданием с полным списком ящиков");
     }
 
     @Test
@@ -1209,24 +1116,19 @@ class TicketPlansTests {
                 List.of(),
                 "dirt");
         Set<Integer> layers = new TreeSet<>();
-        for (int part = 1; part <= GroundsPlan.CLEAR_PARTS; part++) {
-            TaskNode plan = TicketPlans.plan(
-                    BoardCase.CLEAR_GROUNDS,
-                    TicketTarget.at(anchor).withLeveling(leveling).withCount(part));
-            for (ScriptCall call : collectCalls(plan, "clear_area")) {
-                if (call.params().get("y1").equals(call.params().get("y2"))) {
-                    layers.add((Integer) call.params().get("y1"));
-                }
+        TaskNode plan = TicketPlans.plan(
+                BoardCase.CLEAR_GROUNDS, TicketTarget.at(anchor).withLeveling(leveling));
+        for (ScriptCall call : collectCalls(plan, "clear_area")) {
+            for (String box : boxes(call)) {
+                layers.add(Integer.parseInt(box.split(",", -1)[1]));
             }
         }
         assertEquals(
                 Set.of(64, 65, 66),
                 layers,
-                "Каждый слой срезки остатка выравнивания — в плане какой-то части: иначе холмик в пару колонок "
-                        + "остаётся и выравнивание идёт по кругу (сцена 56) При смене plan_ClearPartsLevelingRemainder_EveryCutLayerInSomePart проверь это утверждение.");
-    }
-
-    private static ColumnMask square(BlockCoord center, int half) {
-        return ColumnMask.rect(center.x() - half, center.z() - half, center.x() + half, center.z() + half);
+                "Каждый слой срезки остатка выравнивания — в перечне задания: иначе холмик в пару колонок "
+                        + "остаётся и выравнивание идёт по кругу (сцена 56). При смене "
+                        + "plan_ClearPartsLevelingRemainder_EveryCutLayerInSomePart проверь средние слои "
+                        + "ящиков срезки");
     }
 }

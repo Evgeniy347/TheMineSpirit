@@ -21,11 +21,8 @@ final class LeaseReach {
     private final LevelSafetyView safety;
     private final ScaffoldReach scaffold;
     private final StandWalk stands;
+    private final LeaseWalk walk;
 
-    private @Nullable ReachApproach walk;
-    private @Nullable BlockCoord walkingTo;
-    private @Nullable BlockCoord walkRefusedFor;
-    private String walkRefusal;
     private @Nullable BlockCoord climbCell;
     private @Nullable BlockCoord climbedFor;
     private @Nullable TunnelReach tunnel;
@@ -40,6 +37,7 @@ final class LeaseReach {
         this.safety = safety;
         this.scaffold = new ScaffoldReach(spirit, "откат аренды");
         this.stands = new StandWalk(spirit);
+        this.walk = new LeaseWalk(spirit);
     }
 
     ScaffoldReach scaffold() {
@@ -47,23 +45,31 @@ final class LeaseReach {
     }
 
     boolean busy() {
-        return retractReady
-                || walkingTo != null
-                || stands.busy()
-                || scaffold.busy()
-                || (tunnel != null && tunnelFor != null);
+        return retractReady || walk.busy() || stands.busy() || scaffold.busy() || (tunnel != null && tunnelFor != null);
     }
 
     Outcome tick(BlockCoord cell) {
+        if (PillarDownScript.ownBelow(spirit)) {
+            if (scaffold.busy()) {
+                ScaffoldReach.Result result = scaffold.tick();
+                if (result == ScaffoldReach.Result.FAILED) {
+                    return failed(scaffold.failureReason(), scaffold.failureFact());
+                }
+                return result == ScaffoldReach.Result.RUNNING ? Outcome.RUNNING : Outcome.READY;
+            }
+            if (cell.y() <= feet().y()) {
+                return scaffoldOutcome(scaffold.stepDown());
+            }
+            return scaffoldOutcome(scaffold.climb(cell.y() - feet().y()));
+        }
         if (retractReady) {
             return retractTick();
         }
         if (stands.busy()) {
             return tickStand();
         }
-        if (walkingTo != null) {
-            Outcome outcome = tickWalk();
-            return walkingTo == null ? outcome : Outcome.RUNNING;
+        if (walk.busy()) {
+            return walk.tick();
         }
         if (scaffold.busy()) {
             ScaffoldReach.Result result = scaffold.tick();
@@ -78,10 +84,10 @@ final class LeaseReach {
         if (cell.y() <= feet().y() && PillarDownScript.ownBelow(spirit)) {
             return scaffoldOutcome(scaffold.stepDown());
         }
-        if (cell.equals(walkRefusedFor) && walkRefusal != null) {
+        if (walk.refused(cell)) {
             return fallback(cell);
         }
-        startWalk(cell);
+        walk.begin(cell);
         return Outcome.RUNNING;
     }
 
@@ -101,9 +107,7 @@ final class LeaseReach {
     }
 
     void cancel() {
-        if (walk != null) {
-            walk.cancel();
-        }
+        walk.cancel();
         stands.cancel();
         scaffold.cancel();
         if (tunnel != null) {
@@ -134,8 +138,7 @@ final class LeaseReach {
             stands.begin(stand);
             return Outcome.RUNNING;
         }
-        walkRefusedFor = null;
-        walkRefusal = null;
+        walk.clearRefusal();
         int rise = cell.y() - feet().y();
         if (rise < 1) {
             return failed("к клетке " + cell + " не подняться со стоянки " + feet() + ": столб не нужен");
@@ -166,7 +169,7 @@ final class LeaseReach {
         tunnel = started;
         tunnelFor = cell;
         tunnelAt = cell;
-        walkRefusal = null;
+        walk.clearRefusal();
         return Outcome.RUNNING;
     }
 
@@ -202,42 +205,6 @@ final class LeaseReach {
         tunnel = null;
         tunnelAt = null;
         retractReady = false;
-        return Outcome.READY;
-    }
-
-    private void startWalk(BlockCoord cell) {
-        if (walk == null) {
-            walk = new ReachApproach(spirit);
-        } else {
-            walk.cancel();
-        }
-        walk.begin(pos(cell));
-        walkingTo = cell;
-        walkRefusedFor = null;
-        walkRefusal = null;
-    }
-
-    private Outcome tickWalk() {
-        ReachApproach current = walk;
-        if (current == null) {
-            walkingTo = null;
-            return Outcome.READY;
-        }
-        Approach.State state = current.tick();
-        if (state == Approach.State.MOVING) {
-            return Outcome.RUNNING;
-        }
-        if (state == Approach.State.STUCK || state == Approach.State.TIMEOUT) {
-            BlockCoord failedTo = walkingTo;
-            walkRefusal = current.refusal() == null ? "путь не найден" : current.refusal();
-            walkingTo = null;
-            current.cancel();
-            walkRefusedFor = failedTo;
-            return Outcome.READY;
-        }
-        walkingTo = null;
-        walkRefusedFor = null;
-        walkRefusal = null;
         return Outcome.READY;
     }
 
@@ -283,9 +250,5 @@ final class LeaseReach {
     private BlockCoord feet() {
         BlockPos feet = spirit.blockPosition();
         return new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
-    }
-
-    private static BlockPos pos(BlockCoord cell) {
-        return new BlockPos(cell.x(), cell.y(), cell.z());
     }
 }

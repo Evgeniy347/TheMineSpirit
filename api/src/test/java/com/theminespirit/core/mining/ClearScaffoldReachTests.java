@@ -68,32 +68,4 @@ class ClearScaffoldReachTests {
                 "Радиус три даёт 28 колонок на семи уровнях: ограничение удерживает стоимость поиска и не расширяется до всего мира"
                         + " Иначе тест bases_ThirdBlockAndDiagonal_StaysWithinCircularReach перестанет ловить эту поломку. При смене bases_ThirdBlockAndDiagonal_StaysWithinCircularReach проверь это утверждение.");
     }
-
-    @Test
-    void surfaceBases_HillAboveSpiritLevel_ReachesTargetSurface() {
-        BlockCoord feet = new BlockCoord(-10, 64, 0);
-        BlockCoord target = new BlockCoord(0, 76, 0);
-        BlockCoord hill = new BlockCoord(-2, 70, 0);
-        assertTrue(
-                ClearScaffold.bases(feet, target, 3).stream().allMatch(cell -> cell.y() <= 67),
-                "Прежний поиск держится за уровень ног духа: поверхность у цели выше полосы «ноги ± радиус» в него "
-                        + "не попадает. Живой случай: столб -175,92..95,-517 оставался «на 24 выше духа»"
-                        + " Иначе тест surfaceBases_HillAboveSpiritLevel_ReachesTargetSurface перестанет ловить эту поломку. При смене surfaceBases_HillAboveSpiritLevel_ReachesTargetSurface проверь это утверждение.");
-        int[] checks = {0};
-        List<BlockCoord> bases = ClearScaffold.surfaceBases(feet, target, 3, cell -> {
-            checks[0]++;
-            return cell.equals(hill);
-        });
-        assertEquals(
-                List.of(hill),
-                bases,
-                "Основание подмостей — верхняя стоянка столбца у цели, даже если она выше духа: с неё дух ставит "
-                        + "короткий столб и достаёт клетку"
-                        + " Иначе тест surfaceBases_HillAboveSpiritLevel_ReachesTargetSurface перестанет ловить эту поломку. При смене surfaceBases_HillAboveSpiritLevel_ReachesTargetSurface проверь это утверждение.");
-        assertTrue(
-                checks[0] <= 28 * (target.y() - feet.y()),
-                "Поиск поверхности читает не больше одной стоянки на уровень каждого из 28 столбцов. Чтений: "
-                        + checks[0]
-                        + " Иначе тест surfaceBases_HillAboveSpiritLevel_ReachesTargetSurface перестанет ловить эту поломку. При смене surfaceBases_HillAboveSpiritLevel_ReachesTargetSurface проверь это утверждение.");
-    }
 }

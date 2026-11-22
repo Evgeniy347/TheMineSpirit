@@ -110,42 +110,6 @@ public final class ClearScaffold {
         return List.copyOf(bases);
     }
 
-    // lib: дух в яме стоит ниже поверхности у цели, и полоса оснований «ноги ± радиус» её не достаёт —
-    // lib: живой случай: столб -175,92..95,-517 оставался «на 24 выше духа — не подняться».
-    public static List<BlockCoord> surfaceBases(
-            BlockCoord feet, BlockCoord target, int radius, Predicate<BlockCoord> standable) {
-        Objects.requireNonNull(feet, "Клетка ног не может быть null: от неё считается полоса оснований");
-        Objects.requireNonNull(target, "Клетка цели не может быть null: без неё нет столбца оснований");
-        Objects.requireNonNull(standable, "Проверка стоянки не может быть null: без неё не найти поверхность");
-        if (radius < 1) {
-            throw new IllegalArgumentException("Радиус " + radius + " меньше 1: оснований у цели нет");
-        }
-        List<BlockCoord> bases = new ArrayList<>();
-        int top = Math.min(feet.y() + radius, target.y() - 1);
-        for (int dx = -radius; dx <= radius; dx++) {
-            for (int dz = -radius; dz <= radius; dz++) {
-                if (dx * dx + dz * dz > radius * radius || (dx == 0 && dz == 0)) {
-                    continue;
-                }
-                for (int y = target.y() - 1; y > top; y--) {
-                    BlockCoord base = new BlockCoord(target.x() + dx, y, target.z() + dz);
-                    if (standable.test(base)) {
-                        bases.add(base);
-                        break;
-                    }
-                }
-            }
-        }
-        bases.sort(Comparator.comparingLong((BlockCoord cell) -> {
-                    long dx = (long) cell.x() - feet.x();
-                    long dy = (long) cell.y() - feet.y();
-                    long dz = (long) cell.z() - feet.z();
-                    return dx * dx + dy * dy + dz * dz;
-                })
-                .thenComparing(Comparator.naturalOrder()));
-        return List.copyOf(bases);
-    }
-
     public static @Nullable BlockCoord highest(List<BlockCoord> cells) {
         Objects.requireNonNull(cells, "Клетки целей не могут быть null: пустой список задают пустым");
         BlockCoord best = null;

@@ -19,11 +19,8 @@ import java.util.List;
 import java.util.Map;
 
 public final class GroundsPlan {
-    public static final int CLEAR_PARTS = BoardConfig.current().plans().clearGrid()
-            * BoardConfig.current().plans().clearGrid();
+    public static final int CLEAR_PARTS = 1;
     private static final int DIRT_SOURCE_GAP = 4;
-    private static final int CUT_SLACK = 12;
-    private static final int FILL_SLACK = 40;
     private static final String CLEAR_AREA = "clear_area";
 
     private GroundsPlan() {}
@@ -79,40 +76,27 @@ public final class GroundsPlan {
 
     public static TaskNode plan(TicketTarget target) {
         Frame frame = frame(target);
-        int quarter = target.count();
-        boolean single = quarter >= 1 && quarter <= CLEAR_PARTS;
         List<TaskNode> steps = new ArrayList<>();
         PlotLeveling leveling = target.leveling() == null ? PlotLeveling.FLAT : target.leveling();
-        List<PlotLeveling.Box> cuts = leveling.cutTopDown();
-        List<Integer> cutPart = balancedParts(cuts, frame, CUT_SLACK);
+        List<PlotLeveling.Box> cuts = new ArrayList<>(leveling.cutTopDown());
+        cuts.addAll(chunks(target, frame));
         if (!cuts.isEmpty()) {
             steps.add(GatherPlans.shovel());
-        }
-        for (int index = 0; index < cuts.size(); index++) {
-            if (!single || cutPart.get(index) == quarter) {
-                steps.add(retried(new ScriptCall(CLEAR_AREA, boxParams(cuts.get(index), Map.of()))));
-            }
+            steps.add(retried(new ScriptCall(CLEAR_AREA, boxesParams(cuts, Map.of()))));
         }
         if (!cuts.isEmpty()) {
             steps.add(retried(new ScriptCall(
                     "collect_drops", Map.of("radius", CatalogLimits.DROP_RADIUS_MAX, "filter", dropFilter(leveling)))));
         }
-        List<PlotLeveling.Box> fills = single ? ofPart(leveling.fill(), frame, quarter) : leveling.fill();
+        List<PlotLeveling.Box> fills = leveling.fill();
         for (PlotLeveling.Box box : fills) {
             steps.add(retried(new ScriptCall(CLEAR_AREA, boxParams(box, Map.of("keep_ground", true)))));
         }
-        BlockCoord source = dirtSource(target, single ? quarter : 1);
-        List<PlotLeveling.Box> voids = leveling.voids().stream()
-                .filter(box -> !single || frame.part(box.x1(), box.z1()) == quarter)
-                .toList();
+        BlockCoord source = dirtSource(target, 1);
+        List<PlotLeveling.Box> voids = leveling.voids();
         List<FillOrder.Box> pits = new ArrayList<>(FillOrder.layers(fills));
         pits.addAll(FillOrder.layers(voids));
         steps.addAll(fillSteps(leveling, pits, source, frame.y()));
-        for (PlotLeveling.Box chunk : chunks(target, frame)) {
-            if (!single || frame.part(chunk.x1(), chunk.z1()) == quarter) {
-                steps.add(new ScriptCall(CLEAR_AREA, boxParams(chunk, Map.of())));
-            }
-        }
         return new SequenceNode(steps);
     }
 
@@ -191,45 +175,6 @@ public final class GroundsPlan {
                         source.z())));
     }
 
-    private static List<PlotLeveling.Box> ofPart(List<PlotLeveling.Box> boxes, Frame frame, int part) {
-        List<Integer> parts = balancedParts(boxes, frame, FILL_SLACK);
-        List<PlotLeveling.Box> mine = new ArrayList<>();
-        for (int index = 0; index < boxes.size(); index++) {
-            if (parts.get(index) == part) {
-                mine.add(boxes.get(index));
-            }
-        }
-        return mine;
-    }
-
-    static List<Integer> balancedParts(List<PlotLeveling.Box> cuts, Frame frame, int slack) {
-        int[] load = new int[CLEAR_PARTS + 1];
-        List<Integer> parts = new ArrayList<>(cuts.size());
-        for (PlotLeveling.Box box : cuts) {
-            int home = frame.part(box.x1(), box.z1());
-            int least = Integer.MAX_VALUE;
-            for (int part = 1; part <= CLEAR_PARTS; part++) {
-                least = Math.min(least, load[part]);
-            }
-            int chosen = home;
-            int bestDistance = Integer.MAX_VALUE;
-            for (int part = 1; part <= CLEAR_PARTS; part++) {
-                int distance = Math.abs((part - 1)
-                                        % BoardConfig.current().plans().clearGrid()
-                                - (home - 1) % BoardConfig.current().plans().clearGrid())
-                        + Math.abs((part - 1) / BoardConfig.current().plans().clearGrid()
-                                - (home - 1) / BoardConfig.current().plans().clearGrid());
-                if (load[part] <= least + slack && distance < bestDistance) {
-                    chosen = part;
-                    bestDistance = distance;
-                }
-            }
-            load[chosen] += box.volume();
-            parts.add(chosen);
-        }
-        return parts;
-    }
-
     private static List<String> dropFilter(PlotLeveling leveling) {
         String dirt = NamespacedId.MINECRAFT + PlotLeveling.DEFAULT_BLOCK;
         String block = leveling.block().contains(":") ? leveling.block() : NamespacedId.MINECRAFT + leveling.block();
@@ -247,6 +192,16 @@ public final class GroundsPlan {
         params.put("x2", box.x2());
         params.put("y2", box.y2());
         params.put("z2", box.z2());
+        return Map.copyOf(params);
+    }
+
+    private static Map<String, Object> boxesParams(List<PlotLeveling.Box> boxes, Map<String, Object> extra) {
+        Map<String, Object> params = new LinkedHashMap<>(extra);
+        List<String> list = new ArrayList<>(boxes.size());
+        for (PlotLeveling.Box box : boxes) {
+            list.add(box.x1() + "," + box.y1() + "," + box.z1() + "," + box.x2() + "," + box.y2() + "," + box.z2());
+        }
+        params.put("boxes", List.copyOf(list));
         return Map.copyOf(params);
     }
 

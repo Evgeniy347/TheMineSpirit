@@ -4,6 +4,7 @@ import com.mojang.logging.LogUtils;
 import com.theminespirit.core.building.BuildReservations;
 import com.theminespirit.core.building.BuildResult;
 import com.theminespirit.core.building.api.BuildBox;
+import com.theminespirit.core.engine.FailureFact;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.forestry.api.TreeSpecies;
 import com.theminespirit.core.mining.ApproachFailureTracker;
@@ -11,6 +12,7 @@ import com.theminespirit.core.mining.BreakSkipTally;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -29,7 +31,10 @@ public class ClearAreaSession {
         PICK,
         APPROACH,
         BREAK,
-        COLLECT
+        COLLECT,
+        PILLAR,
+        DESCEND,
+        UNLOAD
     }
 
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -39,11 +44,14 @@ public class ClearAreaSession {
     protected final Level level;
     protected final BuildBox box;
     protected final List<BlockCoord> remaining;
+    final int planned;
     protected final LevelSafetyView safety;
     protected final BlockBreaker breaker;
     protected final Approach approach;
     protected final BuildReservations reservations;
     protected final ClearTargets targets;
+    String neededTool;
+    FailureFact failureFact;
 
     protected State state = State.PICK;
     protected Outcome outcome = Outcome.RUNNING;
@@ -69,15 +77,21 @@ public class ClearAreaSession {
     final DemolitionPermit permit;
     final ClearBlocked blocked;
     final TreeFelling felling;
-    ClearScaffoldWork scaffold;
     private final Map<State, Integer> phaseTicks = new EnumMap<>(State.class);
-    private ClearAreaRun run;
+    private ClearSweepRun run;
 
     public ClearAreaSession(SpiritEntity spirit, BuildBox box, boolean demolish, boolean keepGround) {
+        this(spirit, List.of(box), demolish, keepGround);
+    }
+
+    public ClearAreaSession(SpiritEntity spirit, List<BuildBox> boxes, boolean demolish, boolean keepGround) {
         this.spirit = spirit;
         this.level = spirit.level();
-        this.box = box;
-        this.remaining = new ArrayList<>(box.cellsBottomUp());
+        this.box = bounds(boxes);
+        LinkedHashSet<BlockCoord> cells = new LinkedHashSet<>();
+        boxes.forEach(box -> cells.addAll(box.cellsBottomUp()));
+        this.planned = cells.size();
+        this.remaining = new ArrayList<>(cells);
         this.safety = new LevelSafetyView(level);
         this.breaker = new BlockBreaker(spirit);
         this.approach = new Approach(spirit);
@@ -91,9 +105,30 @@ public class ClearAreaSession {
         this.felling.extend(remaining);
     }
 
-    private ClearAreaRun runner() {
+    private static BuildBox bounds(List<BuildBox> boxes) {
+        if (boxes.isEmpty()) {
+            throw new IllegalArgumentException("Список ящиков расчистки пуст: чистить нечего");
+        }
+        int minX = Integer.MAX_VALUE;
+        int minY = Integer.MAX_VALUE;
+        int minZ = Integer.MAX_VALUE;
+        int maxX = Integer.MIN_VALUE;
+        int maxY = Integer.MIN_VALUE;
+        int maxZ = Integer.MIN_VALUE;
+        for (BuildBox box : boxes) {
+            minX = Math.min(minX, box.minX());
+            minY = Math.min(minY, box.minY());
+            minZ = Math.min(minZ, box.minZ());
+            maxX = Math.max(maxX, box.maxX());
+            maxY = Math.max(maxY, box.maxY());
+            maxZ = Math.max(maxZ, box.maxZ());
+        }
+        return BuildBox.of(minX, minY, minZ, maxX, maxY, maxZ);
+    }
+
+    private ClearSweepRun runner() {
         if (run == null) {
-            run = new ClearAreaRun(this);
+            run = new ClearSweepRun(this);
         }
         return run;
     }
@@ -109,6 +144,9 @@ public class ClearAreaSession {
             case APPROACH -> runner().approachTick();
             case BREAK -> runner().breakTick();
             case COLLECT -> collectTick();
+            case PILLAR -> runner().pillarTick();
+            case DESCEND -> runner().descentTick();
+            case UNLOAD -> runner().unloadTick();
         }
         return outcome;
     }
@@ -126,10 +164,6 @@ public class ClearAreaSession {
         if (collector != null) collector.suspend();
     }
 
-    public boolean picking() {
-        return state == State.PICK && outcome == Outcome.RUNNING;
-    }
-
     public Outcome outcome() {
         return outcome;
     }
@@ -139,8 +173,7 @@ public class ClearAreaSession {
     }
 
     public ScriptInstance.Progress progress() {
-        int total = Math.max(ClearSummary.volume(box), 1);
-        return new ScriptInstance.Progress(Math.min(removed + skippedTotal(), total), total);
+        return ClearProgress.progress(this);
     }
 
     public int skippedTotal() {
@@ -152,29 +185,6 @@ public class ClearAreaSession {
                 + restoredSkipped
                 + excludedSkipped
                 + breakSkips.total();
-    }
-
-    public Map<String, Object> resultData() {
-        return tally.toData();
-    }
-
-    public Map<String, Object> saveState() {
-        return ClearState.save(removed, skippedTotal(), outcome == Outcome.RUNNING);
-    }
-
-    public void restoreState(Map<String, Object> saved) {
-        ClearState.Restored state = ClearState.restore(saved);
-        removed = Math.max(removed, state.removed());
-        restoredSkipped = Math.max(restoredSkipped, state.skipped());
-        for (int i = 0; i < state.removed(); i++) {
-            tally.removed();
-        }
-        for (int i = 0; i < state.skipped(); i++) {
-            tally.skipped();
-        }
-        for (int i = 0; i < state.failed(); i++) {
-            tally.failed();
-        }
     }
 
     void collectTick() {
@@ -259,26 +269,21 @@ public class ClearAreaSession {
         return outcome;
     }
 
+    protected Outcome fail(String reason, FailureFact fact) {
+        failureFact = fact;
+        return fail(reason);
+    }
+
+    void needTool(String item) {
+        neededTool = item;
+    }
+
     void releaseCurrent() {
         if (currentTarget != null) {
             reservations.release(currentTarget, spirit.getUUID());
             currentTarget = null;
         }
         currentStand = null;
-    }
-
-    boolean retryOtherStand() {
-        if (currentTarget == null) {
-            return false;
-        }
-        BlockCoord target = currentTarget;
-        if (currentStand != null) {
-            approachFailures.excludeStand(currentStand, target);
-        }
-        releaseCurrent();
-        remaining.add(0, target);
-        state = State.PICK;
-        return true;
     }
 
     void noteSkipped(int count) {

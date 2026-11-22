@@ -10,7 +10,6 @@ import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.script.BlockPointParams;
 import com.theminespirit.core.script.BuildFarmParams;
 import com.theminespirit.core.script.BuildFenceParams;
-import com.theminespirit.core.script.ClearAreaParams;
 import com.theminespirit.core.script.DigDescentParams;
 import com.theminespirit.core.script.FillCraterParams;
 import com.theminespirit.core.script.FillParams;
@@ -40,7 +39,7 @@ final class BuildingScriptPack extends SpiritScriptPack {
                 "fill_crater",
                 spirit -> params ->
                         new FillCraterScript(spirit, CraterResolver.resolve(spirit, FillCraterParams.from(params))));
-        put("clear_area", spirit -> params -> new ClearAreaScript(spirit, ClearAreaParams.from(params)));
+        put("clear_area", spirit -> params -> new ClearAreaScript(spirit, params));
         put(
                 "place_descent_stairs",
                 spirit -> params -> new PlaceDescentStairsScript(spirit, DigDescentParams.from(params)));

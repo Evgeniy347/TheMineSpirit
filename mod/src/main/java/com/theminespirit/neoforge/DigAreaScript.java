@@ -31,7 +31,7 @@ final class DigAreaScript implements ScriptInstance {
     @Override
     public Optional<ScriptResult> result() {
         return session.outcome() == ClearAreaSession.Outcome.SUCCEEDED
-                ? Optional.of(new ScriptResult.Data(session.resultData()))
+                ? Optional.of(new ScriptResult.Data(session.tally.toData()))
                 : Optional.empty();
     }
 
@@ -52,11 +52,11 @@ final class DigAreaScript implements ScriptInstance {
 
     @Override
     public Map<String, Object> saveState() {
-        return session.saveState();
+        return ClearProgress.save(session);
     }
 
     @Override
     public void restoreState(Map<String, Object> state) {
-        session.restoreState(state);
+        ClearProgress.restore(session, state);
     }
 }

@@ -138,9 +138,11 @@ public final class UndoLeaseScript implements ScriptInstance {
         if (steps == null || cursor >= steps.size()) {
             return ScriptStatus.RUNNING;
         }
-        LOGGER.info("[lease] откат {} пропустил клетку {}: {}", leaseId, cell, reason);
-        complete(steps.get(cursor), pos(cell));
-        return ScriptStatus.RUNNING;
+        LOGGER.info("[lease] откат {} остановлен на клетке {}: {}", leaseId, cell, reason);
+        return fail(
+                "откат аренды не добрался до клетки " + cell + ": " + reason
+                        + "; аренда остаётся брошенной, клетку возьмёт расчистка или следующий откат",
+                FailureFact.NO_PATH);
     }
 
     private boolean attach() {
