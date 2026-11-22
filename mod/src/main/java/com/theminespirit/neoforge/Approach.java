@@ -119,7 +119,8 @@ public final class Approach {
             Path path = spirit.getNavigation().getPath();
             String descent = mode == PathMode.CAREFUL && spirit.onGround()
                     ? CarefulPath.refusal(path)
-                    : CarefulPath.descentRefusal(path, (int) Math.floor(spirit.getY()), (int) Math.floor(goal.y));
+                    : CarefulPath.descentRefusal(
+                            path, (int) Math.floor(spirit.getY()), (int) Math.floor(goal.y), spirit.level());
             if (descent != null) {
                 if (mode != PathMode.CAREFUL && rescued(target)) return State.MOVING;
                 refusal = descent;

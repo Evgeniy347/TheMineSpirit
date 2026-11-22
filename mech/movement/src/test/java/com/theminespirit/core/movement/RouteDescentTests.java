@@ -52,4 +52,24 @@ class RouteDescentTests {
                 "Даже 10 блоков ниже цели — уже ловушка: предел " + RouteDescent.MAX_BELOW + " блоков"
                         + " Иначе тест surfaceGoal_PathDropsTenBlocks_Refused перестанет ловить эту поломку. При смене surfaceGoal_PathDropsTenBlocks_Refused проверь это утверждение.");
     }
+
+    @Test
+    void swimNodes_BelowShore_Ignored() {
+        assertNull(
+                RouteDescent.refusalOf(
+                        63, 63, List.of(new RouteDescent.Height(62, true), new RouteDescent.Height(54, true))),
+                "Переправа вплавь: дно русла ниже берега на 9 блоков — это вода, а не яма, спуск разрешён"
+                        + " Иначе тест swimNodes_BelowShore_Ignored перестанет ловить эту поломку. При смене swimNodes_BelowShore_Ignored проверь это утверждение.");
+    }
+
+    @Test
+    void dryCaveNode_BesideSwimNodes_Refused() {
+        String refusal = RouteDescent.refusalOf(
+                63, 63, List.of(new RouteDescent.Height(62, true), new RouteDescent.Height(50, false)));
+
+        assertTrue(
+                refusal != null && refusal.contains("50"),
+                "Сухой узел на y=50 под водой — настоящая пещерная ловушка: отказ сохраняется"
+                        + " Иначе тест dryCaveNode_BesideSwimNodes_Refused перестанет ловить эту поломку. При смене dryCaveNode_BesideSwimNodes_Refused проверь это утверждение.");
+    }
 }
