@@ -67,7 +67,7 @@ class TownRoutesTests {
     }
 
     @Test
-    void post_Edits_RepeatedRequestId_ReplaysWithoutSecondCall() {
+    void edits_RepeatedRequestId_ReplayWithoutSecondCall() {
         String payload = editBody("edit-replay", "barn");
         RestResponse first = send("POST", "/v1/town/edits", payload);
 
@@ -77,16 +77,16 @@ class TownRoutesTests {
                 first.body(),
                 replay.body(),
                 "Повтор request_id обязан вернуть прежний ответ: " + replay.body()
-                        + " Иначе тест post_Edits_RepeatedRequestId_ReplaysWithoutSecondCall перестанет ловить эту поломку. При смене post_Edits_RepeatedRequestId_ReplaysWithoutSecondCall проверь это утверждение.");
+                        + " Иначе тест edits_RepeatedRequestId_ReplayWithoutSecondCall перестанет ловить эту поломку. При смене edits_RepeatedRequestId_ReplayWithoutSecondCall проверь это утверждение.");
         assertEquals(
                 1,
                 gateway.edits().size(),
                 "Повтор request_id не должен применяться к миру второй раз: " + gateway.edits()
-                        + " Иначе тест post_Edits_RepeatedRequestId_ReplaysWithoutSecondCall перестанет ловить эту поломку. При смене post_Edits_RepeatedRequestId_ReplaysWithoutSecondCall проверь это утверждение.");
+                        + " Иначе тест edits_RepeatedRequestId_ReplayWithoutSecondCall перестанет ловить эту поломку. При смене edits_RepeatedRequestId_ReplayWithoutSecondCall проверь это утверждение.");
     }
 
     @Test
-    void post_Edits_SameRequestIdDifferentBody_Conflicts() {
+    void edits_SameRequestIdDifferentBody_ConflictedResponse() {
         send("POST", "/v1/town/edits", editBody("edit-conflict", "barn"));
 
         RestResponse conflict = send("POST", "/v1/town/edits", editBody("edit-conflict", "hut"));
@@ -95,30 +95,30 @@ class TownRoutesTests {
                 409,
                 conflict.status(),
                 "Тот же request_id с другим телом обязан давать 409: " + conflict.body()
-                        + " Иначе тест post_Edits_SameRequestIdDifferentBody_Conflicts перестанет ловить эту поломку. При смене post_Edits_SameRequestIdDifferentBody_Conflicts проверь это утверждение.");
+                        + " Иначе тест edits_SameRequestIdDifferentBody_ConflictedResponse перестанет ловить эту поломку. При смене edits_SameRequestIdDifferentBody_ConflictedResponse проверь это утверждение.");
         assertTrue(
                 conflict.body().contains("\"conflict\""),
                 "Ответ 409 обязан называть код conflict: " + conflict.body()
-                        + " Иначе тест post_Edits_SameRequestIdDifferentBody_Conflicts перестанет ловить эту поломку. При смене post_Edits_SameRequestIdDifferentBody_Conflicts проверь это утверждение.");
+                        + " Иначе тест edits_SameRequestIdDifferentBody_ConflictedResponse перестанет ловить эту поломку. При смене edits_SameRequestIdDifferentBody_ConflictedResponse проверь это утверждение.");
     }
 
     @Test
-    void post_Edits_MissingRequestId_RejectedAsInvalidRequest() {
+    void edits_MissingRequestId_RejectedAsBadRequest() {
         RestResponse failure = send("POST", "/v1/town/edits", "{\"ops\":[]}");
 
         assertEquals(
                 400,
                 failure.status(),
                 "Правка без request_id — структурная ошибка тела, а не плана: " + failure.body()
-                        + " Иначе тест post_Edits_MissingRequestId_RejectedAsInvalidRequest перестанет ловить эту поломку. При смене post_Edits_MissingRequestId_RejectedAsInvalidRequest проверь это утверждение.");
+                        + " Иначе тест edits_MissingRequestId_RejectedAsBadRequest перестанет ловить эту поломку. При смене edits_MissingRequestId_RejectedAsBadRequest проверь это утверждение.");
         assertTrue(
                 failure.body().contains("request_id"),
                 "Ошибка обязана называть пропущенное поле request_id: " + failure.body()
-                        + " Иначе тест post_Edits_MissingRequestId_RejectedAsInvalidRequest перестанет ловить эту поломку. При смене post_Edits_MissingRequestId_RejectedAsInvalidRequest проверь это утверждение.");
+                        + " Иначе тест edits_MissingRequestId_RejectedAsBadRequest перестанет ловить эту поломку. При смене edits_MissingRequestId_RejectedAsBadRequest проверь это утверждение.");
     }
 
     @Test
-    void post_Edits_FailedApply_AllowsRetryWithSameRequestId() {
+    void edits_FailedApply_AllowsRetry() {
         gateway.withFailure(new ApiException(ErrorCode.INVALID_PLAN, "участок 'barn' накладывается на 'storage'"));
         String payload = editBody("edit-retry", "barn");
         RestResponse failed = send("POST", "/v1/town/edits", payload);
@@ -130,17 +130,17 @@ class TownRoutesTests {
                 422,
                 failed.status(),
                 "Наложение участков обязано давать 422 invalid_plan: " + failed.body()
-                        + " Иначе тест post_Edits_FailedApply_AllowsRetryWithSameRequestId перестанет ловить эту поломку. При смене post_Edits_FailedApply_AllowsRetryWithSameRequestId проверь это утверждение.");
+                        + " Иначе тест edits_FailedApply_AllowsRetry перестанет ловить эту поломку. При смене edits_FailedApply_AllowsRetry проверь это утверждение.");
         assertEquals(
                 200,
                 retry.status(),
                 "После отказа плана тот же request_id обязан приниматься заново: " + retry.body()
-                        + " Иначе тест post_Edits_FailedApply_AllowsRetryWithSameRequestId перестанет ловить эту поломку. При смене post_Edits_FailedApply_AllowsRetryWithSameRequestId проверь это утверждение.");
+                        + " Иначе тест edits_FailedApply_AllowsRetry перестанет ловить эту поломку. При смене edits_FailedApply_AllowsRetry проверь это утверждение.");
         assertEquals(
                 2,
                 gateway.edits().size(),
                 "Неудачная правка не должна запоминаться как применённая: " + gateway.edits()
-                        + " Иначе тест post_Edits_FailedApply_AllowsRetryWithSameRequestId перестанет ловить эту поломку. При смене post_Edits_FailedApply_AllowsRetryWithSameRequestId проверь это утверждение.");
+                        + " Иначе тест edits_FailedApply_AllowsRetry перестанет ловить эту поломку. При смене edits_FailedApply_AllowsRetry проверь это утверждение.");
     }
 
     @Test
