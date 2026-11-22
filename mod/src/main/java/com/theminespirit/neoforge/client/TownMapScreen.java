@@ -39,6 +39,7 @@ public final class TownMapScreen extends Screen {
     private static final int CHIP_BG = 0xFF171B21;
     private static final int CHIP_ACTIVE = 0xFF262116;
     private static final int DOCK_WIDTH = 212;
+    private static final int DOCK_MIN_SCREEN = 860;
     private static final int DOCK_GAP = 8;
     private static final int MARKER_TICKS = 20;
 
@@ -247,6 +248,9 @@ public final class TownMapScreen extends Screen {
 
     private void drawDock(GuiGraphics graphics) {
         BoardLayout.Rect dock = dock();
+        if (dock.width() == 0) {
+            return;
+        }
         graphics.fill(dock.x(), dock.y(), dock.right(), dock.bottom(), 0xF00F1216);
         graphics.fill(dock.x(), dock.y(), dock.x() + 1, dock.bottom(), LINE);
         int x = dock.x() + 10;
@@ -424,14 +428,22 @@ public final class TownMapScreen extends Screen {
 
     private BoardLayout.Rect mapArea() {
         BoardLayout.Rect body = body();
-        int dock = Math.min(DOCK_WIDTH, Math.max(0, body.width() - 120));
-        return new BoardLayout.Rect(body.x(), body.y(), Math.max(1, body.width() - dock - DOCK_GAP), body.height());
+        int dock = dockWidth(body);
+        int gap = dock > 0 ? DOCK_GAP : 0;
+        return new BoardLayout.Rect(body.x(), body.y(), Math.max(1, body.width() - dock - gap), body.height());
     }
 
     private BoardLayout.Rect dock() {
         BoardLayout.Rect body = body();
-        int dock = Math.min(DOCK_WIDTH, Math.max(0, body.width() - 120));
+        int dock = dockWidth(body);
         return new BoardLayout.Rect(body.right() - dock, body.y(), dock, body.height());
+    }
+
+    private int dockWidth(BoardLayout.Rect body) {
+        if (width < DOCK_MIN_SCREEN) {
+            return 0;
+        }
+        return Math.min(DOCK_WIDTH, Math.max(0, body.width() - 120));
     }
 
     private TownMapView.Bounds mapBounds(TownMapView current) {

@@ -7,6 +7,7 @@ import com.theminespirit.core.ui.ScreenTabs;
 import com.theminespirit.core.ui.SettlementTree;
 import com.theminespirit.core.ui.SettlementTreeStyle;
 import com.theminespirit.core.ui.ShellLayout;
+import com.theminespirit.core.ui.TreeDock;
 import com.theminespirit.core.ui.TreeViewport;
 import com.theminespirit.neoforge.net.SettlementTreeChannel;
 import java.util.ArrayList;
@@ -28,6 +29,7 @@ public final class SettlementTreeScreen extends Screen {
     private static final int STAGE_HEIGHT = 16;
     private static final int DEFAULT_STAGES = 4;
     private static final int DOCK_WIDTH = 236;
+    private static final int DOCK_MIN_SCREEN = 860;
     private static final int DOCK_GAP = 8;
     private static final int MUTED = 0xFF98A0AB;
     private static final int DIM = 0xFF6B7480;
@@ -228,12 +230,16 @@ public final class SettlementTreeScreen extends Screen {
     }
 
     private void drawDock(GuiGraphics graphics, @Nullable SettlementTree model) {
-        BoardLayout.Rect dock = dock();
-        graphics.fill(dock.x(), dock.y(), dock.right(), dock.bottom(), 0xF00F1216);
-        graphics.fill(dock.x(), dock.y(), dock.x() + 1, dock.bottom(), LINE);
-        int x = dock.x() + 10;
-        int width = dock.width() - 20;
-        int y = dock.y() + 8;
+        BoardLayout.Rect panel = dock();
+        if (panel.width() == 0) {
+            return;
+        }
+        TreeDock dock = TreeDock.of(panel);
+        graphics.fill(panel.x(), panel.y(), panel.right(), panel.bottom(), 0xF00F1216);
+        graphics.fill(panel.x(), panel.y(), panel.x() + 1, panel.bottom(), LINE);
+        int x = dock.content().x();
+        int width = dock.content().width();
+        int y = dock.content().y();
         if (model == null) {
             graphics.drawString(font, Component.translatable(KEY + "loading"), x, y, DIM, false);
             return;
@@ -316,12 +322,21 @@ public final class SettlementTreeScreen extends Screen {
         }
         graphics.drawString(font, Component.translatable(KEY + "dock.objects").getString(), x, y, DIM, false);
         y += 12;
+        int rows = dock.rows(y);
+        int shown = 0;
         for (SettlementTree.Node node : model.nodes()) {
-            if (y + 18 > dock.bottom() - 24) {
+            if (shown >= rows) {
                 graphics.drawString(
-                        font, Component.translatable(KEY + "dock.more", 1).getString(), x, y, DIM, false);
+                        font,
+                        Component.translatable(KEY + "dock.more", model.nodes().size() - shown)
+                                .getString(),
+                        x,
+                        y,
+                        DIM,
+                        false);
                 break;
             }
+            shown++;
             boolean on = node.id().equals(selectedNodeId);
             if (on) {
                 graphics.fill(x - 3, y - 2, x + width + 3, y + 14, 0x14E0B050);
@@ -344,9 +359,12 @@ public final class SettlementTreeScreen extends Screen {
         }
         graphics.drawString(
                 font,
-                TextClip.text(font, Component.translatable(KEY + "dock.legend"), width),
-                x,
-                dock.bottom() - 14,
+                TextClip.text(
+                        font,
+                        Component.translatable(KEY + "dock.legend"),
+                        dock.legend().width()),
+                dock.legend().x(),
+                dock.legend().y(),
                 DIM,
                 false);
     }
@@ -403,14 +421,22 @@ public final class SettlementTreeScreen extends Screen {
 
     private BoardLayout.Rect treeArea() {
         BoardLayout.Rect body = ShellLayout.of(width, height).body();
-        int dock = Math.min(DOCK_WIDTH, Math.max(0, body.width() - 120));
-        return new BoardLayout.Rect(body.x(), body.y(), Math.max(1, body.width() - dock - DOCK_GAP), body.height());
+        int dock = dockWidth(body);
+        int gap = dock > 0 ? DOCK_GAP : 0;
+        return new BoardLayout.Rect(body.x(), body.y(), Math.max(1, body.width() - dock - gap), body.height());
     }
 
     private BoardLayout.Rect dock() {
         BoardLayout.Rect body = ShellLayout.of(width, height).body();
-        int dock = Math.min(DOCK_WIDTH, Math.max(0, body.width() - 120));
+        int dock = dockWidth(body);
         return new BoardLayout.Rect(body.right() - dock, body.y(), dock, body.height());
+    }
+
+    private int dockWidth(BoardLayout.Rect body) {
+        if (width < DOCK_MIN_SCREEN) {
+            return 0;
+        }
+        return Math.min(DOCK_WIDTH, Math.max(0, body.width() - 120));
     }
 
     private BoardLayout.Rect stageRect(int stage) {

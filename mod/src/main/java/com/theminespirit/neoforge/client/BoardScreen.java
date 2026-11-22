@@ -2,6 +2,7 @@ package com.theminespirit.neoforge.client;
 
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.ui.BoardColumns;
+import com.theminespirit.core.ui.BoardDock;
 import com.theminespirit.core.ui.BoardFeed;
 import com.theminespirit.core.ui.BoardFilter;
 import com.theminespirit.core.ui.BoardLayout;
@@ -257,12 +258,12 @@ public final class BoardScreen extends Screen {
         if (!layout.hasDock()) {
             return;
         }
-        BoardLayout.Rect dock = layout.dock();
-        graphics.fill(dock.x(), dock.y(), dock.right(), dock.bottom(), 0xF00F1216);
-        graphics.fill(dock.x(), dock.y(), dock.x() + 1, dock.bottom(), LINE);
-        int x = dock.x() + 10;
-        int width = dock.width() - 20;
-        int y = dock.y() + 9;
+        BoardLayout.Rect panel = layout.dock();
+        BoardDock dock = BoardDock.of(panel);
+        graphics.fill(panel.x(), panel.y(), panel.right(), panel.bottom(), 0xF00F1216);
+        graphics.fill(panel.x(), panel.y(), panel.x() + 1, panel.bottom(), LINE);
+        int x = dock.content().x();
+        int y = dock.content().y();
         appendText(graphics, Component.translatable(KEY + "dock.title"), x, y, DIM);
         y += 13;
         BoardTile tile = selectedTile();
@@ -298,7 +299,7 @@ public final class BoardScreen extends Screen {
                     y + 2,
                     bad ? 0xFFFF9C9C : MUTED);
             y += 15;
-            if (y + 60 > dock.bottom()) {
+            if (y + 60 > panel.bottom()) {
                 break;
             }
         }
@@ -332,22 +333,22 @@ public final class BoardScreen extends Screen {
                 appendText(graphics, spent, x, y, MUTED);
             }
         }
-        int buttonsY = dock.bottom() - 26;
-        int buttonWidth = (width - 6) / 2;
+        BoardLayout.Rect map = dock.mapButton();
+        BoardLayout.Rect tree = dock.treeButton();
         button(
                 graphics,
                 font,
-                x,
-                buttonsY,
-                buttonWidth,
+                map.x(),
+                map.y(),
+                map.width(),
                 Component.translatable(KEY + "dock.map"),
                 () -> Minecraft.getInstance().setScreen(new TownMapScreen()));
         button(
                 graphics,
                 font,
-                x + buttonWidth + 6,
-                buttonsY,
-                buttonWidth,
+                tree.x(),
+                tree.y(),
+                tree.width(),
                 Component.translatable(KEY + "dock.tree"),
                 () -> Minecraft.getInstance().setScreen(new SettlementTreeScreen()));
     }

@@ -3,6 +3,8 @@ package com.theminespirit.neoforge.client;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.town.SettlementReach;
+import com.theminespirit.core.ui.BoardLayout;
+import com.theminespirit.core.ui.CraftLayout;
 import com.theminespirit.core.ui.RefreshClock;
 import com.theminespirit.core.ui.ScreenTabs;
 import com.theminespirit.neoforge.crafting.ItemIds;
@@ -29,14 +31,6 @@ import org.lwjgl.glfw.GLFW;
 
 public final class CraftTerminalScreen extends AbstractContainerScreen<CraftTerminalMenu> {
     private static final String KEY = ModIdentity.MOD_ID + ".craft.";
-    private static final int WIDTH = 360;
-    private static final int HEIGHT = 256;
-    private static final int LIST_X = 8;
-    private static final int LIST_Y = 20;
-    private static final int SEARCH_WIDTH = 162;
-    private static final int PANEL_X = 184;
-    private static final int PANEL_WIDTH = 166;
-    private static final int BUTTON_HEIGHT = 14;
     private static final int REFRESH_TICKS = 20;
     private static final int BACKGROUND = 0xFFC6C6C6;
     private static final int BORDER = 0xFF555555;
@@ -62,18 +56,25 @@ public final class CraftTerminalScreen extends AbstractContainerScreen<CraftTerm
 
     public CraftTerminalScreen(CraftTerminalMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
-        imageWidth = WIDTH;
-        imageHeight = HEIGHT;
+        imageWidth = CraftLayout.WIDTH;
+        imageHeight = CraftLayout.HEIGHT;
     }
 
     @Override
     protected void init() {
         super.init();
-        list.place(leftPos + LIST_X, topPos + LIST_Y);
-        chain.place(leftPos + PANEL_X, topPos + 96, PANEL_WIDTH, 100);
+        list.place(leftPos + CraftLayout.LIST_X, topPos + CraftLayout.LIST_Y);
+        BoardLayout.Rect chainPanel = CraftLayout.panel();
+        chain.place(leftPos + chainPanel.x(), topPos + chainPanel.y(), chainPanel.width(), chainPanel.height());
         ScreenTabButtons.add(this::addRenderableWidget, width, ScreenTabs.Tab.CRAFT);
+        BoardLayout.Rect searchBox = CraftLayout.search();
         EditBox box = new EditBox(
-                font, leftPos + LIST_X, topPos + 4, SEARCH_WIDTH, 14, Component.translatable(KEY + "search"));
+                font,
+                leftPos + searchBox.x(),
+                topPos + searchBox.y(),
+                searchBox.width(),
+                searchBox.height(),
+                Component.translatable(KEY + "search"));
         box.setHint(Component.translatable(KEY + "search.placeholder"));
         box.setMaxLength(64);
         box.setValue(query);
@@ -83,8 +84,6 @@ public final class CraftTerminalScreen extends AbstractContainerScreen<CraftTerm
             SearchSync.publish(text);
         });
         search = addRenderableWidget(box);
-        int panel = leftPos + PANEL_X;
-        int modeWidth = (PANEL_WIDTH - 4) / 3;
         modeButtons.clear();
         StockPanel.Mode[] modes = StockPanel.Mode.values();
         for (int index = 0; index < modes.length; index++) {
@@ -92,24 +91,32 @@ public final class CraftTerminalScreen extends AbstractContainerScreen<CraftTerm
             Button.Builder builder = Button.builder(
                             Component.translatable(KEY + "tab." + mode.name().toLowerCase(Locale.ROOT)),
                             pressed -> setMode(mode))
-                    .bounds(panel + index * (modeWidth + 2), topPos + 30, modeWidth, BUTTON_HEIGHT);
+                    .bounds(
+                            leftPos + CraftLayout.modeTab(index).x(),
+                            topPos + CraftLayout.modeTab(index).y(),
+                            CraftLayout.modeTab(index).width(),
+                            CraftLayout.modeTab(index).height());
             ShellTabButton button = new ShellTabButton(builder, list.mode() == mode);
             button.active = list.mode() != mode;
             modeButtons.put(mode, button);
             addRenderableWidget(button);
         }
+        BoardLayout.Rect raise = CraftLayout.button(CraftLayout.RAISE_Y);
         sortButton = addRenderableWidget(Button.builder(sortLabel(), pressed -> cycleSort())
-                .bounds(panel, topPos + 48, PANEL_WIDTH, BUTTON_HEIGHT)
+                .bounds(leftPos + raise.x(), topPos + raise.y(), raise.width(), raise.height())
                 .build());
+        BoardLayout.Rect clear = CraftLayout.button(CraftLayout.CLEAR_Y);
         addRenderableWidget(
                 Button.builder(Component.translatable(KEY + "clear"), pressed -> send(Action.of(Kind.CLEAR)))
-                        .bounds(panel, topPos + 64, PANEL_WIDTH, BUTTON_HEIGHT)
+                        .bounds(leftPos + clear.x(), topPos + clear.y(), clear.width(), clear.height())
                         .build());
+        BoardLayout.Rect craftRow = CraftLayout.button(CraftLayout.CRAFT_Y);
         craftButton = addRenderableWidget(Button.builder(Component.translatable(KEY + "make"), pressed -> craft(false))
-                .bounds(panel, topPos + 200, PANEL_WIDTH, BUTTON_HEIGHT)
+                .bounds(leftPos + craftRow.x(), topPos + craftRow.y(), craftRow.width(), craftRow.height())
                 .build());
+        BoardLayout.Rect maxRow = CraftLayout.button(CraftLayout.MAX_Y);
         maxButton = addRenderableWidget(Button.builder(Component.translatable(KEY + "make_max"), pressed -> craft(true))
-                .bounds(panel, topPos + 216, PANEL_WIDTH, BUTTON_HEIGHT)
+                .bounds(leftPos + maxRow.x(), topPos + maxRow.y(), maxRow.width(), maxRow.height())
                 .build());
         updateButtons();
         send(Action.of(Kind.REFRESH));
@@ -335,7 +342,12 @@ public final class CraftTerminalScreen extends AbstractContainerScreen<CraftTerm
                 ? BAD
                 : chain.reply().map(CraftTerminalChannel.ChainReply::feasible).orElse(false) ? GOOD : 0xFF8A5A00;
         graphics.drawString(
-                font, TextClip.text(font, reason, PANEL_WIDTH), leftPos + PANEL_X, topPos + 232, reasonColor, false);
+                font,
+                TextClip.text(font, reason, CraftLayout.PANEL_WIDTH),
+                leftPos + CraftLayout.PANEL_X,
+                topPos + CraftLayout.REASON_Y,
+                reasonColor,
+                false);
     }
 
     @Override
@@ -343,8 +355,8 @@ public final class CraftTerminalScreen extends AbstractContainerScreen<CraftTerm
         Component status = statusText();
         graphics.drawString(
                 font,
-                TextClip.text(font, status, PANEL_WIDTH),
-                PANEL_X,
+                TextClip.text(font, status, CraftLayout.PANEL_WIDTH),
+                CraftLayout.PANEL_X,
                 6,
                 verdict == SettlementReach.Verdict.ALLOWED ? GOOD : BAD,
                 false);

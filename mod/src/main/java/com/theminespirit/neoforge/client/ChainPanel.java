@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.client;
 
 import com.theminespirit.core.ModIdentity;
+import com.theminespirit.core.ui.ChainRows;
 import com.theminespirit.neoforge.terminal.CraftTerminalChannel;
 import java.util.List;
 import java.util.Optional;
@@ -11,7 +12,6 @@ import net.minecraft.network.chat.Component;
 final class ChainPanel {
     private static final String KEY = ModIdentity.MOD_ID + ".craft.";
     private static final int LINE = 10;
-    private static final int MAX_ITEM_LINES = 3;
     private static final int TEXT_COLOR = 0xFF404040;
     private static final int MUTED = 0xFF6A6A6A;
     private static final int GOOD_COLOR = 0xFF2E7D32;
@@ -104,10 +104,9 @@ final class ChainPanel {
         int line = top;
         graphics.drawString(font, title.getString(), x, line, color, false);
         line += 10;
-        for (int index = 0; index < lines.size() && index < MAX_ITEM_LINES; index++) {
-            if (line + LINE > y + height) {
-                return line;
-            }
+        int available = Math.max(0, (y + height - line) / LINE);
+        ChainRows rows = ChainRows.of(lines.size(), available);
+        for (int index = 0; index < rows.shown(); index++) {
             CraftTerminalChannel.Line item = lines.get(index);
             graphics.renderItem(item.sample(), x, line - 1);
             graphics.drawString(
@@ -123,15 +122,9 @@ final class ChainPanel {
                     false);
             line += 10;
         }
-        if (lines.size() > MAX_ITEM_LINES && line + LINE <= y + height) {
+        if (rows.more() && line + LINE <= y + height) {
             graphics.drawString(
-                    font,
-                    Component.translatable(KEY + "more", lines.size() - MAX_ITEM_LINES)
-                            .getString(),
-                    x + 14,
-                    line,
-                    MUTED,
-                    false);
+                    font, Component.translatable(KEY + "more", rows.hidden()).getString(), x + 14, line, MUTED, false);
             line += 10;
         }
         return line + 4;
