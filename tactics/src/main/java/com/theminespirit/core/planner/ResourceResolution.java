@@ -1,5 +1,8 @@
 package com.theminespirit.core.planner;
 
+import com.theminespirit.core.forestry.api.ChopTuning;
+import com.theminespirit.core.forestry.api.TreeSpecies;
+import com.theminespirit.core.plan.FallbackNode;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
@@ -81,10 +84,39 @@ final class ResourceResolution {
     }
 
     private TaskNode gatherPlan(String item, int count, boolean topLevel) {
-        Optional<TaskNode> tool = toolStep(knowledge.gatherBlockFor(item));
+        String block = knowledge.gatherBlockFor(item);
         TaskNode gather = batched("gather", item, count, topLevel);
-        return tool.map(step -> (TaskNode) new SequenceNode(List.of(step, gather)))
+        TaskNode plan = speciesOf(block)
+                .map(species -> (TaskNode) new FallbackNode(List.of(chop(species, treesFor(count)), gather)))
                 .orElse(gather);
+        return toolStep(block)
+                .map(step -> (TaskNode) new SequenceNode(List.of(step, plan)))
+                .orElse(plan);
+    }
+
+    private static Optional<TreeSpecies> speciesOf(String block) {
+        String qualified = block.indexOf(':') < 0 ? "minecraft:" + block : block;
+        return TreeSpecies.ofLog(qualified);
+    }
+
+    private static int treesFor(int count) {
+        int estimated = (count + ChopTuning.LOGS_PER_TREE - 1) / ChopTuning.LOGS_PER_TREE;
+        return Math.min(CatalogLimits.COUNT_MAX, Math.max(1, estimated));
+    }
+
+    private static ScriptCall chop(TreeSpecies species, int trees) {
+        // lib: без пересадки — добыча материалов не должна падать после рубки из-за отсутствия саженцев.
+        return new ScriptCall(
+                "chop_tree",
+                Map.of(
+                        "species",
+                        species.id(),
+                        COUNT,
+                        trees,
+                        RADIUS,
+                        CatalogLimits.HARVEST_RADIUS_MAX,
+                        "replant",
+                        false));
     }
 
     private Optional<TaskNode> toolStep(String block) {

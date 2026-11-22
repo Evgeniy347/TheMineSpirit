@@ -3,6 +3,7 @@ package com.theminespirit.core.planner;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.plan.FallbackNode;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
@@ -64,16 +65,17 @@ class FirstToolsChainTests {
         List<ScriptCall> calls = flatten(plan);
         assertEquals(
                 3,
-                producedCount(calls, "gather", "oak_log"),
-                "От пустого инвентаря кирке нужны ровно 3 бревна: 1 на доски кирки, 1 на палки, 1 на верстак. "
-                        + "Больше — лишний груз, меньше — крафт упрётся в нехватку. План: " + calls
+                producedCount(calls, "chop_tree", "oak"),
+                "От пустого инвентаря кирке нужны три шага добычи дерева: на доски кирки, на палки и на верстак. "
+                        + "Меньше — крафт упрётся в нехватку, а поштучный gather снова валил бы ствол снизу вверх. "
+                        + "План: " + calls
                         + " Иначе тест resolve_EmptyInventoryToWoodenPickaxe_PlanIsMinimalAndTableComesFirst перестанет ловить эту поломку. При смене resolve_EmptyInventoryToWoodenPickaxe_PlanIsMinimalAndTableComesFirst проверь это утверждение.");
         assertTrue(
                 indexOf(calls, "craft", "crafting_table") < indexOf(calls, "craft", "wooden_pickaxe"),
                 "Верстак обязан быть скрафчен раньше кирки: без станции крафт 3×3 невозможен. План: " + calls
                         + " Иначе тест resolve_EmptyInventoryToWoodenPickaxe_PlanIsMinimalAndTableComesFirst перестанет ловить эту поломку. При смене resolve_EmptyInventoryToWoodenPickaxe_PlanIsMinimalAndTableComesFirst проверь это утверждение.");
         assertTrue(
-                indexOf(calls, "gather", "oak_log") < indexOf(calls, "craft", "crafting_table"),
+                indexOf(calls, "chop_tree", "oak") < indexOf(calls, "craft", "crafting_table"),
                 "Брёвна для верстака добываются до его крафта: иначе скрафтить станцию не из чего. План: " + calls
                         + " При смене resolve_EmptyInventoryToWoodenPickaxe_PlanIsMinimalAndTableComesFirst проверь это утверждение.");
         assertEquals(
@@ -252,7 +254,13 @@ class FirstToolsChainTests {
         if (!call.script().equals(script)) {
             return false;
         }
-        Object name = call.params().get("gather".equals(script) ? "block" : "item");
+        Object name = call.params()
+                .get(
+                        switch (script) {
+                            case "gather" -> "block";
+                            case "chop_tree" -> "species";
+                            default -> "item";
+                        });
         return item.equals(name);
     }
 
@@ -272,6 +280,8 @@ class FirstToolsChainTests {
     private static void collect(TaskNode node, List<ScriptCall> calls) {
         if (node instanceof SequenceNode sequence) {
             sequence.steps().forEach(step -> collect(step, calls));
+        } else if (node instanceof FallbackNode fallback) {
+            collect(fallback.steps().get(0), calls);
         } else if (node instanceof ScriptCall call) {
             calls.add(call);
         } else {

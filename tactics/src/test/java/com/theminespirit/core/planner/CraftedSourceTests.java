@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.plan.FallbackNode;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
@@ -52,7 +53,7 @@ class CraftedSourceTests {
         TaskNode plan = CorePlanner.resolve(PLANKS, 8, knowledge);
 
         assertEquals(
-                new SequenceNode(List.of(gather("oak_log", 2), craft(PLANKS, 8))),
+                new SequenceNode(List.of(wood("oak_log", 2), craft(PLANKS, 8))),
                 plan,
                 "Живой рецепт обязан побеждать сбор размещённых досок: 2 бревна дают 8 досок крафтом"
                         + " Иначе тест resolve_CraftedPlanksWithRecipe_CraftsFromLogs перестанет ловить эту поломку. При смене resolve_CraftedPlanksWithRecipe_CraftsFromLogs проверь это утверждение.");
@@ -205,6 +206,14 @@ class CraftedSourceTests {
     private static ScriptCall gather(String block, int count) {
         int radius = block.endsWith("_log") ? CatalogLimits.HARVEST_RADIUS_MAX : CatalogLimits.HARVEST_RADIUS_DEFAULT;
         return new ScriptCall("gather", Map.of("block", block, "count", count, "radius", radius));
+    }
+
+    private static TaskNode wood(String block, int count) {
+        int trees = Math.min(CatalogLimits.COUNT_MAX, Math.max(1, (count + 3) / 4));
+        ScriptCall chop = new ScriptCall(
+                "chop_tree",
+                Map.of("species", "oak", "count", trees, "radius", CatalogLimits.HARVEST_RADIUS_MAX, "replant", false));
+        return new FallbackNode(List.of(chop, gather(block, count)));
     }
 
     private static ScriptCall craft(String item, int count) {

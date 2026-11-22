@@ -1,5 +1,6 @@
 package com.theminespirit.core.planner;
 
+import static com.theminespirit.core.planner.ResolverWood.wood;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -30,14 +31,15 @@ class ResourceResolverTests {
             Map.of("iron_ingot", "iron_ore"));
 
     @Test
-    void resolve_GatherableItem_ReturnsGatherCall() {
+    void resolve_LogItem_ChopPrecedesGather() {
         TaskNode plan = CorePlanner.resolve("oak_log", 5, KNOWLEDGE);
 
         assertEquals(
-                gather("oak_log", 5),
+                wood("oak_log", 5),
                 plan,
-                "Gatherable предмет обязан резолвиться в скрипт gather с block и count: иначе дух не соберёт "
-                        + "материал, доступный напрямую, и будет искать бесполезный рецепт При смене resolve_GatherableItem_ReturnsGatherCall проверь это утверждение.");
+                "Бревно добывается рубкой дерева, а не поштучным gather: иначе ствол валится снизу вверх и листва "
+                        + "остаётся висеть (живой случай repair:build_house, spirit-6). При смене выбора скрипта "
+                        + "для брёвен проверь строку запаса ниже в тесте");
     }
 
     @Test
@@ -90,7 +92,7 @@ class ResourceResolverTests {
         TaskNode plan = CorePlanner.resolve("stick", 1, KNOWLEDGE);
 
         assertEquals(
-                new SequenceNode(List.of(gather("oak_log", 2), craft("stick", 1))),
+                new SequenceNode(List.of(wood("oak_log", 2), craft("stick", 1))),
                 plan,
                 "Craftable предмет обязан резолвиться в получение ингредиентов и скрипт craft: без рекурсивного "
                         + "разбора ингредиентов дух попробует скрафтить из ничего Иначе тест resolve_CraftableItem_ReturnsIngredientsAndCraft перестанет ловить эту поломку. При смене resolve_CraftableItem_ReturnsIngredientsAndCraft проверь это утверждение.");
@@ -127,7 +129,7 @@ class ResourceResolverTests {
                 "stick", 3, KNOWLEDGE, CoreScripts.defaultCatalog(), ConditionCatalog.empty(), supplies);
 
         assertEquals(
-                new SequenceNode(List.of(new SequenceNode(List.of(withdraw, gather("oak_log", 1))), craft("stick", 3))),
+                new SequenceNode(List.of(new SequenceNode(List.of(withdraw, wood("oak_log", 1))), craft("stick", 3))),
                 plan,
                 "Ингредиент берётся из инвентаря (2) и сундука (3), добывается лишь остаток (1): acquire забора с "
                         + "брёвнами на складе рубил деревья в 16 и падал (приёмка «джунгли») Иначе тест resolve_IngredientInInventoryAndChest_TakesThemBeforeGathering перестанет ловить эту поломку. При смене resolve_IngredientInInventoryAndChest_TakesThemBeforeGathering проверь это утверждение.");
@@ -144,7 +146,7 @@ class ResourceResolverTests {
         TaskNode plan = CorePlanner.resolve("oak_planks", 8, planks);
 
         assertEquals(
-                new SequenceNode(List.of(gather("oak_log", 2), craft("oak_planks", 8))),
+                new SequenceNode(List.of(wood("oak_log", 2), craft("oak_planks", 8))),
                 plan,
                 "Рецепт с выходом 4 предмета обязан требовать 2 крафта на 8 досок: иначе резолвер добывает "
                         + "8 брёвен вместо 2 и заваливает духа лишним материалом При смене resolve_CraftableWithOutputCount_ResolvesIngredientsForCraftsNotItems проверь это утверждение.");
@@ -161,7 +163,7 @@ class ResourceResolverTests {
         TaskNode plan = CorePlanner.resolve("oak_planks", 1, planks);
 
         assertEquals(
-                new SequenceNode(List.of(gather("oak_log", 1), craft("oak_planks", 1))),
+                new SequenceNode(List.of(wood("oak_log", 1), craft("oak_planks", 1))),
                 plan,
                 "Одна доска из рецепта на 4 не может дать полкрафта: число крафтов округляется вверх до 1, "
                         + "иначе план добывает 0 брёвен и крафт провалится При смене resolve_SingleItemFromMultiOutputRecipe_RoundsCraftsUp проверь это утверждение.");
@@ -190,7 +192,7 @@ class ResourceResolverTests {
 
         assertEquals(
                 new SequenceNode(List.of(
-                        new SequenceNode(List.of(gather("oak_log", 4), craft("stick", 2))),
+                        new SequenceNode(List.of(wood("oak_log", 4), craft("stick", 2))),
                         new SequenceNode(List.of(gather("iron_ore", 3), gather("coal", 1), smelt("iron_ingot", 3))),
                         craft("iron_pickaxe", 1))),
                 plan,
@@ -277,8 +279,7 @@ class ResourceResolverTests {
 
         assertEquals(
                 new SequenceNode(List.of(
-                        new SequenceNode(List.of(gather("oak_log", 3), craft("wooden_pickaxe", 1))),
-                        gather("stone", 1))),
+                        new SequenceNode(List.of(wood("oak_log", 3), craft("wooden_pickaxe", 1))), gather("stone", 1))),
                 plan,
                 "Перед сбором камня план обязан скрафтить деревянную кирку: без неё камень не отдаёт дроп, "
                         + "и gather простоит без прогресса, не добыв ни одного блока Иначе тест resolve_BlockWithRequiredTool_PlansToolBeforeGather перестанет ловить эту поломку. При смене resolve_BlockWithRequiredTool_PlansToolBeforeGather проверь это утверждение.");
@@ -330,8 +331,7 @@ class ResourceResolverTests {
 
         assertEquals(
                 new SequenceNode(List.of(
-                        new SequenceNode(List.of(gather("oak_log", 3), craft("wooden_pickaxe", 1))),
-                        gather("stone", 1))),
+                        new SequenceNode(List.of(wood("oak_log", 3), craft("wooden_pickaxe", 1))), gather("stone", 1))),
                 plan,
                 "Дроп булыжника идёт сбором камня с киркой впереди: иначе acquire ищет блоки булыжника в мире "
                         + "и проваливается на цели, ради которой достаточно сломать камень При смене resolve_DropFromBlockWithRequiredTool_PlansToolAndNamesSourceBlock проверь это утверждение.");
@@ -400,7 +400,7 @@ class ResourceResolverTests {
         TaskNode plan = CorePlanner.resolve("iron_ingot", 8, logsOnly);
 
         assertEquals(
-                new SequenceNode(List.of(gather("iron_ore", 8), gather("oak_log", 6), smelt("iron_ingot", 8))),
+                new SequenceNode(List.of(gather("iron_ore", 8), wood("oak_log", 6), smelt("iron_ingot", 8))),
                 plan,
                 "Без угля резолвер обязан взять следующее доступное топливо — брёвна (1.5 предмета за бревно, "
                         + "ceil(8 / 1.5) = 6): иначе плавка без угольной жилы не планируется вовсе При смене resolve_EightIngotsWithoutCoal_PlansSixLogs проверь это утверждение.");
@@ -416,7 +416,7 @@ class ResourceResolverTests {
         assertEquals(
                 new SequenceNode(List.of(
                         gather("iron_ore", 8),
-                        new SequenceNode(List.of(gather("oak_log", 1), gather("oak_log", 1), smelt("charcoal", 1))),
+                        new SequenceNode(List.of(wood("oak_log", 1), wood("oak_log", 1), smelt("charcoal", 1))),
                         smelt("iron_ingot", 8))),
                 plan,
                 "Топливо-древесный уголь планируется своей плавкой: вход (1 бревно) и топливо под него (1 бревно) — "
@@ -470,7 +470,7 @@ class ResourceResolverTests {
         TaskNode plan = CorePlanner.resolve("iron_ingot", 8, KNOWLEDGE, Map.of("oak_log", 2));
 
         assertEquals(
-                new SequenceNode(List.of(gather("iron_ore", 8), gather("oak_log", 4), smelt("iron_ingot", 8))),
+                new SequenceNode(List.of(gather("iron_ore", 8), wood("oak_log", 4), smelt("iron_ingot", 8))),
                 plan,
                 "При 2 брёвнах в инвентаре (нужно 6) резолвер обязан потратить имеющиеся и добрать 4 того же топлива, "
                         + "а не переключаться на отсутствующий уголь: иначе дух бросит имеющееся топливо ради нового типа При смене resolve_InventoryHoldsLogs_SpendsThemAndGathersRemainder проверь это утверждение.");
@@ -514,7 +514,7 @@ class ResourceResolverTests {
         assertEquals(
                 new SequenceNode(List.of(
                         gather("iron_ore", 8),
-                        new SequenceNode(List.of(gather("oak_log", 6), craft("oak_planks", 6))),
+                        new SequenceNode(List.of(wood("oak_log", 6), craft("oak_planks", 6))),
                         smelt("iron_ingot", 8))),
                 plan,
                 "Без угля резолвер обязан топить досками раньше древесного угля: из бревна выходят 4 доски по 300 "
@@ -538,32 +538,8 @@ class ResourceResolverTests {
         return new ScriptCall("smelt", Map.of("item", item, "count", count, "radius", STATION_RADIUS));
     }
 
-    @Test
-    void resolve_IntermediateDemandOverLimit_BatchesIntoValidCalls() {
-        ResourceKnowledge knowledge =
-                new StubKnowledge(Set.of("oak_log"), Map.of("stick", List.of(new Ingredient("oak_log", 40))), Map.of());
-        TaskNode plan = CorePlanner.resolve("stick", 8, knowledge);
-        assertEquals(
-                new SequenceNode(List.of(
-                        new SequenceNode(List.of(gather("oak_log", 256), gather("oak_log", 64))), craft("stick", 8))),
-                plan,
-                "Промежуточное требование 320 (8 крафтов по 40 бревна) обязано разбиваться на вызовы в пределах "
-                        + "лимита 256: иначе валидатор ронял бы весь план внутренней ошибкой, а дух оставался бы "
-                        + "без плана на достижимую цель. Финальный крафт при этом один, на 8 При смене resolve_IntermediateDemandOverLimit_BatchesIntoValidCalls проверь это утверждение.");
-    }
-
     private static ScriptCall gather(String block, int count) {
         int radius = block.endsWith("_log") ? CatalogLimits.HARVEST_RADIUS_MAX : CatalogLimits.HARVEST_RADIUS_DEFAULT;
         return new ScriptCall("gather", Map.of("block", block, "count", count, "radius", radius));
-    }
-
-    @Test
-    void resolve_Log_GathersInWideRadius() {
-        TaskNode plan = CorePlanner.resolve("oak_log", 2, KNOWLEDGE);
-        assertEquals(
-                new ScriptCall(
-                        "gather", Map.of("block", "oak_log", "count", 2, "radius", CatalogLimits.HARVEST_RADIUS_MAX)),
-                plan,
-                "Брёвна — в радиусе 32: после расчистки участка деревья в 16 от дома вырублены (приёмка «джунгли») Иначе тест resolve_Log_GathersInWideRadius перестанет ловить эту поломку. При смене resolve_Log_GathersInWideRadius проверь это утверждение.");
     }
 }

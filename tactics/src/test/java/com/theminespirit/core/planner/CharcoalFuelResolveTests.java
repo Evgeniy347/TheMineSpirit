@@ -29,8 +29,8 @@ class CharcoalFuelResolveTests {
 
         assertEquals(
                 new SequenceNode(List.of(
-                        gather("oak_log", 1),
-                        new SequenceNode(List.of(gather("oak_log", 1), craft("oak_planks", 1))),
+                        wood("oak_log", 1),
+                        new SequenceNode(List.of(wood("oak_log", 1), craft("oak_planks", 1))),
                         smelt("charcoal", 1))),
                 plan,
                 "Древесный уголь жгут брёвнами, а не углём: уголь приходится добывать из руды, и обжиг "
@@ -105,5 +105,13 @@ class CharcoalFuelResolveTests {
     private static ScriptCall gather(String block, int count) {
         int radius = block.endsWith("_log") ? CatalogLimits.HARVEST_RADIUS_MAX : CatalogLimits.HARVEST_RADIUS_DEFAULT;
         return new ScriptCall("gather", Map.of("block", block, "count", count, "radius", radius));
+    }
+
+    private static TaskNode wood(String block, int count) {
+        int trees = Math.min(CatalogLimits.COUNT_MAX, Math.max(1, (count + 3) / 4));
+        ScriptCall chop = new ScriptCall(
+                "chop_tree",
+                Map.of("species", "oak", "count", trees, "radius", CatalogLimits.HARVEST_RADIUS_MAX, "replant", false));
+        return new FallbackNode(List.of(chop, gather(block, count)));
     }
 }
