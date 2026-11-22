@@ -47,6 +47,19 @@ class CraftLayoutTests {
     }
 
     @Test
+    void layout_WideWindow_SymmetricOffset() {
+        int vanilla = 176;
+        int shift = (CraftLayout.WIDTH - vanilla) / 2;
+        assertEquals(
+                CraftLayout.WIDTH - vanilla,
+                shift * 2,
+                "Окно крафта должно расширяться симметрично вокруг ванильного: иначе нечётный запас сдвинет leftPos на полупиксель и клики по слотам уедут. При смене layout_WideWindow_SymmetricOffset проверь это утверждение.");
+        assertTrue(
+                CraftLayout.PANEL_X >= vanilla,
+                "Правая панель начинается правее ванильных 176 px: иначе сдвиг leftPos накроет слоты склада и меню. При смене layout_WideWindow_SymmetricOffset проверь это утверждение.");
+    }
+
+    @Test
     void modeTab_OutOfRange_IsRejected() {
         assertThrows(
                 IllegalArgumentException.class,
