@@ -7,9 +7,10 @@ import com.theminespirit.core.forestry.api.ChopTuning;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.ScanTuning;
 import com.theminespirit.core.script.ChopTreeParams;
+import com.theminespirit.core.town.OrchardChop;
 import com.theminespirit.core.town.SettlementPlot;
+import com.theminespirit.core.town.StageSite;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
-import com.theminespirit.neoforge.policy.OrchardTrees;
 import java.util.Collection;
 import java.util.Locale;
 import java.util.Optional;
@@ -124,9 +125,10 @@ final class ChopSearch {
         if (candidates.isFull()) {
             return;
         }
+        Optional<StageSite> site = orchardSite();
         for (BlockPos pos : search.step(ScanTuning.SLICES_PER_TICK)) {
             BlockCoord cell = new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
-            if (OrchardTrees.planned(spirit.level(), cell)) {
+            if (!OrchardChop.allowed(site, cell)) {
                 continue;
             }
             long dx = (long) anchor.x() - cell.x();
@@ -138,6 +140,13 @@ final class ChopSearch {
             }
             candidates.offer(cell);
         }
+    }
+
+    private Optional<StageSite> orchardSite() {
+        if (!(spirit.level() instanceof ServerLevel server)) {
+            return Optional.empty();
+        }
+        return SettlementPlotStore.liveSite(server);
     }
 
     private void noteFar(long squared) {
