@@ -125,6 +125,11 @@ class BoardJournalTests {
                 content.lines().filter(line -> !line.isBlank()).count(),
                 "После обрезки битой строки в файле остаётся ровно одна целая запись: " + content
                         + " Иначе тест load_BrokenTail_TruncatesItAndKeepsPreviousMarks перестанет ловить эту поломку. При смене load_BrokenTail_TruncatesItAndKeepsPreviousMarks проверь это утверждение.");
+        assertFalse(
+                Files.exists(log().resolveSibling(log().getFileName() + ".truncated")),
+                "Временный файл обрезки обязан исчезнуть после замены журнала: иначе на сервере остаётся "
+                        + "копия всех строк и место кончается"
+                        + " Иначе тест load_BrokenTail_TruncatesItAndKeepsPreviousMarks перестанет ловить эту поломку. При смене load_BrokenTail_TruncatesItAndKeepsPreviousMarks проверь это утверждение.");
     }
 
     @Test

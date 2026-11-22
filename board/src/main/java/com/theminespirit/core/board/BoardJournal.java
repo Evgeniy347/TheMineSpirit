@@ -1,11 +1,14 @@
 package com.theminespirit.core.board;
 
 import com.theminespirit.core.board.api.BoardCase;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -84,47 +87,49 @@ public final class BoardJournal {
         if (!Files.exists(path)) {
             return new LoadResult(0, 0, -1, "", false);
         }
-        List<String> lines;
-        try {
-            lines = Files.readAllLines(path, StandardCharsets.UTF_8);
-        } catch (IOException error) {
-            throw new IllegalStateException("Журнал заданий '" + path + "' не прочитан: " + error.getMessage(), error);
-        }
         int restored = 0;
+        int total = 0;
         int lastLine = -1;
         String error = "";
         boolean truncated = false;
         ledger.forgetHistory();
-        for (int index = 0; index < lines.size(); index++) {
-            String line = lines.get(index);
-            if (line.isBlank()) {
-                continue;
-            }
-            try {
-                BoardLogEntry entry = BoardLog.parse(line, index + 1);
-                if (entry.event() == BoardLog.Event.DONE) {
-                    ledger.complete(entry.boardCase(), entry.level());
-                    if (entry.boardCase() == BoardCase.BUILD_PLACED) {
-                        StageCatalog.planId(entry.ticketId()).ifPresent(id -> ledger.notePlan(id, entry.level()));
-                    }
-                    restored++;
-                } else if (entry.event() == BoardLog.Event.REOPENED) {
-                    ledger.reopen(entry.boardCase(), entry.level());
-                    if (entry.boardCase() == BoardCase.BUILD_PLACED) {
-                        StageCatalog.planId(entry.ticketId()).ifPresent(id -> ledger.forgetPlan(id, entry.level()));
-                    }
+        try (BufferedReader reader = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                total++;
+                if (line.isBlank()) {
+                    continue;
                 }
-            } catch (RuntimeException failure) {
-                lastLine = index + 1;
-                error = failure.getMessage();
-                truncated = index == lines.size() - 1;
-                if (truncated) {
-                    truncateAfter(index);
+                try {
+                    BoardLogEntry entry = BoardLog.parse(line, total);
+                    if (entry.event() == BoardLog.Event.DONE) {
+                        ledger.complete(entry.boardCase(), entry.level());
+                        if (entry.boardCase() == BoardCase.BUILD_PLACED) {
+                            StageCatalog.planId(entry.ticketId()).ifPresent(id -> ledger.notePlan(id, entry.level()));
+                        }
+                        restored++;
+                    } else if (entry.event() == BoardLog.Event.REOPENED) {
+                        ledger.reopen(entry.boardCase(), entry.level());
+                        if (entry.boardCase() == BoardCase.BUILD_PLACED) {
+                            StageCatalog.planId(entry.ticketId()).ifPresent(id -> ledger.forgetPlan(id, entry.level()));
+                        }
+                    }
+                } catch (RuntimeException failure) {
+                    lastLine = total;
+                    error = failure.getMessage();
+                    reader.mark(1);
+                    truncated = reader.read() == -1;
+                    if (truncated) {
+                        truncateAfter(total - 1);
+                    }
+                    break;
                 }
-                break;
             }
+        } catch (IOException failure) {
+            throw new IllegalStateException(
+                    "Журнал заданий '" + path + "' не прочитан: " + failure.getMessage(), failure);
         }
-        return new LoadResult(lines.size(), restored, lastLine, error, truncated);
+        return new LoadResult(total, restored, lastLine, error, truncated);
     }
 
     public List<BoardLogEntry> last(int limit) {
@@ -232,17 +237,26 @@ public final class BoardJournal {
     }
 
     private void truncateAfter(int brokenIndex) {
+        Path kept = path.resolveSibling(path.getFileName() + ".truncated");
         try {
-            List<String> lines = Files.readAllLines(path, StandardCharsets.UTF_8);
-            StringBuilder kept = new StringBuilder();
-            for (int index = 0; index < brokenIndex; index++) {
-                String line = lines.get(index);
-                if (line.isBlank() && index == brokenIndex - 1) {
-                    continue;
+            try (BufferedReader reader = Files.newBufferedReader(path, StandardCharsets.UTF_8);
+                    Writer writer = Files.newBufferedWriter(
+                            kept,
+                            StandardCharsets.UTF_8,
+                            StandardOpenOption.CREATE,
+                            StandardOpenOption.TRUNCATE_EXISTING)) {
+                String line;
+                int index = 0;
+                while (index < brokenIndex && (line = reader.readLine()) != null) {
+                    boolean last = index == brokenIndex - 1;
+                    if (!(last && line.isBlank())) {
+                        writer.write(line);
+                        writer.write('\n');
+                    }
+                    index++;
                 }
-                kept.append(line).append('\n');
             }
-            Files.writeString(path, kept, StandardCharsets.UTF_8);
+            Files.move(kept, path, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException error) {
             throw new IllegalStateException(
                     "Оборванный хвост журнала '" + path + "' не отрезан: " + error.getMessage(), error);
