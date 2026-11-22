@@ -473,6 +473,14 @@ public final class BoardScreen extends Screen {
     }
 
     @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (ScreenTabButtons.hotkey(keyCode, searchBox != null && searchBox.isFocused(), ScreenTabs.Tab.BOARD)) {
+            return true;
+        }
+        return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    @Override
     public boolean isPauseScreen() {
         return false;
     }

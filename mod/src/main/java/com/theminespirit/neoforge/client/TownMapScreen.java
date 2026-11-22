@@ -376,6 +376,14 @@ public final class TownMapScreen extends Screen {
     }
 
     @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (ScreenTabButtons.hotkey(keyCode, false, ScreenTabs.Tab.PLAN)) {
+            return true;
+        }
+        return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
         MapViewport window = window();
         if (view != null && window.inside(mouseX, mouseY)) {

@@ -508,6 +508,9 @@ public final class MineMapScreen extends Screen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (ScreenTabButtons.hotkey(keyCode, false, ScreenTabs.Tab.MINE)) {
+            return true;
+        }
         if (view != null && keyCode == GLFW.GLFW_KEY_UP) {
             changeHeight(1);
             return true;

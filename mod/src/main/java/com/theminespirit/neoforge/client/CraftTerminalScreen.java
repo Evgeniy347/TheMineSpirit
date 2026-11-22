@@ -273,6 +273,9 @@ public final class CraftTerminalScreen extends AbstractContainerScreen<CraftTerm
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (ScreenTabButtons.hotkey(keyCode, search != null && search.isFocused(), ScreenTabs.Tab.CRAFT)) {
+            return true;
+        }
         if (keyCode == InputConstants.KEY_F) {
             if (search != null) {
                 search.setFocused(true);

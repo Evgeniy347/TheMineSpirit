@@ -2,6 +2,7 @@ package com.theminespirit.neoforge.client;
 
 import com.theminespirit.core.ui.BoardLayout;
 import com.theminespirit.core.ui.ScreenTabs;
+import com.theminespirit.core.ui.ShellNav;
 import com.theminespirit.neoforge.terminal.CraftTerminalChannel;
 import com.theminespirit.neoforge.terminal.CraftTerminalMenu;
 import java.util.function.Consumer;
@@ -25,7 +26,16 @@ final class ScreenTabButtons {
         }
     }
 
-    private static void open(ScreenTabs.Tab tab) {
+    static boolean hotkey(int keyCode, boolean textFocused, ScreenTabs.Tab current) {
+        ScreenTabs.Tab target = ShellNav.target(keyCode, textFocused, current);
+        if (target == null) {
+            return false;
+        }
+        open(target);
+        return true;
+    }
+
+    static void open(ScreenTabs.Tab tab) {
         Minecraft minecraft = Minecraft.getInstance();
         if (tab == ScreenTabs.Tab.CRAFT) {
             PacketDistributor.sendToServer(CraftTerminalChannel.Action.of(CraftTerminalChannel.Kind.OPEN));

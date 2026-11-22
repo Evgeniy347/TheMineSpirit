@@ -17,8 +17,8 @@ guards/SucceedWhenReturnGuardTests.java	343
 neoforge/SpiritEntity.java	752
 core/building/BuildPlanner.java	838
 core/planner/AcquireScriptTestsSupport.java	337
-neoforge/client/BoardScreen.java	682
-neoforge/client/CraftTerminalScreen.java	371
-neoforge/client/MineMapScreen.java	526
-neoforge/client/SettlementTreeScreen.java	562
-neoforge/client/TownMapScreen.java	526
+neoforge/client/BoardScreen.java	690
+neoforge/client/CraftTerminalScreen.java	374
+neoforge/client/MineMapScreen.java	529
+neoforge/client/SettlementTreeScreen.java	565
+neoforge/client/TownMapScreen.java	534

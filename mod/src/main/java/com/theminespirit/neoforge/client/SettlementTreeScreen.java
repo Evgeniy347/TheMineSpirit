@@ -522,6 +522,9 @@ public final class SettlementTreeScreen extends Screen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (ScreenTabButtons.hotkey(keyCode, false, ScreenTabs.Tab.TREE)) {
+            return true;
+        }
         if (keyCode == InputConstants.KEY_J || keyCode == InputConstants.KEY_ESCAPE) {
             onClose();
             return true;
