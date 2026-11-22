@@ -17,7 +17,6 @@ import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.town.PlannedBlock;
 import com.theminespirit.core.town.StageWork;
 import com.theminespirit.neoforge.BlockStates;
-import com.theminespirit.neoforge.SettlementChestStore;
 import com.theminespirit.neoforge.inventory.ContainerAccess;
 import com.theminespirit.neoforge.policy.PolicyConfig;
 import java.util.ArrayList;
@@ -63,15 +62,7 @@ public final class ChestDemolition {
         if (ChestSnapshots.area(level).isEmpty()) {
             return false;
         }
-        List<BlockCoord> extras = WarehouseLocations.extras(level, ledger);
-        if (extras.isEmpty()) {
-            return false;
-        }
-        SettlementChestStore store = SettlementChestStore.get(level);
-        for (BlockCoord at : extras) {
-            store.forget(new BlockPos(at.x(), at.y(), at.z()));
-        }
-        return true;
+        return !WarehouseLocations.extras(level, ledger).isEmpty();
     }
 
     static boolean tick(GraphPost post, GraphTickets.Ticket ticket) {

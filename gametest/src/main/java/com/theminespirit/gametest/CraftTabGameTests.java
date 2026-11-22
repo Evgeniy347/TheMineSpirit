@@ -69,6 +69,12 @@ public final class CraftTabGameTests {
         helper.assertTrue(
                 store.chests().all().contains(syncCoord),
                 "Сверка реестра обязана добавить сундук участка, поставленный командой, иначе терминал J его не видит");
+        int settled = store.chests().size();
+        SettlementChestSync.reconcile(helper.getLevel());
+        helper.assertTrue(
+                store.chests().size() == settled,
+                "Повторная сверка реестра ничего не добавляет и не снимает: иначе реестр мигает и терминал J "
+                        + "теряет сундуки между циклами доски");
         helper.setBlock(syncAt, Blocks.AIR);
         SettlementChestSync.reconcile(helper.getLevel());
         helper.assertTrue(
