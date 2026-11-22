@@ -13,7 +13,7 @@ public final class TownPlanner {
     public static final String TORCHES = "torches";
     public static final Set<String> LINE_ELEMENTS = Set.of(FENCE, TORCHES);
     // lib: центр и дом с шахтой — первыми (их места привязаны к якорю), затем крупные постройки этапов 2–4.
-    private static final Set<String> EARLY = Set.of("hut", "yard", "mine");
+    private static final Set<String> EARLY = Set.of("storage", "storage_2", "storage_3", "hut", "yard", "mine");
 
     private TownPlanner() {}
 
@@ -135,13 +135,16 @@ public final class TownPlanner {
         Objects.requireNonNull(rules, "Правила плана не могут быть null: размеры берутся из каталога");
         for (Placement place : plan.placements()) {
             Optional<TownEntry> entry = rules.template(place.id());
-            if (entry.isPresent()
-                    && (place.width() != entry.orElseThrow().width()
-                            || place.depth() != entry.orElseThrow().depth())) {
+            if (entry.isPresent() && !sameSize(place, entry.orElseThrow())) {
                 return true;
             }
         }
         return false;
+    }
+
+    private static boolean sameSize(Placement place, TownEntry entry) {
+        return (place.width() == entry.width() && place.depth() == entry.depth())
+                || (place.width() == entry.depth() && place.depth() == entry.width());
     }
 
     public static TownPlan readapt(TerrainGrid grid, TownPlan plan, TownRules rules, Set<String> built) {
@@ -156,9 +159,7 @@ public final class TownPlanner {
         List<Placement> resize = new ArrayList<>();
         for (Placement place : plan.placements()) {
             Optional<TownEntry> entry = rules.template(place.id());
-            boolean same = entry.isEmpty()
-                    || (place.width() == entry.orElseThrow().width()
-                            && place.depth() == entry.orElseThrow().depth());
+            boolean same = entry.isEmpty() || sameSize(place, entry.orElseThrow());
             if (built.contains(place.id()) || same) {
                 keep.add(place);
             } else {

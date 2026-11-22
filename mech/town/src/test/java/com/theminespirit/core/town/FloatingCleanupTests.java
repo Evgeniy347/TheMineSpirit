@@ -40,24 +40,24 @@ class FloatingCleanupTests {
     }
 
     @Test
-    void decide_RegisteredChest_WaitsForRegistry() {
+    void decide_RegisteredChest_RemovedLikeAnyOther() {
         assertEquals(
-                FloatingCleanup.Action.SKIP_REGISTERED,
+                FloatingCleanup.Action.REMOVE,
                 FloatingCleanup.decide(
                         finding(FloatingBlocks.Kind.REGISTERED_CHEST),
-                        new FloatingCleanup.Rooms(true, false, false, false)),
-                "Сундук из реестра сначала освобождает OldChests: уборка не снимает его с содержимым"
-                        + " Иначе тест decide_RegisteredChest_WaitsForRegistry перестанет ловить эту поломку. При смене decide_RegisteredChest_WaitsForRegistry проверь это утверждение.");
+                        new FloatingCleanup.Rooms(false, false, true, false)),
+                "Реестр сундуков больше не защищает от сноса: вне схемы склада пустой сундук снимают"
+                        + " Иначе тест decide_RegisteredChest_RemovedLikeAnyOther перестанет ловить эту поломку. При смене decide_RegisteredChest_RemovedLikeAnyOther проверь это утверждение.");
     }
 
     @Test
-    void decide_EmptyChestWithoutYard_IsLeft() {
+    void decide_EmptyChestWithoutYard_IsRemoved() {
         assertEquals(
-                FloatingCleanup.Action.SKIP_WAIT,
+                FloatingCleanup.Action.REMOVE,
                 FloatingCleanup.decide(
                         finding(FloatingBlocks.Kind.CHEST), new FloatingCleanup.Rooms(false, false, true, false)),
-                "Без сундуков двора переносить некуда: уборка ждёт, а не теряет вещи"
-                        + " Иначе тест decide_EmptyChestWithoutYard_IsLeft перестанет ловить эту поломку. При смене decide_EmptyChestWithoutYard_IsLeft проверь это утверждение.");
+                "Пустому сундуку склад не нужен: вне схемы его снимают сразу, без ожидания"
+                        + " Иначе тест decide_EmptyChestWithoutYard_IsRemoved перестанет ловить эту поломку. При смене decide_EmptyChestWithoutYard_IsRemoved проверь это утверждение.");
     }
 
     @Test

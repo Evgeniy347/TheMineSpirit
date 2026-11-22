@@ -62,11 +62,6 @@ class StageSiteTests {
                 !cells.contains(SITE.workYard()),
                 "Точка двора, где дух крафтит и берёт из сундуков, свободна: схема двора её не занимает"
                         + " Иначе тест yard_SchemeCells_InsideYardOffWorkPoint перестанет ловить эту поломку. При смене yard_SchemeCells_InsideYardOffWorkPoint проверь это утверждение.");
-        assertTrue(
-                YardScheme.slots(SITE).size() >= 2,
-                "Ряд сундуков двора держит запас под рост склада (решение владельца 25.10), а мест "
-                        + YardScheme.slots(SITE).size()
-                        + " Иначе тест yard_SchemeCells_InsideYardOffWorkPoint перестанет ловить эту поломку. При смене yard_SchemeCells_InsideYardOffWorkPoint проверь это утверждение.");
     }
 
     @Test

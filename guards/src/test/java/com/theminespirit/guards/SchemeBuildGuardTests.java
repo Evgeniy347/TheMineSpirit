@@ -88,7 +88,6 @@ class SchemeBuildGuardTests {
                 BoardCase.BUILD_FENCE, fence,
                 BoardCase.BUILD_HOUSE, List.of(),
                 BoardCase.BUILD_ORCHARD, List.of(),
-                BoardCase.STOCK_CHESTS, YardScheme.stock(site, 1),
                 BoardCase.CRAFT_FURNACE, List.of(YardScheme.furnace(site)),
                 BoardCase.LIGHTING, YardScheme.lighting(site));
         works.forEach((step, builds) -> {

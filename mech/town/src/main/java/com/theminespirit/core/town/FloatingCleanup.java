@@ -47,6 +47,15 @@ public final class FloatingCleanup {
         if (finding.kind() == FloatingBlocks.Kind.TREE) {
             return rooms.reachable() ? Action.REMOVE : Action.SKIP_UNREACHABLE;
         }
+        if (finding.kind() == FloatingBlocks.Kind.CHEST || finding.kind() == FloatingBlocks.Kind.REGISTERED_CHEST) {
+            if (!rooms.reachable()) {
+                return Action.SKIP_UNREACHABLE;
+            }
+            if (rooms.chestEmpty()) {
+                return Action.REMOVE;
+            }
+            return rooms.yardReady() ? Action.DRAIN_CHEST : Action.SKIP_WAIT;
+        }
         if (rooms.protectedStructure()) {
             return Action.SKIP_PROTECTED;
         }
@@ -54,18 +63,11 @@ public final class FloatingCleanup {
             return Action.SKIP_PLANNED;
         }
         return switch (finding.kind()) {
-            case REGISTERED_CHEST -> Action.SKIP_REGISTERED;
             default -> {
                 if (!rooms.reachable()) {
                     yield Action.SKIP_UNREACHABLE;
                 }
                 yield switch (finding.kind()) {
-                    case CHEST -> {
-                        if (!rooms.yardReady()) {
-                            yield Action.SKIP_WAIT;
-                        }
-                        yield rooms.chestEmpty() ? Action.REMOVE : Action.DRAIN_CHEST;
-                    }
                     case STATION -> {
                         if (!rooms.yardReady()) {
                             yield Action.SKIP_WAIT;

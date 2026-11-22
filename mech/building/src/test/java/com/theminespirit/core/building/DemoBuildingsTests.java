@@ -54,7 +54,6 @@ class DemoBuildingsTests {
                         "wall_3_corner",
                         "gate_3",
                         "yard_1",
-                        "yard_chest",
                         "ground_torch",
                         "street5_straight",
                         "street5_turn",

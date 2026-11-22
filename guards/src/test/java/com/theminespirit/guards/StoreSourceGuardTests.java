@@ -42,8 +42,8 @@ class StoreSourceGuardTests {
     }
 
     @Test
-    void chestSpaceWatch_OnlyFactAndGraphExecutor_NoOwnTick() {
-        String sources = SOURCES.get(BOARD.resolve("ChestSpaceWatch.java"));
+    void storagePlanWatch_OnlyPlansLots_NoOwnTick() {
+        String sources = SOURCES.get(BOARD.resolve("StoragePlanWatch.java"));
 
         List<String> found = new ArrayList<>();
         found.addAll(found(sources, "static void tick("));
@@ -51,10 +51,10 @@ class StoreSourceGuardTests {
         assertEquals(
                 List.of(),
                 found,
-                "ChestSpaceWatch сам решает, когда ставить сундук: порог и место выбирает узел store:space, "
-                        + "а сторож оставляет только факт свободных слотов и исполнение задания графа. "
-                        + "Нарушители: ChestSpaceWatch.tick, ChestSpaceWatch.request"
-                        + " Иначе тест request перестанет ловить эту поломку. При смене request проверь это утверждение.");
+                "StoragePlanWatch только выставляет BUILD_PLACED по участкам плана: порог и место сундуков "
+                        + "выбирает схема склада, сторож не строит и не ставит сундуки сам. "
+                        + "Нарушители: StoragePlanWatch.tick, StoragePlanWatch.request"
+                        + " При смене storagePlanWatch_OnlyPlansLots_NoOwnTick проверь это утверждение.");
     }
 
     @Test

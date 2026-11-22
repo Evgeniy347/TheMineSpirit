@@ -146,9 +146,9 @@ class TownPlannerLiveTests {
                 .orElseThrow(
                         () -> new AssertionError("Склад этапа 2 без лота в плане: не поместилось " + plan.unplaced()));
         assertEquals(
-                2,
+                1,
                 storage.stage(),
-                "Склад — постройка этапа 2: место берётся из набора этапа"
+                "Склад — постройка этапа 1: место берётся из набора этапа"
                         + " Иначе тест plan_FlatLand_StorageLotPlacedInsidePlot перестанет ловить эту поломку. При смене plan_FlatLand_StorageLotPlacedInsidePlot проверь это утверждение.");
         for (ColumnMask.Cell cell : storage.mask().cells()) {
             assertTrue(

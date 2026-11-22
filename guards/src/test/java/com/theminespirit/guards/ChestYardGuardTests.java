@@ -57,14 +57,14 @@ class ChestYardGuardTests {
     }
 
     @Test
-    void warehouseYardCells_TakeFromYardScheme_IsRequired() {
+    void warehouseChestCells_TakeFromBuiltSchemes_IsRequired() {
         String source = SourceFiles.withoutTextBlocks(byName(SourceFiles.allMain(), "WarehouseLocations.java"));
 
         assertTrue(
-                source != null && source.contains("YardScheme.slots") && source.contains("YardScheme.overflowSlots"),
-                "WarehouseLocations.yardCells обязан брать клетки ряда двора из схемы двора (YardScheme.slots "
-                        + "+ overflowSlots), а не из сканирования рельефа: ряд один и задан планом"
-                        + " Иначе тест warehouseYardCells_TakeFromYardScheme_IsRequired перестанет ловить эту поломку. При смене warehouseYardCells_TakeFromYardScheme_IsRequired проверь это утверждение.");
+                source != null && source.contains("WarehouseChests.cells") && !source.contains("YardScheme"),
+                "WarehouseLocations берёт клетки сундуков только из схем построенных складов: двор и заказы "
+                        + "больше не дают мест под сундуки"
+                        + " Иначе тест warehouseChestCells_TakeFromBuiltSchemes_IsRequired перестанет ловить эту поломку. При смене warehouseChestCells_TakeFromBuiltSchemes_IsRequired проверь это утверждение.");
     }
 
     private static String byName(Map<Path, String> sources, String fileName) {
