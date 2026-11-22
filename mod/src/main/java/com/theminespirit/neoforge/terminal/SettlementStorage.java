@@ -71,18 +71,27 @@ public final class SettlementStorage {
     public List<Kind> kinds() {
         List<ItemStack> samples = new ArrayList<>();
         List<Integer> counts = new ArrayList<>();
+        List<Integer> plain = new ArrayList<>();
         for (Container container : containers) {
             for (int slot = 0; slot < container.getContainerSize(); slot++) {
                 ItemStack stack = container.getItem(slot);
                 if (stack.isEmpty()) {
                     continue;
                 }
+                boolean whole = stack.isComponentsPatchEmpty();
                 int index = indexOf(samples, stack);
                 if (index < 0) {
                     samples.add(stack.copyWithCount(1));
                     counts.add(stack.getCount());
+                    plain.add(whole ? stack.getCount() : 0);
                 } else {
                     counts.set(index, counts.get(index) + stack.getCount());
+                    if (whole) {
+                        plain.set(index, plain.get(index) + stack.getCount());
+                        if (!samples.get(index).isComponentsPatchEmpty()) {
+                            samples.set(index, stack.copyWithCount(1));
+                        }
+                    }
                 }
             }
         }
@@ -91,9 +100,10 @@ public final class SettlementStorage {
         for (int index = 0; index < samples.size(); index++) {
             ItemStack sample = samples.get(index);
             int count = counts.get(index);
-            int available = sample.isComponentsPatchEmpty()
-                    ? Math.min(count, free.getOrDefault(ItemIds.of(sample.getItem()), 0))
-                    : count;
+            int whole = plain.get(index);
+            int available = whole == 0
+                    ? count
+                    : Math.min(whole, free.getOrDefault(ItemIds.of(sample.getItem()), 0)) + (count - whole);
             kinds.add(new Kind(sample, count, available));
         }
         return kinds;
@@ -101,11 +111,18 @@ public final class SettlementStorage {
 
     private static int indexOf(List<ItemStack> samples, ItemStack stack) {
         for (int index = 0; index < samples.size(); index++) {
-            if (ItemStack.isSameItemSameComponents(samples.get(index), stack)) {
+            if (sameKind(samples.get(index), stack)) {
                 return index;
             }
         }
         return -1;
+    }
+
+    private static boolean sameKind(ItemStack left, ItemStack right) {
+        if (!ItemStack.isSameItem(left, right)) {
+            return false;
+        }
+        return left.isDamageableItem() || ItemStack.isSameItemSameComponents(left, right);
     }
 
     public Map<String, Integer> freePlain() {
@@ -123,7 +140,7 @@ public final class SettlementStorage {
 
     public int available(ItemStack kind) {
         for (Kind entry : kinds()) {
-            if (ItemStack.isSameItemSameComponents(entry.sample(), kind)) {
+            if (sameKind(entry.sample(), kind)) {
                 return entry.free();
             }
         }
@@ -133,10 +150,17 @@ public final class SettlementStorage {
     public ItemStack extract(ItemStack kind, int amount) {
         int wanted = Math.min(amount, Math.min(kind.getMaxStackSize(), available(kind)));
         ItemStack taken = kind.copyWithCount(0);
-        for (Container container : containers) {
-            for (int slot = 0; slot < container.getContainerSize() && taken.getCount() < wanted; slot++) {
-                ItemStack stack = container.getItem(slot);
-                if (ItemStack.isSameItemSameComponents(stack, kind)) {
+        boolean damageable = kind.isDamageableItem();
+        for (int pass = 0; pass < (damageable ? 2 : 1) && taken.getCount() < wanted; pass++) {
+            for (Container container : containers) {
+                for (int slot = 0; slot < container.getContainerSize() && taken.getCount() < wanted; slot++) {
+                    ItemStack stack = container.getItem(slot);
+                    if (stack.isEmpty() || !sameKind(stack, kind)) {
+                        continue;
+                    }
+                    if (damageable && (pass == 0) == stack.isComponentsPatchEmpty()) {
+                        continue;
+                    }
                     int part = Math.min(stack.getCount(), wanted - taken.getCount());
                     container.removeItem(slot, part);
                     taken.grow(part);

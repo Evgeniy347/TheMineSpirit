@@ -6,9 +6,12 @@ import com.theminespirit.core.town.FenceLine;
 import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.core.town.TownStreets;
 import com.theminespirit.neoforge.SettlementChestStore;
+import com.theminespirit.neoforge.board.SettlementChestSync;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
 import com.theminespirit.neoforge.terminal.CraftChain;
 import com.theminespirit.neoforge.terminal.CraftTerminalChannel.ChainReply;
+import com.theminespirit.neoforge.terminal.CraftTerminalService;
+import com.theminespirit.neoforge.terminal.SettlementStorage;
 import java.util.BitSet;
 import java.util.List;
 import net.minecraft.core.BlockPos;
@@ -43,7 +46,6 @@ public final class CraftTabGameTests {
         int sticks = GameTestFixtures.countInInventory(player.getInventory(), Items.STICK);
         int logs = inChest(helper, LOGS, Items.OAK_LOG);
         int coal = inChest(helper, COAL, Items.COAL);
-        unsettle(helper);
         helper.assertTrue(
                 torches == 4 && planks == 2 && sticks == 3,
                 "Многошаговый крафт факелов из бревна: игроку 4 факела и остатки 2 доски, 3 палки (доски и палки "
@@ -53,7 +55,70 @@ public final class CraftTabGameTests {
                 logs == 1 && coal == 0,
                 "Сундуки поселения уменьшаются ровно на потраченное: 1 бревно и 1 уголь; осталось брёвен " + logs
                         + ", угля " + coal);
+
+        SettlementChestStore store = SettlementChestStore.get(helper.getLevel());
+        BlockPos syncAt = new BlockPos(2, 1, 2);
+        helper.setBlock(syncAt, Blocks.CHEST);
+        BlockPos syncAbs = helper.absolutePos(syncAt);
+        BlockCoord syncCoord = new BlockCoord(syncAbs.getX(), syncAbs.getY(), syncAbs.getZ());
+        store.forget(syncAbs);
+        helper.assertTrue(
+                !store.chests().all().contains(syncCoord),
+                "Сундук, поставленный setBlock, до сверки не в реестре: событие установки от команды не приходит");
+        SettlementChestSync.reconcile(helper.getLevel());
+        helper.assertTrue(
+                store.chests().all().contains(syncCoord),
+                "Сверка реестра обязана добавить сундук участка, поставленный командой, иначе терминал J его не видит");
+        helper.setBlock(syncAt, Blocks.AIR);
+        SettlementChestSync.reconcile(helper.getLevel());
+        helper.assertTrue(
+                !store.chests().all().contains(syncCoord),
+                "Сверка реестра обязана снять сломанный сундук, иначе терминал показывает несуществующее");
+
+        BlockPos toolsAt = new BlockPos(4, 1, 4);
+        helper.setBlock(toolsAt, Blocks.CHEST);
+        BlockPos toolsAbs = helper.absolutePos(toolsAt);
+        store.track(toolsAbs);
+        if (helper.getBlockEntity(toolsAt) instanceof Container container) {
+            container.setItem(0, new ItemStack(Items.WOODEN_PICKAXE));
+            container.setItem(1, new ItemStack(Items.WOODEN_PICKAXE));
+            container.setItem(2, damaged(3));
+            container.setItem(3, damaged(7));
+            container.setItem(4, damaged(11));
+        }
+        SettlementStorage storage = SettlementStorage.open(
+                helper.getLevel(), CraftTerminalService.reach(helper.getLevel()).orElseThrow());
+        ItemStack sample = ItemStack.EMPTY;
+        int rows = 0;
+        int count = 0;
+        for (SettlementStorage.Kind kind : storage.kinds()) {
+            if (kind.sample().is(Items.WOODEN_PICKAXE)) {
+                rows++;
+                count += kind.count();
+                sample = kind.sample();
+            }
+        }
+        int taken = sample.isEmpty() ? 0 : storage.extract(sample, 1).getCount();
+        if (helper.getBlockEntity(toolsAt) instanceof Container leftover) {
+            for (int slot = 0; slot < leftover.getContainerSize(); slot++) {
+                leftover.setItem(slot, ItemStack.EMPTY);
+            }
+        }
+        helper.setBlock(toolsAt, Blocks.AIR);
+        store.forget(toolsAbs);
+        unsettle(helper);
+        helper.assertTrue(
+                rows == 1 && count == 5,
+                "Пять деревянных кирок с разным износом обязаны быть одной строкой на 5 штук, а не пятью по одной: "
+                        + "строк " + rows + ", всего " + count);
+        helper.assertTrue(taken == 1, "Кирка с износом обязана извлекаться из запаса; взято " + taken);
         helper.succeed();
+    }
+
+    private static ItemStack damaged(int damage) {
+        ItemStack stack = new ItemStack(Items.WOODEN_PICKAXE);
+        stack.setDamageValue(damage);
+        return stack;
     }
 
     private static void settle(GameTestHelper helper) {

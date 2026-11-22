@@ -1,5 +1,6 @@
 package com.theminespirit.gametest;
 
+import com.theminespirit.core.plan.FallbackNode;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
@@ -136,6 +137,7 @@ final class FullCycleScene {
                 scripts.add(call.script() + ":"
                         + call.params().getOrDefault("item", call.params().get("block")));
             case SequenceNode sequence -> sequence.steps().forEach(step -> collect(step, scripts));
+            case FallbackNode fallback -> fallback.steps().forEach(step -> collect(step, scripts));
             default ->
                 throw new IllegalArgumentException(
                         "Резолвер выдал узел " + node.getClass().getSimpleName()
