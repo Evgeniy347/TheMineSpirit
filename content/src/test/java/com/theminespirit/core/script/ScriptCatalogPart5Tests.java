@@ -134,9 +134,9 @@ class ScriptCatalogPart5Tests {
                 CatalogLimits.NAV_RADIUS_DEFAULT,
                 "Радиус навигации по умолчанию — 16: значение задаёт каталог, чтобы маппинги его не дублировали Иначе тест defaultCatalog_NavLimits_MatchAgreedBounds перестанет ловить эту поломку. При смене defaultCatalog_NavLimits_MatchAgreedBounds проверь это утверждение.");
         assertEquals(
-                16,
+                64,
                 CatalogLimits.NAV_PATROL_POINTS_MAX,
-                "Точек маршрута patrol — не больше 16: длинный маршрут режется на части Иначе тест defaultCatalog_NavLimits_MatchAgreedBounds перестанет ловить эту поломку. При смене defaultCatalog_NavLimits_MatchAgreedBounds проверь это утверждение.");
+                "Точек маршрута patrol — не больше 64: длинный маршрут режется на части Иначе тест defaultCatalog_NavLimits_MatchAgreedBounds перестанет ловить эту поломку. При смене defaultCatalog_NavLimits_MatchAgreedBounds проверь это утверждение.");
         assertEquals(
                 1,
                 CatalogLimits.NAV_PATROL_LOOPS_MIN,

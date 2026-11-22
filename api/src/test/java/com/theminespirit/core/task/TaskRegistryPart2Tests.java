@@ -118,7 +118,7 @@ class TaskRegistryPart2Tests {
 
         assertEquals(
                 "{\"task_id\":\"t-1\",\"bot\":\"" + BOT + "\",\"state\":\"running\","
-                        + "\"goal\":\"срубить деревья вокруг\","
+                        + "\"goal\":\"срубить деревья вокруг\",\"title\":null,"
                         + "\"progress\":{\"step\":2,\"total_steps\":2,\"current_script\":\"chop_tree\","
                         + "\"done\":3,\"target\":5},\"result\":null,\"error\":null}",
                 json,
@@ -133,7 +133,7 @@ class TaskRegistryPart2Tests {
         String json = TaskJson.toJson(registry.get(taskId).orElseThrow());
 
         assertEquals(
-                "{\"task_id\":\"t-1\",\"bot\":\"" + BOT + "\",\"state\":\"accepted\",\"goal\":null,"
+                "{\"task_id\":\"t-1\",\"bot\":\"" + BOT + "\",\"state\":\"accepted\",\"goal\":null,\"title\":null,"
                         + "\"progress\":null,\"result\":null,\"error\":null}",
                 json,
                 "Отсутствующие goal и progress обязаны сериализоваться как null, а не отбрасываться Иначе тест taskJson_NoProgressAndGoalNull_SerializesNulls перестанет ловить эту поломку. При смене taskJson_NoProgressAndGoalNull_SerializesNulls проверь это утверждение.");

@@ -13,6 +13,11 @@ class ScriptCatalogTestsSupport {
     static final long WORLD_MIN = -30_000_000L;
     static final long WORLD_MAX = 30_000_000L;
 
+    private static final Map<String, long[]> POINT = Map.of(
+            "x", new long[] {WORLD_MIN, WORLD_MAX},
+            "y", new long[] {-64, 319},
+            "z", new long[] {WORLD_MIN, WORLD_MAX});
+
     record ScriptExpectation(String id, List<String> required, Map<String, long[]> bounds) {}
 
     static Stream<Arguments> scriptSpecRows() {
@@ -24,12 +29,7 @@ class ScriptCatalogTestsSupport {
                 spec("locate_block", List.of("filter"), Map.of("radius", new long[] {1, 32})),
                 spec("locate_tree", List.of(), Map.of("radius", new long[] {1, 32})),
                 spec("locate_container", List.of(), Map.of("radius", new long[] {1, 32})),
-                spec(
-                        "look_at",
-                        List.of("x", "y", "z"),
-                        Map.of("x", new long[] {WORLD_MIN, WORLD_MAX}, "y", new long[] {-64, 319}, "z", new long[] {
-                            WORLD_MIN, WORLD_MAX
-                        })),
+                spec("look_at", List.of("x", "y", "z"), POINT),
                 spec(
                         "remember",
                         List.of("name", "x", "y", "z", "type"),
@@ -39,12 +39,7 @@ class ScriptCatalogTestsSupport {
                 spec("recall", List.of("name"), Map.of()),
                 spec("recall_all", List.of("type"), Map.of()),
                 spec("forget", List.of("name"), Map.of()),
-                spec(
-                        "goto",
-                        List.of("x", "y", "z"),
-                        Map.of("x", new long[] {WORLD_MIN, WORLD_MAX}, "y", new long[] {-64, 319}, "z", new long[] {
-                            WORLD_MIN, WORLD_MAX
-                        })),
+                spec("goto", List.of("x", "y", "z"), POINT),
                 spec("follow", List.of("target"), Map.of("radius", new long[] {0, 16})),
                 spec("escort", List.of("target"), Map.of("radius", new long[] {0, 16}, "until", new long[] {0, 6000})),
                 spec("return_home", List.of(), Map.of()),
@@ -56,19 +51,9 @@ class ScriptCatalogTestsSupport {
                 })),
                 spec("explore", List.of(), Map.of("radius", new long[] {1, 32}, "budget", new long[] {1, 64})),
                 spec("keep_distance", List.of("target"), Map.of("distance", new long[] {1, 16})),
-                spec(
-                        "walk_careful",
-                        List.of("x", "y", "z"),
-                        Map.of("x", new long[] {WORLD_MIN, WORLD_MAX}, "y", new long[] {-64, 319}, "z", new long[] {
-                            WORLD_MIN, WORLD_MAX
-                        })),
+                spec("walk_careful", List.of("x", "y", "z"), POINT),
                 spec("step_over", List.of("dx", "dz"), Map.of("dx", new long[] {-1, 1}, "dz", new long[] {-1, 1})),
-                spec(
-                        "approach",
-                        List.of("x", "y", "z"),
-                        Map.of("x", new long[] {WORLD_MIN, WORLD_MAX}, "y", new long[] {-64, 319}, "z", new long[] {
-                            WORLD_MIN, WORLD_MAX
-                        })),
+                spec("approach", List.of("x", "y", "z"), POINT),
                 spec(
                         "swim",
                         List.of("x", "y", "z"),
@@ -189,20 +174,11 @@ class ScriptCatalogTestsSupport {
                 spec("retreat", List.of(), Map.of()),
                 spec("disengage", List.of(), Map.of("distance", new long[] {1, 16})),
                 spec("pillar_up", List.of("height"), Map.of("height", new long[] {1, 256})),
-                spec(
-                        "dig_out",
-                        List.of("x", "y", "z"),
-                        Map.of("x", new long[] {WORLD_MIN, WORLD_MAX}, "y", new long[] {-64, 319}, "z", new long[] {
-                            WORLD_MIN, WORLD_MAX
-                        })),
+                spec("dig_out", List.of("x", "y", "z"), POINT),
                 spec("pillar_down", List.of(), Map.of()),
                 spec("climb", List.of(), Map.of()),
-                spec(
-                        "place_block",
-                        List.of("block", "x", "y", "z"),
-                        Map.of("x", new long[] {WORLD_MIN, WORLD_MAX}, "y", new long[] {-64, 319}, "z", new long[] {
-                            WORLD_MIN, WORLD_MAX
-                        })),
+                spec("place_block", List.of("block", "x", "y", "z"), POINT),
+                spec("break_block", List.of("x", "y", "z"), POINT),
                 spec(
                         "light_area",
                         List.of("x", "y", "z"),

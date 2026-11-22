@@ -75,8 +75,10 @@ final class BoardTileTexts {
     }
 
     static MutableComponent taskText(BoardTile tile) {
-        String name = tile.boardCase().toLowerCase(Locale.ROOT);
-        MutableComponent text = Component.translatableWithFallback(KEY + "case." + name, tile.boardCase());
+        MutableComponent text = tile.title() != null
+                ? Component.literal(tile.title())
+                : Component.translatableWithFallback(
+                        KEY + "case." + tile.boardCase().toLowerCase(Locale.ROOT), tile.boardCase());
         String building = buildingText(tile);
         if (building != null) {
             text.append(" · ").append(Component.literal(building));

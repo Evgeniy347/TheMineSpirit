@@ -13,6 +13,7 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
+import net.minecraft.server.MinecraftServer;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
@@ -21,7 +22,7 @@ public final class TaskWatcher {
     private final SpiritIndex index;
     private final TaskRegistry registry;
     private final TaskReconciler reconciler;
-    private final Consumer<ServerTickEvent.Post> tickListener = event -> tick();
+    private final Consumer<ServerTickEvent.Post> tickListener = event -> tick(event.getServer());
     private final AtomicBoolean closed = new AtomicBoolean();
     private volatile int lastTickPolls;
     private final AtomicLong totalPolls = new AtomicLong();
@@ -48,12 +49,16 @@ public final class TaskWatcher {
         }
     }
 
-    private void tick() {
+    private void tick(MinecraftServer server) {
         List<TaskRecord> active = registry.watchableRecords();
         lastTickPolls = active.size();
         totalPolls.addAndGet(active.size());
         for (TaskRecord record : active) {
             reconciler.reconcile(record, read(record.bot()));
+            registry.get(record.taskId())
+                    .filter(done -> done.state().isTerminal())
+                    .ifPresent(
+                            done -> RestBoardSync.close(server.overworld(), done.taskId(), done.state(), done.error()));
         }
         reconciler.forgetUnobserved(active);
     }

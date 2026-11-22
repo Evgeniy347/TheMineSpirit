@@ -27,7 +27,8 @@ public record BoardTask(
         @Nullable String supplyItem,
         int supplyCount,
         List<String> executors,
-        Map<String, Integer> stock) {
+        Map<String, Integer> stock,
+        @Nullable String title) {
 
     public BoardTask(
             String id,
@@ -72,7 +73,8 @@ public record BoardTask(
                 supplyItem,
                 supplyCount,
                 List.of(),
-                Map.of());
+                Map.of(),
+                null);
     }
 
     public BoardTask(

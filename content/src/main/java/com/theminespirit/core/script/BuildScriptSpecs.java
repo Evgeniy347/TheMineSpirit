@@ -35,6 +35,24 @@ final class BuildScriptSpecs {
                         List.of("место свободно"),
                         List.of("блок поставлен")),
                 spec(
+                        "break_block",
+                        "сломать блок",
+                        List.of(
+                                ParamSpec.integer(
+                                        "x",
+                                        true,
+                                        -CatalogLimits.WORLD_HORIZONTAL_LIMIT,
+                                        CatalogLimits.WORLD_HORIZONTAL_LIMIT),
+                                ParamSpec.integer("y", true, CatalogLimits.WORLD_Y_MIN, CatalogLimits.WORLD_Y_MAX),
+                                ParamSpec.integer(
+                                        "z",
+                                        true,
+                                        -CatalogLimits.WORLD_HORIZONTAL_LIMIT,
+                                        CatalogLimits.WORLD_HORIZONTAL_LIMIT),
+                                ParamSpec.bool("demolish", false, false)),
+                        List.of("в клетке есть ломаемый блок", "есть подходящий инструмент"),
+                        List.of("блок сломан, дроп подобран")),
+                spec(
                         "light_area",
                         "осветить территорию факелами",
                         List.of(

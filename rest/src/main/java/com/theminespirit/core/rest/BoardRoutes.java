@@ -82,6 +82,7 @@ public final class BoardRoutes {
         body.put("building", request.building().map(Enum::name).orElse(null));
         body.put("from", request.from().map(Object::toString).orElse(null));
         body.put("to", request.to().map(Object::toString).orElse(null));
+        body.put("title", request.title());
         return IdempotencyCache.fingerprintOf(body);
     }
 }

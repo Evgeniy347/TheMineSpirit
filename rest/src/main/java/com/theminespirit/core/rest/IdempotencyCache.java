@@ -120,11 +120,21 @@ public final class IdempotencyCache implements Idempotency {
 
     public static String fingerprint(
             String bot, @Nullable String goal, @Nullable String planJson, Map<String, Object> params) {
+        return fingerprint(bot, goal, planJson, params, null);
+    }
+
+    public static String fingerprint(
+            String bot,
+            @Nullable String goal,
+            @Nullable String planJson,
+            Map<String, Object> params,
+            @Nullable String title) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("bot", bot);
         body.put("goal", goal);
         body.put("plan", planJson == null ? null : readPlan(planJson));
         body.put("params", params == null ? Map.of() : params);
+        body.put("title", title);
         return fingerprintOf(body);
     }
 

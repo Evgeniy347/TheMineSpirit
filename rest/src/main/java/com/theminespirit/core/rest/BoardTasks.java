@@ -111,7 +111,8 @@ public final class BoardTasks {
                 target == null ? null : target.supplyItem(),
                 target == null ? 0 : target.supplyCount(),
                 ticket.executors().stream().map(UUID::toString).toList(),
-                stockOf(ticket.requiredItems(), stock));
+                stockOf(ticket.requiredItems(), stock),
+                ticket.title());
     }
 
     private static Map<String, Integer> stockOf(Map<String, Integer> required, StockView stock) {

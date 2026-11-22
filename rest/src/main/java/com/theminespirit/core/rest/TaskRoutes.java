@@ -92,15 +92,16 @@ public final class TaskRoutes {
         TaskNode plan = parsed.plan() == null ? null : planning.validatePlan(parsed.plan());
         String taskId;
         try {
-            taskId = registry.reserve(bot, parsed.goal());
+            taskId = registry.reserve(bot, parsed.goal(), parsed.title());
         } catch (TaskRegistry.BusyException busy) {
             throw new ApiException(
                     ErrorCode.CONFLICT, ErrorText.of(busy), Map.of("bot", busy.bot(), TASK_ID, busy.activeTaskId()));
         }
         long generation;
         try {
-            generation =
-                    plan != null ? gateway.start(bot, plan) : gateway.startGoal(bot, goalOf(parsed), parsed.params());
+            generation = plan != null
+                    ? gateway.start(bot, taskId, parsed.title(), plan)
+                    : gateway.startGoal(bot, taskId, parsed.title(), goalOf(parsed), parsed.params());
         } catch (RuntimeException failure) {
             registry.discard(taskId);
             throw failure;
@@ -243,7 +244,7 @@ public final class TaskRoutes {
 
     private static String fingerprint(String bot, TaskRequest parsed) {
         String planJson = parsed.plan() == null ? null : parsed.plan().toString();
-        return IdempotencyCache.fingerprint(bot, parsed.goal(), planJson, parsed.params());
+        return IdempotencyCache.fingerprint(bot, parsed.goal(), planJson, parsed.params(), parsed.title());
     }
 
     private static String acceptedJson(String taskId, String bot, String requestId) {

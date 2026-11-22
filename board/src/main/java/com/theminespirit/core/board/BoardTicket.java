@@ -20,7 +20,8 @@ public record BoardTicket(
         List<String> dependsOn,
         Map<String, Integer> requiredItems,
         List<String> modifiers,
-        List<UUID> executors) {
+        List<UUID> executors,
+        @Nullable String title) {
 
     public static final String ALWAYS_CAUSE = "always";
 
@@ -73,7 +74,35 @@ public record BoardTicket(
                 List.of());
     }
 
+    public BoardTicket(
+            String id,
+            BoardCase boardCase,
+            Optional<UUID> assignee,
+            int priority,
+            long createdAt,
+            int level,
+            String cause,
+            List<String> dependsOn,
+            Map<String, Integer> requiredItems,
+            List<String> modifiers,
+            List<UUID> executors) {
+        this(
+                id,
+                boardCase,
+                assignee,
+                priority,
+                createdAt,
+                level,
+                cause,
+                dependsOn,
+                requiredItems,
+                modifiers,
+                executors,
+                null);
+    }
+
     public BoardTicket {
+        title = title == null || title.isBlank() ? null : title;
         if (id == null || id.isBlank()) {
             throw new IllegalArgumentException("id задания пустое: по id доска находит "
                     + "задание в очереди, связывает зависимости и отдаёт наблюдателю");
@@ -143,7 +172,37 @@ public record BoardTicket(
                     + "]: доска сравнивает задания с ремонтом");
         }
         return new BoardTicket(
-                id, boardCase, assignee, next, createdAt, level, cause, dependsOn, requiredItems, modifiers, executors);
+                id,
+                boardCase,
+                assignee,
+                next,
+                createdAt,
+                level,
+                cause,
+                dependsOn,
+                requiredItems,
+                modifiers,
+                executors,
+                title);
+    }
+
+    public BoardTicket withTitle(@Nullable String next) {
+        if (Objects.equals(title, next)) {
+            return this;
+        }
+        return new BoardTicket(
+                id,
+                boardCase,
+                assignee,
+                priority,
+                createdAt,
+                level,
+                cause,
+                dependsOn,
+                requiredItems,
+                modifiers,
+                executors,
+                next == null || next.isBlank() ? null : next);
     }
 
     public BoardTicket withModifier(String modifier) {
@@ -161,7 +220,8 @@ public record BoardTicket(
                 dependsOn,
                 requiredItems,
                 details,
-                executors);
+                executors,
+                title);
     }
 
     public BoardTicket withFailure(@Nullable String reason) {
@@ -181,7 +241,8 @@ public record BoardTicket(
                 dependsOn,
                 requiredItems,
                 details,
-                executors);
+                executors,
+                title);
     }
 
     public boolean sameDetails(BoardTicket other) {
@@ -189,7 +250,8 @@ public record BoardTicket(
                 && cause.equals(other.cause)
                 && dependsOn.equals(other.dependsOn)
                 && requiredItems.equals(other.requiredItems)
-                && executors.equals(other.executors);
+                && executors.equals(other.executors)
+                && Objects.equals(title, other.title);
     }
 
     public boolean teamwork() {

@@ -11,15 +11,27 @@ public record TaskRecord(
         @Nullable String goal,
         @Nullable RunProgress progress,
         @Nullable Object result,
-        @Nullable String error) {
+        @Nullable String error,
+        @Nullable String title) {
     public TaskRecord {
         Objects.requireNonNull(taskId, "taskId не может быть null: клиент находит задачу по task_id");
         Objects.requireNonNull(bot, "bot не может быть null: у задачи всегда есть дух-исполнитель");
         Objects.requireNonNull(state, "state не может быть null: состояние — ось жизненного цикла задачи");
     }
 
+    public TaskRecord(
+            String taskId,
+            String bot,
+            TaskState state,
+            @Nullable String goal,
+            @Nullable RunProgress progress,
+            @Nullable Object result,
+            @Nullable String error) {
+        this(taskId, bot, state, goal, progress, result, error, null);
+    }
+
     public TaskRecord withProgress(@Nullable RunProgress replacement) {
-        return replacement == null ? this : new TaskRecord(taskId, bot, state, goal, replacement, result, error);
+        return replacement == null ? this : new TaskRecord(taskId, bot, state, goal, replacement, result, error, title);
     }
 
     public boolean active() {

@@ -20,6 +20,8 @@ import com.theminespirit.neoforge.blocks.OpenScript;
 import com.theminespirit.neoforge.blocks.UseBlockScript;
 import com.theminespirit.neoforge.crater.CraterResolver;
 import com.theminespirit.neoforge.crater.FillCraterScript;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -32,6 +34,7 @@ final class BuildingScriptPack extends SpiritScriptPack {
     @Override
     protected void register() {
         put("place_block", spirit -> params -> new PlaceBlockScript(spirit, PlaceBlockParams.from(params)));
+        put("break_block", spirit -> params -> breakBlock(spirit, params));
         put("light_area", spirit -> params -> new LightAreaScript(spirit, LightAreaParams.from(params)));
         PortalRegistrations.register(this);
         put("fill", spirit -> params -> new FillScript(spirit, FillParams.from(params)));
@@ -49,6 +52,20 @@ final class BuildingScriptPack extends SpiritScriptPack {
         put("build_shelter", spirit -> params -> new BuildShelterScript(spirit));
         put("use_block", spirit -> params -> new UseBlockScript(spirit, BlockPointParams.from(params)));
         put("open", spirit -> params -> new OpenScript(spirit, BlockPointParams.from(params)));
+    }
+
+    private static ScriptInstance breakBlock(SpiritEntity spirit, Map<String, Object> params) {
+        Map<String, Object> single = new LinkedHashMap<>(params);
+        Object x = single.remove("x");
+        Object y = single.remove("y");
+        Object z = single.remove("z");
+        single.put("x1", x);
+        single.put("y1", y);
+        single.put("z1", z);
+        single.put("x2", x);
+        single.put("y2", y);
+        single.put("z2", z);
+        return new ClearAreaScript(spirit, single);
     }
 
     private static ScriptInstance buildSchematic(SpiritEntity spirit, BuildSchematicParams params) {

@@ -59,6 +59,10 @@ final class BoardTileCodec {
                 buf.writeUtf(item.getKey());
                 buf.writeVarInt(item.getValue());
             }
+            buf.writeBoolean(tile.title() != null);
+            if (tile.title() != null) {
+                buf.writeUtf(tile.title());
+            }
         }
     }
 
@@ -114,6 +118,7 @@ final class BoardTileCodec {
         for (int j = 0; j < stockCount; j++) {
             stock.put(buf.readUtf(), buf.readVarInt());
         }
+        String title = buf.readBoolean() ? buf.readUtf() : null;
         return new BoardTile(
                 id,
                 boardCase,
@@ -132,6 +137,7 @@ final class BoardTileCodec {
                 supplyCount,
                 details,
                 requiredItems,
-                stock);
+                stock,
+                title);
     }
 }

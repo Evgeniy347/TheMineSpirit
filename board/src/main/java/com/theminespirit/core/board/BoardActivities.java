@@ -47,6 +47,9 @@ public final class BoardActivities {
     }
 
     public static boolean stale(BoardTicket ticket, @Nullable BoardStatus status, Set<String> liveCauses) {
+        if (RestTickets.is(ticket.id())) {
+            return status == BoardStatus.DONE;
+        }
         return status == BoardStatus.DONE
                 && isActivity(ticket.boardCase())
                 && ticket.boardCase() != BoardCase.ACTIVITY_EXTERNAL

@@ -23,6 +23,7 @@ class ScriptRegistryGuardTests {
             "approach",
             "attack",
             "bone_meal",
+            "break_block",
             "breed",
             "brew",
             "bridge",

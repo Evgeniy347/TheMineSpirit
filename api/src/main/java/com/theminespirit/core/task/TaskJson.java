@@ -25,6 +25,7 @@ public final class TaskJson {
         map.put("bot", task.bot());
         map.put("state", task.state().wire());
         map.put("goal", task.goal());
+        map.put("title", task.title());
         map.put("progress", task.progress() == null ? null : progressMap(task.progress()));
         map.put("result", task.result());
         map.put("error", task.error());

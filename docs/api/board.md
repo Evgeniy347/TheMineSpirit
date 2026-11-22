@@ -31,7 +31,8 @@ GET /v1/board?limit=30&offset=60&status=ASSIGNED&group=ACTIVE&assignee=<uuid>&ca
   состава и состояния доски.
 - `counts` — итоги журнала: `done` (переходы DONE, только растёт) и `reopened` (REOPENED, отдельно); текущий
   статус задачи в `tasks` от этого не зависит.
-- `id` — id задания; `case` — кейс `BoardCase`; `priority` — вес (больше — раньше);
+- `id` — id задания; `case` — кейс `BoardCase`; `priority` — вес (больше — раньше); `title` — название
+  задания или `null`, если его не задали;
 - `assignee` — дух-держатель или `null` («любой свободный»);
 - `status` — `PENDING`/`WAITING_RESOURCES`/`ASSIGNED`/`BLOCKED`/`DONE`/`FAILED`/`CANCELLED`;
   `BLOCKED` — задание проваливалось подряд `ticketFailLimit` раз (число в `board.json`), пока условия
@@ -66,6 +67,7 @@ GET /v1/board?limit=30&offset=60&status=ASSIGNED&group=ACTIVE&assignee=<uuid>&ca
 - `dependsOn` — необязателен: список id заданий-предшественников;
 - `level` — необязателен, по умолчанию 1; обязан быть ≥ 1;
 - `cause` — необязательна, по умолчанию `always`; обязана быть непустой строкой;
+- `title` — необязательное название задания до 100 символов; его показывает плитка доски вместо имени кейса;
 - `building`, `from`, `to` — только для `case: RELOCATE_BUILDING`: `building` — кейс переносимой постройки,
   `from`/`to` — две точки `"x,y,z"`; неподвижная постройка (данные `board.json → immovable`) — 422
   `invalid_request` с перечнем `immovable`; `from = to` и отсутствие точек — 400;

@@ -78,6 +78,7 @@ public final class BoardJson {
         map.put("createdAt", task.createdAt());
         map.put("level", task.level());
         map.put("cause", task.cause());
+        map.put("title", task.title());
         map.put("effectivePriority", task.effectivePriority());
         map.put("modifiers", task.modifiers());
         map.put("done", task.done());

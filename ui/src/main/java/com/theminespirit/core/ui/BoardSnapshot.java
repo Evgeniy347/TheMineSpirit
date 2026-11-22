@@ -91,7 +91,8 @@ public final class BoardSnapshot {
                 task.supplyCount(),
                 detailsOf(task.modifiers(), targetDetails.get(task.id())),
                 task.requiredItems(),
-                task.stock());
+                task.stock(),
+                task.title());
     }
 
     private static boolean unfinished(Row row) {

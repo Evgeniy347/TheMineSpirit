@@ -57,7 +57,9 @@ class BoardPostGuardTests {
             "SpiritBoardGateway.java",
             "REST POST /v1/board/tasks — внешний вход стратега; задача приходит от игрока, а не от сторожа",
             "BoardActivityDesk.java",
-            "занятие графа: id узла, команда и план приходят из GraphPost, доска хранит его как задание");
+            "занятие графа: id узла, команда и план приходят из GraphPost, доска хранит его как задание",
+            "ExternalTickets.java",
+            "показ REST-задачи стратега на доске: источник — REST-мост, задача уже запущена духу напрямую");
 
     @Test
     void board_PostsOnlyThroughGraphPost_ExceptDocumentedExecutors() {

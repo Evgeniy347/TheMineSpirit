@@ -18,6 +18,10 @@ public final class TaskRegistry {
     private long nextId;
 
     public synchronized String reserve(String bot, @Nullable String goal) {
+        return reserve(bot, goal, null);
+    }
+
+    public synchronized String reserve(String bot, @Nullable String goal, @Nullable String title) {
         Objects.requireNonNull(bot, "bot не может быть null: задача всегда привязана к духу");
         TaskRecord active = activeForBot(bot).orElse(null);
         if (active != null) {
@@ -25,7 +29,10 @@ public final class TaskRegistry {
         }
         nextId++;
         String taskId = "t-" + nextId;
-        tasks.put(taskId, new Entry(new TaskRecord(taskId, bot, TaskState.ACCEPTED, goal, null, null, null)));
+        TaskRecord record = title == null
+                ? new TaskRecord(taskId, bot, TaskState.ACCEPTED, goal, null, null, null)
+                : new TaskRecord(taskId, bot, TaskState.ACCEPTED, goal, null, null, null, title);
+        tasks.put(taskId, new Entry(record));
         ensureCompletedCap();
         return taskId;
     }
@@ -115,7 +122,8 @@ public final class TaskRegistry {
                     + "running → succeeded/failed/cancelled");
         }
         Object nextResult = result != null ? result : previous.result();
-        TaskRecord next = new TaskRecord(taskId, previous.bot(), state, previous.goal(), progress, nextResult, error);
+        TaskRecord next = new TaskRecord(
+                taskId, previous.bot(), state, previous.goal(), progress, nextResult, error, previous.title());
         entry.record = next;
         List<TaskEvent> events = TaskEventDiff.between(previous, next);
         entry.log.append(events);

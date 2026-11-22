@@ -16,5 +16,4 @@ guards/ProductionCommentGuardTests.java	575
 guards/SucceedWhenReturnGuardTests.java	343
 neoforge/SpiritEntity.java	752
 core/building/BuildPlanner.java	838
-core/script/ScriptCatalogTestsSupport.java	319
 core/planner/AcquireScriptTestsSupport.java	337

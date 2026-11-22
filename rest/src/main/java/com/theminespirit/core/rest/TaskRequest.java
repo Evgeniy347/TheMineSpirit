@@ -16,15 +16,26 @@ import java.util.UUID;
 import org.jspecify.annotations.Nullable;
 
 public record TaskRequest(
-        UUID requestId, @Nullable String goal, @Nullable JsonNode plan, Map<String, Object> params) {
+        UUID requestId,
+        @Nullable String goal,
+        @Nullable JsonNode plan,
+        Map<String, Object> params,
+        @Nullable String title) {
     public static final int MAX_GOAL_LENGTH = 500;
+    public static final int MAX_TITLE_LENGTH = 100;
 
     private static final String FIELD = "field";
     private static final String REQUEST_ID = "request_id";
     private static final String GOAL = "goal";
     private static final String PLAN = "plan";
     private static final String PARAMS = "params";
-    private static final List<String> FIELDS = List.of(REQUEST_ID, GOAL, PLAN, PARAMS);
+    private static final String TITLE = "title";
+    private static final List<String> FIELDS = List.of(REQUEST_ID, GOAL, PLAN, PARAMS, TITLE);
+
+    TaskRequest(UUID requestId, @Nullable String goal, @Nullable JsonNode plan, Map<String, Object> params) {
+        this(requestId, goal, plan, params, null);
+    }
+
     private static final JsonMapper MAPPER = JsonMapper.builder()
             .enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS)
             .enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION)
@@ -57,7 +68,31 @@ public record TaskRequest(
         JsonNode plan = objectOrNull(root, PLAN);
         Map<String, Object> params =
                 root.has(PARAMS) && !root.get(PARAMS).isNull() ? params(root.get(PARAMS)) : Map.of();
-        return new TaskRequest(requestId, goal, plan, params);
+        String title = titleOrNull(root, TITLE);
+        return new TaskRequest(requestId, goal, plan, params, title);
+    }
+
+    private static @Nullable String titleOrNull(JsonNode root, String field) {
+        JsonNode node = root.get(field);
+        if (node == null || node.isNull()) {
+            return null;
+        }
+        if (!node.isTextual()) {
+            throw invalid(
+                    "Поле 'title' должно быть строкой названия задачи, получено: " + node.getNodeType(),
+                    Map.of(FIELD, TITLE));
+        }
+        String text = node.textValue().trim();
+        if (text.isEmpty()) {
+            return null;
+        }
+        if (text.length() > MAX_TITLE_LENGTH) {
+            throw invalid(
+                    "Название задачи длиннее " + MAX_TITLE_LENGTH + " символов (" + text.length()
+                            + "): назовите задачу короче",
+                    Map.of(FIELD, TITLE, "max_length", MAX_TITLE_LENGTH));
+        }
+        return text;
     }
 
     private static @Nullable String textOrNull(JsonNode root, String field) {

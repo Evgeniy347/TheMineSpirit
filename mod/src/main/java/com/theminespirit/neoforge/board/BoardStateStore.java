@@ -3,6 +3,7 @@ package com.theminespirit.neoforge.board;
 import com.theminespirit.core.board.BoardState;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.RestTickets;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.board.graph.GraphFailureMemory;
@@ -46,6 +47,7 @@ public final class BoardStateStore extends SavedData {
     private static final String HOLDER_KEY = "Holder";
     private static final String FAILED_AT_KEY = "FailedAt";
     private static final String FAILURES_KEY = "Failures";
+    private static final String TITLE_KEY = "Title";
 
     private BoardState state = BoardState.empty();
     private Map<String, TicketTarget> targets = Map.of();
@@ -98,6 +100,9 @@ public final class BoardStateStore extends SavedData {
         tag.putInt(VERSION_KEY, VERSION);
         ListTag entries = new ListTag();
         for (BoardState.Entry entry : state.entries()) {
+            if (RestTickets.is(entry.ticket().id())) {
+                continue;
+            }
             entries.add(writeEntry(entry));
         }
         tag.put(ENTRIES_KEY, entries);
@@ -107,7 +112,13 @@ public final class BoardStateStore extends SavedData {
         }
         tag.put(LEDGER_KEY, marks);
         BoardStateNbt.write(tag, state);
-        tag.put(BoardTargetsNbt.KEY, BoardTargetsNbt.write(targets));
+        Map<String, TicketTarget> persistedTargets = new LinkedHashMap<>();
+        targets.forEach((id, target) -> {
+            if (!RestTickets.is(id)) {
+                persistedTargets.put(id, target);
+            }
+        });
+        tag.put(BoardTargetsNbt.KEY, BoardTargetsNbt.write(persistedTargets));
         tag.put(BoardFailuresNbt.KEY, BoardFailuresNbt.write(failures));
         tag.putString(BUILD_KEY, build);
         return tag;
@@ -171,6 +182,9 @@ public final class BoardStateStore extends SavedData {
         tag.putLong(CREATED_KEY, ticket.createdAt());
         tag.putInt(LEVEL_KEY, ticket.level());
         tag.putString(CAUSE_KEY, ticket.cause());
+        if (ticket.title() != null) {
+            tag.putString(TITLE_KEY, ticket.title());
+        }
         ListTag depends = new ListTag();
         for (String dependency : ticket.dependsOn()) {
             depends.add(StringTag.valueOf(dependency));
@@ -237,7 +251,8 @@ public final class BoardStateStore extends SavedData {
                 depends,
                 required,
                 modifiers,
-                executors);
+                executors,
+                tag.contains(TITLE_KEY) ? tag.getString(TITLE_KEY) : null);
         Long failedAt = tag.contains(FAILED_AT_KEY) ? tag.getLong(FAILED_AT_KEY) : null;
         return new BoardState.Entry(
                 ticket,

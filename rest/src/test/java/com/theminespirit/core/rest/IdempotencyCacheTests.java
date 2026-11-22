@@ -274,4 +274,17 @@ class IdempotencyCacheTests {
                 "Недавний запрос обязан пережить вытеснение более старых: FIFO вытесняет только старейшие"
                         + " Иначе тест check_AnySequence_SizeNeverExceedsCapacityAndRecentSurvives перестанет ловить эту поломку. При смене check_AnySequence_SizeNeverExceedsCapacityAndRecentSurvives проверь это утверждение.");
     }
+
+    @Test
+    void fingerprint_TitleChange_ChangesDigest() {
+        String base = IdempotencyCache.fingerprint(BOT, "цель", null, Map.of(), "Поход за деревом");
+        String other = IdempotencyCache.fingerprint(BOT, "цель", null, Map.of(), "Поход за сундуками");
+
+        assertNotEquals(
+                base,
+                other,
+                "Повтор с другим названием обязан считаться другим запросом: иначе стратег исправит title, "
+                        + "а кэш молча вернёт старую задачу с прежним именем на доске. При смене набора полей "
+                        + "fingerprint в IdempotencyCache проверь title");
+    }
 }

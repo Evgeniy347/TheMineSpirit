@@ -52,14 +52,14 @@ class PatrolParamsTests {
     @Test
     void from_TooManyPoints_IsRejected() {
         List<String> points = new ArrayList<>();
-        for (int i = 0; i < 17; i++) {
+        for (int i = 0; i < 65; i++) {
             points.add(i + ",64,0");
         }
 
         assertThrows(
                 IllegalArgumentException.class,
                 () -> PatrolParams.from(Map.of("points", points, "mode", "loop", "loops", 1)),
-                "Маршрут длиннее 16 точек обязан отвергаться: длинный маршрут режется на части, "
+                "Маршрут длиннее 64 точек обязан отвергаться: длинный маршрут режется на части, "
                         + "иначе патруль уходит из тикающей зоны"
                         + " При смене from_TooManyPoints_IsRejected проверь это утверждение.");
     }

@@ -25,7 +25,49 @@ public record BoardTile(
         int supplyCount,
         List<String> details,
         Map<String, Integer> requiredItems,
-        Map<String, Integer> stock) {
+        Map<String, Integer> stock,
+        @Nullable String title) {
+    public BoardTile(
+            String id,
+            String boardCase,
+            int level,
+            int priority,
+            @Nullable String spirit,
+            String status,
+            BoardTileGroup group,
+            Map<String, Integer> missing,
+            List<String> dependsOn,
+            long doneAt,
+            long startedAt,
+            long finishedAt,
+            long durationTicks,
+            @Nullable String supplyItem,
+            int supplyCount,
+            List<String> details,
+            Map<String, Integer> requiredItems,
+            Map<String, Integer> stock) {
+        this(
+                id,
+                boardCase,
+                level,
+                priority,
+                spirit,
+                status,
+                group,
+                missing,
+                dependsOn,
+                doneAt,
+                startedAt,
+                finishedAt,
+                durationTicks,
+                supplyItem,
+                supplyCount,
+                details,
+                requiredItems,
+                stock,
+                null);
+    }
+
     public BoardTile(
             String id,
             String boardCase,

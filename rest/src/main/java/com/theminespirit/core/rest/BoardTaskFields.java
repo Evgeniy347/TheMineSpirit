@@ -206,6 +206,32 @@ final class BoardTaskFields {
         }
     }
 
+    static @Nullable String title(@Nullable JsonNode node) {
+        if (node == null || node.isNull()) {
+            return null;
+        }
+        if (!node.isTextual()) {
+            throw BoardTaskRequest.invalid(
+                    "Поле 'title' должно быть строкой названия задания, получено: " + node.getNodeType(),
+                    Map.of(BoardTaskRequest.FIELD, BoardTaskRequest.TITLE));
+        }
+        String text = node.textValue().trim();
+        if (text.isEmpty()) {
+            return null;
+        }
+        if (text.length() > BoardTaskRequest.MAX_TITLE_LENGTH) {
+            throw BoardTaskRequest.invalid(
+                    "Название задания длиннее " + BoardTaskRequest.MAX_TITLE_LENGTH + " символов (" + text.length()
+                            + "): назовите задание короче",
+                    Map.of(
+                            BoardTaskRequest.FIELD,
+                            BoardTaskRequest.TITLE,
+                            "max_length",
+                            BoardTaskRequest.MAX_TITLE_LENGTH));
+        }
+        return text;
+    }
+
     static String cause(@Nullable JsonNode node) {
         if (node == null || node.isNull()) {
             return "always";

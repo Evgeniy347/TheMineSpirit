@@ -148,7 +148,10 @@ public final class SpiritBoardGateway implements BoardGateway {
                 request.level(),
                 request.cause(),
                 request.dependsOn(),
-                request.requiredItems());
+                request.requiredItems(),
+                List.of(),
+                List.of(),
+                request.title());
         BoardOutcome outcome;
         if (request.boardCase() == BoardCase.RELOCATE_BUILDING) {
             outcome = service.submit(ticket, relocationTarget(request));

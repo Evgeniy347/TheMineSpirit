@@ -69,7 +69,7 @@ public final class CatalogLimits {
     public static final int NAV_RADIUS_MAX = 32;
     public static final int NAV_RADIUS_DEFAULT = 16;
 
-    public static final int NAV_PATROL_POINTS_MAX = 16;
+    public static final int NAV_PATROL_POINTS_MAX = 64;
 
     public static final int NAV_PATROL_LOOPS_MIN = 1;
     public static final int NAV_PATROL_LOOPS_MAX = 16;

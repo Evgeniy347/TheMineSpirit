@@ -5,6 +5,7 @@ import com.theminespirit.core.board.AbsentOwners;
 import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardLog;
 import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.RestTickets;
 import com.theminespirit.core.board.TaskStall;
 import com.theminespirit.core.board.TicketRun;
 import com.theminespirit.core.board.TicketTarget;
@@ -113,24 +114,22 @@ final class BoardSettlementDesk {
                 host.releaseSpirit(spirit);
                 continue;
             }
-            RunStatus status = spirit.taskStatus().orElse(null);
             List<BoardTicket> held = board.assignedTo(spirit.getUUID());
-            if (!held.isEmpty()) {
-                BoardTicket crew = held.get(0);
-                UUID owner = board.holderOf(crew.id()).orElse(null);
-                if (crew.teamwork() && owner != null && !owner.equals(spirit.getUUID())) {
-                    continue;
-                }
-            }
-            dropUntooled(spirit);
             if (held.isEmpty()) {
+                dropUntooled(spirit);
                 continue;
             }
-            BoardTicket ticket = held.get(0);
+            BoardTicket crew = held.get(0);
+            UUID owner = board.holderOf(crew.id()).orElse(null);
+            if ((crew.teamwork() && owner != null && !owner.equals(spirit.getUUID())) || RestTickets.is(crew.id())) {
+                continue;
+            }
+            dropUntooled(spirit);
+            BoardTicket ticket = crew;
             TicketRun run = TicketRun.decide(
                     issuedGenerations.getOrDefault(ticket.id(), SpiritReading.UNKNOWN_GENERATION),
                     spirit.taskGeneration(),
-                    status,
+                    spirit.taskStatus().orElse(null),
                     spirit.tactics().wantsControl(),
                     targets.containsKey(ticket.id()));
             switch (run) {

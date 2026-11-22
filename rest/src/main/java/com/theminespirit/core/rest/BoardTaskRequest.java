@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import org.jspecify.annotations.Nullable;
 
 public record BoardTaskRequest(
         UUID requestId,
@@ -30,7 +31,10 @@ public record BoardTaskRequest(
         String cause,
         Optional<BoardCase> building,
         Optional<BlockCoord> from,
-        Optional<BlockCoord> to) {
+        Optional<BlockCoord> to,
+        @Nullable String title) {
+
+    public static final int MAX_TITLE_LENGTH = 100;
 
     static final String FIELD = "field";
     static final String ALLOWED = "allowed";
@@ -44,8 +48,9 @@ public record BoardTaskRequest(
     static final String BUILDING = "building";
     static final String FROM = "from";
     static final String TO = "to";
+    static final String TITLE = "title";
     private static final List<String> FIELDS =
-            List.of(REQUEST_ID, CASE, ASSIGNEE, REQUIRED_ITEMS, DEPENDS_ON, LEVEL, CAUSE, BUILDING, FROM, TO);
+            List.of(REQUEST_ID, CASE, ASSIGNEE, REQUIRED_ITEMS, DEPENDS_ON, LEVEL, CAUSE, BUILDING, FROM, TO, TITLE);
     private static final JsonMapper MAPPER = JsonMapper.builder()
             .enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS)
             .enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION)
@@ -58,18 +63,11 @@ public record BoardTaskRequest(
             Map<String, Integer> requiredItems,
             List<String> dependsOn,
             int level,
-            String cause) {
-        this(
-                requestId,
-                boardCase,
-                assignee,
-                requiredItems,
-                dependsOn,
-                level,
-                cause,
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty());
+            String cause,
+            Optional<BoardCase> building,
+            Optional<BlockCoord> from,
+            Optional<BlockCoord> to) {
+        this(requestId, boardCase, assignee, requiredItems, dependsOn, level, cause, building, from, to, null);
     }
 
     public BoardTaskRequest {
@@ -103,6 +101,13 @@ public record BoardTaskRequest(
         Objects.requireNonNull(building, "building не может быть null: без постройки задают Optional.empty()");
         Objects.requireNonNull(from, "from не может быть null: без точки задают Optional.empty()");
         Objects.requireNonNull(to, "to не может быть null: без точки задают Optional.empty()");
+        title = title == null || title.isBlank() ? null : title.trim();
+        if (title != null && title.length() > MAX_TITLE_LENGTH) {
+            throw invalid(
+                    "Название задания длиннее " + MAX_TITLE_LENGTH + " символов (" + title.length()
+                            + "): назовите задание короче",
+                    Map.of(FIELD, TITLE, "max_length", MAX_TITLE_LENGTH));
+        }
         if (boardCase == BoardCase.TRANSFER_ITEM) {
             throw invalid(
                     "Кейс TRANSFER_ITEM ставит доска по нехватке ингредиентов у крафтера: "
@@ -174,8 +179,9 @@ public record BoardTaskRequest(
         Optional<BoardCase> building = BoardTaskFields.building(root.get(BUILDING));
         Optional<BlockCoord> from = BoardTaskFields.point(root.get(FROM), FROM);
         Optional<BlockCoord> to = BoardTaskFields.point(root.get(TO), TO);
+        String title = BoardTaskFields.title(root.get(TITLE));
         return new BoardTaskRequest(
-                requestId, boardCase, assignee, requiredItems, dependsOn, level, cause, building, from, to);
+                requestId, boardCase, assignee, requiredItems, dependsOn, level, cause, building, from, to, title);
     }
 
     private static JsonNode read(byte[] body) {

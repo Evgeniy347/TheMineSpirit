@@ -46,6 +46,43 @@ class BoardTileCodecTests {
         }
     }
 
+    @Test
+    void writeRead_Title_KeptForClientTile() {
+        BoardTile named = new BoardTile(
+                "rest:t-1",
+                "ACTIVITY_EXTERNAL",
+                1,
+                95,
+                "Дух-1",
+                "ASSIGNED",
+                BoardTileGroup.AVAILABLE,
+                Map.of(),
+                List.of(),
+                0,
+                120,
+                0,
+                0,
+                null,
+                0,
+                List.of(),
+                Map.of(),
+                Map.of(),
+                "Поход за деревом");
+
+        FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
+        try {
+            BoardTileCodec.write(buf, List.of(named));
+            assertEquals(
+                    List.of(named),
+                    BoardTileCodec.read(buf),
+                    "Название обязано пережить пакет доски: иначе клиент рисует имя кейса вместо названия "
+                            + "задачи стратега, и пользователь не узнаёт свою задачу. При смене "
+                            + "writeRead_Title_KeptForClientTile проверь версию протокола и порядок полей");
+        } finally {
+            buf.release();
+        }
+    }
+
     private static BoardTile plain() {
         return new BoardTile(
                 "board-2",

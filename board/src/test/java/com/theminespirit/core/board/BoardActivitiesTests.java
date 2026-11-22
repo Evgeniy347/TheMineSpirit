@@ -1,6 +1,8 @@
 package com.theminespirit.core.board;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.plan.ScriptCall;
@@ -9,6 +11,7 @@ import com.theminespirit.core.plan.TaskNode;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
@@ -79,5 +82,30 @@ class BoardActivitiesTests {
                 BoardHeld.of(board, spirit),
                 "Без билета доски держателя нет: занятие больше не подменяет задание в REST"
                         + " Иначе тест held_NoAssignedTicket_Empty перестанет ловить эту поломку. При смене held_NoAssignedTicket_Empty проверь это утверждение.");
+    }
+
+    @Test
+    void stale_RestTicket_LeavesOnlyWhenDone() {
+        BoardTicket rest = new BoardTicket(
+                RestTickets.idFor("t-1"),
+                BoardCase.ACTIVITY_EXTERNAL,
+                Optional.empty(),
+                95,
+                0,
+                1,
+                "always",
+                List.of(),
+                Map.of());
+
+        assertTrue(
+                BoardActivities.stale(rest, BoardStatus.DONE, Set.of()),
+                "Завершённый REST-тикет обязан уходить с доски: иначе плитка последней задачи стратега висит "
+                        + "вечно, и пользователь считает духа занятым. При смене правила stale для rest-тикетов "
+                        + "проверь завершённое состояние");
+        assertFalse(
+                BoardActivities.stale(rest, BoardStatus.ASSIGNED, Set.of()),
+                "Идущий REST-тикет обязан оставаться на доске: иначе доска снимает отражение задачи, пока дух "
+                        + "её выполняет, и пользователь теряет из виду текущую работу. При смене правила stale "
+                        + "для rest-тикетов проверь выданное состояние");
     }
 }
