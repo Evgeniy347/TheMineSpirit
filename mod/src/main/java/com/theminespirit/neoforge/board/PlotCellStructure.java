@@ -19,6 +19,7 @@ public final class PlotCellStructure {
     private static @Nullable String cachedRulesHash;
     private static @Nullable Plan cachedPlan;
     private static Set<BlockCoord> cachedMine = Set.of();
+    private static long generation;
 
     private PlotCellStructure() {}
 
@@ -42,6 +43,10 @@ public final class PlotCellStructure {
         return block != null && block.endsWith("chest");
     }
 
+    public static long generation() {
+        return generation;
+    }
+
     private static @Nullable StageSite site(ServerLevel level) {
         return SettlementPlotStore.liveSite(level).orElse(null);
     }
@@ -61,6 +66,7 @@ public final class PlotCellStructure {
             cachedMine = mine(site);
             cachedSite = site;
             cachedRulesHash = rulesHash;
+            generation++;
         }
         return cached;
     }

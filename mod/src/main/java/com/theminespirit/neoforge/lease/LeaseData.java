@@ -48,6 +48,7 @@ public final class LeaseData extends SavedData {
             new SavedData.Factory<>(LeaseData::new, LeaseData::load, null);
 
     private final LeaseBook book = new LeaseBook();
+    private long revision;
     private final Map<String, Integer> undoFailures = new HashMap<>();
     private final Map<String, Long> suspendedSince = new HashMap<>();
 
@@ -110,7 +111,12 @@ public final class LeaseData extends SavedData {
     }
 
     public void changed() {
+        revision++;
         setDirty();
+    }
+
+    public long revision() {
+        return revision;
     }
 
     @Override

@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.board.api.BoardCase;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class BoardLedgerTests {
@@ -130,5 +131,23 @@ class BoardLedgerTests {
                 ledger.stageGate().missing(),
                 "После сброса кеша гейт совпадает со свежим журналом с той же отметкой: кеш не меняет смысл этапа"
                         + " Иначе тест note_AfterGateBuilt_InvalidatesCache перестанет ловить эту поломку. При смене note_AfterGateBuilt_InvalidatesCache проверь это утверждение.");
+    }
+
+    @Test
+    void note_AfterBuild_IncrementsRevision() {
+        BoardLedger ledger = new BoardLedger();
+        long before = ledger.revision();
+        ledger.note(BoardCase.BUILD_MINE, 1);
+
+        assertTrue(
+                ledger.revision() > before,
+                "Каждая отметка двигает ревизию журнала: по ней расчистка понимает, что памятку защиты пора сбросить"
+                        + " Иначе тест note_AfterBuild_IncrementsRevision перестанет ловить эту поломку. При смене note_AfterBuild_IncrementsRevision проверь это утверждение.");
+        long marked = ledger.revision();
+        ledger.restore(Set.of(BoardLedger.PREFIX + "BUILD_PEN:1"));
+        assertTrue(
+                ledger.revision() > marked,
+                "Восстановление журнала тоже двигает ревизию: старые решения защиты не должны пережить перезагрузку отметок"
+                        + " Иначе тест note_AfterBuild_IncrementsRevision перестанет ловить эту поломку. При смене note_AfterBuild_IncrementsRevision проверь это утверждение.");
     }
 }

@@ -8,7 +8,11 @@ import com.theminespirit.core.mining.api.BreakSafety;
 import com.theminespirit.core.mining.api.MiningSafety;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.BlockProtection;
+import com.theminespirit.core.policy.ProtectionMemo;
+import com.theminespirit.neoforge.board.BoardRegistry;
+import com.theminespirit.neoforge.board.PlotCellStructure;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
+import com.theminespirit.neoforge.lease.LeaseData;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.BlockPos;
@@ -62,15 +66,31 @@ final class ClearBlocked {
         return new Sweep(leftover, 0, 0, 0, excluded, 0);
     }
 
-    Sweep dropProtected(List<BlockCoord> remaining, SpiritEntity spirit, boolean demolish) {
+    static long protectionStamp(SpiritEntity spirit) {
+        long lease = 0;
+        long ledger = 0;
+        if (spirit.level() instanceof ServerLevel server) {
+            lease = LeaseData.get(server).revision();
+            ledger = BoardRegistry.peek(server)
+                    .map(service -> service.board().ledger().revision())
+                    .orElse(0L);
+        }
+        return lease * 31L + ledger * 131L + PlotCellStructure.generation() * 7919L;
+    }
+
+    Sweep dropProtected(List<BlockCoord> remaining, SpiritEntity spirit, boolean demolish, ProtectionMemo memo) {
         List<ClearSummary.Leftover> leftover = new ArrayList<>();
         int protectedCount = 0;
         for (int index = remaining.size() - 1; index >= 0; index--) {
             BlockCoord cell = remaining.get(index);
+            if (memo.certified(cell)) {
+                continue;
+            }
             BlockPos pos = new BlockPos(cell.x(), cell.y(), cell.z());
             BlockState state = level.getBlockState(pos);
             String reason = protectedReason(spirit, pos, state, demolish);
             if (reason == null) {
+                memo.certify(cell);
                 continue;
             }
             protectedCount++;

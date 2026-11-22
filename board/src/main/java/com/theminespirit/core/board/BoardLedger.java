@@ -16,6 +16,11 @@ public final class BoardLedger {
     private long doneTotal;
     private long reopenedTotal;
     private @Nullable StageGate gate;
+    private long revision;
+
+    public long revision() {
+        return revision;
+    }
 
     public void gate(StageGate next) {
         gate = Objects.requireNonNull(next, "Гейт этапа не может быть null: без него неясно, что открыто");
@@ -83,12 +88,14 @@ public final class BoardLedger {
     public void note(BoardCase boardCase, int level) {
         built.add(key(boardCase, level));
         gate = null;
+        revision++;
     }
 
     public void forget(BoardCase boardCase, int level) {
         Objects.requireNonNull(boardCase, "Кейс снятия отметки не может быть null: без него непонятно, что снимать");
         built.remove(key(boardCase, level));
         gate = null;
+        revision++;
     }
 
     public void complete(BoardCase boardCase, int level) {
@@ -117,16 +124,19 @@ public final class BoardLedger {
     public void notePlan(String planId, int level) {
         built.add(planKey(planId, level));
         gate = null;
+        revision++;
     }
 
     public void forgetPlan(String planId, int level) {
         built.remove(planKey(planId, level));
         gate = null;
+        revision++;
     }
 
     public void clear() {
         built.clear();
         gate = null;
+        revision++;
     }
 
     public void restore(Set<String> keys) {
@@ -139,6 +149,7 @@ public final class BoardLedger {
             built.add(key);
         }
         gate = null;
+        revision++;
     }
 
     public boolean has(BoardCase boardCase, int level) {
