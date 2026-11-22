@@ -1,6 +1,7 @@
 package com.theminespirit.core.observation;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -149,5 +150,27 @@ class IdFilterTests {
                 IdFilter.of(List.of(pattern)).matches(id),
                 "Подстановки обязаны сопоставляться без перебора с возвратами: шаблон из плана ИИ не должен вешать тик"
                         + " Иначе тест matches_PathologicalPattern_FinishesWithoutBacktrackingExplosion перестанет ловить эту поломку. При смене matches_PathologicalPattern_FinishesWithoutBacktrackingExplosion проверь это утверждение.");
+    }
+
+    @Test
+    void matches_RepeatedId_ReturnsSameCachedResult() {
+        IdFilter filter = IdFilter.of(List.of("minecraft:*_ore", "minecraft:stone"));
+
+        boolean first = filter.matches("minecraft:coal_ore");
+        boolean second = filter.matches("minecraft:coal_ore");
+
+        assertEquals(
+                first,
+                second,
+                "Повторная проверка того же id возвращает тот же ответ: защита блоков не гоняет глоб по шаблонам на каждую клетку"
+                        + " Иначе тест matches_RepeatedId_ReturnsSameCachedResult перестанет ловить эту поломку. При смене matches_RepeatedId_ReturnsSameCachedResult проверь это утверждение.");
+        assertTrue(
+                second,
+                "Кэш не ломает попадание: угольная руда подходит под шаблон *_ore"
+                        + " Иначе тест matches_RepeatedId_ReturnsSameCachedResult перестанет ловить эту поломку. При смене matches_RepeatedId_ReturnsSameCachedResult проверь это утверждение.");
+        assertFalse(
+                filter.matches("minecraft:dirt"),
+                "Другой id проверяется по шаблонам заново и не наследует чужой ответ кэша"
+                        + " Иначе тест matches_RepeatedId_ReturnsSameCachedResult перестанет ловить эту поломку. При смене matches_RepeatedId_ReturnsSameCachedResult проверь это утверждение.");
     }
 }

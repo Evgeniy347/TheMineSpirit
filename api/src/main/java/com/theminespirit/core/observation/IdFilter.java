@@ -2,7 +2,9 @@ package com.theminespirit.core.observation;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class IdFilter {
     private static final String DEFAULT_NAMESPACE = "minecraft";
@@ -11,6 +13,7 @@ public final class IdFilter {
     private static final IdFilter MATCH_ALL = new IdFilter(List.of());
 
     private final List<String> patterns;
+    private final Map<String, Boolean> matched = new ConcurrentHashMap<>();
 
     private IdFilter(List<String> patterns) {
         this.patterns = patterns;
@@ -36,6 +39,16 @@ public final class IdFilter {
         if (patterns.isEmpty()) {
             return true;
         }
+        Boolean known = matched.get(id);
+        if (known != null) {
+            return known;
+        }
+        boolean hit = match(id);
+        matched.put(id, hit);
+        return hit;
+    }
+
+    private boolean match(String id) {
         String qualified = qualify(id);
         for (String pattern : patterns) {
             if (globMatches(pattern, qualified)) {
