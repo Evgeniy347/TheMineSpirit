@@ -22,6 +22,13 @@ GAMETEST_FULL_WARN="${THEMINESPIRIT_GAMETEST_FULL_WARN_SECONDS:-180}"
 GAMETEST_FULL_STOP="${THEMINESPIRIT_GAMETEST_FULL_STOP_SECONDS:-300}"
 GAMETEST_PREPARE_WARN="${THEMINESPIRIT_GAMETEST_PREPARE_WARN_SECONDS:-300}"
 GAMETEST_PREPARE_STOP="${THEMINESPIRIT_GAMETEST_PREPARE_STOP_SECONDS:-600}"
+MEM_WARN_MB="${THEMINESPIRIT_MEMORY_WARN_MB:-6144}"
+MEM_STOP_MB="${THEMINESPIRIT_MEMORY_STOP_MB:-8192}"
+MEM_INTERVAL="${THEMINESPIRIT_MEMORY_INTERVAL_SECONDS:-10}"
+case "$MEM_WARN_MB" in ''|*[!0-9]*) MEM_WARN_MB=6144 ;; esac
+case "$MEM_STOP_MB" in ''|*[!0-9]*) MEM_STOP_MB=8192 ;; esac
+case "$MEM_INTERVAL" in ''|*[!0-9]*) MEM_INTERVAL=10 ;; esac
+[ "$MEM_INTERVAL" -ge 1 ] || MEM_INTERVAL=1
 
 case "$OSTYPE" in
     msys*|cygwin*|win*)
@@ -98,6 +105,7 @@ usage() {
   THEMINESPIRIT_GAMETEST_FULL_STOP_SECONDS  стоп --full (300, от старта сцен)
   THEMINESPIRIT_GAMETEST_PREPARE_WARN_SECONDS  предупреждение подготовки сборки и загрузки мира (300)
   THEMINESPIRIT_GAMETEST_PREPARE_STOP_SECONDS  стоп подготовки сборки и загрузки мира (600, отдельный бюджет)
+  THEMINESPIRIT_MEMORY_STOP_MB       предел рабочей памяти процессов прогона, МБ (8192); превышен — прогон погашен
   THEMINESPIRIT_GAMETEST_SHARDS      число параллельных серверов GameTest (ПК 3, Linux 1)
   THEMINESPIRIT_GAMETEST_LOCK        путь к замку (Windows: C:\ProgramData\theminespirit\theminespirit-gametest.lock, Linux: /tmp/theminespirit-gametest.lock)
   THEMINESPIRIT_GAMETEST_WAIT        ожидание замка, с (по умолчанию 1800)
@@ -363,6 +371,18 @@ pid_is_live() {
     kill -0 "$pid" 2>/dev/null
 }
 
+# lib: на Windows TERM не прерывает wait в bash; сторож оставляет файл .stopped,
+# по нему прогон сам выходит из ожидания и гасит свои процессы.
+guard_wait() {
+    local pid="$1"
+    while pid_is_live "$pid"; do
+        [ -n "${LOG_FILE:-}" ] && [ -f "$LOG_FILE.stopped" ] && return 124
+        pause_tick 0.2
+    done
+    wait "$pid" 2>/dev/null
+    return $?
+}
+
 # lib: PowerShell на Windows стоит 0.3–0.6 с на запуск, и при падении прогона список
 # java-процессов спрашивают дважды подряд (надзор по пределу и уборка при выходе).
 # Поэтому снимок живёт GAMETEST_JAVA_CACHE_TTL секунд: за это время надзор и уборка
@@ -507,6 +527,160 @@ kill_own_tree() {
     return 0
 }
 
+# lib: сторож памяти считает только процессы своего прогона — дерево от pid gradlew
+# (unit идёт с --no-daemon, поэтому демон и воркеры — его потомки) и серверы своего
+# gametest-run. Чужой build в том же дереве он не трогает.
+run_process_snapshot() {
+    case "$OSTYPE" in
+        msys*|cygwin*|win*)
+            powershell -NoProfile -Command \
+                "Get-CimInstance Win32_Process | ForEach-Object { if (\$_.Name -eq 'java.exe') { 'J|{0}|{1}|{2}|{3}' -f \$_.ProcessId,\$_.ParentProcessId,[int64](\$_.WorkingSetSize/1KB),(\$_.CommandLine -replace '\|','/') } else { 'P|{0}|{1}' -f \$_.ProcessId,\$_.ParentProcessId } }" \
+                2>/dev/null | tr -d '\r'
+            ;;
+        *)
+            local d pid ppid name cmd rss
+            for d in /proc/[0-9]*; do
+                [ -r "$d/stat" ] || continue
+                pid="${d#/proc/}"
+                pid_is_live "$pid" || continue
+                ppid=$(awk '/^PPid:/ {print $2; exit}' "$d/status" 2>/dev/null)
+                name=$(cat "$d/comm" 2>/dev/null)
+                if [ "$name" = "java" ]; then
+                    cmd=$(tr '\0' ' ' <"$d/cmdline" 2>/dev/null | tr '|' '/')
+                    rss=$(awk '/^VmRSS:/ {print $2; exit}' "$d/status" 2>/dev/null)
+                    printf 'J|%s|%s|%s|%s\n' "$pid" "${ppid:-0}" "${rss:-0}" "$cmd"
+                else
+                    printf 'P|%s|%s\n' "$pid" "${ppid:-0}"
+                fi
+            done
+            ;;
+    esac
+    return 0
+}
+
+run_own_roots() {
+    local file pid winpid
+    for file in "${MONITOR_LOG_FILE}.gradlepid" "${MONITOR_LOG_FILE}.gradlepids"; do
+        [ -f "$file" ] || continue
+        while read -r pid; do
+            [ -n "$pid" ] || continue
+            winpid=$(cat "/proc/$pid/winpid" 2>/dev/null || true)
+            printf '%s\n' "${winpid:-$pid}"
+        done <"$file"
+    done
+}
+
+run_own_snapshot() {
+    local snap roots win_root win_root_slash
+    snap=$(run_process_snapshot)
+    [ -n "$snap" ] || return 0
+    roots=$(run_own_roots)
+    win_root="$GAMETEST_WORKTREE"
+    win_root_slash="${win_root//\\//}"
+    printf '%s\n' "$snap" | awk -F'|' -v roots="$roots" -v wroot="$win_root" -v wroot2="$win_root_slash" '
+        BEGIN { n = split(roots, r, /[ \n]+/); for (i = 1; i <= n; i++) if (r[i] != "") root[r[i]] = 1 }
+        $1 == "P" { ppid_of[$2] = $3; all[$2] = 1; next }
+        $1 == "J" {
+            jpp[$2] = $3; jline[$2] = $2 "|" $3 "|" $4 "|" $5; jcmd[$2] = $5; all[$2] = 1
+            next
+        }
+        END {
+            for (p in all) {
+                q = p
+                for (depth = 0; depth < 50 && q != "" && q != "0"; depth++) {
+                    if (q in root) { own[p] = 1; break }
+                    parent = (q in jpp) ? jpp[q] : ppid_of[q]
+                    if (parent == "" || parent == q) break
+                    q = parent
+                }
+                if (index(jcmd[p], "-Dtheminespirit.gametest.dir=") && (index(jcmd[p], wroot) || index(jcmd[p], wroot2))) own[p] = 1
+            }
+            for (p in own) {
+                if (p in jline) print jline[p]
+                else print p "|" ppid_of[p] "|0|"
+            }
+        }'
+}
+
+run_memory_mb() {
+    local snap
+    snap=$(run_own_snapshot)
+    [ -n "$snap" ] || return 0
+    printf '%s\n' "$snap" | awk -F'|' '{ sum += $3 } END { printf "%d", sum / 1024 }'
+}
+
+stop_run_for_memory() {
+    local total info worst_pid worst_mb worst_cmd pids pid report snap
+    snap=$(run_own_snapshot)
+    total=$(printf '%s\n' "$snap" | awk -F'|' '{ sum += $3 } END { printf "%d", sum / 1024 }')
+    [ -n "$total" ] || total="${1:-0}"
+    info=$(printf '%s\n' "$snap" | awk -F'|' '
+        { if ($3 > max) { max = $3; pid = $1; cmd = $4 } }
+        END { if (pid != "") printf "%s %d %s", pid, max / 1024, cmd }')
+    worst_pid="${info%% *}"
+    info="${info#* }"
+    worst_mb="${info%% *}"
+    worst_cmd="${info#* }"
+    pids=$(printf '%s\n' "$snap" | awk -F'|' '{print $1}')
+    report="${MONITOR_LOG_FILE}.memory-stopped"
+    {
+        echo "СТОП ПО ПАМЯТИ: процессы прогона заняли ${total} МБ (предел ${MEM_STOP_MB} МБ)."
+        if [ -n "${worst_pid:-}" ]; then
+            echo "Больше всех — pid ${worst_pid} (${worst_mb} МБ): $(printf '%s' "$worst_cmd" | cut -c1-160)"
+        fi
+        echo "Гашу процессы прогона: $(printf '%s' "$pids" | tr '\n' ' ')"
+        echo "Прогон погашен, чтобы не исчерпать память ПК; результат не засчитан."
+        echo "Что делать: проверь утечку или большие данные в тесте, уменьши параллелизм (THEMINESPIRIT_GAMETEST_SHARDS, org.gradle.workers.max);"
+        echo "предел меняется THEMINESPIRIT_MEMORY_STOP_MB (сейчас ${MEM_STOP_MB})."
+    } >"$report" 2>/dev/null
+    printf '%s' memory >"${MONITOR_LOG_FILE}.stopped"
+    cat "$report" >>"$MONITOR_LOG_FILE" 2>/dev/null
+    kill_gametest_server
+    if [ "${OS:-}" = "Windows_NT" ] && command -v taskkill >/dev/null 2>&1; then
+        for pid in $pids; do
+            taskkill //PID "$pid" //T //F >/dev/null 2>&1 || true
+        done
+    else
+        for pid in $pids; do
+            kill -TERM "$pid" 2>/dev/null || true
+        done
+        for pid in $pids; do
+            kill -KILL "$pid" 2>/dev/null || true
+        done
+    fi
+    if [ -f "${MONITOR_LOG_FILE}.gradlepids" ]; then
+        while read -r pid; do
+            [ -n "$pid" ] && kill_own_tree "$pid" 5
+        done <"${MONITOR_LOG_FILE}.gradlepids"
+    fi
+    if [ -f "${MONITOR_LOG_FILE}.gradlepid" ]; then
+        read -r pid <"${MONITOR_LOG_FILE}.gradlepid"
+        [ -n "$pid" ] && kill_own_tree "$pid" 5
+    fi
+    for pid in $pids; do
+        pid_is_live "$pid" && kill_own_tree "$pid" 0
+    done
+    # lib: демон может выдать уже стоявшую в очереди задачу и поднять новый воркер — добиваем хвосты
+    local attempt rest
+    for attempt in 1 2 3 4 5; do
+        sleep 1
+        rest=$(run_own_snapshot | awk -F'|' '{print $1}')
+        [ -n "$rest" ] || break
+        if [ "${OS:-}" = "Windows_NT" ] && command -v taskkill >/dev/null 2>&1; then
+            for pid in $rest; do
+                taskkill //PID "$pid" //T //F >/dev/null 2>&1 || true
+            done
+        else
+            for pid in $rest; do
+                kill -KILL "$pid" 2>/dev/null || true
+            done
+        fi
+    done
+    trap - TERM
+    kill -TERM "$MONITOR_MAIN_PID" 2>/dev/null
+    exit 124
+}
+
 stop_own_loop() {
     local pid="$1" grace="${2:-2}" now deadline
     [ -n "$pid" ] || return 0
@@ -626,12 +800,24 @@ GRADLE_PID=""
 START_TIME=0
 
 monitor_loop() {
-    local warned=0 now elapsed gpid
+    local warned=0 now elapsed gpid mem_at=0 warned_mem=0 total
     init_pause_tick
     while kill -0 "$MONITOR_MAIN_PID" 2>/dev/null; do
         pause_tick 1
         now_s now
         elapsed=$((now - MONITOR_START_TIME))
+        if [ "$MEM_STOP_MB" -gt 0 ] && [ $((now - mem_at)) -ge "$MEM_INTERVAL" ]; then
+            mem_at=$now
+            total=$(run_memory_mb)
+            if [ -n "$total" ] && [ "$total" -ge "$MEM_WARN_MB" ] && [ "$warned_mem" = 0 ]; then
+                echo "ВНИМАНИЕ: рабочая память прогона ${total} МБ — близко к пределу ${MEM_STOP_MB} МБ" >&2
+                warned_mem=1
+            fi
+            if [ -n "$total" ] && [ "$total" -ge "$MEM_STOP_MB" ]; then
+                stop_run_for_memory "$total"
+                exit 124
+            fi
+        fi
         if [ "$warned" = 0 ] && [ "$elapsed" -ge "$MONITOR_WARN_SECONDS" ]; then
             if [ "$MONITOR_MODE" = "prepare" ]; then
                 echo "ВНИМАНИЕ: подготовка сборки идёт дольше $MONITOR_WARN_SECONDS с — повод задуматься" >&2
@@ -680,9 +866,11 @@ start_monitor() {
 
     export MONITOR_LOG_FILE="$LOG_FILE" MONITOR_START_TIME="$START_TIME" \
            MONITOR_WARN_SECONDS="$WARN_SECONDS" MONITOR_STOP_SECONDS="$STOP_SECONDS" \
-           MONITOR_MODE="$mode" MONITOR_MAIN_PID="$$" MONITOR_GRADLE_GROUP=""
+           MONITOR_MODE="$mode" MONITOR_MAIN_PID="$$" MONITOR_GRADLE_GROUP="" \
+           MEM_WARN_MB MEM_STOP_MB MEM_INTERVAL
     export MODE GAMETEST_RUN_DIR GAMETEST_WORKTREE PROJECT_ROOT GAMETEST_JAVA_CACHE GAMETEST_JAVA_CACHE_TTL
-    export -f pid_is_live gametest_server_pids kill_gametest_server now_s own_tree_pids kill_own_tree pause_tick init_pause_tick close_pause_tick monitor_loop
+    export -f pid_is_live gametest_server_pids kill_gametest_server now_s own_tree_pids kill_own_tree pause_tick init_pause_tick close_pause_tick monitor_loop \
+        run_process_snapshot run_own_roots run_own_snapshot run_memory_mb stop_run_for_memory
     if command -v setsid >/dev/null 2>&1; then
         MONITOR_GRADLE_GROUP=group
         setsid bash -c monitor_loop </dev/null >/dev/null 2>&1 &
@@ -792,7 +980,9 @@ on_signal() {
         exit 143
     fi
     if [ -n "${LOG_FILE:-}" ] && [ -f "$LOG_FILE.stopped" ]; then
-        if [ "$(cat "$LOG_FILE.stopped" 2>/dev/null)" = "prepare" ]; then
+        if [ -f "$LOG_FILE.memory-stopped" ]; then
+            cat "$LOG_FILE.memory-stopped" >&2
+        elif [ "$(cat "$LOG_FILE.stopped" 2>/dev/null)" = "prepare" ]; then
             echo "стоп: подготовка сборки и загрузка мира (предел ${GAMETEST_PREPARE_STOP} с)"
         else
             echo "стоп по пределу ${STOP_SECONDS} с"
@@ -1238,15 +1428,18 @@ if [ "$MODE" = "unit" ]; then
         fi
     fi
 
+    # lib: --no-daemon делает демон потомком gradlew, поэтому сторож памяти и таймаут
+    # гасят весь прогон, а не общий демон, который может обслуживать чужую сборку.
     if command -v setsid >/dev/null 2>&1; then
-        setsid "$GRADLEW" "${UNIT_TARGETS[@]}" --rerun "${UNIT_TESTS[@]}" "${UNIT_EXCLUDE[@]}" "${UNIT_PROPS[@]}" "${UNIT_EXTRA[@]}" >"$LOG_FILE" 2>&1 &
+        setsid "$GRADLEW" "${UNIT_TARGETS[@]}" --rerun --no-daemon "${UNIT_TESTS[@]}" "${UNIT_EXCLUDE[@]}" "${UNIT_PROPS[@]}" "${UNIT_EXTRA[@]}" >"$LOG_FILE" 2>&1 &
     else
-        "$GRADLEW" "${UNIT_TARGETS[@]}" --rerun "${UNIT_TESTS[@]}" "${UNIT_EXCLUDE[@]}" "${UNIT_PROPS[@]}" "${UNIT_EXTRA[@]}" >"$LOG_FILE" 2>&1 &
+        "$GRADLEW" "${UNIT_TARGETS[@]}" --rerun --no-daemon "${UNIT_TESTS[@]}" "${UNIT_EXCLUDE[@]}" "${UNIT_PROPS[@]}" "${UNIT_EXTRA[@]}" >"$LOG_FILE" 2>&1 &
     fi
     GRADLE_PID=$!
     echo "$GRADLE_PID" >"$LOG_FILE.gradlepid"
-    wait "$GRADLE_PID"
+    guard_wait "$GRADLE_PID"
     CODE=$?
+    [ -f "$LOG_FILE.stopped" ] && kill_own_tree "$GRADLE_PID" 5
     GRADLE_PID=""
     stop_timer
     rm -f "$LOG_FILE.gradlepid"
@@ -1255,7 +1448,11 @@ if [ "$MODE" = "unit" ]; then
     ELAPSED=$((ELAPSED - START_TIME))
 
     if [ -f "$LOG_FILE.stopped" ]; then
-        echo "стоп по пределу ${UNIT_STOP} с"
+        if [ -f "$LOG_FILE.memory-stopped" ]; then
+            cat "$LOG_FILE.memory-stopped" >&2
+        else
+            echo "стоп по пределу ${UNIT_STOP} с"
+        fi
         echo "полный лог: $LOG_FILE"
         exit 124
     fi
@@ -1319,14 +1516,19 @@ else
         "$GRADLEW" "${PRE_TASKS[@]}" >"$LOG_FILE.preflight" 2>&1 &
         PRE_PID=$!
         echo "$PRE_PID" >>"$LOG_FILE.gradlepids"
-        wait "$PRE_PID"
+        guard_wait "$PRE_PID"
         PRE_CODE=$?
+        [ -f "$LOG_FILE.stopped" ] && kill_own_tree "$PRE_PID" 5
         : >"$LOG_FILE.gradlepids"
         stop_timer
         if [ -f "$LOG_FILE.stopped" ]; then
             cat "$LOG_FILE.preflight" >"$LOG_FILE"
             rm -f "$LOG_FILE.preflight"
-            echo "стоп: подготовка сборки и загрузка мира (предел ${GAMETEST_PREPARE_STOP} с)"
+            if [ -f "$LOG_FILE.memory-stopped" ]; then
+                cat "$LOG_FILE.memory-stopped" >&2
+            else
+                echo "стоп: подготовка сборки и загрузка мира (предел ${GAMETEST_PREPARE_STOP} с)"
+            fi
             echo "полный лог: $LOG_FILE"
             exit 124
         fi
@@ -1400,8 +1602,9 @@ else
     CODE=0
     SHARD_CODES=()
     for pid in "${GRADLE_PIDS[@]}"; do
-        wait "$pid"
+        guard_wait "$pid"
         shard_code=$?
+        [ -f "$LOG_FILE.stopped" ] && kill_own_tree "$pid" 5
         SHARD_CODES+=("$shard_code")
         if [ "$shard_code" -ne 0 ] && [ "$CODE" -eq 0 ]; then
             CODE=$shard_code
@@ -1422,7 +1625,11 @@ else
     rm -f "$LOG_FILE.gradlepids"
 
     if [ -f "$LOG_FILE.stopped" ]; then
-        echo "стоп по пределу ${START_STOP} с"
+        if [ -f "$LOG_FILE.memory-stopped" ]; then
+            cat "$LOG_FILE.memory-stopped" >&2
+        else
+            echo "стоп по пределу ${START_STOP} с"
+        fi
         echo "полный лог: $LOG_FILE"
         exit 124
     fi
