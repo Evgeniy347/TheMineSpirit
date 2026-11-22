@@ -46,7 +46,6 @@ final class StorePost {
             case "transfer_item", "store_carry_transfer" -> transfer(post, ticket);
             case "sort_chest" -> sort(post, ticket);
             case "take_smelted" -> takeSmelted(post, ticket);
-            case "add_chest_pair" -> false;
             case "store_minimum" -> true;
             default -> false;
         };

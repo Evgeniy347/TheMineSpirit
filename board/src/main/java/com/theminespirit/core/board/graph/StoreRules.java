@@ -13,8 +13,8 @@ import java.util.Set;
 
 public final class StoreRules {
     public static final String RESOURCE = "data/theminespirit/board/graph.d/farm.json";
-    private static final Set<String> EVENT_TASKS = Set.of(
-            "transfer_item", "store_carry_transfer", "sort_chest", "take_smelted", "add_chest_pair", "store_minimum");
+    private static final Set<String> EVENT_TASKS =
+            Set.of("transfer_item", "store_carry_transfer", "sort_chest", "take_smelted", "store_minimum");
 
     public record Config(
             int reservePercent,
