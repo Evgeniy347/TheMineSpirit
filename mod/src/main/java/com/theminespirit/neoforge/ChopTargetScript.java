@@ -4,6 +4,7 @@ import com.mojang.logging.LogUtils;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
+import com.theminespirit.core.forestry.ChopMode;
 import com.theminespirit.core.forestry.NotATree;
 import com.theminespirit.core.forestry.Tree;
 import com.theminespirit.core.forestry.TreeDetection;
@@ -41,7 +42,8 @@ public final class ChopTargetScript implements ScriptInstance {
         this.params = params;
         this.logBlocks = TreeBlocks.logs(TreeSpecies.ALL);
         this.treeView = new LevelTreeView(spirit.level(), logBlocks);
-        this.chop = new TreeChop(spirit, params.replant(), params.orchard(), treeView, plotWood());
+        this.chop = new TreeChop(
+                spirit, params.replant(), params.orchard() ? ChopMode.ORCHARD : ChopMode.WILD, treeView, plotWood());
     }
 
     private @Nullable String plotWood() {
@@ -103,8 +105,11 @@ public final class ChopTargetScript implements ScriptInstance {
             return fail("нет дерева по координате " + target.toShortString() + ": там не бревно. Укажите координату "
                     + "ствола настоящего дерева");
         }
-        TreeDetection detection =
-                TreeShape.detect(new BlockCoord(params.x(), params.y(), params.z()), treeView, false, params.orchard());
+        TreeDetection detection = TreeShape.detect(
+                new BlockCoord(params.x(), params.y(), params.z()),
+                treeView,
+                false,
+                params.orchard() ? ChopMode.ORCHARD : ChopMode.WILD);
         if (detection instanceof NotATree notATree) {
             return fail("по координате " + target.toShortString() + " не дерево (" + reasonText(notATree.reason())
                     + "): укажите координату ствола настоящего дерева");

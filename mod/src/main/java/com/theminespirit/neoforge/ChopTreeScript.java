@@ -7,20 +7,19 @@ import com.theminespirit.core.engine.FailureFact;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
+import com.theminespirit.core.forestry.ChopMode;
 import com.theminespirit.core.forestry.NotATree;
 import com.theminespirit.core.forestry.Tree;
 import com.theminespirit.core.forestry.TreeDetection;
 import com.theminespirit.core.forestry.TreeShape;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.ChopTreeParams;
-import com.theminespirit.neoforge.board.SettlementPlotStore;
 import com.theminespirit.neoforge.coordinator.WorkReserveHub;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Block;
 import org.slf4j.Logger;
 
@@ -30,8 +29,10 @@ public final class ChopTreeScript implements ScriptInstance {
     private final SpiritEntity spirit;
     private final ChopTreeParams params;
     private final LevelTreeView treeView;
+    private final ChopMode chopMode;
     private final TreeChop chop;
     private final ChopSearch search;
+    private final ChopGroupPolicy groups;
     private final ChopTally tally = new ChopTally();
     private Tree tree;
     private boolean chopping;
@@ -48,7 +49,9 @@ public final class ChopTreeScript implements ScriptInstance {
         Set<Block> logBlocks = TreeBlocks.logs(params.species());
         this.treeView = new LevelTreeView(spirit.level(), logBlocks);
         this.search = new ChopSearch(spirit, params, logBlocks);
-        this.chop = new TreeChop(spirit, params.replant(), false, treeView);
+        this.groups = new ChopGroupPolicy(spirit, search);
+        this.chopMode = groups.mode();
+        this.chop = new TreeChop(spirit, params.replant(), chopMode, treeView);
     }
 
     @Override
@@ -122,11 +125,15 @@ public final class ChopTreeScript implements ScriptInstance {
             search.markKnown(List.of(start.get()));
             return ScriptStatus.RUNNING;
         }
-        TreeDetection detection = TreeShape.detect(start.get(), treeView, true, orchardCare(start.get()));
+        TreeDetection detection = TreeShape.detect(start.get(), treeView, true, chopMode);
         if (detection instanceof NotATree notATree) {
             return reject(notATree);
         }
         Tree found = (Tree) detection;
+        if (groups.plannedGroup(found)) {
+            groups.skipPlanned(found);
+            return ScriptStatus.RUNNING;
+        }
         return startChop(found, false);
     }
 
@@ -199,21 +206,16 @@ public final class ChopTreeScript implements ScriptInstance {
             search.markKnown(found.logs());
             return Optional.empty();
         }
-        TreeDetection detection = TreeShape.detect(surviving.get(), treeView, true, orchardCare(surviving.get()));
+        TreeDetection detection = TreeShape.detect(surviving.get(), treeView, true, chopMode);
         if (detection instanceof Tree tree) {
+            if (groups.plannedGroup(tree)) {
+                search.markKnown(found.logs());
+                return Optional.empty();
+            }
             return Optional.of(tree);
         }
         search.markKnown(found.logs());
         return Optional.empty();
-    }
-
-    private boolean orchardCare(BlockCoord cell) {
-        if (!(spirit.level() instanceof ServerLevel server)) {
-            return false;
-        }
-        return SettlementPlotStore.liveSite(server)
-                .map(site -> site.orchardTerritory(cell.x(), cell.z()))
-                .orElse(false);
     }
 
     private ScriptStatus advance(ChopOutcome outcome) {
@@ -280,11 +282,13 @@ public final class ChopTreeScript implements ScriptInstance {
                 : "; ближайшее дерево к поселению " + far + " блоков при пределе " + search.maxDistance()
                         + " — посадите саженцы и дождитесь их роста";
         failureFact = spirit.level().isNight() ? FailureFact.NIGHT : unreachable == 0 ? FailureFact.NO_TREES : null;
+        String area = chopMode == ChopMode.SETTLEMENT
+                ? "в зоне поселения"
+                : "в радиусе " + search.maxDistance() + " от поселения";
         return fail("срублено деревьев " + tally.chopped() + " из " + params.count() + ": деревья породы "
-                + ChopTreeText.speciesText(params)
-                + " в радиусе " + search.maxDistance() + " от поселения закончились (отвергнуто не-деревьев: "
-                + rejected + ", недоступных: " + unreachable + ", пропущено защищённых: " + tally.protectedLogs()
-                + ")" + beyond);
+                + ChopTreeText.speciesText(params) + " " + area + " закончились (отвергнуто не-деревьев: "
+                + rejected + ", задевают план: " + groups.plannedRejected() + ", недоступных: " + unreachable
+                + ", пропущено защищённых: " + tally.protectedLogs() + ")" + beyond);
     }
 
     private ScriptStatus fail(String reason) {

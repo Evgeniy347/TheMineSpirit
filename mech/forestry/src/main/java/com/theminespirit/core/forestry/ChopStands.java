@@ -46,6 +46,10 @@ public final class ChopStands {
     }
 
     public static List<Stand> standPoints(Tree tree, View view) {
+        return standPoints(tree, view, false);
+    }
+
+    public static List<Stand> standPoints(Tree tree, View view, boolean groundOnly) {
         Objects.requireNonNull(tree, "Дерево не может быть null: без него неизвестно, где стоянка у ствола");
         Objects.requireNonNull(view, "Взгляд на мир не может быть null: по нему проверяется стоянка");
         Set<BlockCoord> walk = new LinkedHashSet<>();
@@ -63,11 +67,14 @@ public final class ChopStands {
                         if (logs.contains(feet) || logs.contains(below(feet))) {
                             continue;
                         }
-                        if (walk.contains(feet) || climb.containsKey(feet)) {
+                        if (walk.contains(feet) || (!groundOnly && climb.containsKey(feet))) {
                             continue;
                         }
                         if (view.standable(feet)) {
                             walk.add(feet);
+                            continue;
+                        }
+                        if (groundOnly) {
                             continue;
                         }
                         BlockCoord base = climbBase(feet, view, floor);

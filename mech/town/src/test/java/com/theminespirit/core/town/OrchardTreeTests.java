@@ -11,7 +11,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 class OrchardTreeTests {
@@ -88,43 +87,5 @@ class OrchardTreeTests {
                 !SITE.orchardTerritory(origin.x() + 50, origin.z() + 50),
                 "За границей площадки послабления нет: клетка уже не сад, и фоновая рубка её не берёт"
                         + " Иначе тест orchardTerritory_SaplingsAndOutside_MatchesPlot перестанет ловить эту поломку. При смене orchardTerritory_SaplingsAndOutside_MatchesPlot проверь ChopSearch: деревья вне сада не выбираются.");
-    }
-
-    @Test
-    void orchardChop_OrchardTerritory_KeepsOnlyGarden() {
-        BlockCoord origin = SITE.orchardOrigin();
-        BlockCoord sapling = SITE.orchardSaplings().get(0);
-        int y = SITE.anchor().y();
-        BlockCoord free = freeOrchardCell(y);
-        BlockCoord wild = new BlockCoord(origin.x() + 50, y, origin.z() + 50);
-
-        assertTrue(
-                OrchardChop.allowed(SITE, free),
-                "Свободная клетка на площадке сада обязана быть доступна фоновой рубке: иначе заготовка брёвен "
-                        + "не найдёт ни одного дерева, кроме запланированных, и стройка встанет без материала"
-                        + " Иначе тест orchardChop_OrchardTerritory_KeepsOnlyGarden перестанет ловить эту поломку. При смене OrchardChop проверь ChopSearch: за озером деревья не выбираются.");
-        assertEquals(
-                List.of(false, false, true),
-                List.of(
-                        OrchardChop.allowed(SITE, sapling),
-                        OrchardChop.allowed(SITE, wild),
-                        OrchardChop.allowed(Optional.empty(), wild)),
-                "Колонка запланированного дерева и лес за площадкой сада не рубятся фоновой заготовкой, а без плана "
-                        + "поселения (GameTest) ограничение не включено: иначе духи уйдут за озеро к дикому дереву "
-                        + "и утонут, а сцены рубки без поселения перестанут находить лес"
-                        + " Иначе тест orchardChop_OrchardTerritory_KeepsOnlyGarden перестанет ловить эту поломку. При смене OrchardChop проверь ChopSearch и OrchardPlans: сад рубит свои деревья отдельным chop_target.");
-    }
-
-    private static BlockCoord freeOrchardCell(int y) {
-        Placement orchard = SITE.orchard();
-        for (int x = orchard.x(); x < orchard.x() + orchard.width(); x++) {
-            for (int z = orchard.z(); z < orchard.z() + orchard.depth(); z++) {
-                if (!SITE.orchardTree(x, y, z)) {
-                    return new BlockCoord(x, y, z);
-                }
-            }
-        }
-        throw new AssertionError("В площадке сада нет свободной клетки: тест OrchardChop не сможет отличить "
-                + "разрешённую рубку внутри сада от запрещённой — проверь схему orchard_1");
     }
 }

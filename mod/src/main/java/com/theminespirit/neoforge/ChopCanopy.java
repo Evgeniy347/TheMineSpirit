@@ -1,12 +1,15 @@
 package com.theminespirit.neoforge;
 
 import com.mojang.logging.LogUtils;
+import com.theminespirit.core.forestry.ChopMode;
 import com.theminespirit.core.forestry.Tree;
 import com.theminespirit.core.forestry.TreeCanopy;
 import com.theminespirit.core.forestry.api.TreeView;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.neoforge.board.SettlementPlotStore;
 import java.util.List;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import org.slf4j.Logger;
 
 final class ChopCanopy {
@@ -14,6 +17,7 @@ final class ChopCanopy {
 
     private final SpiritEntity spirit;
     private final TreeView view;
+    private final ChopMode mode;
     private final BlockBreaker breaker;
     private Tree tree;
     private List<BlockCoord> plan = List.of();
@@ -22,9 +26,10 @@ final class ChopCanopy {
     private int skipped;
     private boolean breaking;
 
-    ChopCanopy(SpiritEntity spirit, TreeView view) {
+    ChopCanopy(SpiritEntity spirit, TreeView view, ChopMode mode) {
         this.spirit = spirit;
         this.view = view;
+        this.mode = mode;
         this.breaker = new BlockBreaker(spirit);
     }
 
@@ -34,7 +39,9 @@ final class ChopCanopy {
         removed = 0;
         skipped = 0;
         breaking = false;
-        plan = TreeCanopy.plan(target, view);
+        plan = mode == ChopMode.SETTLEMENT
+                ? TreeCanopy.clearance(target, view, this::plannedCell)
+                : TreeCanopy.plan(target, view);
         if (plan.isEmpty()) {
             return;
         }
@@ -89,6 +96,16 @@ final class ChopCanopy {
 
     int left() {
         return Math.max(0, plan.size() - removed);
+    }
+
+    private boolean plannedCell(BlockCoord cell) {
+        if (!(spirit.level() instanceof ServerLevel server)) {
+            return false;
+        }
+        return SettlementPlotStore.liveSite(server)
+                .map(site ->
+                        site.planCell(cell.x(), cell.y(), cell.z()) || site.orchardTree(cell.x(), cell.y(), cell.z()))
+                .orElse(false);
     }
 
     private void finish() {

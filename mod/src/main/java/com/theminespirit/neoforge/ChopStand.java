@@ -22,21 +22,23 @@ final class ChopStand {
 
     private ChopStand() {}
 
-    static @Nullable Placement first(Entity spirit, Tree target) {
+    static @Nullable Placement first(Entity spirit, Tree target, boolean groundOnly) {
         Vec3 from = spirit.position();
-        return best(spirit.level(), target, List.of(), pos -> from.distanceToSqr(Vec3.atBottomCenterOf(pos)));
+        return best(
+                spirit.level(), target, List.of(), pos -> from.distanceToSqr(Vec3.atBottomCenterOf(pos)), groundOnly);
     }
 
-    static @Nullable Placement next(Entity spirit, Tree target, List<BlockCoord> rest, List<BlockPos> used) {
-        return best(spirit.level(), target, used, pos -> nearest(pos, rest));
+    static @Nullable Placement next(
+            Entity spirit, Tree target, List<BlockCoord> rest, List<BlockPos> used, boolean groundOnly) {
+        return best(spirit.level(), target, used, pos -> nearest(pos, rest), groundOnly);
     }
 
     private static @Nullable Placement best(
-            Level level, Tree target, List<BlockPos> used, ToDoubleFunction<BlockPos> score) {
+            Level level, Tree target, List<BlockPos> used, ToDoubleFunction<BlockPos> score, boolean groundOnly) {
         Placement best = null;
         double bestScore = Double.MAX_VALUE;
         ChopStands.View view = new LevelView(level);
-        for (ChopStands.Stand stand : ChopStands.standPoints(target, view)) {
+        for (ChopStands.Stand stand : ChopStands.standPoints(target, view, groundOnly)) {
             BlockPos pos = toPos(stand.feet());
             if (used.contains(pos)) {
                 continue;

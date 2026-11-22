@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge;
 
 import com.mojang.logging.LogUtils;
+import com.theminespirit.core.forestry.ChopMode;
 import com.theminespirit.core.forestry.ChopPlan;
 import com.theminespirit.core.forestry.Tree;
 import com.theminespirit.core.forestry.api.TreeView;
@@ -22,7 +23,7 @@ final class ChopPass {
 
     private final SpiritEntity spirit;
     private final TreeView view;
-    private final boolean orchard;
+    private final ChopMode mode;
     private final BlockBreaker breaker;
     private Tree tree;
     private ChopPlan plan = new ChopPlan(List.of());
@@ -30,10 +31,10 @@ final class ChopPass {
     private boolean breaking;
     private boolean skipLogged;
 
-    ChopPass(SpiritEntity spirit, TreeView view, boolean orchard, BlockBreaker breaker) {
+    ChopPass(SpiritEntity spirit, TreeView view, ChopMode mode, BlockBreaker breaker) {
         this.spirit = spirit;
         this.view = view;
-        this.orchard = orchard;
+        this.mode = mode;
         this.breaker = breaker;
     }
 
@@ -55,7 +56,7 @@ final class ChopPass {
         }
         while (index < plan.order().size()) {
             BlockCoord log = plan.order().get(index);
-            BlockBreaker.Begin begin = breaker.beginChop(toPos(log), orchard);
+            BlockBreaker.Begin begin = breaker.beginChop(toPos(log), mode == ChopMode.ORCHARD);
             if (begin instanceof BlockBreaker.Started) {
                 breaking = true;
                 return Step.RUNNING;
@@ -106,7 +107,7 @@ final class ChopPass {
     private boolean protectedCell(BlockCoord log) {
         BlockPos pos = toPos(log);
         BlockState state = spirit.level().getBlockState(pos);
-        BlockProtection.Decision decision = orchard
+        BlockProtection.Decision decision = mode == ChopMode.ORCHARD
                 ? spirit.protectionGate().checkHarvest(pos, state)
                 : spirit.protectionGate().checkBreak(pos, state);
         return decision instanceof BlockProtection.Refused;

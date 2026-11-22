@@ -7,9 +7,9 @@ import com.theminespirit.core.forestry.api.ChopTuning;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.ScanTuning;
 import com.theminespirit.core.script.ChopTreeParams;
-import com.theminespirit.core.town.OrchardChop;
 import com.theminespirit.core.town.SettlementPlot;
 import com.theminespirit.core.town.StageSite;
+import com.theminespirit.core.town.TreeClearance;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
 import java.util.Collection;
 import java.util.Locale;
@@ -106,10 +106,14 @@ final class ChopSearch {
         BlockCoord base = found.base();
         BlockPos pos = new BlockPos(base.x(), base.y(), base.z());
         double toSpirit = Math.sqrt(spirit.position().distanceToSqr(Vec3.atBottomCenterOf(pos)));
+        String area = settlementSite()
+                .map(site -> site.inside(base.x(), base.z()) ? "в зоне поселения" : "в дикой местности")
+                .orElse("в дикой местности");
         LOGGER.info(
-                "[chop] {} выбрал дерево {}: до духа {}, до поселения {}, чанк {}",
+                "[chop] {} выбрал дерево {} {}: до духа {}, до поселения {}, чанк {}",
                 spirit.getName().getString(),
                 base,
+                area,
                 String.format(Locale.ROOT, "%.1f", toSpirit),
                 String.format(Locale.ROOT, "%.1f", distanceToAnchor(base)),
                 spirit.level().isLoaded(pos) ? "загружен" : "не загружен");
@@ -125,10 +129,10 @@ final class ChopSearch {
         if (candidates.isFull()) {
             return;
         }
-        Optional<StageSite> site = orchardSite();
+        Optional<StageSite> site = settlementSite();
         for (BlockPos pos : search.step(ScanTuning.SLICES_PER_TICK)) {
             BlockCoord cell = new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
-            if (!OrchardChop.allowed(site, cell)) {
+            if (!TreeClearance.allowed(site, cell)) {
                 continue;
             }
             long dx = (long) anchor.x() - cell.x();
@@ -142,7 +146,7 @@ final class ChopSearch {
         }
     }
 
-    private Optional<StageSite> orchardSite() {
+    private Optional<StageSite> settlementSite() {
         if (!(spirit.level() instanceof ServerLevel server)) {
             return Optional.empty();
         }

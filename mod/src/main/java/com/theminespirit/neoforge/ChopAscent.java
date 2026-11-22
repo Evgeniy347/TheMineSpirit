@@ -34,15 +34,17 @@ final class ChopAscent {
     private final ChopScaffold scaffold;
     private final ChopPursuit pursuit;
     private final ChopPass pass;
+    private final boolean groundOnly;
     private Tree tree;
     private Stage stage;
 
-    ChopAscent(SpiritEntity spirit, TreeView view, ChopPass pass, ChopScaffold scaffold) {
+    ChopAscent(SpiritEntity spirit, TreeView view, ChopPass pass, ChopScaffold scaffold, boolean groundOnly) {
         this.spirit = spirit;
         this.approach = new Approach(spirit);
         this.clearing = new LeafClearing(spirit, view);
         this.scaffold = scaffold;
-        this.pursuit = new ChopPursuit(spirit);
+        this.groundOnly = groundOnly;
+        this.pursuit = new ChopPursuit(spirit, groundOnly);
         this.pass = pass;
     }
 
@@ -50,7 +52,9 @@ final class ChopAscent {
         tree = target;
         pursuit.begin(target);
         scaffold.reset();
-        clearing.begin(target, from);
+        if (!groundOnly) {
+            clearing.begin(target, from);
+        }
         return startApproach();
     }
 
@@ -111,7 +115,7 @@ final class ChopAscent {
     }
 
     private void startApproachTo(ChopStand.Placement picked) {
-        BlockCoord base = picked.climbFrom();
+        BlockCoord base = groundOnly ? null : picked.climbFrom();
         if (base == null) {
             stage = Stage.APPROACH;
             approach.beginWithRoutes(Vec3.atBottomCenterOf(picked.feet()), ChopTuning.CHOP_ARRIVAL);

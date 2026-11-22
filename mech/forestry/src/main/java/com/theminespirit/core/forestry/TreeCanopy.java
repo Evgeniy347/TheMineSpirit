@@ -1,5 +1,6 @@
 package com.theminespirit.core.forestry;
 
+import com.theminespirit.core.forestry.api.ChopTuning;
 import com.theminespirit.core.forestry.api.TreeView;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayDeque;
@@ -11,11 +12,47 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 public final class TreeCanopy {
     static final int MARGIN = 6;
 
     private TreeCanopy() {}
+
+    public static List<BlockCoord> clearance(Tree tree, TreeView view, Predicate<BlockCoord> skip) {
+        Objects.requireNonNull(tree, "Дерево не может быть null: без него неизвестно, чью листву чистить");
+        Objects.requireNonNull(view, "TreeView не может быть null: по нему отличают листву от прочих блоков");
+        Objects.requireNonNull(
+                skip, "Признак плановой клетки не может быть null: без него рубка снимет листву построек");
+        Set<BlockCoord> logs = new HashSet<>(tree.logs());
+        int minX = tree.logs().stream().mapToInt(BlockCoord::x).min().orElseThrow();
+        int maxX = tree.logs().stream().mapToInt(BlockCoord::x).max().orElseThrow();
+        int minY = tree.logs().stream().mapToInt(BlockCoord::y).min().orElseThrow();
+        int maxY = tree.logs().stream().mapToInt(BlockCoord::y).max().orElseThrow();
+        int minZ = tree.logs().stream().mapToInt(BlockCoord::z).min().orElseThrow();
+        int maxZ = tree.logs().stream().mapToInt(BlockCoord::z).max().orElseThrow();
+        int radius = ChopTuning.CLEARANCE_LEAF_RADIUS;
+        int fromY = minY - ChopTuning.CLEARANCE_LEAF_DOWN;
+        int toY = maxY + ChopTuning.CLEARANCE_LEAF_UP;
+        List<BlockCoord> found = new ArrayList<>();
+        for (int x = minX - radius; x <= maxX + radius; x++) {
+            for (int z = minZ - radius; z <= maxZ + radius; z++) {
+                for (int y = fromY; y <= toY; y++) {
+                    BlockCoord cell = new BlockCoord(x, y, z);
+                    if (logs.contains(cell) || !view.isFoliageObstacle(cell) || skip.test(cell)) {
+                        continue;
+                    }
+                    found.add(cell);
+                }
+            }
+        }
+        found.sort(Comparator.comparingInt(BlockCoord::y)
+                .reversed()
+                .thenComparingLong(cell -> distanceSquared(cell, tree.base()))
+                .thenComparingInt(BlockCoord::x)
+                .thenComparingInt(BlockCoord::z));
+        return List.copyOf(found);
+    }
 
     public static List<BlockCoord> plan(Tree tree, TreeView view) {
         Objects.requireNonNull(tree, "Дерево не может быть null: без него неизвестно, чью крону снимать");
