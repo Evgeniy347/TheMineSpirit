@@ -56,13 +56,6 @@ public record BoardFilter(
         return List.copyOf(kept);
     }
 
-    public BoardFilter nextGroup() {
-        List<BoardTileGroup> groups = List.of(BoardTileGroup.values());
-        int index = group == null ? 0 : groups.indexOf(group) + 1;
-        BoardTileGroup next = index < groups.size() ? groups.get(index) : null;
-        return new BoardFilter(next, spirit, spiritName);
-    }
-
     public BoardFilter nextSpiritNames(List<String> names) {
         Objects.requireNonNull(names, "names не может быть null: цикл фильтра идёт по именам духов доски");
         return nextSpiritFromNames(names);

@@ -3,14 +3,16 @@ package com.theminespirit.neoforge.client;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.town.SettlementReach;
+import com.theminespirit.core.ui.RefreshClock;
 import com.theminespirit.core.ui.ScreenTabs;
-import com.theminespirit.core.ui.StockListing;
 import com.theminespirit.neoforge.crafting.ItemIds;
 import com.theminespirit.neoforge.terminal.CraftTerminalChannel;
 import com.theminespirit.neoforge.terminal.CraftTerminalChannel.Action;
 import com.theminespirit.neoforge.terminal.CraftTerminalChannel.Kind;
 import com.theminespirit.neoforge.terminal.CraftTerminalMenu;
+import java.util.EnumMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -18,21 +20,22 @@ import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.jspecify.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
 
 public final class CraftTerminalScreen extends AbstractContainerScreen<CraftTerminalMenu> {
     private static final String KEY = ModIdentity.MOD_ID + ".craft.";
-    private static final int WIDTH = 290;
+    private static final int WIDTH = 360;
     private static final int HEIGHT = 256;
     private static final int LIST_X = 8;
     private static final int LIST_Y = 20;
-    private static final int PANEL_X = 182;
-    private static final int PANEL_WIDTH = 102;
+    private static final int SEARCH_WIDTH = 162;
+    private static final int PANEL_X = 184;
+    private static final int PANEL_WIDTH = 166;
     private static final int BUTTON_HEIGHT = 14;
     private static final int REFRESH_TICKS = 20;
     private static final int BACKGROUND = 0xFFC6C6C6;
@@ -44,14 +47,18 @@ public final class CraftTerminalScreen extends AbstractContainerScreen<CraftTerm
 
     private final StockPanel list = new StockPanel();
     private final ChainPanel chain = new ChainPanel();
+    private final Map<StockPanel.Mode, ShellTabButton> modeButtons = new EnumMap<>(StockPanel.Mode.class);
     private @Nullable EditBox search;
     private @Nullable Button sortButton;
-    private @Nullable Button modeButton;
     private @Nullable Button craftButton;
     private @Nullable Button maxButton;
+    private Component reason = Component.empty();
     private SettlementReach.Verdict verdict = SettlementReach.Verdict.NO_SETTLEMENT;
     private int distance;
     private int ticks;
+    private int ageTicks;
+    private String query = "";
+    private RefreshClock clock = RefreshClock.NEVER;
 
     public CraftTerminalScreen(CraftTerminalMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
@@ -65,23 +72,38 @@ public final class CraftTerminalScreen extends AbstractContainerScreen<CraftTerm
         list.place(leftPos + LIST_X, topPos + LIST_Y);
         chain.place(leftPos + PANEL_X, topPos + 96, PANEL_WIDTH, 100);
         ScreenTabButtons.add(this::addRenderableWidget, width, ScreenTabs.Tab.CRAFT);
-        EditBox box = new EditBox(font, leftPos + LIST_X, topPos + 6, 110, 12, Component.translatable(KEY + "search"));
+        EditBox box = new EditBox(
+                font, leftPos + LIST_X, topPos + 4, SEARCH_WIDTH, 14, Component.translatable(KEY + "search"));
+        box.setHint(Component.translatable(KEY + "search.placeholder"));
         box.setMaxLength(64);
+        box.setValue(query);
         box.setResponder(text -> {
+            query = text;
             list.query(text);
             SearchSync.publish(text);
         });
         search = addRenderableWidget(box);
         int panel = leftPos + PANEL_X;
-        modeButton = addRenderableWidget(Button.builder(modeLabel(), pressed -> toggleMode())
-                .bounds(panel, topPos + 30, PANEL_WIDTH, BUTTON_HEIGHT)
-                .build());
-        sortButton = addRenderableWidget(Button.builder(sortLabel(StockListing.Sort.COUNT), pressed -> cycleSort())
-                .bounds(panel, topPos + 46, PANEL_WIDTH, BUTTON_HEIGHT)
+        int modeWidth = (PANEL_WIDTH - 4) / 3;
+        modeButtons.clear();
+        StockPanel.Mode[] modes = StockPanel.Mode.values();
+        for (int index = 0; index < modes.length; index++) {
+            StockPanel.Mode mode = modes[index];
+            Button.Builder builder = Button.builder(
+                            Component.translatable(KEY + "tab." + mode.name().toLowerCase(Locale.ROOT)),
+                            pressed -> setMode(mode))
+                    .bounds(panel + index * (modeWidth + 2), topPos + 30, modeWidth, BUTTON_HEIGHT);
+            ShellTabButton button = new ShellTabButton(builder, list.mode() == mode);
+            button.active = list.mode() != mode;
+            modeButtons.put(mode, button);
+            addRenderableWidget(button);
+        }
+        sortButton = addRenderableWidget(Button.builder(sortLabel(), pressed -> cycleSort())
+                .bounds(panel, topPos + 48, PANEL_WIDTH, BUTTON_HEIGHT)
                 .build());
         addRenderableWidget(
                 Button.builder(Component.translatable(KEY + "clear"), pressed -> send(Action.of(Kind.CLEAR)))
-                        .bounds(panel, topPos + 62, PANEL_WIDTH, BUTTON_HEIGHT)
+                        .bounds(panel, topPos + 64, PANEL_WIDTH, BUTTON_HEIGHT)
                         .build());
         craftButton = addRenderableWidget(Button.builder(Component.translatable(KEY + "make"), pressed -> craft(false))
                 .bounds(panel, topPos + 200, PANEL_WIDTH, BUTTON_HEIGHT)
@@ -96,6 +118,7 @@ public final class CraftTerminalScreen extends AbstractContainerScreen<CraftTerm
     public void show(CraftTerminalChannel.Snapshot snapshot) {
         verdict = snapshot.verdict();
         distance = snapshot.distance();
+        clock = RefreshClock.at(ageTicks);
         list.showStock(snapshot.entries());
         list.showOrders(snapshot.orders());
         updateButtons();
@@ -103,6 +126,7 @@ public final class CraftTerminalScreen extends AbstractContainerScreen<CraftTerm
 
     public void show(CraftTerminalChannel.ChainReply reply) {
         chain.show(reply);
+        clock = RefreshClock.at(ageTicks);
         updateButtons();
     }
 
@@ -112,36 +136,53 @@ public final class CraftTerminalScreen extends AbstractContainerScreen<CraftTerm
                 chain.reply().map(CraftTerminalChannel.ChainReply::feasible).orElse(false);
         boolean orderable =
                 chain.reply().map(reply -> !reply.missing().isEmpty()).orElse(false);
+        int crafts = chain.reply().map(CraftTerminalChannel.ChainReply::crafts).orElse(0);
         if (craftButton != null) {
             craftButton.active = allowed && (feasible || orderable);
-            craftButton.setMessage(Component.translatable(orderable ? KEY + "queue" : KEY + "make"));
+            craftButton.setMessage(
+                    Component.translatable(orderable && !feasible ? KEY + "queue_count" : KEY + "make_count", crafts));
         }
         if (maxButton != null) {
             maxButton.active = allowed && feasible;
         }
-    }
-
-    private void toggleMode() {
-        list.cycleMode();
-        if (modeButton != null) {
-            modeButton.setMessage(modeLabel());
+        if (!allowed) {
+            reason = Component.translatable(KEY + "reason.denied");
+        } else if (feasible) {
+            reason = Component.translatable(KEY + "reason.ready");
+        } else if (orderable) {
+            reason = Component.translatable(KEY + "reason.queue");
+        } else {
+            reason = Component.translatable(KEY + "reason.empty");
+        }
+        for (var entry : modeButtons.entrySet()) {
+            entry.getValue().current(entry.getKey() == list.mode());
+            entry.getValue().active = entry.getKey() != list.mode();
         }
     }
 
-    private Component modeLabel() {
-        return Component.translatable(KEY + "mode." + list.mode().name().toLowerCase(Locale.ROOT));
+    private void setMode(StockPanel.Mode mode) {
+        list.mode(mode);
+        updateButtons();
     }
 
     private void cycleSort() {
-        StockListing.Sort next = list.cycleSort();
+        if (Screen.hasShiftDown()) {
+            list.toggleDirection();
+        } else {
+            list.cycleSort();
+        }
         if (sortButton != null) {
-            sortButton.setMessage(sortLabel(next));
+            sortButton.setMessage(sortLabel());
         }
     }
 
-    private static Component sortLabel(StockListing.Sort sort) {
+    private Component sortLabel() {
         return Component.translatable(
-                KEY + "sort", Component.translatable(KEY + "sort." + sort.name().toLowerCase(Locale.ROOT)));
+                        KEY + "sort",
+                        Component.translatable(
+                                KEY + "sort." + list.sort().name().toLowerCase(Locale.ROOT)))
+                .copy()
+                .append(list.reversed() ? " ▲" : " ▼");
     }
 
     private void craft(boolean max) {
@@ -163,6 +204,7 @@ public final class CraftTerminalScreen extends AbstractContainerScreen<CraftTerm
     @Override
     protected void containerTick() {
         super.containerTick();
+        ageTicks++;
         if (++ticks % REFRESH_TICKS == 0) {
             send(Action.of(Kind.REFRESH));
         }
@@ -170,6 +212,22 @@ public final class CraftTerminalScreen extends AbstractContainerScreen<CraftTerm
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (search != null && !query.isEmpty()) {
+            int clearX = search.getX() + search.getWidth() - 11;
+            if (mouseX >= clearX
+                    && mouseX < clearX + 10
+                    && mouseY >= search.getY()
+                    && mouseY < search.getY() + search.getHeight()) {
+                search.setValue("");
+                query = "";
+                return true;
+            }
+        }
+        if (list.cancelZone(mouseX, mouseY)) {
+            list.orderAt(mouseX, mouseY)
+                    .ifPresent(order -> send(new Action(Kind.CANCEL, ItemStack.EMPTY, order.id(), false, "")));
+            return true;
+        }
         if (!list.contains(mouseX, mouseY)) {
             return super.mouseClicked(mouseX, mouseY, button);
         }
@@ -208,6 +266,18 @@ public final class CraftTerminalScreen extends AbstractContainerScreen<CraftTerm
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (keyCode == InputConstants.KEY_F) {
+            if (search != null) {
+                search.setFocused(true);
+            }
+            return true;
+        }
+        if ((keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER)
+                && craftButton != null
+                && craftButton.active) {
+            craft(false);
+            return true;
+        }
         if (search != null && search.isFocused() && keyCode != InputConstants.KEY_ESCAPE) {
             return search.keyPressed(keyCode, scanCode, modifiers) || search.canConsumeInput();
         }
@@ -215,8 +285,25 @@ public final class CraftTerminalScreen extends AbstractContainerScreen<CraftTerm
     }
 
     @Override
+    public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        ShellPainter.background(graphics, width, height);
+    }
+
+    @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         super.render(graphics, mouseX, mouseY, partialTick);
+        ShellPainter.titles(graphics, font, title, Component.translatable(KEY + "subtitle"));
+        ShellPainter.footer(
+                graphics,
+                font,
+                Component.translatable(ShellPainter.KEY + "hint.craft"),
+                clock,
+                ageTicks,
+                width,
+                height);
+        if (search != null && !query.isEmpty()) {
+            graphics.drawString(font, "×", search.getX() + search.getWidth() - 9, search.getY() + 3, 0xFF6A6A6A, false);
+        }
         Optional<CraftTerminalChannel.Order> order = list.orderAt(mouseX, mouseY);
         Optional<ItemStack> hovered = list.at(mouseX, mouseY);
         if (order.isPresent()) {
@@ -244,19 +331,29 @@ public final class CraftTerminalScreen extends AbstractContainerScreen<CraftTerm
                 TEXT,
                 false);
         chain.render(graphics, font);
+        int reasonColor = verdict != SettlementReach.Verdict.ALLOWED
+                ? BAD
+                : chain.reply().map(CraftTerminalChannel.ChainReply::feasible).orElse(false) ? GOOD : 0xFF8A5A00;
+        graphics.drawString(
+                font, TextClip.text(font, reason, PANEL_WIDTH), leftPos + PANEL_X, topPos + 232, reasonColor, false);
     }
 
     @Override
     protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
-        Component status = verdict == SettlementReach.Verdict.ALLOWED
+        Component status = statusText();
+        graphics.drawString(
+                font,
+                TextClip.text(font, status, PANEL_WIDTH),
+                PANEL_X,
+                6,
+                verdict == SettlementReach.Verdict.ALLOWED ? GOOD : BAD,
+                false);
+    }
+
+    private Component statusText() {
+        return verdict == SettlementReach.Verdict.ALLOWED
                 ? Component.translatable(KEY + "status.allowed")
                 : Component.translatable(
                         KEY + "denied." + verdict.name().toLowerCase(Locale.ROOT), distance, SettlementReach.MARGIN);
-        int line = 6;
-        for (FormattedCharSequence part : font.split(status, PANEL_WIDTH)) {
-            graphics.drawString(
-                    font, part, PANEL_X, line, verdict == SettlementReach.Verdict.ALLOWED ? GOOD : BAD, false);
-            line += 9;
-        }
     }
 }

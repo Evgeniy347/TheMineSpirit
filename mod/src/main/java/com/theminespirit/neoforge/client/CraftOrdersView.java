@@ -29,7 +29,7 @@ final class CraftOrdersView {
         return lines;
     }
 
-    private static Component status(String status) {
+    static Component status(String status) {
         return switch (status) {
             case WAITING -> Component.translatable(KEY + "status.waiting");
             case CANCELLED -> Component.translatable(KEY + "status.cancelled");

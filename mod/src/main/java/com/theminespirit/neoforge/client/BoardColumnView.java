@@ -1,11 +1,10 @@
 package com.theminespirit.neoforge.client;
 
 import com.theminespirit.core.ModIdentity;
-import com.theminespirit.core.ui.BoardColumns;
-import com.theminespirit.core.ui.BoardFeed;
 import com.theminespirit.core.ui.BoardLayout;
 import com.theminespirit.core.ui.BoardTile;
 import com.theminespirit.core.ui.BoardWaitReasons;
+import com.theminespirit.core.ui.api.BoardTileGroup;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -16,73 +15,100 @@ import org.jspecify.annotations.Nullable;
 
 final class BoardColumnView {
     private static final String KEY = ModIdentity.MOD_ID + ".board.";
-    private static final int HEADER_BG_COLOR = 0xE0101010;
+    private static final int HEADER_BG = 0xE012151A;
+    private static final int HEADER_BORDER = 0x14FFFFFF;
+    private static final int COUNT_BG = 0x2AFFFFFF;
+    private static final int TRACK = 0xFF1B2026;
+    private static final int THUMB = 0xFF3A434E;
 
     private BoardColumnView() {}
 
     record Context(
             BoardLayout layout,
-            BoardFeed feed,
-            List<BoardColumns.BoardColumn> columns,
+            List<List<BoardTile>> slotTiles,
+            Map<BoardTileGroup, Integer> totals,
             Map<String, List<BoardWaitReasons.Wait>> waitReasons,
             Map<String, BoardTile> tilesById) {}
 
     static BoardTileView.@Nullable Hover render(
-            GuiGraphics graphics, Font font, Context context, double[] scroll, int mouseX, int mouseY) {
+            GuiGraphics graphics,
+            Font font,
+            Context context,
+            Map<BoardTileGroup, Double> scroll,
+            int mouseX,
+            int mouseY,
+            @Nullable String selectedId) {
         BoardLayout layout = context.layout();
-        BoardFeed feed = context.feed();
-        List<BoardColumns.BoardColumn> columns = context.columns();
-        Map<String, List<BoardWaitReasons.Wait>> waitReasons = context.waitReasons();
-        Map<String, BoardTile> tilesById = context.tilesById();
         BoardTileView.Hover hovered = null;
-        BoardLayout.Rect list = layout.list();
-        List<BoardLayout.Rect> columnRects = layout.columns();
-        List<BoardLayout.Rect> headers = layout.headers();
-        for (int i = 0; i < columns.size(); i++) {
-            BoardColumns.BoardColumn column = columns.get(i);
-            BoardLayout.Rect header = headers.get(i);
-            BoardLayout.Rect area = columnRects.get(i);
-            Component headerText = Component.translatable(
-                            KEY + "group." + column.group().name().toLowerCase(Locale.ROOT))
-                    .append(" " + feed.total(column.group()));
-            graphics.fill(header.x(), header.y(), header.right(), header.bottom(), HEADER_BG_COLOR);
-            String headerLine =
-                    font.plainSubstrByWidth(headerText.getString(), header.width() - 2 * BoardLayout.CONTENT_PAD);
+        for (int i = 0; i < layout.slotCount(); i++) {
+            BoardLayout.Slot slot = layout.slots().get(i);
+            BoardLayout.Rect header = slot.header();
+            BoardLayout.Rect list = slot.list();
+            BoardTileGroup group = slot.group();
+            int color = BoardTileView.groupColor(group);
+            graphics.fill(header.x(), header.y(), header.right(), header.bottom(), HEADER_BG);
+            graphics.fill(header.x(), header.bottom() - 1, header.right(), header.bottom(), HEADER_BORDER);
+            graphics.fill(header.x() + 6, header.y() + 6, header.x() + 12, header.y() + 12, color);
+            Component title =
+                    Component.translatable(KEY + "group." + group.name().toLowerCase(Locale.ROOT));
+            int count = context.totals().getOrDefault(group, 0);
+            String badge = String.valueOf(count);
+            int badgeWidth = font.width(badge) + 8;
             graphics.drawString(
                     font,
-                    headerLine,
-                    header.x() + BoardLayout.CONTENT_PAD,
-                    header.y() + BoardLayout.CONTENT_PAD,
-                    BoardTileView.groupColor(column.group()),
-                    true);
-            graphics.enableScissor(area.x(), list.y(), area.right(), list.bottom());
-            for (int j = 0; j < column.tiles().size(); j++) {
-                BoardLayout.Rect rect = layout.tile(i, j);
-                int y = rect.y() - (int) scroll[i];
-                if (y + rect.height() < list.y() || y > list.bottom()) {
+                    TextClip.text(font, title, header.width() - 20 - badgeWidth),
+                    header.x() + 17,
+                    header.y() + 5,
+                    BoardTileView.groupColor(group) == 0 ? 0xFFFFFFFF : 0xFFE8ECF1,
+                    false);
+            graphics.fill(
+                    header.right() - badgeWidth - 5, header.y() + 4, header.right() - 5, header.y() + 15, COUNT_BG);
+            graphics.drawString(font, badge, header.right() - badgeWidth - 1, header.y() + 4, color, false);
+
+            List<BoardTile> tiles = context.slotTiles().get(i);
+            int scrolled = (int) (double) scroll.getOrDefault(group, 0.0);
+            double content = tiles.size() * (BoardLayout.TILE_HEIGHT + BoardLayout.TILE_GAP) - BoardLayout.TILE_GAP;
+            if (tiles.isEmpty()) {
+                graphics.drawString(
+                        font,
+                        Component.translatable(KEY + "column.empty"),
+                        list.x() + 6,
+                        list.y() + 6,
+                        0xFF6B7480,
+                        false);
+            }
+            graphics.enableScissor(list.x(), list.y(), list.right(), list.bottom());
+            for (int j = 0; j < tiles.size(); j++) {
+                BoardLayout.Rect base = layout.tile(i, j);
+                int y = base.y() - scrolled;
+                if (y + base.height() < list.y() || y > list.bottom()) {
                     continue;
                 }
-                boolean over = mouseX >= rect.x()
-                        && mouseX < rect.right()
+                boolean over = mouseX >= base.x()
+                        && mouseX < base.right()
                         && mouseY >= Math.max(y, list.y())
-                        && mouseY < Math.min(y + rect.height(), list.bottom());
-                BoardTile tile = column.tiles().get(j);
-                BoardLayout.Rect row = new BoardLayout.Rect(rect.x(), y, rect.width(), rect.height());
-                BoardTileView.Hover hover = BoardTileView.render(
+                        && mouseY < Math.min(y + base.height(), list.bottom());
+                BoardTile tile = tiles.get(j);
+                BoardLayout.Rect row = new BoardLayout.Rect(base.x(), y, base.width(), base.height());
+                hovered = BoardTileView.render(
                         graphics,
                         font,
                         tile,
                         row,
                         over,
+                        tile.id().equals(selectedId),
                         new BoardTileView.Cursor(mouseX, mouseY),
-                        new BoardTileView.Context(waitReasons, tilesById));
-                if (hover != null) {
-                    hovered = hover;
-                } else if (over) {
-                    hovered = new BoardTileView.Hover(tile, null);
-                }
+                        new BoardTileView.Context(context.waitReasons(), context.tilesById()));
             }
             graphics.disableScissor();
+            if (content > list.height()) {
+                BoardLayout.Rect bar = slot.scrollbar();
+                graphics.fill(bar.x(), bar.y(), bar.right(), bar.bottom(), TRACK);
+                int thumb = Math.max(18, (int) (bar.height() * list.height() / content));
+                int travel = Math.max(1, bar.height() - thumb);
+                int top = bar.y() + (int) (travel * (scrolled / Math.max(1.0, content - list.height())));
+                graphics.fill(bar.x(), top, bar.right(), top + thumb, THUMB);
+            }
         }
         return hovered;
     }

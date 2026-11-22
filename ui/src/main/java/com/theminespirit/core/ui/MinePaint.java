@@ -12,7 +12,11 @@ public final class MinePaint {
     private MinePaint() {}
 
     public static List<MapPaint.Shape> of(
-            MineSnapshot snapshot, MapViewport viewport, Optional<MineSnapshot.Rect> hovered, MapPaint.Font font) {
+            MineSnapshot snapshot,
+            MapViewport viewport,
+            Optional<MineSnapshot.Rect> hovered,
+            MapPaint.Font font,
+            boolean oreOnly) {
         Objects.requireNonNull(snapshot, "Срез шахты не может быть null");
         Objects.requireNonNull(viewport, "Окно карты не может быть null");
         Objects.requireNonNull(hovered, "Наведение постройки не может быть null: пусто — Optional.empty()");
@@ -25,8 +29,8 @@ public final class MinePaint {
                 MineStyle.BACKGROUND));
         for (MineSnapshot.Cell cell : snapshot.cells()) {
             box(viewport, cell.x(), cell.z(), cell.x() + 1, cell.z() + 1)
-                    .ifPresent(box -> out.add(
-                            new MapPaint.Fill(box.x1(), box.y1(), box.x2(), box.y2(), MineStyle.fill(cell.kind()))));
+                    .ifPresent(box -> out.add(new MapPaint.Fill(
+                            box.x1(), box.y1(), box.x2(), box.y2(), MineStyle.fill(cell.kind(), oreOnly))));
         }
         List<MapPaint.Text> labels = new ArrayList<>();
         for (MineSnapshot.Rect rect : snapshot.rects()) {

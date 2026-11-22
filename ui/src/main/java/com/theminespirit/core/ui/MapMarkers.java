@@ -93,6 +93,15 @@ public final class MapMarkers {
 
     public static List<MapPaint.Shape> paint(
             List<MapMarker> markers, MapViewport viewport, Optional<MapMarker> hovered, MapPaint.Font font) {
+        return paint(markers, viewport, hovered, font, true);
+    }
+
+    public static List<MapPaint.Shape> paint(
+            List<MapMarker> markers,
+            MapViewport viewport,
+            Optional<MapMarker> hovered,
+            MapPaint.Font font,
+            boolean labels) {
         Objects.requireNonNull(hovered, "Наведение метки не может быть null: пусто — Optional.empty()");
         List<Placed> placed = layout(markers, viewport, font);
         List<MapPaint.Shape> out = new ArrayList<>();
@@ -107,6 +116,9 @@ public final class MapMarkers {
                     marker.dotX() + DOT,
                     marker.dotY() + DOT,
                     MapStyle.marker(marker.marker().kind())));
+        }
+        if (!labels) {
+            return out;
         }
         for (Placed marker : placed) {
             if (marker.labelWidth() <= 0) {

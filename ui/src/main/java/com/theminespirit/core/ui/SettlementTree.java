@@ -1,5 +1,6 @@
 package com.theminespirit.core.ui;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -146,5 +147,20 @@ public record SettlementTree(
     public Optional<Node> node(String id) {
         Objects.requireNonNull(id, "id узла не может быть null: по нему ищут рамку");
         return nodes.stream().filter(node -> node.id().equals(id)).findFirst();
+    }
+
+    public SettlementTree withoutOptional() {
+        Set<String> kept = new HashSet<>();
+        List<Node> filtered = new ArrayList<>();
+        for (Node node : nodes) {
+            if (!node.optional() || node.kind() == Kind.ROOT || node.kind() == Kind.GATE) {
+                filtered.add(node);
+                kept.add(node.id());
+            }
+        }
+        List<Edge> links = edges.stream()
+                .filter(edge -> kept.contains(edge.from()) && kept.contains(edge.to()))
+                .toList();
+        return new SettlementTree(stage, stages, currentStage, filtered, links, width, height);
     }
 }

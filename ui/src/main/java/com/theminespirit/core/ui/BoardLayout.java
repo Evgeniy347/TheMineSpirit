@@ -1,178 +1,155 @@
 package com.theminespirit.core.ui;
 
+import com.theminespirit.core.ui.api.BoardTileGroup;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public final class BoardLayout {
     public static final int MARGIN = 8;
-    public static final int STAGE_HEIGHT = 12;
-    public static final int BUTTON_HEIGHT = 20;
-    public static final int BUTTON_GAP = 4;
-    public static final int BUTTON_MAX_WIDTH = 150;
-    public static final int BORDER_LEFT = 9;
-    public static final int BORDER_TOP = 18;
-    public static final int BORDER_RIGHT = 9;
-    public static final int BORDER_BOTTOM = 9;
     public static final int COLUMN_COUNT = 4;
-    public static final int COLUMN_GAP = 4;
-    public static final int COLUMN_HEADER = 12;
+    public static final int WIDE_MIN_WIDTH = 820;
+    public static final int SINGLE_MIN_WIDTH = 560;
+    public static final int DOCK_WIDTH = 208;
+    public static final int DOCK_GAP = 8;
+    public static final int COLUMN_GAP = 6;
+    public static final int COLUMN_HEADER = 18;
     public static final int CONTENT_PAD = 2;
-    public static final int TILE_HEIGHT = 56;
-    public static final int TILE_GAP = 2;
-    public static final int TILE_TEXT_TOP = 3;
-    public static final int TILE_LINE_STEP = 10;
-    public static final int ICON_SIZE = 16;
-    public static final int ICON_GAP = 2;
-    public static final int ICON_TOP = 2;
-    public static final int ICON_LABEL = 9;
+    public static final int TILE_HEIGHT = 54;
+    public static final int TILE_GAP = 4;
+    public static final int SCROLLBAR_WIDTH = 3;
 
-    private final Rect window;
-    private final Rect inner;
-    private final Rect list;
-    private final List<Rect> columns;
-    private final List<Rect> headers;
-    private final Rect statusButton;
-    private final Rect spiritButton;
+    private final int screenWidth;
+    private final BoardLayout.Rect toolbar;
+    private final BoardLayout.Rect window;
+    private final BoardLayout.Rect dock;
+    private final List<Slot> slots;
 
-    private BoardLayout(
-            Rect window,
-            Rect inner,
-            Rect list,
-            List<Rect> columns,
-            List<Rect> headers,
-            Rect statusButton,
-            Rect spiritButton) {
+    private BoardLayout(int screenWidth, Rect toolbar, Rect window, Rect dock, List<Slot> slots) {
+        this.screenWidth = screenWidth;
+        this.toolbar = toolbar;
         this.window = window;
-        this.inner = inner;
-        this.list = list;
-        this.columns = List.copyOf(columns);
-        this.headers = List.copyOf(headers);
-        this.statusButton = statusButton;
-        this.spiritButton = spiritButton;
+        this.dock = dock;
+        this.slots = List.copyOf(slots);
+    }
+
+    public record Slot(BoardTileGroup group, Rect header, Rect list) {
+        public Slot {
+            Objects.requireNonNull(group, "Группа слота не может быть null: по ней подписан заголовок колонки");
+            Objects.requireNonNull(header, "Заголовок слота не может быть null: группа без подписи непонятна");
+            Objects.requireNonNull(list, "Список слота не может быть null: плиткам нужно место");
+        }
+
+        public Rect scrollbar() {
+            int x = list.right() - SCROLLBAR_WIDTH;
+            return new Rect(x, list.y() + 2, SCROLLBAR_WIDTH, Math.max(0, list.height() - 4));
+        }
+    }
+
+    public static int columnsFor(int screenWidth) {
+        if (screenWidth >= WIDE_MIN_WIDTH) {
+            return COLUMN_COUNT;
+        }
+        return screenWidth >= SINGLE_MIN_WIDTH ? 2 : 1;
     }
 
     public static BoardLayout of(int screenWidth, int screenHeight) {
-        int windowX = MARGIN;
-        int buttonY = MARGIN + STAGE_HEIGHT + BUTTON_GAP;
-        int windowY = buttonY + BUTTON_HEIGHT + BUTTON_GAP;
-        int windowWidth = Math.max(0, screenWidth - 2 * MARGIN);
-        int windowHeight = Math.max(0, screenHeight - windowY - MARGIN);
-        Rect window = new Rect(windowX, windowY, windowWidth, windowHeight);
-        Rect inner = new Rect(
-                window.x() + BORDER_LEFT,
-                window.y() + BORDER_TOP,
-                Math.max(0, window.width() - BORDER_LEFT - BORDER_RIGHT),
-                Math.max(0, window.height() - BORDER_TOP - BORDER_BOTTOM));
-        int columnsTop = inner.y() + CONTENT_PAD;
-        int listTop = columnsTop + COLUMN_HEADER + CONTENT_PAD;
-        int listHeight = Math.max(0, inner.bottom() - CONTENT_PAD - listTop);
-        Rect list = new Rect(inner.x(), listTop, inner.width(), listHeight);
-        int columnWidth = Math.max(1, (inner.width() - (COLUMN_COUNT - 1) * COLUMN_GAP) / COLUMN_COUNT);
-        List<Rect> columns = new ArrayList<>(COLUMN_COUNT);
-        List<Rect> headers = new ArrayList<>(COLUMN_COUNT);
-        for (int i = 0; i < COLUMN_COUNT; i++) {
-            int x = inner.x() + i * (columnWidth + COLUMN_GAP);
-            columns.add(new Rect(x, listTop, columnWidth, listHeight));
-            headers.add(new Rect(x, columnsTop, columnWidth, COLUMN_HEADER));
+        return of(screenWidth, screenHeight, List.of(BoardTileGroup.values()));
+    }
+
+    public static BoardLayout of(int screenWidth, int screenHeight, List<BoardTileGroup> groups) {
+        Objects.requireNonNull(groups, "Список групп не может быть null: пустую доску задают пустым списком");
+        if (groups.isEmpty()) {
+            throw new IllegalArgumentException("У доски нет ни одной группы: рисовать нечего");
         }
-        int buttonWidth = Math.min(BUTTON_MAX_WIDTH, Math.max(60, (inner.width() - BUTTON_GAP) / 2));
-        int buttonX = inner.x() + CONTENT_PAD;
-        Rect statusButton = new Rect(buttonX, buttonY, buttonWidth, BUTTON_HEIGHT);
-        Rect spiritButton = new Rect(buttonX + buttonWidth + BUTTON_GAP, buttonY, buttonWidth, BUTTON_HEIGHT);
-        return new BoardLayout(window, inner, list, columns, headers, statusButton, spiritButton);
+        ShellLayout shell = ShellLayout.of(screenWidth, screenHeight);
+        Rect toolbar = shell.toolbar();
+        Rect body = shell.body();
+        int dockWidth = screenWidth >= WIDE_MIN_WIDTH ? Math.min(DOCK_WIDTH, body.width()) : 0;
+        int columnsWidth = Math.max(0, body.width() - (dockWidth > 0 ? dockWidth + DOCK_GAP : 0));
+        Rect window = new Rect(body.x(), body.y(), columnsWidth, body.height());
+        Rect dock = dockWidth > 0
+                ? new Rect(body.x() + body.width() - dockWidth, body.y(), dockWidth, body.height())
+                : new Rect(0, 0, 0, 0);
+        int columns = columnsFor(screenWidth);
+        int rows = (groups.size() + columns - 1) / columns;
+        int cellHeight = rows == 0 ? 0 : Math.max(0, (window.height() - (rows - 1) * COLUMN_GAP) / rows);
+        int columnWidth = Math.max(1, (window.width() - (columns - 1) * COLUMN_GAP) / columns);
+        List<Slot> slots = new ArrayList<>(groups.size());
+        for (int i = 0; i < groups.size(); i++) {
+            int column = i % columns;
+            int row = i / columns;
+            int x = window.x() + column * (columnWidth + COLUMN_GAP);
+            int y = window.y() + row * (cellHeight + COLUMN_GAP);
+            Rect header = new Rect(x, y, columnWidth, Math.min(COLUMN_HEADER, cellHeight));
+            Rect list = new Rect(
+                    x,
+                    header.bottom() + CONTENT_PAD,
+                    columnWidth,
+                    Math.max(0, cellHeight - header.height() - CONTENT_PAD));
+            slots.add(new Slot(groups.get(i), header, list));
+        }
+        return new BoardLayout(screenWidth, toolbar, window, dock, slots);
+    }
+
+    public int screenWidth() {
+        return screenWidth;
+    }
+
+    public Rect toolbar() {
+        return toolbar;
     }
 
     public Rect window() {
         return window;
     }
 
-    public Rect inner() {
-        return inner;
+    public Rect dock() {
+        return dock;
     }
 
-    public Rect list() {
-        return list;
+    public boolean hasDock() {
+        return dock.width() > 0;
     }
 
-    public List<Rect> columns() {
-        return columns;
+    public List<Slot> slots() {
+        return slots;
     }
 
-    public List<Rect> headers() {
-        return headers;
+    public int slotCount() {
+        return slots.size();
     }
 
-    public Rect stage() {
-        return new Rect(window.x(), MARGIN, window.width(), STAGE_HEIGHT);
+    public Rect header(int slot) {
+        return slot(slot).header();
     }
 
-    public Rect statusButton() {
-        return statusButton;
+    public Rect list(int slot) {
+        return slot(slot).list();
     }
 
-    public Rect spiritButton() {
-        return spiritButton;
-    }
-
-    public Rect tile(int column, int index) {
-        Rect area = column(column);
+    public Rect tile(int slot, int index) {
+        Rect area = list(slot);
         if (index < 0) {
             throw new IllegalArgumentException("Номер плитки не может быть отрицательным: " + index);
         }
-        return new Rect(area.x(), list.y() + index * (TILE_HEIGHT + TILE_GAP), area.width(), TILE_HEIGHT);
+        return new Rect(area.x(), area.y() + index * (TILE_HEIGHT + TILE_GAP), area.width(), TILE_HEIGHT);
     }
 
-    public static IconGrid iconGrid(int tileWidth, int count) {
-        if (tileWidth < 0) {
-            throw new IllegalArgumentException("Ширина плитки " + tileWidth + " отрицательна: значки некуда класть");
-        }
-        if (count < 0) {
-            throw new IllegalArgumentException("Число значков " + count + " отрицательно: показывать нечего");
-        }
-        if (count == 0) {
-            return new IconGrid(0, 0, 0);
-        }
-        int rows = Math.max(1, (TILE_HEIGHT - 2 * ICON_TOP + ICON_GAP) / (ICON_SIZE + ICON_LABEL + ICON_GAP));
-        int blockLimit = Math.max(ICON_SIZE, tileWidth / 2);
-        int columns = Math.max(1, Math.min(count, (blockLimit + ICON_GAP) / (ICON_SIZE + ICON_GAP)));
-        return new IconGrid(columns, rows, columns * rows);
-    }
-
-    public record IconGrid(int columns, int rows, int capacity) {
-        public IconGrid {
-            if (columns < 0 || rows < 0 || capacity < 0) {
-                throw new IllegalArgumentException(
-                        "Сетка значков " + columns + "x" + rows + "/" + capacity + " отрицательна: рисовать нечего");
-            }
-            if (capacity != columns * rows) {
-                throw new IllegalArgumentException("Вместимость сетки " + capacity + " не равна " + columns + "x" + rows
-                        + ": скрытые значки посчитаются неверно");
-            }
-        }
-
-        public int width() {
-            return columns == 0 ? 0 : columns * (ICON_SIZE + ICON_GAP) - ICON_GAP;
-        }
-    }
-
-    public int columnAt(double mouseX, double mouseY) {
-        if (!list.contains((int) Math.floor(mouseX), (int) Math.floor(mouseY))) {
-            return -1;
-        }
-        for (int i = 0; i < columns.size(); i++) {
-            Rect column = columns.get(i);
-            if (mouseX >= column.x() && mouseX < column.right()) {
+    public int slotAt(double mouseX, double mouseY) {
+        for (int i = 0; i < slots.size(); i++) {
+            if (slots.get(i).list().contains((int) Math.floor(mouseX), (int) Math.floor(mouseY))) {
                 return i;
             }
         }
         return -1;
     }
 
-    private Rect column(int column) {
-        if (column < 0 || column >= columns.size()) {
-            throw new IndexOutOfBoundsException("Колонки " + column + " нет: их всего " + columns.size());
+    private Slot slot(int slot) {
+        if (slot < 0 || slot >= slots.size()) {
+            throw new IndexOutOfBoundsException("Слота " + slot + " нет: их всего " + slots.size());
         }
-        return columns.get(column);
+        return slots.get(slot);
     }
 
     public record Rect(int x, int y, int width, int height) {

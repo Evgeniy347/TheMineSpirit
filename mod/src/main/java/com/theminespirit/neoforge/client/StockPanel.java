@@ -40,6 +40,7 @@ final class StockPanel {
     private List<CraftTerminalChannel.Order> orders = List.of();
     private String query = "";
     private StockListing.Sort sort = StockListing.Sort.COUNT;
+    private boolean reversed;
     private int scrollRow;
 
     void place(int left, int top) {
@@ -64,18 +65,26 @@ final class StockPanel {
         return sort;
     }
 
-    Mode cycleMode() {
-        mode = switch (mode) {
-            case STOCK -> Mode.RECIPES;
-            case RECIPES -> Mode.ORDERS;
-            case ORDERS -> Mode.STOCK;
-        };
+    StockListing.Sort sort() {
+        return sort;
+    }
+
+    void toggleDirection() {
+        reversed = !reversed;
+        refresh();
+    }
+
+    boolean reversed() {
+        return reversed;
+    }
+
+    void mode(Mode next) {
+        mode = next;
         if (mode == Mode.RECIPES && recipeOutputs.isEmpty()) {
             recipeOutputs = craftableOutputs();
         }
         scrollRow = 0;
         refresh();
-        return mode;
     }
 
     Mode mode() {
@@ -114,7 +123,7 @@ final class StockPanel {
                         entry.count()));
             }
         }
-        shown = StockListing.view(all, query, mode == Mode.STOCK ? sort : StockListing.Sort.NAME, false);
+        shown = StockListing.view(all, query, mode == Mode.STOCK ? sort : StockListing.Sort.NAME, reversed);
         scrollRow = Math.min(scrollRow, maxScroll());
     }
 
@@ -186,8 +195,12 @@ final class StockPanel {
         ItemStack sample = sampleOf(entry);
         graphics.renderItem(sample, itemX, itemY);
         if (mode == Mode.ORDERS) {
-            graphics.renderItemDecorations(
-                    font, sample, itemX, itemY, compact(orders.get(entry.key()).count()));
+            CraftTerminalChannel.Order order = orders.get(entry.key());
+            graphics.renderItemDecorations(font, sample, itemX, itemY, compact(order.count()));
+            if (CraftOrdersView.WAITING.equals(order.status())) {
+                int x = itemX + 11;
+                graphics.drawString(font, "×", x, itemY, 0xFFB71C1C, true);
+            }
         } else if (mode == Mode.STOCK) {
             CraftTerminalChannel.Entry source = stock.get(entry.key());
             if (source.free() < source.count()) {
@@ -195,6 +208,25 @@ final class StockPanel {
             }
             graphics.renderItemDecorations(font, sample, itemX, itemY, compact(source.count()));
         }
+    }
+
+    boolean cancelZone(double mouseX, double mouseY) {
+        if (mode != Mode.ORDERS) {
+            return false;
+        }
+        Optional<Integer> key = keyAt(mouseX, mouseY);
+        if (key.isEmpty()) {
+            return false;
+        }
+        CraftTerminalChannel.Order order = orders.get(key.get());
+        if (!CraftOrdersView.WAITING.equals(order.status())) {
+            return false;
+        }
+        int column = (int) ((mouseX - x) / CELL);
+        int row = (int) ((mouseY - y) / CELL);
+        double localX = mouseX - (x + column * CELL);
+        double localY = mouseY - (y + row * CELL);
+        return localX >= CELL - 8 && localY <= 9;
     }
 
     Optional<CraftTerminalChannel.Entry> stockAt(double mouseX, double mouseY) {

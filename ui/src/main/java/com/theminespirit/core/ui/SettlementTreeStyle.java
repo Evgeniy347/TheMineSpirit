@@ -6,7 +6,6 @@ public final class SettlementTreeStyle {
     public static final int NODE = 28;
     public static final int STEP_X = 96;
     public static final int STEP_Y = 46;
-    public static final int PAD = 8;
     public static final int GATE_STUB = STEP_X + NODE + 22;
 
     public static final int TEXT = 0xFFFFFFFF;

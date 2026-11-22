@@ -43,7 +43,7 @@ public final class MineMapPng {
         g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 11));
         FontMetrics metrics = g.getFontMetrics();
         MapPaint.Font font = font();
-        for (MapPaint.Shape shape : MinePaint.of(snapshot, viewport, hovered, font)) {
+        for (MapPaint.Shape shape : MinePaint.of(snapshot, viewport, hovered, font, false)) {
             draw(g, metrics, shape);
         }
         for (MapPaint.Shape shape : MapMarkers.paint(snapshot.markers(), viewport, hoveredMarker, font)) {

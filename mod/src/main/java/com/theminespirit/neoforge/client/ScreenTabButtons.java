@@ -17,9 +17,9 @@ final class ScreenTabButtons {
     static void add(Consumer<Button> widgets, int screenWidth, ScreenTabs.Tab current) {
         for (ScreenTabs.Tab tab : ScreenTabs.Tab.values()) {
             BoardLayout.Rect rect = ScreenTabs.rect(screenWidth, tab);
-            Button button = Button.builder(Component.translatable(ScreenTabs.key(tab)), pressed -> open(tab))
-                    .bounds(rect.x(), rect.y(), rect.width(), rect.height())
-                    .build();
+            Button.Builder builder = Button.builder(Component.translatable(ScreenTabs.key(tab)), pressed -> open(tab))
+                    .bounds(rect.x(), rect.y(), rect.width(), rect.height());
+            Button button = new ShellTabButton(builder, tab == current);
             button.active = tab != current;
             widgets.accept(button);
         }

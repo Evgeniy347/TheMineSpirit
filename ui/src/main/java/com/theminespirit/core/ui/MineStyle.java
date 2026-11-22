@@ -14,8 +14,22 @@ public final class MineStyle {
     private static final int LUCK_ORE = 0xFF54D6C8;
     private static final int WATER = 0xFF3A6AD6;
     private static final int LAVA = 0xFFE2672B;
+    public static final int DIM = 0xFF24211C;
 
     private MineStyle() {}
+
+    public static boolean ore(MineSnapshot.Kind kind) {
+        Objects.requireNonNull(kind, "Вид клетки среза шахты не может быть null");
+        return kind == MineSnapshot.Kind.ORE || kind == MineSnapshot.Kind.LUCK_ORE;
+    }
+
+    public static int fill(MineSnapshot.Kind kind, boolean oreOnly) {
+        Objects.requireNonNull(kind, "Вид клетки среза шахты не может быть null");
+        if (oreOnly && !ore(kind)) {
+            return DIM;
+        }
+        return fill(kind);
+    }
 
     public static int fill(MineSnapshot.Kind kind) {
         Objects.requireNonNull(kind, "Вид клетки среза шахты не может быть null");
