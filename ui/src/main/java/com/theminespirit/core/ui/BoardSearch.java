@@ -11,6 +11,10 @@ public final class BoardSearch {
         return query == null ? "" : query.trim().toLowerCase(Locale.ROOT);
     }
 
+    public static boolean entered(@Nullable String previous, @Nullable String next) {
+        return normalize(previous).isEmpty() && !normalize(next).isEmpty();
+    }
+
     public static boolean matches(String haystack, @Nullable String query) {
         Objects.requireNonNull(haystack, "Строка поиска не может быть null: пустую задают пустой строкой");
         String normalized = normalize(query);

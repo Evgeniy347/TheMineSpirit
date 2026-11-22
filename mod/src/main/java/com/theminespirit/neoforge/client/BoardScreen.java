@@ -111,6 +111,9 @@ public final class BoardScreen extends Screen {
         box.setMaxLength(64);
         box.setValue(query);
         box.setResponder(text -> {
+            if (BoardSearch.entered(query, text)) {
+                requestAll();
+            }
             query = text;
             rebuild();
         });
