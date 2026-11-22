@@ -226,6 +226,8 @@
   "theminespirit.board.sort.time": "Время",
   "theminespirit.board.search": "Поиск по заданиям",
   "theminespirit.board.search.placeholder": "Поиск по заданиям…",
+  "theminespirit.board.search.found": "найдено %s из %s загруженных",
+  "theminespirit.board.search.reset": "Сбросить",
   "theminespirit.board.dock.title": "ВЫБРАННОЕ ЗАДАНИЕ",
   "theminespirit.board.dock.nothing": "Выберите задание в колонке",
   "theminespirit.board.dock.materials": "МАТЕРИАЛЫ",

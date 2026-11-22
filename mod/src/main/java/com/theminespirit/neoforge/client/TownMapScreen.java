@@ -41,11 +41,15 @@ public final class TownMapScreen extends Screen {
     private static final int DOCK_WIDTH = 212;
     private static final int DOCK_MIN_SCREEN = 860;
     private static final int DOCK_GAP = 8;
+    private static final double FOCUS_SCALE = 3.0;
     private static final int MARKER_TICKS = 20;
 
     private @Nullable TownMapView view;
     private TerrainRaster terrain = TerrainRaster.EMPTY;
     private @Nullable TerrainTexture texture;
+    private final int focusX;
+    private final int focusZ;
+    private final boolean focused;
     private @Nullable MapViewport viewport;
     private boolean answered;
     private boolean offline;
@@ -60,7 +64,18 @@ public final class TownMapScreen extends Screen {
     private record Hit(BoardLayout.Rect rect, Runnable action) {}
 
     public TownMapScreen() {
+        this(0, 0, false);
+    }
+
+    public TownMapScreen(int focusX, int focusZ) {
+        this(focusX, focusZ, true);
+    }
+
+    private TownMapScreen(int focusX, int focusZ, boolean focused) {
         super(Component.translatable(KEY + "title"));
+        this.focusX = focusX;
+        this.focusZ = focusZ;
+        this.focused = focused;
     }
 
     void show(TownMapChannel.Reply received) {
@@ -409,6 +424,12 @@ public final class TownMapScreen extends Screen {
             return window;
         }
         BoardLayout.Rect map = mapArea();
+        if (focused) {
+            window = new MapViewport(
+                    focusX, focusZ, FOCUS_SCALE, map.x(), map.y(), Math.max(1, map.width()), Math.max(1, map.height()));
+            viewport = window;
+            return window;
+        }
         TownMapView current = view;
         TownMapView.Bounds bounds = current == null ? new TownMapView.Bounds(0, 0, 0, 0) : mapBounds(current);
         window = MapViewport.fit(bounds, map.x(), map.y(), Math.max(1, map.width()), Math.max(1, map.height()));

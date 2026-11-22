@@ -14,6 +14,7 @@ import com.theminespirit.core.ui.BoardTile;
 import com.theminespirit.core.ui.BoardWaitReasons;
 import com.theminespirit.core.ui.RefreshClock;
 import com.theminespirit.core.ui.ScreenTabs;
+import com.theminespirit.core.ui.SearchCount;
 import com.theminespirit.core.ui.api.BoardTileGroup;
 import com.theminespirit.neoforge.net.BoardViewChannel;
 import java.util.ArrayList;
@@ -56,6 +57,7 @@ public final class BoardScreen extends Screen {
     private List<List<BoardTile>> slotTiles = List.of();
     private Map<BoardTileGroup, Integer> totals = Map.of();
     private Map<String, BoardTile> tilesById = Map.of();
+    private SearchCount searchCount = new SearchCount(0, 0);
     private Map<String, List<BoardWaitReasons.Wait>> waitReasons = Map.of();
     private final Map<BoardTileGroup, Double> scroll = new EnumMap<>(BoardTileGroup.class);
     private final List<Hit> hits = new ArrayList<>();
@@ -147,6 +149,18 @@ public final class BoardScreen extends Screen {
                     layout.window().y() + 8,
                     MUTED,
                     false);
+        } else if (filteredEmpty()) {
+            BoardLayout.Rect window = layout.window();
+            graphics.drawString(
+                    font, Component.translatable(KEY + "filtered"), window.x() + 8, window.y() + 8, MUTED, false);
+            button(
+                    graphics,
+                    font,
+                    window.x() + 8,
+                    window.y() + 24,
+                    90,
+                    Component.translatable(KEY + "search.reset"),
+                    this::clearQuery);
         } else {
             hovered = BoardColumnView.render(
                     graphics,
@@ -195,6 +209,15 @@ public final class BoardScreen extends Screen {
                     () -> setFocus(focusGroup == group ? null : group));
         }
         int searchLeft = toolbar.right() - (layout.screenWidth() < BoardLayout.WIDE_MIN_WIDTH ? 130 : 150);
+        if (!query.isEmpty()) {
+            int free = searchLeft - x - 8;
+            if (free >= 90) {
+                Component found =
+                        Component.translatable(KEY + "search.found", searchCount.found(), searchCount.loaded());
+                String text = TextClip.text(font, found, free);
+                graphics.drawString(font, text, searchLeft - 6 - font.width(text), y + 4, MUTED, false);
+            }
+        }
         if (!query.isEmpty() && searchBox != null) {
             int clearX = searchLeft + searchBox.getWidth() - 11;
             graphics.drawString(font, "×", clearX + 1, y + 3, MUTED, false);
@@ -350,7 +373,7 @@ public final class BoardScreen extends Screen {
                 tree.y(),
                 tree.width(),
                 Component.translatable(KEY + "dock.tree"),
-                () -> Minecraft.getInstance().setScreen(new SettlementTreeScreen()));
+                () -> Minecraft.getInstance().setScreen(new SettlementTreeScreen(tile.id())));
     }
 
     private void button(GuiGraphics graphics, Font font, int x, int y, int width, Component label, Runnable action) {
@@ -521,6 +544,7 @@ public final class BoardScreen extends Screen {
             }
         }
         tilesById = Map.copyOf(byId);
+        searchCount = SearchCount.of(List.copyOf(byId.values()), query, this::haystack);
         Map<String, List<BoardWaitReasons.Wait>> reasons = new HashMap<>();
         for (BoardTile tile : byId.values()) {
             List<BoardWaitReasons.Wait> waits = BoardWaitReasons.of(tile, tilesById);
@@ -612,6 +636,18 @@ public final class BoardScreen extends Screen {
 
     private void setScrolled(BoardTileGroup group, double value) {
         scroll.put(group, value);
+    }
+
+    private boolean filteredEmpty() {
+        return !query.isEmpty() && feed.seen() && totalAll() > 0 && searchCount.empty();
+    }
+
+    private void clearQuery() {
+        query = "";
+        if (searchBox != null) {
+            searchBox.setValue("");
+        }
+        rebuild();
     }
 
     private int totalAll() {

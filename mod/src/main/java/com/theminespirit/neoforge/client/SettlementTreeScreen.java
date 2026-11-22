@@ -44,6 +44,7 @@ public final class SettlementTreeScreen extends Screen {
     private @Nullable SettlementTree tree;
     private SettlementTree.@Nullable Node hoveredNode;
     private @Nullable String selectedNodeId;
+    private final @Nullable String focusNodeId;
     private int selectedStage = 1;
     private int refreshTicks;
     private int ageTicks;
@@ -59,13 +60,23 @@ public final class SettlementTreeScreen extends Screen {
     private record Hit(BoardLayout.Rect rect, Runnable action) {}
 
     public SettlementTreeScreen() {
+        this(null);
+    }
+
+    public SettlementTreeScreen(@Nullable String focusNodeId) {
         super(Component.translatable(KEY + "title"));
+        this.focusNodeId = focusNodeId;
     }
 
     void show(SettlementTree received) {
         boolean changed = received.stage() != selectedStage;
         selectedStage = received.stage();
         tree = received;
+        if (selectedNodeId == null
+                && focusNodeId != null
+                && received.node(focusNodeId).isPresent()) {
+            selectedNodeId = focusNodeId;
+        }
         answered = true;
         offline = false;
         clock = RefreshClock.at(ageTicks);
@@ -315,9 +326,12 @@ public final class SettlementTreeScreen extends Screen {
                     y + 3,
                     TEXT,
                     false);
+            SettlementTree.Position where = selected.at();
             hits.add(new Hit(
                     new BoardLayout.Rect(x, y, buttonWidth, 14),
-                    () -> Minecraft.getInstance().setScreen(new TownMapScreen())));
+                    where == null
+                            ? () -> Minecraft.getInstance().setScreen(new TownMapScreen())
+                            : () -> Minecraft.getInstance().setScreen(new TownMapScreen(where.x(), where.z()))));
             y += 22;
         }
         graphics.drawString(font, Component.translatable(KEY + "dock.objects").getString(), x, y, DIM, false);

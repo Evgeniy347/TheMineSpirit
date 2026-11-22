@@ -226,6 +226,8 @@
   "theminespirit.board.sort.time": "Time",
   "theminespirit.board.search": "Search tasks",
   "theminespirit.board.search.placeholder": "Search tasks…",
+  "theminespirit.board.search.found": "found %s of %s loaded",
+  "theminespirit.board.search.reset": "Reset",
   "theminespirit.board.dock.title": "SELECTED TASK",
   "theminespirit.board.dock.nothing": "Pick a task in a column",
   "theminespirit.board.dock.materials": "MATERIALS",
