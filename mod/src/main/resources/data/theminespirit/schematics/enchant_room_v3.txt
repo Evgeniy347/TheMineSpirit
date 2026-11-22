@@ -6,8 +6,9 @@ type: craft
 stage: 2
 level: 3
 requires: enchant_room_v2
-size: 15x7x13
-entrance: 5,1,11
+size: 32x7x32
+plot: 32x32
+entrance: 13,1,20
 legend:
   'c': cobblestone
   'S': stone_bricks
@@ -28,100 +29,163 @@ legend:
   'P': potted_poppy
 layers:
   - y0 булыжный цоколь и дубовый пол: |
-      ccccccccccccccc
-      c#############c
-      c#############c
-      c#############c
-      c#############c
-      c#############c
-      c#############c
-      c#############c
-      c#############c
-      c#############c
-      c#############c
-      ccccccccccccccc
-           pppp
+      
+      
+      
+      
+      
+      
+      
+      
+      
+              ccccccccccccccc
+              c#############c
+              c#############c
+              c#############c
+              c#############c
+              c#############c
+              c#############c
+              c#############c
+              c#############c
+              c#############c
+              c#############c
+              ccccccccccccccc
+                   pppp
   - y1 зал, кольцо 15 полок, ковры, кафедра: |
-      BSSSSSSSSSSSSSB
-      SKKKKK........S
-      SK...K........S
-      SK.E.K........S
-      SK...K........S
-      SKK.KK........S
-      S.~~~.........S
-      S.......l.....S
-      S.mmm.........S
-      S...........P.S
-      S.............S
-      BSSSSDHDHSSSSSB
-           ....
+      
+      
+      
+      
+      
+      
+      
+      
+      
+              BSSSSSSSSSSSSSB
+              SKKKKK........S
+              SK...K........S
+              SK.E.K........S
+              SK...K........S
+              SKK.KK........S
+              S.~~~.........S
+              S.......l.....S
+              S.mmm.........S
+              S...........P.S
+              S.............S
+              BSSSSDHDHSSSSSB
+                   ....
   - y2 окна 2×2, свечи, подвесные фонари: |
-      BSGGSSSSSSSGGSB
-      STC.CT........S
-      S.............S
-      S.............S
-      S.............S
-      S.............S
-      S.............S
-      S.............S
-      S.............S
-      S.............S
-      S.............S
-      BSSSSDHDHSSSSSB
-           ....
+      
+      
+      
+      
+      
+      
+      
+      
+      
+              BSGGSSSSSSSGGSB
+              STC.CT........S
+              S.............S
+              S.............S
+              S.............S
+              S.............S
+              S.............S
+              S.............S
+              S.............S
+              S.............S
+              S.............S
+              BSSSSDHDHSSSSSB
+                   ....
   - y3 окна 2×2: |
-      BSGGSSSSSSSGGSB
-      S.............S
-      S.............S
-      G.............G
-      G.............G
-      S.............S
-      S.............S
-      G.............G
-      G.............G
-      S.............S
-      S.............S
-      BSSSSSSSSSSSSSB
-           ....
+      
+      
+      
+      
+      
+      
+      
+      
+      
+              BSGGSSSSSSSGGSB
+              S.............S
+              S.............S
+              G.............G
+              G.............G
+              S.............S
+              S.............S
+              G.............G
+              G.............G
+              S.............S
+              S.............S
+              BSSSSSSSSSSSSSB
+                   ....
   - y4 верх стен: |
-      BSSSSSSSSSSSSSB
-      S.............S
-      S.............S
-      S.............S
-      S.............S
-      S.............S
-      S.............S
-      S.............S
-      S.............S
-      S.............S
-      S.............S
-      BSSSSSSSSSSSSSB
-           ....
+      
+      
+      
+      
+      
+      
+      
+      
+      
+              BSSSSSSSSSSSSSB
+              S.............S
+              S.............S
+              S.............S
+              S.............S
+              S.............S
+              S.............S
+              S.............S
+              S.............S
+              S.............S
+              S.............S
+              BSSSSSSSSSSSSSB
+                   ....
   - y5 верх стен и фонари: |
-      BSSSSSSSSSSSSSB
-      S.............S
-      S.............S
-      S.............S
-      S.............S
-      S........n....S
-      S.............S
-      S.............S
-      S.............S
-      S...........n.S
-      S.............S
-      BSSSSSSSSSSSSSB
-           ....
+      
+      
+      
+      
+      
+      
+      
+      
+      
+              BSSSSSSSSSSSSSB
+              S.............S
+              S.............S
+              S.............S
+              S.............S
+              S........n....S
+              S.............S
+              S.............S
+              S.............S
+              S...........n.S
+              S.............S
+              BSSSSSSSSSSSSSB
+                   ....
   - y6 каменная крыша: |
-      SSSSSSSSSSSSSSS
-      SSSSSSSSSSSSSSS
-      SSSSSSSSSSSSSSS
-      SSSSSSSSSSSSSSS
-      SSSSSSSSSSSSSSS
-      SSSSSSSSSSSSSSS
-      SSSSSSSSSSSSSSS
-      SSSSSSSSSSSSSSS
-      SSSSSSSSSSSSSSS
-      SSSSSSSSSSSSSSS
-      SSSSSSSSSSSSSSS
-      SSSSSSSSSSSSSSS
-           ....
+      
+      
+      
+      
+      
+      
+      
+      
+      
+              SSSSSSSSSSSSSSS
+              SSSSSSSSSSSSSSS
+              SSSSSSSSSSSSSSS
+              SSSSSSSSSSSSSSS
+              SSSSSSSSSSSSSSS
+              SSSSSSSSSSSSSSS
+              SSSSSSSSSSSSSSS
+              SSSSSSSSSSSSSSS
+              SSSSSSSSSSSSSSS
+              SSSSSSSSSSSSSSS
+              SSSSSSSSSSSSSSS
+              SSSSSSSSSSSSSSS
+                   ....

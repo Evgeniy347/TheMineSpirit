@@ -2,7 +2,7 @@
 name: "Палисад-секция (с калиткой)"
 type: defense
 stage: 0
-size: 8x2x1   # Ш×В×Д   # Ш×В×Д
+size: 8x2x1   # Ш×В×Д
 entrance: 3,0,0
 legend:
   'F': oak_fence

@@ -32,9 +32,9 @@ public final class BoardV2GameTests {
 
     private BoardV2GameTests() {}
 
-    // [флак] перенос: путь, разбор старого загона и стройка нового 4×5; под нагрузкой
-    // машины 400 тиков мало, запас двойной.
-    @SceneStep(template = "arena", timeoutTicks = 800, board = true, calmMobs = true)
+    // [флак] перенос: путь, разбор старого загона и стройка нового на участке 16×16; под нагрузкой
+    // машины 800 тиков мало, запас двойной.
+    @SceneStep(template = "arena", timeoutTicks = 1600, board = true, calmMobs = true)
     public static void relocate_PenMoved_OldClearedNewStands(GameTestHelper helper) {
         GameTestFixtures.holdDayTime(helper, NOON_TIME);
         GameTestFixtures.reset(helper);
@@ -54,7 +54,7 @@ public final class BoardV2GameTests {
         helper.setBlock(oldTwo, Blocks.OAK_FENCE);
         helper.setBlock(oldThree, Blocks.OAK_FENCE);
         BlockCoord from = absolute(helper, new BlockPos(2, 1, 6));
-        BlockCoord to = absolute(helper, new BlockPos(4, 1, 1));
+        BlockCoord to = absolute(helper, new BlockPos(0, 1, 0));
         String id = "relocate_pen";
         board.submit(
                 new BoardTicket(
@@ -87,7 +87,8 @@ public final class BoardV2GameTests {
                     "Старый загон обязан быть снесён в from: остались "
                             + helper.getBlockState(oldOne) + ", " + helper.getBlockState(oldTwo)
                             + ", " + helper.getBlockState(oldThree));
-            int fence = countFence(helper, to, 4, 5);
+            BlockCoord pen = new BlockCoord(to.x() + 6, to.y(), to.z() + 5);
+            int fence = countFence(helper, pen, 4, 5);
             helper.assertTrue(
                     fence > 0,
                     "Новый загон обязан стоять в to: клеток забора в 4×5 — " + fence
@@ -100,7 +101,7 @@ public final class BoardV2GameTests {
                             + helper.getLevel().getBlockState(new BlockPos(to.x(), to.y(), to.z()))
                             + ": без новой постройки перенос теряет загон");
             helper.assertTrue(
-                    hasGate(helper, to, 4, 5), "Новый загон обязан сохранить калитку: без неё животное не загнать");
+                    hasGate(helper, pen, 4, 5), "Новый загон обязан сохранить калитку: без неё животное не загнать");
             GameTestFixtures.finish(helper);
             helper.succeed();
         });

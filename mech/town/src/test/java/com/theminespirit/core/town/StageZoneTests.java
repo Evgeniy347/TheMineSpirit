@@ -1,5 +1,6 @@
 package com.theminespirit.core.town;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -15,7 +16,7 @@ class StageZoneTests {
         for (ColumnMask.Cell cell : first.enclosure().cells()) {
             assertTrue(
                     second.zone().contains(cell.x(), cell.z()),
-                    "Зона второго этапа обязана содержать огородку первого: она растёт, а не переезжает"
+                    "Зона второго этапа содержит огородку первого: граница закреплена и не переезжает"
                             + " Иначе тест zone_SecondStage_ContainsFenceAndPlotsOfBothStages перестанет ловить эту поломку. При смене zone_SecondStage_ContainsFenceAndPlotsOfBothStages проверь это утверждение.");
         }
         for (Placement place : plan.upToStage(2)) {
@@ -27,9 +28,10 @@ class StageZoneTests {
                                 + " Иначе тест zone_SecondStage_ContainsFenceAndPlotsOfBothStages перестанет ловить эту поломку. При смене zone_SecondStage_ContainsFenceAndPlotsOfBothStages проверь это утверждение.");
             }
         }
-        assertTrue(
-                second.zone().count() > first.zone().count(),
-                "Зона второго этапа не выросла: " + second.zone().count() + " против "
+        assertEquals(
+                first.zone().count(),
+                second.zone().count(),
+                "Зона этапа — весь регион и не растёт: " + second.zone().count() + " против "
                         + first.zone().count()
                         + " Иначе тест zone_SecondStage_ContainsFenceAndPlotsOfBothStages перестанет ловить эту поломку. При смене zone_SecondStage_ContainsFenceAndPlotsOfBothStages проверь это утверждение.");
     }

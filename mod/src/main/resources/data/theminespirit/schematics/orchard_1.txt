@@ -4,8 +4,9 @@ name: "Сад, уровень 1"
 type: farm
 stage: 1
 level: 1
-size: 11x1x11   # Ш×В×Д
-entrance: 5,0,0
+size: 16x1x16  # Ш×В×Д
+plot: 16x16
+entrance: 7,0,2
 exemptions:
   - rule: closed_walls
     reason: "сад открыт: стен и забора нет по замыслу, это участок с деревьями и тропинками"
@@ -23,14 +24,16 @@ legend:
   'T': torch
 layers:
   - y0 сад: |
-      T.........T
-      .f.d.p.a.b.
-      ..o..p..o..
-      .d.a.p.f.b.
-      .....p.....
-      ppppppppppp
-      .....p.....
-      .a.f.p.d.b.
-      ..o..p..o..
-      .f.a.p.b.d.
-      T....p....T
+      
+      
+        T.........T
+        .f.d.p.a.b.
+        ..o..p..o..
+        .d.a.p.f.b.
+        .....p.....
+        ppppppppppp
+        .....p.....
+        .a.f.p.d.b.
+        ..o..p..o..
+        .f.a.p.b.d.
+        T....p....T

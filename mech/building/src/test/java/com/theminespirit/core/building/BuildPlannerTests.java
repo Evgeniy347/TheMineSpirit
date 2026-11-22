@@ -164,19 +164,13 @@ class BuildPlannerTests {
     @Test
     void plan_JunkSlots_ReleasedWhenNoFreeSlots() {
         BuildPlanner.Plan plan = planFrom(
-                "family_house_3",
+                "storage_hut",
                 new BuildPlanner.Start(
-                        Set.of(),
-                        Set.of(),
-                        Map.of(),
-                        materials("family_house_3"),
-                        2,
-                        BuildPlanner.SLOTS - 2,
-                        Map.of()));
+                        Set.of(), Set.of(), Map.of(), materials("storage_hut"), 2, BuildPlanner.SLOTS - 2, Map.of()));
         assertEquals(
                 0,
                 plan.stuck(),
-                "лишнее освобождает слоты — стройка доходит до конца: " + plan.lines()
+                "лишнее освобождает слоты — стройка доходит до конца на схеме без полей участка: " + plan.lines()
                         + " Иначе тест plan_JunkSlots_ReleasedWhenNoFreeSlots перестанет ловить эту поломку. При смене plan_JunkSlots_ReleasedWhenNoFreeSlots проверь это утверждение.");
     }
 

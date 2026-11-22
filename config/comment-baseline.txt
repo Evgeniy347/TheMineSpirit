@@ -3,8 +3,8 @@ gametest/AcquireGameTests.java	заранее (резолвер не плани�
 gametest/AcquireGameTests.java	остальное дух добывает, крафтит и плавит сам; замерено ~340 тиков, запас 2×.
 gametest/BoardGameTests.java	[флак] добыча одного бревна вручную, путь к сундуку и ожидание пересборки: под нагрузкой
 gametest/BoardGameTests.java	машины не укладывается в 400 тиков, запас двойной.
-gametest/BoardV2GameTests.java	[флак] перенос: путь, разбор старого загона и стройка нового 4×5; под нагрузкой
-gametest/BoardV2GameTests.java	машины 400 тиков мало, запас двойной.
+gametest/BoardV2GameTests.java	[флак] перенос: путь, разбор старого загона и стройка нового на участке 16×16; под нагрузкой
+gametest/BoardV2GameTests.java	машины 800 тиков мало, запас двойной.
 gametest/DemoAuditGameTests.java	[флак] два свободных слота: заходы к сундуку и обратно — запас тиков на подходы, тест меряет результат
 gametest/DemoAuditGameTests.java	[флак] дом игрока 1 — сотни блоков под коньком: запас тиков на подходы, тест меряет результат.
 gametest/DemoAuditGameTests.java	[флак] дом игрока 1 — сотни блоков под коньком: запас тиков на подходы, тест меряет результат.

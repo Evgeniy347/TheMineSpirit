@@ -5,8 +5,9 @@ type: craft
 stage: 4
 level: 3
 requires: alchemy_2
-size: 13x12x13   # Ш×В×Д
-entrance: 6,1,1
+size: 16x12x16  # Ш×В×Д
+plot: 16x16
+entrance: 7,1,2
 legend:
   'c': smooth_stone
   'S': bricks
@@ -56,170 +57,182 @@ legend:
   'x': oak_leaves
 layers:
   - y0 цоколь и пол: |
-      aaaaaapaaaaaa
-      aaaaaaaaaaaaa
-      aaaaaaaaaaaaa
-      aaaaaaaaaaaaa
-      aaaaaaaaaaaaa
-      aaaaaaaaaaaaa
-      aaaaaaaaaaaaa
-      aaaaaaaaaaaaa
-      aaaaaaaaaaaaa
-      aaaaaaaaaaaaa
-      aaaaaaaaaaaaa
-      aaaaaaaaaaaaa
-      aaaaaaaaaaaaa
+      
+       aaaaaapaaaaaa
+       aaaaaaaaaaaaa
+       aaaaaaaaaaaaa
+       aaaaaaaaaaaaa
+       aaaaaaaaaaaaa
+       aaaaaaaaaaaaa
+       aaaaaaaaaaaaa
+       aaaaaaaaaaaaa
+       aaaaaaaaaaaaa
+       aaaaaaaaaaaaa
+       aaaaaaaaaaaaa
+       aaaaaaaaaaaaa
+       aaaaaaaaaaaaa
   - y1 зал: |
       
-       LSSSLDLSSSL
-       S    ~  v S
-       SvVv ~ v CS
-       S   x~  V S
-       S    V    S
-       SvV  ~x  bS
-       S    ~    S
-       S    ~    S
-       ST   ~  u S
-       SQQQQQQQQQS
-       LSSSSSSSSSL
-            .
+       
+        LSSSLDLSSSL
+        S    ~  v S
+        SvVv ~ v CS
+        S   x~  V S
+        S    V    S
+        SvV  ~x  bS
+        S    ~    S
+        S    ~    S
+        ST   ~  u S
+        SQQQQQQQQQS
+        LSSSSSSSSSL
+             .
   - y2: |
       
-       LSGGLDLGGSL
-       S         S
-       G         G
-       G         G
-       S         S
-       S         S
-       S         S
-       G         G
-       G         G
-       SQPQQQQQOQS
-       LSGGSSSGGSL
-            .
+       
+        LSGGLDLGGSL
+        S         S
+        G         G
+        G         G
+        S         S
+        S         S
+        S         S
+        G         G
+        G         G
+        SQPQQQQQOQS
+        LSGGSSSGGSL
+             .
   - y3: |
       
-       LSGGLSLGGSL
-       S         S
-       G         G
-       G         G
-       S         S
-       S         S
-       S         S
-       G         G
-       G         G
-       S         S
-       LSGGSSSGGSL
-            .
+       
+        LSGGLSLGGSL
+        S         S
+        G         G
+        G         G
+        S         S
+        S         S
+        S         S
+        G         G
+        G         G
+        S         S
+        LSGGSSSGGSL
+             .
   - y4: |
       
-       LSSSLSLSSSL
-       S         S
-       S         S
-       S         S
-       S         S
-       S         S
-       S         S
-       S         S
-       S         S
-       S         S
-       LSSSSSSSSSL
-            .
+       
+        LSSSLSLSSSL
+        S         S
+        S         S
+        S         S
+        S         S
+        S         S
+        S         S
+        S         S
+        S         S
+        S         S
+        LSSSSSSSSSL
+             .
   - y5: |
       
-       LSSSLSLSSSL
-       S         S
-       S H H   H S
-       S         S
-       S         S
-       S         S
-       S H H   H S
-       S H H   H S
-       S         S
-       S         S
-       LSSSSSSSSSL
-            .
+       
+        LSSSLSLSSSL
+        S         S
+        S H H   H S
+        S         S
+        S         S
+        S         S
+        S H H   H S
+        S H H   H S
+        S         S
+        S         S
+        LSSSSSSSSSL
+             .
   - y6: |
       
-       LSSSLSLSSSL
-       S         S
-       S z z   z S
-       S         S
-       S         S
-       S         S
-       S z z   z S
-       S z z   z S
-       S         S
-       S         S
-       LSSSSSSSSSL
-            .
+       
+        LSSSLSLSSSL
+        S         S
+        S z z   z S
+        S         S
+        S         S
+        S         S
+        S z z   z S
+        S z z   z S
+        S         S
+        S         S
+        LSSSSSSSSSL
+             .
   - y7: |
-      #############
-      #############
-      #############
-      #############
-      #####GGG#####
-      #####GGG#####
-      #####GGG#####
-      #############
-      #############
-      #############
-      #############
-      #############
-      #############
+      
+       #############
+       #############
+       #############
+       #############
+       #####GGG#####
+       #####GGG#####
+       #####GGG#####
+       #############
+       #############
+       #############
+       #############
+       #############
+       #############
   - y8: |
-      txtxtxtxtxtxt
-      x13333333332x
-      t1#########2t
-      x1#########2x
-      t1#########2t
-      x1#########2x
-      t1#########2t
-      x1#########2x
-      t1#########2t
-      x1#########2x
-      t1#########2t
-      x14444444442x
-      txtxtxtxtxtxt
+      
+       txtxtxtxtxtxt
+       x13333333332x
+       t1#########2t
+       x1#########2x
+       t1#########2t
+       x1#########2x
+       t1#########2t
+       x1#########2x
+       t1#########2t
+       x1#########2x
+       t1#########2t
+       x14444444442x
+       txtxtxtxtxtxt
   - y9: |
       
-      
-        133333332
-        1#######2
-        1#######2
-        1#######2
-        1#######2
-        1#######2
-        1#######2
-        1#######2
-        144444442
-      
-            .
+       
+       
+         133333332
+         1#######2
+         1#######2
+         1#######2
+         1#######2
+         1#######2
+         1#######2
+         1#######2
+         144444442
+       
+             .
   - y10: |
       
-      
-      
-         1333332
-         1#####2
-         1#####2
-         1#####2
-         1#####2
-         1#####2
-         1444442
-      
-      
-            .
+       
+       
+       
+          1333332
+          1#####2
+          1#####2
+          1#####2
+          1#####2
+          1#####2
+          1444442
+       
+       
+             .
   - y11: |
       
-      
-      
-      
-          13332
-          1###2
-          1###2
-          1###2
-          14442
-      
-      
-      
-            .
+       
+       
+       
+       
+           13332
+           1###2
+           1###2
+           1###2
+           14442
+       
+       
+       
+             .

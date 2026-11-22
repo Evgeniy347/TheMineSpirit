@@ -11,7 +11,8 @@ public record TownPlan(
         TownStreets streets,
         List<Placement> placements,
         FenceLine fence,
-        List<String> unplaced) {
+        List<String> unplaced,
+        List<PathLine> paths) {
     public TownPlan {
         Objects.requireNonNull(anchor, "Якорь плана не может быть null: от него размечен участок");
         Objects.requireNonNull(region, "Контур плана не может быть null");
@@ -19,6 +20,17 @@ public record TownPlan(
         Objects.requireNonNull(fence, "Ограда плана не может быть null");
         placements = List.copyOf(Objects.requireNonNull(placements, "Места построек не могут быть null"));
         unplaced = List.copyOf(Objects.requireNonNull(unplaced, "Список не поместившихся не может быть null"));
+        paths = List.copyOf(Objects.requireNonNull(paths, "Тропинки плана не могут быть null"));
+    }
+
+    public TownPlan(
+            BlockCoord anchor,
+            ColumnMask region,
+            TownStreets streets,
+            List<Placement> placements,
+            FenceLine fence,
+            List<String> unplaced) {
+        this(anchor, region, streets, placements, fence, unplaced, List.of());
     }
 
     public int area() {
@@ -44,6 +56,6 @@ public record TownPlan(
 
     public TownPlan atLevel(int level) {
         return new TownPlan(
-                new BlockCoord(anchor.x(), level, anchor.z()), region, streets, placements, fence, unplaced);
+                new BlockCoord(anchor.x(), level, anchor.z()), region, streets, placements, fence, unplaced, paths);
     }
 }

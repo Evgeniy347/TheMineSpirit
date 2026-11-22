@@ -24,7 +24,8 @@ class StageSiteTests {
     void hut_Scheme_InsideHutPlot() throws IOException {
         Schematic hut = SchematicTextParser.parse(Files.readString(ROOT.resolve("hut_1.txt")), "hut_1")
                 .schematic();
-        BlockCoord house = SITE.houseOrigin();
+        BlockCoord house =
+                new BlockCoord(SITE.hut().x(), SITE.anchor().y(), SITE.hut().z());
         List<BlockCoord> corners = new ArrayList<>(
                 List.of(house, new BlockCoord(house.x() + hut.sizeX() - 1, house.y(), house.z() + hut.sizeZ() - 1)));
         for (BlockCoord corner : corners) {
@@ -35,9 +36,9 @@ class StageSiteTests {
                             + " Иначе тест hut_Scheme_InsideHutPlot перестанет ловить эту поломку. При смене hut_Scheme_InsideHutPlot проверь это утверждение.");
         }
         assertEquals(
-                List.of(StageSite.HOUSE_WIDTH, StageSite.HOUSE_DEPTH),
+                List.of(SITE.hut().width(), SITE.hut().depth()),
                 List.of(hut.sizeX(), hut.sizeZ()),
-                "Габарит хижины в месте этапа обязан совпадать со схемой hut_1, иначе аудит хижины промахнётся"
+                "Габарит схемы hut_1 обязан совпадать с участком: схема — коробка участка 16×16"
                         + " При смене hut_Scheme_InsideHutPlot проверь это утверждение.");
     }
 

@@ -7,8 +7,9 @@ name: "Домашняя грядка пшеницы, уровень 1"
 type: farm
 stage: 1
 level: 1
-size: 7x2x12   # Ш×В×Д: 5×10 пашни, по краю обход
-entrance: 3,1,0
+size: 16x2x16  # Ш×В×Д: 5×10 пашни, по краю обход
+plot: 16x16
+entrance: 7,1,2
 exemptions:
   - rule: roof
     reason: "грядка под открытым небом: посевам нужны свет и дождь, крыши у неё нет"
@@ -27,28 +28,32 @@ legend:
   'w': wheat[age=0] ~
 layers:
   - y0 обход, пашня и вода: |
-      ppppppp
-      peeeeep
-      peeeeep
-      pee~eep
-      peeeeep
-      peeeeep
-      peeeeep
-      peeeeep
-      pee~eep
-      peeeeep
-      peeeeep
-      ppppppp
+      
+      
+          ppppppp
+          peeeeep
+          peeeeep
+          pee~eep
+          peeeeep
+          peeeeep
+          peeeeep
+          peeeeep
+          pee~eep
+          peeeeep
+          peeeeep
+          ppppppp
   - y1 посев: |
-      .......
-      .wwwww.
-      .wwwww.
-      .ww.ww.
-      .wwwww.
-      .wwwww.
-      .wwwww.
-      .wwwww.
-      .ww.ww.
-      .wwwww.
-      .wwwww.
-      .......
+      
+      
+          .......
+          .wwwww.
+          .wwwww.
+          .ww.ww.
+          .wwwww.
+          .wwwww.
+          .wwwww.
+          .wwwww.
+          .ww.ww.
+          .wwwww.
+          .wwwww.
+          .......

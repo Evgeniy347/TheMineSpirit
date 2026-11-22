@@ -19,6 +19,9 @@ public final class Walkways {
         TownStreets streets = plan.streets();
         ColumnMask street = streets.main().union(streets.side()).union(streets.ring());
         Set<ColumnMask.Cell> cells = new LinkedHashSet<>(street.cells());
+        for (PathLine path : plan.paths()) {
+            cells.addAll(path.cells());
+        }
         for (int gate : plan.fence().gates()) {
             cells.add(plan.fence().posts().get(gate));
         }

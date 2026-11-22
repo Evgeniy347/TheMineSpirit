@@ -4,8 +4,9 @@ name: "Тренировочный двор, уровень 1"
 type: social
 stage: 3
 level: 1
-size: 13x5x13   # Ш×В×Д
-entrance: 6,1,1
+size: 32x5x32  # Ш×В×Д
+plot: 32x32
+entrance: 15,1,10
 exemptions:
   - rule: roof
     reason: "двор под открытым небом; крыша только над трибуной у уровня 4"
@@ -28,47 +29,74 @@ legend:
   'x': moss_carpet
 layers:
   - y0 площадка и крыльцо: |
-      aaaaaapaaaaaa
-      aaaaaaaaaaaaa
-      aaaaaaaaaaaaa
-      aaaaaaaaaaaaa
-      aaaaaaaaaaaaa
-      aaaaaaaaaaaaa
-      aaaaaaaaaaaaa
-      aaaaaaaaaaaaa
-      aaaaaaaaaaaaa
-      aaaaaaaaaaaaa
-      aaaaaaaaaaaaa
-      aaaaaaaaaaaaa
-      aaaaaaaaaaaaa
+      
+      
+      
+      
+      
+      
+      
+      
+      
+               aaaaaapaaaaaa
+               aaaaaaaaaaaaa
+               aaaaaaaaaaaaa
+               aaaaaaaaaaaaa
+               aaaaaaaaaaaaa
+               aaaaaaaaaaaaa
+               aaaaaaaaaaaaa
+               aaaaaaaaaaaaa
+               aaaaaaaaaaaaa
+               aaaaaaaaaaaaa
+               aaaaaaaaaaaaa
+               aaaaaaaaaaaaa
+               aaaaaaaaaaaaa
   - y1 частокол, чучела, стойки: |
       
-       tttttDttttt
-       txxxxxxxxxt
-       txhxxxxxhxt
-       txxxxxxxbxt
-       txxxxxxxbxt
-       tWxxxxxxxxt
-       tAxxxxxxxxt
-       txxxxxxxxxt
-       txhxxxxxhxt
-       txxxxxxxxxt
-       ttttttttttt
-            .
+      
+      
+      
+      
+      
+      
+      
+      
+               
+                tttttDttttt
+                txxxxxxxxxt
+                txhxxxxxhxt
+                txxxxxxxbxt
+                txxxxxxxbxt
+                tWxxxxxxxxt
+                tAxxxxxxxxt
+                txxxxxxxxxt
+                txhxxxxxhxt
+                txxxxxxxxxt
+                ttttttttttt
+                     .
   - y2: |
       
-         N N   N
-      
-       N j     j N
-      
-       N         N
       
       
       
-       N j     j N
       
-         N N   N
-            .
+      
+      
+      
+      
+               
+                  N N   N
+               
+                N j     j N
+               
+                N         N
+               
+               
+               
+                N j     j N
+               
+                  N N   N
+                     .
   - y3: |
       
       
@@ -79,10 +107,19 @@ layers:
       
       
       
-      
-      
-      
-            .
+               
+               
+               
+               
+               
+               
+               
+               
+               
+               
+               
+               
+                     .
   - y4 навес: |
       
       
@@ -93,7 +130,16 @@ layers:
       
       
       
-      
-      
-      
-            .
+               
+               
+               
+               
+               
+               
+               
+               
+               
+               
+               
+               
+                     .

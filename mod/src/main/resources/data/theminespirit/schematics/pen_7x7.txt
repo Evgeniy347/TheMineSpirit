@@ -2,8 +2,9 @@
 name: "Загон 7×7 (забор + калитка)"
 type: farm
 stage: 1
-size: 7x2x7   # Ш×В×Д   # Ш×В×Д
-entrance: 3,0,0
+size: 16x2x16  # Ш×В×Д
+plot: 16x16
+entrance: 7,0,4
 exemptions:
   - rule: roof
     reason: "загон открыт сверху по замыслу: животным нужен свет и воздух"
@@ -15,18 +16,26 @@ legend:
   'T': torch
 layers:
   - y0 забор: |
-      FFFGFFF
-      F.....F
-      F.....F
-      F.....F
-      F.....F
-      F.....F
-      FFFFFFF
+      
+      
+      
+      
+          FFFGFFF
+          F.....F
+          F.....F
+          F.....F
+          F.....F
+          F.....F
+          FFFFFFF
   - y1 факелы на угловых столбах: |
-      T     T
-
-
-
-
-
-      T     T
+      
+      
+      
+      
+          T     T
+          
+          
+          
+          
+          
+          T     T

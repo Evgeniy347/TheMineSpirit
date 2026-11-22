@@ -9,8 +9,9 @@ type: housing
 stage: 4
 level: 4
 requires: player_house_3
-size: 24x22x23   # Ш×В×Д
-entrance: 10,1,2
+size: 32x22x32  # Ш×В×Д
+plot: 32x32
+entrance: 14,1,6
 legend:
   'S': smooth_stone
   'K': calcite
@@ -79,529 +80,617 @@ legend:
 layers:
   - y0 цоколь, ступени, цветы и фонари у входов: |
       
-        P9P9PN <pppp> NP9P9P
-       SSSSSSSSSSSSSSSSSSSSSS
-       S######aaaaaaaa######S
-      0S######aaaaaaaa######SP
-      PS######aaaaaaaa######S9
-       S######aaaaaaaa######S
-      0S######aaaaaaaa######SP
-      PS######aaaaaaaa######S9
-       S######aaaaaaaa######S
-       S######aaaaaaaa######S
-      0S######aaaaaaaa######SP
-       S######aaaaaaaa######S
-       S######aaaaaaaa######S
-      PS######aaaaaaaa######S9
-      0S######aaaaaaaa######SP
-       S######aaaaaaaa######S
-      PS######aaaaaaaa######S9
-      0S######aaaaaaaa######SP
-       S######aaaaaaaa######S
-       S######aaaaaaaa######S
-       SSSSSSSSSSSSSSSSSSSSSS
-        90909  90  09 9 NAAN
+      
+      
+      
+          
+            P9P9PN <pppp> NP9P9P
+           SSSSSSSSSSSSSSSSSSSSSS
+           S######aaaaaaaa######S
+          0S######aaaaaaaa######SP
+          PS######aaaaaaaa######S9
+           S######aaaaaaaa######S
+          0S######aaaaaaaa######SP
+          PS######aaaaaaaa######S9
+           S######aaaaaaaa######S
+           S######aaaaaaaa######S
+          0S######aaaaaaaa######SP
+           S######aaaaaaaa######S
+           S######aaaaaaaa######S
+          PS######aaaaaaaa######S9
+          0S######aaaaaaaa######SP
+           S######aaaaaaaa######S
+          PS######aaaaaaaa######S9
+          0S######aaaaaaaa######SP
+           S######aaaaaaaa######S
+           S######aaaaaaaa######S
+           SSSSSSSSSSSSSSSSSSSSSS
+            90909  90  09 9 NAAN
   - y1 первый этаж: |
       
       
-       LKKKKKLKLDEDELKLKKKKKL
-       KOlnnbKb0c~~cPbKOjjbOK
-       KOnnnnKccc~~cccKOjjjOK
-       KOnttn.ccc~~ccc.jjjjOK
-       KOnRRn.ccc~~ccc.jjejOK
-       KOnnnnKccc~~cccKOjjjOK
-       KOnnnnKccc~~cccKOjjjOK
-       KOOOOOKccc~~cccKOOOOOK
-       LKKKKKKccc~~cccKKKKKKL
-       Kbmmmm.ccc~~ccc.nnnnFK
-       Kmmmmm.b#c~~c#b.nnnnkK
-       KmhtgmK##c~~c##KnnnnkK
-       KmhtgmK##c~~c##KninnuK
-       KmhtgmK##c~~c##KnttnTK
-       KmhtgmK##c~~c##KnttnbK
-       KmhtgmK##c~~c##KnnRnnK
-       KmhtgmKiic~~ciiKnnnnnK
-       KmmmmmKccc~~cccKnnnnbK
-       KbMfMbKccc~~cccKWVnnbK
-       LKMMMKLKKMMMMKKLKKDEKL
-                  .
+      
+      
+          
+          
+           LKKKKKLKLDEDELKLKKKKKL
+           KOlnnbKb0c~~cPbKOjjbOK
+           KOnnnnKccc~~cccKOjjjOK
+           KOnttn.ccc~~ccc.jjjjOK
+           KOnRRn.ccc~~ccc.jjejOK
+           KOnnnnKccc~~cccKOjjjOK
+           KOnnnnKccc~~cccKOjjjOK
+           KOOOOOKccc~~cccKOOOOOK
+           LKKKKKKccc~~cccKKKKKKL
+           Kbmmmm.ccc~~ccc.nnnnFK
+           Kmmmmm.b#c~~c#b.nnnnkK
+           KmhtgmK##c~~c##KnnnnkK
+           KmhtgmK##c~~c##KninnuK
+           KmhtgmK##c~~c##KnttnTK
+           KmhtgmK##c~~c##KnttnbK
+           KmhtgmK##c~~c##KnnRnnK
+           KmhtgmKiic~~ciiKnnnnnK
+           KmmmmmKccc~~cccKnnnnbK
+           KbMfMbKccc~~cccKWVnnbK
+           LKMMMKLKKMMMMKKLKKDEKL
+                      .
   - y2: |
       
-        d  d            d  d
-       LKGGKKLyLDEDELyLKKGGKL
-       KO   PKP      9KO  0OK
-       KO    K        KO   OK
-       KO qq .        .    OK
-       KO    .        .    OK
-       KO    K        KO   OK
-       KO    K        KO   OK
-       KOOOOOK        KOOOOOK
-       LKKKKKK        KKKKKKL
-       K0    .        .     K
-      vK     .9#    #0.     Kr
-       G  q  K##    ##K     G
-       G  q  K##    ##K     G
-      vK  q  K##    ##K qq  Kr
-      vK  q  K##    ##K qq  Kr
-       G  q  Kii    iiK     G
-       G  q  K        K     G
-      vK     K        K     Kr
-       KPM M9K        K    PK
-       LKMMMKLGGMMMMGGLKKDEKL
-        s  s s  s  s  s
+      
+      
+      
+          
+            d  d            d  d
+           LKGGKKLyLDEDELyLKKGGKL
+           KO   PKP      9KO  0OK
+           KO    K        KO   OK
+           KO qq .        .    OK
+           KO    .        .    OK
+           KO    K        KO   OK
+           KO    K        KO   OK
+           KOOOOOK        KOOOOOK
+           LKKKKKK        KKKKKKL
+           K0    .        .     K
+          vK     .9#    #0.     Kr
+           G  q  K##    ##K     G
+           G  q  K##    ##K     G
+          vK  q  K##    ##K qq  Kr
+          vK  q  K##    ##K qq  Kr
+           G  q  Kii    iiK     G
+           G  q  K        K     G
+          vK     K        K     Kr
+           KPM M9K        K    PK
+           LKMMMKLGGMMMMGGLKKDEKL
+            s  s s  s  s  s
   - y3: |
       
-        d  d            d  d
-       LKGGKKLyLXXXXLyLKKGGKL
-       KO    K        K     K
-       KO    K        K     K
-       KO    .        .     K
-       KO    .        .     K
-       KO    K        K     K
-       KO    K        K     K
-       KOOOOOK        K     K
-       LKKKKKK        KKKKKKL
-       K     .        .     K
-      vK     .##    ##.     Kr
-       G     K##    ##K     G
-       G     K##    ##K     G
-      vK     K##    ##K     Kr
-      vK     Kii    iiK     Kr
-       G     K        K     G
-       G     K        K     G
-      vK     K        K     Kr
-       K M M K        K     K
-       LKMMMKLGGMMMMGGLKKXXKL
-        s  s s  s  s  s
+      
+      
+      
+          
+            d  d            d  d
+           LKGGKKLyLXXXXLyLKKGGKL
+           KO    K        K     K
+           KO    K        K     K
+           KO    .        .     K
+           KO    .        .     K
+           KO    K        K     K
+           KO    K        K     K
+           KOOOOOK        K     K
+           LKKKKKK        KKKKKKL
+           K     .        .     K
+          vK     .##    ##.     Kr
+           G     K##    ##K     G
+           G     K##    ##K     G
+          vK     K##    ##K     Kr
+          vK     Kii    iiK     Kr
+           G     K        K     G
+           G     K        K     G
+          vK     K        K     Kr
+           K M M K        K     K
+           LKMMMKLGGMMMMGGLKKXXKL
+            s  s s  s  s  s
   - y4: |
       
-        d  d            d  d
-       LKGGKKLyLoyyoLyLKKGGKL
-       KO    K        K     K
-       KO    K        K     K
-       KO    .        .     K
-       KO    .        .     K
-       KO    K        K     K
-       KO    K        K     K
-       KOOOOOK        K     K
-       LKKKKKK        KKKKKKL
-       K     .        .     K
-      vK     .##    ##.     Kr
-       G     K##    ##K     G
-       G     K##    ##K     G
-      vK     Kii    iiK     Kr
-      vK     K        K     Kr
-       G     K        K     G
-       G     K        K     G
-      vK     K        K     Kr
-       K     K        K     K
-       LKMMMKLGGMMMMGGLKKKKKL
-        s  s s  s  s  s
+      
+      
+      
+          
+            d  d            d  d
+           LKGGKKLyLoyyoLyLKKGGKL
+           KO    K        K     K
+           KO    K        K     K
+           KO    .        .     K
+           KO    .        .     K
+           KO    K        K     K
+           KO    K        K     K
+           KOOOOOK        K     K
+           LKKKKKK        KKKKKKL
+           K     .        .     K
+          vK     .##    ##.     Kr
+           G     K##    ##K     G
+           G     K##    ##K     G
+          vK     Kii    iiK     Kr
+          vK     K        K     Kr
+           G     K        K     G
+           G     K        K     G
+          vK     K        K     Kr
+           K     K        K     K
+           LKMMMKLGGMMMMGGLKKKKKL
+            s  s s  s  s  s
   - y5: |
       
       
-       LKKKKKLyLKKKKLyLKKKKKL
-       K     K        K     K
-       K     K        K     K
-       K     .        .     K
-       K     .        .     K
-       K     K        K     K
-       K     K        K     K
-       K     K        K     K
-       LKKKKKK        KKKKKKL
-       K     .        .     K
-       K     .##    ##.     K
-       K     K##    ##K     K
-       K     Kii    iiK     K
-       K     K        K     K
-       K     K        K     K
-       K     K        K     K
-       K     K        K     K
-       K     K        K     K
-       K     K        K     K
-       LKMMMKLKKMMMMKKLKKKKKL
-                  .
+      
+      
+          
+          
+           LKKKKKLyLKKKKLyLKKKKKL
+           K     K        K     K
+           K     K        K     K
+           K     .        .     K
+           K     .        .     K
+           K     K        K     K
+           K     K        K     K
+           K     K        K     K
+           LKKKKKK        KKKKKKL
+           K     .        .     K
+           K     .##    ##.     K
+           K     K##    ##K     K
+           K     Kii    iiK     K
+           K     K        K     K
+           K     K        K     K
+           K     K        K     K
+           K     K        K     K
+           K     K        K     K
+           K     K        K     K
+           LKMMMKLKKMMMMKKLKKKKKL
+                      .
   - y6: |
       
-               H    H
-       LKKKKKLKLKKKKLKLKKKKKL
-       K     K        K     K
-       K     K        K     K
-       K  H  .        .  H  K
-       K     .        .     K
-       K     K H    H K     K
-       K     K        K     K
-       K     K        K     K
-       LKKKKKK        KKKKKKL
-       K     . H    H .     K
-       K     .##    ##.     K
-       K     Kii    iiK     K
-       K     K        K     K
-       K  H  K        K  H  K
-       K     K        K     K
-       K     K        K     K
-       K  H  K        K  H  K
-       K     K        K     K
-       K     K        K     K
-       LKMMMKLKKMMMMKKLKKKKKL
-                  .
+      
+      
+      
+          
+                   H    H
+           LKKKKKLKLKKKKLKLKKKKKL
+           K     K        K     K
+           K     K        K     K
+           K  H  .        .  H  K
+           K     .        .     K
+           K     K H    H K     K
+           K     K        K     K
+           K     K        K     K
+           LKKKKKK        KKKKKKL
+           K     . H    H .     K
+           K     .##    ##.     K
+           K     Kii    iiK     K
+           K     K        K     K
+           K  H  K        K  H  K
+           K     K        K     K
+           K     K        K     K
+           K  H  K        K  H  K
+           K     K        K     K
+           K     K        K     K
+           LKMMMKLKKMMMMKKLKKKKKL
+                      .
   - y7 галерея и перекрытие: |
-              ########
-              ########
-       LXXXXXXXXXXXXXXXXXXXXL
-       Z####################Z
-       Z####################Z
-       Z####################Z
-       Z#########..#########Z
-       Z#########..#########Z
-       Z#########..#########Z
-       Z#########..#########Z
-       Z#########..#########Z
-       Z#########..#########Z
-       Z######ii#..#ii######Z
-       Z######........######Z
-       Z######........######Z
-       Z######........######Z
-       Z######........######Z
-       Z######........######Z
-       Z######........######Z
-       Z######........######Z
-       Z######........######Z
-       LXXXXXXXXXXXXXXXXXXXXL
-                  .
+      
+      
+      
+      
+                  ########
+                  ########
+           LXXXXXXXXXXXXXXXXXXXXL
+           Z####################Z
+           Z####################Z
+           Z####################Z
+           Z#########..#########Z
+           Z#########..#########Z
+           Z#########..#########Z
+           Z#########..#########Z
+           Z#########..#########Z
+           Z#########..#########Z
+           Z######ii#..#ii######Z
+           Z######........######Z
+           Z######........######Z
+           Z######........######Z
+           Z######........######Z
+           Z######........######Z
+           Z######........######Z
+           Z######........######Z
+           Z######........######Z
+           LXXXXXXXXXXXXXXXXXXXXL
+                      .
   - y8 второй этаж: |
-              tttttttt
-        d  d  t      t  d  d
-       LwGGwwLowYDEYwoLwwGGwL
-       wJQ~~b#b~~~~~~b#bnnlOw
-      vw~~~~~#~~~~~~~~#nnnnOwr
-       G~~~~~.~~tttt~~.nttnnG
-       G~~~~~.~~t  t~~.nRRnnG
-      vw~~~~~#~~t  t~~#nnnnnwr
-       w~BB~~#~~t  t~~#nnnnOw
-       wbBBb #~~t  t~~#OOOOOw
-       L######~~t  t~~######L
-       wOmmmm.~~t  t~~.cccJQw
-      vwOmmmm.  t  t  .cccccwr
-       Gmmmmm#        #cccccG
-       Gmmttm#        #ccccbG
-      vwmmRRm#        #cccccwr
-      vwmmmmm#        #cccccwr
-       Gmmmmm#        #cccccG
-       Gmmmmm#        #cccccG
-      vw C   #        # C C wr
-       wbC WV#        # CbC w
-       LwGGwwLGGwwwwGGLwwGGwL
-        s  s s  s  s  s s  s
+      
+      
+      
+      
+                  tttttttt
+            d  d  t      t  d  d
+           LwGGwwLowYDEYwoLwwGGwL
+           wJQ~~b#b~~~~~~b#bnnlOw
+          vw~~~~~#~~~~~~~~#nnnnOwr
+           G~~~~~.~~tttt~~.nttnnG
+           G~~~~~.~~t  t~~.nRRnnG
+          vw~~~~~#~~t  t~~#nnnnnwr
+           w~BB~~#~~t  t~~#nnnnOw
+           wbBBb #~~t  t~~#OOOOOw
+           L######~~t  t~~######L
+           wOmmmm.~~t  t~~.cccJQw
+          vwOmmmm.  t  t  .cccccwr
+           Gmmmmm#        #cccccG
+           Gmmttm#        #ccccbG
+          vwmmRRm#        #cccccwr
+          vwmmmmm#        #cccccwr
+           Gmmmmm#        #cccccG
+           Gmmmmm#        #cccccG
+          vw C   #        # C C wr
+           wbC WV#        # CbC w
+           LwGGwwLGGwwwwGGLwwGGwL
+            s  s s  s  s  s s  s
   - y9: |
       
-        d  d  N      N  d  d
-       LwGGwwLowYDEYwoLwwGGwL
-       w    9#P      9#0   Ow
-      vw     #        #    Owr
-       G     .        . qq  G
-       G     .        .     G
-      vw     #        #     wr
-       w     #        #    Ow
-       wP  0 #        #OOOOOw
-       L######        ######L
-       wO    .        .     w
-      vwO    .        .     wr
-       G     #        #     G
-       G  qq #        #    PG
-      vw     #        #     wr
-      vw     #        #     wr
-       G     #        #     G
-       G     #        #     G
-      vw     #        #     wr
-       wP    #        #  9  w
-       LwGGwwLGGwwwwGGLwwGGwL
-        s  s s  s  s  s s  s
+      
+      
+      
+          
+            d  d  N      N  d  d
+           LwGGwwLowYDEYwoLwwGGwL
+           w    9#P      9#0   Ow
+          vw     #        #    Owr
+           G     .        . qq  G
+           G     .        .     G
+          vw     #        #     wr
+           w     #        #    Ow
+           wP  0 #        #OOOOOw
+           L######        ######L
+           wO    .        .     w
+          vwO    .        .     wr
+           G     #        #     G
+           G  qq #        #    PG
+          vw     #        #     wr
+          vw     #        #     wr
+           G     #        #     G
+           G     #        #     G
+          vw     #        #     wr
+           wP    #        #  9  w
+           LwGGwwLGGwwwwGGLwwGGwL
+            s  s s  s  s  s s  s
   - y10: |
       
-       7777777777777777777777
-      5LwwwwwLwwwwwwwwLwwwwwL6
-      5w     #        #     w6
-      5w     #        #     w6
-      5w     #        #     w6
-      5w     #        #     w6
-      5w     #        #     w6
-      5w     #        #     w6
-      5w     #        #     w6
-      5L######        ######L6
-      5w     #        #     w6
-      5w     #        #     w6
-      5w     #        #     w6
-      5w     #        #     w6
-      5w     #        #     w6
-      5w     #        #     w6
-      5w     #        #     w6
-      5w     #        #     w6
-      5w     #        #     w6
-      5w     #        #     w6
-      5LwwwwwLwwwwwwwwLwwwwwL6
-       8888888888888888888888
+      
+      
+      
+          
+           7777777777777777777777
+          5LwwwwwLwwwwwwwwLwwwwwL6
+          5w     #        #     w6
+          5w     #        #     w6
+          5w     #        #     w6
+          5w     #        #     w6
+          5w     #        #     w6
+          5w     #        #     w6
+          5w     #        #     w6
+          5L######        ######L6
+          5w     #        #     w6
+          5w     #        #     w6
+          5w     #        #     w6
+          5w     #        #     w6
+          5w     #        #     w6
+          5w     #        #     w6
+          5w     #        #     w6
+          5w     #        #     w6
+          5w     #        #     w6
+          5w     #        #     w6
+          5LwwwwwLwwwwwwwwLwwwwwL6
+           8888888888888888888888
   - y11 обвязка и крыша: |
       
-      .3333333333333333333333.
-      1LXXXXXXXXXXXXXXXXXXXXL2
-      1Z                    Z2
-      1Z                    Z2
-      1Z                    Z2
-      1Z                    Z2
-      1Z                    Z2
-      1Z                    Z2
-      1Z                    Z2
-      1Z                    Z2
-      1Z                    Z2
-      1Z                    Z2
-      1Z                    Z2
-      1Z                    Z2
-      1Z                    Z2
-      1Z                    Z2
-      1Z                    Z2
-      1Z                    Z2
-      1Z                    Z2
-      1Z                    Z2
-      1LXXXXXXXXXXXXXXXXXXXXL2
-      .4444444444444444444444.
+      
+      
+      
+          
+          .3333333333333333333333.
+          1LXXXXXXXXXXXXXXXXXXXXL2
+          1Z                    Z2
+          1Z                    Z2
+          1Z                    Z2
+          1Z                    Z2
+          1Z                    Z2
+          1Z                    Z2
+          1Z                    Z2
+          1Z                    Z2
+          1Z                    Z2
+          1Z                    Z2
+          1Z                    Z2
+          1Z                    Z2
+          1Z                    Z2
+          1Z                    Z2
+          1Z                    Z2
+          1Z                    Z2
+          1Z                    Z2
+          1Z                    Z2
+          1LXXXXXXXXXXXXXXXXXXXXL2
+          .4444444444444444444444.
   - y12: |
       
       
-       1333333333333333333332
-       1####################2
-       1#                  #2
-       1#                  #2
-       1#                  #2
-       1#                  #2
-       1#                  #2
-       1#                  #2
-       1#                  #2
-       1#                  #2
-       1#                  #2
-       1#                  #2
-       1#                  #2
-       1#                  #2
-       1#                  #2
-       1#                  #2
-       1#                  #2
-       1#                  #2
-       1####################2
-       1444444444444444444442
-                  .
+      
+      
+          
+          
+           1333333333333333333332
+           1####################2
+           1#                  #2
+           1#                  #2
+           1#                  #2
+           1#                  #2
+           1#                  #2
+           1#                  #2
+           1#                  #2
+           1#                  #2
+           1#                  #2
+           1#                  #2
+           1#                  #2
+           1#                  #2
+           1#                  #2
+           1#                  #2
+           1#                  #2
+           1#                  #2
+           1####################2
+           1444444444444444444442
+                      .
   - y13: |
       
       
-               H    H
-        1333333#GGGG#3333332
-        1#######....#######2
-        1#                #2
-        1#                #2
-        1#H      HH      H#2
-        1#                #2
-        1#                #2
-        1#                #2
-        1#       HH       #2
-        1#                #2
-        1#                #2
-        1#                #2
-        1#H              H#2
-        1#                #2
-        1#                #2
-        1#                #2
-        1#######....#######2
-        1444444#GGGG#4444442
-               H    H
-                  .
+      
+      
+          
+          
+                   H    H
+            1333333#GGGG#3333332
+            1#######....#######2
+            1#                #2
+            1#                #2
+            1#H      HH      H#2
+            1#                #2
+            1#                #2
+            1#                #2
+            1#       HH       #2
+            1#                #2
+            1#                #2
+            1#                #2
+            1#H              H#2
+            1#                #2
+            1#                #2
+            1#                #2
+            1#######....#######2
+            1444444#GGGG#4444442
+                   H    H
+                      .
   - y14: |
       
       
-               ######
-               ######
-         133333333333333332
-         1################2
-         1#              #2
-         1#      zz      #2
-         1#              #2
-         1#              #2
-         1#              #2
-         1#      zz      #2
-         1#              #2
-         1#              #2
-         1#              #2
-         1#              #2
-         1#              #2
-         1#              #2
-         1################2
-         144444444444444442
-               ######
-               ######
-                  .
+      
+      
+          
+          
+                   ######
+                   ######
+             133333333333333332
+             1################2
+             1#              #2
+             1#      zz      #2
+             1#              #2
+             1#              #2
+             1#              #2
+             1#      zz      #2
+             1#              #2
+             1#              #2
+             1#              #2
+             1#              #2
+             1#              #2
+             1#              #2
+             1################2
+             144444444444444442
+                   ######
+                   ######
+                      .
   - y15: |
       
       
       
       
-      
-          1333333333333332
-          1##############2
-          1#     zz     #2
-          1#            #2
-          1#            #2
-          1#            #2
-          1#     zz     #2
-          1#            #2
-          1#            #2
-          1#            #2
-          1#            #2
-          1#            #2
-          1##############2
-          1444444444444442
-      
-      
-      
-                  .
+          
+          
+          
+          
+          
+              1333333333333332
+              1##############2
+              1#     zz     #2
+              1#            #2
+              1#            #2
+              1#            #2
+              1#     zz     #2
+              1#            #2
+              1#            #2
+              1#            #2
+              1#            #2
+              1#            #2
+              1##############2
+              1444444444444442
+          
+          
+          
+                      .
   - y16: |
       
       
       
       
-      
-      
-           13333333333332
-           1############2
-           1#          #2
-           1#          #2
-           1#          #2
-           1#    zz    #2
-           1#          #2
-           1#          #2
-           1#          #2
-           1#          #2
-           1############2
-           14444444444442
-      
-      
-      
-      
-                  .
+          
+          
+          
+          
+          
+          
+               13333333333332
+               1############2
+               1#          #2
+               1#          #2
+               1#          #2
+               1#    zz    #2
+               1#          #2
+               1#          #2
+               1#          #2
+               1#          #2
+               1############2
+               14444444444442
+          
+          
+          
+          
+                      .
   - y17: |
       
       
       
       
-      
-      
-      
-            133333333332
-            1##########2
-            1#        #2
-            1#        #2
-            1#   zz   #2
-            1#        #2
-            1#        #2
-            1#        #2
-            1##########2
-            144444444442
-      
-      
-      
-      
-      
-                  .
+          
+          
+          
+          
+          
+          
+          
+                133333333332
+                1##########2
+                1#        #2
+                1#        #2
+                1#   zz   #2
+                1#        #2
+                1#        #2
+                1#        #2
+                1##########2
+                144444444442
+          
+          
+          
+          
+          
+                      .
   - y18: |
       
       
       
       
-      
-      
-      
-      
-             1333333332
-             1########2
-             1#      #2
-             1#  zz  #2
-             1#      #2
-             1#      #2
-             1########2
-             1444444442
-      
-      
-      
-      
-      
-      
-                  .
+          
+          
+          
+          
+          
+          
+          
+          
+                 1333333332
+                 1########2
+                 1#      #2
+                 1#  zz  #2
+                 1#      #2
+                 1#      #2
+                 1########2
+                 1444444442
+          
+          
+          
+          
+          
+          
+                      .
   - y19: |
       
       
       
       
-      
-      
-      
-      
-      
-              13333332
-              1######2
-              1# zz #2
-              1#    #2
-              1######2
-              14444442
-      
-      
-      
-      
-      
-      
-      
-                  .
+          
+          
+          
+          
+          
+          
+          
+          
+          
+                  13333332
+                  1######2
+                  1# zz #2
+                  1#    #2
+                  1######2
+                  14444442
+          
+          
+          
+          
+          
+          
+          
+                      .
   - y20: |
       
       
       
       
-      
-      
-      
-      
-      
-      
-               133332
-               1####2
-               1####2
-               144442
-      
-      
-      
-      
-      
-      
-      
-      
-                  .
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+                   133332
+                   1####2
+                   1####2
+                   144442
+          
+          
+          
+          
+          
+          
+          
+          
+                      .
   - y21: |
       
       
       
       
-      
-      
-      
-      
-      
-      
-      
-                1332
-                1442
-      
-      
-      
-      
-      
-      
-      
-      
-      
-                  .
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+                    1332
+                    1442
+          
+          
+          
+          
+          
+          
+          
+          
+          
+                      .

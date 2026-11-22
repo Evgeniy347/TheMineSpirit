@@ -3,8 +3,9 @@ name: "Загон 4×5 (забор 1 блок, калитка)"
 type: farm
 stage: 1
 level: 1
-size: 4x2x5   # Ш×В×Д   # Ш×В×Д
-entrance: 2,0,0
+size: 16x2x16  # Ш×В×Д
+plot: 16x16
+entrance: 8,0,5
 exemptions:
   - rule: roof
     reason: "загон открыт сверху по замыслу: животным нужен свет и воздух"
@@ -16,14 +17,24 @@ legend:
   'T': torch
 layers:
   - y0 забор: |
-      FFGF
-      F..F
-      F..F
-      F..F
-      FFFF
+      
+      
+      
+      
+      
+            FFGF
+            F..F
+            F..F
+            F..F
+            FFFF
   - y1 факелы на угловых столбах: |
-      T  T
-
-
-
-      T  T
+      
+      
+      
+      
+      
+            T  T
+            
+            
+            
+            T  T

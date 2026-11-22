@@ -6,8 +6,9 @@ type: social
 stage: 2
 level: 2
 requires: plaza_1
-size: 19x4x20   # Ш×В×Д
-entrance: 9,1,2
+size: 32x4x32  # Ш×В×Д
+plot: 32x32
+entrance: 15,1,8
 exemptions:
   - rule: closed_walls
     reason: "площадь открыта: стен нет по замыслу, это мощёный двор с колодцем"
@@ -37,86 +38,110 @@ legend:
   'P': potted_poppy
 layers:
   - y0 мощение: |
-             ppppp
-      SSSSSSSSSSSSSSSSSSS
-      ScccccccccccccccccS
-      ScScccccccccccccScS
-      SccScccccccccccSccS
-      ScccSSSSSSSSSSScccS
-      ScMMScccccccccSMMcS
-      ScMMScccccccccSMMcS
-      ScccScccccccccScccS
-      ScccScccSSScccScccS
-      ScccScccSWScccScccS
-      ScccScccSSScccScccS
-      ScccScccccccccScccS
-      ScMMScccccccccSMMcS
-      ScMMScccccccccSMMcS
-      ScccSSSSSSSSSSScccS
-      SccScccccccccccSccS
-      ScScccccccccccccScS
-      ScccccccccccccccccS
-      SSSSSSSSSSSSSSSSSSS
+      
+      
+      
+      
+      
+      
+                   ppppp
+            SSSSSSSSSSSSSSSSSSS
+            ScccccccccccccccccS
+            ScScccccccccccccScS
+            SccScccccccccccSccS
+            ScccSSSSSSSSSSScccS
+            ScMMScccccccccSMMcS
+            ScMMScccccccccSMMcS
+            ScccScccccccccScccS
+            ScccScccSSScccScccS
+            ScccScccSWScccScccS
+            ScccScccSSScccScccS
+            ScccScccccccccScccS
+            ScMMScccccccccSMMcS
+            ScMMScccccccccSMMcS
+            ScccSSSSSSSSSSScccS
+            SccScccccccccccSccS
+            ScScccccccccccccScS
+            ScccccccccccccccccS
+            SSSSSSSSSSSSSSSSSSS
   - y1 колодец, скамьи и столбы: |
       
       
-       L               L
-      
-          L  b l b  b
-      
-        PA    iii    oP
-        JO           JO
-      
-           h  S S  g
-           h       g
-           h  S S  g
-      
-        oA           oA
-        PO    RRR    JP
       
       
-         P  P     P  P
-       L               L
-               .
+      
+      
+            
+            
+             L               L
+            
+                L  b l b  b
+            
+              PA    iii    oP
+              JO           JO
+            
+                 h  S S  g
+                 h       g
+                 h  S S  g
+            
+              oA           oA
+              PO    RRR    JP
+            
+            
+               P  P     P  P
+             L               L
+                     .
   - y2: |
       
       
-       t               t
-      
-          B         P
       
       
       
       
-              T T
-      
-              T T
-      
-      
-      
-      
-      
-      
-       t               t
-               .
+            
+            
+             t               t
+            
+                B         P
+            
+            
+            
+            
+                    T T
+            
+                    T T
+            
+            
+            
+            
+            
+            
+             t               t
+                     .
   - y3: |
       
       
-       N               N
       
       
       
       
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-       N               N
-               .
+            
+            
+             N               N
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+             N               N
+                     .

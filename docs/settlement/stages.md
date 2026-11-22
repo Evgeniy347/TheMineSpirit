@@ -21,7 +21,7 @@
 | 3 | `CLEAR_GROUNDS` 1, `BUILD_MINE` 3, `BUILD_WAREHOUSE` 3, `BUILD_STREETS` 2; план: `player_house`, `forge`, `bakery`, `barracks` | `kennel`, `stable`, `weaver` |
 | 4 | `CLEAR_GROUNDS` 1, `BUILD_MINE` 4, `BUILD_WAREHOUSE` 4; план: `town_hall`, `tavern`, `infirmary`, `training_yard` | `enchant_room`, `alchemy`, `library` |
 
-Ровность держит каждый этап: зона — клетки внутри забора этапа плюс участки его и прошлых построек
+Ровность держит каждый этап: зона — клетки региона плана плюс участки его и прошлых построек
 (`StageSite.zone()`). Яма, бугор, столб любой высоты и посторонний блок в зоне — дефект; постройки плана, схемы
 и деревья сада — нет. Дефект после закрытия снова открывает расчистку, граф поднимает `level_lot`/`backfill`.
 

@@ -3,8 +3,9 @@ name: "Загон 9×9 (больше, забор и калитка)"
 type: farm
 stage: 1
 level: 3
-size: 9x2x9   # Ш×В×Д   # Ш×В×Д
-entrance: 4,0,0
+size: 16x2x16  # Ш×В×Д
+plot: 16x16
+entrance: 7,0,3
 exemptions:
   - rule: roof
     reason: "загон открыт сверху по замыслу: животным нужен свет и воздух"
@@ -16,22 +17,28 @@ legend:
   'T': torch
 layers:
   - y0 забор: |
-      FFFFGFFFF
-      F.......F
-      F.......F
-      F.......F
-      F.......F
-      F.......F
-      F.......F
-      F.......F
-      FFFFFFFFF
+      
+      
+      
+         FFFFGFFFF
+         F.......F
+         F.......F
+         F.......F
+         F.......F
+         F.......F
+         F.......F
+         F.......F
+         FFFFFFFFF
   - y1 факелы на угловых столбах: |
-      T       T
-
-
-
-
-
-
-
-      T       T
+      
+      
+      
+         T       T
+         
+         
+         
+         
+         
+         
+         
+         T       T

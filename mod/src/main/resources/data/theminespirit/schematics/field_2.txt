@@ -4,8 +4,9 @@ type: farm
 stage: 1
 level: 2
 requires: field_1
-size: 13x3x13   # Ш×В×Д
-entrance: 6,1,1
+size: 32x3x64  # Ш×В×Д
+plot: 32x64
+entrance: 15,1,26
 exemptions:
   - rule: roof
     reason: "пашня под открытым небом: грядкам нужны свет и дождь, крыши у поля нет"
@@ -20,44 +21,119 @@ legend:
   '_': oak_slab[type=bottom]
 layers:
   - y0: |
-      ......_......
-      ppppppppppppp
-      peeeeepeeeeep
-      peeeeepeeeeep
-      pee~eepeeeeep
-      peeeeepeeeeep
-      ppppppppppppp
-      peeeeepeeeeep
-      peeeeepee~eep
-      peeeeepeeeeep
-      peeeeepeeeeep
-      peeeeepeeeeep
-      ppppppppppppp
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+               ......_......
+               ppppppppppppp
+               peeeeepeeeeep
+               peeeeepeeeeep
+               pee~eepeeeeep
+               peeeeepeeeeep
+               ppppppppppppp
+               peeeeepeeeeep
+               peeeeepee~eep
+               peeeeepeeeeep
+               peeeeepeeeeep
+               peeeeepeeeeep
+               ppppppppppppp
   - y1: |
-      .............
-      FFFFFGGGFFFFF
-      Fwwwww.wwwwwF
-      Fwwwww.wwwwwF
-      Fww.ww.wwwwwF
-      Fwwwww.wwwwwF
-      F...........F
-      Fwwwww.wwwwwF
-      Fwwwww.ww.wwF
-      Fwwwww.wwwwwF
-      Fwwwww.wwwwwF
-      Fwwwww.wwwwwF
-      FFFFFFFFFFFFF
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+               .............
+               FFFFFGGGFFFFF
+               Fwwwww.wwwwwF
+               Fwwwww.wwwwwF
+               Fww.ww.wwwwwF
+               Fwwwww.wwwwwF
+               F...........F
+               Fwwwww.wwwwwF
+               Fwwwww.ww.wwF
+               Fwwwww.wwwwwF
+               Fwwwww.wwwwwF
+               Fwwwww.wwwwwF
+               FFFFFFFFFFFFF
   - y2: |
-      .............
-      T...........T
-      .............
-      .............
-      .............
-      .............
-      .............
-      T...........T
-      .............
-      .............
-      .............
-      .............
-      T.....T.....T
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+               .............
+               T...........T
+               .............
+               .............
+               .............
+               .............
+               .............
+               T...........T
+               .............
+               .............
+               .............
+               .............
+               T.....T.....T

@@ -18,6 +18,8 @@ final class SchematicDraft {
     private final Optional<String> requires;
     private final int @Nullable [] size;
     private final int sizeLine;
+    private final int @Nullable [] plot;
+    private final int plotLine;
     private final @Nullable String entrance;
     private final int entranceLine;
     private final Schematic.@Nullable Repeat repeat;
@@ -34,6 +36,8 @@ final class SchematicDraft {
             Optional<String> requires,
             int @Nullable [] size,
             int sizeLine,
+            int @Nullable [] plot,
+            int plotLine,
             @Nullable String entrance,
             int entranceLine,
             Schematic.@Nullable Repeat repeat,
@@ -48,6 +52,8 @@ final class SchematicDraft {
         this.requires = requires;
         this.size = size;
         this.sizeLine = sizeLine;
+        this.plot = plot;
+        this.plotLine = plotLine;
         this.entrance = entrance;
         this.entranceLine = entranceLine;
         this.repeat = repeat;
@@ -63,6 +69,12 @@ final class SchematicDraft {
         int sx = size[0];
         int sy = size[1];
         int sz = size[2];
+        if (plot != null && (plot[0] != sx || plot[1] != sz)) {
+            throw error(
+                    plotLine,
+                    "участок " + plot[0] + "×" + plot[1] + " не совпадает с габаритом " + sx + "×" + sy + "×" + sz
+                            + ": схема занимает весь участок, иначе размер участка при смене уровня другой");
+        }
         if (sx < 1 || sy < 1 || sz < 1) {
             throw error(sizeLine, "размер " + sx + "×" + sy + "×" + sz + ": стороны обязаны быть хотя бы 1");
         }
@@ -113,15 +125,20 @@ final class SchematicDraft {
             while (!rows.isEmpty() && rows.get(rows.size() - 1).isBlank()) {
                 rows.remove(rows.size() - 1);
             }
-            if (rows.size() != sz) {
+            if (plot == null && rows.size() != sz) {
                 throw error(
                         layer.line(),
                         "в слое y" + y + " строк " + rows.size() + ", а по size глубина "
                                 + sz + ": первая строка — фронт (z=0), последняя — тыл; пустые строки в конце слоя "
                                 + "не считаются");
             }
+            if (rows.size() > sz) {
+                throw error(
+                        layer.line(),
+                        "в слое y" + y + " строк " + rows.size() + ", а по size глубина " + sz + ": лишние строки");
+            }
             for (int z = 0; z < sz; z++) {
-                String row = rows.get(z);
+                String row = z < rows.size() ? rows.get(z) : "";
                 if (row.length() > sx) {
                     throw error(
                             layer.line() + 1 + z,

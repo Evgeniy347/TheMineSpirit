@@ -40,14 +40,20 @@ final class TownSurvey {
         List<List<String>> stages = DataTables.INSTANCE.stages().current().plans();
         Optional<TownPlan> stored =
                 store.town().filter(plan -> near(plan.anchor(), center) && TownPlanner.keepStored(plan));
-        if (stored.isPresent()) {
-            TownPlan kept = stored.orElseThrow();
-            if (!TownPlanner.laidWith(kept, rules) && !kept.anchor().equals(warnedAnchor)) {
-                warnedAnchor = kept.anchor();
-                LOGGER.warn("[plot] план размечен прежним обмером: места построек сохраняются, новый обмер не переносит"
-                        + " origin; расширение — только новыми участками");
-            }
+        if (stored.isPresent() && TownPlanner.laidWith(stored.orElseThrow(), rules)) {
             return extend(level, store, stored.orElseThrow(), rules, stages, service, now);
+        }
+        if (stored.isPresent() && !stored.orElseThrow().anchor().equals(warnedAnchor)) {
+            warnedAnchor = stored.orElseThrow().anchor();
+            LOGGER.warn("[plot] план размечен прежними правилами: участки и обмер сменились, план пересобран заново");
+            service.journal()
+                    .recordEntry(BoardLog.note(
+                            JOURNAL_ID,
+                            BoardCase.CLEAR_GROUNDS,
+                            now,
+                            List.of("план устарел: обмер или размеры участков сменились", "пересборка плана"),
+                            null,
+                            ConfigStamp.current()));
         }
         Optional<SettlementPlot> old = store.plot();
         TerrainGrid grid = GroundProbe.terrain(level, center, rules.ground().probeRadius());

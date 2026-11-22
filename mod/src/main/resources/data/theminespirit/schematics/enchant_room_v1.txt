@@ -5,8 +5,9 @@ name: "Чаровальня, уровень 1 (деревянная изба, 5 
 type: craft
 stage: 2
 level: 1
-size: 7x5x9
-entrance: 3,1,7
+size: 32x5x32
+plot: 32x32
+entrance: 15,1,18
 legend:
   'c': cobblestone
   '#': oak_planks
@@ -21,52 +22,107 @@ legend:
   '~': red_carpet
 layers:
   - y0 булыжный цоколь и дубовый пол: |
-      ccccccc
-      c#####c
-      c#####c
-      c#####c
-      c#####c
-      c#####c
-      c#####c
-      ccccccc
-         p
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+                  ccccccc
+                  c#####c
+                  c#####c
+                  c#####c
+                  c#####c
+                  c#####c
+                  c#####c
+                  ccccccc
+                     p
   - y1 стол, 5 полок, дорожка: |
-      L#####L
-      #KKKKK#
-      #.....#
-      #..E..#
-      #.....#
-      #T~~~T#
-      #.....#
-      L##D##L
-         .
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+                  L#####L
+                  #KKKKK#
+                  #.....#
+                  #..E..#
+                  #.....#
+                  #T~~~T#
+                  #.....#
+                  L##D##L
+                     .
   - y2 окна 1×1, свет на полках: |
-      L#G###L
-      #T...T#
-      #.....#
-      G.....G
-      #.....#
-      #.....#
-      #.....#
-      L##D##L
-         .
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+                  L#G###L
+                  #T...T#
+                  #.....#
+                  G.....G
+                  #.....#
+                  #.....#
+                  #.....#
+                  L##D##L
+                     .
   - y3 верх стен: |
-      L#####L
-      #.....#
-      #.....#
-      #.....#
-      #.....#
-      #.....#
-      #.....#
-      L#####L
-         .
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+                  L#####L
+                  #.....#
+                  #.....#
+                  #.....#
+                  #.....#
+                  #.....#
+                  #.....#
+                  L#####L
+                     .
   - y4 деревянная крыша: |
-      rrrrrrr
-      rrrrrrr
-      rrrrrrr
-      rrrrrrr
-      rrrrrrr
-      rrrrrrr
-      rrrrrrr
-      rrrrrrr
-         .
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+                  rrrrrrr
+                  rrrrrrr
+                  rrrrrrr
+                  rrrrrrr
+                  rrrrrrr
+                  rrrrrrr
+                  rrrrrrr
+                  rrrrrrr
+                     .

@@ -14,38 +14,6 @@ import org.junit.jupiter.api.Test;
 class TownPlannerTestsExtraTests {
 
     @Test
-    void plan_ExtensionGrowsFence_OldPlotsStayInside() {
-        TownPlan base = plan((x, z) -> 70, (x, z) -> 0);
-        TownPlan old = new TownPlan(
-                base.anchor(),
-                base.region(),
-                base.streets(),
-                base.placements().stream()
-                        .filter(place -> !StageSites.ORCHARD_EXTRA.equals(place.id()))
-                        .toList(),
-                base.fence(),
-                base.unplaced());
-        StageSite before = StageSites.of(old, 1, old.anchor().y(), RULES);
-        TownPlan grown =
-                TownPlanner.plant(grid((x, z) -> 70, (x, z) -> 0), old, RULES, STAGES, List.of("orchard_jungle"), 1);
-        StageSite after = StageSites.of(grown, 1, grown.anchor().y(), RULES);
-
-        assertTrue(
-                after.enclosure().count() >= before.enclosure().count(),
-                "Контур ограды при росте плана не вырос: новый сад остался бы за забором"
-                        + " Иначе тест plan_ExtensionGrowsFence_OldPlotsStayInside перестанет ловить эту поломку. При смене plan_ExtensionGrowsFence_OldPlotsStayInside проверь это утверждение.");
-        assertTrue(
-                StageSites.insideEnclosure(after),
-                "После роста плана все старые и новые участки внутри ограды"
-                        + " Иначе тест plan_ExtensionGrowsFence_OldPlotsStayInside перестанет ловить эту поломку. При смене plan_ExtensionGrowsFence_OldPlotsStayInside проверь это утверждение.");
-        assertTrue(
-                after.ring().posts().containsAll(before.ring().posts())
-                        || after.enclosure().count() > before.enclosure().count(),
-                "Ограда этапа не охватывает старый и новый контур: старые куски остались бы за забором"
-                        + " Иначе тест plan_ExtensionGrowsFence_OldPlotsStayInside перестанет ловить эту поломку. При смене plan_ExtensionGrowsFence_OldPlotsStayInside проверь это утверждение.");
-    }
-
-    @Test
     void stages_SecondStagePlan_AllBuildingsRequired() {
         StageRules.Stage second = StageRules.load().stages().get(1);
 

@@ -137,7 +137,7 @@ public final class CatalogLimits {
     public static final int MINE_LENGTH_MAX = 256;
     public static final int MINE_LENGTH_DEFAULT = 16;
     public static final int BUILD_VOLUME_MAX = 4096;
-    public static final int SCHEMATIC_SIZE_MAX = 32;
+    public static final int SCHEMATIC_SIZE_MAX = 64;
     public static final int UNDERGROUND_REPEAT_SIZE_MAX = 160;
     public static final int SCHEMATIC_BLOCKS_MAX = 4096;
 

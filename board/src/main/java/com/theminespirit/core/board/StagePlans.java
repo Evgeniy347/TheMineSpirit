@@ -105,7 +105,8 @@ public final class StagePlans {
                 .scheme(BoardCase.BUILD_HOUSE, 1)
                 .orElseThrow(() -> new IllegalStateException(
                         "stages.json: нет схемы дома уровня 1 — хижине этапа 1 не по чему строиться"));
-        BlockCoord origin = site.houseOrigin();
+        BlockCoord origin =
+                new BlockCoord(site.hut().x(), site.anchor().y(), site.hut().z());
         Map<String, Object> params = new LinkedHashMap<>();
         params.put("file", scheme);
         params.put("x", origin.x());

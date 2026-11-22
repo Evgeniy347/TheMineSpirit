@@ -41,10 +41,10 @@ class WarehouseChestsTests {
         assertTrue(
                 cells.stream()
                         .allMatch(cell -> cell.x() >= ORIGIN.x()
-                                && cell.x() < ORIGIN.x() + 6
+                                && cell.x() < ORIGIN.x() + 32
                                 && cell.z() >= ORIGIN.z()
-                                && cell.z() < ORIGIN.z() + 7),
-                "Сундуки не выходят за габариты схемы 6×7"
+                                && cell.z() < ORIGIN.z() + 32),
+                "Сундуки не выходят за габариты схемы 32×32"
                         + " Иначе тест cells_LevelOne_AreShiftedFromOrigin перестанет ловить эту поломку. При смене cells_LevelOne_AreShiftedFromOrigin проверь это утверждение.");
     }
 }

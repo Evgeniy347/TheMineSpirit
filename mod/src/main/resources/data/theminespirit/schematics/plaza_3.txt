@@ -7,8 +7,9 @@ type: social
 stage: 4
 level: 3
 requires: plaza_2
-size: 25x5x26   # Ш×В×Д
-entrance: 12,1,1
+size: 32x5x32  # Ш×В×Д
+plot: 32x32
+entrance: 15,1,4
 exemptions:
   - rule: closed_walls
     reason: "площадь открыта: стен нет по замыслу, это мощёный двор с фонтаном"
@@ -42,137 +43,152 @@ legend:
   '9': potted_azure_bluet
 layers:
   - y0 мощение, клумбы, бортик ступеней: |
-                ppppp
-      MMMMMMMMMMSSSSSMMMMMMMMMM
-      MSSSSSSSSSSSaSSSSSSSSSSSM
-      MSSSSSSSSSSSaSSSSSSSSSSSM
-      MSSSSSSSSSSSaSSSSSSSSSSSM
-      MSSSSSSSSSSSaSSSSSSSSSSSM
-      MSSSSSSSSSSSaSSSSSSSSSSSM
-      MSSSSSSSSSSSaSSSSSSSSSSSM
-      MSSSSSSaaaaaaaaaaaSSSSSSM
-      MSSSSSSaSSSSSSSSSaSSSSSSM
-      MSSSSSSaSSSSSSSSSaSSSSSSM
-      SSSSSSSaSSSSSSSSSaSSSSSSS
-      SSSSSSSaSSSSSSSSSaSSSSSSS
-      SaaaaaaaSSSSSSSSSaaaaaaaS
-      SSSSSSSaSSSSSSSSSaSSSSSSS
-      SSSSSSSaSSSSSSSSSaSSSSSSS
-      MSSSSSSaSSSSSSSSSaSSSSSSM
-      MSSSSSSaSSSSSSSSSaSSSSSSM
-      MSSSSSSaaaaaaaaaaaSSSSSSM
-      MSSSSSSSSSSSaSSSSSSSSSSSM
-      MSSSSSSSSSSSaSSSSSSSSSSSM
-      MSSSSSSSSSSSaSSSSSSSSSSSM
-      MSSSSSSSSSSSaSSSSSSSSSSSM
-      MSSSSSSSSSSSaSSSSSSSSSSSM
-      MMMMMMMMMSSSSSSSMMMMMMMMM
-               eeeeeee
+      
+      
+      
+                   ppppp
+         MMMMMMMMMMSSSSSMMMMMMMMMM
+         MSSSSSSSSSSSaSSSSSSSSSSSM
+         MSSSSSSSSSSSaSSSSSSSSSSSM
+         MSSSSSSSSSSSaSSSSSSSSSSSM
+         MSSSSSSSSSSSaSSSSSSSSSSSM
+         MSSSSSSSSSSSaSSSSSSSSSSSM
+         MSSSSSSSSSSSaSSSSSSSSSSSM
+         MSSSSSSaaaaaaaaaaaSSSSSSM
+         MSSSSSSaSSSSSSSSSaSSSSSSM
+         MSSSSSSaSSSSSSSSSaSSSSSSM
+         SSSSSSSaSSSSSSSSSaSSSSSSS
+         SSSSSSSaSSSSSSSSSaSSSSSSS
+         SaaaaaaaSSSSSSSSSaaaaaaaS
+         SSSSSSSaSSSSSSSSSaSSSSSSS
+         SSSSSSSaSSSSSSSSSaSSSSSSS
+         MSSSSSSaSSSSSSSSSaSSSSSSM
+         MSSSSSSaSSSSSSSSSaSSSSSSM
+         MSSSSSSaaaaaaaaaaaSSSSSSM
+         MSSSSSSSSSSSaSSSSSSSSSSSM
+         MSSSSSSSSSSSaSSSSSSSSSSSM
+         MSSSSSSSSSSSaSSSSSSSSSSSM
+         MSSSSSSSSSSSaSSSSSSSSSSSM
+         MSSSSSSSSSSSaSSSSSSSSSSSM
+         MMMMMMMMMSSSSSSSMMMMMMMMM
+                  eeeeeee
   - y1 фонтан, скамьи, цветы, столбы: |
       
-      zJOUYoAJOU     UYoAJOUYoz
-      J       C       C       J
-      O                       O
-      U   b     b l b     b   U
-      Y                       Y
-      o                       o
-      A                       A
-      J      C         C      J
-      OC         iii         CO
-      U                       U
-                aaaaa
-              h aWWWa g
-              h aWSWa g
-              h aWWWa g
-                aaaaa
-      U                       U
-      YC         RRR         CY
-      o      C         C      o
-      A                       A
-      J                       J
-      O   b       C       b   O
-      U                       U
-      Y        C     C        Y
-      zAJOUYoAJ       UYoAJOUYz
-                  .
+      
+      
+         
+         zJOUYoAJOU     UYoAJOUYoz
+         J       C       C       J
+         O                       O
+         U   b     b l b     b   U
+         Y                       Y
+         o                       o
+         A                       A
+         J      C         C      J
+         OC         iii         CO
+         U                       U
+                   aaaaa
+                 h aWWWa g
+                 h aWSWa g
+                 h aWWWa g
+                   aaaaa
+         U                       U
+         YC         RRR         CY
+         o      C         C      o
+         A                       A
+         J                       J
+         O   b       C       b   O
+         U                       U
+         Y        C     C        Y
+         zAJOUYoAJ       UYoAJOUYz
+                     .
   - y2: |
       
       
-              t       t
       
-          P     9   P     P
-      
-      
-      
-             t         t
-       t                     t
-      
-                P   P
-      
-                  S
-      
-                P   P
-      
-       t                     t
-             t         t
-      
-      
-          P       B       P
-      
-               t     t
-      
-                  .
+         
+         
+                 t       t
+         
+             P     9   P     P
+         
+         
+         
+                t         t
+          t                     t
+         
+                   P   P
+         
+                     S
+         
+                   P   P
+         
+          t                     t
+                t         t
+         
+         
+             P       B       P
+         
+                  t     t
+         
+                     .
   - y3: |
       
       
-              N       N
       
-      
-      
-      
-      
-             N         N
-       N                     N
-      
-      
-      
-                  C
-      
-      
-      
-       N                     N
-             N         N
-      
-      
-      
-      
-               N     N
-      
-                  .
+         
+         
+                 N       N
+         
+         
+         
+         
+         
+                N         N
+          N                     N
+         
+         
+         
+                     C
+         
+         
+         
+          N                     N
+                N         N
+         
+         
+         
+         
+                  N     N
+         
+                     .
   - y4: |
       
       
       
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-                  N
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-                  .
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+                     N
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+                     .

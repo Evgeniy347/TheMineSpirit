@@ -127,7 +127,7 @@ public final class TownPlanner {
             }
         }
         List<Placement> placed = bindSlots(placer.placed(), demanded);
-        return new TownPlan(plan.anchor(), plan.region(), plan.streets(), placed, plan.fence(), unplaced);
+        return new TownPlan(plan.anchor(), plan.region(), plan.streets(), placed, plan.fence(), unplaced, plan.paths());
     }
 
     public static boolean staleSizes(TownPlan plan, TownRules rules) {
@@ -193,7 +193,7 @@ public final class TownPlanner {
         List<Placement> placements = new ArrayList<>(placer.placed());
         placements.addAll(failed);
         TownStreets open = openStreets(plan.streets(), placements, rules, plan.anchor());
-        return new TownPlan(plan.anchor(), plan.region(), open, placements, plan.fence(), unplaced);
+        return new TownPlan(plan.anchor(), plan.region(), open, placements, plan.fence(), unplaced, plan.paths());
     }
 
     private static TownStreets openStreets(
