@@ -52,7 +52,8 @@ final class LifePreemption {
     }
 
     private boolean preemptable(BoardTicket ticket) {
-        return ticket.boardCase() != BoardCase.ACTIVITY_RETREAT
+        return !RestTickets.is(ticket.id())
+                && ticket.boardCase() != BoardCase.ACTIVITY_RETREAT
                 && ticket.boardCase() != BoardCase.ACTIVITY_DEFEND
                 && ticket.boardCase() != BoardCase.ACTIVITY_ESCAPE
                 && ticket.boardCase() != BoardCase.RESCUE_SPIRIT;
