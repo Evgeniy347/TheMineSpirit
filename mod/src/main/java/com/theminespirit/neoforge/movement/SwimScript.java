@@ -22,7 +22,6 @@ public final class SwimScript implements ScriptInstance {
     private final Approach approach;
     private final @Nullable BlockCoord dry;
     private final @Nullable BlockCoord wet;
-    private boolean swam;
     private boolean zoneChecked;
     private ScriptStatus outcome = ScriptStatus.RUNNING;
     private String failureReason;
@@ -62,13 +61,12 @@ public final class SwimScript implements ScriptInstance {
         }
         surfaceForAir();
         if (spirit.isInWater()) {
-            swam = true;
             return swimTowards();
         }
-        if (swam || dry == null || wet == null) {
-            return walkAshore();
+        if (wet != null && CrossingSpan.enterWater(current(), wet, goalCell())) {
+            return walkToWater();
         }
-        return walkToWater();
+        return walkAshore();
     }
 
     @Override
@@ -125,6 +123,15 @@ public final class SwimScript implements ScriptInstance {
 
     private static Vec3 center(BlockCoord cell) {
         return new Vec3(cell.x() + 0.5, cell.y(), cell.z() + 0.5);
+    }
+
+    private BlockCoord goalCell() {
+        return new BlockCoord((int) Math.floor(target.x), (int) Math.floor(target.y), (int) Math.floor(target.z));
+    }
+
+    private BlockCoord current() {
+        return new BlockCoord(
+                (int) Math.floor(spirit.getX()), (int) Math.floor(spirit.getY()), (int) Math.floor(spirit.getZ()));
     }
 
     private ScriptStatus walkAshore() {

@@ -77,4 +77,16 @@ class CrossingSpanTests {
                 "Первая клетка воды запоминается и без сухого берега: по ней дух шагает в заплыв"
                         + " Иначе тест span_WaterFromFirstCell_KeepsEntryWithoutShore перестанет ловить эту поломку. При смене span_WaterFromFirstCell_KeepsEntryWithoutShore проверь это утверждение.");
     }
+
+    @Test
+    void enterWater_TargetFartherThanWater_True() {
+        assertTrue(
+                CrossingSpan.enterWater(new BlockCoord(0, 62, 0), new BlockCoord(3, 62, 0), new BlockCoord(9, 62, 0)),
+                "Вода ближе цели — дух ещё на своём берегу и должен шагать в воду"
+                        + " Иначе тест enterWater_TargetFartherThanWater_True перестанет ловить эту поломку. При смене enterWater_TargetFartherThanWater_True проверь это утверждение.");
+        assertTrue(
+                !CrossingSpan.enterWater(new BlockCoord(8, 62, 0), new BlockCoord(3, 62, 0), new BlockCoord(9, 62, 0)),
+                "Цель ближе воды — дух уже переплыл и идёт по дальнему берегу, а не возвращается в воду"
+                        + " Иначе тест enterWater_TargetFartherThanWater_True перестанет ловить эту поломку. При смене enterWater_TargetFartherThanWater_True проверь это утверждение.");
+    }
 }
