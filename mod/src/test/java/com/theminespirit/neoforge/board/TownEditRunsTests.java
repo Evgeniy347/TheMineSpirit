@@ -13,6 +13,31 @@ class TownEditRunsTests {
     private static final ObjectMapper JSON = new ObjectMapper();
 
     @Test
+    void runs_SingleColumnTwoRows_EmitsTwoSegments() throws Exception {
+        ColumnMask mask = ColumnMask.rect(4, 2, 4, 3);
+        ArrayNode target = JsonNodeFactory.instance.arrayNode();
+
+        TownEditCheck.runs(target, mask);
+
+        JsonNode json = JSON.readTree(target.toString());
+        assertEquals(
+                2,
+                json.size(),
+                "Колонка из двух клеток даёт по отрезку на строку: " + json
+                        + " Иначе тест runs_SingleColumnTwoRows_EmitsTwoSegments перестанет ловить эту поломку. При смене runs_SingleColumnTwoRows_EmitsTwoSegments проверь это утверждение.");
+        assertEquals(
+                "[2,4,4]",
+                json.get(0).toString(),
+                "Первый отрезок обязан быть клеткой в первой строке маски: " + json
+                        + " Иначе тест runs_SingleColumnTwoRows_EmitsTwoSegments перестанет ловить эту поломку. При смене runs_SingleColumnTwoRows_EmitsTwoSegments проверь это утверждение.");
+        assertEquals(
+                "[3,4,4]",
+                json.get(1).toString(),
+                "Второй отрезок обязан быть клеткой во второй строке маски: " + json
+                        + " Иначе тест runs_SingleColumnTwoRows_EmitsTwoSegments перестанет ловить эту поломку. При смене runs_SingleColumnTwoRows_EmitsTwoSegments проверь это утверждение.");
+    }
+
+    @Test
     void runs_TwoDisjointRectangles_EmitsRowSegments() throws Exception {
         ColumnMask mask = ColumnMask.rect(0, 0, 1, 1).union(ColumnMask.rect(5, 0, 6, 0));
         ArrayNode target = JsonNodeFactory.instance.arrayNode();

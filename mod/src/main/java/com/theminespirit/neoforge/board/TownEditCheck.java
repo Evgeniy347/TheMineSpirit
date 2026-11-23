@@ -71,22 +71,21 @@ final class TownEditCheck {
     }
 
     static void runs(ArrayNode target, ColumnMask mask) {
-        int minX = mask.minX();
-        int maxX = minX + mask.width() - 1;
-        for (int z = mask.minZ(); z < mask.minZ() + mask.depth(); z++) {
-            int start = -1;
-            for (int x = minX; x <= maxX; x++) {
-                boolean on = mask.contains(x, z);
-                if (on && start < 0) {
-                    start = x;
-                } else if (!on && start >= 0) {
-                    target.addArray().add(z).add(start).add(x - 1);
-                    start = -1;
+        int rowZ = Integer.MIN_VALUE;
+        int start = -1;
+        int end = -1;
+        for (ColumnMask.Cell cell : mask.cells()) {
+            if (cell.z() != rowZ || cell.x() > end + 1) {
+                if (start >= 0) {
+                    target.addArray().add(rowZ).add(start).add(end);
                 }
+                rowZ = cell.z();
+                start = cell.x();
             }
-            if (start >= 0) {
-                target.addArray().add(z).add(start).add(maxX);
-            }
+            end = cell.x();
+        }
+        if (start >= 0) {
+            target.addArray().add(rowZ).add(start).add(end);
         }
     }
 
