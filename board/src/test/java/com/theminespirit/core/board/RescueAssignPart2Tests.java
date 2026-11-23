@@ -85,6 +85,16 @@ class RescueAssignPart2Tests {
     }
 
     @Test
+    void self_SurfaceNoPathNearSettlement_WalksInsteadOfBridge() {
+        assertEquals(
+                RescuePlans.Self.WALK,
+                RescuePlans.self(new RescuePlans.Situation(false, false, false, true, true, 40), false),
+                "В поселении и в сотне блоков от него мост запрещён: дух идёт и прыгает пешком, иначе он снова "
+                        + "кладёт дорожку блоков поверх крон и висит на высоте без спуска. При смене "
+                        + "self_SurfaceNoPathNearSettlement_WalksInsteadOfBridge проверь флаг bridgeAllowed.");
+    }
+
+    @Test
     void self_SealedWithoutTool_None() {
         assertEquals(
                 RescuePlans.Self.NONE,

@@ -1,12 +1,14 @@
 package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.RescuePlans;
+import com.theminespirit.core.board.SettlementReach;
 import com.theminespirit.core.movement.PitExitPlanner;
 import com.theminespirit.core.navigation.PillarDescent;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.FallbackNode;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.neoforge.DigOutScript;
 import com.theminespirit.neoforge.PickaxeCheck;
 import com.theminespirit.neoforge.SpiritEntity;
@@ -58,14 +60,20 @@ final class RescueTicket {
         boolean tool = PickaxeCheck.has(spirit);
         boolean open = DigOutScript.open(level, feet);
         int blocks = PitRescue.supplies(spirit).blocks();
-        RescuePlans.Self method =
-                RescuePlans.self(new RescuePlans.Situation(false, false, tool, open, noPath, blocks, descend));
+        boolean bridgeAllowed = !SettlementReach.near(
+                SettlementPlotStore.get(level).town().map(TownPlan::region).orElse(null), feet.getX(), feet.getZ());
+        RescuePlans.Self method = RescuePlans.self(
+                new RescuePlans.Situation(false, false, tool, open, noPath, blocks, descend), bridgeAllowed);
         return switch (method) {
             case PIT ->
                 throw new IllegalStateException("Яма без плана выхода: PitRescue обязан назвать способ подъёма");
             case WALK ->
                 new Escape(
-                        true, new FallbackNode(List.of(gotoPoint(home), digOut(home))), "путь домой есть, идёт пешком");
+                        true,
+                        new FallbackNode(List.of(gotoPoint(home), digOut(home))),
+                        bridgeAllowed
+                                ? "путь домой есть, идёт пешком"
+                                : "мост в поселении запрещён: прыгает и идёт пешком");
             case DIG -> dig(home);
             case BRIDGE ->
                 new Escape(

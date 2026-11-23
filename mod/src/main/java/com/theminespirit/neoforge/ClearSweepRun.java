@@ -101,7 +101,7 @@ final class ClearSweepRun {
             return;
         }
         if (onPillar) {
-            if (canRise()) {
+            if (canRise() && riseAllowed()) {
                 startPillarStep();
                 return;
             }
@@ -124,7 +124,7 @@ final class ClearSweepRun {
             return;
         }
         if (chosen.x() == from.x() && chosen.y() == from.y() && chosen.z() == from.z()) {
-            if (canRise()) {
+            if (canRise() && riseAllowed()) {
                 startPillarStep();
                 return;
             }
@@ -266,6 +266,10 @@ final class ClearSweepRun {
             }
         }
         return false;
+    }
+
+    private boolean riseAllowed() {
+        return ClearRise.allowed(session.level, feet().y());
     }
 
     private void approachMiss() {

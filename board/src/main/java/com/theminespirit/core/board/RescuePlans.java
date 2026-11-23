@@ -133,13 +133,17 @@ public final class RescuePlans {
     }
 
     public static Self self(Situation situation) {
+        return self(situation, true);
+    }
+
+    public static Self self(Situation situation, boolean bridgeAllowed) {
         if (situation.pit()) {
             return situation.steps() || situation.tool() ? Self.PIT : Self.NONE;
         }
         if (situation.descent()) {
             return Self.DESCEND;
         }
-        if (situation.open() && situation.noPath() && situation.blocks() > 0) {
+        if (situation.open() && situation.noPath() && situation.blocks() > 0 && bridgeAllowed) {
             return Self.BRIDGE;
         }
         if (situation.open()) {
