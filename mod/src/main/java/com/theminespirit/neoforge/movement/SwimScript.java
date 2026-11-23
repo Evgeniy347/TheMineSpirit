@@ -17,7 +17,8 @@ import org.jspecify.annotations.Nullable;
 public final class SwimScript implements ScriptInstance {
     private static final int SURFACE_AIR_THRESHOLD = 120;
     private static final double SURFACE_PUSH = 0.12;
-    private static final double EXIT_PUSH = 0.2;
+    private static final double SWIM_UP = 0.16;
+    private static final double SWIM_STEER = 0.12;
     private static final double SWIM_SPEED = 1.0;
     private static final double ARRIVAL = CatalogLimits.NAV_ARRIVAL_TOLERANCE;
     private static final int FORCE_TICKS = 600;
@@ -74,6 +75,11 @@ public final class SwimScript implements ScriptInstance {
         if (!entered && wet != null) {
             return walkToWater();
         }
+        if (spirit.position().distanceTo(target) <= ARRIVAL * 2) {
+            approach.cancel();
+            outcome = ScriptStatus.SUCCEEDED;
+            return outcome;
+        }
         return walkAshore();
     }
 
@@ -100,12 +106,14 @@ public final class SwimScript implements ScriptInstance {
             return outcome;
         }
         spirit.getNavigation().stop();
-        spirit.getMoveControl().setWantedPosition(target.x, target.y, target.z, SWIM_SPEED);
-        if (spirit.horizontalCollision) {
-            spirit.getJumpControl().jump();
-            Vec3 motion = spirit.getDeltaMovement();
-            spirit.setDeltaMovement(motion.x, Math.max(motion.y, EXIT_PUSH), motion.z);
-        }
+        Vec3 motion = spirit.getDeltaMovement();
+        double dx = target.x - spirit.getX();
+        double dz = target.z - spirit.getZ();
+        double horizontal = Math.sqrt(dx * dx + dz * dz);
+        double vx = horizontal > 0.5 ? dx / horizontal * SWIM_STEER : motion.x;
+        double vz = horizontal > 0.5 ? dz / horizontal * SWIM_STEER : motion.z;
+        spirit.setDeltaMovement(vx, Math.max(motion.y, SWIM_UP), vz);
+        spirit.getJumpControl().jump();
         return ScriptStatus.RUNNING;
     }
 

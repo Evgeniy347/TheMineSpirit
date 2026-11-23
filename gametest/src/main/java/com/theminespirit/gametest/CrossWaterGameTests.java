@@ -65,6 +65,9 @@ final class CrossWaterGameTests {
                     spirit.blockPosition().getX() >= farX,
                     "дух на дальнем берегу после отмели: x="
                             + spirit.blockPosition().getX() + " < " + farX);
+            helper.assertTrue(
+                    spirit.getY() >= helper.absolutePos(TARGET).getY() - 0.5,
+                    "дух влез на приподнятый берег, а не висит у стенки: y=" + spirit.getY());
             GameTestFixtures.reset(helper);
         });
     }
