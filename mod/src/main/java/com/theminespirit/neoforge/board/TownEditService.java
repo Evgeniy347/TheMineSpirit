@@ -249,6 +249,10 @@ public final class TownEditService {
                 .put("width", mask.width())
                 .put("depth", mask.depth());
         street.put("cellCount", mask.count());
+        ArrayNode directStreet = street.putArray("directCells");
+        for (ColumnMask.Cell cell : mask.cells()) {
+            directStreet.addArray().add(cell.x()).add(cell.z());
+        }
         TownEditCheck.runs(street.putArray("cells"), mask);
     }
 
