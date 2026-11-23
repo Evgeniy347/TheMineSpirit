@@ -58,6 +58,11 @@ public final class TownEditService {
                 .put("depth", plan.region().depth())
                 .put("area", plan.area());
         region.put("cellCount", plan.region().count());
+        region.put("cellSample", plan.region().cells().size());
+        ArrayNode direct = region.putArray("directCells");
+        for (ColumnMask.Cell cell : plan.region().cells()) {
+            direct.addArray().add(cell.x()).add(cell.z());
+        }
         TownEditCheck.runs(region.putArray("cells"), plan.region());
         root.put("stage", SettlementStageService.of(level).view().stage());
         ArrayNode plots = root.putArray("plots");
