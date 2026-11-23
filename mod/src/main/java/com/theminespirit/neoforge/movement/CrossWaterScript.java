@@ -13,12 +13,16 @@ import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.FluidTags;
+import net.minecraft.world.level.block.state.BlockState;
+import org.jspecify.annotations.Nullable;
 
 public final class CrossWaterScript implements ScriptInstance {
+    private static final int SURFACE_SCAN = 6;
 
     private final SpiritEntity spirit;
     private final CrossWaterParams params;
     private final BlockCoord target;
+    private final BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
     private ScriptInstance delegate;
     private boolean planned;
     private int deepest;
@@ -78,21 +82,58 @@ public final class CrossWaterScript implements ScriptInstance {
     private void plan() {
         BlockPos feet = spirit.blockPosition();
         int floorY = feet.getY() - 1;
-        CrossingSpan span = CrossingSpan.of(
+        CrossingSpan span = CrossingSpan.ofSurface(
                 new BlockCoord(feet.getX(), floorY, feet.getZ()),
                 target,
-                this::waterAt,
+                this::waterSurfaceAt,
                 cell -> depthAt(cell.x(), cell.y(), cell.z()));
         deepest = span.deepest();
         if (!span.crosses() || deepest < MovementConfig.swimDepth()) {
             delegate = new GotoScript(spirit, new GotoParams(params.x(), params.y(), params.z()));
             return;
         }
+        BlockCoord shore = span.dry() == null ? null : standAt(span.dry());
+        if (shore != null) {
+            span = new CrossingSpan(span.width(), span.deepest(), shore, span.wet());
+        }
         delegate = new SwimScript(spirit, new SwimParams(params.x(), params.y(), params.z()), span);
     }
 
-    private boolean waterAt(BlockCoord cell) {
-        return isWater(cell.x(), cell.y(), cell.z());
+    private @Nullable BlockCoord waterSurfaceAt(BlockCoord cell) {
+        for (int y = cell.y(); y > cell.y() - SURFACE_SCAN; y--) {
+            if (y < spirit.level().getMinBuildHeight()) {
+                return null;
+            }
+            cursor.set(cell.x(), y, cell.z());
+            if (!spirit.level().isLoaded(cursor)) {
+                return null;
+            }
+            BlockState state = spirit.level().getBlockState(cursor);
+            if (state.getFluidState().is(FluidTags.WATER)) {
+                return new BlockCoord(cell.x(), y, cell.z());
+            }
+            if (!state.getCollisionShape(spirit.level(), cursor).isEmpty()) {
+                return null;
+            }
+        }
+        return null;
+    }
+
+    private @Nullable BlockCoord standAt(BlockCoord cell) {
+        for (int y = cell.y(); y > cell.y() - SURFACE_SCAN; y--) {
+            if (y < spirit.level().getMinBuildHeight()) {
+                return null;
+            }
+            cursor.set(cell.x(), y, cell.z());
+            if (!spirit.level().isLoaded(cursor)) {
+                return null;
+            }
+            BlockState state = spirit.level().getBlockState(cursor);
+            if (!state.getCollisionShape(spirit.level(), cursor).isEmpty()) {
+                return new BlockCoord(cell.x(), y + 1, cell.z());
+            }
+        }
+        return null;
     }
 
     private int depthAt(int x, int top, int z) {

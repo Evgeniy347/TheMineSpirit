@@ -79,6 +79,37 @@ class CrossingSpanTests {
     }
 
     @Test
+    void surface_WaterBelowWalkingLine_FindsCrossing() {
+        CrossingSpan span = CrossingSpan.ofSurface(
+                new BlockCoord(0, 67, 0),
+                new BlockCoord(6, 67, 0),
+                cell -> cell.x() >= 2 && cell.x() <= 4 ? new BlockCoord(cell.x(), 62, cell.z()) : null,
+                cell -> 3);
+
+        assertEquals(
+                3,
+                span.width(),
+                "Вода под линией ходьбы — переправа есть: линия идёт по берегу выше зеркала озера, "
+                        + "и без поиска поверхности дух получает goto и тонет"
+                        + " Иначе тест surface_WaterBelowWalkingLine_FindsCrossing перестанет ловить эту поломку. При смене surface_WaterBelowWalkingLine_FindsCrossing проверь это утверждение.");
+        assertEquals(
+                new BlockCoord(2, 62, 0),
+                span.wet(),
+                "Вход в воду — поверхность воды, а не клетка линии в воздухе: по ней дух шагает в заплыв"
+                        + " Иначе тест surface_WaterBelowWalkingLine_FindsCrossing перестанет ловить эту поломку. При смене surface_WaterBelowWalkingLine_FindsCrossing проверь это утверждение.");
+        assertEquals(
+                new BlockCoord(1, 67, 0),
+                span.dry(),
+                "Сухой берег перед водой остаётся клеткой линии: скрипт подводит духа к ней обычным путём"
+                        + " Иначе тест surface_WaterBelowWalkingLine_FindsCrossing перестанет ловить эту поломку. При смене surface_WaterBelowWalkingLine_FindsCrossing проверь это утверждение.");
+        assertEquals(
+                3,
+                span.deepest(),
+                "Глубина считается по клетке поверхности: по ней выбирается заплыв"
+                        + " Иначе тест surface_WaterBelowWalkingLine_FindsCrossing перестанет ловить эту поломку. При смене surface_WaterBelowWalkingLine_FindsCrossing проверь это утверждение.");
+    }
+
+    @Test
     void enterWater_TargetFartherThanWater_True() {
         assertTrue(
                 CrossingSpan.enterWater(new BlockCoord(0, 62, 0), new BlockCoord(3, 62, 0), new BlockCoord(9, 62, 0)),
