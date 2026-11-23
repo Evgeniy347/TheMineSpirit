@@ -7,6 +7,7 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.CrossWaterParams;
 import com.theminespirit.core.script.GotoParams;
 import com.theminespirit.core.script.SwimParams;
+import com.theminespirit.core.script.api.CrossingSpan;
 import com.theminespirit.neoforge.GotoScript;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Optional;
@@ -77,50 +78,21 @@ public final class CrossWaterScript implements ScriptInstance {
     private void plan() {
         BlockPos feet = spirit.blockPosition();
         int floorY = feet.getY() - 1;
-        int width = waterWidth(new BlockCoord(feet.getX(), floorY, feet.getZ()), target);
-        if (width == 0 || deepest < MovementConfig.swimDepth()) {
+        CrossingSpan span = CrossingSpan.of(
+                new BlockCoord(feet.getX(), floorY, feet.getZ()),
+                target,
+                this::waterAt,
+                cell -> depthAt(cell.x(), cell.y(), cell.z()));
+        deepest = span.deepest();
+        if (!span.crosses() || deepest < MovementConfig.swimDepth()) {
             delegate = new GotoScript(spirit, new GotoParams(params.x(), params.y(), params.z()));
             return;
         }
-        delegate = new SwimScript(spirit, new SwimParams(params.x(), params.y(), params.z()));
+        delegate = new SwimScript(spirit, new SwimParams(params.x(), params.y(), params.z()), span);
     }
 
-    private int waterWidth(BlockCoord from, BlockCoord to) {
-        int x0 = from.x();
-        int z0 = from.z();
-        int x1 = to.x();
-        int z1 = to.z();
-        int dx = Math.abs(x1 - x0);
-        int dz = Math.abs(z1 - z0);
-        int sx = Integer.compare(x1, x0);
-        int sz = Integer.compare(z1, z0);
-        int err = dx - dz;
-        int x = x0;
-        int z = z0;
-        int run = 0;
-        int widest = 0;
-        while (true) {
-            if (isWater(x, from.y(), z)) {
-                run++;
-                widest = Math.max(widest, run);
-                deepest = Math.max(deepest, depthAt(x, from.y(), z));
-            } else {
-                run = 0;
-            }
-            if (x == x1 && z == z1) {
-                break;
-            }
-            int doubled = 2 * err;
-            if (doubled > -dz) {
-                err -= dz;
-                x += sx;
-            }
-            if (doubled < dx) {
-                err += dx;
-                z += sz;
-            }
-        }
-        return widest;
+    private boolean waterAt(BlockCoord cell) {
+        return isWater(cell.x(), cell.y(), cell.z());
     }
 
     private int depthAt(int x, int top, int z) {
