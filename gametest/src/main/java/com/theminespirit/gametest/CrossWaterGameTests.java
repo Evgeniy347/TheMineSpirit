@@ -46,6 +46,8 @@ final class CrossWaterGameTests {
             helper.assertBlockPresent(Blocks.WATER, new BlockPos(WATER_MIN_X, 0, 1));
             helper.assertBlockPresent(Blocks.WATER, new BlockPos(WATER_MIN_X, -1, 1));
             assertFinished(helper, spirit, run, RunStatus.SUCCEEDED);
+            helper.assertTrue(
+                    !spirit.isInWater(), "дух вышел из воды на дальний берег, а не остался тонуть: y=" + spirit.getY());
             int farX = helper.absolutePos(new BlockPos(WATER_MAX_X, 1, 1)).getX();
             helper.assertTrue(
                     spirit.blockPosition().getX() >= farX,

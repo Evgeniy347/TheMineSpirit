@@ -94,6 +94,7 @@ public final class SwimScript implements ScriptInstance {
             outcome = ScriptStatus.SUCCEEDED;
             return outcome;
         }
+        spirit.getNavigation().stop();
         spirit.getMoveControl().setWantedPosition(target.x, target.y, target.z, SWIM_SPEED);
         return ScriptStatus.RUNNING;
     }
@@ -114,6 +115,7 @@ public final class SwimScript implements ScriptInstance {
                 case TIMEOUT, STUCK -> {
                     if (forced++ < FORCE_TICKS) {
                         approach.cancel();
+                        spirit.getNavigation().stop();
                         Vec3 water = center(wet);
                         spirit.getMoveControl().setWantedPosition(water.x, water.y, water.z, SWIM_SPEED);
                         yield ScriptStatus.RUNNING;
@@ -146,6 +148,7 @@ public final class SwimScript implements ScriptInstance {
             case TIMEOUT, STUCK -> {
                 if (forced++ < FORCE_TICKS) {
                     approach.cancel();
+                    spirit.getNavigation().stop();
                     spirit.getMoveControl().setWantedPosition(target.x, target.y, target.z, SWIM_SPEED);
                     yield ScriptStatus.RUNNING;
                 }
