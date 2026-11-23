@@ -3,13 +3,11 @@ package com.theminespirit.core.board;
 import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.board.graph.VitalNeeds;
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import org.jspecify.annotations.Nullable;
 
@@ -98,20 +96,7 @@ public final class DispatchRound {
     }
 
     public static int stageCasesOpen(Board board) {
-        Objects.requireNonNull(board, "Доска не может быть null: открытые шаги этапа считают по ней");
-        Set<BoardCase> cases = EnumSet.noneOf(BoardCase.class);
-        for (BoardTicket ticket : board.tickets()) {
-            if (!StageTicket.stage(ticket.id())) {
-                continue;
-            }
-            BoardStatus status = board.statusOf(ticket.id()).orElse(null);
-            if (status == BoardStatus.PENDING
-                    || status == BoardStatus.WAITING_RESOURCES
-                    || status == BoardStatus.ASSIGNED) {
-                cases.add(ticket.boardCase());
-            }
-        }
-        return cases.size();
+        return DispatchStageCases.open(board);
     }
 
     public static List<BoardTicket> order(List<BoardTicket> claimable) {
@@ -133,6 +118,9 @@ public final class DispatchRound {
     }
 
     public Optional<String> refusal(BoardTicket ticket, Candidate spirit, @Nullable String supplyItem) {
+        if (DispatchRestHold.held(board, spirit.id())) {
+            return Optional.of("держит внешнюю задачу стратега: доска её не отменяет");
+        }
         if (ticket.boardCase() == BoardCase.DISMANTLE_SHELTER && spirit.wet()) {
             return Optional.of("в воде или под крышей: до стоянки уборки не дойдёт");
         }
