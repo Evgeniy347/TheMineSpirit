@@ -37,9 +37,7 @@ final class StagePlacePost {
         }
         TicketTarget target =
                 TicketTarget.at(at.orElseThrow()).withScheme(entry.scheme()).withBuilding(ticket.node());
-        if (groundLayer(entry.scheme())) {
-            target = level(target, post, ticket.node());
-        }
+        target = level(target, post, ticket.node());
         String wood = OrchardSites.speciesOfBuilding(ticket.node()).orElse(post.scan.wood());
         if (!WoodSpecies.OAK.equals(wood)) {
             target = target.withWood(wood);
@@ -71,15 +69,6 @@ final class StagePlacePost {
                     return target.withLeveling(plan);
                 })
                 .orElse(target);
-    }
-
-    private static boolean groundLayer(String scheme) {
-        return DataTables.INSTANCE
-                .presets()
-                .current()
-                .byId(scheme)
-                .map(preset -> SchematicGround.groundLayer(preset.schematic()))
-                .orElse(false);
     }
 
     private static boolean tilled(String scheme) {

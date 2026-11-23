@@ -131,8 +131,7 @@ public record PlotLeveling(List<Box> cut, List<Box> fill, String block, List<Box
                 int height = inside ? feet.applyAsInt(x, z) : level;
                 @Nullable
                 Run cutHere = height > level ? new Run(x, level, Math.min(height, level + MAX_SHIFT) - 1) : null;
-                @Nullable
-                Run fillHere = height < level ? new Run(x, Math.max(height, level - MAX_SHIFT), level - 1) : null;
+                @Nullable Run fillHere = height < level ? new Run(x, height, level - 1) : null;
                 cutRun = extend(cutRun, cutHere, x, z, cut);
                 fillRun = extend(fillRun, fillHere, x, z, fill);
             }

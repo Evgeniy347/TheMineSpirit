@@ -116,6 +116,9 @@ public final class StagePlans {
             params.put(BuildSchematicParams.WOOD, target.wood());
         }
         List<TaskNode> steps = new ArrayList<>();
+        if (target.leveling() != null) {
+            steps.add(LevelRepair.plan(target));
+        }
         steps.add(PlanSteps.gotoPoint(site.workYard()));
         PresetLibrary.current()
                 .byId(scheme)

@@ -14,6 +14,9 @@ import com.theminespirit.core.board.StockNeed;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.building.api.WoodSpecies;
+import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.town.Placement;
+import com.theminespirit.core.town.PlotLeveling;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.StageWork;
 import java.util.HashMap;
@@ -42,6 +45,9 @@ final class StageStepOpener {
         if (caseValue == BoardCase.CLEAR_GROUNDS) {
             target = target.withLeveling(SettlementGround.leveling(level, stage));
         }
+        if (caseValue == BoardCase.BUILD_HOUSE) {
+            target = target.withLeveling(hutLeveling(level, stage));
+        }
         FirstStepsRunner.OpenStep step = new FirstStepsRunner.OpenStep(caseValue, target, Map.of(), wood);
         Map<String, Integer> need = StageMaterialDesk.need(level, post.stock, step, blocked);
         if (StageSettle.AUDIT_STEPS.contains(caseValue)
@@ -60,6 +66,13 @@ final class StageStepOpener {
         }
         openStep(post, new FirstStepsRunner.OpenStep(caseValue, target, need, wood), order);
         return Map.of();
+    }
+
+    private static PlotLeveling hutLeveling(ServerLevel level, StageSite stage) {
+        Placement hut = stage.hut();
+        int levelY = stage.anchor().y();
+        return PlotLeveling.plan(
+                new BlockCoord(hut.x(), levelY, hut.z()), hut.mask(), SettlementGround.tops(level, levelY));
     }
 
     private static void openStep(GraphPost post, FirstStepsRunner.OpenStep step, FirstStepsRunner.StepOrder order) {

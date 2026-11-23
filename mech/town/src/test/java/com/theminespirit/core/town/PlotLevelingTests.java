@@ -93,19 +93,22 @@ class PlotLevelingTests {
     }
 
     @Test
-    void plan_DeepPit_FilledAtMostTen() {
+    void plan_DeepPit_FilledDownToGround() {
         PlotLeveling plan = PlotLeveling.plan(ANCHOR, square(ANCHOR, 1), (x, z) -> x == 0 && z == 0 ? 40 : 64);
 
         assertEquals(
-                List.of(new PlotLeveling.Box(0, 54, 0, 0, 63, 0)),
+                List.of(new PlotLeveling.Box(0, 40, 0, 0, 63, 0)),
                 plan.fill(),
-                "Яма глубже десяти подсыпается только на десять блоков (решение 16)"
-                        + " Иначе тест plan_DeepPit_FilledAtMostTen перестанет ловить эту поломку. При смене plan_DeepPit_FilledAtMostTen проверь это утверждение.");
+                "Яма под участком подсыпается до самой земли, а не на десять блоков: иначе дом встанет в воздух "
+                        + "над обрывом, а под его полом останется пустота (решение 24.11) — дом не строят в воздухе, "
+                        + "низ сначала опирают землёй"
+                        + " При смене plan_DeepPit_FilledDownToGround проверь это утверждение.");
         assertEquals(
-                10,
+                24,
                 plan.fillVolume(),
-                "Подсыпка — ровно десять блоков"
-                        + " Иначе тест plan_DeepPit_FilledAtMostTen перестанет ловить эту поломку. При смене plan_DeepPit_FilledAtMostTen проверь это утверждение.");
+                "Подсыпка ямы глубиной 24 — ровно 24 блока: каждый слой от дна до уровня ног учитывается один раз, "
+                        + "иначе дно ямы остаётся незакрытым"
+                        + " Иначе тест plan_DeepPit_FilledDownToGround перестанет ловить эту поломку. При смене plan_DeepPit_FilledDownToGround проверь это утверждение.");
     }
 
     @Test
