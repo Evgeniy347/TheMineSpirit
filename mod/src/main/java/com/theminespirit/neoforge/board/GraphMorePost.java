@@ -1,5 +1,7 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.board.MoreActivityPlans;
+import com.theminespirit.core.board.SettlementReach;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.board.graph.GraphNames;
@@ -7,6 +9,7 @@ import com.theminespirit.core.board.graph.GraphPlan;
 import com.theminespirit.core.board.graph.GraphTickets;
 import com.theminespirit.core.board.graph.MoreActions;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.town.TownPlan;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -120,14 +123,29 @@ final class GraphMorePost {
     }
 
     private static boolean bridgeRoute(GraphPost post, GraphTickets.Ticket ticket) {
+        BlockCoord site = workSite(post);
+        if (bridgeBanned(post, site)) {
+            submit(
+                    post,
+                    ticket,
+                    BoardCase.ACTIVITY_BUILD,
+                    TicketTarget.at(site).withPlan(MoreActivityPlans.walkTo(site)),
+                    Map.of());
+            return true;
+        }
         String planks = post.scan.wood() + "_planks";
         submit(
                 post,
                 ticket,
                 BoardCase.ACTIVITY_BUILD,
-                TicketTarget.at(workSite(post)).withSupply(planks, FUEL_BATCH).withBuilding(BRIDGE),
+                TicketTarget.at(site).withSupply(planks, FUEL_BATCH).withBuilding(BRIDGE),
                 Map.of(planks, FUEL_BATCH));
         return true;
+    }
+
+    private static boolean bridgeBanned(GraphPost post, BlockCoord site) {
+        return SettlementReach.near(
+                SettlementPlotStore.get(post.level).town().map(TownPlan::region).orElse(null), site.x(), site.z());
     }
 
     private static BlockCoord workSite(GraphPost post) {

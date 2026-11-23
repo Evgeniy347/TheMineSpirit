@@ -9,6 +9,7 @@ import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.script.api.CatalogLimits;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public final class MoreActivityPlans {
     private static final String BLOCK = "block";
@@ -35,6 +36,11 @@ public final class MoreActivityPlans {
                     ACTIVITY_SENSE -> true;
             default -> false;
         };
+    }
+
+    public static TaskNode walkTo(BlockCoord point) {
+        Objects.requireNonNull(point, "Цель пешего перехода не может быть null: духу некуда идти");
+        return new ScriptCall("goto", Map.of("x", point.x(), "y", point.y(), "z", point.z()));
     }
 
     public static TaskNode plan(BoardCase boardCase, TicketTarget target) {

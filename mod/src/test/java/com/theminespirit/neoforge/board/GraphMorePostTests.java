@@ -109,6 +109,17 @@ class GraphMorePostTests {
     }
 
     @Test
+    void walkRoute_PlanBuilt_UsesOnlyGoto() {
+        TaskNode plan = MoreActivityPlans.walkTo(new BlockCoord(10, 64, -5));
+
+        assertEquals(
+                List.of("goto"),
+                scripts(plan),
+                "Запрещённый мост заменяется пешим переходом без досок: иначе дух снова настилает полку "
+                        + "в воздухе. При смене walkRoute_PlanBuilt_UsesOnlyGoto проверь план walkTo.");
+    }
+
+    @Test
     void eventTicket_KeyDerived_MatchesFragmentAction() {
         GraphPlan.Task task = new GraphPlan.Task(
                 "event:more5_fuel_low:more5_gather_fuel",

@@ -20,6 +20,8 @@ import java.util.Objects;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.world.level.block.state.BlockState;
 import org.jspecify.annotations.Nullable;
 
 final class RescueTicket {
@@ -60,8 +62,15 @@ final class RescueTicket {
         boolean tool = PickaxeCheck.has(spirit);
         boolean open = DigOutScript.open(level, feet);
         int blocks = PitRescue.supplies(spirit).blocks();
-        boolean bridgeAllowed = !SettlementReach.near(
-                SettlementPlotStore.get(level).town().map(TownPlan::region).orElse(null), feet.getX(), feet.getZ());
+        boolean onTree = onTree(level, feet);
+        boolean bridgeAllowed = !onTree
+                && !SettlementReach.near(
+                        SettlementPlotStore.get(level)
+                                .town()
+                                .map(TownPlan::region)
+                                .orElse(null),
+                        feet.getX(),
+                        feet.getZ());
         RescuePlans.Self method = RescuePlans.self(
                 new RescuePlans.Situation(false, false, tool, open, noPath, blocks, descend), bridgeAllowed);
         return switch (method) {
@@ -69,11 +78,7 @@ final class RescueTicket {
                 throw new IllegalStateException("Яма без плана выхода: PitRescue обязан назвать способ подъёма");
             case WALK ->
                 new Escape(
-                        true,
-                        new FallbackNode(List.of(gotoPoint(home), digOut(home))),
-                        bridgeAllowed
-                                ? "путь домой есть, идёт пешком"
-                                : "мост в поселении запрещён: прыгает и идёт пешком");
+                        true, new FallbackNode(List.of(gotoPoint(home), digOut(home))), walkWhy(bridgeAllowed, onTree));
             case DIG -> dig(home);
             case BRIDGE ->
                 new Escape(
@@ -92,6 +97,20 @@ final class RescueTicket {
             }
             case NONE -> new Escape(false, null, refusal(open, noPath, blocks));
         };
+    }
+
+    private static boolean onTree(ServerLevel level, BlockPos feet) {
+        BlockState below = level.getBlockState(feet.below());
+        return below.is(BlockTags.LOGS) || below.is(BlockTags.LEAVES);
+    }
+
+    private static String walkWhy(boolean bridgeAllowed, boolean onTree) {
+        if (bridgeAllowed) {
+            return "путь домой есть, идёт пешком";
+        }
+        return onTree
+                ? "стоит на дереве: мост не строим, прыгает и идёт пешком"
+                : "мост в поселении запрещён: прыгает и идёт пешком";
     }
 
     private static PillarDescent.@Nullable Plan ownPillar(ServerLevel level, SpiritEntity spirit, BlockCoord at) {

@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.levelgen.Heightmap;
 
@@ -28,6 +29,7 @@ final class PitRescue {
     private static final String GOTO = "goto";
     private static final String DIG_OUT = "dig_out";
     private static final String PILLAR = "pillar_up";
+    private static final int WOOD_SCAN_DEPTH = 32;
 
     private PitRescue() {}
 
@@ -124,6 +126,10 @@ final class PitRescue {
     }
 
     private static int top(Level level, int x, int z) {
-        return level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+        int upper = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z) - 1;
+        return TreeSurface.skipWood(
+                upper,
+                WOOD_SCAN_DEPTH,
+                y -> level.getBlockState(new BlockPos(x, y, z)).is(BlockTags.LOGS));
     }
 }
