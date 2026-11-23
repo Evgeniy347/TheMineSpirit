@@ -2,8 +2,11 @@ package com.theminespirit.neoforge;
 
 import com.theminespirit.core.movement.SealedSpace;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.neoforge.board.TreeSurface;
 import net.minecraft.core.BlockPos;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
 
 final class DigOutSpace {
@@ -18,6 +21,9 @@ final class DigOutSpace {
     }
 
     static boolean open(Level level, BlockPos cell) {
-        return level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, cell.getX(), cell.getZ()) <= cell.getY();
+        int height = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, cell.getX(), cell.getZ());
+        BlockState under = level.getBlockState(cell.below());
+        boolean woodBelow = under.is(BlockTags.LOGS) || under.is(BlockTags.LEAVES);
+        return TreeSurface.sky(height, cell.getY(), woodBelow);
     }
 }

@@ -50,6 +50,15 @@ final class BreakCheck {
                     "блок " + BreakNames.blockId(targetState) + " в " + target.toShortString() + " неразрушим: "
                             + hardness);
         }
+        if (!escaping
+                && !rescue
+                && intent != BlockBreaker.Intent.EXCAVATE
+                && target.equals(spirit.blockPosition().below())) {
+            return refusals.refused(
+                    target,
+                    BlockBreaker.RefuseReason.SUPPORTS_SELF,
+                    "блок " + target.toShortString() + " под ногами — опора духа: сломать её значит упасть");
+        }
         if (reachLimited) {
             double distance = spirit.getEyePosition().distanceTo(Vec3.atCenterOf(target));
             if (distance > BlockBreaker.REACH) {

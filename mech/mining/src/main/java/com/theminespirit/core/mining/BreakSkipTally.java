@@ -18,7 +18,8 @@ public final class BreakSkipTally {
         CHUNK_NOT_LOADED("чанк не загружен"),
         NO_STAND("без стоянки"),
         UNBREAKABLE("неразрушим"),
-        VANISHED("исчез");
+        VANISHED("исчез"),
+        SUPPORTS_SELF("опора под духом");
 
         private final String title;
 

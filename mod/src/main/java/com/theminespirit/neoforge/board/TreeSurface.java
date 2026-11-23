@@ -2,7 +2,7 @@ package com.theminespirit.neoforge.board;
 
 import java.util.function.IntPredicate;
 
-final class TreeSurface {
+public final class TreeSurface {
     private TreeSurface() {}
 
     static int skipWood(int top, int depth, IntPredicate wood) {
@@ -11,5 +11,9 @@ final class TreeSurface {
             y--;
         }
         return y + 1;
+    }
+
+    public static boolean sky(int height, int y, boolean woodBelow) {
+        return !woodBelow && height <= y;
     }
 }
