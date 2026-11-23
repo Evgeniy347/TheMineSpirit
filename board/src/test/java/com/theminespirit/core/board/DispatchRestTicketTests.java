@@ -88,10 +88,10 @@ class DispatchRestTicketTests {
                         + " Иначе тест claim_StuckSpirit_RestTicketClaimedAnyway перестанет ловить эту поломку. "
                         + "При смене claim_StuckSpirit_RestTicketClaimedAnyway проверь это утверждение.");
         assertEquals(
-                BoardOutcome.SPIRIT_PAUSED,
+                BoardOutcome.TAKEN_BY_OTHER,
                 board.claim("graph:event:hungry:eat@" + SPIRIT, SPIRIT, 100),
-                "Обычный тикет застрявшему духу по-прежнему не выдаётся: пауза после застревания "
-                        + "защищает духа от немедленного повторного провала"
+                "Обычный тикет держателю rest-тикета не закрепляется: заслон на уровне жизненного "
+                        + "цикла отвечает раньше stuck-паузы — задача стратега не вытесняется"
                         + " Иначе тест claim_StuckSpirit_RestTicketClaimedAnyway перестанет ловить эту поломку. "
                         + "При смене claim_StuckSpirit_RestTicketClaimedAnyway проверь это утверждение.");
     }
@@ -135,5 +135,46 @@ class DispatchRestTicketTests {
                         + "его обычный забег"
                         + " Иначе тест held_RestAssigned_TrueOnlyForRest перестанет ловить эту поломку. "
                         + "При смене held_RestAssigned_TrueOnlyForRest проверь это утверждение.");
+    }
+
+    @Test
+    void claim_GraphTicket_RestHolderRefusedAtClaim() {
+        Board board = new Board(() -> 100);
+        board.submit(new BoardTicket(
+                RestTickets.idFor("t-4"),
+                BoardCase.ACTIVITY_EXTERNAL,
+                Optional.of(SPIRIT),
+                95,
+                0,
+                1,
+                "always",
+                List.of(),
+                Map.of()));
+        board.claim(RestTickets.idFor("t-4"), SPIRIT, 100);
+        board.submit(new BoardTicket(
+                "graph:event:chest_purpose_missing:assign_chest_purpose:" + SPIRIT,
+                BoardCase.ACTIVITY_UNLOAD,
+                Optional.of(SPIRIT),
+                30,
+                0,
+                1,
+                "graph:event:chest_purpose_missing",
+                List.of(),
+                Map.of()));
+
+        assertEquals(
+                BoardOutcome.TAKEN_BY_OTHER,
+                board.claim("graph:event:chest_purpose_missing:assign_chest_purpose:" + SPIRIT, SPIRIT, 100),
+                "Графовые события закрепляют тикеты мимо диспетчера: держателю rest-тикета claim "
+                        + "обычного тикета отказан на уровне жизненного цикла — иначе доска вытеснит "
+                        + "задачу стратега"
+                        + " Иначе тест claim_GraphTicket_RestHolderRefusedAtClaim перестанет ловить эту поломку. "
+                        + "При смене claim_GraphTicket_RestHolderRefusedAtClaim проверь это утверждение.");
+        assertEquals(
+                BoardOutcome.CLAIMED,
+                board.claim(RestTickets.idFor("t-4"), SPIRIT, 100),
+                "Сам rest-тикет перезакрепляется за своим духом штатно"
+                        + " Иначе тест claim_GraphTicket_RestHolderRefusedAtClaim перестанет ловить эту поломку. "
+                        + "При смене claim_GraphTicket_RestHolderRefusedAtClaim проверь это утверждение.");
     }
 }

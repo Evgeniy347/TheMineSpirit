@@ -139,6 +139,9 @@ final class TicketLifecycle {
             }
             return BoardOutcome.TAKEN_BY_OTHER;
         }
+        if (!RestTickets.is(ticketId) && holdsRestTicket(spirit)) {
+            return BoardOutcome.TAKEN_BY_OTHER;
+        }
         if (!availableTo(spirit, ticket, now)) {
             return BoardOutcome.SPIRIT_PAUSED;
         }
@@ -229,6 +232,17 @@ final class TicketLifecycle {
         }
         boolean rescue = ticket.boardCase() == BoardCase.RESCUE_SPIRIT;
         return (rescue || !stuckSpirits.isStuck(spirit, now)) && casePauses.available(spirit, ticket, now);
+    }
+
+    private boolean holdsRestTicket(UUID spirit) {
+        for (Map.Entry<String, UUID> entry : claimAssignees.entrySet()) {
+            if (spirit.equals(entry.getValue())
+                    && RestTickets.is(entry.getKey())
+                    && statuses.get(entry.getKey()) == BoardStatus.ASSIGNED) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private @Nullable UUID holder(BoardTicket ticket) {

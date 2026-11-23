@@ -7,6 +7,7 @@ import com.theminespirit.core.town.Placement;
 import com.theminespirit.core.town.TownEntry;
 import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.core.town.TownRules;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -87,6 +88,21 @@ final class TownEditCheck {
         if (start >= 0) {
             target.addArray().add(rowZ).add(start).add(end);
         }
+    }
+
+    static List<String> without(List<String> unplaced, String id) {
+        List<String> next = new ArrayList<>(unplaced);
+        next.remove(id);
+        return next;
+    }
+
+    static List<String> with(List<String> unplaced, String id) {
+        if (unplaced.contains(id)) {
+            return List.copyOf(unplaced);
+        }
+        List<String> next = new ArrayList<>(unplaced);
+        next.add(id);
+        return next;
     }
 
     static int indexOf(List<ColumnMask.Cell> posts, int x, int z) {

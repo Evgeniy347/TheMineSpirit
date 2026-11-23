@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.theminespirit.core.town.ColumnMask;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class TownEditRunsTests {
@@ -65,5 +66,27 @@ class TownEditRunsTests {
                 json.get(2).toString(),
                 "Следующая строка обязана дать свой отрезок с номером z: " + json
                         + " Иначе тест runs_TwoDisjointRectangles_EmitsRowSegments перестанет ловить эту поломку. При смене runs_TwoDisjointRectangles_EmitsRowSegments проверь это утверждение.");
+    }
+
+    @Test
+    void without_ListedId_DropsItFromUnplaced() {
+        List<String> next = TownEditCheck.without(List.of("field_a", "field_b"), "field_a");
+
+        assertEquals(
+                List.of("field_b"),
+                next,
+                "Добавленный участок обязан исчезнуть из unplaced: " + next
+                        + " Иначе тест without_ListedId_DropsItFromUnplaced перестанет ловить эту поломку. При смене without_ListedId_DropsItFromUnplaced проверь это утверждение.");
+    }
+
+    @Test
+    void with_NewId_AppendsItToUnplaced() {
+        List<String> next = TownEditCheck.with(List.of("field_a"), "barn");
+
+        assertEquals(
+                List.of("field_a", "barn"),
+                next,
+                "Снятый участок обязан вернуться в unplaced, чтобы обзор снова его планировал: " + next
+                        + " Иначе тест with_NewId_AppendsItToUnplaced перестанет ловить эту поломку. При смене with_NewId_AppendsItToUnplaced проверь это утверждение.");
     }
 }

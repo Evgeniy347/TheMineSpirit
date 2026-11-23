@@ -113,6 +113,7 @@ public final class TownEditService {
                     Map.of("field", "ops"));
         }
         List<Placement> placements = new ArrayList<>(plan.placements());
+        List<String> unplaced = new ArrayList<>(plan.unplaced());
         List<PathLine> paths = new ArrayList<>(plan.paths());
         List<ColumnMask.Cell> posts = plan.fence().posts();
         List<Integer> gates = new ArrayList<>(plan.fence().gates());
@@ -165,6 +166,7 @@ public final class TownEditService {
                             entry.depth(),
                             Placement.Facing.SOUTH));
                     placedIds.add(id);
+                    unplaced = TownEditCheck.without(unplaced, id);
                 }
                 case "remove_plot" -> {
                     String id = text(op, "id");
@@ -172,6 +174,9 @@ public final class TownEditService {
                         errors.add("участка '" + id + "' нет в плане");
                     }
                     placedIds.remove(id);
+                    if (rules.entry(id).isPresent()) {
+                        unplaced = TownEditCheck.with(unplaced, id);
+                    }
                 }
                 case "set_gates" -> {
                     gates.clear();
@@ -221,7 +226,7 @@ public final class TownEditService {
                     plan.streets(),
                     placements,
                     new FenceLine(posts, gates),
-                    plan.unplaced(),
+                    unplaced,
                     paths);
             SettlementPlotStore.get(level).refitTown(next);
         }
