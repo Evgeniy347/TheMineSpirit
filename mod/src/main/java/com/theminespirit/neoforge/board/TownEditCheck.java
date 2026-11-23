@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.theminespirit.core.town.ColumnMask;
 import com.theminespirit.core.town.PathLine;
 import com.theminespirit.core.town.Placement;
@@ -65,6 +66,26 @@ final class TownEditCheck {
         for (int gate : gates) {
             if (gate < 0 || gate >= posts.size()) {
                 errors.add("ворота №" + gate + " вне линии ограды");
+            }
+        }
+    }
+
+    static void runs(ArrayNode target, ColumnMask mask) {
+        int minX = mask.minX();
+        int maxX = minX + mask.width() - 1;
+        for (int z = mask.minZ(); z < mask.minZ() + mask.depth(); z++) {
+            int start = -1;
+            for (int x = minX; x <= maxX; x++) {
+                boolean on = mask.contains(x, z);
+                if (on && start < 0) {
+                    start = x;
+                } else if (!on && start >= 0) {
+                    target.addArray().add(z).add(start).add(x - 1);
+                    start = -1;
+                }
+            }
+            if (start >= 0) {
+                target.addArray().add(z).add(start).add(maxX);
             }
         }
     }
