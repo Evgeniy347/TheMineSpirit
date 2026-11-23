@@ -1,5 +1,6 @@
 package com.theminespirit.core.board;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.board.api.BoardCase;
@@ -51,5 +52,47 @@ class DispatchRestTicketTests {
                 "Причина отказа видна владельцу: дух держит внешнюю задачу стратега"
                         + " Иначе тест choose_AnyTicket_RestHolderNotPicked перестанет ловить эту поломку. "
                         + "При смене choose_AnyTicket_RestHolderNotPicked проверь это утверждение.");
+    }
+
+    @Test
+    void claim_StuckSpirit_RestTicketClaimedAnyway() {
+        Board board = new Board(() -> 100);
+        board.submit(new BoardTicket(
+                RestTickets.idFor("t-2"),
+                BoardCase.ACTIVITY_EXTERNAL,
+                Optional.of(SPIRIT),
+                95,
+                0,
+                1,
+                "always",
+                List.of(),
+                Map.of()));
+        board.submit(new BoardTicket(
+                "graph:event:hungry:eat@" + SPIRIT,
+                BoardCase.EAT_TO_FULL,
+                Optional.of(SPIRIT),
+                100,
+                0,
+                1,
+                "graph:event:hungry:eat",
+                List.of(),
+                Map.of()));
+        board.stuck().mark(SPIRIT, 0, "пути нет: дух замурован");
+
+        assertEquals(
+                BoardOutcome.CLAIMED,
+                board.claim(RestTickets.idFor("t-2"), SPIRIT, 100),
+                "REST-тикет — прямой приказ стратега: доска обязана закрепить его даже за застрявшим "
+                        + "духом, иначе тикет повиснет и retain снимет его, а доска выдаст духу свою "
+                        + "работу и прервёт задачу ИИ"
+                        + " Иначе тест claim_StuckSpirit_RestTicketClaimedAnyway перестанет ловить эту поломку. "
+                        + "При смене claim_StuckSpirit_RestTicketClaimedAnyway проверь это утверждение.");
+        assertEquals(
+                BoardOutcome.SPIRIT_PAUSED,
+                board.claim("graph:event:hungry:eat@" + SPIRIT, SPIRIT, 100),
+                "Обычный тикет застрявшему духу по-прежнему не выдаётся: пауза после застревания "
+                        + "защищает духа от немедленного повторного провала"
+                        + " Иначе тест claim_StuckSpirit_RestTicketClaimedAnyway перестанет ловить эту поломку. "
+                        + "При смене claim_StuckSpirit_RestTicketClaimedAnyway проверь это утверждение.");
     }
 }

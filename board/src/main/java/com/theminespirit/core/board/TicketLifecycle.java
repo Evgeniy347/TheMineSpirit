@@ -224,6 +224,9 @@ final class TicketLifecycle {
     }
 
     boolean availableTo(UUID spirit, BoardTicket ticket, long now) {
+        if (RestTickets.is(ticket.id())) {
+            return true;
+        }
         boolean rescue = ticket.boardCase() == BoardCase.RESCUE_SPIRIT;
         return (rescue || !stuckSpirits.isStuck(spirit, now)) && casePauses.available(spirit, ticket, now);
     }
