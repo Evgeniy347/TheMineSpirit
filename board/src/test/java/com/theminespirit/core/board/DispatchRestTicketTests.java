@@ -95,4 +95,45 @@ class DispatchRestTicketTests {
                         + " Иначе тест claim_StuckSpirit_RestTicketClaimedAnyway перестанет ловить эту поломку. "
                         + "При смене claim_StuckSpirit_RestTicketClaimedAnyway проверь это утверждение.");
     }
+
+    @Test
+    void held_RestAssigned_TrueOnlyForRest() {
+        Board board = new Board(() -> 100);
+        board.submit(new BoardTicket(
+                RestTickets.idFor("t-3"),
+                BoardCase.ACTIVITY_EXTERNAL,
+                Optional.of(SPIRIT),
+                95,
+                0,
+                1,
+                "always",
+                List.of(),
+                Map.of()));
+        board.claim(RestTickets.idFor("t-3"), SPIRIT, 100);
+        board.submit(new BoardTicket(
+                "graph:event:hungry:eat@" + SPIRIT,
+                BoardCase.EAT_TO_FULL,
+                Optional.of(SPIRIT),
+                100,
+                0,
+                1,
+                "graph:event:hungry:eat",
+                List.of(),
+                Map.of()));
+        board.claim("graph:event:hungry:eat@" + SPIRIT, SPIRIT, 100);
+
+        assertTrue(
+                DispatchRestHold.held(board, SPIRIT),
+                "Дух с закреплённым rest-тикетом виден сторожам сброса: смена сборки и снятие заданий "
+                        + "не отменят его задачу стратега"
+                        + " Иначе тест held_RestAssigned_TrueOnlyForRest перестанет ловить эту поломку. "
+                        + "При смене held_RestAssigned_TrueOnlyForRest проверь это утверждение.");
+        board.cancel(RestTickets.idFor("t-3"));
+        assertTrue(
+                !DispatchRestHold.held(board, SPIRIT),
+                "После снятия rest-тикета сторож отпускает духа: сброс сборки снова может отменить "
+                        + "его обычный забег"
+                        + " Иначе тест held_RestAssigned_TrueOnlyForRest перестанет ловить эту поломку. "
+                        + "При смене held_RestAssigned_TrueOnlyForRest проверь это утверждение.");
+    }
 }

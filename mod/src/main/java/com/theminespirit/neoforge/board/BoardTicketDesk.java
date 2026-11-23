@@ -5,6 +5,7 @@ import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BuildProgressSnapshots;
+import com.theminespirit.core.board.DispatchRestHold;
 import com.theminespirit.core.board.TicketRun;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.engine.RunStatus;
@@ -57,6 +58,13 @@ final class BoardTicketDesk {
             if (!(level.getEntity(holder.getKey()) instanceof SpiritEntity spirit)) {
                 continue;
             }
+            if (DispatchRestHold.held(board, holder.getKey())) {
+                LOGGER.info(
+                        "[board] задание {} снято с доски, но духа {} не трогаем: он выполняет задачу стратега",
+                        ticketId,
+                        spirit.displayName());
+                continue;
+            }
             if (!ownsAny(holder.getValue(), spirit)) {
                 LOGGER.info(
                         "[board] задание {} снято с доски, но духа {} не трогаем: он выполняет другую задачу",
@@ -86,6 +94,9 @@ final class BoardTicketDesk {
         }
         for (SpiritEntity spirit : spirits) {
             String ticket = orphans.remove(spirit.getUUID());
+            if (DispatchRestHold.held(board, spirit.getUUID())) {
+                continue;
+            }
             boolean holdsTicket = !board.assignedTo(spirit.getUUID()).isEmpty();
             if (ticket == null || spirit.isRemoved() || holdsTicket) {
                 continue;
