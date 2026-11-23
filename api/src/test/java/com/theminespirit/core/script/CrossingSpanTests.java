@@ -61,4 +61,20 @@ class CrossingSpanTests {
                 "Глубина заплыва — максимум по линии: по ней выбирается плавание вместо обхода"
                         + " Иначе тест span_DeeperColumn_ReportsMaxDepth перестанет ловить эту поломку. При смене span_DeeperColumn_ReportsMaxDepth проверь это утверждение.");
     }
+
+    @Test
+    void span_WaterFromFirstCell_KeepsEntryWithoutShore() {
+        CrossingSpan span =
+                CrossingSpan.of(new BlockCoord(2, 62, 0), new BlockCoord(6, 62, 0), WATER::contains, cell -> 4);
+
+        assertNull(
+                span.dry(),
+                "Если дух уже стоит у кромки и линия начинается с воды, сухого берега входа нет: скрипт шагает в воду с места"
+                        + " Иначе тест span_WaterFromFirstCell_KeepsEntryWithoutShore перестанет ловить эту поломку. При смене span_WaterFromFirstCell_KeepsEntryWithoutShore проверь это утверждение.");
+        assertEquals(
+                new BlockCoord(2, 62, 0),
+                span.wet(),
+                "Первая клетка воды запоминается и без сухого берега: по ней дух шагает в заплыв"
+                        + " Иначе тест span_WaterFromFirstCell_KeepsEntryWithoutShore перестанет ловить эту поломку. При смене span_WaterFromFirstCell_KeepsEntryWithoutShore проверь это утверждение.");
+    }
 }

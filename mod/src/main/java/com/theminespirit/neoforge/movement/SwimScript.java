@@ -99,11 +99,11 @@ public final class SwimScript implements ScriptInstance {
     private ScriptStatus walkToWater() {
         @Nullable BlockCoord entryDry = dry;
         @Nullable BlockCoord entryWet = wet;
-        if (entryDry == null || entryWet == null) {
+        if (entryWet == null) {
             return walkAshore();
         }
-        Vec3 shore = center(entryDry);
-        if (spirit.position().distanceTo(shore) > ARRIVAL + 0.75) {
+        if (entryDry != null && spirit.position().distanceTo(center(entryDry)) > ARRIVAL + 0.75) {
+            Vec3 shore = center(entryDry);
             if (!approach.isActive()) {
                 approach.begin(shore, ARRIVAL, PathMode.SWIM);
             }
