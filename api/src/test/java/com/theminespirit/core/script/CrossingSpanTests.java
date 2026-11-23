@@ -120,16 +120,4 @@ class CrossingSpanTests {
                 "Цель ближе воды — дух уже переплыл и идёт по дальнему берегу, а не возвращается в воду"
                         + " Иначе тест enterWater_TargetFartherThanWater_True перестанет ловить эту поломку. При смене enterWater_TargetFartherThanWater_True проверь это утверждение.");
     }
-
-    @Test
-    void withinEntry_NearWater_True() {
-        assertTrue(
-                CrossingSpan.withinEntry(new BlockCoord(0, 62, 0), new BlockCoord(4, 62, 0), 6.0),
-                "Вода в пределах допуска — дух шагает в неё напрямую, когда граф не довёл до кромки"
-                        + " Иначе тест withinEntry_NearWater_True перестанет ловить эту поломку. При смене withinEntry_NearWater_True проверь это утверждение.");
-        assertTrue(
-                !CrossingSpan.withinEntry(new BlockCoord(0, 62, 0), new BlockCoord(9, 62, 0), 6.0),
-                "Вода дальше допуска — прямой шаг не делается, чтобы не тащить духа через рельеф"
-                        + " Иначе тест withinEntry_NearWater_True перестанет ловить эту поломку. При смене withinEntry_NearWater_True проверь это утверждение.");
-    }
 }

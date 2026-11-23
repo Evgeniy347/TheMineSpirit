@@ -27,14 +27,6 @@ public record CrossingSpan(
         return distanceSquared(from, wet) < distanceSquared(from, target);
     }
 
-    public static boolean withinEntry(BlockCoord from, BlockCoord wet, double blocks) {
-        if (blocks < 0) {
-            throw new IllegalArgumentException(
-                    "Допуск " + blocks + " отрицателен: расстояние до воды не бывает меньше нуля");
-        }
-        return distanceSquared(from, wet) <= blocks * blocks;
-    }
-
     private static double distanceSquared(BlockCoord a, BlockCoord b) {
         double dx = a.x() - b.x();
         double dy = a.y() - b.y();

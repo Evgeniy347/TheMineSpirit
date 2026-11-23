@@ -16,8 +16,7 @@ public final class SwimScript implements ScriptInstance {
     private static final int SURFACE_AIR_THRESHOLD = 120;
     private static final double SWIM_SPEED = 1.0;
     private static final double ARRIVAL = CatalogLimits.NAV_ARRIVAL_TOLERANCE;
-    private static final double ENTRY_REACH = 6.0;
-    private static final int FORCE_TICKS = 240;
+    private static final int FORCE_TICKS = 600;
 
     private final SpiritEntity spirit;
     private final Vec3 target;
@@ -111,7 +110,7 @@ public final class SwimScript implements ScriptInstance {
             return switch (approach.tick()) {
                 case ARRIVED, MOVING -> ScriptStatus.RUNNING;
                 case TIMEOUT, STUCK -> {
-                    if (CrossingSpan.withinEntry(current(), wet, ENTRY_REACH) && forced++ < FORCE_TICKS) {
+                    if (forced++ < FORCE_TICKS) {
                         approach.cancel();
                         Vec3 water = center(wet);
                         spirit.getMoveControl().setWantedPosition(water.x, water.y, water.z, SWIM_SPEED);
