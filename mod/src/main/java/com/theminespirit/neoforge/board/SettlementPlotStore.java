@@ -224,8 +224,8 @@ public final class SettlementPlotStore extends SavedData {
         }
         if (tag.contains(TOWN)) {
             try {
-                store.town = TownPlanCodec.decode(tag.getString(TOWN));
-            } catch (IllegalArgumentException broken) {
+                store.town = TownPlanCodec.decodePacked(tag.getByteArray(TOWN));
+            } catch (IllegalArgumentException | IllegalStateException broken) {
                 LOGGER.error(
                         "[plot] сохранённый план поселения не читается, план будет размечен заново: {}",
                         broken.getMessage());
@@ -259,7 +259,7 @@ public final class SettlementPlotStore extends SavedData {
         }
         TownPlan plan = town;
         if (plan != null) {
-            tag.putString(TOWN, TownPlanCodec.encode(plan));
+            tag.putByteArray(TOWN, TownPlanCodec.encodePacked(plan));
         }
         return tag;
     }

@@ -1,6 +1,10 @@
 package com.theminespirit.core.town;
 
 import com.theminespirit.core.observation.BlockCoord;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -8,6 +12,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 public final class TownPlanCodec {
     private static final String FIELD = "|";
@@ -96,6 +102,39 @@ public final class TownPlanCodec {
                 fence,
                 words(need(single, "unplaced")),
                 paths);
+    }
+
+    public static byte[] encodePacked(TownPlan plan) {
+        return gzip(encode(plan));
+    }
+
+    public static TownPlan decodePacked(byte[] packed) {
+        Objects.requireNonNull(packed, "Сжатый план не может быть null: читать нечего");
+        if (packed.length == 0) {
+            throw broken("сжатый план пуст");
+        }
+        return decode(ungzip(packed));
+    }
+
+    private static byte[] gzip(String text) {
+        try {
+            ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+            try (GZIPOutputStream out = new GZIPOutputStream(bytes)) {
+                out.write(text.getBytes(StandardCharsets.UTF_8));
+            }
+            return bytes.toByteArray();
+        } catch (IOException error) {
+            throw new IllegalStateException(
+                    "План поселения не сжат для сохранения в мире: " + error.getMessage(), error);
+        }
+    }
+
+    private static String ungzip(byte[] packed) {
+        try (GZIPInputStream in = new GZIPInputStream(new ByteArrayInputStream(packed))) {
+            return new String(in.readAllBytes(), StandardCharsets.UTF_8);
+        } catch (IOException error) {
+            throw new IllegalStateException("Сжатый план поселения не распакован: " + error.getMessage(), error);
+        }
     }
 
     private static PathLine path(String value) {
