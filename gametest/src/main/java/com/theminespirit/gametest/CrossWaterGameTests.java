@@ -20,7 +20,8 @@ final class CrossWaterGameTests {
     private static final int ISLAND_X = 4;
     private static final int POND_MIN_Z = -2;
     private static final int POND_MAX_Z = 10;
-    private static final BlockPos TARGET = new BlockPos(7, 1, 1);
+    private static final int BANK_MAX_X = 8;
+    private static final BlockPos TARGET = new BlockPos(7, 2, 1);
 
     private CrossWaterGameTests() {}
 
@@ -32,6 +33,11 @@ final class CrossWaterGameTests {
                 helper.setBlock(new BlockPos(x, -2, z), Blocks.STONE);
                 helper.setBlock(new BlockPos(x, -1, z), island ? Blocks.SAND : Blocks.WATER);
                 helper.setBlock(new BlockPos(x, 0, z), island ? Blocks.SAND : Blocks.WATER);
+            }
+        }
+        for (int x = WATER_MAX_X + 1; x <= BANK_MAX_X; x++) {
+            for (int z = POND_MIN_Z; z <= POND_MAX_Z; z++) {
+                helper.setBlock(new BlockPos(x, 1, z), Blocks.GRASS_BLOCK);
             }
         }
         SpiritEntity spirit = prepare(helper);

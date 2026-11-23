@@ -9,12 +9,15 @@ import com.theminespirit.core.script.api.CrossingSpan;
 import com.theminespirit.neoforge.Approach;
 import com.theminespirit.neoforge.PathMode;
 import com.theminespirit.neoforge.SpiritEntity;
+import net.minecraft.core.BlockPos;
+import net.minecraft.tags.FluidTags;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
 public final class SwimScript implements ScriptInstance {
     private static final int SURFACE_AIR_THRESHOLD = 120;
     private static final double SURFACE_PUSH = 0.12;
+    private static final double EXIT_PUSH = 0.2;
     private static final double SWIM_SPEED = 1.0;
     private static final double ARRIVAL = CatalogLimits.NAV_ARRIVAL_TOLERANCE;
     private static final int FORCE_TICKS = 600;
@@ -90,14 +93,26 @@ public final class SwimScript implements ScriptInstance {
     }
 
     private ScriptStatus swimTowards() {
-        if (spirit.position().distanceTo(target) <= ARRIVAL) {
+        double distance = spirit.position().distanceTo(target);
+        if (distance <= ARRIVAL || (distance <= ARRIVAL * 2 && spirit.horizontalCollision && !targetWater())) {
             approach.cancel();
             outcome = ScriptStatus.SUCCEEDED;
             return outcome;
         }
         spirit.getNavigation().stop();
         spirit.getMoveControl().setWantedPosition(target.x, target.y, target.z, SWIM_SPEED);
+        if (spirit.horizontalCollision) {
+            spirit.getJumpControl().jump();
+            Vec3 motion = spirit.getDeltaMovement();
+            spirit.setDeltaMovement(motion.x, Math.max(motion.y, EXIT_PUSH), motion.z);
+        }
         return ScriptStatus.RUNNING;
+    }
+
+    private boolean targetWater() {
+        return spirit.level()
+                .getFluidState(BlockPos.containing(target.x, target.y, target.z))
+                .is(FluidTags.WATER);
     }
 
     private ScriptStatus walkToWater() {
