@@ -57,6 +57,7 @@ public final class TownEditService {
                 .put("width", plan.region().width())
                 .put("depth", plan.region().depth())
                 .put("area", plan.area());
+        TownEditCheck.runs(region.putArray("cells"), plan.region());
         root.put("stage", SettlementStageService.of(level).view().stage());
         ArrayNode plots = root.putArray("plots");
         for (Placement place : plan.placements()) {
@@ -241,6 +242,7 @@ public final class TownEditService {
                 .put("minZ", mask.minZ())
                 .put("width", mask.width())
                 .put("depth", mask.depth());
+        TownEditCheck.runs(street.putArray("cells"), mask);
     }
 
     private static int stageOf(String id) {
