@@ -24,6 +24,7 @@ public final class SwimScript implements ScriptInstance {
     private final @Nullable BlockCoord dry;
     private final @Nullable BlockCoord wet;
     private boolean zoneChecked;
+    private boolean entered;
     private int forced;
     private ScriptStatus outcome = ScriptStatus.RUNNING;
     private String failureReason;
@@ -63,9 +64,10 @@ public final class SwimScript implements ScriptInstance {
         }
         surfaceForAir();
         if (spirit.isInWater()) {
+            entered = true;
             return swimTowards();
         }
-        if (wet != null && CrossingSpan.enterWater(current(), wet, goalCell())) {
+        if (!entered && wet != null) {
             return walkToWater();
         }
         return walkAshore();
@@ -131,15 +133,6 @@ public final class SwimScript implements ScriptInstance {
         return new Vec3(cell.x() + 0.5, cell.y(), cell.z() + 0.5);
     }
 
-    private BlockCoord goalCell() {
-        return new BlockCoord((int) Math.floor(target.x), (int) Math.floor(target.y), (int) Math.floor(target.z));
-    }
-
-    private BlockCoord current() {
-        return new BlockCoord(
-                (int) Math.floor(spirit.getX()), (int) Math.floor(spirit.getY()), (int) Math.floor(spirit.getZ()));
-    }
-
     private ScriptStatus walkAshore() {
         if (!approach.isActive()) {
             approach.begin(target, ARRIVAL, PathMode.SWIM);
@@ -150,12 +143,15 @@ public final class SwimScript implements ScriptInstance {
                 yield outcome;
             }
             case MOVING -> ScriptStatus.RUNNING;
-            case TIMEOUT ->
-                fail("не доплыл до (x=" + target.x + ", y=" + target.y + ", z=" + target.z + ") за "
-                        + approach.timeoutTicks() + " тиков");
-            case STUCK ->
-                fail("не доплыл до (x=" + target.x + ", y=" + target.y + ", z=" + target.z + "): путь "
+            case TIMEOUT, STUCK -> {
+                if (forced++ < FORCE_TICKS) {
+                    approach.cancel();
+                    spirit.getMoveControl().setWantedPosition(target.x, target.y, target.z, SWIM_SPEED);
+                    yield ScriptStatus.RUNNING;
+                }
+                yield fail("не доплыл до (x=" + target.x + ", y=" + target.y + ", z=" + target.z + "): путь "
                         + (approach.refusal() == null ? "перекрыт" : approach.refusal()));
+            }
         };
     }
 

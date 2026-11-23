@@ -23,17 +23,6 @@ public record CrossingSpan(
         return width > 0 && wet != null;
     }
 
-    public static boolean enterWater(BlockCoord from, BlockCoord wet, BlockCoord target) {
-        return distanceSquared(from, wet) < distanceSquared(from, target);
-    }
-
-    private static double distanceSquared(BlockCoord a, BlockCoord b) {
-        double dx = a.x() - b.x();
-        double dy = a.y() - b.y();
-        double dz = a.z() - b.z();
-        return dx * dx + dy * dy + dz * dz;
-    }
-
     public static CrossingSpan of(
             BlockCoord from, BlockCoord to, Predicate<BlockCoord> water, ToIntFunction<BlockCoord> depth) {
         Objects.requireNonNull(water, "Признак воды не может быть null: без него линия не читается");

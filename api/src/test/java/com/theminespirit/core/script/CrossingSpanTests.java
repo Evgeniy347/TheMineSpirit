@@ -108,16 +108,4 @@ class CrossingSpanTests {
                 "Глубина считается по клетке поверхности: по ней выбирается заплыв"
                         + " Иначе тест surface_WaterBelowWalkingLine_FindsCrossing перестанет ловить эту поломку. При смене surface_WaterBelowWalkingLine_FindsCrossing проверь это утверждение.");
     }
-
-    @Test
-    void enterWater_TargetFartherThanWater_True() {
-        assertTrue(
-                CrossingSpan.enterWater(new BlockCoord(0, 62, 0), new BlockCoord(3, 62, 0), new BlockCoord(9, 62, 0)),
-                "Вода ближе цели — дух ещё на своём берегу и должен шагать в воду"
-                        + " Иначе тест enterWater_TargetFartherThanWater_True перестанет ловить эту поломку. При смене enterWater_TargetFartherThanWater_True проверь это утверждение.");
-        assertTrue(
-                !CrossingSpan.enterWater(new BlockCoord(8, 62, 0), new BlockCoord(3, 62, 0), new BlockCoord(9, 62, 0)),
-                "Цель ближе воды — дух уже переплыл и идёт по дальнему берегу, а не возвращается в воду"
-                        + " Иначе тест enterWater_TargetFartherThanWater_True перестанет ловить эту поломку. При смене enterWater_TargetFartherThanWater_True проверь это утверждение.");
-    }
 }
