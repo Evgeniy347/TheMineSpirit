@@ -35,6 +35,12 @@ final class CrossWaterGameTests {
             }
         }
         SpiritEntity spirit = prepare(helper);
+        double surfaceY = helper.absolutePos(new BlockPos(0, 1, 0)).getY();
+        helper.onEachTick(() -> {
+            if (spirit.isInWater() && spirit.getY() < surfaceY - 1.5) {
+                helper.fail("дух тонет ниже зеркала пруда: y=" + spirit.getY());
+            }
+        });
         BlockPos absolute = helper.absolutePos(TARGET);
         TaskNode plan = PlanParser.parse(
                 """

@@ -14,6 +14,7 @@ import org.jspecify.annotations.Nullable;
 
 public final class SwimScript implements ScriptInstance {
     private static final int SURFACE_AIR_THRESHOLD = 120;
+    private static final double SURFACE_PUSH = 0.12;
     private static final double SWIM_SPEED = 1.0;
     private static final double ARRIVAL = CatalogLimits.NAV_ARRIVAL_TOLERANCE;
     private static final int FORCE_TICKS = 600;
@@ -164,6 +165,10 @@ public final class SwimScript implements ScriptInstance {
                 || spirit.isUnderWater()
                 || (spirit.isInWater() && spirit.getAirSupply() < SURFACE_AIR_THRESHOLD)) {
             spirit.getJumpControl().jump();
+        }
+        if (spirit.isUnderWater()) {
+            Vec3 motion = spirit.getDeltaMovement();
+            spirit.setDeltaMovement(motion.x, Math.max(motion.y, SURFACE_PUSH), motion.z);
         }
     }
 
