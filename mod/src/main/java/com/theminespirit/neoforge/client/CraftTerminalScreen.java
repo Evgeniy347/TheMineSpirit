@@ -296,11 +296,12 @@ public final class CraftTerminalScreen extends AbstractContainerScreen<CraftTerm
 
     @Override
     public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        ShellPainter.background(graphics, width, height);
+        renderBg(graphics, partialTick, mouseX, mouseY);
     }
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        ShellPainter.background(graphics, width, height);
         super.render(graphics, mouseX, mouseY, partialTick);
         ShellPainter.titles(graphics, font, title, Component.translatable(KEY + "subtitle"));
         ShellPainter.footer(

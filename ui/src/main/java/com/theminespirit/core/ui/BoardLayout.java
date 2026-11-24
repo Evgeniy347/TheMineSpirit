@@ -18,6 +18,15 @@ public final class BoardLayout {
     public static final int TILE_HEIGHT = 54;
     public static final int TILE_GAP = 4;
     public static final int SCROLLBAR_WIDTH = 3;
+    public static final int MATERIAL_ICON = 16;
+
+    public static int materialChipWidth(int labelWidth) {
+        if (labelWidth < 0) {
+            throw new IllegalArgumentException(
+                    "Ширина подписи " + labelWidth + " отрицательна: чип материала не бывает уже значка");
+        }
+        return MATERIAL_ICON + 7 + labelWidth;
+    }
 
     private final int screenWidth;
     private final BoardLayout.Rect toolbar;

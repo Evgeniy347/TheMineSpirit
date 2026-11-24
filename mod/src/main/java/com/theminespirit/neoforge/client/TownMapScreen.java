@@ -160,15 +160,26 @@ public final class TownMapScreen extends Screen {
         if (showMarkers) {
             shapes.addAll(MapMarkers.paint(shown.markers(), window, hoveredMarker, metrics, showLabels));
         }
+        MapPaint.@Nullable Raster mapRaster = null;
         for (MapPaint.Shape shape : shapes) {
             switch (shape) {
                 case MapPaint.Fill fill -> graphics.fill(fill.x1(), fill.y1(), fill.x2(), fill.y2(), fill.color());
                 case MapPaint.Text text -> graphics.drawString(font, text.text(), text.x(), text.y(), text.color());
-                case MapPaint.Raster raster -> drawTerrain(graphics, raster, window);
+                case MapPaint.Raster raster -> {
+                    drawTerrain(graphics, raster, window);
+                    mapRaster = raster;
+                }
             }
         }
-        drawCompass(graphics, window);
-        drawRulerAndCursor(graphics, window, mouseX, mouseY);
+        BoardLayout.Rect mapRect = mapRaster == null
+                ? new BoardLayout.Rect(window.left(), window.top(), window.width(), window.height())
+                : new BoardLayout.Rect(
+                        mapRaster.x1(),
+                        mapRaster.y1(),
+                        mapRaster.x2() - mapRaster.x1(),
+                        mapRaster.y2() - mapRaster.y1());
+        drawCompass(graphics, mapRect);
+        drawRulerAndCursor(graphics, window, mapRect, mouseX, mouseY);
         drawDock(graphics);
         if (hoveredMarker.isPresent()) {
             graphics.renderComponentTooltip(font, hint(MapHint.of(hoveredMarker.orElseThrow())), mouseX, mouseY);
@@ -233,23 +244,24 @@ public final class TownMapScreen extends Screen {
                 .scale();
     }
 
-    private void drawCompass(GuiGraphics graphics, MapViewport window) {
-        int x = window.left() + 16;
-        int y = window.top() + 10;
+    private void drawCompass(GuiGraphics graphics, BoardLayout.Rect map) {
+        int x = map.x() + 16;
+        int y = map.y() + 10;
         graphics.drawString(font, "N", x - 3, y, TEXT, false);
         graphics.fill(x, y + 10, x + 1, y + 24, TEXT);
         graphics.fill(x - 3, y + 10, x + 4, y + 12, TEXT);
     }
 
-    private void drawRulerAndCursor(GuiGraphics graphics, MapViewport window, int mouseX, int mouseY) {
+    private void drawRulerAndCursor(
+            GuiGraphics graphics, MapViewport window, BoardLayout.Rect map, int mouseX, int mouseY) {
         int length = (int) Math.round(20 * window.scale());
-        int x = window.left() + 8;
-        int y = window.top() + window.height() - 14;
-        graphics.fill(x, y, x + Math.min(length, window.width() - 60), y + 2, TEXT);
+        int x = map.x() + 8;
+        int y = map.bottom() - 14;
+        graphics.fill(x, y, x + Math.min(length, map.width() - 60), y + 2, TEXT);
         graphics.drawString(
                 font,
                 Component.translatable(KEY + "ruler").getString(),
-                x + Math.min(length, window.width() - 60) + 4,
+                x + Math.min(length, map.width() - 60) + 4,
                 y - 4,
                 MUTED,
                 false);

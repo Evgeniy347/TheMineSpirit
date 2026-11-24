@@ -265,13 +265,21 @@ public final class SettlementTreeScreen extends Screen {
             int color = SettlementTreeView.stateColor(selected.state());
             graphics.fill(x, y + 3, x + 5, y + 8, color);
             String state = SettlementTreeView.stateText(selected).getString();
-            graphics.drawString(
-                    font, TextClip.text(font, Component.literal(state), width - 50), x + 9, y, color, false);
             String level = selected.level() > 0
                     ? Component.translatable(KEY + "level.short", selected.level())
                             .getString()
                     : Component.translatable(KEY + "gate.short").getString();
-            graphics.drawString(font, level, x + width - font.width(level), y, MUTED, false);
+            int levelWidth = font.width(level);
+            int stateWidth = width - 9 - levelWidth - 6;
+            if (stateWidth < 40) {
+                levelWidth = 0;
+                stateWidth = width - 9;
+            }
+            graphics.drawString(
+                    font, TextClip.text(font, Component.literal(state), stateWidth), x + 9, y, color, false);
+            if (levelWidth > 0) {
+                graphics.drawString(font, level, x + width - levelWidth, y, MUTED, false);
+            }
             y += 14;
             graphics.fill(x, y, x + width, y + 4, 0xFF0C0E11);
             int filled = Math.min(width - 2, (width - 2) * selected.percent() / 100);

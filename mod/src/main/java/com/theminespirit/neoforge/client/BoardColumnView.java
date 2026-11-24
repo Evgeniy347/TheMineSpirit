@@ -90,7 +90,7 @@ final class BoardColumnView {
                         && mouseY < Math.min(y + base.height(), list.bottom());
                 BoardTile tile = tiles.get(j);
                 BoardLayout.Rect row = new BoardLayout.Rect(base.x(), y, base.width(), base.height());
-                hovered = BoardTileView.render(
+                BoardTileView.Hover tileHover = BoardTileView.render(
                         graphics,
                         font,
                         tile,
@@ -99,6 +99,9 @@ final class BoardColumnView {
                         tile.id().equals(selectedId),
                         new BoardTileView.Cursor(mouseX, mouseY),
                         new BoardTileView.Context(context.waitReasons(), context.tilesById()));
+                if (tileHover != null) {
+                    hovered = tileHover;
+                }
             }
             graphics.disableScissor();
             if (content > list.height()) {

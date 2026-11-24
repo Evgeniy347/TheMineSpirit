@@ -21,6 +21,7 @@ import org.jspecify.annotations.Nullable;
 
 final class BoardTileView {
     static final int TEXT_PAD = 9;
+    private static final int MATERIAL_Y = 24;
     private static final String KEY = ModIdentity.MOD_ID + ".board.";
     private static final int TEXT_COLOR = 0xFFE8ECF1;
     private static final int MUTED_COLOR = 0xFF98A0AB;
@@ -113,19 +114,27 @@ final class BoardTileView {
             ItemStack stack = stack(material.item());
             boolean bad = BoardMaterials.shortage(material) || material.kind() == BoardMaterials.Kind.MISSING;
             String label = label(material);
-            int chipWidthNow = 13 + font.width(label) + 6;
+            int chipWidthNow = BoardLayout.materialChipWidth(font.width(label));
             if (materialX + chipWidthNow > x + width - 6) {
                 break;
             }
-            graphics.fill(materialX, y + 26, materialX + chipWidthNow, y + 38, bad ? CHIP_BAD : CHIP_BG);
+            graphics.fill(
+                    materialX, y + MATERIAL_Y, materialX + chipWidthNow, y + MATERIAL_Y + 16, bad ? CHIP_BAD : CHIP_BG);
             if (stack != null) {
-                graphics.renderItem(stack, materialX + 1, y + 26);
+                graphics.renderItem(stack, materialX + 1, y + MATERIAL_Y);
             }
-            graphics.drawString(font, label, materialX + 14, y + 28, bad ? 0xFFFF9C9C : MUTED_COLOR, false);
+            graphics.drawString(
+                    font,
+                    label,
+                    materialX + BoardLayout.MATERIAL_ICON + 3,
+                    y + MATERIAL_Y + 4,
+                    bad ? 0xFFFF9C9C : MUTED_COLOR,
+                    false);
             materialX += chipWidthNow + 4;
         }
         if (materials.size() > shown && materialX + 12 < x + width - 6) {
-            graphics.drawString(font, "+" + (materials.size() - shown), materialX, y + 28, DIM_COLOR, false);
+            graphics.drawString(
+                    font, "+" + (materials.size() - shown), materialX, y + MATERIAL_Y + 4, DIM_COLOR, false);
         }
 
         String status = statusText(tile, context);
@@ -145,19 +154,19 @@ final class BoardTileView {
             graphics.drawString(font, shortTime, x + width - 6 - font.width(shortTime), y + 42, DIM_COLOR, false);
         }
 
-        BoardMaterials.Material hovered = hoveredMaterial(font, cursor, x, y, width, materials);
-        return new Hover(tile, hovered);
+        BoardMaterials.Material hovered = over ? hoveredMaterial(font, cursor, x, y, width, materials) : null;
+        return over ? new Hover(tile, hovered) : null;
     }
 
     private static BoardMaterials.@Nullable Material hoveredMaterial(
             Font font, Cursor cursor, int x, int y, int width, List<BoardMaterials.Material> materials) {
-        if (cursor.y() < y + 26 || cursor.y() >= y + 38) {
+        if (cursor.y() < y + MATERIAL_Y || cursor.y() >= y + MATERIAL_Y + 16) {
             return null;
         }
         int materialX = x + TEXT_PAD + 3;
         for (int i = 0; i < Math.min(2, materials.size()); i++) {
             String label = label(materials.get(i));
-            int chipWidth = 13 + font.width(label) + 6;
+            int chipWidth = BoardLayout.materialChipWidth(font.width(label));
             if (materialX + chipWidth > x + width - 6) {
                 return null;
             }

@@ -2,6 +2,7 @@ package com.theminespirit.core.ui;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.ui.api.BoardTileGroup;
@@ -134,6 +135,27 @@ class BoardLayoutTests {
         assertTrue(
                 layout.toolbar().bottom() <= layout.dock().y(),
                 "Механизм обязан вести себя так, как описано в проверке: иначе поломка пройдёт незамеченной и сломается экран поселения при следующей правке. При смене toolbar_AnyGui_SitsAboveWindow проверь это утверждение.");
+    }
+
+    @Test
+    void materialChip_AnyLabel_SitsAfterIcon() {
+        int label = 21;
+        int chip = BoardLayout.materialChipWidth(label);
+        assertTrue(
+                chip > BoardLayout.MATERIAL_ICON + label,
+                "Подпись чипа материала обязана начинаться за значком: иначе цифры «9/1» ложатся поверх иконки и чип нечитаем. При смене materialChip_AnyLabel_SitsAfterIcon проверь это утверждение.");
+        assertEquals(
+                BoardLayout.MATERIAL_ICON + 7 + label,
+                chip,
+                "Ширина чипа — значок, отступ и подпись: иначе клик по чипу и подсказка материала расходятся с рисунком. При смене materialChip_AnyLabel_SitsAfterIcon проверь это утверждение.");
+    }
+
+    @Test
+    void materialChip_NegativeWidth_IsRejected() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> BoardLayout.materialChipWidth(-1),
+                "Отрицательная ширина подписи обязана падать: иначе чип схлопнется в точку и клик уйдёт в соседний чип. При смене materialChip_NegativeWidth_IsRejected проверь это утверждение.");
     }
 
     @Test
