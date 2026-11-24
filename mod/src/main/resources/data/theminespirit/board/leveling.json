@@ -2,5 +2,7 @@
   "surplusPercent": 25,
   "batch": 128,
   "chestKeep": 64,
-  "tripMin": 16
+  "tripMin": 16,
+  "waterRadius": 128,
+  "waterMinBlocks": 10
 }

@@ -10,6 +10,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.levelgen.Heightmap;
 
 public final class GroundProbe {
@@ -32,17 +33,19 @@ public final class GroundProbe {
     }
 
     public static int waterTop(ServerLevel level, int x, int z, int fallback) {
-        int top = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+        LevelChunk chunk = level.getChunkSource().getChunkNow(x >> 4, z >> 4);
+        if (chunk == null) {
+            return fallback;
+        }
+        int top = chunk.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x & 15, z & 15);
         BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos(x, top, z);
         for (int step = 0; step < BoardConfig.current().facts().groundProbeDepth(); step++) {
             pos.move(0, -1, 0);
-            if (!level.isLoaded(pos)) {
-                return fallback;
+            BlockState state = chunk.getBlockState(pos);
+            if (!state.getFluidState().isEmpty()) {
+                return state.getFluidState().is(FluidTags.WATER) ? pos.getY() : fallback;
             }
-            if (!level.getFluidState(pos).isEmpty()) {
-                return level.getFluidState(pos).is(FluidTags.WATER) ? pos.getY() : fallback;
-            }
-            if (isGround(level.getBlockState(pos))) {
+            if (isGround(state)) {
                 return fallback;
             }
         }

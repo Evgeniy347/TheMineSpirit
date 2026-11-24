@@ -10,6 +10,7 @@ import com.theminespirit.core.rest.PolicyRoutes;
 import com.theminespirit.core.rest.QuarryRoutes;
 import com.theminespirit.core.rest.Route;
 import com.theminespirit.core.rest.Router;
+import com.theminespirit.core.rest.SettlementLevelRoutes;
 import com.theminespirit.core.rest.SettlementRoutes;
 import com.theminespirit.core.rest.SseSlots;
 import com.theminespirit.core.rest.TaskRoutes;
@@ -53,6 +54,10 @@ public final class RestRouter {
         SettlementRoutes settlementRoutes = new SettlementRoutes(
                 new SpiritSettlementGateway(gateway.server(), gateway.serverCall()), new IdempotencyCache());
         routes.addAll(settlementRoutes.routes());
+        routes.addAll(new SettlementLevelRoutes(
+                        new SpiritSettlementLevelGateway(gateway.server(), gateway.serverCall()),
+                        new IdempotencyCache())
+                .routes());
         TownRoutes townRoutes =
                 new TownRoutes(new SpiritTownGateway(gateway.server(), gateway.serverCall()), new IdempotencyCache());
         routes.addAll(townRoutes.routes());

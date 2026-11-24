@@ -1,10 +1,8 @@
 package com.theminespirit.core.board;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.ColumnMask;
@@ -18,7 +16,7 @@ import org.junit.jupiter.api.Test;
 
 class SettlementLevelTests {
     private static final BlockCoord CENTER = new BlockCoord(0, 64, 0);
-    private static final LevelingRules RULES = new LevelingRules(25, 128, 64, 32);
+    private static final LevelingRules RULES = new LevelingRules(25, 128, 64, 32, 128, 10);
 
     @Test
     void of_Plot_IsTheOneHeight() {
@@ -71,49 +69,6 @@ class SettlementLevelTests {
     }
 
     @Test
-    void remeasure_OldHeight_RecomputedOnceByTerrain() {
-        SettlementPlot stored = new SettlementPlot(new BlockCoord(10, 90, -10), 85, 95, 25, "spruce");
-
-        SettlementPlot moved = SettlementLevel.remeasure(
-                stored, ColumnMask.rect(-3, -3, 3, 3), (x, z) -> 64, Integer.MIN_VALUE, RULES);
-
-        assertEquals(
-                64,
-                SettlementLevel.of(moved),
-                "Старая высота 90 пересчитана по рельефу: медиана 64"
-                        + " Иначе тест remeasure_OldHeight_RecomputedOnceByTerrain перестанет ловить эту поломку. При смене remeasure_OldHeight_RecomputedOnceByTerrain проверь это утверждение.");
-        assertEquals(
-                10,
-                moved.anchor().x(),
-                "Миграция сохраняет центр участка: x не переносится"
-                        + " Иначе тест remeasure_OldHeight_RecomputedOnceByTerrain перестанет ловить эту поломку. При смене remeasure_OldHeight_RecomputedOnceByTerrain проверь это утверждение.");
-        assertEquals(
-                -10,
-                moved.anchor().z(),
-                "Миграция сохраняет центр участка: z не переносится"
-                        + " Иначе тест remeasure_OldHeight_RecomputedOnceByTerrain перестанет ловить эту поломку. При смене remeasure_OldHeight_RecomputedOnceByTerrain проверь это утверждение.");
-        assertEquals(
-                "spruce",
-                moved.wood(),
-                "Миграция сохраняет выбранную породу построек"
-                        + " Иначе тест remeasure_OldHeight_RecomputedOnceByTerrain перестанет ловить эту поломку. При смене remeasure_OldHeight_RecomputedOnceByTerrain проверь это утверждение.");
-    }
-
-    @Test
-    void remeasure_Water_LevelNotBelowWater() {
-        SettlementPlot stored = new SettlementPlot(new BlockCoord(0, 90, 0), 85, 95, 25, "oak");
-
-        SettlementPlot moved =
-                SettlementLevel.remeasure(stored, ColumnMask.rect(-1, -1, 1, 1), (x, z) -> 60, 70, RULES);
-
-        assertEquals(
-                70,
-                SettlementLevel.of(moved),
-                "Высота после миграции не опускается под воду: 70"
-                        + " Иначе тест remeasure_Water_LevelNotBelowWater перестанет ловить эту поломку. При смене remeasure_Water_LevelNotBelowWater проверь это утверждение.");
-    }
-
-    @Test
     void site_PlotWood_GoesIntoStageSaplings() {
         TownPlan plan = TownFixtures.flatPlan();
         SettlementPlot plot = new SettlementPlot(new BlockCoord(200, 70, -300), 65, 80, 100, "birch");
@@ -127,22 +82,6 @@ class SettlementLevelTests {
                 "Порода главного сада берётся из участка поселения: иначе план сажает oak при выбранной birch "
                         + "и посадка расходится с проверкой плана"
                         + " При смене site_PlotWood_GoesIntoStageSaplings проверь это утверждение.");
-    }
-
-    @Test
-    void marked_OnlyOwnRule_IsTrue() {
-        assertTrue(
-                SettlementLevel.marked(SettlementLevel.RULE),
-                "Отметка своего правила читается"
-                        + " Иначе тест marked_OnlyOwnRule_IsTrue перестанет ловить эту поломку. При смене marked_OnlyOwnRule_IsTrue проверь это утверждение.");
-        assertFalse(
-                SettlementLevel.marked(""),
-                "Старое сохранение без отметки обязано пересчитаться"
-                        + " Иначе тест marked_OnlyOwnRule_IsTrue перестанет ловить эту поломку. При смене marked_OnlyOwnRule_IsTrue проверь это утверждение.");
-        assertFalse(
-                SettlementLevel.marked("SettlementLevel.v0"),
-                "Чужая версия правила — не своя отметка"
-                        + " Иначе тест marked_OnlyOwnRule_IsTrue перестанет ловить эту поломку. При смене marked_OnlyOwnRule_IsTrue проверь это утверждение.");
     }
 
     @Test

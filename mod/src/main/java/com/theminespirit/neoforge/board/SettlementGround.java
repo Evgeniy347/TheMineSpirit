@@ -1,12 +1,15 @@
 package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
+import com.theminespirit.core.board.LevelingRules;
 import com.theminespirit.core.board.MineDescentBottom;
+import com.theminespirit.core.board.WaterLevel;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.town.ColumnMask;
 import com.theminespirit.core.town.PlotLeveling;
 import com.theminespirit.core.town.SiteLevels;
 import com.theminespirit.core.town.StageSite;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.IntBinaryOperator;
 import net.minecraft.server.level.ServerLevel;
 import org.slf4j.Logger;
@@ -25,15 +28,27 @@ public final class SettlementGround {
         return (x, z) -> GroundProbe.top(level, x, z, fallback);
     }
 
-    public static int waterAbove(ServerLevel level, ColumnMask area) {
-        int above = Integer.MIN_VALUE;
-        for (ColumnMask.Cell cell : area.cells()) {
-            int water = GroundProbe.waterTop(level, cell.x(), cell.z(), Integer.MIN_VALUE);
-            if (water != Integer.MIN_VALUE) {
-                above = Math.max(above, water + 1);
+    public record WaterScan(int blocks, int median, int floor) {
+        public boolean limited() {
+            return floor != Integer.MIN_VALUE;
+        }
+    }
+
+    public static WaterScan waterScan(ServerLevel level, BlockCoord base, LevelingRules rules) {
+        int radius = rules.waterRadius();
+        List<Integer> tops = new ArrayList<>();
+        for (int dz = -radius; dz <= radius; dz++) {
+            for (int dx = -radius; dx <= radius; dx++) {
+                int water = GroundProbe.waterTop(level, base.x() + dx, base.z() + dz, Integer.MIN_VALUE);
+                if (water != Integer.MIN_VALUE) {
+                    tops.add(water);
+                }
             }
         }
-        return above;
+        int[] levels = tops.stream().mapToInt(Integer::intValue).toArray();
+        return WaterLevel.of(levels, rules.waterMinBlocks())
+                .map(water -> new WaterScan(water.blocks(), water.median(), water.minSettlementLevel()))
+                .orElseGet(() -> new WaterScan(levels.length, Integer.MIN_VALUE, Integer.MIN_VALUE));
     }
 
     static PlotLeveling leveling(ServerLevel level, StageSite site) {

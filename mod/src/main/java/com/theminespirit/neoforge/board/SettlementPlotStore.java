@@ -31,7 +31,6 @@ public final class SettlementPlotStore extends SavedData {
     private static final String MAX = "Max";
     private static final String COLUMNS = "Columns";
     private static final String WOOD = "Wood";
-    private static final String LEVELED = "Leveled";
     private static final String LEVEL_RULE = "LevelRule";
     private static final String TOWN = "Town";
     private static final String BUILDING_WOOD = "BuildingWood";
@@ -47,7 +46,6 @@ public final class SettlementPlotStore extends SavedData {
     private @Nullable TownPlan town;
     private @Nullable BlockCoord home;
     private final Map<Integer, StageSite> sites = new HashMap<>();
-    private boolean leveled;
     private String levelRule = "";
     private BuildingWoods woods = BuildingWoods.NONE;
 
@@ -89,7 +87,6 @@ public final class SettlementPlotStore extends SavedData {
         plot = null;
         forgetHome();
         sites.clear();
-        leveled = false;
         levelRule = "";
         woods = BuildingWoods.NONE;
         setDirty();
@@ -140,13 +137,12 @@ public final class SettlementPlotStore extends SavedData {
         return Optional.of(cached);
     }
 
-    public void fix(SettlementPlot next) {
+    void fix(SettlementPlot next) {
         Objects.requireNonNull(next, "Участок не может быть null: фиксируется обмеренный участок");
         SettlementPlot before = plot;
         if (before == null
                 || before.anchor().x() != next.anchor().x()
                 || before.anchor().z() != next.anchor().z()) {
-            leveled = false;
             levelRule = "";
             woods = BuildingWoods.NONE;
         }
@@ -156,17 +152,16 @@ public final class SettlementPlotStore extends SavedData {
         setDirty();
     }
 
-    public boolean levelMarked() {
-        return SettlementLevel.marked(levelRule);
+    public String levelRule() {
+        return levelRule;
     }
 
     public void settle(SettlementPlot next) {
         fix(next);
         TownPlan plan = town;
-        if (levelMarked() || plan == null) {
-            return;
+        if (plan != null) {
+            town = plan.atLevel(SettlementLevel.of(next));
         }
-        town = plan.atLevel(SettlementLevel.of(next));
         levelRule = SettlementLevel.RULE;
         sites.clear();
         setDirty();
@@ -181,23 +176,11 @@ public final class SettlementPlotStore extends SavedData {
         setDirty();
     }
 
-    public boolean leveled() {
-        return leveled;
-    }
-
-    public void markLeveled() {
-        if (!leveled) {
-            leveled = true;
-            setDirty();
-        }
-    }
-
     public void clear() {
         plot = null;
         town = null;
         home = null;
         sites.clear();
-        leveled = false;
         levelRule = "";
         woods = BuildingWoods.NONE;
         setDirty();
@@ -205,7 +188,6 @@ public final class SettlementPlotStore extends SavedData {
 
     public static SettlementPlotStore load(CompoundTag tag, HolderLookup.Provider ignoredRegistries) {
         SettlementPlotStore store = new SettlementPlotStore();
-        store.leveled = tag.getBoolean(LEVELED);
         store.levelRule = tag.getString(LEVEL_RULE);
         if (tag.contains(HOME_X)) {
             store.home = new BlockCoord(tag.getInt(HOME_X), tag.getInt(HOME_Y), tag.getInt(HOME_Z));
@@ -237,7 +219,6 @@ public final class SettlementPlotStore extends SavedData {
     @Override
     public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
         SettlementPlot current = plot;
-        tag.putBoolean(LEVELED, leveled);
         tag.putString(LEVEL_RULE, levelRule);
         BlockCoord stand = home;
         if (stand != null) {

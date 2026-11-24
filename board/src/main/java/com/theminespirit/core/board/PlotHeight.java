@@ -13,13 +13,22 @@ public record PlotHeight(int level, int cut, int fill, int surplusPercent) {
     }
 
     public static PlotHeight choose(ColumnMask area, IntBinaryOperator feet, LevelingRules rules, int lowest) {
+        return choose(area, feet, rules, lowest, 0);
+    }
+
+    public static PlotHeight choose(
+            ColumnMask area, IntBinaryOperator feet, LevelingRules rules, int lowest, int fillStock) {
+        if (fillStock < 0) {
+            throw new IllegalArgumentException(
+                    "Запас земли " + fillStock + " отрицательный: бюджет подсыпки не может быть должником");
+        }
         int[] heights = heights(area, feet);
         int[] sorted = heights.clone();
         Arrays.sort(sorted);
         int bottom = Math.max(sorted[0], lowest);
         for (int level = sorted[sorted.length / 2]; level > bottom; level--) {
             PlotHeight candidate = measure(heights, level, rules);
-            if (rules.enough(candidate.cut(), candidate.fill())) {
+            if (rules.enough(candidate.cut(), candidate.fill(), fillStock)) {
                 return candidate;
             }
         }

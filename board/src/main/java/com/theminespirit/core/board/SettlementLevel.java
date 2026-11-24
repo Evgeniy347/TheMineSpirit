@@ -46,10 +46,6 @@ public final class SettlementLevel {
         return plot.anchor().y();
     }
 
-    public static boolean marked(String rule) {
-        return RULE.equals(rule);
-    }
-
     public static Optional<StageSite> site(TownPlan plan, int stage, int level) {
         Objects.requireNonNull(plan, "План не может быть null: места этапа берутся из него");
         return StageSites.find(plan, stage, level, TownRules.current(), orchardScheme());
@@ -75,23 +71,44 @@ public final class SettlementLevel {
         return area.isPresent() ? area : StageSites.levelArea(plan, FIRST_STAGE, rules);
     }
 
-    public static SettlementPlot remeasure(
-            SettlementPlot stored, ColumnMask area, IntBinaryOperator feet, int above, LevelingRules rules) {
-        Objects.requireNonNull(stored, "Сохранённый участок не может быть null: мигрирует записанная высота");
-        return survey(stored.anchor(), area, feet, stored.wood(), above, rules);
+    public static int choose(ColumnMask area, IntBinaryOperator feet, LevelingRules rules, int above) {
+        return choose(area, feet, rules, above, 0);
     }
 
-    public static int choose(ColumnMask area, IntBinaryOperator feet, LevelingRules rules, int above) {
+    public static int choose(ColumnMask area, IntBinaryOperator feet, LevelingRules rules, int above, int fillStock) {
+        return height(area, feet, rules, above, fillStock).level();
+    }
+
+    public static PlotHeight height(
+            ColumnMask area, IntBinaryOperator feet, LevelingRules rules, int above, int fillStock) {
         Objects.requireNonNull(area, "Площадки не могут быть null: высоту выбирают по ним");
         Objects.requireNonNull(feet, "Высоты колонок не могут быть null: без них высоту не выбрать");
         Objects.requireNonNull(rules, "Правила выравнивания не могут быть null: запас берётся из данных");
-        return PlotHeight.choose(area, feet, rules, Math.max(above, Integer.MIN_VALUE))
-                .level();
+        return PlotHeight.choose(area, feet, rules, Math.max(above, Integer.MIN_VALUE), fillStock);
     }
 
     public static SettlementPlot survey(
             BlockCoord center, ColumnMask area, IntBinaryOperator feet, String wood, int above, LevelingRules rules) {
-        int level = choose(area, feet, rules, above);
+        return survey(center, area, feet, wood, above, rules, 0);
+    }
+
+    public static SettlementPlot survey(
+            BlockCoord center,
+            ColumnMask area,
+            IntBinaryOperator feet,
+            String wood,
+            int above,
+            LevelingRules rules,
+            int fillStock) {
+        return plot(center, area, feet, wood, choose(area, feet, rules, above, fillStock));
+    }
+
+    public static SettlementPlot plot(
+            BlockCoord center, ColumnMask area, IntBinaryOperator feet, String wood, int level) {
+        Objects.requireNonNull(center, "Центр участка не может быть null: от него якорь плана");
+        Objects.requireNonNull(area, "Площадки не могут быть null: обмер идёт по ним");
+        Objects.requireNonNull(feet, "Высоты колонок не могут быть null: без них высота участка не считается");
+        Objects.requireNonNull(wood, "Порода не может быть null: план без неё не размечен");
         return SettlementPlot.survey(center, area, feet, wood, OptionalInt.of(level));
     }
 }

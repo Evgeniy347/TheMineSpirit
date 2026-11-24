@@ -35,7 +35,7 @@ public final class SettlementLevelScenesGameTests {
     private SettlementLevelScenesGameTests() {}
 
     @GameTest(template = "arena", batch = "scene_settlement_level_save", timeoutTicks = 40)
-    public static void settlementPlot_Settle_HeightCountedOnce(GameTestHelper helper) {
+    public static void settlementPlot_Settle_LevelAndHomeSaved(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         SettlementPlotStore store = SettlementPlotStore.get(helper.getLevel());
         store.clear();
@@ -44,33 +44,44 @@ public final class SettlementLevelScenesGameTests {
         int x = plan.anchor().x();
         int z = plan.anchor().z();
 
-        helper.assertFalse(store.levelMarked(), "Сохранение старого мира без отметки обязано пересчитать высоту");
+        helper.assertTrue(
+                store.plot().isEmpty(),
+                "Новый мир начинает без выбранного уровня: его задаёт только REST; иначе первый обмер снова "
+                        + "выберет высоту мимо решения владельца и поселение уйдёт вниз. При смене правила "
+                        + "выбора уровня проверь SettlementLevelService и StagePlotSurvey");
         store.settle(new SettlementPlot(new BlockCoord(x, 90, z), 88, 92, 9, "oak"));
 
-        helper.assertTrue(store.levelMarked(), "После обмера высота помечена правилом SettlementLevel");
         helper.assertTrue(
                 store.town().orElseThrow().anchor().y() == 90,
-                "Высота поселения попадает в план: второго источника (медианы домов) не остаётся");
+                "Уровень попадает в план: второго источника (медианы домов) не остаётся; иначе стройка "
+                        + "и аудит расходятся по высоте. При смене settle проверь SettlementPlotStore и план этапа");
         BlockCoord stand = new BlockCoord(x + 1, 90, z + 1);
         store.rememberHome(stand);
         helper.assertTrue(
                 stand.equals(store.home().orElse(null)),
-                "Домашняя стоянка запоминается в мире: цель дома не пересчитывается от текущих позиций духов");
+                "Домашняя стоянка запоминается в мире: цель дома не пересчитывается от текущих позиций духов, "
+                        + "иначе выданное задание остаётся со старой целью. При смене rememberHome проверь HomePoint");
         SettlementPlotStore restored = SettlementPlotStore.load(
                 store.save(new CompoundTag(), helper.getLevel().registryAccess()),
                 helper.getLevel().registryAccess());
         helper.assertTrue(
                 stand.equals(restored.home().orElse(null)),
-                "Домашняя стоянка переживает сохранение и рестарт: выданное задание не остаётся со старой целью");
+                "Домашняя стоянка переживает сохранение и рестарт: иначе после перезапуска выданное задание "
+                        + "ведёт духа к старой цели. При смене save/load SettlementPlotStore проверь home");
         store.settle(new SettlementPlot(new BlockCoord(x, 94, z), 92, 96, 9, "oak"));
         helper.assertTrue(
-                store.town().orElseThrow().anchor().y() == 90,
-                "Высота считается один раз: повторный обмер её не переносит");
+                store.town().orElseThrow().anchor().y() == 94,
+                "REST может сменить уровень повторно: план обязан следовать за участком, иначе снова "
+                        + "два источника высоты и стройка идёт не туда. При смене settle проверь TownPlan.atLevel");
         helper.assertTrue(
                 store.home().isEmpty(),
-                "Новая разметка участка сбрасывает запомненную стоянку: дом выбирается заново по новому миру");
+                "Новая разметка участка сбрасывает запомненную стоянку: дом выбирается заново по новому миру, "
+                        + "иначе дух держится за старую яму. При смене fix/settle проверь forgetHome");
         store.clear();
-        helper.assertFalse(store.levelMarked(), "Новый мир начинает без отметки высоты");
+        helper.assertTrue(
+                store.plot().isEmpty(),
+                "После очистки уровень снова не задан: выбирать его может только REST, иначе автообмер "
+                        + "вернёт снятую высоту. При смене clear проверь SettlementPlotStore и StagePlotSurvey");
         GameTestFixtures.finish(helper);
         helper.succeed();
     }

@@ -156,6 +156,31 @@ class SettlementLevelGuardTests {
     }
 
     @Test
+    void settlementLevel_SettleOutsideRest_IsReported() {
+        List<String> offenders = new ArrayList<>();
+        SourceFiles.allMain().forEach((path, text) -> {
+            String name = path.getFileName().toString();
+            String logical = path.toString().replace('\\', '/');
+            if (!logical.startsWith("com/theminespirit/neoforge/") || "SettlementLevelService.java".equals(name)) {
+                return;
+            }
+            String source = SourceFiles.withoutTextBlocks(text);
+            if (source.contains("SettlementPlotStore") && source.contains(".settle(")) {
+                offenders.add(name);
+            }
+        });
+
+        assertEquals(
+                List.of(),
+                offenders,
+                "Уровень поселения меняется только через REST: иначе автообмер или чужая подсистема снова "
+                        + "сдвинет высоту, и постройки разойдутся с планом. Цена: дома, забор и улицы встают на "
+                        + "разные y, аудит не закрывает этап. Как надо: SettlementLevelService.set по запросу "
+                        + "PUT /v1/settlement/level. При смене правила смены уровня проверь StagePlotSurvey и "
+                        + "SettlementPlotStore.");
+    }
+
+    @Test
     void fenceOrigins_DangerAndPortal_UseSettlementLevel() {
         List<String> offenders = new ArrayList<>();
         for (String file : List.of("neoforge/board/More4Post.java")) {
