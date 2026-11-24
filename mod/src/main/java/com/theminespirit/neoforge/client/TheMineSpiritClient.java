@@ -1,13 +1,16 @@
 package com.theminespirit.neoforge.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import com.mojang.logging.LogUtils;
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.neoforge.net.BoardViewChannel;
+import com.theminespirit.neoforge.net.ConstructionAuditChannel;
 import com.theminespirit.neoforge.net.MineMapChannel;
 import com.theminespirit.neoforge.net.SettlementTreeChannel;
 import com.theminespirit.neoforge.net.TownMapChannel;
 import com.theminespirit.neoforge.terminal.CraftTerminalChannel;
 import com.theminespirit.neoforge.terminal.TerminalMenus;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -23,6 +26,8 @@ import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import net.neoforged.neoforge.client.settings.KeyConflictContext;
 import net.neoforged.neoforge.client.settings.KeyModifier;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.network.PacketDistributor;
+import org.slf4j.Logger;
 
 @Mod(value = ModIdentity.MOD_ID, dist = Dist.CLIENT)
 public final class TheMineSpiritClient {
@@ -46,6 +51,11 @@ public final class TheMineSpiritClient {
             InputConstants.Type.KEYSYM,
             InputConstants.KEY_J,
             CATEGORY);
+    private static final Logger LOGGER = LogUtils.getLogger();
+    private static final int AUDIT_REFRESH_TICKS = 100;
+    private static int auditTicks;
+    private static int reportedDemolish = -1;
+    private static int reportedPlace = -1;
 
     public TheMineSpiritClient(IEventBus modBus) {
         modBus.addListener(TheMineSpiritClient::registerKeys);
@@ -63,6 +73,7 @@ public final class TheMineSpiritClient {
         NeoForge.EVENT_BUS.addListener(TheMineSpiritClient::onClientTick);
         NeoForge.EVENT_BUS.addListener(
                 (ClientPlayerNetworkEvent.LoggingOut ignoredEvent) -> applyConstructionAudit(Set.of(), Set.of()));
+        ConstructionAuditChannel.onClientReply(TheMineSpiritClient::onConstructionAudit);
         TownMapChannel.onClientReply(reply -> {
             if (Minecraft.getInstance().screen instanceof TownMapScreen screen) {
                 screen.show(reply);
@@ -122,10 +133,37 @@ public final class TheMineSpiritClient {
                 minecraft.setScreen(new BoardScreen());
             }
         }
+        requestAuditRefresh(minecraft);
     }
 
     public static void applyConstructionAudit(Set<BlockPos> wrong, Set<BlockPos> missing) {
         ConstructionHighlightManager.instance().updateData(wrong, missing);
+    }
+
+    private static void onConstructionAudit(ConstructionAuditChannel.Reply reply) {
+        applyConstructionAudit(new LinkedHashSet<>(reply.demolish()), new LinkedHashSet<>(reply.place()));
+        if (reply.demolish().size() != reportedDemolish || reply.place().size() != reportedPlace) {
+            reportedDemolish = reply.demolish().size();
+            reportedPlace = reply.place().size();
+            LOGGER.info("Подсветка строительства: пришло снести {}, поставить {}", reportedDemolish, reportedPlace);
+        }
+    }
+
+    private static void requestAuditRefresh(Minecraft minecraft) {
+        if (!ConstructionHighlightManager.instance().isEnabled() || minecraft.player == null) {
+            return;
+        }
+        auditTicks--;
+        if (auditTicks <= 0) {
+            requestConstructionAudit(minecraft);
+            auditTicks = AUDIT_REFRESH_TICKS;
+        }
+    }
+
+    private static void requestConstructionAudit(Minecraft minecraft) {
+        if (minecraft.player != null) {
+            PacketDistributor.sendToServer(new ConstructionAuditChannel.Request(minecraft.player.blockPosition()));
+        }
     }
 
     private static boolean controlHeld() {
@@ -135,6 +173,14 @@ public final class TheMineSpiritClient {
     private static void toggleConstructionHighlight(Minecraft minecraft) {
         ConstructionHighlightManager manager = ConstructionHighlightManager.instance();
         manager.toggle();
+        if (manager.isEnabled()) {
+            requestConstructionAudit(minecraft);
+            auditTicks = AUDIT_REFRESH_TICKS;
+        } else {
+            auditTicks = 0;
+            reportedDemolish = -1;
+            reportedPlace = -1;
+        }
         Component message = manager.isEnabled()
                 ? Component.translatable(
                         "theminespirit.highlight.on",

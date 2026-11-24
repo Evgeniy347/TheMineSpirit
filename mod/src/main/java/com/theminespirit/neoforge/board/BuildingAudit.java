@@ -136,6 +136,11 @@ final class BuildingAudit {
 
     static BuildingAuditInputs.Audit scheme(
             ServerLevel level, String scheme, GraphFacts.Position at, String wood, long now) {
+        return report(schemeReport(level, scheme, at, wood, now));
+    }
+
+    static RepairAudit.Report schemeReport(
+            ServerLevel level, String scheme, GraphFacts.Position at, String wood, long now) {
         bucket(level);
         String key = level.dimension().location() + "|" + scheme + "|" + at + "|" + wood;
         RepairAudit.Report report = SCHEMES.get(key);
@@ -149,7 +154,7 @@ final class BuildingAudit {
                     RepairData.loadDefault());
             SCHEMES.put(key, report);
         }
-        return report(report);
+        return report;
     }
 
     static BuildingAuditInputs.Audit report(RepairAudit.Report report) {
