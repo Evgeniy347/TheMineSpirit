@@ -248,4 +248,49 @@ class BoardJournalTests {
                 "Кириллица в id задания обязана переживать запись и чтение UTF-8"
                         + " Иначе тест last_Utf8Lines_StayReadable перестанет ловить эту поломку. При смене last_Utf8Lines_StayReadable проверь это утверждение.");
     }
+
+    @Test
+    void load_RetiredCaseLine_SkipsItAndKeepsNeighbours() throws IOException {
+        BoardJournal journal = new BoardJournal(log());
+        journal.enqueue(entry(BoardLog.Event.DONE, "pen", BoardCase.BUILD_PEN, 1));
+        journal.enqueue(entry(BoardLog.Event.FAILED, "undo:old", BoardCase.BUILD_PEN, 1));
+        journal.enqueue(entry(BoardLog.Event.DONE, "mine", BoardCase.BUILD_MINE, 1));
+        journal.flushAll();
+        List<String> lines = Files.readAllLines(log(), StandardCharsets.UTF_8);
+        lines.set(1, lines.get(1).replace("BUILD_PEN", "ACTIVITY_UNDO"));
+        Files.writeString(log(), String.join("\n", lines) + "\n", StandardCharsets.UTF_8);
+        BoardLedger ledger = new BoardLedger();
+
+        BoardJournal.LoadResult result = journal.load(ledger);
+
+        assertFalse(
+                result.failed(),
+                "Строка удалённого кейса не считается поломкой журнала: иначе старый файл валит доску "
+                        + "и на сервере нет ни доски, ни REST"
+                        + " Иначе тест load_RetiredCaseLine_SkipsItAndKeepsNeighbours перестанет ловить эту поломку. При смене load_RetiredCaseLine_SkipsItAndKeepsNeighbours проверь это утверждение.");
+        assertEquals(
+                2,
+                result.restored(),
+                "Соседние записи обязаны восстановиться, а строка удалённого кейса — пропуститься"
+                        + " Иначе тест load_RetiredCaseLine_SkipsItAndKeepsNeighbours перестанет ловить эту поломку. При смене load_RetiredCaseLine_SkipsItAndKeepsNeighbours проверь это утверждение.");
+    }
+
+    @Test
+    void last_RetiredCaseLine_SkipsIt() throws IOException {
+        BoardJournal journal = new BoardJournal(log());
+        journal.enqueue(entry(BoardLog.Event.DONE, "pen", BoardCase.BUILD_PEN, 1));
+        journal.enqueue(entry(BoardLog.Event.FAILED, "undo:old", BoardCase.BUILD_PEN, 1));
+        journal.flushAll();
+        List<String> lines = Files.readAllLines(log(), StandardCharsets.UTF_8);
+        lines.set(1, lines.get(1).replace("BUILD_PEN", "ACTIVITY_UNDO"));
+        Files.writeString(log(), String.join("\n", lines) + "\n", StandardCharsets.UTF_8);
+
+        List<BoardLogEntry> entries = journal.last(10);
+
+        assertEquals(
+                1,
+                entries.size(),
+                "Хвост журнала не отдаёт строки удалённых кейсов: клиент и REST знают только живые кейсы"
+                        + " Иначе тест last_RetiredCaseLine_SkipsIt перестанет ловить эту поломку. При смене last_RetiredCaseLine_SkipsIt проверь это утверждение.");
+    }
 }

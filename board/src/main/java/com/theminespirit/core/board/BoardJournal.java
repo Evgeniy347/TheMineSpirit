@@ -3,7 +3,6 @@ package com.theminespirit.core.board;
 import com.theminespirit.core.board.api.BoardCase;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -20,7 +19,6 @@ import org.jspecify.annotations.Nullable;
 
 public final class BoardJournal {
     public static final int FIND_LINES = 65_536;
-    private static final int TAIL_CHUNK = 64 * 1024;
     private static final int NEWER_SCAN_LINES = 4096;
 
     private final Path path;
@@ -101,7 +99,11 @@ public final class BoardJournal {
                     continue;
                 }
                 try {
-                    BoardLogEntry entry = BoardLog.parse(line, total);
+                    Optional<BoardLogEntry> compatible = BoardLog.parseCompatible(line, total);
+                    if (compatible.isEmpty()) {
+                        continue;
+                    }
+                    BoardLogEntry entry = compatible.get();
                     if (entry.event() == BoardLog.Event.DONE) {
                         ledger.complete(entry.boardCase(), entry.level());
                         if (entry.boardCase() == BoardCase.BUILD_PLACED) {
@@ -139,14 +141,18 @@ public final class BoardJournal {
         if (!Files.exists(path)) {
             return List.of();
         }
-        List<String> lines = tailLines(limit * 2);
+        List<String> lines = BoardJournalSearch.tailLines(path, limit * 2);
         List<BoardLogEntry> entries = new ArrayList<>(limit);
         for (int index = lines.size() - 1; index >= 0 && entries.size() < limit; index--) {
             String line = lines.get(index);
             if (line.isBlank()) {
                 continue;
             }
-            entries.add(BoardLog.parse(line, index + 1));
+            Optional<BoardLogEntry> parsed = BoardLog.parseCompatible(line, index + 1);
+            if (parsed.isEmpty()) {
+                continue;
+            }
+            entries.add(parsed.get());
         }
         return List.copyOf(entries);
     }
@@ -161,14 +167,18 @@ public final class BoardJournal {
         if (!Files.exists(path)) {
             return List.of();
         }
-        List<String> lines = tailLines(Math.min(NEWER_SCAN_LINES, Math.max(512, limit * 8)));
+        List<String> lines = BoardJournalSearch.tailLines(path, Math.min(NEWER_SCAN_LINES, Math.max(512, limit * 8)));
         List<BoardLogEntry> entries = new ArrayList<>(limit);
         for (int index = lines.size() - 1; index >= 0 && entries.size() < limit; index--) {
             String line = lines.get(index);
             if (line.isBlank()) {
                 continue;
             }
-            BoardLogEntry entry = BoardLog.parse(line, index + 1);
+            Optional<BoardLogEntry> parsed = BoardLog.parseCompatible(line, index + 1);
+            if (parsed.isEmpty()) {
+                continue;
+            }
+            BoardLogEntry entry = parsed.get();
             if (entry.tick() <= sinceTick) {
                 break;
             }
@@ -179,61 +189,6 @@ public final class BoardJournal {
 
     public Optional<BoardLogEntry> findStatus(String ticketId, int maxLines) {
         return BoardJournalSearch.findStatus(path, pending, ticketId, maxLines);
-    }
-
-    private List<String> tailLines(int wanted) {
-        if (wanted < 1) {
-            throw new IllegalArgumentException("Хвост журнала " + wanted + " меньше 1 строки: нечего читать");
-        }
-        try (RandomAccessFile file = new RandomAccessFile(path.toFile(), "r")) {
-            long length = file.length();
-            if (length == 0) {
-                return List.of();
-            }
-            long position = length;
-            int newlines = 0;
-            List<byte[]> chunks = new ArrayList<>();
-            while (position > 0 && newlines <= wanted) {
-                int read = (int) Math.min(TAIL_CHUNK, position);
-                position -= read;
-                byte[] chunk = new byte[read];
-                file.seek(position);
-                file.readFully(chunk);
-                chunks.add(chunk);
-                for (byte value : chunk) {
-                    if (value == '\n') {
-                        newlines++;
-                    }
-                }
-            }
-            String text = new String(joinReverse(chunks), StandardCharsets.UTF_8);
-            List<String> lines = new ArrayList<>();
-            for (String raw : text.split("\n", -1)) {
-                String line = raw.endsWith("\r") ? raw.substring(0, raw.length() - 1) : raw;
-                if (!line.isEmpty()) {
-                    lines.add(line);
-                }
-            }
-            int from = Math.max(0, lines.size() - wanted);
-            return List.copyOf(lines.subList(from, lines.size()));
-        } catch (IOException error) {
-            throw new IllegalStateException("Хвост журнала '" + path + "' не прочитан: " + error.getMessage(), error);
-        }
-    }
-
-    private static byte[] joinReverse(List<byte[]> chunks) {
-        int size = 0;
-        for (byte[] chunk : chunks) {
-            size += chunk.length;
-        }
-        byte[] joined = new byte[size];
-        int offset = 0;
-        for (int index = chunks.size() - 1; index >= 0; index--) {
-            byte[] chunk = chunks.get(index);
-            System.arraycopy(chunk, 0, joined, offset, chunk.length);
-            offset += chunk.length;
-        }
-        return joined;
     }
 
     private void truncateAfter(int brokenIndex) {

@@ -23,6 +23,7 @@ import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.SavedData;
+import org.jspecify.annotations.Nullable;
 
 public final class BoardStateStore extends SavedData {
     public static final String NAME = "theminespirit_board";
@@ -75,7 +76,10 @@ public final class BoardStateStore extends SavedData {
         }
         List<BoardState.Entry> restored = new ArrayList<>();
         for (int index = 0; index < entries.size(); index++) {
-            restored.add(readEntry(entries.getCompound(index)));
+            BoardState.Entry entry = readEntry(entries.getCompound(index));
+            if (entry != null) {
+                restored.add(entry);
+            }
         }
         Set<String> ledger = new LinkedHashSet<>();
         ListTag marks = tag.getList(LEDGER_KEY, Tag.TAG_STRING);
@@ -219,7 +223,11 @@ public final class BoardStateStore extends SavedData {
         return tag;
     }
 
-    private static BoardState.Entry readEntry(CompoundTag tag) {
+    private static BoardState.@Nullable Entry readEntry(CompoundTag tag) {
+        BoardCase known = boardCase(tag.getString(CASE_KEY));
+        if (known == null) {
+            return null;
+        }
         List<String> depends = new ArrayList<>();
         ListTag dependsTag = tag.getList(DEPENDS_KEY, Tag.TAG_STRING);
         for (int index = 0; index < dependsTag.size(); index++) {
@@ -242,7 +250,7 @@ public final class BoardStateStore extends SavedData {
         }
         BoardTicket ticket = new BoardTicket(
                 tag.getString(ID_KEY),
-                boardCase(tag.getString(CASE_KEY)),
+                known,
                 optionalUuid(tag, ASSIGNEE_KEY),
                 tag.getInt(PRIORITY_KEY),
                 tag.getLong(CREATED_KEY),
@@ -262,12 +270,11 @@ public final class BoardStateStore extends SavedData {
                 tag.getInt(FAILURES_KEY));
     }
 
-    private static BoardCase boardCase(String name) {
+    private static @Nullable BoardCase boardCase(String name) {
         try {
             return BoardCase.valueOf(name);
         } catch (IllegalArgumentException unknown) {
-            throw new IllegalStateException("Кейс доски '" + name + "' неизвестен этой версии мода: "
-                    + "состояние доски не читается, проверьте сборку");
+            return null;
         }
     }
 

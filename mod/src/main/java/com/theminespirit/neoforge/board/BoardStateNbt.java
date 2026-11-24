@@ -118,9 +118,15 @@ final class BoardStateNbt {
         ListTag pausesTag = tag.getList(PAUSES_KEY, Tag.TAG_COMPOUND);
         for (int index = 0; index < pausesTag.size(); index++) {
             CompoundTag item = pausesTag.getCompound(index);
+            BoardCase pauseCase;
+            try {
+                pauseCase = BoardCase.valueOf(item.getString(CASE_KEY));
+            } catch (IllegalArgumentException retired) {
+                continue;
+            }
             pauses.add(new BoardState.Pause(
                     item.getUUID(SPIRIT_KEY),
-                    BoardCase.valueOf(item.getString(CASE_KEY)),
+                    pauseCase,
                     item.getInt(CONSECUTIVE_KEY),
                     item.getLong(PAUSED_UNTIL_KEY),
                     item.getBoolean(DETACHED_KEY),

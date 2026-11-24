@@ -11,6 +11,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 
 public final class BoardLog {
@@ -98,6 +99,22 @@ public final class BoardLog {
 
     public static BoardLogEntry parse(String line) {
         return parse(line, 0);
+    }
+
+    public static final class UnknownCaseException extends IllegalStateException {
+        private static final long serialVersionUID = 1L;
+
+        UnknownCaseException(String message, Throwable cause) {
+            super(message, cause);
+        }
+    }
+
+    public static Optional<BoardLogEntry> parseCompatible(String line, int lineNumber) {
+        try {
+            return Optional.of(parse(line, lineNumber));
+        } catch (UnknownCaseException retired) {
+            return Optional.empty();
+        }
     }
 
     public static BoardLogEntry parse(String line, int lineNumber) {
@@ -192,7 +209,7 @@ public final class BoardLog {
         try {
             return BoardCase.valueOf(name);
         } catch (IllegalArgumentException unknown) {
-            throw new IllegalStateException(
+            throw new UnknownCaseException(
                     "Строка " + lineNumber + " журнала: неизвестный кейс '" + name + "'", unknown);
         }
     }

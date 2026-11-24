@@ -6,13 +6,72 @@ import java.io.RandomAccessFile;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Deque;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
 final class BoardJournalSearch {
+    private static final int TAIL_CHUNK = 64 * 1024;
+
     private BoardJournalSearch() {}
+
+    static List<String> tailLines(Path path, int wanted) {
+        if (wanted < 1) {
+            throw new IllegalArgumentException("Хвост журнала " + wanted + " меньше 1 строки: нечего читать");
+        }
+        try (RandomAccessFile file = new RandomAccessFile(path.toFile(), "r")) {
+            long length = file.length();
+            if (length == 0) {
+                return List.of();
+            }
+            long position = length;
+            int newlines = 0;
+            List<byte[]> chunks = new ArrayList<>();
+            while (position > 0 && newlines <= wanted) {
+                int read = (int) Math.min(TAIL_CHUNK, position);
+                position -= read;
+                byte[] chunk = new byte[read];
+                file.seek(position);
+                file.readFully(chunk);
+                chunks.add(chunk);
+                for (byte value : chunk) {
+                    if (value == '\n') {
+                        newlines++;
+                    }
+                }
+            }
+            String text = new String(joinReverse(chunks), StandardCharsets.UTF_8);
+            List<String> lines = new ArrayList<>();
+            for (String raw : text.split("\n", -1)) {
+                String line = raw.endsWith("\r") ? raw.substring(0, raw.length() - 1) : raw;
+                if (!line.isEmpty()) {
+                    lines.add(line);
+                }
+            }
+            int from = Math.max(0, lines.size() - wanted);
+            return List.copyOf(lines.subList(from, lines.size()));
+        } catch (IOException error) {
+            throw new IllegalStateException("Хвост журнала '" + path + "' не прочитан: " + error.getMessage(), error);
+        }
+    }
+
+    private static byte[] joinReverse(List<byte[]> chunks) {
+        int size = 0;
+        for (byte[] chunk : chunks) {
+            size += chunk.length;
+        }
+        byte[] joined = new byte[size];
+        int offset = 0;
+        for (int index = chunks.size() - 1; index >= 0; index--) {
+            byte[] chunk = chunks.get(index);
+            System.arraycopy(chunk, 0, joined, offset, chunk.length);
+            offset += chunk.length;
+        }
+        return joined;
+    }
 
     static Optional<BoardLogEntry> findStatus(Path path, Deque<String> pending, String ticketId, int maxLines) {
         Objects.requireNonNull(path, "Путь журнала не может быть null: по нему идёт поиск задания");
