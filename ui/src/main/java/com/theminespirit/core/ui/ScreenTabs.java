@@ -3,10 +3,10 @@ package com.theminespirit.core.ui;
 import java.util.Locale;
 
 public final class ScreenTabs {
-    public static final int WIDTH = 56;
+    public static final int WIDTH = 54;
     public static final int HEIGHT = 16;
     public static final int GAP = 2;
-    public static final int TOP = 2;
+    public static final int TOP = 5;
 
     public enum Tab {
         BOARD(0),
@@ -28,9 +28,17 @@ public final class ScreenTabs {
         return "theminespirit.tab." + tab.name().toLowerCase(Locale.ROOT);
     }
 
-    public static BoardLayout.Rect rect(int screenWidth, Tab tab) {
+    public static int tabsWidth() {
         int count = Tab.values().length;
-        int start = screenWidth - BoardLayout.MARGIN - count * WIDTH - (count - 1) * GAP;
+        return count * WIDTH + (count - 1) * GAP;
+    }
+
+    public static int tabStart(int screenWidth) {
+        return Math.max(ShellLayout.PAD, screenWidth - BoardLayout.MARGIN - tabsWidth());
+    }
+
+    public static BoardLayout.Rect rect(int screenWidth, Tab tab) {
+        int start = tabStart(screenWidth);
         return new BoardLayout.Rect(start + tab.slot * (WIDTH + GAP), TOP, WIDTH, HEIGHT);
     }
 }

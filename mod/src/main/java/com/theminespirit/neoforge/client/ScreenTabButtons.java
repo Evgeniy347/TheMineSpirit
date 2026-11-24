@@ -2,6 +2,7 @@ package com.theminespirit.neoforge.client;
 
 import com.theminespirit.core.ui.BoardLayout;
 import com.theminespirit.core.ui.ScreenTabs;
+import com.theminespirit.core.ui.ShellNav;
 import com.theminespirit.neoforge.terminal.CraftTerminalChannel;
 import com.theminespirit.neoforge.terminal.CraftTerminalMenu;
 import java.util.function.Consumer;
@@ -17,15 +18,24 @@ final class ScreenTabButtons {
     static void add(Consumer<Button> widgets, int screenWidth, ScreenTabs.Tab current) {
         for (ScreenTabs.Tab tab : ScreenTabs.Tab.values()) {
             BoardLayout.Rect rect = ScreenTabs.rect(screenWidth, tab);
-            Button button = Button.builder(Component.translatable(ScreenTabs.key(tab)), pressed -> open(tab))
-                    .bounds(rect.x(), rect.y(), rect.width(), rect.height())
-                    .build();
+            Button.Builder builder = Button.builder(Component.translatable(ScreenTabs.key(tab)), pressed -> open(tab))
+                    .bounds(rect.x(), rect.y(), rect.width(), rect.height());
+            Button button = new ShellTabButton(builder, tab == current);
             button.active = tab != current;
             widgets.accept(button);
         }
     }
 
-    private static void open(ScreenTabs.Tab tab) {
+    static boolean hotkey(int keyCode, boolean textFocused, ScreenTabs.Tab current) {
+        ScreenTabs.Tab target = ShellNav.target(keyCode, textFocused, current);
+        if (target == null) {
+            return false;
+        }
+        open(target);
+        return true;
+    }
+
+    static void open(ScreenTabs.Tab tab) {
         Minecraft minecraft = Minecraft.getInstance();
         if (tab == ScreenTabs.Tab.CRAFT) {
             PacketDistributor.sendToServer(CraftTerminalChannel.Action.of(CraftTerminalChannel.Kind.OPEN));

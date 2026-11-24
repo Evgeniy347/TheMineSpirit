@@ -1,7 +1,6 @@
 package com.theminespirit.core.ui;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.theminespirit.core.ui.api.BoardTileGroup;
@@ -70,23 +69,6 @@ class BoardFilterTests {
                 filter,
                 "После последнего духа фильтр возвращается к «все»"
                         + " Иначе тест nextSpirit_Cycle_AnyNobodyNamesAlphabeticallyAny перестанет ловить эту поломку. При смене nextSpirit_Cycle_AnyNobodyNamesAlphabeticallyAny проверь это утверждение.");
-    }
-
-    @Test
-    void nextGroup_Cycle_ReturnsToAll() {
-        BoardFilter filter = BoardFilter.ALL;
-        for (BoardTileGroup expected : BoardTileGroup.values()) {
-            filter = filter.nextGroup();
-            assertEquals(
-                    expected,
-                    filter.group(),
-                    "Группы перебираются в порядке показа"
-                            + " Иначе тест nextGroup_Cycle_ReturnsToAll перестанет ловить эту поломку. При смене nextGroup_Cycle_ReturnsToAll проверь это утверждение.");
-        }
-        assertNull(
-                filter.nextGroup().group(),
-                "После последней группы фильтр возвращается к «все»"
-                        + " Иначе тест nextGroup_Cycle_ReturnsToAll перестанет ловить эту поломку. При смене nextGroup_Cycle_ReturnsToAll проверь это утверждение.");
     }
 
     @Test

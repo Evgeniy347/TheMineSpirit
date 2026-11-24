@@ -18,9 +18,6 @@ public final class MapStyle {
     public static final int DIRT = 0xFF9C7A4A;
     public static final int SAND = 0xFFE6D391;
     public static final int PATH = 0xFFB79C6B;
-    public static final int LEGEND_BACKGROUND = 0xB03C3C3C;
-    public static final int LEGEND_BORDER = 0xFFB0B0B0;
-    public static final int LEGEND_DIM = 0xFF9A9A9A;
     private static final int PERCENT = 100;
     private static final int LOT_EMPTY = 0xA84E5A3A;
     private static final int LOT_DONE = 0xA86FA548;

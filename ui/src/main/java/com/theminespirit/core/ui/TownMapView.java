@@ -10,6 +10,7 @@ import java.util.NavigableSet;
 import java.util.Objects;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.function.UnaryOperator;
 
 public record TownMapView(List<MapRect> rects, List<MapLine> lines, List<MapMarker> markers) {
     public enum Kind {
@@ -79,6 +80,26 @@ public record TownMapView(List<MapRect> rects, List<MapLine> lines, List<MapMark
         List<MapRect> kept =
                 rects.stream().filter(rect -> rect.kind() != Kind.PATH).toList();
         return new TownMapView(kept, lines, markers);
+    }
+
+    public TownMapView withLotLabels(UnaryOperator<String> names) {
+        Objects.requireNonNull(names, "Переименование участков не может быть null: id остаётся как есть");
+        List<MapRect> renamed = new ArrayList<>(rects.size());
+        for (MapRect rect : rects) {
+            renamed.add(
+                    rect.kind() == Kind.LOT
+                            ? new MapRect(
+                                    rect.kind(),
+                                    rect.x1(),
+                                    rect.z1(),
+                                    rect.x2(),
+                                    rect.z2(),
+                                    names.apply(rect.label()),
+                                    rect.percent(),
+                                    rect.damaged())
+                            : rect);
+        }
+        return new TownMapView(renamed, lines, markers);
     }
 
     public static TownMapView of(TownSnapshot snapshot) {
