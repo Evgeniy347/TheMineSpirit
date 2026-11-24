@@ -1,7 +1,10 @@
 {
   "key.theminespirit.board": "Экран поселения",
   "key.theminespirit.tree": "Древо поселения",
+  "key.theminespirit.highlight": "Подсветка строительства",
   "key.categories.theminespirit": "The Mine Spirit",
+  "theminespirit.highlight.on": "Подсветка включена: снести %s, поставить %s (Ctrl+J — выключить)",
+  "theminespirit.highlight.off": "Подсветка строительства выключена",
   "theminespirit.tree.title": "Древо развития поселения",
   "theminespirit.tree.tab": "Этап %s",
   "theminespirit.tree.loading": "Загрузка древа…",
