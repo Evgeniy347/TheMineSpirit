@@ -139,12 +139,17 @@ public final class ColumnMask {
 
     @Override
     public boolean equals(Object other) {
-        return other instanceof ColumnMask mask && cells().equals(mask.cells());
+        return other instanceof ColumnMask mask
+                && minX == mask.minX
+                && minZ == mask.minZ
+                && width == mask.width
+                && depth == mask.depth
+                && bits.equals(mask.bits);
     }
 
     @Override
     public int hashCode() {
-        return cells().hashCode();
+        return Objects.hash(minX, minZ, width, depth, bits);
     }
 
     @Override
