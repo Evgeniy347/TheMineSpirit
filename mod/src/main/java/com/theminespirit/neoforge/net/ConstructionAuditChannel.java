@@ -31,12 +31,15 @@ public final class ConstructionAuditChannel {
 
     private ConstructionAuditChannel() {}
 
-    public record Request(BlockPos center) implements CustomPacketPayload {
+    public record Request(BlockPos center, int batch) implements CustomPacketPayload {
         public static final StreamCodec<FriendlyByteBuf, Request> STREAM_CODEC =
                 StreamCodec.of(ConstructionAuditChannel::writeRequest, ConstructionAuditChannel::readRequest);
 
         public Request {
             Objects.requireNonNull(center, "Центр запроса аудита не может быть null: от него считается радиус");
+            if (batch < 0) {
+                throw new IllegalArgumentException("Пачка " + batch + ": пачки считаются с нуля");
+            }
         }
 
         @Override
@@ -45,7 +48,8 @@ public final class ConstructionAuditChannel {
         }
     }
 
-    public record Reply(List<BlockPos> demolish, List<BlockPos> place) implements CustomPacketPayload {
+    public record Reply(List<BlockPos> demolish, List<BlockPos> place, int batch, boolean hasMore)
+            implements CustomPacketPayload {
         public static final StreamCodec<FriendlyByteBuf, Reply> STREAM_CODEC =
                 StreamCodec.of(ConstructionAuditChannel::writeReply, ConstructionAuditChannel::readReply);
 
@@ -54,6 +58,9 @@ public final class ConstructionAuditChannel {
                     Objects.requireNonNull(demolish, "Набор на снос не может быть null: пустой — List.of()"));
             place = List.copyOf(
                     Objects.requireNonNull(place, "Набор к постановке не может быть null: пустой — List.of()"));
+            if (batch < 0) {
+                throw new IllegalArgumentException("Пачка " + batch + ": пачки считаются с нуля");
+            }
         }
 
         @Override
@@ -79,33 +86,41 @@ public final class ConstructionAuditChannel {
     private static void handleRequest(Request request, IPayloadContext context) {
         if (context.player() instanceof ServerPlayer player) {
             long started = System.nanoTime();
-            ConstructionAuditService.Marks marks =
-                    ConstructionAuditService.around(player.serverLevel(), request.center());
+            ConstructionAuditService.Batch batch =
+                    ConstructionAuditService.batch(player.serverLevel(), request.center(), request.batch());
             LOGGER.debug(
-                    "Аудит подсветки у {}: снести {}, поставить {}, {} мс",
+                    "Аудит подсветки у {}: пачка {}, снести {}, поставить {}, дальше {}, {} мс",
                     player.getName().getString(),
-                    marks.demolish().size(),
-                    marks.place().size(),
+                    batch.index(),
+                    batch.demolish().size(),
+                    batch.place().size(),
+                    batch.hasMore(),
                     (System.nanoTime() - started) / 1_000_000L);
-            context.reply(new Reply(marks.demolish(), marks.place()));
+            context.reply(new Reply(batch.demolish(), batch.place(), batch.index(), batch.hasMore()));
         }
     }
 
     private static void writeRequest(FriendlyByteBuf buf, Request request) {
         buf.writeBlockPos(request.center());
+        buf.writeVarInt(request.batch());
     }
 
     private static Request readRequest(FriendlyByteBuf buf) {
-        return new Request(buf.readBlockPos());
+        BlockPos center = buf.readBlockPos();
+        return new Request(center, buf.readVarInt());
     }
 
     private static void writeReply(FriendlyByteBuf buf, Reply reply) {
         writePositions(buf, reply.demolish());
         writePositions(buf, reply.place());
+        buf.writeVarInt(reply.batch());
+        buf.writeBoolean(reply.hasMore());
     }
 
     private static Reply readReply(FriendlyByteBuf buf) {
-        return new Reply(readPositions(buf), readPositions(buf));
+        List<BlockPos> demolish = readPositions(buf);
+        List<BlockPos> place = readPositions(buf);
+        return new Reply(demolish, place, buf.readVarInt(), buf.readBoolean());
     }
 
     private static void writePositions(FriendlyByteBuf buf, List<BlockPos> positions) {

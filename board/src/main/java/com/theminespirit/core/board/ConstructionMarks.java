@@ -19,18 +19,15 @@ public final class ConstructionMarks {
 
     private ConstructionMarks() {}
 
-    public static Marks of(RepairAudit.Report report, BlockCoord center, int radius) {
+    public static Marks in(RepairAudit.Report report, Set<ConstructionBatches.ChunkCell> chunks) {
         Objects.requireNonNull(report, "Аудит ремонта не может быть null: без него нечего подсвечивать");
-        Objects.requireNonNull(center, "Центр подсветки не может быть null: от него считается радиус");
-        if (radius < 0) {
-            throw new IllegalArgumentException(
-                    "Радиус подсветки " + radius + ": расстояние не может быть отрицательным");
-        }
+        Objects.requireNonNull(chunks, "Набор чанков не может быть null: пустой — Set.of()");
         Set<BlockCoord> demolish = new LinkedHashSet<>();
         Set<BlockCoord> place = new LinkedHashSet<>();
         if (!report.rebuild()) {
             for (RepairAudit.Fix fix : report.fixes()) {
-                if (!near(fix.cell(), center, radius)) {
+                if (!chunks.contains(
+                        ConstructionBatches.at(fix.cell().x(), fix.cell().z()))) {
                     continue;
                 }
                 if (fix.action() == RepairAudit.Action.CLEAR || !air(fix.found())) {
@@ -41,12 +38,6 @@ public final class ConstructionMarks {
             }
         }
         return new Marks(demolish, place);
-    }
-
-    private static boolean near(BlockCoord cell, BlockCoord center, int radius) {
-        return Math.abs(cell.x() - center.x()) <= radius
-                && Math.abs(cell.y() - center.y()) <= radius
-                && Math.abs(cell.z() - center.z()) <= radius;
     }
 
     private static boolean air(String block) {

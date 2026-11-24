@@ -9,10 +9,10 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class ConstructionMarksTests {
-    private static final BlockCoord CENTER = new BlockCoord(0, 64, 0);
+    private static final Set<ConstructionBatches.ChunkCell> HOME = Set.of(new ConstructionBatches.ChunkCell(0, 0));
 
-    private static ConstructionMarks.Marks marks(RepairAudit.Report report, int radius) {
-        return ConstructionMarks.of(report, CENTER, radius);
+    private static ConstructionMarks.Marks marks(RepairAudit.Report report) {
+        return ConstructionMarks.in(report, HOME);
     }
 
     @Test
@@ -25,7 +25,7 @@ class ConstructionMarksTests {
                 List.of(new RepairAudit.Fix(cell, RepairAudit.Action.CLEAR, "minecraft:air", "minecraft:dirt")),
                 0);
 
-        ConstructionMarks.Marks marks = marks(report, 16);
+        ConstructionMarks.Marks marks = marks(report);
 
         assertEquals(
                 Set.of(cell),
@@ -46,7 +46,7 @@ class ConstructionMarksTests {
                 List.of(new RepairAudit.Fix(cell, RepairAudit.Action.PLACE, "minecraft:stone", "minecraft:dirt")),
                 0);
 
-        ConstructionMarks.Marks marks = marks(report, 16);
+        ConstructionMarks.Marks marks = marks(report);
 
         assertEquals(
                 Set.of(cell),
@@ -67,7 +67,7 @@ class ConstructionMarksTests {
                 List.of(new RepairAudit.Fix(cell, RepairAudit.Action.PLACE, "minecraft:oak_planks", "minecraft:air")),
                 0);
 
-        ConstructionMarks.Marks marks = marks(report, 16);
+        ConstructionMarks.Marks marks = marks(report);
 
         assertEquals(
                 Set.of(cell),
@@ -79,24 +79,24 @@ class ConstructionMarksTests {
     }
 
     @Test
-    void marks_FixOnRadiusEdge_IsKept() {
-        BlockCoord edge = new BlockCoord(16, 64, 0);
-        BlockCoord outside = new BlockCoord(17, 64, 0);
+    void marks_FixOutsideBatchChunks_IsSkipped() {
+        BlockCoord inside = new BlockCoord(15, 64, 0);
+        BlockCoord outside = new BlockCoord(16, 64, 0);
         RepairAudit.Report report = new RepairAudit.Report(
                 4,
                 2,
                 false,
                 List.of(
-                        new RepairAudit.Fix(edge, RepairAudit.Action.PLACE, "minecraft:stone", "minecraft:air"),
+                        new RepairAudit.Fix(inside, RepairAudit.Action.PLACE, "minecraft:stone", "minecraft:air"),
                         new RepairAudit.Fix(outside, RepairAudit.Action.PLACE, "minecraft:stone", "minecraft:air")),
                 0);
 
-        ConstructionMarks.Marks marks = marks(report, 16);
+        ConstructionMarks.Marks marks = marks(report);
 
         assertEquals(
-                Set.of(edge),
+                Set.of(inside),
                 marks.place(),
-                "Клетка на границе радиуса должна остаться, а следующая за ней — отсечься: иначе подсветка либо обрежется раньше времени, либо потянет весь мир; при смене фильтра радиуса в ConstructionMarks проверь включительную границу");
+                "Клетка из чанка пачки должна остаться, а клетка соседнего чанка — отсечься: иначе пачки наложатся, и одна и та же правка придёт дважды; при смене фильтра чанков в ConstructionMarks проверь границу 16 блоков");
     }
 
     @Test
@@ -109,7 +109,7 @@ class ConstructionMarksTests {
                 List.of(new RepairAudit.Fix(cell, RepairAudit.Action.CLEAR, "minecraft:air", "minecraft:dirt")),
                 0);
 
-        ConstructionMarks.Marks marks = marks(report, 16);
+        ConstructionMarks.Marks marks = marks(report);
 
         assertTrue(
                 marks.demolish().isEmpty() && marks.place().isEmpty(),

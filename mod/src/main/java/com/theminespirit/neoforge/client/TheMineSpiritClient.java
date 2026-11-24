@@ -53,9 +53,12 @@ public final class TheMineSpiritClient {
             CATEGORY);
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final int AUDIT_REFRESH_TICKS = 100;
-    private static int auditTicks;
-    private static int reportedDemolish = -1;
-    private static int reportedPlace = -1;
+    private static final int AUDIT_NEXT_BATCH_TICKS = 2;
+    private static int auditBatch;
+    private static int auditDelay = AUDIT_REFRESH_TICKS;
+    private static boolean auditWaiting;
+    private static int cycleDemolish;
+    private static int cyclePlace;
 
     public TheMineSpiritClient(IEventBus modBus) {
         modBus.addListener(TheMineSpiritClient::registerKeys);
@@ -133,7 +136,7 @@ public final class TheMineSpiritClient {
                 minecraft.setScreen(new BoardScreen());
             }
         }
-        requestAuditRefresh(minecraft);
+        tickConstructionAudit(minecraft);
     }
 
     public static void applyConstructionAudit(Set<BlockPos> wrong, Set<BlockPos> missing) {
@@ -141,28 +144,59 @@ public final class TheMineSpiritClient {
     }
 
     private static void onConstructionAudit(ConstructionAuditChannel.Reply reply) {
-        applyConstructionAudit(new LinkedHashSet<>(reply.demolish()), new LinkedHashSet<>(reply.place()));
-        if (reply.demolish().size() != reportedDemolish || reply.place().size() != reportedPlace) {
-            reportedDemolish = reply.demolish().size();
-            reportedPlace = reply.place().size();
-            LOGGER.info("Подсветка строительства: пришло снести {}, поставить {}", reportedDemolish, reportedPlace);
-        }
-    }
-
-    private static void requestAuditRefresh(Minecraft minecraft) {
-        if (!ConstructionHighlightManager.instance().isEnabled() || minecraft.player == null) {
+        ConstructionHighlightManager manager = ConstructionHighlightManager.instance();
+        if (!manager.isEnabled()) {
             return;
         }
-        auditTicks--;
-        if (auditTicks <= 0) {
-            requestConstructionAudit(minecraft);
-            auditTicks = AUDIT_REFRESH_TICKS;
+        manager.addData(new LinkedHashSet<>(reply.demolish()), new LinkedHashSet<>(reply.place()));
+        cycleDemolish += reply.demolish().size();
+        cyclePlace += reply.place().size();
+        auditWaiting = false;
+        if (reply.hasMore()) {
+            auditBatch = reply.batch() + 1;
+            auditDelay = AUDIT_NEXT_BATCH_TICKS;
+            return;
         }
+        manager.commitCycle();
+        auditBatch = 0;
+        auditDelay = AUDIT_REFRESH_TICKS;
+        LOGGER.info(
+                "Подсветка строительства: круг собран, снести {}, поставить {} (пришло {} / {})",
+                manager.wrongBlocks().size(),
+                manager.missingBlocks().size(),
+                cycleDemolish,
+                cyclePlace);
     }
 
-    private static void requestConstructionAudit(Minecraft minecraft) {
+    private static void tickConstructionAudit(Minecraft minecraft) {
+        if (!ConstructionHighlightManager.instance().isEnabled() || minecraft.player == null) {
+            auditWaiting = false;
+            auditBatch = 0;
+            auditDelay = AUDIT_REFRESH_TICKS;
+            cycleDemolish = 0;
+            cyclePlace = 0;
+            return;
+        }
+        if (auditWaiting) {
+            return;
+        }
+        if (auditDelay > 0) {
+            auditDelay--;
+            return;
+        }
+        if (auditBatch == 0) {
+            ConstructionHighlightManager.instance().beginCycle();
+            cycleDemolish = 0;
+            cyclePlace = 0;
+        }
+        requestConstructionAudit(minecraft, auditBatch);
+        auditWaiting = true;
+    }
+
+    private static void requestConstructionAudit(Minecraft minecraft, int batch) {
         if (minecraft.player != null) {
-            PacketDistributor.sendToServer(new ConstructionAuditChannel.Request(minecraft.player.blockPosition()));
+            PacketDistributor.sendToServer(
+                    new ConstructionAuditChannel.Request(minecraft.player.blockPosition(), batch));
         }
     }
 
@@ -173,13 +207,15 @@ public final class TheMineSpiritClient {
     private static void toggleConstructionHighlight(Minecraft minecraft) {
         ConstructionHighlightManager manager = ConstructionHighlightManager.instance();
         manager.toggle();
+        auditWaiting = false;
+        auditBatch = 0;
         if (manager.isEnabled()) {
-            requestConstructionAudit(minecraft);
-            auditTicks = AUDIT_REFRESH_TICKS;
+            manager.clear();
+            auditDelay = 0;
         } else {
-            auditTicks = 0;
-            reportedDemolish = -1;
-            reportedPlace = -1;
+            auditDelay = AUDIT_REFRESH_TICKS;
+            cycleDemolish = 0;
+            cyclePlace = 0;
         }
         Component message = manager.isEnabled()
                 ? Component.translatable(

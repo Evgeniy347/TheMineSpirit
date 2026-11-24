@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.board.ConstructionBatches;
 import com.theminespirit.core.board.ConstructionMarks;
 import com.theminespirit.core.board.RepairAudit;
 import com.theminespirit.core.board.StageCatalog;
@@ -11,7 +12,6 @@ import com.theminespirit.core.town.Placement;
 import com.theminespirit.core.town.SettlementPlot;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.TownPlan;
-import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
@@ -20,12 +20,11 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 
 public final class ConstructionAuditService {
-    public static final int RADIUS = 64;
-    private static final int LIMIT = 6000;
-    private static final int PLACEMENTS = 32;
+    public static final int RADIUS_CHUNKS = 4;
+    private static final int LIMIT_PER_BATCH = 2000;
 
-    public record Marks(List<BlockPos> demolish, List<BlockPos> place) {
-        public Marks {
+    public record Batch(List<BlockPos> demolish, List<BlockPos> place, int index, boolean hasMore) {
+        public Batch {
             demolish = List.copyOf(demolish);
             place = List.copyOf(place);
         }
@@ -33,40 +32,61 @@ public final class ConstructionAuditService {
 
     private ConstructionAuditService() {}
 
-    public static Marks around(ServerLevel level, BlockPos center) {
+    public static Batch batch(ServerLevel level, BlockPos center, int index) {
+        List<ConstructionBatches.ChunkCell> order =
+                ConstructionBatches.spiral(center.getX() >> 4, center.getZ() >> 4, RADIUS_CHUNKS);
+        List<ConstructionBatches.ChunkCell> chunks = ConstructionBatches.batch(order, index);
+        if (chunks.isEmpty()) {
+            return new Batch(List.of(), List.of(), index, false);
+        }
+        boolean hasMore = ConstructionBatches.hasMore(order, index);
+        Set<ConstructionBatches.ChunkCell> selected = Set.copyOf(chunks);
         Optional<TownPlan> town = SettlementPlotStore.get(level).town();
         Optional<StageSite> site = SettlementPlotStore.liveSite(level);
         Optional<SettlementPlot> plot = SettlementPlotStore.get(level).plot();
         if (town.isEmpty() || site.isEmpty() || plot.isEmpty()) {
-            return new Marks(List.of(), List.of());
+            return new Batch(List.of(), List.of(), index, hasMore);
         }
         BlockCoord anchor = site.orElseThrow().anchor();
         String settlementWood = plot.orElseThrow().wood();
-        List<Placement> places = town.orElseThrow().placements().stream()
-                .filter(place -> StageCatalog.entry(place.id()).isPresent())
-                .filter(place -> Math.abs(place.centerX() - center.getX()) <= RADIUS + place.width()
-                        && Math.abs(place.centerZ() - center.getZ()) <= RADIUS + place.depth())
-                .sorted(Comparator.comparingLong(place -> distanceSq(place, center)))
-                .limit(PLACEMENTS)
-                .toList();
         Set<BlockPos> demolish = new LinkedHashSet<>();
         Set<BlockPos> place = new LinkedHashSet<>();
-        BlockCoord middle = new BlockCoord(center.getX(), center.getY(), center.getZ());
-        for (Placement at : places) {
-            String scheme = StageCatalog.entry(at.id()).orElseThrow().scheme();
+        for (Placement at : town.orElseThrow().placements()) {
+            if (!intersects(at, selected)) {
+                continue;
+            }
+            Optional<StageCatalog.Entry> entry = StageCatalog.entry(at.id());
+            if (entry.isEmpty()) {
+                continue;
+            }
             GraphFacts.Position origin = new GraphFacts.Position(at.x(), anchor.y(), at.z());
-            RepairAudit.Report report =
-                    BuildingAudit.schemeReport(level, scheme, origin, wood(at, settlementWood), level.getGameTime());
-            ConstructionMarks.Marks marks = ConstructionMarks.of(report, middle, RADIUS);
+            RepairAudit.Report report = BuildingAudit.schemeReport(
+                    level, entry.orElseThrow().scheme(), origin, wood(at, settlementWood), level.getGameTime());
+            ConstructionMarks.Marks marks = ConstructionMarks.in(report, selected);
             add(level, demolish, marks.demolish());
             add(level, place, marks.place());
         }
-        return new Marks(List.copyOf(demolish), List.copyOf(place));
+        return new Batch(List.copyOf(demolish), List.copyOf(place), index, hasMore);
+    }
+
+    private static boolean intersects(Placement place, Set<ConstructionBatches.ChunkCell> chunks) {
+        int minX = place.x() >> 4;
+        int maxX = (place.x() + place.width() - 1) >> 4;
+        int minZ = place.z() >> 4;
+        int maxZ = (place.z() + place.depth() - 1) >> 4;
+        for (int x = minX; x <= maxX; x++) {
+            for (int z = minZ; z <= maxZ; z++) {
+                if (chunks.contains(new ConstructionBatches.ChunkCell(x, z))) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private static void add(ServerLevel level, Set<BlockPos> target, Set<BlockCoord> cells) {
         for (BlockCoord cell : cells) {
-            if (target.size() >= LIMIT) {
+            if (target.size() >= LIMIT_PER_BATCH) {
                 return;
             }
             BlockPos pos = new BlockPos(cell.x(), cell.y(), cell.z());
@@ -81,11 +101,5 @@ public final class ConstructionAuditService {
             return WoodSpecies.OAK;
         }
         return OrchardSites.speciesOfBuilding(place.id()).orElse(settlementWood);
-    }
-
-    private static long distanceSq(Placement place, BlockPos center) {
-        long dx = (long) place.centerX() - center.getX();
-        long dz = (long) place.centerZ() - center.getZ();
-        return dx * dx + dz * dz;
     }
 }

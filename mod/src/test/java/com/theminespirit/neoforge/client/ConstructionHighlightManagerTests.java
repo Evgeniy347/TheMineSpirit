@@ -90,4 +90,30 @@ class ConstructionHighlightManagerTests {
                 "Заглушка пакета аудита обязана передавать отсутствующие блоки в состояние подсветки: иначе план "
                         + "постановки не покажется в мире и дух поставит блоки вслепую; при смене приёма пакета аудита проверь, что applyConstructionAudit зовёт updateData");
     }
+
+    @Test
+    void addData_TwoBatches_UniteOnCommit() {
+        BlockPos wrong = new BlockPos(1, 64, 1);
+        BlockPos wrongNext = new BlockPos(3, 64, 3);
+        BlockPos missing = new BlockPos(2, 64, 2);
+        BlockPos missingNext = new BlockPos(4, 64, 4);
+        manager.beginCycle();
+
+        manager.addData(Set.of(wrong), Set.of(missing));
+        manager.addData(Set.of(wrongNext), Set.of(missingNext));
+
+        assertEquals(
+                Set.of(),
+                manager.wrongBlocks(),
+                "До конца круга пачки не должны попадать на экран: иначе подсветка прыгает от пачки к пачке вместо ровной смены кадра; при смене накопления пачек в ConstructionHighlightManager проверь, что commitCycle ещё не вызван");
+        manager.commitCycle();
+        assertEquals(
+                Set.of(wrong, wrongNext),
+                manager.wrongBlocks(),
+                "Круг обязан объединить все пачки на снос: иначе последняя пачка затирает предыдущие и красные контуры пропадают; при смене накопления пачек в ConstructionHighlightManager проверь, что commitCycle переносит весь pending-набор");
+        assertEquals(
+                Set.of(missing, missingNext),
+                manager.missingBlocks(),
+                "Круг обязан объединить все пачки отсутствующих блоков: иначе последняя пачка затирает предыдущие и оранжевые контуры пропадают; при смене накопления пачек в ConstructionHighlightManager проверь, что commitCycle переносит весь pending-набор");
+    }
 }
