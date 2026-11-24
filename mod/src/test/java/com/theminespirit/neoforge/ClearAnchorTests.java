@@ -89,6 +89,23 @@ class ClearAnchorTests {
     }
 
     @Test
+    void best_StandDeepBelowSpirit_IsNotChosen() {
+        ClearAnchor.Stand pit = new ClearAnchor.Stand(0, 45, 0);
+        ClearAnchor.Stand near = new ClearAnchor.Stand(3, 64, 0);
+        List<BlockCoord> cells = List.of(new BlockCoord(0, 49, 0), new BlockCoord(0, 60, 0), new BlockCoord(4, 64, 0));
+
+        ClearAnchor.Stand chosen =
+                ClearAnchor.best(cells, List.of(pit, near), new BlockCoord(0, 64, 0), REACH, Set.of());
+
+        assertEquals(
+                near,
+                chosen,
+                "Спуск в глубокую яму ради охвата не выбирается: иначе дух бесконечно ищет путь к точке на 19 "
+                        + "ниже (живой лог 22.11, -168,49,-493) и клетки не снимаются вовсе, поэтому берём стоянку "
+                        + "уровня духа. При смене best_StandDeepBelowSpirit_IsNotChosen проверь порог BELOW");
+    }
+
+    @Test
     void reachFor_SpiritHorizontal_WidensToBreakingReach() {
         assertEquals(
                 4,

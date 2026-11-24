@@ -23,7 +23,7 @@ final class ClearAnchor {
         int bestScore = 0;
         double bestDistance = Double.MAX_VALUE;
         for (Stand stand : stands) {
-            if (tried.contains(stand.coord())) {
+            if (tried.contains(stand.coord()) || stand.y() < from.y() - BELOW) {
                 continue;
             }
             int score = 0;
