@@ -15,14 +15,12 @@ import com.theminespirit.core.town.SettlementPlot;
 import com.theminespirit.core.town.SettlementScan;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.TownPlan;
-import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.levelgen.Heightmap;
 import org.slf4j.Logger;
 
 public final class ConstructionAuditService {
@@ -72,46 +70,7 @@ public final class ConstructionAuditService {
         SettlementScan.Strays strays = WorldAreaScan.cachedOrScan(level, site.orElseThrow());
         addCells(level, selected, demolish, WorldAreaScan.raised(strays));
         addCells(level, selected, place, WorldAreaScan.holes(strays));
-        addSupport(level, town.orElseThrow(), site.orElseThrow(), selected, place);
         return new Batch(List.copyOf(demolish), List.copyOf(place), index, hasMore);
-    }
-
-    private static void addSupport(
-            ServerLevel level,
-            TownPlan town,
-            StageSite site,
-            Set<ConstructionBatches.ChunkCell> selected,
-            Set<BlockPos> place) {
-        int groundY = site.anchor().y() - 1;
-        List<Placement> lots = new ArrayList<>(town.placements());
-        lots.add(site.hut());
-        lots.add(site.yard());
-        lots.add(site.mine());
-        lots.add(site.orchard());
-        lots.addAll(site.placements());
-        lots.addAll(site.fields());
-        for (Placement at : lots) {
-            if (!intersects(at, selected)) {
-                continue;
-            }
-            for (int x = at.x(); x < at.x() + at.width(); x++) {
-                for (int z = at.z(); z < at.z() + at.depth(); z++) {
-                    if (place.size() >= LIMIT_PER_BATCH) {
-                        return;
-                    }
-                    if (!selected.contains(ConstructionBatches.at(x, z))) {
-                        continue;
-                    }
-                    BlockPos ground = new BlockPos(x, groundY, z);
-                    if (!level.isLoaded(ground) || !level.getBlockState(ground).isAir()) {
-                        continue;
-                    }
-                    if (level.getHeight(Heightmap.Types.WORLD_SURFACE, x, z) > groundY) {
-                        place.add(ground);
-                    }
-                }
-            }
-        }
     }
 
     private static void addSchemes(
