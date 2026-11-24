@@ -42,4 +42,13 @@ public final class CraftLayout {
     public static BoardLayout.Rect panel() {
         return new BoardLayout.Rect(PANEL_X, CHAIN_Y, PANEL_WIDTH, CHAIN_HEIGHT);
     }
+
+    public static BoardLayout.Rect sideColumn() {
+        return new BoardLayout.Rect(PANEL_X, MODE_Y, PANEL_WIDTH, Math.max(1, HEIGHT - MODE_Y - 8));
+    }
+
+    public static BoardLayout.Rect guiArea(int guiLeft, int guiTop) {
+        BoardLayout.Rect column = sideColumn();
+        return new BoardLayout.Rect(guiLeft + column.x(), guiTop + column.y(), column.width(), column.height());
+    }
 }

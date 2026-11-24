@@ -60,6 +60,22 @@ class CraftLayoutTests {
     }
 
     @Test
+    void guiArea_ScreenOffset_MovesWithWindow() {
+        BoardLayout.Rect area = CraftLayout.guiArea(40, 50);
+        assertEquals(
+                CraftLayout.PANEL_X + 40,
+                area.x(),
+                "Зона JEI смещается вместе с окном: иначе рецепты рисуются не над панелью, а где попало. При смене guiArea_ScreenOffset_MovesWithWindow проверь это утверждение.");
+        assertEquals(
+                CraftLayout.MODE_Y + 50,
+                area.y(),
+                "Верх зоны JEI — строка вкладок режимов: иначе подсказка рецепта накроет первую вкладку. При смене guiArea_ScreenOffset_MovesWithWindow проверь это утверждение.");
+        assertTrue(
+                area.bottom() <= 50 + CraftLayout.HEIGHT,
+                "Зона JEI не вылезает за окно крафта: иначе она перекроет шапку каркаса. При смене guiArea_ScreenOffset_MovesWithWindow проверь это утверждение.");
+    }
+
+    @Test
     void modeTab_OutOfRange_IsRejected() {
         assertThrows(
                 IllegalArgumentException.class,
