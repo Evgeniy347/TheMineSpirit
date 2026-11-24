@@ -1,6 +1,7 @@
 package com.theminespirit.core.town;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
@@ -16,14 +17,10 @@ class TownMapWallTests {
                 List.of(),
                 List.of(),
                 List.of(
-                        new TownMap.WallSegment(95, 90, 105, 90),
-                        new TownMap.WallSegment(105, 90, 110, 95),
-                        new TownMap.WallSegment(110, 95, 110, 105),
-                        new TownMap.WallSegment(110, 105, 105, 110),
-                        new TownMap.WallSegment(105, 110, 95, 110),
-                        new TownMap.WallSegment(95, 110, 90, 105),
-                        new TownMap.WallSegment(90, 105, 90, 95),
-                        new TownMap.WallSegment(90, 95, 95, 90)));
+                        new TownMap.WallSegment(90, 100, 100, 90),
+                        new TownMap.WallSegment(100, 90, 110, 100),
+                        new TownMap.WallSegment(110, 100, 100, 110),
+                        new TownMap.WallSegment(100, 110, 90, 100)));
 
         List<TownMapFinding> findings =
                 TownMapCheck.validate(map, RULES, TownMapFixtures.REGION, TownMapFixtures.NO_WATER);
@@ -104,5 +101,28 @@ class TownMapWallTests {
                 "Улица без соединения с остальными отклоняется: иначе в городе остаётся дорога в никуда; получено "
                         + findings
                         + " Иначе тест check_DisconnectedStreet_Reported перестанет ловить эту поломку. При смене check_DisconnectedStreet_Reported проверь это утверждение.");
+    }
+
+    @Test
+    void wallLine_DiagonalLoop_KeepsPosts() {
+        TownMap map = new TownMap(
+                new TownMap.MapPoint(100, 100),
+                List.of(),
+                List.of(),
+                List.of(
+                        new TownMap.WallSegment(90, 100, 100, 90),
+                        new TownMap.WallSegment(100, 90, 110, 100),
+                        new TownMap.WallSegment(110, 100, 100, 110),
+                        new TownMap.WallSegment(100, 110, 90, 100)));
+
+        FenceLine line = TownMapRules.wallLine(
+                        map, TownMapRules.streets(map, RULES, TownMapFixtures.REGION), TownMapFixtures.REGION)
+                .orElseThrow();
+
+        assertFalse(
+                line.posts().isEmpty(),
+                "Диагональный контур обязан давать столбы стены: пустая линия означает, что стык диагоналей "
+                        + "теряет клетки"
+                        + " Иначе тест wallLine_DiagonalLoop_KeepsPosts перестанет ловить эту поломку. При смене wallLine_DiagonalLoop_KeepsPosts проверь это утверждение.");
     }
 }

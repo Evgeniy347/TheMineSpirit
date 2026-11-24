@@ -109,7 +109,12 @@ public final class TownMapRules {
         if (cells.isEmpty()) {
             return Optional.empty();
         }
-        List<ColumnMask.Cell> loop = order(cells);
+        boolean diagonal =
+                map.wall().stream().anyMatch(segment -> segment.x1() != segment.x2() && segment.z1() != segment.z2());
+        List<ColumnMask.Cell> loop = diagonal ? WallSegmentCells.line(map.wall()) : order(cells);
+        if (loop.isEmpty()) {
+            return Optional.empty();
+        }
         List<Integer> gates = new ArrayList<>();
         for (int index = 0; index < loop.size(); index++) {
             if (streets.contains(loop.get(index).x(), loop.get(index).z())) {

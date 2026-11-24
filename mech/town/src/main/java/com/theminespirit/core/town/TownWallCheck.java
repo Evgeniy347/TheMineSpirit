@@ -30,6 +30,15 @@ final class TownWallCheck {
         if (broken || cells.isEmpty()) {
             return;
         }
+        boolean diagonal =
+                map.wall().stream().anyMatch(segment -> segment.x1() != segment.x2() && segment.z1() != segment.z2());
+        Set<ColumnMask.Cell> joints = new HashSet<>();
+        for (TownMap.WallSegment segment : map.wall()) {
+            if (segment.x1() != segment.x2() && segment.z1() != segment.z2()) {
+                joints.add(new ColumnMask.Cell(segment.x1(), segment.z1()));
+                joints.add(new ColumnMask.Cell(segment.x2(), segment.z2()));
+            }
+        }
         Map<ColumnMask.Cell, Integer> degrees = new HashMap<>();
         for (ColumnMask.Cell cell : cells) {
             if (!region.contains(cell.x(), cell.z())) {
@@ -51,12 +60,13 @@ final class TownWallCheck {
             degrees.put(cell, degree);
         }
         for (Map.Entry<ColumnMask.Cell, Integer> entry : degrees.entrySet()) {
-            if (entry.getValue() != 2) {
+            int degree = entry.getValue();
+            if (degree <= 1 || (degree > 2 && !(diagonal && nearJoint(joints, entry.getKey())))) {
                 findings.add(new TownMapFinding(
                         "wall",
                         "loop",
                         "стена не замкнута: у клетки " + entry.getKey().x() + ","
-                                + entry.getKey().z() + " " + entry.getValue() + " соседей вместо двух"));
+                                + entry.getKey().z() + " " + degree + " соседей вместо двух"));
                 return;
             }
         }
@@ -106,5 +116,14 @@ final class TownWallCheck {
                 new ColumnMask.Cell(cell.x() - 1, cell.z()),
                 new ColumnMask.Cell(cell.x(), cell.z() + 1),
                 new ColumnMask.Cell(cell.x(), cell.z() - 1));
+    }
+
+    private static boolean nearJoint(Set<ColumnMask.Cell> joints, ColumnMask.Cell cell) {
+        for (ColumnMask.Cell joint : joints) {
+            if (Math.abs(joint.x() - cell.x()) <= 1 && Math.abs(joint.z() - cell.z()) <= 1) {
+                return true;
+            }
+        }
+        return false;
     }
 }
