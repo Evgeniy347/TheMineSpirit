@@ -31,8 +31,7 @@ class WallLayoutTestsExtraTests {
                         + " Иначе тест demoWall_ClosedRing_UsesStoneWallFragments перестанет ловить эту поломку. При смене demoWall_ClosedRing_UsesStoneWallFragments проверь это утверждение.");
         assertTrue(
                 pieces.stream()
-                        .allMatch(piece -> piece.scheme().startsWith("wall_3")
-                                || piece.scheme().equals("gate_3")),
+                        .allMatch(piece -> piece.scheme().startsWith("wall_3") || "gate_3".equals(piece.scheme())),
                 "Витрина складывается только из каменной стены этапа 3: " + pieces
                         + " Иначе тест demoWall_ClosedRing_UsesStoneWallFragments перестанет ловить эту поломку. При смене demoWall_ClosedRing_UsesStoneWallFragments проверь это утверждение.");
         assertRing(line.posts());

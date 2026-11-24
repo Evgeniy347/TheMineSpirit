@@ -90,7 +90,41 @@ public final class WallLayout {
         if (count < 1) {
             throw new IllegalArgumentException("Частей " + count + ": ограда делится хотя бы на одну часть");
         }
-        List<WallPiece> pieces = closedOrEmpty(line, gates);
+        return split(closedOrEmpty(line, gates), count);
+    }
+
+    public List<WallPiece> openRuns(List<ColumnMask.Cell> line, Collection<Integer> gates) {
+        Objects.requireNonNull(line, "Линия стены не может быть null: проёмы вырезают из неё");
+        Objects.requireNonNull(gates, "Проёмы не могут быть null: пустые задают пустым списком");
+        if (gates.isEmpty()) {
+            return open(line, List.of());
+        }
+        List<WallPiece> pieces = new ArrayList<>();
+        Set<Integer> holes = Set.copyOf(gates);
+        int size = line.size();
+        int start = (holes.stream().mapToInt(Integer::intValue).min().orElseThrow() + 1) % size;
+        List<ColumnMask.Cell> run = new ArrayList<>();
+        for (int step = 0; step < size; step++) {
+            int index = (start + step) % size;
+            if (holes.contains(index)) {
+                pieces.addAll(open(run, List.of()));
+                run.clear();
+            } else {
+                run.add(line.get(index));
+            }
+        }
+        pieces.addAll(open(run, List.of()));
+        return List.copyOf(pieces);
+    }
+
+    public List<List<WallPiece>> openParts(List<ColumnMask.Cell> line, Collection<Integer> gates, int count) {
+        if (count < 1) {
+            throw new IllegalArgumentException("Частей " + count + ": стена делится хотя бы на одну часть");
+        }
+        return split(openRuns(line, gates), count);
+    }
+
+    private static List<List<WallPiece>> split(List<WallPiece> pieces, int count) {
         int size = pieces.size();
         List<List<WallPiece>> parts = new ArrayList<>(count);
         for (int part = 1; part <= count; part++) {

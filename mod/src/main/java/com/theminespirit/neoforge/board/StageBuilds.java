@@ -70,7 +70,7 @@ public final class StageBuilds {
         if (cached != null) {
             return cached;
         }
-        List<List<WallPiece>> parts = fenceLayout().parts(ring.posts(), ring.gates(), count);
+        List<List<WallPiece>> parts = fenceLayout().openParts(ring.posts(), ring.gates(), count);
         if (FENCE_PARTS.size() >= 32) {
             FENCE_PARTS.clear();
         }
