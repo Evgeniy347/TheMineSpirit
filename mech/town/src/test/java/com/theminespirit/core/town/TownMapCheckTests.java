@@ -185,4 +185,44 @@ class TownMapCheckTests {
                         + "получено " + findings
                         + " Иначе тест check_PlotOnStreet_IsRejected перестанет ловить эту поломку. При смене check_PlotOnStreet_IsRejected проверь это утверждение.");
     }
+
+    @Test
+    void check_RotatedField_SizeReported() {
+        TownMap base = TownMapFixtures.withoutRing();
+        TownMap map = new TownMap(
+                base.anchor(),
+                List.of(new TownMap.MapPlot("field_a", "field_a", 10, 10, 73, 41, "north")),
+                base.streets(),
+                base.wall());
+
+        List<TownMapFinding> findings =
+                TownMapCheck.validate(map, RULES, TownMapFixtures.REGION, TownMapFixtures.NO_WATER);
+
+        assertTrue(
+                findings.stream()
+                        .anyMatch(finding -> "size".equals(finding.kind()) && "field_a".equals(finding.object())),
+                "Пашня с поворотом отклоняется: в каталоге у неё rotate=false, схему поворачивать нельзя; получено "
+                        + findings
+                        + " Иначе тест check_RotatedField_SizeReported перестанет ловить эту поломку. При смене check_RotatedField_SizeReported проверь это утверждение.");
+    }
+
+    @Test
+    void check_WallNearPlot_ClearanceReported() {
+        TownMap base = TownMapFixtures.withoutRing();
+        TownMap map = new TownMap(
+                base.anchor(),
+                List.of(new TownMap.MapPlot("hut", "hut", 1, 1, 16, 16, "north")),
+                base.streets(),
+                base.wall());
+
+        List<TownMapFinding> findings =
+                TownMapCheck.validate(map, RULES, TownMapFixtures.REGION, TownMapFixtures.NO_WATER);
+
+        assertTrue(
+                findings.stream()
+                        .anyMatch(finding -> "clearance".equals(finding.kind()) && "wall".equals(finding.object())),
+                "Стена ближе двух блоков к участку отклоняется: иначе кладка режет двор и проход к двери; получено "
+                        + findings
+                        + " Иначе тест check_WallNearPlot_ClearanceReported перестанет ловить эту поломку. При смене check_WallNearPlot_ClearanceReported проверь это утверждение.");
+    }
 }

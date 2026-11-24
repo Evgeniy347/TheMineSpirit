@@ -1,11 +1,9 @@
 package com.theminespirit.core.town;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -28,6 +26,7 @@ public final class TownMapCheck {
         Objects.requireNonNull(water, "Вода не может быть null: по ней видно, куда нельзя ставить");
         List<TownMapFinding> findings = new ArrayList<>();
         TownStreets streets = TownMapRules.streets(map, rules, region);
+        ColumnMask ponds = WaterPonds.small(water, region);
         Set<String> plotIds = new HashSet<>();
         for (TownMap.MapPlot plot : map.plots()) {
             boolean inherited = inheritedPlot(previous, plot);
@@ -45,7 +44,7 @@ public final class TownMapCheck {
                 int w = plot.width();
                 int d = plot.depth();
                 boolean same = (w == template.width() && d == template.depth())
-                        || (w == template.depth() && d == template.width());
+                        || (template.rotate() && w == template.depth() && d == template.width());
                 if (!same) {
                     findings.add(new TownMapFinding(
                             plot.id(),
@@ -69,8 +68,10 @@ public final class TownMapCheck {
                     plot.minZ() + plot.depth() - 1,
                     region,
                     water,
+                    ponds,
                     streets,
                     inherited,
+                    true,
                     findings);
             for (TownMap.MapPlot other : map.plots()) {
                 if (other.id().equals(plot.id()) || other.id().compareTo(plot.id()) > 0) {
@@ -119,11 +120,13 @@ public final class TownMapCheck {
                     street.maxZ(),
                     region,
                     water,
+                    ponds,
                     streets,
+                    false,
                     false,
                     findings);
         }
-        wall(map, region, water, findings);
+        TownWallCheck.validate(map, region, water, findings);
         return List.copyOf(findings);
     }
 
@@ -140,8 +143,10 @@ public final class TownMapCheck {
             int z2,
             ColumnMask region,
             ColumnMask water,
+            ColumnMask ponds,
             TownStreets streets,
             boolean allowWater,
+            boolean allowPonds,
             List<TownMapFinding> findings) {
         int outside = 0;
         int wet = 0;
@@ -157,7 +162,7 @@ public final class TownMapCheck {
                     }
                     continue;
                 }
-                if (!allowWater && water.contains(x, z)) {
+                if (!allowWater && water.contains(x, z) && !(allowPonds && ponds.contains(x, z))) {
                     wet++;
                 }
                 if (streets.contains(x, z) && "участок".equals(kind)) {
@@ -180,91 +185,6 @@ public final class TownMapCheck {
             findings.add(new TownMapFinding(
                     object, "street", kind + " '" + object + "' стоит на улице (" + onStreet + " клеток)"));
         }
-    }
-
-    private static void wall(TownMap map, ColumnMask region, ColumnMask water, List<TownMapFinding> findings) {
-        Set<ColumnMask.Cell> cells = new HashSet<>();
-        boolean broken = false;
-        for (TownMap.WallSegment segment : map.wall()) {
-            if (!segment.horizontal() && segment.x1() != segment.x2()) {
-                findings.add(new TownMapFinding(
-                        "wall",
-                        "segment",
-                        "отрезок стены " + segment.x1() + "," + segment.z1() + " → " + segment.x2() + "," + segment.z2()
-                                + " не прямой"));
-                broken = true;
-                continue;
-            }
-            if (segment.horizontal()) {
-                for (int x = segment.minX(); x <= segment.maxX(); x++) {
-                    cells.add(new ColumnMask.Cell(x, segment.z1()));
-                }
-            } else {
-                for (int z = segment.minZ(); z <= segment.maxZ(); z++) {
-                    cells.add(new ColumnMask.Cell(segment.x1(), z));
-                }
-            }
-        }
-        if (broken || cells.isEmpty()) {
-            return;
-        }
-        Map<ColumnMask.Cell, Integer> degrees = new HashMap<>();
-        for (ColumnMask.Cell cell : cells) {
-            if (!region.contains(cell.x(), cell.z())) {
-                findings.add(new TownMapFinding(
-                        "wall", "outside", "стена выходит за границу поселения в " + cell.x() + "," + cell.z()));
-                return;
-            }
-            if (water.contains(cell.x(), cell.z())) {
-                findings.add(
-                        new TownMapFinding("wall", "water", "стена заходит в воду в " + cell.x() + "," + cell.z()));
-                return;
-            }
-            int degree = 0;
-            for (ColumnMask.Cell neighbour : around(cell)) {
-                if (cells.contains(neighbour)) {
-                    degree++;
-                }
-            }
-            degrees.put(cell, degree);
-        }
-        for (Map.Entry<ColumnMask.Cell, Integer> entry : degrees.entrySet()) {
-            if (entry.getValue() != 2) {
-                findings.add(new TownMapFinding(
-                        "wall",
-                        "loop",
-                        "стена не замкнута: у клетки " + entry.getKey().x() + ","
-                                + entry.getKey().z() + " " + entry.getValue() + " соседей вместо двух"));
-                return;
-            }
-        }
-        Set<ColumnMask.Cell> seen = new HashSet<>();
-        List<ColumnMask.Cell> queue = new ArrayList<>();
-        queue.add(cells.iterator().next());
-        seen.add(queue.get(0));
-        while (!queue.isEmpty()) {
-            ColumnMask.Cell cell = queue.remove(queue.size() - 1);
-            for (ColumnMask.Cell neighbour : around(cell)) {
-                if (cells.contains(neighbour) && seen.add(neighbour)) {
-                    queue.add(neighbour);
-                }
-            }
-        }
-        if (seen.size() != cells.size()) {
-            findings.add(new TownMapFinding(
-                    "wall",
-                    "loop",
-                    "стена распадается на куски: нужен один замкнутый контур, а соединено " + seen.size() + " из "
-                            + cells.size() + " клеток"));
-        }
-    }
-
-    private static List<ColumnMask.Cell> around(ColumnMask.Cell cell) {
-        return List.of(
-                new ColumnMask.Cell(cell.x() + 1, cell.z()),
-                new ColumnMask.Cell(cell.x() - 1, cell.z()),
-                new ColumnMask.Cell(cell.x(), cell.z() + 1),
-                new ColumnMask.Cell(cell.x(), cell.z() - 1));
     }
 
     private static boolean overlaps(TownMap.MapPlot first, TownMap.MapPlot second, int gap) {

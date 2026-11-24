@@ -1,16 +1,20 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.building.Preset;
+import com.theminespirit.core.building.PresetLibrary;
+import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.ColumnMask;
 import com.theminespirit.core.town.Placement;
+import com.theminespirit.core.town.StageSchemes;
 import com.theminespirit.core.town.TownPlan;
+import com.theminespirit.core.town.WallLayout;
+import com.theminespirit.core.town.WallPiece;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import javax.imageio.ImageIO;
 import net.minecraft.server.level.ServerLevel;
 
@@ -84,13 +88,41 @@ final class TownPreview {
     }
 
     private static void wall(Graphics2D graphics, TownPlan plan, int x1, int z1, int scale) {
+        if (plan.fence().posts().isEmpty()) {
+            return;
+        }
+        PresetLibrary presets = DataTables.INSTANCE.presets().current();
+        List<WallPiece> pieces;
+        try {
+            pieces = WallLayout.of(presets, StageSchemes.wall())
+                    .openRuns(plan.fence().posts(), plan.fence().gates());
+        } catch (IllegalStateException unfolded) {
+            pieces = List.of();
+        }
+        if (pieces.isEmpty()) {
+            posts(graphics, plan, x1, z1, scale);
+            return;
+        }
+        for (WallPiece piece : pieces) {
+            Preset preset = presets.byId(piece.scheme())
+                    .orElseThrow(() -> new IllegalStateException(
+                            "presets.json: нет схемы фрагмента стены '" + piece.scheme() + "' для карты"));
+            int width = piece.rotation().rotatedSizeX(preset.sizeX(), preset.sizeZ());
+            int depth = piece.rotation().rotatedSizeZ(preset.sizeX(), preset.sizeZ());
+            int px = (piece.x() - x1) * scale;
+            int pz = (piece.z() - z1) * scale;
+            graphics.setColor(WALL);
+            graphics.fillRect(px, pz, width * scale, depth * scale);
+            graphics.setColor(BORDER);
+            graphics.drawRect(px, pz, width * scale - 1, depth * scale - 1);
+            graphics.setFont(graphics.getFont().deriveFont(Math.max(6f, scale * 2.5f)));
+            TerrainPainter.label(graphics, piece.scheme(), px + 1, pz + Math.max(7, scale * 3));
+        }
+    }
+
+    private static void posts(Graphics2D graphics, TownPlan plan, int x1, int z1, int scale) {
         graphics.setColor(WALL);
-        Set<Integer> gates = new HashSet<>(plan.fence().gates());
-        for (int index = 0; index < plan.fence().posts().size(); index++) {
-            if (gates.contains(index)) {
-                continue;
-            }
-            ColumnMask.Cell cell = plan.fence().posts().get(index);
+        for (ColumnMask.Cell cell : plan.fence().posts()) {
             graphics.fillRect((cell.x() - x1) * scale, (cell.z() - z1) * scale, scale, scale);
         }
     }
