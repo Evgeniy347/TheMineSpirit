@@ -98,11 +98,12 @@ public final class PillarDownScript implements ScriptInstance {
         Level level = spirit.level();
         BlockPos feet = spirit.blockPosition();
         int floor = Math.max(level.getMinBuildHeight() + 1, feet.getY() - CatalogLimits.COUNT_MAX);
-        List<BlockCoord> cells = columnBelow(feet.getX(), feet.getY(), feet.getZ(), floor, cell -> {
-            BlockPos pos = new BlockPos(cell.x(), cell.y(), cell.z());
-            return LeaseRun.ownedAnywhereAt(spirit, pos) != null
-                    && !level.getBlockState(pos).isAir();
-        });
+        List<BlockCoord> cells = columnBelow(
+                feet.getX(),
+                feet.getY(),
+                feet.getZ(),
+                floor,
+                cell -> ownCellAt(spirit, new BlockPos(cell.x(), cell.y(), cell.z())));
         if (cells.isEmpty()) {
             return Optional.empty();
         }
@@ -123,11 +124,12 @@ public final class PillarDownScript implements ScriptInstance {
     }
 
     public static boolean ownBelow(SpiritEntity spirit) {
-        BlockPos below = spirit.blockPosition().below();
-        if (spirit.level().getBlockState(below).isAir()) {
-            return false;
-        }
-        return LeaseRun.ownedAnywhereAt(spirit, below) != null;
+        return ownCellAt(spirit, spirit.blockPosition().below());
+    }
+
+    static boolean ownCellAt(SpiritEntity spirit, BlockPos pos) {
+        return LeaseRun.ownedAnywhereAt(spirit, pos) != null
+                && !spirit.level().getBlockState(pos).isAir();
     }
 
     private ScriptStatus fail(String reason) {
