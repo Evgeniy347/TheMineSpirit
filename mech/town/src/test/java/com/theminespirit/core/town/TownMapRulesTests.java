@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.observation.BlockCoord;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class TownMapRulesTests {
@@ -35,6 +37,23 @@ class TownMapRulesTests {
                 "Этап постройки приходит из этапов, а не из карты: задания доски решают, когда ставить дом; "
                         + "нулевой этап навсегда оставил бы дом в очереди"
                         + " Иначе тест build_Map_KeepsPlotSizeStageAndDoor перестанет ловить эту поломку. При смене build_Map_KeepsPlotSizeStageAndDoor проверь это утверждение.");
+    }
+
+    @Test
+    void build_ExtraOrchard_UsesTemplateSize() {
+        TownMap base = TownMapFixtures.withoutRing();
+        List<TownMap.MapPlot> plots = new ArrayList<>(base.plots());
+        plots.add(new TownMap.MapPlot("orchard_jungle", "orchard_jungle", 40, 60, 55, 75, "north"));
+        TownMap map = new TownMap(base.anchor(), plots, base.streets(), base.wall());
+
+        TownPlan plan = TownMapRules.build(map, RULES, TownMapFixtures.REGION, ANCHOR, building -> 1);
+
+        Placement extra = plan.placement("orchard_jungle").orElseThrow();
+        assertEquals(
+                16,
+                extra.width(),
+                "Дополнительный сад берёт размер шаблона orchard_extra: иначе карта со старым планом не читается"
+                        + " Иначе тест build_ExtraOrchard_UsesTemplateSize перестанет ловить эту поломку. При смене build_ExtraOrchard_UsesTemplateSize проверь это утверждение.");
     }
 
     @Test

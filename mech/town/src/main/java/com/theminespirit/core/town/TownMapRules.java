@@ -28,7 +28,7 @@ public final class TownMapRules {
         TownStreets streets = streets(map, rules, region);
         List<Placement> placements = new ArrayList<>();
         for (TownMap.MapPlot plot : map.plots()) {
-            TownEntry entry = rules.entry(plot.building())
+            TownEntry entry = entryFor(rules, plot.building())
                     .orElseThrow(() -> new IllegalArgumentException("Нет постройки '" + plot.building()
                             + "' в каталоге участков: карта ссылается на неизвестную постройку"));
             placements.add(new Placement(
@@ -43,6 +43,13 @@ public final class TownMapRules {
         }
         FenceLine wall = wallLine(map, streets, region).orElse(new FenceLine(List.of(), List.of()));
         return new TownPlan(anchor, region, streets, placements, wall, List.of());
+    }
+
+    static Optional<TownEntry> entryFor(TownRules rules, String building) {
+        Objects.requireNonNull(rules, "Правила не могут быть null: размеры участка — данные");
+        Objects.requireNonNull(building, "Постройка участка не может быть null: по ней берётся размер");
+        return rules.entry(building)
+                .or(() -> rules.template(OrchardSites.TEMPLATE).filter(template -> OrchardSites.isExtra(building)));
     }
 
     public static TownStreets streets(TownMap map, TownRules rules, ColumnMask region) {

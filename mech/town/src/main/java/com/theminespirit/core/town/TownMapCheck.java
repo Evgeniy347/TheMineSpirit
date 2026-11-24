@@ -27,7 +27,7 @@ public final class TownMapCheck {
             if (!plotIds.add(plot.id())) {
                 findings.add(new TownMapFinding(plot.id(), "duplicate", "участок '" + plot.id() + "' объявлен дважды"));
             }
-            Optional<TownEntry> entry = rules.entry(plot.building());
+            Optional<TownEntry> entry = TownMapRules.entryFor(rules, plot.building());
             if (entry.isEmpty()) {
                 findings.add(new TownMapFinding(
                         plot.id(),
