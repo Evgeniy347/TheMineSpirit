@@ -10,11 +10,16 @@ import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.core.town.WallLayout;
 import com.theminespirit.core.town.WallPiece;
 import java.awt.Color;
+import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import javax.imageio.ImageIO;
 import net.minecraft.server.level.ServerLevel;
 
@@ -103,6 +108,7 @@ final class TownPreview {
             posts(graphics, plan, x1, z1, scale);
             return;
         }
+        Map<String, Integer> schemes = new LinkedHashMap<>();
         for (WallPiece piece : pieces) {
             Preset preset = presets.byId(piece.scheme())
                     .orElseThrow(() -> new IllegalStateException(
@@ -115,8 +121,35 @@ final class TownPreview {
             graphics.fillRect(px, pz, width * scale, depth * scale);
             graphics.setColor(BORDER);
             graphics.drawRect(px, pz, width * scale - 1, depth * scale - 1);
-            graphics.setFont(graphics.getFont().deriveFont(Math.max(6f, scale * 2.5f)));
-            TerrainPainter.label(graphics, piece.scheme(), px + 1, pz + Math.max(7, scale * 3));
+            int index = schemes.computeIfAbsent(piece.scheme(), ignored -> schemes.size() + 1);
+            graphics.setFont(graphics.getFont().deriveFont(Font.BOLD, Math.max(7f, scale * 3f)));
+            TerrainPainter.label(graphics, String.valueOf(index), px + 2, pz + Math.max(8, scale * 4));
+        }
+        legend(graphics, schemes, scale);
+    }
+
+    static void legend(Graphics2D graphics, Map<String, Integer> schemes, int scale) {
+        if (schemes.isEmpty()) {
+            return;
+        }
+        float size = Math.max(9f, scale * 4.5f);
+        graphics.setFont(graphics.getFont().deriveFont(size));
+        FontMetrics metrics = graphics.getFontMetrics();
+        List<String> lines = new ArrayList<>(schemes.size());
+        int width = 0;
+        for (Map.Entry<String, Integer> scheme : schemes.entrySet()) {
+            String line = scheme.getValue() + " — " + scheme.getKey();
+            lines.add(line);
+            width = Math.max(width, metrics.stringWidth(line));
+        }
+        int pad = Math.max(4, scale * 2);
+        int height = lines.size() * metrics.getHeight() + pad * 2;
+        graphics.setColor(new Color(0, 0, 0, 190));
+        graphics.fillRect(4, 20, width + pad * 2, height);
+        int y = 20 + pad + metrics.getAscent();
+        for (String line : lines) {
+            TerrainPainter.label(graphics, line, 4 + pad, y);
+            y += metrics.getHeight();
         }
     }
 
