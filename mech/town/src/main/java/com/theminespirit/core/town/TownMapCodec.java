@@ -15,6 +15,8 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 public final class TownMapCodec {
+    public static final int FORMAT = 2;
+    private static final String FORMAT_KEY = "format";
     private static final ObjectMapper MAPPER = JsonMapper.builder()
             .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
             .build();
@@ -39,6 +41,7 @@ public final class TownMapCodec {
         Objects.requireNonNull(map, "Карта не может быть null: без неё нечего отдавать");
         Objects.requireNonNull(region, "Граница не может быть null: по ней считаются размеры карты");
         ObjectNode root = MAPPER.createObjectNode();
+        root.put(FORMAT_KEY, FORMAT);
         root.put("revision", revision);
         ObjectNode anchor = root.putObject("anchor");
         anchor.put("x", map.anchor().x());
@@ -83,6 +86,15 @@ public final class TownMapCodec {
             return MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(root);
         } catch (JsonProcessingException error) {
             throw new IllegalStateException("Карта поселения не записана в JSON: " + error.getOriginalMessage(), error);
+        }
+    }
+
+    public static int format(String json) {
+        Objects.requireNonNull(json, "Текст карты не может быть null: формат берётся из него");
+        try {
+            return MAPPER.readTree(json).path(FORMAT_KEY).asInt(1);
+        } catch (JsonProcessingException error) {
+            throw new IllegalArgumentException("Карта поселения не читается: " + error.getOriginalMessage(), error);
         }
     }
 

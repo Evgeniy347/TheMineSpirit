@@ -8,8 +8,9 @@ import java.util.Objects;
 public final class TownMapConvert {
     private TownMapConvert() {}
 
-    public static TownMap of(TownPlan plan) {
+    public static TownMap of(TownPlan plan, ColumnMask region) {
         Objects.requireNonNull(plan, "План не может быть null: карту экспортируют из него");
+        Objects.requireNonNull(region, "Граница не может быть null: стена обязана лежать внутри неё");
         List<TownMap.MapPlot> plots = new ArrayList<>();
         for (Placement place : plan.placements()) {
             plots.add(new TownMap.MapPlot(
@@ -32,10 +33,13 @@ public final class TownMapConvert {
             streets.add(new TownMap.MapStreet("ring", TownMapRules.RING, 0, 0, 0, 0));
         }
         return new TownMap(
-                new TownMap.MapPoint(plan.anchor().x(), plan.anchor().z()),
-                plots,
-                streets,
-                segments(rectify(plan.fence().posts(), plan.region())));
+                new TownMap.MapPoint(plan.anchor().x(), plan.anchor().z()), plots, streets, wall(plan, region));
+    }
+
+    private static List<TownMap.WallSegment> wall(TownPlan plan, ColumnMask region) {
+        List<ColumnMask.Cell> posts = plan.fence().posts();
+        boolean inside = !posts.isEmpty() && posts.stream().allMatch(cell -> region.contains(cell.x(), cell.z()));
+        return segments(inside ? rectify(posts, region) : FenceLine.loop(region));
     }
 
     public static List<ColumnMask.Cell> rectify(List<ColumnMask.Cell> posts, ColumnMask region) {

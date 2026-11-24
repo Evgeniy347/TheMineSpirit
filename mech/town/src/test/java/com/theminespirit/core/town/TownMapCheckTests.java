@@ -3,6 +3,7 @@ package com.theminespirit.core.town;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -20,6 +21,76 @@ class TownMapCheckTests {
                 "Ровная карта проходит проверку без замечаний: загрузка обязана быть тихой, иначе ложные "
                         + "ошибки заставляют стратега править здоровый план; получено " + findings
                         + " При смене check_GoodMap_NoFindings проверь это утверждение.");
+    }
+
+    @Test
+    void check_InheritedPlotInWater_Allowed() {
+        TownMap map = TownMapFixtures.withoutRing();
+        ColumnMask water = ColumnMask.rect(10, 10, 20, 20);
+
+        List<TownMapFinding> findings = TownMapCheck.validate(map, RULES, TownMapFixtures.REGION, water, map);
+
+        assertEquals(
+                List.of(),
+                findings,
+                "Участок, переехавший из старого плана клетка в клетку, не блокирует применение карты: иначе "
+                        + "живое поселение нельзя править из-за воды под уже стоящей постройкой; получено " + findings
+                        + " Иначе тест check_InheritedPlotInWater_Allowed перестанет ловить эту поломку. При смене check_InheritedPlotInWater_Allowed проверь это утверждение.");
+    }
+
+    @Test
+    void check_MovedPlotIntoWater_Reported() {
+        TownMap map = TownMapFixtures.withoutRing();
+        TownMap previous = new TownMap(
+                map.anchor(),
+                List.of(map.plots().get(0), new TownMap.MapPlot("hut", "hut", 60, 60, 75, 75, "north")),
+                map.streets(),
+                map.wall());
+        ColumnMask water = ColumnMask.rect(12, 62, 22, 72);
+
+        List<TownMapFinding> findings = TownMapCheck.validate(map, RULES, TownMapFixtures.REGION, water, previous);
+
+        assertTrue(
+                findings.stream().anyMatch(finding -> "water".equals(finding.kind()) && "hut".equals(finding.object())),
+                "Переехавший в воду участок обязан называться: унаследованное послабление не прячет правку; "
+                        + "получено " + findings
+                        + " Иначе тест check_MovedPlotIntoWater_Reported перестанет ловить эту поломку. При смене check_MovedPlotIntoWater_Reported проверь это утверждение.");
+    }
+
+    @Test
+    void check_InheritedNarrowStreet_Allowed() {
+        TownMap base = TownMapFixtures.withoutRing();
+        List<TownMap.MapStreet> streets = new ArrayList<>(base.streets());
+        streets.add(new TownMap.MapStreet("thin", TownMapRules.SIDE, 0, 0, 0, 49));
+        TownMap map = new TownMap(base.anchor(), base.plots(), streets, base.wall());
+
+        List<TownMapFinding> findings =
+                TownMapCheck.validate(map, RULES, TownMapFixtures.REGION, TownMapFixtures.NO_WATER, map);
+
+        assertEquals(
+                List.of(),
+                findings,
+                "Старая узкая полоса улицы не мешает применить карту без правки: иначе любая правка упирается "
+                        + "в геометрию миграции; получено " + findings
+                        + " Иначе тест check_InheritedNarrowStreet_Allowed перестанет ловить эту поломку. При смене check_InheritedNarrowStreet_Allowed проверь это утверждение.");
+    }
+
+    @Test
+    void check_NewNarrowStreet_Reported() {
+        TownMap base = TownMapFixtures.withoutRing();
+        List<TownMap.MapStreet> streets = new ArrayList<>(base.streets());
+        streets.add(new TownMap.MapStreet("thin", TownMapRules.SIDE, 0, 0, 0, 49));
+        TownMap map = new TownMap(base.anchor(), base.plots(), streets, base.wall());
+
+        List<TownMapFinding> findings =
+                TownMapCheck.validate(map, RULES, TownMapFixtures.REGION, TownMapFixtures.NO_WATER, base);
+
+        assertTrue(
+                findings.stream()
+                        .anyMatch(finding -> "narrow".equals(finding.kind()) && "thin".equals(finding.object())),
+                "Новая улица уже 5 блоков отклоняется: послабление только для унаследованных полос; получено "
+                        + findings
+                        + " Иначе тест check_NewNarrowStreet_Reported перестанет ловить эту поломку. При смене check_NewNarrowStreet_Reported проверь это утверждение.");
     }
 
     @Test

@@ -17,6 +17,7 @@ import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.core.town.TownRules;
 import java.util.BitSet;
 import java.util.List;
+import java.util.Optional;
 import net.minecraft.server.level.ServerLevel;
 import org.slf4j.Logger;
 
@@ -51,16 +52,28 @@ final class TownSurvey {
             Frame frame,
             BoardService service,
             long now) {
-        if (store.mapJson().isPresent()) {
-            try {
-                return TownMapCodec.decode(store.mapJson().orElseThrow());
-            } catch (IllegalArgumentException broken) {
-                LOGGER.error("[plot] сохранённая карта не читается, план пуст: {}", broken.getMessage());
-            }
+        Optional<TownMap> stored = decodeStored(store);
+        if (stored.isPresent()
+                && TownMapCodec.format(store.mapJson().orElseThrow()) < TownMapCodec.FORMAT
+                && store.town().isPresent()) {
+            TownMap converted = TownMapConvert.of(store.town().orElseThrow(), frame.region());
+            int revision = store.mapRevision() + 1;
+            store.putMap(
+                    TownMapCodec.encode(converted, revision, frame.region()),
+                    store.town().orElseThrow(),
+                    revision);
+            LOGGER.info(
+                    "[plot] карта пересобрана по новому формату: участков {}, улиц {}",
+                    converted.plots().size(),
+                    converted.streets().size());
+            return converted;
+        }
+        if (stored.isPresent()) {
+            return stored.orElseThrow();
         }
         if (store.town().isPresent()) {
             TownPlan legacy = store.town().orElseThrow();
-            TownMap converted = TownMapConvert.of(legacy);
+            TownMap converted = TownMapConvert.of(legacy, frame.region());
             String json = TownMapCodec.encode(converted, 1, frame.region());
             store.putMap(json, legacy, 1);
             LOGGER.info(
@@ -85,6 +98,19 @@ final class TownSurvey {
         store.putMap(TownMapCodec.encode(empty, 1, frame.region()), plan, 1);
         LOGGER.info("[plot] карта поселения пуста: ждём раскладку стратега через REST");
         return empty;
+    }
+
+    private static Optional<TownMap> decodeStored(SettlementPlotStore store) {
+        Optional<String> json = store.mapJson();
+        if (json.isEmpty()) {
+            return Optional.empty();
+        }
+        try {
+            return Optional.of(TownMapCodec.decode(json.orElseThrow()));
+        } catch (IllegalArgumentException broken) {
+            LOGGER.error("[plot] сохранённая карта не читается, план пуст: {}", broken.getMessage());
+            return Optional.empty();
+        }
     }
 
     static int stageOf(String building) {

@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.observation.BlockCoord;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -18,8 +19,8 @@ class TownMapConvertTests {
         TownPlan plan =
                 TownMapRules.build(TownMapFixtures.small(), RULES, TownMapFixtures.REGION, ANCHOR, building -> 1);
 
-        TownPlan back =
-                TownMapRules.build(TownMapConvert.of(plan), RULES, TownMapFixtures.REGION, ANCHOR, building -> 1);
+        TownPlan back = TownMapRules.build(
+                TownMapConvert.of(plan, TownMapFixtures.REGION), RULES, TownMapFixtures.REGION, ANCHOR, building -> 1);
 
         assertEquals(
                 cells(plan.streets().main()),
@@ -45,6 +46,32 @@ class TownMapConvertTests {
                 "Участки при миграции не меняются: id, размер и поворот те же; иначе живые постройки "
                         + "разъедутся с планом"
                         + " Иначе тест convert_LegacyPlan_RebuildsSameStreetsAndWall перестанет ловить эту поломку. При смене convert_LegacyPlan_RebuildsSameStreetsAndWall проверь это утверждение.");
+    }
+
+    @Test
+    void convert_WallOutsideRegion_MovesToRegionEdge() {
+        TownPlan plan =
+                TownMapRules.build(TownMapFixtures.small(), RULES, TownMapFixtures.REGION, ANCHOR, building -> 1);
+        ColumnMask smaller = ColumnMask.rect(20, 20, 180, 180);
+
+        TownMap map = TownMapConvert.of(plan, smaller);
+
+        assertTrue(
+                map.wall().stream()
+                        .flatMap(segment -> segmentCells(segment).stream())
+                        .allMatch(cell -> smaller.contains(cell.x(), cell.z())),
+                "Стена миграции лежит внутри текущей границы: иначе карту нельзя применить; получено " + map.wall()
+                        + " Иначе тест convert_WallOutsideRegion_MovesToRegionEdge перестанет ловить эту поломку. При смене convert_WallOutsideRegion_MovesToRegionEdge проверь это утверждение.");
+    }
+
+    private static List<ColumnMask.Cell> segmentCells(TownMap.WallSegment segment) {
+        List<ColumnMask.Cell> cells = new ArrayList<>();
+        for (int x = segment.minX(); x <= segment.maxX(); x++) {
+            for (int z = segment.minZ(); z <= segment.maxZ(); z++) {
+                cells.add(new ColumnMask.Cell(x, z));
+            }
+        }
+        return cells;
     }
 
     @Test

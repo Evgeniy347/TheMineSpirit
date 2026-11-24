@@ -46,6 +46,7 @@ public final class TownMapService {
         TownRules rules = DataTables.INSTANCE.town().current();
         BlockCoord center = SettlementCenter.of(level);
         TownSurvey.Frame frame = TownSurvey.frame(level, center, rules);
+        SettlementPlotStore store = SettlementPlotStore.get(level);
         TownMap map = TownMapCodec.decode(body);
         if (map.anchor().x() != center.x() || map.anchor().z() != center.z()) {
             throw new ApiException(
@@ -54,11 +55,11 @@ public final class TownMapService {
                             + center.x() + "," + center.z() + ": координаты обязаны считаться от якоря",
                     Map.of("object", "anchor"));
         }
-        List<TownMapFinding> findings = TownMapCheck.validate(map, rules, frame.region(), frame.water());
+        List<TownMapFinding> findings =
+                TownMapCheck.validate(map, rules, frame.region(), frame.water(), previous(store));
         if (!findings.isEmpty()) {
             throw new ApiException(ErrorCode.INVALID_PLAN, message(findings), details(findings));
         }
-        SettlementPlotStore store = SettlementPlotStore.get(level);
         int revision = TownMapCodec.revision(body);
         if (revision >= 0 && revision != store.mapRevision()) {
             throw new ApiException(
@@ -78,6 +79,15 @@ public final class TownMapService {
                 map.wall().size());
         return "{\"ok\":true,\"revision\":" + next + ",\"plots\":" + map.plots().size() + ",\"streets\":"
                 + map.streets().size() + ",\"wall\":" + map.wall().size() + "}";
+    }
+
+    private static TownMap previous(SettlementPlotStore store) {
+        try {
+            return store.mapJson().map(TownMapCodec::decode).orElse(null);
+        } catch (IllegalArgumentException broken) {
+            LOGGER.warn("[plot] прежняя карта не читается, унаследованных объектов нет: {}", broken.getMessage());
+            return null;
+        }
     }
 
     public byte[] previewPng(String body) {

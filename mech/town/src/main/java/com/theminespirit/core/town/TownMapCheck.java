@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import org.jspecify.annotations.Nullable;
 
 public final class TownMapCheck {
     public static final int MIN_STREET = 5;
@@ -16,6 +17,11 @@ public final class TownMapCheck {
     private TownMapCheck() {}
 
     public static List<TownMapFinding> validate(TownMap map, TownRules rules, ColumnMask region, ColumnMask water) {
+        return validate(map, rules, region, water, null);
+    }
+
+    public static List<TownMapFinding> validate(
+            TownMap map, TownRules rules, ColumnMask region, ColumnMask water, @Nullable TownMap previous) {
         Objects.requireNonNull(map, "Карта не может быть null: проверять нечего");
         Objects.requireNonNull(rules, "Правила не могут быть null: размеры участков берутся оттуда");
         Objects.requireNonNull(region, "Граница не может быть null: карта лежит внутри неё");
@@ -24,6 +30,7 @@ public final class TownMapCheck {
         TownStreets streets = TownMapRules.streets(map, rules, region);
         Set<String> plotIds = new HashSet<>();
         for (TownMap.MapPlot plot : map.plots()) {
+            boolean inherited = inheritedPlot(previous, plot);
             if (!plotIds.add(plot.id())) {
                 findings.add(new TownMapFinding(plot.id(), "duplicate", "участок '" + plot.id() + "' объявлен дважды"));
             }
@@ -63,6 +70,7 @@ public final class TownMapCheck {
                     region,
                     water,
                     streets,
+                    inherited,
                     findings);
             for (TownMap.MapPlot other : map.plots()) {
                 if (other.id().equals(plot.id()) || other.id().compareTo(plot.id()) > 0) {
@@ -77,6 +85,7 @@ public final class TownMapCheck {
         Set<String> streetIds = new HashSet<>();
         int rings = 0;
         for (TownMap.MapStreet street : map.streets()) {
+            boolean inherited = previous != null && previous.streets().stream().anyMatch(street::equals);
             if (!streetIds.add(street.id())) {
                 findings.add(
                         new TownMapFinding(street.id(), "duplicate", "улица '" + street.id() + "' объявлена дважды"));
@@ -94,7 +103,7 @@ public final class TownMapCheck {
                         street.id(), "kind", "улица '" + street.id() + "' неизвестного вида '" + street.kind() + "'"));
                 continue;
             }
-            if (street.width() < MIN_STREET || street.depth() < MIN_STREET) {
+            if (!inherited && (street.width() < MIN_STREET || street.depth() < MIN_STREET)) {
                 findings.add(new TownMapFinding(
                         street.id(),
                         "narrow",
@@ -111,10 +120,15 @@ public final class TownMapCheck {
                     region,
                     water,
                     streets,
+                    false,
                     findings);
         }
         wall(map, region, water, findings);
         return List.copyOf(findings);
+    }
+
+    private static boolean inheritedPlot(@Nullable TownMap previous, TownMap.MapPlot plot) {
+        return previous != null && previous.plots().stream().anyMatch(plot::equals);
     }
 
     private static void checkCells(
@@ -127,6 +141,7 @@ public final class TownMapCheck {
             ColumnMask region,
             ColumnMask water,
             TownStreets streets,
+            boolean allowWater,
             List<TownMapFinding> findings) {
         int outside = 0;
         int wet = 0;
@@ -142,7 +157,7 @@ public final class TownMapCheck {
                     }
                     continue;
                 }
-                if (water.contains(x, z)) {
+                if (!allowWater && water.contains(x, z)) {
                     wet++;
                 }
                 if (streets.contains(x, z) && "участок".equals(kind)) {
