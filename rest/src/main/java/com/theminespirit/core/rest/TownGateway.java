@@ -1,7 +1,11 @@
 package com.theminespirit.core.rest;
 
 public interface TownGateway {
-    String viewJson();
+    String planJson();
 
-    String editJson(String body, boolean dryRun);
+    byte[] terrainPng(int x1, int z1, int x2, int z2, int scale);
+
+    byte[] previewPng(String body);
+
+    String applyJson(String body);
 }

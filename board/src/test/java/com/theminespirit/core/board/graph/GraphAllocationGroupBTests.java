@@ -105,7 +105,11 @@ class GraphAllocationGroupBTests {
 
     @Test
     void case15_NoToolMaterial_MaterialFirst() {
-        GraphWorld world = community(1).with("oak_planks", 0).with("stick", 0).with("cobblestone", 0);
+        GraphWorld world = community(1)
+                .with("oak_log", 3)
+                .with("oak_planks", 0)
+                .with("stick", 0)
+                .with("cobblestone", 0);
         world.tools("spirit-1", -1);
         GraphTickets.Result result = tickets(world);
 
@@ -148,7 +152,7 @@ class GraphAllocationGroupBTests {
 
     @Test
     void case23_DifferentTools_DifferentWork() {
-        GraphWorld world = community(2).with("cobblestone", 0);
+        GraphWorld world = community(2).with("oak_log", 0).with("cobblestone", 0);
         world.tools("spirit-1", 1);
         world.tools("spirit-2", -1);
         GraphTickets.Result result = tickets(world);

@@ -187,9 +187,9 @@ class GraphChoicePart3Tests {
     void spaceFound_FreeGround_RaisesBuilding() {
         GraphWorld world = GraphWorld.empty();
         world.event(More4Rules.SPACE_FOUND);
-        int neutral = GraphPlanner.plan(GRAPH, world.state()).priority("building:fence");
+        int neutral = GraphPlanner.plan(GRAPH, world.state()).priority("building:hut");
         int boosted = GraphPlanner.plan(tuned("{\"spaceFoundBoost\": 50}"), world.state())
-                .priority("building:fence");
+                .priority("building:hut");
         assertTrue(
                 boosted > neutral,
                 "Свободное место поднимает стройку: " + boosted
@@ -201,9 +201,9 @@ class GraphChoicePart3Tests {
     void spaceTight_NoGround_LowersBuilding() {
         GraphWorld world = GraphWorld.empty();
         world.event(More4Rules.SPACE_TIGHT);
-        int neutral = GraphPlanner.plan(GRAPH, world.state()).priority("building:fence");
+        int neutral = GraphPlanner.plan(GRAPH, world.state()).priority("building:hut");
         int tight =
-                GraphPlanner.plan(tuned("{\"spaceTight\": 0.3}"), world.state()).priority("building:fence");
+                GraphPlanner.plan(tuned("{\"spaceTight\": 0.3}"), world.state()).priority("building:hut");
         assertTrue(
                 tight < neutral,
                 "Тесное место снижает вес стройки: " + tight

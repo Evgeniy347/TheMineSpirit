@@ -102,7 +102,7 @@ final class GraphBaseWorlds {
     }
 
     static GraphWorld failures() {
-        GraphWorld world = GraphWorld.settled();
+        GraphWorld world = GraphWorld.settled().with("oak_log", 0);
         world.world("more:work_duplicate");
         world.world("more:failures_repeat");
         world.distances.put("tree:oak", 240);

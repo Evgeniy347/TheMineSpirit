@@ -2663,18 +2663,7 @@
         "chests"
       ]
     },
-    "fence": {
-      "name": "Забор",
-      "case": "BUILD_FENCE",
-      "stage": 1,
-      "base": 78,
-      "materials": {
-        "oak_log": 40
-      },
-      "advice": [
-        "build_fence_where_cell_free"
-      ]
-    },
+
     "hut": {
       "name": "Хижина",
       "case": "BUILD_HOUSE",
@@ -3824,40 +3813,24 @@
       "optional": true,
       "estimate": true
     },
-    "wall_2": {
-      "name": "Стена",
-      "case": "BUILD_FENCE",
-      "stage": 1,
-      "base": 78,
-      "materials": {
-        "oak_log": 64,
-        "oak_planks": 16
-      },
-      "requires": [
-        "fence"
-      ],
-      "optional": true,
-      "estimate": true
-    },
+
     "wall_3": {
       "name": "Стена",
       "case": "BUILD_FENCE",
-      "stage": 2,
+      "stage": 3,
       "base": 92,
       "materials": {
         "cobblestone": 128,
         "stone_bricks": 32
       },
-      "requires": [
-        "wall_2"
-      ],
+      "requires": [],
       "optional": true,
       "estimate": true
     },
     "wall_4": {
       "name": "Стена",
       "case": "BUILD_FENCE",
-      "stage": 3,
+      "stage": 4,
       "base": 728,
       "materials": {
         "stone_bricks": 192,
@@ -3869,67 +3842,10 @@
       "optional": true,
       "estimate": true
     },
-    "gate_1": {
-      "name": "Ворота",
-      "case": "BUILD_FENCE",
-      "stage": 1,
-      "base": 78,
-      "materials": {
-        "oak_fence_gate": 3,
-        "oak_fence": 8,
-        "torch": 2
-      },
-      "optional": true,
-      "estimate": true
-    },
-    "gate_2": {
-      "name": "Ворота",
-      "case": "BUILD_FENCE",
-      "stage": 2,
-      "base": 92,
-      "materials": {
-        "oak_log": 24,
-        "oak_fence_gate": 3,
-        "torch": 4
-      },
-      "requires": [
-        "gate_1"
-      ],
-      "optional": true,
-      "estimate": true
-    },
-    "gate_3": {
-      "name": "Ворота",
-      "case": "BUILD_FENCE",
-      "stage": 3,
-      "base": 728,
-      "materials": {
-        "stone_bricks": 64,
-        "oak_fence_gate": 3,
-        "lantern": 4
-      },
-      "requires": [
-        "gate_2"
-      ],
-      "optional": true,
-      "estimate": true
-    },
-    "gate_4": {
-      "name": "Ворота",
-      "case": "BUILD_FENCE",
-      "stage": 4,
-      "base": 58,
-      "materials": {
-        "stone_bricks": 128,
-        "oak_fence_gate": 4,
-        "lantern": 8
-      },
-      "requires": [
-        "gate_3"
-      ],
-      "optional": true,
-      "estimate": true
-    },
+
+
+
+
     "archer_tower_1": {
       "name": "Башня лучников",
       "case": "BUILD_HOUSE",

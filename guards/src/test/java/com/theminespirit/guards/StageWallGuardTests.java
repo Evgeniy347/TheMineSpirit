@@ -16,15 +16,10 @@ class StageWallGuardTests {
     @Test
     void wallStageThree_LevelMapping_UsesWallAndGateFragments() {
         assertEquals(
-                StageSchemes.FENCE,
-                StageSchemes.fence(2),
-                "этап 2 ещё держит деревянный забор: каменная стена поднимается на третьем этапе"
-                        + " Иначе тест wallStageThree_LevelMapping_UsesWallAndGateFragments перестанет ловить эту поломку. При смене wallStageThree_LevelMapping_UsesWallAndGateFragments проверь это утверждение.");
-        assertEquals(
                 StageSchemes.WALL,
-                StageSchemes.fence(3),
-                "этап 3 поднимает забор до каменной стены: тот же кейс BUILD_FENCE берёт фрагменты стены, а не "
-                        + "деревянного забора. Как надо: StageSchemes.fence(stage) для этапа 2 и выше — набор WALL"
+                StageSchemes.wall(),
+                "кейс BUILD_FENCE берёт фрагменты каменной стены, а не деревянного забора: временного забора "
+                        + "в этапах больше нет"
                         + " Иначе тест wallStageThree_LevelMapping_UsesWallAndGateFragments перестанет ловить эту поломку. При смене wallStageThree_LevelMapping_UsesWallAndGateFragments проверь это утверждение.");
         assertTrue(
                 StageSchemes.WALL.stream().anyMatch(id -> id.startsWith("wall_3")),

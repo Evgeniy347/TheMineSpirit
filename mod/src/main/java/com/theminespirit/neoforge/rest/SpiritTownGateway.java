@@ -3,7 +3,7 @@ package com.theminespirit.neoforge.rest;
 import com.theminespirit.core.rest.RestTuning;
 import com.theminespirit.core.rest.ServerThreadCall;
 import com.theminespirit.core.rest.TownGateway;
-import com.theminespirit.neoforge.board.TownEditService;
+import com.theminespirit.neoforge.board.TownMapService;
 import java.util.Objects;
 import net.minecraft.server.MinecraftServer;
 
@@ -18,13 +18,25 @@ public final class SpiritTownGateway implements TownGateway {
     }
 
     @Override
-    public String viewJson() {
-        return serverCall.call(() -> TownEditService.of(server.overworld()).view(), RestTuning.SERVER_CALL_TIMEOUT);
+    public String planJson() {
+        return serverCall.call(() -> TownMapService.of(server.overworld()).planJson(), RestTuning.SERVER_CALL_TIMEOUT);
     }
 
     @Override
-    public String editJson(String body, boolean dryRun) {
+    public byte[] terrainPng(int x1, int z1, int x2, int z2, int scale) {
         return serverCall.call(
-                () -> TownEditService.of(server.overworld()).edit(body, dryRun), RestTuning.SERVER_CALL_TIMEOUT);
+                () -> TownMapService.of(server.overworld()).terrainPng(x1, z1, x2, z2, scale),
+                RestTuning.SERVER_CALL_TIMEOUT);
+    }
+
+    @Override
+    public byte[] previewPng(String body) {
+        return serverCall.call(
+                () -> TownMapService.of(server.overworld()).previewPng(body), RestTuning.SERVER_CALL_TIMEOUT);
+    }
+
+    @Override
+    public String applyJson(String body) {
+        return serverCall.call(() -> TownMapService.of(server.overworld()).apply(body), RestTuning.SERVER_CALL_TIMEOUT);
     }
 }

@@ -17,7 +17,6 @@ class SettlementTreeScenarioTests {
     void stageOne_PartlyBuilt_UsesWorldPercentsAndKeepsGateClosed() {
         SettlementTree tree = stageOne(facts().board(BoardCase.CLEAR_GROUNDS, PERCENT)
                 .board(BoardCase.BUILD_MINE, 40)
-                .board(BoardCase.BUILD_FENCE, PERCENT)
                 .board(BoardCase.BUILD_STREETS, PERCENT)
                 .board(BoardCase.STOCK_CHESTS, PERCENT)
                 .board(BoardCase.LIGHTING, PERCENT)
@@ -41,10 +40,6 @@ class SettlementTreeScenarioTests {
                 SettlementTree.State.NOT_STARTED,
                 tree.node("s1:case:BUILD_ORCHARD:1").orElseThrow().state(),
                 "Сад 0% — не начат Иначе тест stageOne_PartlyBuilt_UsesWorldPercentsAndKeepsGateClosed перестанет ловить эту поломку. При смене stageOne_PartlyBuilt_UsesWorldPercentsAndKeepsGateClosed проверь это утверждение.");
-        assertEquals(
-                PERCENT,
-                tree.node("s1:case:BUILD_FENCE:1").orElseThrow().percent(),
-                "Забор 100%: готовность мира доходит до предела Иначе тест stageOne_PartlyBuilt_UsesWorldPercentsAndKeepsGateClosed перестанет ловить эту поломку. При смене stageOne_PartlyBuilt_UsesWorldPercentsAndKeepsGateClosed проверь это утверждение.");
         SettlementTree.Node gate = tree.node("s1:gate").orElseThrow();
         assertEquals(
                 SettlementTree.State.LOCKED,
@@ -62,7 +57,6 @@ class SettlementTreeScenarioTests {
     void stageOne_AllMandatoryReady_OpensGateAndIgnoresPlanExtras() {
         SettlementTree tree = stageOne(facts().board(BoardCase.CLEAR_GROUNDS, PERCENT)
                 .board(BoardCase.BUILD_MINE, PERCENT)
-                .board(BoardCase.BUILD_FENCE, PERCENT)
                 .board(BoardCase.BUILD_STREETS, PERCENT)
                 .board(BoardCase.STOCK_CHESTS, PERCENT)
                 .board(BoardCase.LIGHTING, PERCENT)

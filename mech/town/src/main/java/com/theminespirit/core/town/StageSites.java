@@ -17,7 +17,6 @@ public final class StageSites {
     public static final String YARD = "yard";
     public static final String MINE = "mine";
     public static final String ORCHARD = "orchard";
-    public static final String ORCHARD_EXTRA = "orchard_extra";
     public static final String MINE_DESCENT_SCHEME = "mine_descent_v1";
     public static final String MINE_DESCENT_ROTATION = "clockwise_90";
     public static final String ORCHARD_SCHEME = "orchard_1";

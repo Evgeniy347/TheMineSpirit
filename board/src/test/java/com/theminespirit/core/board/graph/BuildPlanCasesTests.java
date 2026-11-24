@@ -142,11 +142,11 @@ class BuildPlanCasesTests {
     void plan_LotNotLeveled_NoBuildUntilLotReady() {
         GraphWorld world = GraphWorld.settled().with("dirt", 64);
         world.buildings.put("hut", Built.PLANNED);
-        world.buildings.put("fence", Built.PLANNED);
+        world.buildings.put("warehouse", Built.PLANNED);
         GraphFacts facts = PlanCaseFacts.facts(
                 Map.of(
                         "hut", PlanCaseFacts.building("hut", 0, Map.of(), false),
-                        "fence", PlanCaseFacts.building("fence", 0, Map.of(), true)),
+                        "warehouse", PlanCaseFacts.building("warehouse", 0, Map.of(), true)),
                 List.of(),
                 new GraphSiteFacts.Terrain(
                         1, 0, 3, 1, Map.of("minecraft:dirt", 4), Map.of("minecraft:dirt", 2), Map.of()));
@@ -166,7 +166,7 @@ class BuildPlanCasesTests {
                 "Яма на лоте засыпается до стройки: " + plan.tasks()
                         + " Иначе тест plan_LotNotLeveled_NoBuildUntilLotReady перестанет ловить эту поломку. При смене plan_LotNotLeveled_NoBuildUntilLotReady проверь это утверждение.");
         assertTrue(
-                PlanCaseFacts.posted(plan, "building:fence"),
+                PlanCaseFacts.posted(plan, "building:warehouse"),
                 "Готовый лот не ждёт чужой: постройка на выровненной площадке строится: " + plan.tasks()
                         + " Иначе тест plan_LotNotLeveled_NoBuildUntilLotReady перестанет ловить эту поломку. При смене plan_LotNotLeveled_NoBuildUntilLotReady проверь это утверждение.");
     }

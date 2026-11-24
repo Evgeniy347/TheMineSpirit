@@ -2,7 +2,6 @@ package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.DemolitionVerdict;
-import com.theminespirit.core.town.FenceDemolition;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.neoforge.BlockStates;
 import com.theminespirit.neoforge.SpiritEntity;
@@ -28,9 +27,6 @@ final class DemolitionLeftovers {
             BlockCoord at,
             BlockState state) {
         String blockId = BlockStates.idOf(state);
-        if (site != null && FenceDemolition.allowed(blockId, site.fenceStrip(), at.x(), at.z())) {
-            return "забор плана ограды";
-        }
         if (plan != null && plan.planned(at)) {
             return "блок постройки плана поселения";
         }

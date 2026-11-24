@@ -23,12 +23,12 @@ class RepairPlanTests {
         assertEquals(
                 Optional.of(ANCHOR),
                 repair.map(TicketTarget::target),
-                "Восстановление ограды без плана — по её схеме от цели задания: иначе REPAIR_BUILDING строит не там (INC-60)"
+                "Восстановление стены без плана — по её схеме от цели задания: иначе REPAIR_BUILDING строит не там (INC-60)"
                         + " При смене target_FencePlan_RepairBySchemeAtFenceOrigin проверь это утверждение.");
         assertEquals(
-                Optional.of("fence"),
+                Optional.of("wall_3"),
                 repair.map(TicketTarget::schemeFile),
-                "Восстановление ограды — схема fence"
+                "Восстановление стены — схема wall_3"
                         + " Иначе тест target_FencePlan_RepairBySchemeAtFenceOrigin перестанет ловить эту поломку. При смене target_FencePlan_RepairBySchemeAtFenceOrigin проверь это утверждение.");
         assertEquals(
                 Optional.of("jungle"),

@@ -43,6 +43,6 @@ public final class WallDemo {
     }
 
     public static List<WallPiece> pieces(PresetLibrary presets) {
-        return WallLayout.of(presets, StageSchemes.FENCE).closed(line().posts(), line().gates());
+        return WallLayout.of(presets, StageSchemes.wall()).closed(line().posts(), line().gates());
     }
 }

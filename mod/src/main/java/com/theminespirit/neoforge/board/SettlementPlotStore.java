@@ -9,6 +9,7 @@ import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.SettlementPlot;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.StageSites;
+import com.theminespirit.core.town.TownMapCodec;
 import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.core.town.TownPlanCodec;
 import java.util.HashMap;
@@ -33,6 +34,8 @@ public final class SettlementPlotStore extends SavedData {
     private static final String WOOD = "Wood";
     private static final String LEVEL_RULE = "LevelRule";
     private static final String TOWN = "Town";
+    private static final String MAP = "Map";
+    private static final String MAP_REV = "MapRev";
     private static final String BUILDING_WOOD = "BuildingWood";
     private static final String HOME_X = "HomeX";
     private static final String HOME_Y = "HomeY";
@@ -44,6 +47,8 @@ public final class SettlementPlotStore extends SavedData {
 
     private @Nullable SettlementPlot plot;
     private @Nullable TownPlan town;
+    private @Nullable String mapJson;
+    private int mapRevision;
     private @Nullable BlockCoord home;
     private final Map<Integer, StageSite> sites = new HashMap<>();
     private String levelRule = "";
@@ -61,6 +66,27 @@ public final class SettlementPlotStore extends SavedData {
 
     public Optional<TownPlan> town() {
         return Optional.ofNullable(town);
+    }
+
+    public Optional<String> mapJson() {
+        return Optional.ofNullable(mapJson);
+    }
+
+    public int mapRevision() {
+        return mapRevision;
+    }
+
+    public void putMap(String json, TownPlan next, int revision) {
+        mapJson = Objects.requireNonNull(json, "JSON карты не может быть null: применять нечего");
+        town = Objects.requireNonNull(next, "План карты не может быть null: по нему строят духи");
+        mapRevision = revision;
+        forgetHome();
+        sites.clear();
+        setDirty();
+    }
+
+    public void settlePlan(TownPlan next) {
+        town = Objects.requireNonNull(next, "План не может быть null: без него поселение пустое");
     }
 
     public Optional<BlockCoord> home() {
@@ -89,13 +115,6 @@ public final class SettlementPlotStore extends SavedData {
         sites.clear();
         levelRule = "";
         woods = BuildingWoods.NONE;
-        setDirty();
-    }
-
-    public void refitTown(TownPlan next) {
-        town = Objects.requireNonNull(next, "План поселения не может быть null: фиксируется расширенный план");
-        forgetHome();
-        sites.clear();
         setDirty();
     }
 
@@ -213,6 +232,14 @@ public final class SettlementPlotStore extends SavedData {
                         broken.getMessage());
             }
         }
+        if (tag.contains(MAP)) {
+            try {
+                store.mapJson = TownMapCodec.unpack(tag.getByteArray(MAP));
+                store.mapRevision = tag.getInt(MAP_REV);
+            } catch (IllegalArgumentException | IllegalStateException broken) {
+                LOGGER.error("[plot] сохранённая карта поселения не читается: {}", broken.getMessage());
+            }
+        }
         return store;
     }
 
@@ -241,6 +268,10 @@ public final class SettlementPlotStore extends SavedData {
         TownPlan plan = town;
         if (plan != null) {
             tag.putByteArray(TOWN, TownPlanCodec.encodePacked(plan));
+        }
+        if (mapJson != null) {
+            tag.putByteArray(MAP, TownMapCodec.pack(mapJson));
+            tag.putInt(MAP_REV, mapRevision);
         }
         return tag;
     }

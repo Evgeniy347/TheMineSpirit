@@ -2,6 +2,7 @@ package com.theminespirit.core.town;
 
 import com.theminespirit.core.board.StageRules;
 import com.theminespirit.core.observation.BlockCoord;
+import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
 import java.util.function.IntBinaryOperator;
@@ -17,7 +18,160 @@ public final class TownFixtures {
     private TownFixtures() {}
 
     public static TownPlan plan(IntBinaryOperator feet, IntBinaryOperator water) {
-        return TownPlanner.plan(grid(feet, water), ANCHOR, RULES, STAGES);
+        TerrainGrid grid = grid(feet, water);
+        ColumnMask region = PlotContour.grow(grid, ANCHOR.x(), ANCHOR.z(), RULES.ground());
+        TownStreets streets = layStreets(grid, region, ANCHOR.x(), ANCHOR.z(), RULES.streets());
+        List<Placement> placed = new ArrayList<>();
+        for (int stage = 1; stage <= STAGES.size(); stage++) {
+            for (String id : STAGES.get(stage - 1)) {
+                if (TownSnapshot.FENCE.equals(id) || TownSnapshot.TORCHES.equals(id)) {
+                    continue;
+                }
+                TownEntry entry = RULES.entry(id)
+                        .orElseThrow(() -> new IllegalArgumentException("Нет постройки '" + id + "' в каталоге"));
+                placed.add(place(grid, region, streets, placed, id, entry.name(), entry.width(), entry.depth(), stage));
+            }
+        }
+        List<ColumnMask.Cell> loop = FenceLine.loop(region);
+        List<Integer> gates = new ArrayList<>();
+        for (int index = 0; index < loop.size(); index++) {
+            if (streets.contains(loop.get(index).x(), loop.get(index).z())) {
+                gates.add(index);
+            }
+        }
+        return new TownPlan(ANCHOR, region, streets, placed, new FenceLine(loop, gates), List.of());
+    }
+
+    private static TownStreets layStreets(
+            TerrainGrid grid, ColumnMask region, int centerX, int centerZ, TownRules.Streets rules) {
+        GridBits bits = new GridBits(region.width(), region.depth());
+        BitSet inside = new BitSet(bits.size());
+        for (ColumnMask.Cell cell : region.cells()) {
+            inside.set(bits.at(cell.x() - region.minX(), cell.z() - region.minZ()));
+        }
+        int[] inset = bits.insetDistance(inside);
+        BitSet main = new BitSet(bits.size());
+        BitSet side = new BitSet(bits.size());
+        BitSet ring = new BitSet(bits.size());
+        int mainHalf = rules.main() / 2;
+        int sideHalf = rules.side() / 2;
+        for (int index = inside.nextSetBit(0); index >= 0; index = inside.nextSetBit(index + 1)) {
+            int x = region.minX() + index % region.width();
+            int z = region.minZ() + index / region.width();
+            if (grid.water(x, z)) {
+                continue;
+            }
+            int depth = inset[index];
+            boolean inner = depth > rules.ringInset() + rules.ring();
+            if (Math.abs(x - centerX) <= mainHalf || Math.abs(z - centerZ) <= mainHalf) {
+                main.set(index);
+            } else if (depth > rules.ringInset() && depth <= rules.ringInset() + rules.ring()) {
+                ring.set(index);
+            } else if (inner && (onLine(x - centerX, rules, sideHalf) || onLine(z - centerZ, rules, sideHalf))) {
+                side.set(index);
+            }
+        }
+        return new TownStreets(mask(region, main), mask(region, side), mask(region, ring));
+    }
+
+    private static boolean onLine(int offset, TownRules.Streets rules, int half) {
+        int distance = Math.abs(offset);
+        int nearest = Math.round((float) distance / rules.blockSize()) * rules.blockSize();
+        return nearest > 0 && Math.abs(distance - nearest) <= half;
+    }
+
+    private static ColumnMask mask(ColumnMask region, BitSet bits) {
+        return new ColumnMask(region.minX(), region.minZ(), region.width(), region.depth(), bits);
+    }
+
+    private static Placement place(
+            TerrainGrid grid,
+            ColumnMask region,
+            TownStreets streets,
+            List<Placement> placed,
+            String id,
+            String name,
+            int width,
+            int depth,
+            int stage) {
+        int gap = RULES.spacing().gap();
+        int maxX = region.minX() + region.width() - width;
+        int maxZ = region.minZ() + region.depth() - depth;
+        for (int z = region.minZ(); z <= maxZ; z++) {
+            for (int x = region.minX(); x <= maxX; x++) {
+                if (free(grid, region, streets, placed, x, z, width, depth, gap)) {
+                    return new Placement(
+                            id, name, stage, x, z, width, depth, facing(region, streets, x, z, width, depth));
+                }
+            }
+        }
+        throw new IllegalArgumentException("Тестовая раскладка не вместила " + id + ": площадь контура мала");
+    }
+
+    private static boolean free(
+            TerrainGrid grid,
+            ColumnMask region,
+            TownStreets streets,
+            List<Placement> placed,
+            int x,
+            int z,
+            int width,
+            int depth,
+            int gap) {
+        for (int dz = 0; dz < depth; dz++) {
+            for (int dx = 0; dx < width; dx++) {
+                int px = x + dx;
+                int pz = z + dz;
+                if (!region.contains(px, pz)
+                        || px <= region.minX()
+                        || pz <= region.minZ()
+                        || px >= region.minX() + region.width() - 1
+                        || pz >= region.minZ() + region.depth() - 1
+                        || !grid.land(px, pz)
+                        || streets.contains(px, pz)) {
+                    return false;
+                }
+            }
+        }
+        return placed.stream()
+                .noneMatch(other -> x - gap < other.x() + other.width()
+                        && other.x() - gap < x + width
+                        && z - gap < other.z() + other.depth()
+                        && other.z() - gap < z + depth);
+    }
+
+    private static Placement.Facing facing(ColumnMask region, TownStreets streets, int x, int z, int width, int depth) {
+        int centerX = x + width / 2;
+        int centerZ = z + depth / 2;
+        int limit = region.width() + region.depth();
+        int step = 0;
+        while (step < limit && !streets.contains(centerX + step, centerZ)) {
+            step++;
+        }
+        int east = step;
+        step = 0;
+        while (step < limit && !streets.contains(centerX - step, centerZ)) {
+            step++;
+        }
+        int west = step;
+        step = 0;
+        while (step < limit && !streets.contains(centerX, centerZ + step)) {
+            step++;
+        }
+        int south = step;
+        step = 0;
+        while (step < limit && !streets.contains(centerX, centerZ - step)) {
+            step++;
+        }
+        int north = step;
+        int best = Math.min(Math.min(east, west), Math.min(south, north));
+        if (best == east) {
+            return Placement.Facing.EAST;
+        }
+        if (best == west) {
+            return Placement.Facing.WEST;
+        }
+        return best == south ? Placement.Facing.SOUTH : Placement.Facing.NORTH;
     }
 
     public static TerrainGrid grid(IntBinaryOperator feet, IntBinaryOperator water) {
@@ -57,14 +211,22 @@ public final class TownFixtures {
     }
 
     public static TownPlan planWithOrchard(String building) {
-        TownRules rules = TownRules.load();
-        return TownPlanner.plant(
+        TownPlan base = flatPlan();
+        TownEntry template = RULES.template(OrchardSites.TEMPLATE)
+                .orElseThrow(() -> new IllegalArgumentException("Нет шаблона '" + OrchardSites.TEMPLATE + "'"));
+        List<Placement> placed = new ArrayList<>(base.placements());
+        placed.add(place(
                 grid((x, z) -> LEVEL, (x, z) -> 0),
-                flatPlan(),
-                rules,
-                StageRules.load().plans(),
-                List.of(building),
-                1);
+                base.region(),
+                base.streets(),
+                placed,
+                building,
+                template.name(),
+                template.width(),
+                template.depth(),
+                1));
+        return new TownPlan(
+                base.anchor(), base.region(), base.streets(), placed, base.fence(), base.unplaced(), base.paths());
     }
 
     private record Relief(long seed) {

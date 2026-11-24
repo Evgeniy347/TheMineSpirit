@@ -21,7 +21,6 @@ class SettlementStagePart2Tests {
     private static final List<BoardCase> FIRST_STAGE = List.of(
             BoardCase.CLEAR_GROUNDS,
             BoardCase.BUILD_MINE,
-            BoardCase.BUILD_FENCE,
             BoardCase.BUILD_ORCHARD,
             BoardCase.BUILD_HOUSE,
             BoardCase.STOCK_CHESTS,
@@ -50,10 +49,10 @@ class SettlementStagePart2Tests {
     }
 
     @Test
-    void missing_FirstStageWithoutFence_ListsFence() {
+    void missing_FirstStageWithoutHouse_ListsHouse() {
         BoardLedger ledger = new BoardLedger();
         for (BoardCase boardCase : FIRST_STAGE) {
-            if (boardCase != BoardCase.BUILD_FENCE) {
+            if (boardCase != BoardCase.BUILD_HOUSE) {
                 ledger.note(boardCase, 1);
             }
         }
@@ -61,11 +60,13 @@ class SettlementStagePart2Tests {
         assertEquals(
                 1,
                 SettlementStage.of(ledger),
-                "Без забора первый этап не пройден Иначе тест missing_FirstStageWithoutFence_ListsFence перестанет ловить эту поломку. При смене missing_FirstStageWithoutFence_ListsFence проверь это утверждение.");
+                "Без дома первый этап не пройден"
+                        + " Иначе тест missing_FirstStageWithoutHouse_ListsHouse перестанет ловить эту поломку. При смене missing_FirstStageWithoutHouse_ListsHouse проверь это утверждение.");
         assertEquals(
-                Map.of("BUILD_FENCE", 1),
+                Map.of("BUILD_HOUSE", 1),
                 SettlementStage.missing(ledger),
-                "Остаток — забор Иначе тест missing_FirstStageWithoutFence_ListsFence перестанет ловить эту поломку. При смене missing_FirstStageWithoutFence_ListsFence проверь это утверждение.");
+                "Остаток — дом"
+                        + " Иначе тест missing_FirstStageWithoutHouse_ListsHouse перестанет ловить эту поломку. При смене missing_FirstStageWithoutHouse_ListsHouse проверь это утверждение.");
     }
 
     @Test

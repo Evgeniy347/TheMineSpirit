@@ -19,7 +19,7 @@ public final class FenceStubPlan {
     public static TaskNode of(BlockCoord origin, int stage, @Nullable String wood) {
         Objects.requireNonNull(origin, "Точка заглушки не может быть null: без неё некуда ставить фрагмент");
         Map<String, Object> params = new LinkedHashMap<>();
-        params.put(FILE, StageSchemes.fenceStub(stage));
+        params.put(FILE, StageSchemes.wallStub(stage));
         params.put("x", origin.x());
         params.put("y", origin.y());
         params.put("z", origin.z());

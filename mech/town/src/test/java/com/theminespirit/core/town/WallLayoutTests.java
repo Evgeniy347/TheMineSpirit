@@ -18,7 +18,16 @@ import org.junit.jupiter.api.Test;
 
 class WallLayoutTests {
     static final PresetLibrary PRESETS = DataTables.INSTANCE.presets().current();
-    static final WallLayout FENCE = WallLayout.of(PRESETS, StageSchemes.FENCE);
+    static final List<String> FENCE_SCHEMES = List.of(
+            "fence_long",
+            "fence_straight",
+            "fence_post",
+            "fence_corner",
+            "fence_diagonal",
+            "fence_corner45_left",
+            "fence_corner45_right",
+            "fence_wicket");
+    static final WallLayout FENCE = WallLayout.of(PRESETS, FENCE_SCHEMES);
     static final WallLayout WALL = WallLayout.of(PRESETS, StageSchemes.WALL);
 
     @Test

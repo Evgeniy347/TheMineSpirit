@@ -23,7 +23,7 @@ class PlotPlanBlocksTests {
 
         assertFalse(
                 first.blocks().isEmpty(),
-                "План этапа обязан содержать блоки дома и ограды: пустой план слеп"
+                "План этапа обязан содержать блоки дома и двора: пустой план слеп"
                         + " Иначе тест plan_SameSite_IsReusedInsteadOfRebuilt перестанет ловить эту поломку. При смене plan_SameSite_IsReusedInsteadOfRebuilt проверь это утверждение.");
         assertSame(
                 first,

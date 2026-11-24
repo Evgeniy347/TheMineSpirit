@@ -32,6 +32,9 @@ public record TownSnapshot(
         paths = paths.stream().map(List::copyOf).toList();
     }
 
+    public static final String FENCE = "fence";
+    public static final String TORCHES = "torches";
+
     public record Progress(int done, int total, boolean damaged) {
         public static final Progress NONE = new Progress(0, 0, false);
 
@@ -81,7 +84,7 @@ public record TownSnapshot(
                 gateCells(plan.fence()),
                 site.ring().posts(),
                 gateCells(site.ring()),
-                progress.getOrDefault(TownPlanner.FENCE, Progress.NONE),
+                progress.getOrDefault(FENCE, Progress.NONE),
                 streets,
                 lots,
                 paths);

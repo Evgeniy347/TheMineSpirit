@@ -167,9 +167,11 @@ public final class RestServer {
             writeStream(exchange, response);
             return;
         }
-        byte[] bytes = response.body().getBytes(StandardCharsets.UTF_8);
+        byte[] bytes = response.binary().size() > 0
+                ? response.binary().bytes()
+                : response.body().getBytes(StandardCharsets.UTF_8);
         Headers headers = exchange.getResponseHeaders();
-        headers.set("Content-Type", JSON_CONTENT_TYPE);
+        headers.set("Content-Type", response.binary().size() > 0 ? "image/png" : JSON_CONTENT_TYPE);
         headers.set("Cache-Control", "no-store");
         response.headers().forEach(headers::set);
         exchange.sendResponseHeaders(response.status(), bytes.length);

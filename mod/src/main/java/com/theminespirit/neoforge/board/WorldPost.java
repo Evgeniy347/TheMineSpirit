@@ -97,7 +97,7 @@ final class WorldPost {
         if (step == BoardCase.CLEAR_GROUNDS) {
             SettlementScan.Strays found = WorldAreaScan.cachedOrScan(post.level, post.scan.stage());
             List<BlockCoord> extras = WorldAreaScan.raised(found).stream()
-                    .filter(ClearableCells.of(post.level, post.scan.stage()))
+                    .filter(ClearableCells.of(post.level))
                     .toList();
             List<BlockCoord> holes = WorldAreaScan.holes(found);
             if (extras.isEmpty() && holes.isEmpty()) {

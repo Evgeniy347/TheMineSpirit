@@ -1,10 +1,10 @@
 {
   "stages": [
-    {"stage": 1, "buildings": {"CLEAR_GROUNDS": 1, "BUILD_MINE": 1, "BUILD_FENCE": 1, "BUILD_ORCHARD": 1,
+    {"stage": 1, "buildings": {"CLEAR_GROUNDS": 1, "BUILD_MINE": 1, "BUILD_ORCHARD": 1,
                               "BUILD_HOUSE": 1, "LIGHTING": 1,
                               "BUILD_STREETS": 1},
      "plan": ["storage", "storage_2", "storage_3", "hut", "yard", "mine", "orchard", "orchard_extra",
-              "wheat_field", "fence", "torches"],
+              "wheat_field", "torches"],
      "requires": {"storage": 1, "storage_2": 1, "storage_3": 1}},
     {"stage": 2, "buildings": {"CLEAR_GROUNDS": 1, "BUILD_MINE": 2, "BUILD_STREETS": 2},
      "plan": ["plaza", "family_house_a", "family_house_b", "family_house_c", "barn", "field_a", "field_b",

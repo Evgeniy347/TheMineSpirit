@@ -1,8 +1,6 @@
 package com.theminespirit.neoforge.board;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.List;
@@ -20,22 +18,6 @@ class PlanDemolitionOrderTests {
                 PlanDemolition.order(List.of(highDirt, fence), Set.of(fence)),
                 "Столб-заглушка обязан идти в уборку первым: иначе задача на снос забора ждёт тысячи чужих клеток"
                         + " При смене order_FenceAmongTallerStrays_FenceGoesFirst проверь это утверждение.");
-    }
-
-    @Test
-    void hidden_StubFailures_ThirdHides() {
-        assertFalse(
-                ExtraFenceScan.hidden(0),
-                "Новый столб виден уборке сразу"
-                        + " Иначе тест hidden_StubFailures_ThirdHides перестанет ловить эту поломку. При смене hidden_StubFailures_ThirdHides проверь это утверждение.");
-        assertFalse(
-                ExtraFenceScan.hidden(2),
-                "После двух срывов столб получает ещё одну попытку: срыв мог быть случайным"
-                        + " Иначе тест hidden_StubFailures_ThirdHides перестанет ловить эту поломку. При смене hidden_StubFailures_ThirdHides проверь это утверждение.");
-        assertTrue(
-                ExtraFenceScan.hidden(3),
-                "После трёх срывов столб уходит из сказа, чтобы уборка не крутилась вечно"
-                        + " Иначе тест hidden_StubFailures_ThirdHides перестанет ловить эту поломку. При смене hidden_StubFailures_ThirdHides проверь это утверждение.");
     }
 
     @Test

@@ -89,7 +89,7 @@ class GraphAllocationGroupATests {
 
     @Test
     void case04_ToolWork_GoesToAxeHolder() {
-        GraphWorld world = community(2);
+        GraphWorld world = community(2).with("oak_log", 0);
         world.tools("spirit-1", 1);
         world.tools("spirit-2", -1);
         GraphTickets.Ticket chop = only(tickets(world), "chop_oak_log").get(0);
@@ -108,7 +108,7 @@ class GraphAllocationGroupATests {
 
     @Test
     void case05_NoTool_GivenToBareHandsWhenToolHolderBusy() {
-        GraphWorld world = community(2);
+        GraphWorld world = community(2).with("oak_log", 0);
         world.tools("spirit-1", 1);
         world.tools("spirit-2", -1);
         GraphTickets.Ticket chop = only(tickets(world), "chop_oak_log").get(0);

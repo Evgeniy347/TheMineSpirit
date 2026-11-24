@@ -3,7 +3,6 @@ package com.theminespirit.neoforge.policy;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.policy.api.PolicyId;
-import com.theminespirit.core.town.FenceDemolition;
 import com.theminespirit.core.town.PlanBuildings;
 import com.theminespirit.core.town.PlotProtection;
 import com.theminespirit.core.town.StageSite;
@@ -28,12 +27,6 @@ final class PolicyExcavation {
         return level instanceof ServerLevel server
                 ? SettlementPlotStore.liveSite(server).orElse(null)
                 : null;
-    }
-
-    static boolean inFenceStrip(ServerLevel level, BlockCoord coord, String blockId) {
-        return SettlementPlotStore.liveSite(level)
-                .map(site -> FenceDemolition.allowed(blockId, site.fenceStrip(), coord.x(), coord.z()))
-                .orElse(false);
     }
 
     static PlanBuilding planBuilding(ServerLevel level, BlockCoord coord) {

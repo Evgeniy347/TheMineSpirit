@@ -8,7 +8,6 @@ import com.theminespirit.core.town.SettlementPlot;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.StageSites;
 import com.theminespirit.core.town.TownPlan;
-import com.theminespirit.core.town.TownPlanner;
 import com.theminespirit.core.town.TownSnapshot;
 import com.theminespirit.core.ui.TownMapView;
 import com.theminespirit.neoforge.movement.PathNetworkService;
@@ -38,8 +37,8 @@ public final class TownSnapshots {
         progress.put(StageSites.YARD, YardFloorWatch.progress(level, stage));
         progress.put(StageSites.MINE, step(level, service, BoardCase.BUILD_MINE, stage, wood));
         progress.put(StageSites.ORCHARD, step(level, service, BoardCase.BUILD_ORCHARD, stage, wood));
-        progress.put(TownPlanner.FENCE, step(level, service, BoardCase.BUILD_FENCE, stage, wood));
-        progress.put(TownPlanner.TORCHES, step(level, service, BoardCase.LIGHTING, stage, wood));
+        progress.put(TownSnapshot.FENCE, step(level, service, BoardCase.BUILD_FENCE, stage, wood));
+        progress.put(TownSnapshot.TORCHES, step(level, service, BoardCase.LIGHTING, stage, wood));
         List<List<BlockCoord>> paths = PathNetworkService.segments(level);
         return Optional.of(TownSnapshot.of(town.orElseThrow(), stage, stageValue, progress, paths));
     }

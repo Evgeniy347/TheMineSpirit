@@ -97,9 +97,10 @@
 | GET | `/v1/settlement/level` | текущий уровень поселения ([level.md](level.md)) |
 | POST | `/v1/settlement/level/preview` | рассчитать уровень: рельеф, склад земли, вода ([level.md](level.md)) |
 | PUT | `/v1/settlement/level` | задать уровень поселения — единственный способ его сменить ([level.md](level.md)) |
-| GET | `/v1/town` | карта поселения: участки, улицы, ограда, плановые тропинки ([town.md](town.md)) |
-| POST | `/v1/town/edits` | точечные правки карты: участки, ворота, тропинки ([town.md](town.md)) |
-| POST | `/v1/town/validate` | сухой прогон правок без записи ([town.md](town.md)) |
+| GET | `/v1/town/plan` | карта поселения: участки, улицы, стена в JSON ([town.md](town.md)) |
+| GET | `/v1/town/terrain.png` | PNG местности в стиле ванильной карты по рамке x1,z1,x2,z2 ([town.md](town.md)) |
+| POST | `/v1/town/preview` | PNG: местность с наложенным планом из присланной карты ([town.md](town.md)) |
+| POST | `/v1/town/apply` | проверить и применить карту поселения ([town.md](town.md)) |
 | GET | `/v1/quarry/search` | лучшие области добычи земли/песка по выгодности ([quarry.md](quarry.md)) |
 | GET | `/v1/quarry/status` | места добычи: запас, остаток, состояние и маршрут ([quarry.md](quarry.md)) |
 | POST | `/v1/quarry/site` | установить место добычи решением стратега или игрока |

@@ -45,23 +45,6 @@ public final class OrchardSites {
         return parseNumber(building.substring(BUILDING_PREFIX.length())).orElse(FIRST_NUMBER);
     }
 
-    public static String numbered(String baseBuilding, int number) {
-        String species = speciesOfBuilding(baseBuilding)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Постройка '" + baseBuilding + "' не сад: номер дают только месту orchard_<порода>"));
-        if (number < FIRST_NUMBER) {
-            throw new IllegalArgumentException("Номер сада " + number + ": счёт идёт с первого");
-        }
-        return number == FIRST_NUMBER ? BUILDING_PREFIX + species : BUILDING_PREFIX + species + "_" + number;
-    }
-
-    public static boolean wantAnother(boolean built, int saplingStock, int saplingsPerPlot) {
-        if (saplingsPerPlot < 1) {
-            throw new IllegalArgumentException("Саженцев на сад " + saplingsPerPlot + ": нужно хотя бы один");
-        }
-        return built && saplingStock >= saplingsPerPlot;
-    }
-
     public static Optional<Placement> placement(TownPlan plan, String building) {
         Objects.requireNonNull(plan, "План не может быть null: место сада берут из него");
         return isExtra(building) ? plan.placement(building) : Optional.empty();

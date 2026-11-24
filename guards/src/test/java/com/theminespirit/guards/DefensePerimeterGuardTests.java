@@ -3,7 +3,6 @@ package com.theminespirit.guards;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.theminespirit.core.building.FenceGateRule;
 import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicTextParser;
@@ -20,6 +19,8 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
 class DefensePerimeterGuardTests {
+    private static final int MIN_SPAN = 10;
+    private static final int MAX_SPAN = 20;
     private static final Path ROOT = SourceFiles.resource(PresetLibrary.SCHEMATICS_ROOT);
 
     static List<String> lowBlocks(Schematic schematic) {
@@ -106,9 +107,9 @@ class DefensePerimeterGuardTests {
         assertEquals(
                 List.of(),
                 problems,
-                "Оборонная ограда: отрезок забора между углом и калиткой — от " + FenceGateRule.MIN_SPAN + " до "
-                        + FenceGateRule.MAX_SPAN + " блоков, иначе калитки либо редкие (дыра) либо частые (лишние "
-                        + "проходы). Сторону короче 11 не делят. Как надо: калитки по FenceGateRule.gates. Нарушения"
+                "Оборонная ограда: отрезок забора между углом и калиткой — от " + MIN_SPAN + " до "
+                        + MAX_SPAN + " блоков, иначе калитки либо редкие (дыра) либо частые (лишние "
+                        + "проходы). Сторону короче 11 не делят. Как надо: калитки по gates(). Нарушения"
                         + " При смене defenseSchemes_FenceSpans_BetweenTenAndTwenty проверь это утверждение.");
     }
 
@@ -189,7 +190,7 @@ class DefensePerimeterGuardTests {
         List<String> problems = new ArrayList<>();
         for (Side side : sides(schematic)) {
             int length = side.blocks().size();
-            if (length <= FenceGateRule.MIN_SPAN) {
+            if (length <= MIN_SPAN) {
                 continue;
             }
             boolean fence = false;
@@ -210,7 +211,7 @@ class DefensePerimeterGuardTests {
             points.add(length - 1);
             for (int index = 1; index < points.size(); index++) {
                 int span = points.get(index) - points.get(index - 1);
-                if (span < FenceGateRule.MIN_SPAN || span > FenceGateRule.MAX_SPAN) {
+                if (span < MIN_SPAN || span > MAX_SPAN) {
                     problems.add(
                             side.name() + " " + points.get(index - 1) + ".." + points.get(index) + " длиной " + span);
                 }

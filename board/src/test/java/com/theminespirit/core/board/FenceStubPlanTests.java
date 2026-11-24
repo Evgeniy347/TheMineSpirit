@@ -13,20 +13,20 @@ class FenceStubPlanTests {
     private static final BlockCoord ORIGIN = new BlockCoord(-170, 70, -489);
 
     @Test
-    void of_FirstStage_UsesSingleFencePost() {
+    void of_FirstStage_UsesSingleWallPost() {
         TaskNode node = FenceStubPlan.of(ORIGIN, 1, "oak");
         ScriptCall call = (ScriptCall) node;
 
         assertEquals(
                 "build_schematic",
                 call.script(),
-                "Заглушка ставится схемой, как и весь забор этапа"
-                        + " Иначе тест of_FirstStage_UsesSingleFencePost перестанет ловить эту поломку. При смене of_FirstStage_UsesSingleFencePost проверь это утверждение.");
+                "Заглушка ставится схемой, как и вся стена этапа"
+                        + " Иначе тест of_FirstStage_UsesSingleWallPost перестанет ловить эту поломку. При смене of_FirstStage_UsesSingleWallPost проверь это утверждение.");
         assertEquals(
-                "fence_post",
+                "wall_3_post",
                 call.params().get("file"),
                 "Событие ставит один столб в опасной колонке, а не кольцо 23×23: кольцо оставлено REST/демо"
-                        + " Иначе тест of_FirstStage_UsesSingleFencePost перестанет ловить эту поломку. При смене of_FirstStage_UsesSingleFencePost проверь это утверждение.");
+                        + " Иначе тест of_FirstStage_UsesSingleWallPost перестанет ловить эту поломку. При смене of_FirstStage_UsesSingleWallPost проверь это утверждение.");
         assertEquals(
                 Map.of("x", -170, "y", 70, "z", -489),
                 Map.of(
@@ -34,7 +34,7 @@ class FenceStubPlanTests {
                         "y", call.params().get("y"),
                         "z", call.params().get("z")),
                 "Заглушка стоит в основании колонки опасности: координаты берутся из SiteLevels.fenceOrigin"
-                        + " Иначе тест of_FirstStage_UsesSingleFencePost перестанет ловить эту поломку. При смене of_FirstStage_UsesSingleFencePost проверь это утверждение.");
+                        + " Иначе тест of_FirstStage_UsesSingleWallPost перестанет ловить эту поломку. При смене of_FirstStage_UsesSingleWallPost проверь это утверждение.");
     }
 
     @Test

@@ -54,8 +54,8 @@ final class TicketFarmPlans {
 
     static TaskNode buildFence(TicketTarget target, int level) {
         int part = target.count();
-        String base = level >= 2 ? "wall_3" : FENCE_SCHEME;
-        String scheme = part >= 1 && part <= fenceParts() ? SchematicPart.name(base, part, fenceParts()) : base;
+        String scheme =
+                part >= 1 && part <= fenceParts() ? SchematicPart.name(WALL_SCHEME, part, fenceParts()) : WALL_SCHEME;
         return schematic(scheme, target.target(), target);
     }
 

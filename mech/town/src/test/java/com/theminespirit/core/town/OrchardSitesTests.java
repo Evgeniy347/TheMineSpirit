@@ -1,7 +1,6 @@
 package com.theminespirit.core.town;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
@@ -38,44 +37,6 @@ class OrchardSitesTests {
                 OrchardSites.baseBuilding("orchard_jungle_2"),
                 "Для заданий и аудита все участки породы сводятся к её базовой постройке"
                         + " Иначе тест baseBuilding_Numbered_StripsNumber перестанет ловить эту поломку. При смене baseBuilding_Numbered_StripsNumber проверь это утверждение.");
-    }
-
-    @Test
-    void numbered_Second_AddsSuffix() {
-        assertEquals(
-                "orchard_jungle_2",
-                OrchardSites.numbered("orchard_jungle", 2),
-                "Второй сад породы получает номер, чтобы место и задание были уникальны"
-                        + " Иначе тест numbered_Second_AddsSuffix перестанет ловить эту поломку. При смене numbered_Second_AddsSuffix проверь это утверждение.");
-        assertEquals(
-                "orchard_jungle",
-                OrchardSites.numbered("orchard_jungle", 1),
-                "Первый сад породы остаётся без номера: совместимость с живым планом"
-                        + " Иначе тест numbered_Second_AddsSuffix перестанет ловить эту поломку. При смене numbered_Second_AddsSuffix проверь это утверждение.");
-    }
-
-    @Test
-    void wantAnother_PreviousNotBuilt_False() {
-        assertFalse(
-                OrchardSites.wantAnother(false, 64, 4),
-                "Пока прошлый сад породы не построен, новый не просят: иначе план плодит пустые участки"
-                        + " При смене wantAnother_PreviousNotBuilt_False проверь это утверждение.");
-    }
-
-    @Test
-    void wantAnother_BuiltAndStock_True() {
-        assertTrue(
-                OrchardSites.wantAnother(true, 4, 4),
-                "Построен прошлый сад и хватает саженцев на новый — спрос законный"
-                        + " Иначе тест wantAnother_BuiltAndStock_True перестанет ловить эту поломку. При смене wantAnother_BuiltAndStock_True проверь это утверждение.");
-    }
-
-    @Test
-    void wantAnother_BuiltNoStock_False() {
-        assertFalse(
-                OrchardSites.wantAnother(true, 3, 4),
-                "Без саженцев на постройку новый сад не просят: стройка встала бы без материалов"
-                        + " Иначе тест wantAnother_BuiltNoStock_False перестанет ловить эту поломку. При смене wantAnother_BuiltNoStock_False проверь это утверждение.");
     }
 
     @Test

@@ -124,12 +124,6 @@ final class ProtectionDecide {
                 || request.ground() == PlotProtection.Ground.CHEST_SALVAGE) {
             return new BlockProtection.Allowed();
         }
-        if (request.demolish()
-                && !inProtectedZone
-                && level instanceof ServerLevel server
-                && PolicyExcavation.inFenceStrip(server, coord, ProtectionGate.blockId(state))) {
-            return new BlockProtection.Allowed();
-        }
         if (plot.planCell()) {
             return new BlockProtection.Allowed();
         }

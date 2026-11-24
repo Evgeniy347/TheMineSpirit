@@ -70,7 +70,7 @@ public final class StageBuilds {
         if (cached != null) {
             return cached;
         }
-        List<List<WallPiece>> parts = fenceLayout(site).parts(ring.posts(), ring.gates(), count);
+        List<List<WallPiece>> parts = fenceLayout().parts(ring.posts(), ring.gates(), count);
         if (FENCE_PARTS.size() >= 32) {
             FENCE_PARTS.clear();
         }
@@ -78,8 +78,8 @@ public final class StageBuilds {
         return parts;
     }
 
-    private static WallLayout fenceLayout(StageSite site) {
-        return WallLayout.of(DataTables.INSTANCE.presets().current(), StageSchemes.fenceAtomic(site.stage()));
+    private static WallLayout fenceLayout() {
+        return WallLayout.of(DataTables.INSTANCE.presets().current(), StageSchemes.wall());
     }
 
     record FencePart(StageWork work, boolean hasPieces) {}

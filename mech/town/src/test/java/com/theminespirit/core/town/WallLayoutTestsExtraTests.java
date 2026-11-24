@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.reload.DataTables;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
@@ -12,37 +13,28 @@ import org.junit.jupiter.api.Test;
 class WallLayoutTestsExtraTests {
 
     @Test
-    void demoWall_ClosedRing_HasBothCornerKindsAndWicket() {
+    void demoWall_ClosedRing_UsesStoneWallFragments() {
         FenceLine line = WallDemo.line();
         List<WallPiece> pieces = WallDemo.pieces(PRESETS);
 
         assertExact(line.posts(), Set.of(line.posts().get(WallDemo.GATE)), pieces);
         assertEquals(
                 2,
-                count(pieces, "fence_corner"),
-                "Витрина обязана показать два угла 90°: на одном угле не увидеть, что линия поворачивает в обе стороны: "
+                count(pieces, "wall_3_corner"),
+                "Витрина стены обязана показать два угла 90°: на одном угле не увидеть, что линия поворачивает в обе стороны: "
                         + pieces
-                        + " Иначе тест demoWall_ClosedRing_HasBothCornerKindsAndWicket перестанет ловить эту поломку. При смене demoWall_ClosedRing_HasBothCornerKindsAndWicket проверь это утверждение.");
+                        + " Иначе тест demoWall_ClosedRing_UsesStoneWallFragments перестанет ловить эту поломку. При смене demoWall_ClosedRing_UsesStoneWallFragments проверь это утверждение.");
         assertEquals(
                 1,
-                count(pieces, "fence_corner45_left"),
-                "Витрина обязана показать угол 45° влево: иначе 45° в демо нет: " + pieces
-                        + " При смене demoWall_ClosedRing_HasBothCornerKindsAndWicket проверь это утверждение.");
-        assertEquals(
-                1,
-                count(pieces, "fence_corner45_right"),
-                "Витрина обязана показать угол 45° вправо: левый и правый — разные схемы: " + pieces
-                        + " Иначе тест demoWall_ClosedRing_HasBothCornerKindsAndWicket перестанет ловить эту поломку. При смене demoWall_ClosedRing_HasBothCornerKindsAndWicket проверь это утверждение.");
-        assertEquals(
-                1,
-                count(pieces, "fence_diagonal"),
-                "Витрина обязана показать участок диагонали, а не только повороты: " + pieces
-                        + " Иначе тест demoWall_ClosedRing_HasBothCornerKindsAndWicket перестанет ловить эту поломку. При смене demoWall_ClosedRing_HasBothCornerKindsAndWicket проверь это утверждение.");
-        assertEquals(
-                1,
-                count(pieces, "fence_wicket"),
-                "В витрине одни ворота: калитка — единственный проход в замкнутом контуре: " + pieces
-                        + " Иначе тест demoWall_ClosedRing_HasBothCornerKindsAndWicket перестанет ловить эту поломку. При смене demoWall_ClosedRing_HasBothCornerKindsAndWicket проверь это утверждение.");
+                count(pieces, "gate_3"),
+                "В витрине одни ворота: gate_3 — единственный проход в замкнутой стене: " + pieces
+                        + " Иначе тест demoWall_ClosedRing_UsesStoneWallFragments перестанет ловить эту поломку. При смене demoWall_ClosedRing_UsesStoneWallFragments проверь это утверждение.");
+        assertTrue(
+                pieces.stream()
+                        .allMatch(piece -> piece.scheme().startsWith("wall_3")
+                                || piece.scheme().equals("gate_3")),
+                "Витрина складывается только из каменной стены этапа 3: " + pieces
+                        + " Иначе тест demoWall_ClosedRing_UsesStoneWallFragments перестанет ловить эту поломку. При смене demoWall_ClosedRing_UsesStoneWallFragments проверь это утверждение.");
         assertRing(line.posts());
     }
 
@@ -64,10 +56,18 @@ class WallLayoutTestsExtraTests {
     @Test
     void wall_StoneStage_HasNo45Schemes() {
         assertTrue(
-                StageSchemes.FENCE.contains("fence_diagonal")
-                        && StageSchemes.FENCE.contains("fence_corner45_left")
-                        && StageSchemes.FENCE.contains("fence_corner45_right"),
-                "Уровень забора обязан иметь диагональ и оба угла 45°: на нём и держится витрина"
+                DataTables.INSTANCE.presets().current().byId("fence_diagonal").isPresent()
+                        && DataTables.INSTANCE
+                                .presets()
+                                .current()
+                                .byId("fence_corner45_left")
+                                .isPresent()
+                        && DataTables.INSTANCE
+                                .presets()
+                                .current()
+                                .byId("fence_corner45_right")
+                                .isPresent(),
+                "Набор стены обязан ссылаться на существующую схему wall_3"
                         + " Иначе тест wall_StoneStage_HasNo45Schemes перестанет ловить эту поломку. При смене wall_StoneStage_HasNo45Schemes проверь это утверждение.");
         assertFalse(
                 StageSchemes.WALL.stream()

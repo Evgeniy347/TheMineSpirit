@@ -41,8 +41,8 @@ public final class TicketPlans {
     static final String CLEAR_AREA = "clear_area";
     static final String WITHDRAW = "withdraw";
     static final String DEFAULT_SCHEME = "stone_house";
+    static final String WALL_SCHEME = "wall_3";
     static final String DEFAULT_LURE_ITEM = "wheat";
-    static final String FENCE_SCHEME = "fence";
     static final String ENCHANT_ROOM_SCHEME = "enchant_room_v1";
     static final String ENCHANT_ROOM_SHELVES_SCHEME = "enchant_room_v2";
     static final String ENCHANT_ROOM_HALL_SCHEME = "enchant_room_v3";

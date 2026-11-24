@@ -6,26 +6,26 @@ import org.junit.jupiter.api.Test;
 
 class StageSchemesTests {
     @Test
-    void fenceStub_FirstStage_IsSingleFencePost() {
+    void wallStub_FirstStage_IsSingleWallPost() {
         assertEquals(
-                "fence_post",
-                StageSchemes.fenceStub(1),
-                "Заглушка ограды этапа 1 — один столб: событие отмечает опасную колонку, а не строит кольцо 23×23"
-                        + " Иначе тест fenceStub_FirstStage_IsSingleFencePost перестанет ловить эту поломку. При смене fenceStub_FirstStage_IsSingleFencePost проверь это утверждение.");
+                "wall_3_post",
+                StageSchemes.wallStub(1),
+                "Заглушка ограды — один столб стены: событие отмечает опасную колонку, а не строит кольцо 23×23"
+                        + " Иначе тест wallStub_FirstStage_IsSingleWallPost перестанет ловить эту поломку. При смене wallStub_FirstStage_IsSingleWallPost проверь это утверждение.");
         assertEquals(
-                "fence_post",
-                StageSchemes.fenceStub(0),
-                "До первого этапа действует та же заглушка этапа 1: иначе событие до старта этапа не построить"
-                        + " При смене fenceStub_FirstStage_IsSingleFencePost проверь это утверждение.");
+                "wall_3_post",
+                StageSchemes.wallStub(0),
+                "До первого этапа действует та же заглушка стены: иначе событие до старта этапа не построить"
+                        + " При смене wallStub_FirstStage_IsSingleWallPost проверь это утверждение.");
     }
 
     @Test
-    void fenceStub_ThirdStage_IsSingleWallPost() {
+    void wallStub_ThirdStage_IsSingleWallPost() {
         assertEquals(
                 "wall_3_post",
-                StageSchemes.fenceStub(3),
+                StageSchemes.wallStub(3),
                 "С третьего этапа ограда — стена: заглушка обязана быть стенным столбом той же схемы, а не "
                         + "деревянным забором из прошлого этапа"
-                        + " Иначе тест fenceStub_ThirdStage_IsSingleWallPost перестанет ловить эту поломку. При смене fenceStub_ThirdStage_IsSingleWallPost проверь это утверждение.");
+                        + " Иначе тест wallStub_ThirdStage_IsSingleWallPost перестанет ловить эту поломку. При смене wallStub_ThirdStage_IsSingleWallPost проверь это утверждение.");
     }
 }

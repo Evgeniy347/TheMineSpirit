@@ -36,7 +36,6 @@ public final class StageBuilt {
         built.put("furnace", SettlementFacts::furnace);
         built.put("brewing_stand", facts -> done(facts, BoardCase.CRAFT_BREWING_STAND));
         built.put("lighting", SettlementFacts::lighting);
-        built.put("fence", SettlementFacts::fence);
         built.put("hut", SettlementFacts::houses);
         built.put(ORCHARD, SettlementFacts::orchard);
         built.put("streets", SettlementFacts::streets);
