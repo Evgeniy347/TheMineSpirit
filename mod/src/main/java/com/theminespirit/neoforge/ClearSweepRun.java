@@ -105,11 +105,10 @@ final class ClearSweepRun {
                 startPillarStep();
                 return;
             }
-            if (pillar != null && !pillar.cells().isEmpty()) {
-                startDescent();
-                return;
+            startDescent();
+            if (session.state != ClearAreaSession.State.DESCEND) {
+                session.fail("стою на своих подмостях, но своих клеток для разбора нет: нужен откат аренды");
             }
-            session.fail("стою на своих подмостях, но своих клеток для разбора нет: нужен откат аренды");
             return;
         }
         if (!session.spirit.onGround()) {
@@ -243,13 +242,13 @@ final class ClearSweepRun {
     private void startDescent() {
         SweepPillar current = pillar;
         if (current == null) {
-            session.state = ClearAreaSession.State.PICK;
-            return;
+            dismantler = PillarDownScript.leftoverDismantler(session.spirit);
+        } else {
+            List<BlockCoord> order = new ArrayList<>(current.cells());
+            order.sort(Comparator.comparingInt(BlockCoord::y).reversed());
+            dismantler = new PillarDismantler(session.spirit, order, current.lease(), false);
         }
-        List<BlockCoord> order = new ArrayList<>(current.cells());
-        order.sort(Comparator.comparingInt(BlockCoord::y).reversed());
-        dismantler = new PillarDismantler(session.spirit, order, current.lease(), false);
-        session.state = ClearAreaSession.State.DESCEND;
+        session.state = dismantler == null ? ClearAreaSession.State.PICK : ClearAreaSession.State.DESCEND;
     }
 
     private boolean canRise() {

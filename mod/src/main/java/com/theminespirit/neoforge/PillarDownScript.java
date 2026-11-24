@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Predicate;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
@@ -54,26 +55,23 @@ public final class PillarDownScript implements ScriptInstance {
         };
     }
 
+    record OwnPillar(List<BlockCoord> cells, @Nullable LeaseRun lease) {}
+
     private void scan() {
+        ownPillarBelow(spirit)
+                .ifPresentOrElse(
+                        found -> {
+                            own.addAll(found.cells());
+                            lease = found.lease();
+                        },
+                        () -> scanLeaseCells());
+    }
+
+    private void scanLeaseCells() {
         if (!(spirit.level() instanceof ServerLevel)) {
             return;
         }
-        Level level = spirit.level();
-        BlockPos feet = spirit.blockPosition();
-        int floor = Math.max(level.getMinBuildHeight() + 1, feet.getY() - CatalogLimits.COUNT_MAX);
-        for (int y = feet.getY() - 1; y >= floor; y--) {
-            BlockPos pos = new BlockPos(feet.getX(), y, feet.getZ());
-            if (LeaseRun.ownedAnywhereAt(spirit, pos) != null
-                    && !level.getBlockState(pos).isAir()) {
-                own.add(new BlockCoord(pos.getX(), pos.getY(), pos.getZ()));
-            }
-        }
-        if (!own.isEmpty()) {
-            BlockCoord top = own.get(0);
-            lease = LeaseRun.ownedAnywhereAt(spirit, new BlockPos(top.x(), top.y(), top.z()));
-            return;
-        }
-        LeaseRun found = LeaseRun.ownedAnywhereAt(spirit, feet.below());
+        LeaseRun found = LeaseRun.ownedAnywhereAt(spirit, spirit.blockPosition().below());
         if (found == null) {
             return;
         }
@@ -85,6 +83,43 @@ public final class PillarDownScript implements ScriptInstance {
                 own.add(cell.pos());
             }
         }
+    }
+
+    static @Nullable PillarDismantler leftoverDismantler(SpiritEntity spirit) {
+        return ownPillarBelow(spirit)
+                .map(found -> new PillarDismantler(spirit, found.cells(), found.lease(), false))
+                .orElse(null);
+    }
+
+    static Optional<OwnPillar> ownPillarBelow(SpiritEntity spirit) {
+        if (!(spirit.level() instanceof ServerLevel)) {
+            return Optional.empty();
+        }
+        Level level = spirit.level();
+        BlockPos feet = spirit.blockPosition();
+        int floor = Math.max(level.getMinBuildHeight() + 1, feet.getY() - CatalogLimits.COUNT_MAX);
+        List<BlockCoord> cells = columnBelow(feet.getX(), feet.getY(), feet.getZ(), floor, cell -> {
+            BlockPos pos = new BlockPos(cell.x(), cell.y(), cell.z());
+            return LeaseRun.ownedAnywhereAt(spirit, pos) != null
+                    && !level.getBlockState(pos).isAir();
+        });
+        if (cells.isEmpty()) {
+            return Optional.empty();
+        }
+        BlockCoord top = cells.get(0);
+        return Optional.of(
+                new OwnPillar(cells, LeaseRun.ownedAnywhereAt(spirit, new BlockPos(top.x(), top.y(), top.z()))));
+    }
+
+    static List<BlockCoord> columnBelow(int x, int feetY, int z, int floor, Predicate<BlockCoord> own) {
+        List<BlockCoord> cells = new ArrayList<>();
+        for (int y = feetY - 1; y >= floor; y--) {
+            BlockCoord cell = new BlockCoord(x, y, z);
+            if (own.test(cell)) {
+                cells.add(cell);
+            }
+        }
+        return cells;
     }
 
     public static boolean ownBelow(SpiritEntity spirit) {
