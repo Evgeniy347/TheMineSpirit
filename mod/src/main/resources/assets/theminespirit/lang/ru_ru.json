@@ -4,6 +4,7 @@
   "key.theminespirit.highlight": "Подсветка строительства",
   "key.categories.theminespirit": "The Mine Spirit",
   "theminespirit.highlight.on": "Подсветка включена: снести %s, поставить %s (Ctrl+J — выключить)",
+  "theminespirit.highlight.ready": "Подсветка: снести %s, поставить %s",
   "theminespirit.highlight.off": "Подсветка строительства выключена",
   "theminespirit.tree.title": "Древо развития поселения",
   "theminespirit.tree.tab": "Этап %s",

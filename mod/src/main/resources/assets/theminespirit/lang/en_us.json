@@ -4,6 +4,7 @@
   "key.theminespirit.highlight": "Construction highlight",
   "key.categories.theminespirit": "The Mine Spirit",
   "theminespirit.highlight.on": "Highlight on: to remove %s, to place %s (Ctrl+J to turn off)",
+  "theminespirit.highlight.ready": "Highlight: to remove %s, to place %s",
   "theminespirit.highlight.off": "Construction highlight off",
   "theminespirit.tree.title": "Settlement development tree",
   "theminespirit.tree.tab": "Stage %s",

@@ -3,6 +3,7 @@ package com.theminespirit.core.board;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 public final class ConstructionBatches {
     public static final int PER_BATCH = 9;
@@ -42,6 +43,24 @@ public final class ConstructionBatches {
 
     public static boolean hasMore(List<ChunkCell> order, int index) {
         return (index + 1) * PER_BATCH < order.size();
+    }
+
+    public static List<ChunkCell> order(Set<ChunkCell> included, int centerX, int centerZ) {
+        Objects.requireNonNull(included, "Набор чанков не может быть null: пустой — Set.of()");
+        if (included.isEmpty()) {
+            return List.of();
+        }
+        int radius = 0;
+        for (ChunkCell cell : included) {
+            radius = Math.max(radius, Math.max(Math.abs(cell.x() - centerX), Math.abs(cell.z() - centerZ)));
+        }
+        List<ChunkCell> order = new ArrayList<>();
+        for (ChunkCell cell : spiral(centerX, centerZ, radius)) {
+            if (included.contains(cell)) {
+                order.add(cell);
+            }
+        }
+        return List.copyOf(order);
     }
 
     private static void ring(List<ChunkCell> order, int centerX, int centerZ, int ring) {

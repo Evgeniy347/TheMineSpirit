@@ -166,6 +166,16 @@ public final class TheMineSpiritClient {
                 manager.missingBlocks().size(),
                 cycleDemolish,
                 cyclePlace);
+        if (Minecraft.getInstance().player != null) {
+            Minecraft.getInstance()
+                    .player
+                    .displayClientMessage(
+                            Component.translatable(
+                                    "theminespirit.highlight.ready",
+                                    manager.wrongBlocks().size(),
+                                    manager.missingBlocks().size()),
+                            true);
+        }
     }
 
     private static void tickConstructionAudit(Minecraft minecraft) {

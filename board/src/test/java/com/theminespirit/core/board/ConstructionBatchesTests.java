@@ -73,4 +73,31 @@ class ConstructionBatchesTests {
                 new HashSet<>(order).size(),
                 "Спираль не должна повторять чанки: иначе аудит посчитает одну и ту же клетку дважды и раздует пакеты; при смене обхода кольца в ConstructionBatches проверь уникальность всех 81 чанка");
     }
+
+    @Test
+    void order_OnlySettlementChunks_KeepClockwiseOrder() {
+        Set<ConstructionBatches.ChunkCell> included = Set.of(
+                new ConstructionBatches.ChunkCell(0, 0),
+                new ConstructionBatches.ChunkCell(2, 0),
+                new ConstructionBatches.ChunkCell(-1, 1));
+
+        List<ConstructionBatches.ChunkCell> order = ConstructionBatches.order(included, ZERO.x(), ZERO.z());
+
+        assertEquals(
+                List.of(
+                        new ConstructionBatches.ChunkCell(0, 0),
+                        new ConstructionBatches.ChunkCell(-1, 1),
+                        new ConstructionBatches.ChunkCell(2, 0)),
+                order,
+                "Порядок обязан фильтровать спираль чанками поселения, сохраняя обход по часовой стрелке: иначе пачки выйдут за пределы поселения или перестанут быть ближайшими первыми; при смене фильтра поселения в ConstructionBatches проверь порядок трёх чанков");
+    }
+
+    @Test
+    void order_NoSettlementChunks_IsEmpty() {
+        List<ConstructionBatches.ChunkCell> order = ConstructionBatches.order(Set.of(), ZERO.x(), ZERO.z());
+
+        assertTrue(
+                order.isEmpty(),
+                "Без чанков поселения порядок обязан быть пустым: иначе клиент запросит пачки с пустым районом и будет крутить аудит впустую; при смене order в ConstructionBatches проверь пустой набор");
+    }
 }
