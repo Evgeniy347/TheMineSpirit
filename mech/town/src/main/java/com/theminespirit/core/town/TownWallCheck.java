@@ -16,24 +16,16 @@ final class TownWallCheck {
         Set<ColumnMask.Cell> cells = new HashSet<>();
         boolean broken = false;
         for (TownMap.WallSegment segment : map.wall()) {
-            if (!segment.horizontal() && segment.x1() != segment.x2()) {
+            if (!WallSegmentCells.valid(segment)) {
                 findings.add(new TownMapFinding(
                         "wall",
                         "segment",
                         "отрезок стены " + segment.x1() + "," + segment.z1() + " → " + segment.x2() + "," + segment.z2()
-                                + " не прямой"));
+                                + " не прямой и не под 45°"));
                 broken = true;
                 continue;
             }
-            if (segment.horizontal()) {
-                for (int x = segment.minX(); x <= segment.maxX(); x++) {
-                    cells.add(new ColumnMask.Cell(x, segment.z1()));
-                }
-            } else {
-                for (int z = segment.minZ(); z <= segment.maxZ(); z++) {
-                    cells.add(new ColumnMask.Cell(segment.x1(), z));
-                }
-            }
+            cells.addAll(WallSegmentCells.of(segment));
         }
         if (broken || cells.isEmpty()) {
             return;

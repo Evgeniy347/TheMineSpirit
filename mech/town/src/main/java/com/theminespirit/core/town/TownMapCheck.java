@@ -126,8 +126,71 @@ public final class TownMapCheck {
                     false,
                     findings);
         }
+        checkStreetNetwork(map.streets(), streets, region, previous, findings);
         TownWallCheck.validate(map, region, water, findings);
         return List.copyOf(findings);
+    }
+
+    private static void checkStreetNetwork(
+            List<TownMap.MapStreet> streets,
+            TownStreets masks,
+            ColumnMask region,
+            @Nullable TownMap previous,
+            List<TownMapFinding> findings) {
+        if (streets.size() < 2) {
+            return;
+        }
+        List<Set<ColumnMask.Cell>> cells = new ArrayList<>();
+        for (TownMap.MapStreet street : streets) {
+            cells.add(streetCells(street, masks, region));
+        }
+        for (int index = 0; index < streets.size(); index++) {
+            if (inheritedStreet(previous, streets.get(index))) {
+                continue;
+            }
+            boolean linked = false;
+            for (int other = 0; other < streets.size() && !linked; other++) {
+                linked = other != index && joined(cells.get(index), cells.get(other));
+            }
+            if (!linked) {
+                findings.add(new TownMapFinding(
+                        streets.get(index).id(),
+                        "disconnected",
+                        "улица '" + streets.get(index).id() + "' не соединена с остальными улицами"));
+            }
+        }
+    }
+
+    private static boolean inheritedStreet(@Nullable TownMap previous, TownMap.MapStreet street) {
+        return previous != null && previous.streets().stream().anyMatch(street::equals);
+    }
+
+    private static Set<ColumnMask.Cell> streetCells(TownMap.MapStreet street, TownStreets masks, ColumnMask region) {
+        if (street.ring()) {
+            return new HashSet<>(masks.ring().cells());
+        }
+        Set<ColumnMask.Cell> out = new HashSet<>();
+        for (int x = street.minX(); x <= street.maxX(); x++) {
+            for (int z = street.minZ(); z <= street.maxZ(); z++) {
+                if (region.contains(x, z)) {
+                    out.add(new ColumnMask.Cell(x, z));
+                }
+            }
+        }
+        return out;
+    }
+
+    private static boolean joined(Set<ColumnMask.Cell> first, Set<ColumnMask.Cell> second) {
+        for (ColumnMask.Cell cell : first) {
+            if (second.contains(cell)
+                    || second.contains(new ColumnMask.Cell(cell.x() + 1, cell.z()))
+                    || second.contains(new ColumnMask.Cell(cell.x() - 1, cell.z()))
+                    || second.contains(new ColumnMask.Cell(cell.x(), cell.z() + 1))
+                    || second.contains(new ColumnMask.Cell(cell.x(), cell.z() - 1))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static boolean inheritedPlot(@Nullable TownMap previous, TownMap.MapPlot plot) {

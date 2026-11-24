@@ -100,15 +100,11 @@ public final class TownMapRules {
         Objects.requireNonNull(region, "Граница не может быть null: стена идёт по ней");
         Set<ColumnMask.Cell> cells = new LinkedHashSet<>();
         for (TownMap.WallSegment segment : map.wall()) {
-            if (segment.horizontal()) {
-                for (int x = segment.minX(); x <= segment.maxX(); x++) {
-                    cells.add(new ColumnMask.Cell(x, segment.z1()));
-                }
-            } else {
-                for (int z = segment.minZ(); z <= segment.maxZ(); z++) {
-                    cells.add(new ColumnMask.Cell(segment.x1(), z));
-                }
+            if (!WallSegmentCells.valid(segment)) {
+                throw new IllegalArgumentException("Отрезок стены " + segment.x1() + "," + segment.z1() + " → "
+                        + segment.x2() + "," + segment.z2() + " не прямой и не под 45°: стену не уложить");
             }
+            cells.addAll(WallSegmentCells.of(segment));
         }
         if (cells.isEmpty()) {
             return Optional.empty();
