@@ -46,7 +46,6 @@ class GraphStateExportTests {
                 new GraphSiteFacts.StageReqs(Map.of("hut", 1), Map.of("hut", 1)),
                 GraphFeedback.none(),
                 List.of(),
-                List.of(),
                 List.of());
         GraphState state = GraphWorld.empty()
                 .state()

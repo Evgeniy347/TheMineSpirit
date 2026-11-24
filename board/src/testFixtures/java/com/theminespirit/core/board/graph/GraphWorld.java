@@ -132,8 +132,7 @@ final class GraphWorld {
                 facts.stageReqs(),
                 facts.feedback(),
                 facts.players(),
-                facts.planBreaches(),
-                List.of());
+                facts.planBreaches());
         return this;
     }
 

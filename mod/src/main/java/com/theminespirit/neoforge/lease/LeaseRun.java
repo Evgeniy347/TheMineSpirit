@@ -62,14 +62,6 @@ public final class LeaseRun {
                 .orElse(null);
     }
 
-    public static @Nullable LeaseRun attach(ServerLevel level, String id) {
-        LeaseData data = LeaseData.get(level);
-        return data.book()
-                .find(id)
-                .map(lease -> new LeaseRun(data, LeaseSession.attach(data.book(), lease.id())))
-                .orElse(null);
-    }
-
     public String id() {
         return session.id();
     }

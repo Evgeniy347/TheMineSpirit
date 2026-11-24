@@ -90,7 +90,6 @@ class GraphBuildingMaterialsTests {
                 new GraphSiteFacts.StageReqs(Map.of(), Map.of()),
                 GraphFeedback.none(),
                 List.of(),
-                List.of(),
                 List.of());
     }
 }

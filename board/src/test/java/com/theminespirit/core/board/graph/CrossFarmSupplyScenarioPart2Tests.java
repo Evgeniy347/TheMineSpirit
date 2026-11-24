@@ -196,7 +196,6 @@ class CrossFarmSupplyScenarioPart2Tests {
                 new GraphSiteFacts.StageReqs(Map.of(), Map.of()),
                 GraphFeedback.none(),
                 List.of(),
-                List.of(),
                 List.of());
         GraphPlan plan = plan(world, facts);
         GraphPlan.Task repairHut = task(plan, "event:repair_hut:repair:hut");
@@ -245,8 +244,7 @@ class CrossFarmSupplyScenarioPart2Tests {
                 facts.stageReqs(),
                 facts.feedback(),
                 facts.players(),
-                facts.planBreaches(),
-                List.of());
+                facts.planBreaches());
         assertTrue(
                 GraphStageGate.buildingReady(repaired, "hut"),
                 "После аудита 100 % и снятия лишнего этап видит готовую хижину Иначе тест audit_DamagedHutExtraStray_RepairAndDemolitionBeforeStageClose перестанет ловить эту поломку. При смене audit_DamagedHutExtraStray_RepairAndDemolitionBeforeStageClose проверь это утверждение.");

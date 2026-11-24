@@ -150,7 +150,6 @@ final class AllocationCases {
                 new GraphSiteFacts.StageReqs(Map.of(), Map.of()),
                 GraphFeedback.none(),
                 List.of(),
-                List.of(),
                 List.of());
     }
 
@@ -166,7 +165,6 @@ final class AllocationCases {
                 GraphSiteFacts.Terrain.empty(),
                 new GraphSiteFacts.StageReqs(Map.of(), Map.of()),
                 GraphFeedback.none(),
-                List.of(),
                 List.of(),
                 List.of());
     }

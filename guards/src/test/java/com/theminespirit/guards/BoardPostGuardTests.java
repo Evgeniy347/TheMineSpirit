@@ -48,8 +48,6 @@ class BoardPostGuardTests {
             "исполнитель узла warehouse: участки трёх складов этапа 1 выдаются по плану, а не порогом",
             "PlanDemolition.java",
             "исполнитель билета графа: снос по узлу demolish_stray/clear_floating",
-            "UndoLeasePost.java",
-            "исполнитель билета графа: откат брошенной аренды по узлу undo_lease",
             "TransferWatch.java",
             "доставка материалов по билету графа: причина под-задачи — id задания графа, work выбирает граф",
             "SupplyTickets.java",

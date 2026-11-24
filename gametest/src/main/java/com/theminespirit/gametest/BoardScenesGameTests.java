@@ -1,20 +1,13 @@
 package com.theminespirit.gametest;
 
 import com.theminespirit.core.ModIdentity;
-import com.theminespirit.core.board.BoardConfig;
-import com.theminespirit.core.board.lease.Lease;
-import com.theminespirit.core.board.lease.LeaseStatus;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
-import com.theminespirit.neoforge.lease.LeaseData;
-import com.theminespirit.neoforge.lease.LeaseRun;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -32,42 +25,6 @@ public final class BoardScenesGameTests {
     @GameTest(template = "arena", batch = "scene_board_arena", timeoutTicks = 3203)
     public static void boardScene_ArenaSteps_AllPass(GameTestHelper helper) {
         SceneSteps.run(helper, List.of("arena"), BoardGameTests.class, BoardV2GameTests.class);
-    }
-
-    @GameTest(template = "big_arena", batch = "scene_undo_stall", timeoutTicks = 200)
-    public static void undoScene_InReachButInvisibleCell_FailsWithReasonKeepsLeaseOrphaned(GameTestHelper helper) {
-        GameTestFixtures.reset(helper, 24);
-        GameTestFixtures.buildFloor(helper, Blocks.STONE);
-        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(2, 1, 2));
-        spirit.getInventory().addItem(new ItemStack(Items.STONE_PICKAXE));
-        BlockPos cell = new BlockPos(3, 0, 2);
-        helper.setBlock(cell, Blocks.DIRT);
-        helper.setBlock(cell.above(), Blocks.STONE);
-        LeaseRun abandoned = LeaseRun.open(spirit, "scaffold");
-        abandoned.placed(helper.absolutePos(cell), "minecraft:dirt");
-        abandoned.orphan();
-        withUndoNoProgress(20);
-        SpiritRun run = SpiritRun.launch(helper, spirit, new ScriptCall("undo_lease", Map.of("id", abandoned.id())), 1);
-        restoreUndoNoProgressWhenFinished(helper, run);
-
-        helper.succeedWhen(() -> {
-            CraftTestSupport.assertFinished(helper, spirit, run, RunStatus.FAILED);
-            helper.assertTrue(
-                    spirit.taskFailureReason().orElse("").contains("без продвижения"),
-                    "Откат без продвижения обязан провалиться с причиной, а не висеть RUNNING: "
-                            + spirit.taskFailureReason().orElse("нет"));
-            Lease lease = LeaseData.get(helper.getLevel()).book().require(abandoned.id());
-            helper.assertTrue(
-                    lease.status() == LeaseStatus.ORPHANED,
-                    "Провал отката оставляет аренду ORPHANED до смены ключа, а не закрывает и не теряет её: "
-                            + lease.status());
-            helper.assertTrue(
-                    helper.getBlockState(cell).is(Blocks.DIRT),
-                    "Провал не трогает мир: клетка " + cell + " обязана остаться " + Blocks.DIRT + ", сейчас "
-                            + helper.getBlockState(cell));
-            spirit.discard();
-            GameTestFixtures.finish(helper, 24);
-        });
     }
 
     @GameTest(template = "arena", batch = "scene_dig_open_pit", timeoutTicks = 400)
@@ -108,36 +65,6 @@ public final class BoardScenesGameTests {
                             + helper.getBlockState(new BlockPos(5, 2, 4)));
             spirit.discard();
             GameTestFixtures.finish(helper);
-        });
-    }
-
-    private static void withUndoNoProgress(int ticks) {
-        BoardConfig base = BoardConfig.readFromClasspath();
-        Map<String, Long> intervals = new LinkedHashMap<>(base.intervals());
-        intervals.put("undoNoProgressTicks", (long) ticks);
-        BoardConfig.useSource(() -> new BoardConfig(
-                base.priorities(),
-                base.modifiers(),
-                intervals,
-                base.levels(),
-                base.herd(),
-                base.immovable(),
-                base.products(),
-                base.tools(),
-                base.wool(),
-                base.hive(),
-                base.plans(),
-                base.facts()));
-    }
-
-    private static void restoreUndoNoProgressWhenFinished(GameTestHelper helper, SpiritRun run) {
-        AtomicBoolean restored = new AtomicBoolean();
-        helper.onEachTick(() -> {
-            if (run.started()
-                    && run.spirit().taskStatus().orElse(null) != RunStatus.RUNNING
-                    && restored.compareAndSet(false, true)) {
-                BoardConfig.useSource(BoardConfig::readFromClasspath);
-            }
         });
     }
 }

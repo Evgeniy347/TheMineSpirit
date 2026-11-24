@@ -17,7 +17,6 @@ public final class SpiritConfig {
     public static final int DEFAULT_STORAGE_SEARCH_RADIUS = 8;
     public static final int DEFAULT_WATER_SEARCH_RADIUS = 6;
     public static final int DEFAULT_FORAGE_WATER_RADIUS = 8;
-    public static final int DEFAULT_STAND_WALK_RADIUS = 3;
     public static final int DEFAULT_WALL_ESCAPE_RADIUS = 2;
     public static final int DEFAULT_BUILD_MAKE_WAY_RADIUS = 6;
     public static final int DEFAULT_FOLLOW_PICKUP_RADIUS = 4;
@@ -46,7 +45,6 @@ public final class SpiritConfig {
     private static final ModConfigSpec.IntValue STORAGE_SEARCH_RADIUS;
     private static final ModConfigSpec.IntValue WATER_SEARCH_RADIUS;
     private static final ModConfigSpec.IntValue FORAGE_WATER_RADIUS;
-    private static final ModConfigSpec.IntValue STAND_WALK_RADIUS;
     private static final ModConfigSpec.IntValue WALL_ESCAPE_RADIUS;
     private static final ModConfigSpec.IntValue BUILD_MAKE_WAY_RADIUS;
     private static final ModConfigSpec.IntValue FOLLOW_PICKUP_RADIUS;
@@ -133,10 +131,6 @@ public final class SpiritConfig {
                         "Радиус поиска воды при выборе места сбора, в блоках.",
                         "Шире — сбор считается обеспеченным водой даже на сухом краю поселения.")
                 .defineInRange("forageWaterRadius", DEFAULT_FORAGE_WATER_RADIUS, 1, 32);
-        STAND_WALK_RADIUS = builder.comment(
-                        "Радиус поиска стоянок при откате и обходе, в блоках.",
-                        "Шире — дух ищет стоянку дальше от цели и дольше думает.")
-                .defineInRange("standWalkRadius", DEFAULT_STAND_WALK_RADIUS, 1, 12);
         WALL_ESCAPE_RADIUS = builder.comment(
                         "Радиус осмотра запертого духа вокруг себя при побеге из ямы, в блоках.",
                         "Шире — дух видит выход через толстую стену.")
@@ -246,10 +240,6 @@ public final class SpiritConfig {
 
     public static int forageWaterRadius() {
         return loaded(FORAGE_WATER_RADIUS, DEFAULT_FORAGE_WATER_RADIUS);
-    }
-
-    public static int standWalkRadius() {
-        return loaded(STAND_WALK_RADIUS, DEFAULT_STAND_WALK_RADIUS);
     }
 
     public static int wallEscapeRadius() {

@@ -61,7 +61,6 @@ class StoreGraphPart2Tests {
                     stageReqs,
                     GraphFeedback.none(),
                     List.of(),
-                    List.of(),
                     List.of());
         }
     }

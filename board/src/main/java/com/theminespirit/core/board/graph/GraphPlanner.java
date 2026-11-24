@@ -121,8 +121,7 @@ public final class GraphPlanner {
             if (event == null) {
                 continue;
             }
-            for (GraphEvent.Task task :
-                    GraphEvent.tasks(name, event, state.facts().leases())) {
+            for (GraphEvent.Task task : event.tasks()) {
                 String key = EVENT + name + ":" + task.id();
                 flow.root(key, GraphEventFacts.weight(graph, state, task));
                 for (Map.Entry<String, Integer> input :

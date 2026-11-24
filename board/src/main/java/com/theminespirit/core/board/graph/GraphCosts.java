@@ -15,8 +15,7 @@ public record GraphCosts(
         Map<String, Integer> toolDurability,
         Map<String, Integer> stationCapacity,
         GraphChoice choice,
-        GraphLife life,
-        GraphUndo undo) {
+        GraphLife life) {
     public GraphCosts {
         caseTicks = Map.copyOf(caseTicks);
         wayTicks = Map.copyOf(wayTicks);
@@ -30,10 +29,6 @@ public record GraphCosts(
         if (life == null) {
             throw new IllegalArgumentException(
                     "Формула жизни не может быть null: значения по умолчанию — GraphLife.DEFAULTS");
-        }
-        if (undo == null) {
-            throw new IllegalArgumentException(
-                    "Формула отката аренды не может быть null: значения по умолчанию — GraphUndo.DEFAULTS");
         }
         if (defaultTicks < 1 || travelScaleTicks < 1) {
             throw new IllegalArgumentException("Длительность по умолчанию " + defaultTicks + " и шкала дороги "
@@ -65,18 +60,7 @@ public record GraphCosts(
         JsonNode costs = root.path("costs");
         GraphLife life = GraphLife.parse(root.path("life"));
         if (costs.isMissingNode()) {
-            return new GraphCosts(
-                    1,
-                    Map.of(),
-                    Map.of(),
-                    Map.of(),
-                    0,
-                    1,
-                    Map.of(),
-                    Map.of(),
-                    GraphChoice.NEUTRAL,
-                    life,
-                    GraphUndo.DEFAULTS);
+            return new GraphCosts(1, Map.of(), Map.of(), Map.of(), 0, 1, Map.of(), Map.of(), GraphChoice.NEUTRAL, life);
         }
         Map<String, Integer> wayTicks = new LinkedHashMap<>();
         Map<String, Integer> wayUses = new LinkedHashMap<>();
@@ -98,7 +82,6 @@ public record GraphCosts(
                 GraphEvent.counts(costs.path("toolDurability")),
                 GraphEvent.counts(costs.path("stationCapacity")),
                 GraphChoice.parse(root.path("choice")),
-                life,
-                GraphUndo.parse(root));
+                life);
     }
 }

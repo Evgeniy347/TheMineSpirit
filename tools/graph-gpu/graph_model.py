@@ -366,7 +366,6 @@ class Flow:
 
 
 SCORE_SPAN = 1000.0
-UNDO_LEASE = "undo_lease"
 LIFE_SPAN = 30
 
 
@@ -1594,8 +1593,6 @@ class Planner:
             if event is None:
                 continue
             for task in event["tasks"]:
-                if name == UNDO_LEASE and task.get("id") == UNDO_LEASE:
-                    continue
                 key = EVENT + name + ":" + task.get("id", "")
                 self.flow.root(key, self.event_weight(task))
                 for item, value in self.event_consumes(task).items():

@@ -24,8 +24,7 @@ class GraphChoicePart3Tests {
                 costs.toolDurability(),
                 costs.stationCapacity(),
                 choice,
-                costs.life(),
-                costs.undo());
+                costs.life());
         return new SupplyGraph(
                 GRAPH.decay(),
                 GRAPH.urgentBoost(),
@@ -95,7 +94,6 @@ class GraphChoicePart3Tests {
                 GraphSiteFacts.Terrain.empty(),
                 new GraphSiteFacts.StageReqs(Map.of(), Map.of()),
                 GraphFeedback.none(),
-                List.of(),
                 List.of(),
                 List.of());
     }

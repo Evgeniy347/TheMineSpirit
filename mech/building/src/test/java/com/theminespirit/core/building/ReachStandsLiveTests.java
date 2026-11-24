@@ -89,7 +89,7 @@ class ReachStandsLiveTests {
                 first,
                 second.orElseThrow(),
                 "Отказанная стоянка запоминается: иначе один и тот же дорогой поиск пути повторяется каждый тик "
-                        + "(сервер 0.1.3614: UndoLeaseScript держал поток 1,5 с на тик)"
+                        + "(сервер 0.1.3614: подход к блоку держал поток 1,5 с на тик)"
                         + " При смене search_SkippedStand_IsNotProbedAtNextTick проверь это утверждение.");
         assertTrue(
                 tried.contains(first),

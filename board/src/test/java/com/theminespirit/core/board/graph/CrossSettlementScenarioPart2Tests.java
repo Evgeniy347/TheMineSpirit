@@ -74,7 +74,6 @@ class CrossSettlementScenarioPart2Tests {
                 new GraphSiteFacts.StageReqs(Map.of(), Map.of()),
                 GraphFeedback.none(),
                 List.of(),
-                List.of(),
                 List.of());
         GraphPlan plan = plan(world, facts);
         GraphPlan.Task demolition = task(plan, "event:demolish_stray:demolish_stray");

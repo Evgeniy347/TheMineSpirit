@@ -80,7 +80,6 @@ public final class BoardGameTests {
                                 PlotLeveling.DEFAULT_BLOCK)));
         assertFailuresSurviveReload(helper);
         assertLeasesSurviveReload(helper);
-        LeaseUndoScene.Check undo = LeaseUndoScene.submit(helper, spirit);
 
         helper.succeedWhen(() -> {
             helper.assertTrue(
@@ -91,7 +90,6 @@ public final class BoardGameTests {
                     board.board().statusOf(PICKAXE_ID).orElse(null) == BoardStatus.DONE,
                     "Задание крафта кирки обязано закрыться по факту предмета, статус "
                             + board.board().statusOf(PICKAXE_ID).orElse(null));
-            LeaseUndoScene.assertDone(helper, undo);
             GameTestFixtures.finish(helper);
         });
     }

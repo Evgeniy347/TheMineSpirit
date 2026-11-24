@@ -5,7 +5,6 @@ import com.theminespirit.core.board.MineDescentBottom;
 import com.theminespirit.core.board.WorkStand;
 import com.theminespirit.core.board.graph.FailureTargets;
 import com.theminespirit.core.board.graph.SupplyGraph;
-import com.theminespirit.core.board.lease.RollbackReach;
 import com.theminespirit.core.board.pickup.LeafDropStand;
 import com.theminespirit.core.movement.PatrolPoints;
 import com.theminespirit.core.observation.BlockCoord;
@@ -30,16 +29,6 @@ public final class GraphTargets {
 
     static Optional<BlockCoord> standNear(ServerLevel level, BlockCoord point) {
         return WorkStand.near(point, ground(level));
-    }
-
-    public static RollbackReach.Ground rollbackGround(ServerLevel level) {
-        return (x, z) -> {
-            int y = GroundProbe.feet(level, x, z, NO_GROUND);
-            if (y == NO_GROUND) {
-                return RollbackReach.Ground.NO_GROUND;
-            }
-            return GroundProbe.freeAt(level, new BlockCoord(x, y, z)) ? y : RollbackReach.Ground.NO_GROUND;
-        };
     }
 
     static Optional<BlockCoord> leafDropStand(ServerLevel level, BlockCoord leaf) {

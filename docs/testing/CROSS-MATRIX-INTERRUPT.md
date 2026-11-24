@@ -8,11 +8,12 @@
 С этапа 2 (аренда временной правки) временная правка этих механик живёт в `LeaseBook`: клетка помнит вид
 (`PLACED`/`BROKEN`), владельца и назначение. `cancel`, смерть духа и рестарт сервера бросают аренду
 (`ORPHANED`), мир при этом не меняется; скан (`FloatingScan`, `WorldAreaScan`) считает временными только клетки
-`ORPHANED`, поэтому действующие подмости чужого духа не сносит. Уборка брошенного — узел графа `undo_lease`
-(этап 3): вес из `graph.json`, откат сверху вниз, блокировка с ключом при отсутствии пути. Успешное
-использование правки бросает остаток в `ORPHANED`, а не закрывает аренду: мост после переправы, пол `dig_out`
-и клетки маршрута убирает тот же узел. Дверь, открытая духом, — `STATE`-клетка аренды; смерть и рестарт её
-бросают, откат закрывает створку. Бронь клетки живёт, пока аренда `ACTIVE`, и снимается смертью/рестартом.
+`ORPHANED`, поэтому действующие подмости чужого духа не сносит. Брошенное убирают существующие уборки
+поселения (`DISMANTLE_SHELTER`, расчистка) — билета отката нет; вне участка поселения скан не смотрит и
+брошенные клетки там остаются. Успешное использование правки бросает остаток в `ORPHANED`, а не закрывает
+аренду: мост после переправы, пол `dig_out` и клетки маршрута находит скан. Дверь, открытая духом, —
+`STATE`-клетка аренды; смерть и рестарт её бросают, створку закрывает скрипт двери. Бронь клетки живёт,
+пока аренда `ACTIVE`, и снимается смертью/рестартом.
 
 `ОК` — выход корректен: остаётся только видимое графу (брошенная аренда, нужда, бронь/тикет с владельцем).
 `Н` — механика оставляет мусор или застрявшего духа, которого граф не видит; номер — задача из
@@ -46,7 +47,7 @@
 | I24 | шахта | рестарт | шаги туннеля не в снимке | то же | Н | задача 4 |
 | I25 | dig_out | голод | spoil возвращён, пол — PLACED в брошенной аренде | аренда + яма/rescue | ОК | `LeaseScenarioPart2Tests.digOut_SuccessOrphansRemainingCells_InterruptOrphansEverything` |
 | I26 | dig_out | угроза | spoil возвращён, клетки тела не трогаются, пол в аренде | аренда + rescue | ОК | `LeaseScenarioPart2Tests.digOut_SuccessOrphansRemainingCells_InterruptOrphansEverything` |
-| I27 | dig_out | ночь | аренда брошена, spoil вернёт откат | аренда + rescue | ОК | `LeaseScenarioPart2Tests.digOut_SuccessOrphansRemainingCells_InterruptOrphansEverything` |
+| I27 | dig_out | ночь | аренда брошена, spoil и пол берёт уборка поселения | аренда + rescue | ОК | `LeaseScenarioPart2Tests.digOut_SuccessOrphansRemainingCells_InterruptOrphansEverything` |
 | I28 | dig_out | задача выше | аренда брошена, rescue остаётся | аренда + rescue | ОК | `LeaseScenarioPart2Tests.digOut_SuccessOrphansRemainingCells_InterruptOrphansEverything` |
 | I29 | dig_out | смерть | смерть бросает аренды духа, spoil и пол видны скану | аренда в SavedData | ОК | `LeaseScenarioPart2Tests.digOut_SuccessOrphansRemainingCells_InterruptOrphansEverything` |
 | I30 | dig_out | рестарт | все ACTIVE бросаются, BROKEN помнит before | аренда в SavedData | ОК | `LeaseScenarioPart2Tests.digOut_SuccessOrphansRemainingCells_InterruptOrphansEverything` |

@@ -10,7 +10,6 @@ import org.jspecify.annotations.Nullable;
 
 public record GraphEvent(
         String name, List<Task> tasks, Map<String, Integer> push, List<String> advice, boolean life, boolean vital) {
-    public static final String UNDO_PREFIX = "undo:";
     private static final String RESCUE = "rescue_spirit";
 
     public record Task(
@@ -42,43 +41,6 @@ public record GraphEvent(
         this(name, tasks, push, advice, life, false);
     }
 
-    static List<Task> tasks(String name, GraphEvent event, List<GraphSiteFacts.Lease> leases) {
-        return GraphWorldEvents.UNDO_LEASE.equals(name) ? undo(event, leases) : event.tasks();
-    }
-
-    static List<Task> undo(GraphEvent template, List<GraphSiteFacts.Lease> leases) {
-        List<Task> tasks = new ArrayList<>();
-        for (Task task : template.tasks()) {
-            if (!GraphWorldEvents.UNDO_LEASE.equals(task.id())) {
-                tasks.add(task);
-                continue;
-            }
-            for (GraphSiteFacts.Lease lease : leases) {
-                tasks.add(new Task(
-                        undoTaskId(lease),
-                        task.boardCase(),
-                        task.base(),
-                        Map.of(),
-                        null,
-                        null,
-                        null,
-                        lease.owner(),
-                        task.implemented()));
-            }
-        }
-        return List.copyOf(tasks);
-    }
-
-    public static String undoTaskId(GraphSiteFacts.Lease lease) {
-        return UNDO_PREFIX + lease.id() + "#" + lease.key();
-    }
-
-    public static String leaseId(String taskId) {
-        String raw = taskId.startsWith(UNDO_PREFIX) ? taskId.substring(UNDO_PREFIX.length()) : taskId;
-        int key = raw.indexOf('#');
-        return key < 0 ? raw : raw.substring(0, key);
-    }
-
     static @Nullable Task find(GraphEvent event, String taskId) {
         Task prefix = null;
         for (Task task : event.tasks()) {
@@ -89,17 +51,7 @@ public record GraphEvent(
                 prefix = task;
             }
         }
-        if (prefix != null) {
-            return prefix;
-        }
-        if (taskId.startsWith(UNDO_PREFIX)) {
-            for (Task task : event.tasks()) {
-                if (GraphWorldEvents.UNDO_LEASE.equals(task.id())) {
-                    return task;
-                }
-            }
-        }
-        return null;
+        return prefix;
     }
 
     static Map<String, GraphEvent> withRepairs(

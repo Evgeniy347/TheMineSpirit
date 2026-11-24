@@ -123,35 +123,6 @@ class GraphNeedsTests {
     }
 
     @Test
-    void undoLease_NoScaffoldMaterial_NeedsMaterialNotPath() {
-        BoardTicket ticket = undo("graph:event:undo_lease:undo:lease-1#key");
-
-        GraphBlock.Need need =
-                ask(ticket, TicketTarget.at(SITE), List.of("minecraft:stone_pickaxe"), FailureFact.NO_MATERIAL);
-
-        assertEquals(
-                new GraphBlock.Item("dirt", 1),
-                need,
-                "Откат без земли/булыжника ждёт материал 'dirt' без неймспейса, а не путь: ключ материала "
-                        + "снимается, когда земля появилась, и задание выдаётся снова"
-                        + " Иначе тест undoLease_NoScaffoldMaterial_NeedsMaterialNotPath перестанет ловить эту поломку. При смене undoLease_NoScaffoldMaterial_NeedsMaterialNotPath проверь это утверждение.");
-    }
-
-    @Test
-    void undoLease_NoTool_NeedsPickaxeNotPath() {
-        BoardTicket ticket = undo("graph:event:undo_lease:undo:lease-1#key");
-
-        GraphBlock.Need need =
-                ask(ticket, TicketTarget.at(SITE), List.of("minecraft:stone_pickaxe"), FailureFact.NO_TOOL);
-
-        assertEquals(
-                new GraphBlock.Tool("_pickaxe", 0, HOLDER),
-                need,
-                "Откату нечем пробить блок: граф поднимает кирку, а не метит точку недостижимой"
-                        + " Иначе тест undoLease_NoTool_NeedsPickaxeNotPath перестанет ловить эту поломку. При смене undoLease_NoTool_NeedsPickaxeNotPath проверь это утверждение.");
-    }
-
-    @Test
     void graphMake_EmptyStock_NeedsProducedItem() {
         BoardTicket ticket = ticket("graph:make:stick", BoardCase.GATHER_MATERIALS, List.of());
 
@@ -200,10 +171,5 @@ class GraphNeedsTests {
     private static BoardTicket ticket(String id, BoardCase boardCase, List<String> modifiers) {
         return new BoardTicket(
                 id, boardCase, Optional.empty(), 50, 0, 1, BoardTicket.ALWAYS_CAUSE, List.of(), Map.of(), modifiers);
-    }
-
-    private static BoardTicket undo(String id) {
-        return new BoardTicket(
-                id, BoardCase.ACTIVITY_UNDO, Optional.empty(), 50, 0, 1, id, List.of(), Map.of(), List.of());
     }
 }

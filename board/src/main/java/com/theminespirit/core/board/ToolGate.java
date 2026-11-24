@@ -50,7 +50,6 @@ public final class ToolGate {
         table.put(BoardCase.REPAIR_TOOL, Hands.BARE);
         table.put(BoardCase.ACTIVITY_CHOP, Hands.BARE);
         table.put(BoardCase.ACTIVITY_ESCAPE, Hands.BARE);
-        table.put(BoardCase.ACTIVITY_UNDO, Hands.PICKAXE);
         return Map.copyOf(table);
     }
 

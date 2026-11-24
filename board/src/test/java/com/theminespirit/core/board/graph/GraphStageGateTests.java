@@ -153,7 +153,6 @@ class GraphStageGateTests {
                 new GraphSiteFacts.StageReqs(Map.of("hut", 1), Map.of()),
                 GraphFeedback.none(),
                 List.of(),
-                List.of(),
                 List.of());
     }
 }

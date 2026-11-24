@@ -50,8 +50,7 @@ class ToolGateTests {
                         BoardCase.CLEAR_GROUNDS,
                         BoardCase.BUILD_MINE,
                         BoardCase.MINE_LEFT_ORE,
-                        BoardCase.DISMANTLE_SHELTER,
-                        BoardCase.ACTIVITY_UNDO),
+                        BoardCase.DISMANTLE_SHELTER),
                 ToolGate.table().entrySet().stream()
                         .filter(entry -> entry.getValue() == ToolGate.Hands.PICKAXE)
                         .map(Map.Entry::getKey)

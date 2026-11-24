@@ -36,7 +36,6 @@ public final class BoardActivities {
             BoardCase.ACTIVITY_SENSE,
             BoardCase.ACTIVITY_SMELT,
             BoardCase.ACTIVITY_SOCIAL,
-            BoardCase.ACTIVITY_UNDO,
             BoardCase.ACTIVITY_UNLOAD);
     private static final String GOTO = "goto";
 

@@ -32,7 +32,6 @@ class BoardCaseTests {
             "ACTIVITY_SENSE",
             "ACTIVITY_SMELT",
             "ACTIVITY_SOCIAL",
-            "ACTIVITY_UNDO",
             "ACTIVITY_UNLOAD",
             "CLEAR_GROUNDS",
             "COLLECT_DROPS",

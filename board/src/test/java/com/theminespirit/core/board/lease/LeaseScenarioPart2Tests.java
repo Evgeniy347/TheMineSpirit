@@ -93,13 +93,13 @@ class LeaseScenarioPart2Tests {
         assertEquals(
                 LeaseStatus.ORPHANED,
                 passed.status(),
-                "Пройденный маршрут не становится постоянным: его клетки откатывает узел undo_lease Иначе тест route_PassOrphansCells_BreakAndCancelOrphans перестанет ловить эту поломку. При смене route_PassOrphansCells_BreakAndCancelOrphans проверь это утверждение.");
+                "Пройденный маршрут не становится постоянным: его клетки помечены брошенными и их берёт уборка поселения Иначе тест route_PassOrphansCells_BreakAndCancelOrphans перестанет ловить эту поломку. При смене route_PassOrphansCells_BreakAndCancelOrphans проверь это утверждение.");
         assertTrue(
                 book.isOrphaned(placed),
-                "Поставленная клетка маршрута ждёт отката Иначе тест route_PassOrphansCells_BreakAndCancelOrphans перестанет ловить эту поломку. При смене route_PassOrphansCells_BreakAndCancelOrphans проверь это утверждение.");
+                "Поставленная клетка маршрута ждёт уборки Иначе тест route_PassOrphansCells_BreakAndCancelOrphans перестанет ловить эту поломку. При смене route_PassOrphansCells_BreakAndCancelOrphans проверь это утверждение.");
         assertTrue(
                 book.isOrphaned(broken),
-                "Сломанная клетка маршрута ждёт возврата before Иначе тест route_PassOrphansCells_BreakAndCancelOrphans перестанет ловить эту поломку. При смене route_PassOrphansCells_BreakAndCancelOrphans проверь это утверждение.");
+                "Сломанная клетка маршрута помечена брошенной и помнит before Иначе тест route_PassOrphansCells_BreakAndCancelOrphans перестанет ловить эту поломку. При смене route_PassOrphansCells_BreakAndCancelOrphans проверь это утверждение.");
         LeaseSession abandoned = LeaseSession.open(book, BUILDER, null, "route", 120);
         BlockCoord hole = new BlockCoord(40, 70, 0);
         abandoned.broken(hole, "minecraft:stone");
@@ -108,7 +108,7 @@ class LeaseScenarioPart2Tests {
         assertEquals(
                 "minecraft:stone",
                 book.require(abandoned.id()).cells().get(0).before(),
-                "Пролом маршрута помнит прежний блок: брошенная аренда вернёт его по before Иначе тест route_PassOrphansCells_BreakAndCancelOrphans перестанет ловить эту поломку. При смене route_PassOrphansCells_BreakAndCancelOrphans проверь это утверждение.");
+                "Пролом маршрута помнит прежний блок: брошенная аренда хранит before для разбора Иначе тест route_PassOrphansCells_BreakAndCancelOrphans перестанет ловить эту поломку. При смене route_PassOrphansCells_BreakAndCancelOrphans проверь это утверждение.");
     }
 
     @Test
@@ -127,7 +127,7 @@ class LeaseScenarioPart2Tests {
                 "Успешный выход убирает spoil, но оставшийся пол ступени — временная правка, а не план Иначе тест digOut_SuccessOrphansRemainingCells_InterruptOrphansEverything перестанет ловить эту поломку. При смене digOut_SuccessOrphansRemainingCells_InterruptOrphansEverything проверь это утверждение.");
         assertTrue(
                 book.isOrphaned(floor),
-                "Пол ступени после выхода ждёт отката, а не остаётся навсегда Иначе тест digOut_SuccessOrphansRemainingCells_InterruptOrphansEverything перестанет ловить эту поломку. При смене digOut_SuccessOrphansRemainingCells_InterruptOrphansEverything проверь это утверждение.");
+                "Пол ступени после выхода помечен брошенным и попадает в уборку, а не остаётся никем не замеченным Иначе тест digOut_SuccessOrphansRemainingCells_InterruptOrphansEverything перестанет ловить эту поломку. При смене digOut_SuccessOrphansRemainingCells_InterruptOrphansEverything проверь это утверждение.");
         assertFalse(
                 book.isOrphaned(broken),
                 "Возвращённый spoil уже не ждёт откат: клетка забыта механикой Иначе тест digOut_SuccessOrphansRemainingCells_InterruptOrphansEverything перестанет ловить эту поломку. При смене digOut_SuccessOrphansRemainingCells_InterruptOrphansEverything проверь это утверждение.");

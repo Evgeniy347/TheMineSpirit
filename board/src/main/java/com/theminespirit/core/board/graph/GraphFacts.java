@@ -20,8 +20,7 @@ public record GraphFacts(
         StageReqs stageReqs,
         GraphFeedback feedback,
         List<Player> players,
-        List<Position> planBreaches,
-        List<GraphSiteFacts.Lease> leases) {
+        List<Position> planBreaches) {
     public enum Reach {
         UNKNOWN,
         PATH,
@@ -250,8 +249,6 @@ public record GraphFacts(
                 List.copyOf(Objects.requireNonNull(players, "Игроки не могут быть null: без игроков — пустой список"));
         planBreaches = List.copyOf(
                 Objects.requireNonNull(planBreaches, "Проломы плана не могут быть null: без них — пустой список"));
-        leases = List.copyOf(
-                Objects.requireNonNull(leases, "Брошенные аренды не могут быть null: без них — пустой список"));
     }
 
     public static GraphFacts empty() {

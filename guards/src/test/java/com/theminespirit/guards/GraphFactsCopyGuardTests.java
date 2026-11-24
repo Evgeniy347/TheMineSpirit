@@ -90,21 +90,21 @@ class GraphFactsCopyGuardTests {
         List<Constructor<?>> constructors =
                 Arrays.stream(GraphFacts.class.getConstructors()).toList();
         assertEquals(
-                List.of(13),
+                List.of(12),
                 constructors.stream().map(Constructor::getParameterCount).toList(),
                 "У GraphFacts есть конструктор не на все компоненты: короткий конструктор подставляет пустые "
-                        + "игроки/проломы/аренды, и факты мира молча не доходят до графа. Компоненты задают все "
-                        + "тринадцать, явно."
+                        + "игроки/проломы, и факты мира молча не доходят до графа. Компоненты задают все "
+                        + "двенадцать, явно."
                         + " Иначе тест graphFacts_ShortConstructor_IsAbsent перестанет ловить эту поломку. При смене graphFacts_ShortConstructor_IsAbsent проверь это утверждение.");
         assertEquals(
-                13,
+                12,
                 GraphFacts.class.getRecordComponents().length,
                 "Компоненты GraphFacts читаются рефлексией: сторож перечисляет их и сверяет каждую копию"
                         + " Иначе тест graphFacts_ShortConstructor_IsAbsent перестанет ловить эту поломку. При смене graphFacts_ShortConstructor_IsAbsent проверь это утверждение.");
     }
 
     private static GraphWorldFacts world(GraphFacts base) {
-        return new GraphWorldFacts(base.strays(), base.terrain(), base.buildings(), base.leases());
+        return new GraphWorldFacts(base.strays(), base.terrain(), base.buildings());
     }
 
     private static GraphFacts.Threat threat() {
@@ -199,7 +199,6 @@ class GraphFactsCopyGuardTests {
                         List.of(new GraphFeedback.Failure(
                                 "make:dirt", "0,64,0", 2, new GraphBlock.Path("0,64,0"), 100, 1.5))),
                 List.of(new GraphFacts.Player("Steve", new GraphFacts.Position(1, 64, 1), 20, 20, 20)),
-                List.of(new GraphFacts.Position(2, 64, 2)),
-                List.of());
+                List.of(new GraphFacts.Position(2, 64, 2)));
     }
 }

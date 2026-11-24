@@ -10691,19 +10691,6 @@
       "crafting_table": 4,
       "smoker": 2
     }
-  },
-  "undo": {
-    "base": 30,
-    "inside": 30,
-    "street": 10,
-    "perHeight": 1.0,
-    "heightCap": 30,
-    "perCell": 1.0,
-    "cellCap": 15,
-    "farDistance": 256,
-    "farShare": 0.8,
-    "owner": 0.8,
-    "buriedDepth": 8,
-    "buriedShare": 0.6
   }
 }
+

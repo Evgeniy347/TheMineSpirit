@@ -278,19 +278,6 @@
       "advice": [
         "restore_world_as_it_was"
       ]
-    },
-    "undo_lease": {
-      "tasks": [
-        {
-          "id": "undo_lease",
-          "case": "ACTIVITY_UNDO",
-          "base": 30,
-          "consumes": {}
-        }
-      ],
-      "advice": [
-        "undo_abandoned_lease"
-      ]
     }
   }
 }

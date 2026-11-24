@@ -1,13 +1,11 @@
 package com.theminespirit.neoforge.lease;
 
-import com.mojang.logging.LogUtils;
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.board.lease.Lease;
 import com.theminespirit.core.board.lease.LeaseBook;
 import com.theminespirit.core.board.lease.LeaseCodec;
 import com.theminespirit.core.board.lease.LeaseKind;
 import com.theminespirit.core.board.lease.LeaseStatus;
-import com.theminespirit.core.board.lease.LeaseUndoLimit;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -23,12 +21,10 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.SavedData;
 import org.jspecify.annotations.Nullable;
-import org.slf4j.Logger;
 
 public final class LeaseData extends SavedData {
     public static final String NAME = ModIdentity.MOD_ID + "_leases";
 
-    private static final Logger LOGGER = LogUtils.getLogger();
     private static final String LEASES = "Leases";
     private static final String ID = "Id";
     private static final String SPIRIT = "Spirit";
@@ -49,7 +45,6 @@ public final class LeaseData extends SavedData {
 
     private final LeaseBook book = new LeaseBook();
     private long revision;
-    private final Map<String, Integer> undoFailures = new HashMap<>();
     private final Map<String, Long> suspendedSince = new HashMap<>();
 
     public LeaseData() {}
@@ -65,25 +60,6 @@ public final class LeaseData extends SavedData {
 
     public Map<String, Long> suspendedSince() {
         return suspendedSince;
-    }
-
-    public boolean undoFailed(String id, int maxFailures, String reason) {
-        int failures = undoFailures.merge(id, 1, Integer::sum);
-        if (!LeaseUndoLimit.exhausted(failures, maxFailures)
-                || book.find(id)
-                        .filter(lease -> lease.status() == LeaseStatus.ORPHANED)
-                        .isEmpty()) {
-            return false;
-        }
-        book.abandon(id);
-        undoFailures.remove(id);
-        setDirty();
-        LOGGER.info(
-                "[lease] аренда {} снята после {} неудачных откатов, клетки отданы расчистке: {}",
-                id,
-                failures,
-                reason);
-        return true;
     }
 
     public int orphanSpirit(UUID spirit) {

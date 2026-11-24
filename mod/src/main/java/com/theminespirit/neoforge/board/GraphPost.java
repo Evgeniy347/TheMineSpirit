@@ -92,9 +92,6 @@ final class GraphPost {
         if (MoreAreaPost.handles(ticket.node())) {
             return MoreAreaPost.post(this, ticket);
         }
-        if (UndoLeasePost.handles(ticket.node())) {
-            return UndoLeasePost.post(this, ticket);
-        }
         return switch (ticket.kind()) {
             case BUILDING ->
                 MorePost.building(this, ticket)
