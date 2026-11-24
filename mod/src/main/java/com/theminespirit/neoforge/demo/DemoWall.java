@@ -121,6 +121,6 @@ final class DemoWall {
                 siteFloor,
                 siteMaxX - siteMinX + 1,
                 siteMaxZ - siteMinZ + 1);
-        return new DemoPlan("Стена-витрина", "fence_long", sitePlacement, materials, List.of(), List.of());
+        return new DemoPlan("Стена-витрина", "wall_3", sitePlacement, materials, List.of(), List.of());
     }
 }

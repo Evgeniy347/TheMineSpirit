@@ -3,7 +3,6 @@ name: "Стена: прямой фрагмент"
 type: defense
 stage: 2
 level: 3
-requires: fence_straight
 size: 4x4x2   # Ш×В×Д
 entrance: 0,0,0
 exemptions:

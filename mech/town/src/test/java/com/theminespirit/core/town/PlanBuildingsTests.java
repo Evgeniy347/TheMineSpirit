@@ -72,8 +72,8 @@ class PlanBuildingsTests {
     void ofScheme_FenceScheme_IsFence() {
         assertEquals(
                 PlanBuilding.FENCE,
-                PlanBuildings.ofScheme("fence_long"),
-                "Файл забора называет забор: его стройка не должна примерять чужой дом"
+                PlanBuildings.ofScheme("wall_3_straight"),
+                "Фрагмент стены называет ограду: его стройка не должна примерять чужой дом"
                         + " Иначе тест ofScheme_FenceScheme_IsFence перестанет ловить эту поломку. При смене ofScheme_FenceScheme_IsFence проверь это утверждение.");
         assertEquals(
                 PlanBuilding.FENCE,

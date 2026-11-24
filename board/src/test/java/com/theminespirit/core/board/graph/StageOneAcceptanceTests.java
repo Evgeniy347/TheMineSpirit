@@ -13,7 +13,6 @@ import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.board.graph.GraphState.Built;
-import com.theminespirit.core.building.api.BuildRotation;
 import com.theminespirit.core.plan.FallbackNode;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
@@ -155,27 +154,6 @@ class StageOneAcceptanceTests {
                 built.get("furnace"),
                 "Печь не на месте схемы двора — двор не построен, даже если шаги в журнале сделаны: " + built
                         + " Иначе тест board_StageOne_DamagedYardIsNotBuiltByOldChests перестанет ловить эту поломку. При смене board_StageOne_DamagedYardIsNotBuiltByOldChests проверь это утверждение.");
-    }
-
-    @Test
-    void plan_FencePart_CraftsFromOwnWoodInsteadOfWithdraw() {
-        TaskNode plan = plan(
-                BoardCase.BUILD_FENCE, List.of(new SchemeBuild("fence_long", site().workYard(), BuildRotation.NONE)));
-        List<ScriptCall> calls = calls(plan);
-
-        assertTrue(
-                calls.stream()
-                        .anyMatch(call -> "craft".equals(call.script())
-                                && String.valueOf(call.params().get("item")).endsWith("_fence")),
-                "Строитель ограды крафтит забор из своего дерева: забор в общем сундуке ждёт передачу от другого "
-                        + "духа — часть ограды стоит, а этап 1 не закрывается (забор). План: " + calls
-                        + " Иначе тест plan_FencePart_CraftsFromOwnWoodInsteadOfWithdraw перестанет ловить эту поломку. При смене plan_FencePart_CraftsFromOwnWoodInsteadOfWithdraw проверь это утверждение.");
-        assertTrue(
-                calls.stream()
-                        .noneMatch(call -> "withdraw".equals(call.script())
-                                && String.valueOf(call.params().get("item")).endsWith("_fence")),
-                "Забор не забирают из сундука: доски лежат у другого духа, часть ждёт передачу. План: " + calls
-                        + " Иначе тест plan_FencePart_CraftsFromOwnWoodInsteadOfWithdraw перестанет ловить эту поломку. При смене plan_FencePart_CraftsFromOwnWoodInsteadOfWithdraw проверь это утверждение.");
     }
 
     @Test

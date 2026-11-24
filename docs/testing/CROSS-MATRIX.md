@@ -109,7 +109,7 @@
 | 4-20 | `GraphPlannerTests.plan_NoCoal_PostsMineAndCharcoal` | `mine_coal` и `smelt_charcoal` | уголь добывается, затем жжётся | ОК | слабо |
 | 5-6 | `CrossSettlementScenarioTests.fill_PitOnHouseLot_FillAndBuildStayPostedTogether` | backfill и building:hut выполнимы вместе | fill кладёт землю, build_schematic строит дом | ОК | полный |
 | 5-7 | `BuildPlanCasesTests.plan_StrayBesidePlannedHouse_DemolishesOnlyStray` | лишний забор → `demolish_stray` | снос убирает только чужое, дом не трогает | ОК | слабо |
-| 5-9 | `StageOneAcceptanceTests.plan_FencePart_CraftsFromOwnWoodInsteadOfWithdraw` | деталь забора крафтится из своего дерева | крафт закрывает нехватку без похода в сундук | ОК | полный |
+| 5-9 | `TicketPlansTests.plan_EnchantShelves_CraftsBookshelves` | достройка полок требует крафта книжных полок | план крафтит полки, а не ждёт их в сундуке | ОК | полный |
 | 5-11 | `FarmGraphTests.plan_PenAbsentAtStageTwo_GraphDemandsPen` | на этапе 2 нет загона → стройка загона | животноводство ждёт постройку | ОК | слабо |
 | 5-12 | `CrossBattleWorkScenarioPart2Tests.combat_MobsAtBuilderAndChopper_RetreatPreemptsWork` | defend 100, retreat 96 вытесняет стройку | строитель бросает хижину, рубка второго ждёт | ОК | полный |
 | 5-13 | `CrossLifeWorkScenarioTests.flee_WhileBuilding_RetreatPreemptsBuildAndBuildReturnsToBoard` | retreat 100 вытесняет стройку, стройка возвращается PENDING | строитель уходит от мобов, хижину достраивает другой | ОК | полный |

@@ -4,7 +4,6 @@ name: "Ворота главные, уровень 3"
 type: defense
 stage: 2
 level: 3
-requires: fence_wicket
 size: 3x4x1   # Ш×В×Д
 entrance: 1,0,0
 legend:

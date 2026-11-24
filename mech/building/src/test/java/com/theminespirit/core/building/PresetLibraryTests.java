@@ -57,9 +57,9 @@ class PresetLibraryTests {
         PresetLibrary library = loadReal();
 
         assertEquals(
-                132,
+                125,
                 library.size(),
-                "Библиотека обязана прочитать все пресеты, включая фрагменты забора, четыре уровня дома семьи и дома игрока, площадь 1–3, колодец 2, светильники 2–3, три уровня чаровальни, "
+                "Библиотека обязана прочитать все пресеты, включая фрагменты каменной стены (прямые, столб, углы 90° и 45°, ворота), четыре уровня дома семьи и дома игрока, площадь 1–3, колодец 2, светильники 2–3, три уровня чаровальни, "
                         + "четыре уровня склада, загоны трёх уровней и сад: без них стратегу не из чего "
                         + "составлять планировку поселения"
                         + " Иначе тест parse_RealIndex_LoadsAllPresets перестанет ловить эту поломку. При смене parse_RealIndex_LoadsAllPresets проверь это утверждение.");
@@ -202,16 +202,7 @@ class PresetLibraryTests {
                         "mine_descent_v1",
                         "mine_tunnel_v1",
                         "player_house_1",
-                        "plaza_1",
-                        "fence_long",
-                        "fence_straight",
-                        "fence_post",
-                        "fence_corner",
-                        "fence_diagonal",
-                        "fence_corner45_left",
-                        "fence_corner45_right",
-                        "fence_wicket",
-                        "fence_gate"),
+                        "plaza_1"),
                 library.byStage(0).stream().map(Preset::id).toList(),
                 "Этап 0 «лагерь выживания» — палисад, факелы, вход в шахту, спуск и ход, первый каменный дом и площадь: по этапу стратег решает, "
                         + "что строить сейчас"
@@ -282,9 +273,9 @@ class PresetLibraryTests {
         List<String> paths = PresetLibrary.bodyPaths(indexJson, INDEX_PATH);
 
         assertEquals(
-                132,
+                125,
                 paths.size(),
-                "Индекс обязан назвать по телу на каждый из тридцати четырёх пресетов: пропуск тела оставил бы пресет без схемы"
+                "Индекс обязан назвать по телу на каждый пресет: пропуск тела оставил бы пресет без схемы"
                         + " Иначе тест bodyPaths_RealIndex_ReturnsOnePathPerPreset перестанет ловить эту поломку. При смене bodyPaths_RealIndex_ReturnsOnePathPerPreset проверь это утверждение.");
         assertEquals(
                 PresetLibrary.SCHEMATICS_ROOT + "storage_hut.txt",

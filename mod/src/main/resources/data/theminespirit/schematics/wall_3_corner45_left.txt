@@ -1,0 +1,28 @@
+# wall_3_corner45_left — угол каменной стены 45°: прямая переходит в диагональ с поворотом влево.
+name: "Стена: угол 45° влево"
+type: defense
+stage: 2
+level: 3
+size: 4x4x2   # Ш×В×Д
+entrance: 0,0,1
+exemptions:
+  - rule: light
+    reason: "глухой фрагмент стены без света: фонари и ворота ставятся отдельными фрагментами линии"
+  - rule: closed_walls
+    reason: "фрагмент стены — отрезок линии ограды, периметр замыкают соседние фрагменты"
+legend:
+  'W': cobblestone_wall
+  'C': cobblestone
+layers:
+  - y0 основание: |
+      WWW
+        WW
+  - y1: |
+      CCC
+        CC
+  - y2: |
+      CCC
+        CC
+  - y3 зубцы: |
+      C.C.
+        .C

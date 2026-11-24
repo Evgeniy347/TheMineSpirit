@@ -3,8 +3,14 @@ package com.theminespirit.core.town;
 import java.util.List;
 
 public final class StageSchemes {
-    public static final List<String> WALL =
-            List.of("wall_3", "wall_3_straight", "wall_3_post", "wall_3_corner", "gate_3");
+    public static final List<String> WALL = List.of(
+            "wall_3",
+            "wall_3_straight",
+            "wall_3_post",
+            "wall_3_corner",
+            "wall_3_corner45_left",
+            "wall_3_corner45_right",
+            "gate_3");
 
     private StageSchemes() {}
 

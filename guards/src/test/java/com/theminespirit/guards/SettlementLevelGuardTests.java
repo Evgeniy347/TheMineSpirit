@@ -211,8 +211,8 @@ class SettlementLevelGuardTests {
         assertEquals(
                 List.of(),
                 offenders,
-                "Забор по событию — маленькая заглушка ограды этапа (FenceStubPlan → StageSchemes.fenceStub → "
-                        + "fence_post/wall_3_post), а не кольцо 23×23: на уровне земли кольцо вокруг опасности "
+                "Забор по событию — маленькая заглушка ограды этапа (FenceStubPlan → StageSchemes.wallStub → "
+                        + "wall_3_post), а не кольцо 23×23: на уровне земли кольцо вокруг опасности "
                         + "перекрывает склад и требует сотен постановок. Кольцо («fence») остаётся для REST/демо "
                         + "и задания без схемы. Нарушители"
                         + " Иначе тест fenceEvents_UseSmallStageStub_NotWholeRing перестанет ловить эту поломку. При смене fenceEvents_UseSmallStageStub_NotWholeRing проверь это утверждение.");

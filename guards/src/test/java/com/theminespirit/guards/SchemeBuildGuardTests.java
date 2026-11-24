@@ -16,7 +16,7 @@ import com.theminespirit.core.town.SchemeBuild;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.StageWork;
 import com.theminespirit.core.town.TownFixtures;
-import com.theminespirit.core.town.WallLayout;
+import com.theminespirit.core.town.WallDemo;
 import com.theminespirit.core.town.YardScheme;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -77,20 +77,7 @@ class SchemeBuildGuardTests {
     @Test
     void stagePlans_BuildCases_PlaceOnlyGroundBlocks() {
         StageSite site = TownFixtures.flatSite();
-        List<SchemeBuild> fence = WallLayout.of(
-                        DataTables.INSTANCE.presets().current(),
-                        List.of(
-                                "fence_long",
-                                "fence_straight",
-                                "fence_post",
-                                "fence_corner",
-                                "fence_diagonal",
-                                "fence_corner45_left",
-                                "fence_corner45_right",
-                                "fence_wicket",
-                                "fence_gate"))
-                .closed(site.ring().posts(), site.ring().gates())
-                .stream()
+        List<SchemeBuild> fence = WallDemo.pieces(DataTables.INSTANCE.presets().current()).stream()
                 .map(piece -> new SchemeBuild(
                         piece.scheme(), new BlockCoord(piece.x(), site.anchor().y(), piece.z()), piece.rotation()))
                 .toList();
