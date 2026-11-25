@@ -80,8 +80,4 @@ public final class TerrainGrid {
     public boolean water(int x, int z) {
         return inside(x, z) && water.get((z - minZ) * width + (x - minX));
     }
-
-    public boolean land(int x, int z) {
-        return inside(x, z) && !water(x, z) && feet(x, z) != NO_GROUND;
-    }
 }

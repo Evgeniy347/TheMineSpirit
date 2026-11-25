@@ -15,23 +15,17 @@ public record TownRules(Ground ground, Streets streets, Spacing spacing, List<To
     public static final String RESOURCE = "data/theminespirit/board/town.json";
     private static final TableSlot<TownRules> SOURCE = new TableSlot<>(TownRules::load);
     private static final Set<String> ROOT = Set.of("ground", "streets", "spacing", "buildings");
-    private static final Set<String> GROUND = Set.of("area", "probeRadius", "cliffStep", "slopeWeight", "slopeMax");
+    private static final Set<String> GROUND = Set.of("probeRadius");
     private static final Set<String> STREETS = Set.of("main", "side", "blockSize");
     private static final Set<String> SPACING = Set.of("gap", "stageMargin", "chestFreePercent", "fenceStrip");
     private static final Set<String> ENTRY =
             Set.of("id", "name", "width", "depth", "quarter", "level", "rotate", "field");
 
-    public record Ground(int area, int probeRadius, int cliffStep, int slopeWeight, int slopeMax) {
+    public record Ground(int probeRadius) {
         public Ground {
-            if (area < 1 || probeRadius < 1 || cliffStep < 1 || slopeWeight < 0 || slopeMax < 0) {
-                throw new IllegalArgumentException("Рельеф плана: площадь " + area + ", радиус обмера " + probeRadius
-                        + ", обрыв " + cliffStep + ", вес и предел уклона " + slopeWeight + "/" + slopeMax
-                        + ": площадь, радиус и обрыв положительны, уклон не отрицателен");
-            }
-            long side = 2L * probeRadius + 1;
-            if (side * side < area) {
-                throw new IllegalArgumentException("Радиус обмера " + probeRadius + " даёт " + side * side
-                        + " колонок меньше площади " + area + ": участок не уместится в обмер");
+            if (probeRadius < 1) {
+                throw new IllegalArgumentException(
+                        "Радиус обмера рельефа " + probeRadius + ": он положителен, иначе карту не нарисовать");
             }
         }
     }
@@ -108,12 +102,7 @@ public record TownRules(Ground ground, Streets streets, Spacing spacing, List<To
                         flag(node, "field", origin)));
             }
             return new TownRules(
-                    new Ground(
-                            number(g, "area", origin),
-                            number(g, "probeRadius", origin),
-                            number(g, "cliffStep", origin),
-                            number(g, "slopeWeight", origin),
-                            number(g, "slopeMax", origin)),
+                    new Ground(number(g, "probeRadius", origin)),
                     new Streets(number(s, "main", origin), number(s, "side", origin), number(s, "blockSize", origin)),
                     new Spacing(
                             number(p, "gap", origin),

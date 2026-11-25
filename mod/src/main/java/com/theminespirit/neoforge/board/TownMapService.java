@@ -46,7 +46,6 @@ public final class TownMapService {
         TownMap map = decoded.map();
         TownRules rules = DataTables.INSTANCE.town().current();
         BlockCoord center = SettlementCenter.of(level);
-        TownSurvey.Frame frame = TownSurvey.frame(level, center, rules);
         SettlementPlotStore store = SettlementPlotStore.get(level);
         if (map.anchor().x() != center.x() || map.anchor().z() != center.z()) {
             throw new ApiException(
@@ -55,6 +54,7 @@ public final class TownMapService {
                             + center.x() + "," + center.z() + ": координаты обязаны считаться от якоря",
                     Map.of("object", "anchor"));
         }
+        TownSurvey.Frame frame = frame(level, center, map, rules);
         List<TownMapFinding> findings =
                 TownMapCheck.validate(map, rules, frame.region(), frame.water(), previous(store));
         if (!findings.isEmpty()) {
@@ -97,7 +97,7 @@ public final class TownMapService {
                         Map.of("object", id)));
         TownRules rules = DataTables.INSTANCE.town().current();
         BlockCoord center = SettlementCenter.of(level);
-        TownSurvey.Frame frame = TownSurvey.frame(level, center, rules);
+        TownSurvey.Frame frame = frame(level, center, edited, rules);
         TownPlan plan = TownMapRules.build(edited, rules, frame.region(), center, TownSurvey::stageOf);
         int next = store.mapRevision() + 1;
         store.putMap(stored(edited, next, frame.region()), plan, next);
@@ -145,7 +145,7 @@ public final class TownMapService {
         }
         TownRules rules = DataTables.INSTANCE.town().current();
         BlockCoord center = SettlementCenter.of(level);
-        TownSurvey.Frame frame = TownSurvey.frame(level, center, rules);
+        TownSurvey.Frame frame = frame(level, center, map, rules);
         TownPlan plan;
         try {
             plan = TownMapRules.build(map, rules, frame.region(), center, TownSurvey::stageOf);
@@ -162,7 +162,10 @@ public final class TownMapService {
     public String planDrawio() {
         TownRules rules = DataTables.INSTANCE.town().current();
         BlockCoord center = SettlementCenter.of(level);
-        TownSurvey.Frame frame = TownSurvey.frame(level, center, rules);
+        TownMap map = previous(SettlementPlotStore.get(level));
+        TownSurvey.Frame frame = map == null || map.wall().isEmpty()
+                ? TownSurvey.canvas(level, center, rules)
+                : frame(level, center, map, rules);
         ColumnMask region = frame.region();
         return planDrawio(
                 region.minX(),
@@ -170,6 +173,14 @@ public final class TownMapService {
                 region.minX() + region.width() - 1,
                 region.minZ() + region.depth() - 1,
                 TownPreview.SCALE);
+    }
+
+    private static TownSurvey.Frame frame(ServerLevel level, BlockCoord center, TownMap map, TownRules rules) {
+        try {
+            return TownSurvey.frame(level, center, map, rules);
+        } catch (IllegalArgumentException broken) {
+            throw new ApiException(ErrorCode.INVALID_PLAN, broken.getMessage(), Map.of("object", "wall"));
+        }
     }
 
     public String planDrawio(int x1, int z1, int x2, int z2, int scale) {

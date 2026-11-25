@@ -7,7 +7,6 @@ import com.theminespirit.core.board.api.ConfigStamp;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.ColumnMask;
-import com.theminespirit.core.town.PlotContour;
 import com.theminespirit.core.town.TerrainGrid;
 import com.theminespirit.core.town.TownDrawio;
 import com.theminespirit.core.town.TownMap;
@@ -15,6 +14,7 @@ import com.theminespirit.core.town.TownMapConvert;
 import com.theminespirit.core.town.TownMapRules;
 import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.core.town.TownRules;
+import com.theminespirit.core.town.WallRegion;
 import java.util.BitSet;
 import java.util.List;
 import java.util.Optional;
@@ -32,35 +32,63 @@ final class TownSurvey {
     static TownPlan town(
             ServerLevel level, BoardService service, SettlementPlotStore store, BlockCoord center, long now) {
         TownRules rules = DataTables.INSTANCE.town().current();
-        Frame frame = frame(level, center, rules);
-        TownMap map = map(store, center, rules, frame, service, now);
-        TownPlan plan = TownMapRules.build(map, rules, frame.region(), center, TownSurvey::stageOf);
+        TownMap map = map(store, center, rules, service, now);
+        TownPlan plan;
+        if (map.wall().isEmpty()) {
+            LOGGER.warn("[plot] стены в плане нет: границы поселения не заданы, стройка и расчистка ждут план");
+            plan = TownMapRules.build(blank(center), rules, emptyRegion(center), center, TownSurvey::stageOf);
+        } else {
+            Frame frame = frame(level, center, map, rules);
+            plan = TownMapRules.build(map, rules, frame.region(), center, TownSurvey::stageOf);
+        }
         store.settlePlan(plan);
         return plan;
     }
 
-    static Frame frame(ServerLevel level, BlockCoord center, TownRules rules) {
-        TerrainGrid grid = GroundProbe.terrain(level, center, rules.ground().probeRadius());
-        ColumnMask region = PlotContour.grow(grid, center.x(), center.z(), rules.ground());
+    static Frame frame(ServerLevel level, BlockCoord center, TownMap map, TownRules rules) {
+        ColumnMask region = WallRegion.of(map.wall());
+        int cx = region.minX() + region.width() / 2;
+        int cz = region.minZ() + region.depth() / 2;
+        int reach = Math.max(
+                Math.max(cx - region.minX(), region.minX() + region.width() - 1 - cx),
+                Math.max(cz - region.minZ(), region.minZ() + region.depth() - 1 - cz));
+        int radius = Math.max(rules.ground().probeRadius(), reach + 2);
+        TerrainGrid grid = GroundProbe.terrain(level, new BlockCoord(cx, center.y(), cz), radius);
         return new Frame(grid, region, water(grid, region));
     }
 
-    static TownMap map(
-            SettlementPlotStore store,
-            BlockCoord center,
-            TownRules rules,
-            Frame frame,
-            BoardService service,
-            long now) {
+    static Frame canvas(ServerLevel level, BlockCoord center, TownRules rules) {
+        int radius = rules.ground().probeRadius();
+        TerrainGrid grid = GroundProbe.terrain(level, center, radius);
+        ColumnMask region =
+                ColumnMask.rect(center.x() - radius, center.z() - radius, center.x() + radius, center.z() + radius);
+        return new Frame(grid, region, water(grid, region));
+    }
+
+    private static TownMap blank(BlockCoord center) {
+        return new TownMap(new TownMap.MapPoint(center.x(), center.z()), List.of(), List.of(), List.of());
+    }
+
+    private static ColumnMask emptyRegion(BlockCoord center) {
+        return new ColumnMask(center.x(), center.z(), 1, 1, new BitSet());
+    }
+
+    static TownMap map(SettlementPlotStore store, BlockCoord center, TownRules rules, BoardService service, long now) {
         Optional<TownMap> stored = decodeStored(store);
         if (stored.isPresent()) {
             return stored.orElseThrow();
         }
         if (store.town().isPresent()) {
             TownPlan legacy = store.town().orElseThrow();
-            TownMap converted = TownMapConvert.of(legacy, frame.region());
+            TownMap converted = TownMapConvert.of(legacy);
             String xml = TownDrawio.encodeStored(
-                    converted, 1, bounds(frame, 0), bounds(frame, 1), bounds(frame, 2), bounds(frame, 3), 2);
+                    converted,
+                    1,
+                    legacy.region().minX(),
+                    legacy.region().minZ(),
+                    legacy.region().minX() + legacy.region().width() - 1,
+                    legacy.region().minZ() + legacy.region().depth() - 1,
+                    2);
             store.putMap(xml, legacy, 1);
             LOGGER.info(
                     "[plot] старый план пересобран в карту: участков {}, улиц {}, отрезков стены {}",
@@ -79,11 +107,18 @@ final class TownSurvey {
                             ConfigStamp.current()));
             return converted;
         }
-        TownMap empty = new TownMap(new TownMap.MapPoint(center.x(), center.z()), List.of(), List.of(), List.of());
-        TownPlan plan = TownMapRules.build(empty, rules, frame.region(), center, TownSurvey::stageOf);
+        TownMap empty = blank(center);
+        TownPlan plan = TownMapRules.build(empty, rules, emptyRegion(center), center, TownSurvey::stageOf);
+        int radius = rules.ground().probeRadius();
         store.putMap(
                 TownDrawio.encodeStored(
-                        empty, 1, bounds(frame, 0), bounds(frame, 1), bounds(frame, 2), bounds(frame, 3), 2),
+                        empty,
+                        1,
+                        center.x() - radius,
+                        center.z() - radius,
+                        center.x() + radius,
+                        center.z() + radius,
+                        2),
                 plan,
                 1);
         LOGGER.info("[plot] карта поселения пуста: ждём раскладку стратега через REST");
@@ -101,15 +136,6 @@ final class TownSurvey {
             LOGGER.error("[plot] сохранённая карта не читается, план пуст: {}", broken.getMessage());
             return Optional.empty();
         }
-    }
-
-    private static int bounds(Frame frame, int index) {
-        return switch (index) {
-            case 0 -> frame.region().minX();
-            case 1 -> frame.region().minZ();
-            case 2 -> frame.region().minX() + frame.region().width() - 1;
-            default -> frame.region().minZ() + frame.region().depth() - 1;
-        };
     }
 
     static int stageOf(String building) {

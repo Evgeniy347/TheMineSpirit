@@ -11,6 +11,15 @@ public final class TownMapConvert {
     public static TownMap of(TownPlan plan, ColumnMask region) {
         Objects.requireNonNull(plan, "План не может быть null: карту экспортируют из него");
         Objects.requireNonNull(region, "Граница не может быть null: стена обязана лежать внутри неё");
+        return map(plan, wall(plan, region));
+    }
+
+    public static TownMap of(TownPlan plan) {
+        Objects.requireNonNull(plan, "План не может быть null: карту экспортируют из него");
+        return map(plan, segments(plan.fence().posts()));
+    }
+
+    private static TownMap map(TownPlan plan, List<TownMap.WallSegment> wall) {
         List<TownMap.MapPlot> plots = new ArrayList<>();
         for (Placement place : plan.placements()) {
             plots.add(new TownMap.MapPlot(
@@ -29,8 +38,7 @@ public final class TownMapConvert {
         if (!plan.streets().side().isEmpty()) {
             streets.addAll(rects(plan.streets().side(), "side"));
         }
-        return new TownMap(
-                new TownMap.MapPoint(plan.anchor().x(), plan.anchor().z()), plots, streets, wall(plan, region));
+        return new TownMap(new TownMap.MapPoint(plan.anchor().x(), plan.anchor().z()), plots, streets, wall);
     }
 
     private static List<TownMap.WallSegment> wall(TownPlan plan, ColumnMask region) {

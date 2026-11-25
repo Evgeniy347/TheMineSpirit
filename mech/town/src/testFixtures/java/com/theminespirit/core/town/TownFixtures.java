@@ -19,7 +19,8 @@ public final class TownFixtures {
 
     public static TownPlan plan(IntBinaryOperator feet, IntBinaryOperator water) {
         TerrainGrid grid = grid(feet, water);
-        ColumnMask region = PlotContour.grow(grid, ANCHOR.x(), ANCHOR.z(), RULES.ground());
+        ColumnMask region = ColumnMask.rect(
+                ANCHOR.x() - RADIUS + 2, ANCHOR.z() - RADIUS + 2, ANCHOR.x() + RADIUS - 2, ANCHOR.z() + RADIUS - 2);
         TownStreets streets = layStreets(grid, region, ANCHOR.x(), ANCHOR.z(), RULES.streets());
         List<Placement> placed = new ArrayList<>();
         for (int stage = 1; stage <= STAGES.size(); stage++) {
@@ -44,16 +45,12 @@ public final class TownFixtures {
 
     private static TownStreets layStreets(
             TerrainGrid grid, ColumnMask region, int centerX, int centerZ, TownRules.Streets rules) {
-        GridBits bits = new GridBits(region.width(), region.depth());
-        BitSet inside = new BitSet(bits.size());
-        for (ColumnMask.Cell cell : region.cells()) {
-            inside.set(bits.at(cell.x() - region.minX(), cell.z() - region.minZ()));
-        }
-        BitSet main = new BitSet(bits.size());
-        BitSet side = new BitSet(bits.size());
+        int size = region.width() * region.depth();
+        BitSet main = new BitSet(size);
+        BitSet side = new BitSet(size);
         int mainHalf = rules.main() / 2;
         int sideHalf = rules.side() / 2;
-        for (int index = inside.nextSetBit(0); index >= 0; index = inside.nextSetBit(index + 1)) {
+        for (int index = 0; index < size; index++) {
             int x = region.minX() + index % region.width();
             int z = region.minZ() + index / region.width();
             if (grid.water(x, z)) {
@@ -121,7 +118,8 @@ public final class TownFixtures {
                         || pz <= region.minZ()
                         || px >= region.minX() + region.width() - 1
                         || pz >= region.minZ() + region.depth() - 1
-                        || !grid.land(px, pz)
+                        || grid.feet(px, pz) == TerrainGrid.NO_GROUND
+                        || grid.water(px, pz)
                         || streets.contains(px, pz)) {
                     return false;
                 }

@@ -29,13 +29,14 @@ class TownRulesTests {
     }
 
     @Test
-    void load_SlopeMax_FitsLevelingShift() {
+    void load_GroundProbe_Positive() {
         TownRules rules = TownRules.load();
 
         assertTrue(
-                rules.ground().slopeMax() <= PlotLeveling.MAX_SHIFT,
-                "Предел уклона площадки " + rules.ground().slopeMax() + " больше сдвига выравнивания "
-                        + PlotLeveling.MAX_SHIFT + ": постройка встанет на уступ, который выравнивание уже не снимет"
-                        + " Иначе тест load_SlopeMax_FitsLevelingShift перестанет ловить эту поломку. При смене load_SlopeMax_FitsLevelingShift проверь это утверждение.");
+                rules.ground().probeRadius() > 0,
+                "Радиус обмера рельефа " + rules.ground().probeRadius() + " обязан быть положительным: по нему "
+                        + "рисуется пустая карта до загрузки плана"
+                        + " Иначе тест load_GroundProbe_Positive перестанет ловить эту поломку. При смене "
+                        + "load_GroundProbe_Positive проверь радиус обмера.");
     }
 }
