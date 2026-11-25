@@ -104,6 +104,7 @@
 | POST | `/v1/town/preview.drawio` | то же превью с явным адресом .drawio ([town.md](town.md)) |
 | POST | `/v1/town/apply` | проверить и применить .drawio поселения ([town.md](town.md)) |
 | POST | `/v1/town/apply.drawio` | то же применение с явным адресом .drawio ([town.md](town.md)) |
+| DELETE | `/v1/town/plots/{id}` | убрать участок из плана по имени; аудит разберёт постройку ([town.md](town.md)) |
 | GET | `/v1/quarry/search` | лучшие области добычи земли/песка по выгодности ([quarry.md](quarry.md)) |
 | GET | `/v1/quarry/status` | места добычи: запас, остаток, состояние и маршрут ([quarry.md](quarry.md)) |
 | POST | `/v1/quarry/site` | установить место добычи решением стратега или игрока |

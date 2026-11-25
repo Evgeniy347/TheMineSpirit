@@ -10,4 +10,6 @@ public interface TownGateway {
     byte[] previewDrawio(String body);
 
     String applyDrawio(String body);
+
+    String removePlot(String id);
 }

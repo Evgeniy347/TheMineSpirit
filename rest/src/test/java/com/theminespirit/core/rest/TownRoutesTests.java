@@ -222,6 +222,32 @@ class TownRoutesTests {
     }
 
     @Test
+    void delete_Plot_ForwardsIdAndReturnsAnswer() {
+        gateway.withAnswer("{\"ok\":true,\"removed\":\"storage\"}");
+
+        RestResponse response = send("DELETE", "/v1/town/plots/storage", "");
+
+        assertEquals(
+                200,
+                response.status(),
+                "Удаление участка по имени обязано отвечать 200: " + response.body()
+                        + " Иначе тест delete_Plot_ForwardsIdAndReturnsAnswer перестанет ловить эту поломку. При "
+                        + "смене delete_Plot_ForwardsIdAndReturnsAnswer проверь код");
+        assertEquals(
+                List.of("storage"),
+                gateway.removed(),
+                "Имя объекта обязано дойти до платформы без подмены: " + gateway.removed()
+                        + " Иначе тест delete_Plot_ForwardsIdAndReturnsAnswer перестанет ловить эту поломку. При "
+                        + "смене delete_Plot_ForwardsIdAndReturnsAnswer проверь id");
+        assertEquals(
+                "{\"ok\":true,\"removed\":\"storage\"}",
+                response.body(),
+                "Ответ удаления идёт от платформы: " + response.body()
+                        + " Иначе тест delete_Plot_ForwardsIdAndReturnsAnswer перестанет ловить эту поломку. При "
+                        + "смене delete_Plot_ForwardsIdAndReturnsAnswer проверь тело");
+    }
+
+    @Test
     void apply_FailedValidation_AllowsRetry() {
         gateway.withFailure(new ApiException(
                 ErrorCode.INVALID_PLAN, "участки 'barn' и 'storage' накладываются: разведите их по клеткам"));

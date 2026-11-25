@@ -9,6 +9,7 @@ import com.theminespirit.core.town.ColumnMask;
 import com.theminespirit.core.town.TownDrawio;
 import com.theminespirit.core.town.TownMap;
 import com.theminespirit.core.town.TownMapCheck;
+import com.theminespirit.core.town.TownMapEdits;
 import com.theminespirit.core.town.TownMapFinding;
 import com.theminespirit.core.town.TownMapRules;
 import com.theminespirit.core.town.TownPlan;
@@ -78,6 +79,37 @@ public final class TownMapService {
                 map.wall().size());
         return "{\"ok\":true,\"revision\":" + next + ",\"plots\":" + map.plots().size() + ",\"streets\":"
                 + map.streets().size() + ",\"wall\":" + map.wall().size() + "}";
+    }
+
+    public String removePlot(String id) {
+        SettlementPlotStore store = SettlementPlotStore.get(level);
+        TownMap map = previous(store);
+        if (map == null) {
+            throw new ApiException(
+                    ErrorCode.NOT_FOUND,
+                    "Карты поселения нет: удалять участок '" + id + "' не из чего",
+                    Map.of("object", id));
+        }
+        TownMap edited = TownMapEdits.removePlot(map, id)
+                .orElseThrow(() -> new ApiException(
+                        ErrorCode.NOT_FOUND,
+                        "Участок '" + id + "' не найден в карте: список — в GET /v1/town/plan.drawio",
+                        Map.of("object", id)));
+        TownRules rules = DataTables.INSTANCE.town().current();
+        BlockCoord center = SettlementCenter.of(level);
+        TownSurvey.Frame frame = TownSurvey.frame(level, center, rules);
+        TownPlan plan = TownMapRules.build(edited, rules, frame.region(), center, TownSurvey::stageOf);
+        int next = store.mapRevision() + 1;
+        store.putMap(stored(edited, next, frame.region()), plan, next);
+        LOGGER.info(
+                "[plot] участок '{}' убран с плана: ревизия {}, осталось участков {}",
+                id,
+                next,
+                edited.plots().size());
+        return "{\"ok\":true,\"removed\":\"" + id.replace("\\", "\\\\").replace("\"", "\\\"") + "\",\"revision\":"
+                + next + ",\"plots\":" + edited.plots().size() + ",\"streets\":"
+                + edited.streets().size()
+                + ",\"wall\":" + edited.wall().size() + "}";
     }
 
     private static TownMap previous(SettlementPlotStore store) {

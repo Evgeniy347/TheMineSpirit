@@ -7,6 +7,7 @@ final class FakeTownGateway implements TownGateway {
     private final List<String> applied = new ArrayList<>();
     private final List<String> previews = new ArrayList<>();
     private final List<String> drawioFrames = new ArrayList<>();
+    private final List<String> removed = new ArrayList<>();
     private String answer = "{\"ok\":true}";
     private String drawio = "<mxfile/>";
     private byte[] image = {1, 2, 3};
@@ -40,6 +41,10 @@ final class FakeTownGateway implements TownGateway {
         return List.copyOf(drawioFrames);
     }
 
+    List<String> removed() {
+        return List.copyOf(removed);
+    }
+
     @Override
     public String planDrawio() {
         drawioFrames.add("default");
@@ -69,6 +74,15 @@ final class FakeTownGateway implements TownGateway {
     @Override
     public String applyDrawio(String body) {
         applied.add(body);
+        if (failure != null) {
+            throw failure;
+        }
+        return answer;
+    }
+
+    @Override
+    public String removePlot(String id) {
+        removed.add(id);
         if (failure != null) {
             throw failure;
         }

@@ -83,6 +83,19 @@ public final class TownMapCheck {
                 }
             }
         }
+        if (previous != null) {
+            for (TownMap.MapPlot plot : map.plots()) {
+                for (TownMap.MapPlot old : previous.plots()) {
+                    if (!plot.equals(old) && overlaps(plot, old, 0)) {
+                        findings.add(new TownMapFinding(
+                                plot.id(),
+                                "occupied",
+                                "участок '" + plot.id() + "' пересекает прежний '" + old.id()
+                                        + "': сначала удалите прежний объект и дайте аудиту его разобрать"));
+                    }
+                }
+            }
+        }
         Set<String> streetIds = new HashSet<>();
         for (TownMap.MapStreet street : map.streets()) {
             boolean inherited = previous != null && previous.streets().stream().anyMatch(street::equals);

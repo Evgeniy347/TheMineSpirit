@@ -48,4 +48,10 @@ public final class SpiritTownGateway implements TownGateway {
         return serverCall.call(
                 () -> TownMapService.of(server.overworld()).applyDrawio(body), RestTuning.SERVER_CALL_TIMEOUT);
     }
+
+    @Override
+    public String removePlot(String id) {
+        return serverCall.call(
+                () -> TownMapService.of(server.overworld()).removePlot(id), RestTuning.SERVER_CALL_TIMEOUT);
+    }
 }

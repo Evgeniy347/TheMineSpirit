@@ -11,6 +11,32 @@ class TownMapCheckTests {
     private static final TownRules RULES = TownRules.load();
 
     @Test
+    void check_NewPlotOverOld_Reported() {
+        TownMap base = TownMapFixtures.small();
+        TownMap previous = new TownMap(
+                base.anchor(),
+                List.of(new TownMap.MapPlot("old_hut", "hut", 60, 60, 75, 75, "north")),
+                base.streets(),
+                base.wall());
+        TownMap map = new TownMap(
+                base.anchor(),
+                List.of(new TownMap.MapPlot("new_hut", "hut", 60, 60, 75, 75, "north")),
+                base.streets(),
+                base.wall());
+
+        List<TownMapFinding> findings =
+                TownMapCheck.validate(map, RULES, TownMapFixtures.REGION, TownMapFixtures.NO_WATER, previous);
+
+        assertTrue(
+                findings.stream()
+                        .anyMatch(finding -> "occupied".equals(finding.kind()) && "new_hut".equals(finding.object())),
+                "Новый участок поверх прежнего обязан отклоняться с причиной: иначе план применяется, а старый дом "
+                        + "стоит и духи не могут его разобрать; получено " + findings
+                        + " Иначе тест check_NewPlotOverOld_Reported перестанет ловить эту поломку. При смене "
+                        + "check_NewPlotOverOld_Reported проверь вид occupied");
+    }
+
+    @Test
     void check_GoodMap_NoFindings() {
         List<TownMapFinding> findings =
                 TownMapCheck.validate(TownMapFixtures.small(), RULES, TownMapFixtures.REGION, TownMapFixtures.NO_WATER);

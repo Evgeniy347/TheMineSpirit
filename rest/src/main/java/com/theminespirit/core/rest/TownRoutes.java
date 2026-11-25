@@ -13,6 +13,7 @@ public final class TownRoutes {
     public static final String PREVIEW_DRAWIO = "/v1/town/preview.drawio";
     public static final String APPLY = "/v1/town/apply";
     public static final String APPLY_DRAWIO = "/v1/town/apply.drawio";
+    public static final String PLOT = "/v1/town/plots/{id}";
     private static final int DEFAULT_SCALE = 2;
 
     private final TownGateway gateway;
@@ -32,7 +33,8 @@ public final class TownRoutes {
                 new Route("POST", PREVIEW, this::preview),
                 new Route("POST", PREVIEW_DRAWIO, this::preview),
                 new Route("POST", APPLY, this::apply),
-                new Route("POST", APPLY_DRAWIO, this::apply));
+                new Route("POST", APPLY_DRAWIO, this::apply),
+                new Route("DELETE", PLOT, this::removePlot));
     }
 
     private RestResponse terrain(RestRequest request, PathParams ignored) {
@@ -89,6 +91,10 @@ public final class TownRoutes {
         }
         idempotency.remember(requestId, fingerprint, response);
         return RestResponse.ok(response);
+    }
+
+    private RestResponse removePlot(RestRequest request, PathParams params) {
+        return RestResponse.ok(gateway.removePlot(params.get("id")));
     }
 
     private static String requestId(RestRequest request, String fingerprint) {
