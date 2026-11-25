@@ -36,6 +36,8 @@ public final class BoardSources {
     private long roundNow;
     private boolean advanceFailed;
 
+    private static final long RESCUE_SLICE_NANOS = 2_000_000L;
+
     private BoardSources() {}
 
     public static BoardSources create() {
@@ -139,11 +141,18 @@ public final class BoardSources {
         });
     }
 
-    public void advanceGraph() {
+    public void advance(long now) {
         advanceFailed = !guard.call(
                 "graph_advance",
                 () -> {
                     graph.advance();
+                    return Boolean.TRUE;
+                },
+                Boolean.FALSE);
+        advanceFailed |= !guard.call(
+                "rescue_advance",
+                () -> {
+                    rescueReach.advance(now, RESCUE_SLICE_NANOS);
                     return Boolean.TRUE;
                 },
                 Boolean.FALSE);
@@ -162,7 +171,6 @@ public final class BoardSources {
         Set<String> fences = guard.call("fence", () -> FenceWatch.liveCauses(level), Set.of());
         live.addAll(craters);
         live.addAll(fences);
-        guard.run("rescue_reach", () -> rescueReach.advance(now, 5_000_000L));
         live.addAll(guard.call(
                 "graph",
                 () -> graph.tick(

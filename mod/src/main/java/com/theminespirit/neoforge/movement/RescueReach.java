@@ -11,6 +11,7 @@ import com.theminespirit.core.navigation.NavSettings;
 import com.theminespirit.core.navigation.NavWorld;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.SpiritConfig;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -24,7 +25,7 @@ public final class RescueReach {
     private static final long VERDICT_TTL_TICKS = 1200;
     private static final long PROBE_TTL_TICKS = 1200;
     private static final int MAX_VERDICTS = 64;
-    private static final int MAX_PENDING = 8;
+    private static final int MAX_PENDING = 16;
     private static final NavSettings WALK_ONLY =
             new NavSettings(600_000, 600_000, 30_000, 50, 3, 12, 2, 20, 2, false, false);
 
@@ -59,6 +60,7 @@ public final class RescueReach {
         private final Map<Key, Entry> verdicts = new LinkedHashMap<>();
         private final Map<Key, Probe> pending = new LinkedHashMap<>();
         private long generation;
+        private int cursor;
 
         public @Nullable Verdict verdict(UUID helper, BlockCoord from, BlockCoord target, long now) {
             Objects.requireNonNull(helper, "Помощник не может быть null: кэш адресный");
@@ -91,18 +93,16 @@ public final class RescueReach {
             if (pending.isEmpty() || budgetNanos <= 0) {
                 return;
             }
-            long slice = Math.max(1, budgetNanos / pending.size());
-            Iterator<Map.Entry<Key, Probe>> iterator = pending.entrySet().iterator();
-            while (iterator.hasNext()) {
-                Probe probe = iterator.next().getValue();
-                NavResult result = probe.session.step(slice);
-                if (result != null) {
-                    remember(probe, verdict(probe, result), now);
-                    iterator.remove();
-                } else if (now - probe.started >= PROBE_TTL_TICKS) {
-                    remember(probe, new Verdict(false, "поиск не уложился: срок"), now);
-                    iterator.remove();
-                }
+            List<Probe> probes = new ArrayList<>(pending.values());
+            Probe probe = probes.get(Math.floorMod(cursor, probes.size()));
+            cursor++;
+            NavResult result = probe.session.step(budgetNanos);
+            if (result != null) {
+                remember(probe, verdict(probe, result), now);
+                pending.remove(probe.key);
+            } else if (now - probe.started >= PROBE_TTL_TICKS) {
+                remember(probe, new Verdict(false, "поиск не уложился: срок"), now);
+                pending.remove(probe.key);
             }
         }
 

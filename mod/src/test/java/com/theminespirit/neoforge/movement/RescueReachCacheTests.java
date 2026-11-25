@@ -171,13 +171,49 @@ class RescueReachCacheTests {
                         + " Иначе тест verdict_WaterAtEnd_NotReachable перестанет ловить эту поломку. При смене verdict_WaterAtEnd_NotReachable проверь это утверждение.");
     }
 
+    @Test
+    void cache_Advance_RotatesPendingSearches() {
+        RescueReach.Cache cache = new RescueReach.Cache();
+        UUID other = UUID.fromString("66666666-7777-8888-9999-000000000000");
+        BlockCoord far = new BlockCoord(5000, 64, 0);
+        Flat first = new Flat();
+        Flat second = new Flat();
+        cache.request(first, cell -> false, HELPER, FROM, far, 0);
+        cache.request(second, cell -> false, other, FROM, far, 0);
+        first.reset();
+        second.reset();
+
+        cache.advance(0, 10_000_000L);
+
+        assertTrue(
+                (first.reads > 0) != (second.reads > 0),
+                "Один шаг кэша обязан обслужить только один запрос: при делении бюджета между всеми"
+                        + " помощниками каждый поиск получает доли тика и не успевает за TTL, а дух остаётся"
+                        + " в ловушке Иначе тест cache_Advance_RotatesPendingSearches перестанет ловить"
+                        + " живой случай spirit-3 от 25.11. При смене cache_Advance_RotatesPendingSearches"
+                        + " проверь RescueReach.Cache.advance и BoardSources.advance.");
+        cache.advance(1, 10_000_000L);
+        assertTrue(
+                first.reads > 0 && second.reads > 0,
+                "Следующий тик обязан обслужить второй запрос: иначе первый запрос постоянно получает"
+                        + " бюджет, а остальные помощники никогда не получают вердикт Иначе тест"
+                        + " cache_Advance_RotatesPendingSearches перестанет ловить эту поломку. При смене"
+                        + " cache_Advance_RotatesPendingSearches проверь порядок round-robin.");
+    }
+
     private static void finish(RescueReach.Cache cache, long now) {
         for (int step = 0; step < 20; step++) {
             cache.advance(now, 10_000_000L);
         }
     }
 
-    private static final class Flat implements NavWorld {
+    private static class Flat implements NavWorld {
+        private int reads;
+
+        void reset() {
+            reads = 0;
+        }
+
         @Override
         public boolean available(int x, int z) {
             return true;
@@ -185,6 +221,7 @@ class RescueReachCacheTests {
 
         @Override
         public boolean passable(int x, int y, int z) {
+            reads++;
             return y >= 64;
         }
 

@@ -57,7 +57,7 @@ final class BoardCycle {
         journal.flush(JournalService.FLUSH_BUDGET);
         split.mark("journal", started);
         started = System.nanoTime();
-        sources.advanceGraph();
+        sources.advance(now);
         split.mark("graph_advance", started);
         long since = now - lastRebuild;
         if (since >= BoardTuning.boardIntervalTicks()) {
