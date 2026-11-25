@@ -39,6 +39,10 @@ final class GraphBuildInputs {
         return BuildingStates.of(level, buildings);
     }
 
+    static Built auditedState(Optional<Boolean> world) {
+        return world.orElse(false) ? Built.BUILT : Built.PLANNED;
+    }
+
     private static Map<String, Built> planBuilt(
             ServerLevel level, BoardService service, FirstStepsRunner.StageScan scan, Optional<TownPlan> town) {
         BoardLedger ledger = service.board().ledger();
@@ -56,11 +60,11 @@ final class GraphBuildInputs {
             Optional<Boolean> world = town.isPresent()
                     ? PlanStatesInputs.worldBuilt(level, scan, town.orElseThrow(), entry.orElseThrow())
                     : Optional.empty();
-            boolean built = ledger.hasPlan(id, 1) || world.orElse(false);
+            Built built = auditedState(world);
             if (world.orElse(false)) {
                 ledger.notePlan(id, 1);
             }
-            states.put(id, built ? Built.BUILT : Built.PLANNED);
+            states.put(id, built);
         }
         return states;
     }

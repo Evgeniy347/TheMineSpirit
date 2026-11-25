@@ -6,9 +6,38 @@ import com.theminespirit.core.board.graph.GraphState.Built;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 class PlanStatesInputsTests {
+    @Test
+    void auditedState_JournalPlanWithoutWorldProof_StaysPlanned() {
+        assertEquals(
+                Built.PLANNED,
+                GraphBuildInputs.auditedState(Optional.empty()),
+                "Запись плана в журнале не доказывает постройку: без аудита мира узел остаётся"
+                        + " запланированным, иначе упавшее поле исчезает с доски навсегда Иначе тест"
+                        + " auditedState_JournalPlanWithoutWorldProof_StaysPlanned перестанет ловить"
+                        + " живой случай wheat_field от 25.11. При смене"
+                        + " auditedState_JournalPlanWithoutWorldProof_StaysPlanned проверь GraphBuildInputs.planBuilt.");
+        assertEquals(
+                Built.PLANNED,
+                GraphBuildInputs.auditedState(Optional.of(false)),
+                "Явный отрицательный аудит тоже оставляет постройку незавершённой: граф обязан"
+                        + " продолжить её выдавать, а не считать готовой по журналу Иначе тест"
+                        + " auditedState_JournalPlanWithoutWorldProof_StaysPlanned перестанет ловить"
+                        + " эту поломку. При смене auditedState_JournalPlanWithoutWorldProof_StaysPlanned"
+                        + " проверь PlanStatesInputs.worldBuilt.");
+        assertEquals(
+                Built.BUILT,
+                GraphBuildInputs.auditedState(Optional.of(true)),
+                "Только положительный аудит мира закрывает постройку: иначе граф перестанет"
+                        + " выдавать работу до фактического завершения схемы Иначе тест"
+                        + " auditedState_JournalPlanWithoutWorldProof_StaysPlanned перестанет ловить"
+                        + " эту поломку. При смене auditedState_JournalPlanWithoutWorldProof_StaysPlanned"
+                        + " проверь BuildingAudit и GraphBuildInputs.");
+    }
+
     @Test
     void putGroups_PartlyBuiltWarehouses_GraphStaysPlanned() {
         Map<String, Built> buildings = new HashMap<>();
