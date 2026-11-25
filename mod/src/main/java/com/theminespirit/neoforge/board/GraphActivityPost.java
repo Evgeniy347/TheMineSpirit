@@ -90,7 +90,7 @@ final class GraphActivityPost {
         String cause = post.current == null ? "activity:" + request.script() : post.current.id();
         if (post.current != null
                 && BoardActivities.open(post.service.board(), cause)
-                && post.service.board().find(request.id()).isEmpty()) {
+                && !BoardActivities.openId(post.service.board(), request.id())) {
             return true;
         }
         int planned = post.current == null ? 0 : post.current.task().ticks();

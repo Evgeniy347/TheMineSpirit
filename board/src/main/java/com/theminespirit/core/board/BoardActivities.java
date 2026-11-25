@@ -45,6 +45,15 @@ public final class BoardActivities {
         return CASES.contains(boardCase);
     }
 
+    public static boolean openId(Board board, String ticketId) {
+        Objects.requireNonNull(board, "Доска занятий не может быть null: дубликат ищут на ней");
+        Objects.requireNonNull(ticketId, "Id занятия не может быть null: без него не отличить повтор");
+        BoardStatus status = board.statusOf(ticketId).orElse(null);
+        return status == BoardStatus.PENDING
+                || status == BoardStatus.WAITING_RESOURCES
+                || status == BoardStatus.ASSIGNED;
+    }
+
     public static boolean open(Board board, String cause) {
         Objects.requireNonNull(board, "Доска занятий не может быть null: дубликат ищут на ней");
         Objects.requireNonNull(cause, "Причина занятия не может быть null: без неё не отличить повтор");
@@ -52,10 +61,7 @@ public final class BoardActivities {
             if (!isActivity(ticket.boardCase()) || !cause.equals(ticket.cause())) {
                 continue;
             }
-            BoardStatus status = board.statusOf(ticket.id()).orElse(null);
-            if (status == BoardStatus.PENDING
-                    || status == BoardStatus.WAITING_RESOURCES
-                    || status == BoardStatus.ASSIGNED) {
+            if (openId(board, ticket.id())) {
                 return true;
             }
         }
