@@ -10,10 +10,8 @@ import com.theminespirit.core.board.VitalGate;
 import com.theminespirit.core.board.graph.GraphCadence;
 import com.theminespirit.core.board.graph.GraphDecisions;
 import com.theminespirit.core.board.graph.GraphPlan;
-import com.theminespirit.core.board.graph.GraphPlanner;
 import com.theminespirit.core.board.graph.GraphState;
 import com.theminespirit.core.board.graph.GraphTickets;
-import com.theminespirit.core.board.graph.StageBuilt;
 import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.log.Perf;
 import com.theminespirit.core.reload.DataTables;
@@ -24,10 +22,10 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.monster.Monster;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 public final class GraphSource {
@@ -59,7 +57,8 @@ public final class GraphSource {
             boolean deep,
             Set<String> signals) {}
 
-    private Half pending;
+    private GraphSource.@Nullable Half pending;
+    private GraphPreparation.@Nullable Work preparation;
 
     public Set<String> tick(
             ServerLevel level,
@@ -83,49 +82,35 @@ public final class GraphSource {
             return lastLive;
         }
         SupplyGraph graph = DataTables.INSTANCE.graph().current();
-        started = System.nanoTime();
-        Optional<FirstStepsRunner.StageScan> scan = FirstStepsRunner.tick(level, service, spirits, stock, now);
-        mark("stage", started);
-        if (scan.isEmpty()) {
-            lastLive = Set.of();
-            return lastLive;
-        }
-        FirstStepsRunner.StageScan stageScan = scan.orElseThrow();
-        started = System.nanoTime();
-        QuarryWatch.Result quarries = this.quarries.tick(level, stageScan.home(), now);
-        mark("quarry", started);
-        started = System.nanoTime();
-        GraphSurroundings.Around around = GraphSurroundings.of(
-                        level,
-                        service,
-                        stageScan.home(),
-                        quarries.nearest(),
-                        quarries.distances(),
-                        TreeCenterLogs.centers(stageScan.stage()),
-                        cell -> stageScan.stage().orchardTerritory(cell.x(), cell.z()))
-                .with(events)
-                .withRoutes(quarries.events(), quarries.world());
-        mark("around", started);
-        started = System.nanoTime();
-        GraphState state = GraphInputs.state(level, service, spirits, stock, stageScan, graph, around);
-        mark("state", started);
-        GraphInputs.lastPhases().forEach((name, millis) -> phases.merge("in." + name, millis, Long::sum));
         boolean deep = lastDeep < 0 || now < lastDeep || now - lastDeep >= DEEP_INTERVAL_TICKS;
         if (deep) {
             lastDeep = now;
-            started = System.nanoTime();
-            settleBuilt(level, service, stock, stageScan, graph, state);
-            mark("built", started);
         }
-        started = System.nanoTime();
-        GraphPlan plan = GraphPlanner.plan(graph, state);
-        mark("plan", started);
-        started = System.nanoTime();
-        GraphTickets.Result result = GraphTickets.of(graph, state, plan);
-        mark("tickets", started);
-        pending = new Half(
-                level, service, spirits, stock, stageScan, around, state, plan, graph, result, now, deep, signals);
+        preparation = GraphPreparation.start(
+                level, service, spirits, stock, quarries, graph, now, deep, events, signals, phases);
+        if (preparation == null) {
+            lastLive = Set.of();
+        }
         return lastLive;
+    }
+
+    public void advance() {
+        GraphPreparation.Work work = preparation;
+        if (work == null) {
+            return;
+        }
+        try {
+            Half half = work.advance();
+            phases.putAll(work.phases());
+            if (half != null) {
+                pending = half;
+                preparation = null;
+            }
+        } catch (RuntimeException error) {
+            preparation = null;
+            pending = null;
+            throw error;
+        }
     }
 
     public Map<String, Long> lastPhases() {
@@ -242,21 +227,6 @@ public final class GraphSource {
             events.add(CraftOrders.EVENT);
         }
         return Set.copyOf(events);
-    }
-
-    private static void settleBuilt(
-            ServerLevel level,
-            BoardService service,
-            StockView stock,
-            FirstStepsRunner.StageScan scan,
-            SupplyGraph graph,
-            GraphState state) {
-        for (SupplyGraph.Building building : graph.buildings().values()) {
-            if (!StageBuilt.ids().contains(building.id()) || state.built(building.id()) == GraphState.Built.BUILT) {
-                continue;
-            }
-            StageSettle.settle(level, service, stock, scan, building.boardCase(), level.getGameTime());
-        }
     }
 
     private static List<GraphDecisions.Vital> vitals(Half half) {

@@ -34,6 +34,7 @@ public final class BoardSources {
     private final GraphNotes notes = new GraphNotes();
     private final SourceGuard guard = new SourceGuard(this::report);
     private long roundNow;
+    private boolean advanceFailed;
 
     private BoardSources() {}
 
@@ -42,7 +43,7 @@ public final class BoardSources {
     }
 
     public boolean failedRound() {
-        return guard.failedRound();
+        return guard.failedRound() || advanceFailed;
     }
 
     public Map<String, Long> sourceMillis() {
@@ -138,6 +139,16 @@ public final class BoardSources {
         });
     }
 
+    public void advanceGraph() {
+        advanceFailed = !guard.call(
+                "graph_advance",
+                () -> {
+                    graph.advance();
+                    return Boolean.TRUE;
+                },
+                Boolean.FALSE);
+    }
+
     public Set<String> tick(
             ServerLevel level, BoardService service, List<SpiritEntity> spirits, StockView stock, long now) {
         if (now < 0) {
@@ -145,6 +156,7 @@ public final class BoardSources {
         }
         Set<String> live = new HashSet<>();
         roundNow = now;
+        advanceFailed = false;
         guard.startRound();
         Set<String> craters = guard.call("crater", () -> CraterWatch.liveCauses(level, service), Set.of());
         Set<String> fences = guard.call("fence", () -> FenceWatch.liveCauses(level), Set.of());
