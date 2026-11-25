@@ -113,8 +113,8 @@ public final class TownDrawio {
                     xml,
                     "street-" + index,
                     street.id(),
-                    "rounded=0;whiteSpace=wrap;html=1;strokeColor=none;opacity=70;fillColor="
-                            + streetColor(street.kind()) + ";",
+                    "rounded=0;whiteSpace=wrap;html=1;strokeWidth=0;fillColor=#f5f5f5;strokeColor=#666666;"
+                            + "fontColor=#333333;",
                     (street.minX() - x1) * scale,
                     (street.minZ() - z1) * scale,
                     street.width() * scale,
@@ -123,13 +123,6 @@ public final class TownDrawio {
                             + "\" tmX1=\"" + street.x1() + "\" tmZ1=\"" + street.z1() + "\" tmX2=\"" + street.x2()
                             + "\" tmZ2=\"" + street.z2() + "\"");
         }
-    }
-
-    private static String streetColor(String kind) {
-        return switch (kind) {
-            case "main" -> "#333333";
-            default -> "#777777";
-        };
     }
 
     private static void walls(StringBuilder xml, TownMap map, int x1, int z1, int scale) {

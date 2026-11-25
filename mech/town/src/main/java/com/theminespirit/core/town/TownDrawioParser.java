@@ -128,11 +128,25 @@ final class TownDrawioParser {
                 && geometry.containsKey("y")
                 && geometry.containsKey("width")
                 && geometry.containsKey("height")) {
-            int minX = block(decimal(geometry, "x"), meta.x1(), meta.scale(), false);
-            int minZ = block(decimal(geometry, "y"), meta.z1(), meta.scale(), false);
-            int width = Math.max(1, (int) Math.round(decimal(geometry, "width") / meta.scale()));
-            int depth = Math.max(1, (int) Math.round(decimal(geometry, "height") / meta.scale()));
-            return new int[] {minX, minZ, minX + width - 1, minZ + depth - 1};
+            double angle = rotation(cell.attrs().getOrDefault("style", ""));
+            int turn = Math.abs((int) Math.round(angle)) % 180;
+            double width = decimal(geometry, "width");
+            double height = decimal(geometry, "height");
+            if (turn == 90) {
+                double swap = width;
+                width = height;
+                height = swap;
+            } else if (turn != 0) {
+                throw new IllegalArgumentException("Фигура повёрнута на " + Math.round(angle) + "°: участки и улицы "
+                        + "выравниваются по осям, допустим поворот только на 90° — выпрямите фигуру в diagrams.net");
+            }
+            double centerX = decimal(geometry, "x") + decimal(geometry, "width") / 2;
+            double centerY = decimal(geometry, "y") + decimal(geometry, "height") / 2;
+            int minX = block(centerX - width / 2, meta.x1(), meta.scale(), false);
+            int minZ = block(centerY - height / 2, meta.z1(), meta.scale(), false);
+            int wide = Math.max(1, (int) Math.round(width / meta.scale()));
+            int deep = Math.max(1, (int) Math.round(height / meta.scale()));
+            return new int[] {minX, minZ, minX + wide - 1, minZ + deep - 1};
         }
         return new int[] {
             integer(cell.attrs(), "tmX1"),

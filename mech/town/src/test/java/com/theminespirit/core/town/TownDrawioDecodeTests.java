@@ -156,4 +156,40 @@ class TownDrawioDecodeTests {
                         + " Иначе тест decode_BadWallRotation_RejectsWall перестанет ловить эту поломку. При смене "
                         + "decode_BadWallRotation_RejectsWall проверь текст ошибки");
     }
+
+    @Test
+    void decode_RotatedStreet_SwapsGeometry() {
+        String cells = "<mxCell tmKind=\"street\" tmId=\"road\" tmKindValue=\"side\" style=\"rotation=90;\">"
+                + "<mxGeometry x=\"0\" y=\"0\" width=\"12\" height=\"120\" as=\"geometry\"/></mxCell>";
+
+        TownMap map = TownDrawio.decode(doc(cells)).map();
+
+        assertEquals(
+                List.of(new TownMap.MapStreet("road", "side", -47, 17, 12, 22)),
+                map.streets(),
+                "Улица, повёрнутая в diagrams.net на 90°, обязана читаться с обменом сторон: иначе дорога из "
+                        + "выгрузки владельца ложится поперёк и перекрывает участки; получено " + map.streets()
+                        + " Иначе тест decode_RotatedStreet_SwapsGeometry перестанет ловить эту поломку. При смене "
+                        + "decode_RotatedStreet_SwapsGeometry проверь прямоугольник улицы");
+    }
+
+    @Test
+    void decode_StreetRotatedBy45_Rejected() {
+        String cells = "<mxCell tmKind=\"street\" tmId=\"road\" tmKindValue=\"side\" style=\"rotation=45;\">"
+                + "<mxGeometry x=\"0\" y=\"0\" width=\"12\" height=\"120\" as=\"geometry\"/></mxCell>";
+
+        IllegalArgumentException failure = assertThrows(
+                IllegalArgumentException.class,
+                () -> TownDrawio.decode(doc(cells)),
+                "Косая улица обязана отклоняться: участки и дороги выравниваются по осям, иначе блоки улицы "
+                        + "не совпадут с миром; Иначе тест decode_StreetRotatedBy45_Rejected перестанет ловить эту "
+                        + "поломку. При смене decode_StreetRotatedBy45_Rejected проверь отказ");
+
+        assertTrue(
+                failure.getMessage().contains("поворот только на 90°"),
+                "Отказ косой улицы обязан объяснять допустимый поворот: иначе правку не исправить по тексту; "
+                        + "получено " + failure.getMessage()
+                        + " Иначе тест decode_StreetRotatedBy45_Rejected перестанет ловить эту поломку. При смене "
+                        + "decode_StreetRotatedBy45_Rejected проверь текст ошибки");
+    }
 }

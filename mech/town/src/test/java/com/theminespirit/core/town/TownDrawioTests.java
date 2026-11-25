@@ -34,7 +34,7 @@ class TownDrawioTests {
                         && xml.contains("tmX1=\"-10\" tmZ1=\"20\" tmX2=\"5\" tmZ2=\"35\"")
                         && xml.contains("<mxGeometry x=\"20\" y=\"60\" width=\"32\" height=\"32\" as=\"geometry\"/>")
                         && xml.contains("tmKind=\"street\" tmId=\"main\"")
-                        && xml.contains("fillColor=#333333;")
+                        && xml.contains("fillColor=#f5f5f5;strokeColor=#666666;")
                         && xml.contains("x=\"0\" y=\"20\" width=\"82\" height=\"10\" as=\"geometry\"")
                         && xml.contains("fillColor=#000000;rotation=0;")
                         && xml.contains("<mxGeometry x=\"1\" y=\"19\" width=\"80\" height=\"4\" as=\"geometry\"/>")
@@ -64,7 +64,7 @@ class TownDrawioTests {
     }
 
     @Test
-    void encode_SideStreet_WritesColoredLine() {
+    void encode_SideStreet_WritesGrayRectangle() {
         TownMap map = new TownMap(
                 new TownMap.MapPoint(0, 0),
                 List.of(),
@@ -80,8 +80,8 @@ class TownDrawioTests {
                 "Боковая улица и диагональная стена обязаны рисоваться отдельными фигурами: без этого в .drawio "
                         + "пропадут улица без координат и косая стена, и план разойдётся с миром; получено "
                         + xml.length()
-                        + " символов Иначе тест encode_SideStreet_WritesColoredLine перестанет ловить эту поломку. "
-                        + "При смене encode_SideStreet_WritesColoredLine проверь цвет боковой улицы и отрезок стены");
+                        + " символов Иначе тест encode_SideStreet_WritesGrayRectangle перестанет ловить эту поломку. "
+                        + "При смене encode_SideStreet_WritesGrayRectangle проверь вид боковой улицы и отрезок стены");
     }
 
     @Test
