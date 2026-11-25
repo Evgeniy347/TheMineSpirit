@@ -79,6 +79,34 @@ class UnreachableCellsTests {
     }
 
     @Test
+    void revision_NewFailure_Grows() {
+        UnreachableCells cells = new UnreachableCells();
+        long before = cells.revision();
+
+        cells.noteFailure(FENCE);
+
+        assertTrue(
+                cells.revision() > before,
+                "Новый отказ обязан двигать ревизию: иначе проход исключений не узнает о нём и мёртвая клетка останется в работе до конца сессии"
+                        + " Иначе тест revision_NewFailure_Grows перестанет ловить эту поломку. При смене revision_NewFailure_Grows проверь это утверждение.");
+    }
+
+    @Test
+    void revision_ReachedCell_StaysSame() {
+        UnreachableCells cells = new UnreachableCells();
+        cells.noteFailure(FENCE);
+        long afterFailure = cells.revision();
+
+        cells.reached(FENCE);
+
+        assertEquals(
+                afterFailure,
+                cells.revision(),
+                "Достигнутая клетка не двигает ревизию: иначе проход исключений пересканирует сотни тысяч клеток после каждого сломанного блока"
+                        + " Иначе тест revision_ReachedCell_StaysSame перестанет ловить эту поломку. При смене revision_ReachedCell_StaysSame проверь это утверждение.");
+    }
+
+    @Test
     void escalating_AfterOneAreaAttempt_IsFalse() {
         UnreachableCells cells = new UnreachableCells();
         cells.noteAttempt("-182,66,-524..-182,66,-524");

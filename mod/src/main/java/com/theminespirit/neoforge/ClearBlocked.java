@@ -1,6 +1,5 @@
 package com.theminespirit.neoforge;
 
-import com.mojang.logging.LogUtils;
 import com.theminespirit.core.building.api.BuildBox;
 import com.theminespirit.core.mining.BreakSkipTally;
 import com.theminespirit.core.mining.StandSpots;
@@ -21,9 +20,6 @@ import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 final class ClearBlocked {
-    private static final Logger LOGGER = LogUtils.getLogger();
-    private static final long SLOW_PROTECTION_SCAN_NANOS = 200_000_000L;
-
     record Sweep(
             List<ClearSummary.Leftover> leftover, int unsafe, int noStand, int unreachable, int excluded, int planned) {
         int skipped() {
@@ -34,6 +30,7 @@ final class ClearBlocked {
     private final Level level;
     private final UnreachableCells cells;
     private final String area;
+    private long excludedRevision = -1;
 
     ClearBlocked(Level level, BuildBox box) {
         this.level = level;
@@ -50,7 +47,14 @@ final class ClearBlocked {
         cells.noteFailure(cell);
     }
 
+    private static final Sweep NOTHING = new Sweep(List.of(), 0, 0, 0, 0, 0);
+
     Sweep dropExcluded(List<BlockCoord> remaining) {
+        long revision = cells.revision();
+        if (revision == excludedRevision) {
+            return NOTHING;
+        }
+        excludedRevision = revision;
         List<ClearSummary.Leftover> leftover = new ArrayList<>();
         int excluded = 0;
         for (int index = remaining.size() - 1; index >= 0; index--) {
@@ -66,32 +70,10 @@ final class ClearBlocked {
         return new Sweep(leftover, 0, 0, 0, excluded, 0);
     }
 
-    Sweep dropProtected(List<BlockCoord> remaining, SpiritEntity spirit, boolean demolish) {
-        long started = System.nanoTime();
-        List<ClearSummary.Leftover> leftover = new ArrayList<>();
-        int protectedCount = 0;
-        for (int index = remaining.size() - 1; index >= 0; index--) {
-            BlockCoord cell = remaining.get(index);
-            BlockPos pos = new BlockPos(cell.x(), cell.y(), cell.z());
-            BlockState state = level.getBlockState(pos);
-            String reason = protectedReason(spirit, pos, state, demolish);
-            if (reason == null) {
-                continue;
-            }
-            protectedCount++;
-            leftover.add(new ClearSummary.Leftover(cell, blockAt(cell), reason, 0));
-            remaining.remove(index);
-        }
-        long spent = System.nanoTime() - started;
-        if (spent >= SLOW_PROTECTION_SCAN_NANOS) {
-            LOGGER.warn(
-                    "[clear] {}: проверка защиты {} клеток заняла {} мс — это время стоит серверный тик;"
-                            + " искать дорогую проверку в защите поселения, а не в самом духе",
-                    spirit.getName().getString(),
-                    remaining.size() + protectedCount,
-                    spent / 1_000_000L);
-        }
-        return new Sweep(leftover, 0, 0, 0, 0, protectedCount);
+    @Nullable
+    String protectedReason(SpiritEntity spirit, BlockCoord cell, boolean demolish) {
+        BlockPos pos = new BlockPos(cell.x(), cell.y(), cell.z());
+        return protectedReason(spirit, pos, level.getBlockState(pos), demolish);
     }
 
     private static @Nullable String protectedReason(
@@ -107,22 +89,13 @@ final class ClearBlocked {
         return null;
     }
 
-    Sweep dropPlanned(List<BlockCoord> remaining) {
-        List<ClearSummary.Leftover> leftover = new ArrayList<>();
-        int planned = 0;
-        for (int index = remaining.size() - 1; index >= 0; index--) {
-            BlockCoord cell = remaining.get(index);
-            BlockPos pos = new BlockPos(cell.x(), cell.y(), cell.z());
-            BlockState state = level.getBlockState(pos);
-            String id = BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString();
-            if (!plannedFence(id, onFenceStrip(pos))) {
-                continue;
-            }
-            planned++;
-            leftover.add(new ClearSummary.Leftover(cell, blockAt(cell), "забор плана ограды", 0));
-            remaining.remove(index);
-        }
-        return new Sweep(leftover, 0, 0, 0, 0, planned);
+    @Nullable
+    String plannedFenceReason(BlockCoord cell) {
+        BlockPos pos = new BlockPos(cell.x(), cell.y(), cell.z());
+        String id = BuiltInRegistries.BLOCK
+                .getKey(level.getBlockState(pos).getBlock())
+                .toString();
+        return plannedFence(id, onFenceStrip(pos)) ? "забор плана ограды" : null;
     }
 
     static boolean plannedFence(String blockId, boolean onStrip) {

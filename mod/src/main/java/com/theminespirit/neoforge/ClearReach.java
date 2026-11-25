@@ -4,6 +4,7 @@ import com.theminespirit.core.building.BuildReservations;
 import com.theminespirit.core.mining.api.BreakSafety;
 import com.theminespirit.core.mining.api.MiningSafety;
 import com.theminespirit.core.observation.BlockCoord;
+import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.ClipContext;
@@ -17,6 +18,20 @@ final class ClearReach {
     private static final double REACH_FROM_PLACE = BlockBreaker.REACH;
 
     private ClearReach() {}
+
+    static List<BlockCoord> inReach(List<BlockCoord> cells, Vec3 eye) {
+        double limit = (REACH_FROM_PLACE + 2.0) * (REACH_FROM_PLACE + 2.0);
+        List<BlockCoord> out = new ArrayList<>();
+        for (BlockCoord cell : cells) {
+            double dx = cell.x() + 0.5 - eye.x;
+            double dy = cell.y() + 0.5 - eye.y;
+            double dz = cell.z() + 0.5 - eye.z;
+            if (dx * dx + dy * dy + dz * dz <= limit) {
+                out.add(cell);
+            }
+        }
+        return out;
+    }
 
     static @Nullable BlockCoord near(
             SpiritEntity spirit,

@@ -5,8 +5,6 @@ import com.theminespirit.core.mining.ClearOrder;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.PlanFilterGate;
 import com.theminespirit.neoforge.board.PlotCellStructure;
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -26,11 +24,10 @@ final class ClearSweepRun {
     private final ClearBreaks breaks;
     private final Set<BlockCoord> triedAnchors = new HashSet<>();
     private ClearAnchor.@Nullable Stand anchor;
-    private @Nullable SweepPillar pillar;
-    private @Nullable PillarDismantler dismantler;
+    private final ClearSweepScaffold scaffold;
     private final SweepUnload unload;
     private final PlanFilterGate planFilter = new PlanFilterGate();
-    private boolean finishAfterDescent;
+    private final ClearPlanFilter filter = new ClearPlanFilter();
     private int approachSpent;
     private int approaches;
     private int approachFailed;
@@ -41,6 +38,7 @@ final class ClearSweepRun {
         this.session = session;
         this.breaks = new ClearBreaks(session);
         this.unload = new SweepUnload(session);
+        this.scaffold = new ClearSweepScaffold(session, this::afterDismantle);
     }
 
     int approachFailed() {
@@ -63,18 +61,19 @@ final class ClearSweepRun {
         return breaks.brokenKinds();
     }
 
+    void filterTick() {
+        if (filter.idle() && planFilter.due(PlotCellStructure.generation())) {
+            filter.start(session.remaining);
+        }
+        filter.tick(session);
+    }
+
     void pick() {
         session.targets.dropLeased(session.remaining);
-        session.noteSkipped(session.felling.dropPartial(session.remaining));
         while (!session.remaining.isEmpty() && session.targets.clear(session.remaining.get(0))) {
             session.remaining.remove(0);
         }
         session.apply(session.blocked.dropExcluded(session.remaining));
-        if (planFilter.due(PlotCellStructure.generation())) {
-            session.apply(session.blocked.dropPlanned(session.remaining));
-            session.apply(session.blocked.dropProtected(session.remaining, session.spirit, session.demolish));
-        }
-        session.noteSkipped(session.felling.dropPartial(session.remaining));
         if (session.remaining.isEmpty()) {
             finish();
             return;
@@ -84,7 +83,8 @@ final class ClearSweepRun {
             return;
         }
         BlockCoord from = feet();
-        List<BlockCoord> top = ClearOrder.topmost(session.remaining, cell -> !session.targets.clear(cell));
+        List<BlockCoord> nearby = ClearReach.inReach(session.remaining, session.spirit.getEyePosition());
+        List<BlockCoord> top = ClearOrder.topmost(nearby, cell -> !session.targets.clear(cell));
         BlockCoord near = ClearReach.near(
                 session.spirit,
                 session.level,
@@ -103,11 +103,11 @@ final class ClearSweepRun {
             return;
         }
         if (onPillar) {
-            if (canRise() && riseAllowed()) {
-                startPillarStep();
+            if (scaffold.canRise() && riseAllowed()) {
+                scaffold.startStep();
                 return;
             }
-            startDescent();
+            scaffold.startDescent();
             if (session.state != ClearAreaSession.State.DESCEND) {
                 session.fail("стою на своих подмостях, но своих клеток для разбора нет: нужен откат аренды");
             }
@@ -125,8 +125,8 @@ final class ClearSweepRun {
             return;
         }
         if (chosen.x() == from.x() && chosen.y() == from.y() && chosen.z() == from.z()) {
-            if (canRise() && riseAllowed()) {
-                startPillarStep();
+            if (scaffold.canRise() && riseAllowed()) {
+                scaffold.startStep();
                 return;
             }
             triedAnchors.add(chosen.coord());
@@ -172,40 +172,11 @@ final class ClearSweepRun {
     }
 
     void pillarTick() {
-        SweepPillar current = pillar;
-        if (current == null) {
-            session.state = ClearAreaSession.State.PICK;
-            return;
-        }
-        switch (current.tick()) {
-            case RUNNING -> {}
-            case PLACED -> session.state = ClearAreaSession.State.PICK;
-            case FAILED -> session.fail(current.failureReason(), current.failureFact());
-        }
+        scaffold.pillarTick();
     }
 
     void descentTick() {
-        PillarDismantler current = dismantler;
-        if (current == null) {
-            session.state = ClearAreaSession.State.PICK;
-            return;
-        }
-        switch (current.tick()) {
-            case RUNNING -> {}
-            case DONE -> {
-                dismantler = null;
-                pillar = null;
-                anchor = null;
-                triedAnchors.clear();
-                if (finishAfterDescent) {
-                    finishAfterDescent = false;
-                    finish();
-                    return;
-                }
-                session.state = ClearAreaSession.State.PICK;
-            }
-            case FAILED -> session.fail("разбор своего столба: " + current.failureReason());
-        }
+        scaffold.descentTick();
     }
 
     void unloadTick() {
@@ -220,53 +191,15 @@ final class ClearSweepRun {
     }
 
     private void finish() {
-        if (pillar != null && !pillar.cells().isEmpty() && dismantler == null) {
-            finishAfterDescent = true;
-            session.remaining.clear();
-            startDescent();
+        if (scaffold.teardown()) {
             return;
         }
         session.finish();
     }
 
-    private void startPillarStep() {
-        if (!SweepPillar.hasMaterial(session.spirit)) {
-            session.neededMaterial = true;
-            session.state = ClearAreaSession.State.PICK;
-            return;
-        }
-        if (pillar == null) {
-            pillar = SweepPillar.start(session.spirit);
-        }
-        session.state = ClearAreaSession.State.PILLAR;
-    }
-
-    private void startDescent() {
-        SweepPillar current = pillar;
-        if (current == null) {
-            dismantler = PillarDownScript.leftoverDismantler(session.spirit);
-        } else {
-            List<BlockCoord> order = new ArrayList<>(current.cells());
-            order.sort(Comparator.comparingInt(BlockCoord::y).reversed());
-            dismantler = new PillarDismantler(session.spirit, order, current.lease(), false);
-        }
-        session.state = dismantler == null ? ClearAreaSession.State.PICK : ClearAreaSession.State.DESCEND;
-    }
-
-    private boolean canRise() {
-        if (pillar != null && pillar.cells().size() >= ClearAnchor.MAX_RISE) {
-            return false;
-        }
-        BlockCoord from = feet();
-        int reach = ClearStands.horizontalReach();
-        for (BlockCoord cell : session.remaining) {
-            if (cell.y() > from.y()
-                    && Math.abs(cell.x() - from.x()) <= reach
-                    && Math.abs(cell.z() - from.z()) <= reach) {
-                return true;
-            }
-        }
-        return false;
+    private void afterDismantle() {
+        anchor = null;
+        triedAnchors.clear();
     }
 
     private boolean riseAllowed() {

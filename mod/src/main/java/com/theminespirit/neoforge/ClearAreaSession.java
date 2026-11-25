@@ -139,6 +139,7 @@ public class ClearAreaSession {
             return outcome;
         }
         if (spirit.isRemoved()) return fail("дух исчез во время расчистки");
+        runner().filterTick();
         phaseTicks.merge(state, 1, Integer::sum);
         switch (state) {
             case PICK -> runner().pick();

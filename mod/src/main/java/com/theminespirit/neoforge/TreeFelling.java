@@ -20,17 +20,22 @@ final class TreeFelling {
     }
 
     void extend(List<BlockCoord> cells) {
+        Set<BlockCoord> present = new HashSet<>(cells);
         Set<BlockCoord> fell = new LinkedHashSet<>();
         for (BlockCoord cell : List.copyOf(cells)) {
             TreeGroup group = group(cell);
             if (group != null) {
-                fell.addAll(group.cells());
+                for (BlockCoord member : group.cells()) {
+                    if (present.add(member)) {
+                        fell.add(member);
+                    }
+                }
             }
         }
         if (fell.isEmpty()) {
             return;
         }
-        cells.addAll(0, fell.stream().filter(cell -> !cells.contains(cell)).toList());
+        cells.addAll(0, fell);
     }
 
     TreeGroup group(BlockCoord cell) {

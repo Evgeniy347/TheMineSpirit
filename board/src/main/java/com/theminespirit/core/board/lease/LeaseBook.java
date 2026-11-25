@@ -18,11 +18,22 @@ public final class LeaseBook {
     private final Map<String, Lease> leases = new LinkedHashMap<>();
     private final Map<BlockCoord, String> activeCells = new HashMap<>();
     private final Map<BlockCoord, String> orphanedCells = new HashMap<>();
+    private long revision;
+
+    public long revision() {
+        return revision;
+    }
+
+    public boolean occupied(BlockCoord pos) {
+        Objects.requireNonNull(pos, "Клетка не может быть null: занятость ищут по ней");
+        return activeCells.containsKey(pos) || orphanedCells.containsKey(pos);
+    }
 
     public Lease open(@Nullable UUID spirit, @Nullable String ticket, String purpose, long since) {
         String id = UUID.randomUUID().toString();
         Lease lease = Lease.opened(id, spirit, ticket, purpose, since);
         leases.put(id, lease);
+        revision++;
         return lease;
     }
 
@@ -99,6 +110,7 @@ public final class LeaseBook {
         for (LeaseCell cell : cells) {
             activeCells.put(cell.pos(), id);
         }
+        revision++;
         return next;
     }
 
@@ -118,6 +130,7 @@ public final class LeaseBook {
         Lease updated = lease.withCells(next);
         leases.put(id, updated);
         activeCells.remove(cell, id);
+        revision++;
         return updated;
     }
 
@@ -133,6 +146,7 @@ public final class LeaseBook {
         release(lease, activeCells);
         Lease done = lease.withStatus(LeaseStatus.DONE);
         leases.put(id, done);
+        revision++;
         return done;
     }
 
@@ -151,6 +165,7 @@ public final class LeaseBook {
         for (LeaseCell cell : lease.cells()) {
             orphanedCells.put(cell.pos(), id);
         }
+        revision++;
         return orphaned;
     }
 
@@ -181,6 +196,7 @@ public final class LeaseBook {
         orphanedCells.remove(cell, id);
         Lease updated = next.isEmpty() ? lease.withCells(next).withStatus(LeaseStatus.DONE) : lease.withCells(next);
         leases.put(id, updated);
+        revision++;
         return updated;
     }
 
@@ -235,6 +251,7 @@ public final class LeaseBook {
             }
         }
         leases.put(lease.id(), lease);
+        revision++;
     }
 
     private void release(Lease lease, Map<BlockCoord, String> cells) {

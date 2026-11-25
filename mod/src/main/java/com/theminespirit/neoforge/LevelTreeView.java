@@ -2,7 +2,9 @@ package com.theminespirit.neoforge;
 
 import com.theminespirit.core.forestry.api.TreeView;
 import com.theminespirit.core.observation.BlockCoord;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.BlockTags;
@@ -161,6 +163,7 @@ public final class LevelTreeView implements TreeView {
 
     private final Level level;
     private final Set<Block> logs;
+    private final Map<BlockState, Kind> kinds = new HashMap<>();
     private BlockCoord lastCoord;
     private Kind lastKind;
     private long lastGameTime = -1;
@@ -230,6 +233,10 @@ public final class LevelTreeView implements TreeView {
     }
 
     private Kind classify(BlockState state) {
+        return kinds.computeIfAbsent(state, this::readKind);
+    }
+
+    private Kind readKind(BlockState state) {
         if (logs.contains(state.getBlock())) {
             return Kind.LOG;
         }

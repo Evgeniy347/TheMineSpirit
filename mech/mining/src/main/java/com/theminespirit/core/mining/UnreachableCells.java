@@ -11,9 +11,15 @@ public final class UnreachableCells {
 
     private final Map<BlockCoord, Integer> failures = new HashMap<>();
     private final Map<String, Integer> attempts = new HashMap<>();
+    private long revision;
+
+    public long revision() {
+        return revision;
+    }
 
     public int noteFailure(BlockCoord cell) {
         Objects.requireNonNull(cell, "Клетка не может быть null: без неё нечего запоминать в чёрном списке");
+        revision++;
         return failures.merge(cell, 1, Integer::sum);
     }
 
