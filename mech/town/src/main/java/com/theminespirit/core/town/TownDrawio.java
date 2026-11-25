@@ -4,10 +4,16 @@ import java.util.Base64;
 import java.util.Objects;
 
 public final class TownDrawio {
-    public static final int FORMAT = 1;
+    public static final int FORMAT = 2;
     private static final String PLOT_STYLE = "rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;";
 
+    public record Decoded(TownMap map, int revision) {}
+
     private TownDrawio() {}
+
+    public static Decoded decode(String xml) {
+        return TownDrawioParser.decode(xml);
+    }
 
     public static String encode(TownMap map, int revision, int x1, int z1, int x2, int z2, int scale, byte[] png) {
         Objects.requireNonNull(map, "Карта не может быть null: без участков и стены выгружать нечего");
@@ -81,58 +87,25 @@ public final class TownDrawio {
                     plot.width() * scale,
                     plot.depth() * scale,
                     "tmKind=\"plot\" tmId=\"" + escape(plot.id()) + "\" tmBuilding=\"" + escape(plot.building())
-                            + "\" tmFacing=\"" + escape(plot.facing()) + "\"");
+                            + "\" tmFacing=\"" + escape(plot.facing()) + "\" tmX1=\"" + plot.x1() + "\" tmZ1=\""
+                            + plot.z1() + "\" tmX2=\"" + plot.x2() + "\" tmZ2=\"" + plot.z2() + "\"");
         }
     }
 
     private static void streets(StringBuilder xml, TownMap map, int x1, int z1, int scale) {
         int index = 0;
-        int rings = 0;
         for (TownMap.MapStreet street : map.streets()) {
             index++;
-            if (street.ring()) {
-                rings++;
-                vertex(
-                        xml,
-                        "ring-" + index,
-                        "кольцо: " + street.id(),
-                        "text;html=1;align=left;verticalAlign=top;fontSize=10;",
-                        4,
-                        18 * rings,
-                        240,
-                        18,
-                        "tmKind=\"street\" tmId=\"" + escape(street.id()) + "\" tmKindValue=\"ring\""
-                                + " tmX1=\"0\" tmZ1=\"0\" tmX2=\"0\" tmZ2=\"0\"");
-                continue;
-            }
-            int thickness = Math.min(street.width(), street.depth()) * scale;
-            int ax;
-            int az;
-            int bx;
-            int bz;
-            if (street.width() >= street.depth()) {
-                int centerZ = (street.minZ() + street.maxZ()) / 2;
-                ax = pixel(street.minX(), x1, scale);
-                az = pixel(centerZ, z1, scale);
-                bx = pixel(street.maxX(), x1, scale);
-                bz = az;
-            } else {
-                int centerX = (street.minX() + street.maxX()) / 2;
-                ax = pixel(centerX, x1, scale);
-                az = pixel(street.minZ(), z1, scale);
-                bx = ax;
-                bz = pixel(street.maxZ(), z1, scale);
-            }
-            edge(
+            vertex(
                     xml,
                     "street-" + index,
                     street.id(),
-                    "endArrow=none;html=1;rounded=0;opacity=70;strokeColor=" + streetColor(street.kind())
-                            + ";strokeWidth=" + thickness + ";",
-                    ax,
-                    az,
-                    bx,
-                    bz,
+                    "rounded=0;whiteSpace=wrap;html=1;strokeColor=none;opacity=70;fillColor="
+                            + streetColor(street.kind()) + ";",
+                    (street.minX() - x1) * scale,
+                    (street.minZ() - z1) * scale,
+                    street.width() * scale,
+                    street.depth() * scale,
                     "tmKind=\"street\" tmId=\"" + escape(street.id()) + "\" tmKindValue=\"" + escape(street.kind())
                             + "\" tmX1=\"" + street.x1() + "\" tmZ1=\"" + street.z1() + "\" tmX2=\"" + street.x2()
                             + "\" tmZ2=\"" + street.z2() + "\"");
@@ -142,7 +115,6 @@ public final class TownDrawio {
     private static String streetColor(String kind) {
         return switch (kind) {
             case "main" -> "#333333";
-            case "ring" -> "#999999";
             default -> "#777777";
         };
     }
@@ -220,40 +192,6 @@ public final class TownDrawio {
                 .append("\" height=\"")
                 .append(height)
                 .append("\" as=\"geometry\"/>\n");
-        xml.append("        </mxCell>\n");
-    }
-
-    private static void edge(
-            StringBuilder xml,
-            String id,
-            String value,
-            String style,
-            int ax,
-            int az,
-            int bx,
-            int bz,
-            String attributes) {
-        xml.append("        <mxCell id=\"")
-                .append(id)
-                .append("\" value=\"")
-                .append(escape(value))
-                .append("\" style=\"")
-                .append(style)
-                .append("\" edge=\"1\" parent=\"1\" ")
-                .append(attributes)
-                .append(">\n");
-        xml.append("          <mxGeometry relative=\"1\" as=\"geometry\">\n");
-        xml.append("            <mxPoint x=\"")
-                .append(ax)
-                .append("\" y=\"")
-                .append(az)
-                .append("\" as=\"sourcePoint\"/>\n");
-        xml.append("            <mxPoint x=\"")
-                .append(bx)
-                .append("\" y=\"")
-                .append(bz)
-                .append("\" as=\"targetPoint\"/>\n");
-        xml.append("          </mxGeometry>\n");
         xml.append("        </mxCell>\n");
     }
 

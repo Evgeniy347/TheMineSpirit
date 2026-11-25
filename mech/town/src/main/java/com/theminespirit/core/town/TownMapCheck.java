@@ -25,7 +25,7 @@ public final class TownMapCheck {
         Objects.requireNonNull(region, "Граница не может быть null: карта лежит внутри неё");
         Objects.requireNonNull(water, "Вода не может быть null: по ней видно, куда нельзя ставить");
         List<TownMapFinding> findings = new ArrayList<>();
-        TownStreets streets = TownMapRules.streets(map, rules, region);
+        TownStreets streets = TownMapRules.streets(map, region);
         ColumnMask ponds = WaterPonds.small(water, region);
         Set<String> plotIds = new HashSet<>();
         for (TownMap.MapPlot plot : map.plots()) {
@@ -84,20 +84,11 @@ public final class TownMapCheck {
             }
         }
         Set<String> streetIds = new HashSet<>();
-        int rings = 0;
         for (TownMap.MapStreet street : map.streets()) {
             boolean inherited = previous != null && previous.streets().stream().anyMatch(street::equals);
             if (!streetIds.add(street.id())) {
                 findings.add(
                         new TownMapFinding(street.id(), "duplicate", "улица '" + street.id() + "' объявлена дважды"));
-            }
-            if (street.ring()) {
-                rings++;
-                if (rings > 1) {
-                    findings.add(new TownMapFinding(
-                            street.id(), "ring", "кольцевая улица '" + street.id() + "' объявлена второй раз"));
-                }
-                continue;
             }
             if (!kind(street.kind())) {
                 findings.add(new TownMapFinding(
@@ -126,14 +117,13 @@ public final class TownMapCheck {
                     false,
                     findings);
         }
-        checkStreetNetwork(map.streets(), streets, region, previous, findings);
+        checkStreetNetwork(map.streets(), region, previous, findings);
         TownWallCheck.validate(map, region, water, findings);
         return List.copyOf(findings);
     }
 
     private static void checkStreetNetwork(
             List<TownMap.MapStreet> streets,
-            TownStreets masks,
             ColumnMask region,
             @Nullable TownMap previous,
             List<TownMapFinding> findings) {
@@ -142,7 +132,7 @@ public final class TownMapCheck {
         }
         List<Set<ColumnMask.Cell>> cells = new ArrayList<>();
         for (TownMap.MapStreet street : streets) {
-            cells.add(streetCells(street, masks, region));
+            cells.add(streetCells(street, region));
         }
         for (int index = 0; index < streets.size(); index++) {
             if (inheritedStreet(previous, streets.get(index))) {
@@ -165,10 +155,7 @@ public final class TownMapCheck {
         return previous != null && previous.streets().stream().anyMatch(street::equals);
     }
 
-    private static Set<ColumnMask.Cell> streetCells(TownMap.MapStreet street, TownStreets masks, ColumnMask region) {
-        if (street.ring()) {
-            return new HashSet<>(masks.ring().cells());
-        }
+    private static Set<ColumnMask.Cell> streetCells(TownMap.MapStreet street, ColumnMask region) {
         Set<ColumnMask.Cell> out = new HashSet<>();
         for (int x = street.minX(); x <= street.maxX(); x++) {
             for (int z = street.minZ(); z <= street.maxZ(); z++) {

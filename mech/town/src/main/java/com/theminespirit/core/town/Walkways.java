@@ -17,7 +17,7 @@ public final class Walkways {
     public static List<ColumnMask.Cell> of(TownPlan plan, int stage) {
         Objects.requireNonNull(plan, "План не может быть null: тропы берутся из плана поселения");
         TownStreets streets = plan.streets();
-        ColumnMask street = streets.main().union(streets.side()).union(streets.ring());
+        ColumnMask street = streets.main().union(streets.side());
         Set<ColumnMask.Cell> cells = new LinkedHashSet<>(street.cells());
         for (PathLine path : plan.paths()) {
             cells.addAll(path.cells());

@@ -14,7 +14,6 @@ import java.util.function.ToIntFunction;
 public final class TownMapRules {
     public static final String MAIN = "main";
     public static final String SIDE = "side";
-    public static final String RING = "ring";
 
     private TownMapRules() {}
 
@@ -25,7 +24,7 @@ public final class TownMapRules {
         Objects.requireNonNull(region, "Граница не может быть null: план живёт внутри неё");
         Objects.requireNonNull(anchor, "Якорь поселения не может быть null: высота берётся из мира");
         Objects.requireNonNull(stageOf, "Этап постройки не может быть null: задание доски берёт этап");
-        TownStreets streets = streets(map, rules, region);
+        TownStreets streets = streets(map, region);
         List<Placement> placements = new ArrayList<>();
         for (TownMap.MapPlot plot : map.plots()) {
             TownEntry entry = entryFor(rules, plot.building())
@@ -52,18 +51,12 @@ public final class TownMapRules {
                 .or(() -> rules.template(OrchardSites.TEMPLATE).filter(template -> OrchardSites.isExtra(building)));
     }
 
-    public static TownStreets streets(TownMap map, TownRules rules, ColumnMask region) {
+    public static TownStreets streets(TownMap map, ColumnMask region) {
         Objects.requireNonNull(map, "Карта не может быть null: улицы берутся из неё");
-        Objects.requireNonNull(rules, "Правила не могут быть null: ширины улиц — данные");
         Objects.requireNonNull(region, "Граница не может быть null: улицы идут внутри неё");
         BitSet main = new BitSet(region.width() * region.depth());
         BitSet side = new BitSet(region.width() * region.depth());
-        BitSet ring = new BitSet(region.width() * region.depth());
         for (TownMap.MapStreet street : map.streets()) {
-            if (street.ring()) {
-                ringBand(region, rules.streets(), ring);
-                continue;
-            }
             BitSet target = MAIN.equals(street.kind()) ? main : side;
             for (int x = street.minX(); x <= street.maxX(); x++) {
                 for (int z = street.minZ(); z <= street.maxZ(); z++) {
@@ -75,23 +68,7 @@ public final class TownMapRules {
         }
         return new TownStreets(
                 new ColumnMask(region.minX(), region.minZ(), region.width(), region.depth(), main),
-                new ColumnMask(region.minX(), region.minZ(), region.width(), region.depth(), side),
-                new ColumnMask(region.minX(), region.minZ(), region.width(), region.depth(), ring));
-    }
-
-    private static void ringBand(ColumnMask region, TownRules.Streets rules, BitSet out) {
-        GridBits bits = new GridBits(region.width(), region.depth());
-        BitSet inside = new BitSet(bits.size());
-        for (ColumnMask.Cell cell : region.cells()) {
-            inside.set(bits.at(cell.x() - region.minX(), cell.z() - region.minZ()));
-        }
-        int[] depth = bits.insetDistance(inside);
-        for (int index = inside.nextSetBit(0); index >= 0; index = inside.nextSetBit(index + 1)) {
-            int here = depth[index];
-            if (here > rules.ringInset() && here <= rules.ringInset() + rules.ring()) {
-                out.set(index);
-            }
-        }
+                new ColumnMask(region.minX(), region.minZ(), region.width(), region.depth(), side));
     }
 
     public static Optional<FenceLine> wallLine(TownMap map, TownStreets streets, ColumnMask region) {

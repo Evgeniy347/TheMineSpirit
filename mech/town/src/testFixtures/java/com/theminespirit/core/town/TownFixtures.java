@@ -49,10 +49,8 @@ public final class TownFixtures {
         for (ColumnMask.Cell cell : region.cells()) {
             inside.set(bits.at(cell.x() - region.minX(), cell.z() - region.minZ()));
         }
-        int[] inset = bits.insetDistance(inside);
         BitSet main = new BitSet(bits.size());
         BitSet side = new BitSet(bits.size());
-        BitSet ring = new BitSet(bits.size());
         int mainHalf = rules.main() / 2;
         int sideHalf = rules.side() / 2;
         for (int index = inside.nextSetBit(0); index >= 0; index = inside.nextSetBit(index + 1)) {
@@ -61,17 +59,13 @@ public final class TownFixtures {
             if (grid.water(x, z)) {
                 continue;
             }
-            int depth = inset[index];
-            boolean inner = depth > rules.ringInset() + rules.ring();
             if (Math.abs(x - centerX) <= mainHalf || Math.abs(z - centerZ) <= mainHalf) {
                 main.set(index);
-            } else if (depth > rules.ringInset() && depth <= rules.ringInset() + rules.ring()) {
-                ring.set(index);
-            } else if (inner && (onLine(x - centerX, rules, sideHalf) || onLine(z - centerZ, rules, sideHalf))) {
+            } else if (onLine(x - centerX, rules, sideHalf) || onLine(z - centerZ, rules, sideHalf)) {
                 side.set(index);
             }
         }
-        return new TownStreets(mask(region, main), mask(region, side), mask(region, ring));
+        return new TownStreets(mask(region, main), mask(region, side));
     }
 
     private static boolean onLine(int offset, TownRules.Streets rules, int half) {

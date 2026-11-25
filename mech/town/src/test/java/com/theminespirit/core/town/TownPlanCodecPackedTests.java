@@ -23,8 +23,8 @@ class TownPlanCodecPackedTests {
                         + "теряет участки стратега и перепланирует поселение с нуля"
                         + " При смене packed_LivePlan_RoundTrips проверь это утверждение.");
         assertTrue(
-                TownPlanCodec.encode(live).length() > 16_000,
-                "Живой план длиннее 16 000 символов: именно поэтому тексту плана тесно в строке NBT "
+                TownPlanCodec.encode(live).length() > 10_000,
+                "Живой план заметно длиннее строки NBT: именно поэтому тексту плана тесно в строке "
                         + "и его хранят сжатыми байтами"
                         + " Иначе тест packed_LivePlan_RoundTrips перестанет ловить эту поломку. При смене packed_LivePlan_RoundTrips проверь это утверждение.");
     }

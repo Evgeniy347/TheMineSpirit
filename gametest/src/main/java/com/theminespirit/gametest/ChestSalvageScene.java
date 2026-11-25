@@ -172,7 +172,7 @@ final class ChestSalvageScene {
         TownPlan plan = new TownPlan(
                 anchor,
                 area,
-                new TownStreets(street, street, street),
+                new TownStreets(street, street),
                 List.of(
                         new Placement("hut", "дом", 1, x - 20, z - 20, 7, 9, Placement.Facing.NORTH),
                         new Placement("yard", "двор", 1, x - 20, z - 10, 7, 5, Placement.Facing.NORTH),

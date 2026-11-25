@@ -116,7 +116,7 @@ class TownMapWallTests {
                         new TownMap.WallSegment(100, 110, 90, 100)));
 
         FenceLine line = TownMapRules.wallLine(
-                        map, TownMapRules.streets(map, RULES, TownMapFixtures.REGION), TownMapFixtures.REGION)
+                        map, TownMapRules.streets(map, TownMapFixtures.REGION), TownMapFixtures.REGION)
                 .orElseThrow();
 
         assertFalse(

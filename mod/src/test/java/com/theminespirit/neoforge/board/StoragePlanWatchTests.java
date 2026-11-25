@@ -69,7 +69,7 @@ class StoragePlanWatchTests {
         return new TownPlan(
                 ANCHOR,
                 area,
-                new TownStreets(area, area, area),
+                new TownStreets(area, area),
                 List.of(
                         new Placement("storage", "склад", 1, 0, 0, 18, 19, Placement.Facing.NORTH),
                         new Placement("storage_2", "склад 2", 1, 20, 0, 8, 9, Placement.Facing.NORTH),

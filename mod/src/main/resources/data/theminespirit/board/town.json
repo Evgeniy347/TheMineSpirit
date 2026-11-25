@@ -1,6 +1,6 @@
 {
   "ground": {"area": 82944, "probeRadius": 144, "cliffStep": 2, "slopeWeight": 4, "slopeMax": 10},
-  "streets": {"main": 7, "side": 5, "ring": 5, "ringInset": 2, "blockSize": 84},
+  "streets": {"main": 7, "side": 5, "blockSize": 84},
   "spacing": {"gap": 1, "stageMargin": 1, "chestFreePercent": 20, "fenceStrip": 1},
   "buildings": [
     {"id": "hut", "name": "Хижина", "width": 16, "depth": 16, "quarter": "nw", "level": true, "field": false, "rotate": true},

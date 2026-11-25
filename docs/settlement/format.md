@@ -57,7 +57,7 @@
 
 `neoforge`: сохранение плана и реестра в мире, зонд рельефа (карта высот, вода, постройки игрока по меткам духов),
 обход проверки по бюджету тика, команды `/spirit plan show|build|reserve`, REST карты
-`GET /v1/town/plan`, `GET /v1/town/terrain.png`, `POST /v1/town/preview`, `POST /v1/town/apply`. `FirstStepsRunner` берёт координаты заданий из плана, а не «у дома».
+`GET /v1/town/plan.drawio`, `GET /v1/town/terrain.png`, `POST /v1/town/preview.drawio`, `POST /v1/town/apply.drawio`. `FirstStepsRunner` берёт координаты заданий из плана, а не «у дома».
 
 ## Инструменты автора
 

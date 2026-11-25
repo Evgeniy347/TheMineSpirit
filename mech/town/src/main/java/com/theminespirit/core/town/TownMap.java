@@ -48,11 +48,7 @@ public record TownMap(MapPoint anchor, List<MapPlot> plots, List<MapStreet> stre
     public record MapStreet(String id, String kind, int x1, int z1, int x2, int z2) {
         public MapStreet {
             Objects.requireNonNull(id, "id улицы не может быть null: по нему видно, что двигают");
-            Objects.requireNonNull(kind, "Вид улицы не может быть null: главная, боковая или кольцевая");
-        }
-
-        public boolean ring() {
-            return "ring".equals(kind);
+            Objects.requireNonNull(kind, "Вид улицы не может быть null: главная или боковая");
         }
 
         public int width() {

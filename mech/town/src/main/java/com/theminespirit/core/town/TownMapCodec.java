@@ -67,12 +67,10 @@ public final class TownMapCodec {
             ObjectNode node = streets.addObject();
             node.put("id", street.id());
             node.put("kind", street.kind());
-            if (!street.ring()) {
-                node.put("x1", street.x1());
-                node.put("z1", street.z1());
-                node.put("x2", street.x2());
-                node.put("z2", street.z2());
-            }
+            node.put("x1", street.x1());
+            node.put("z1", street.z1());
+            node.put("x2", street.x2());
+            node.put("z2", street.z2());
         }
         ArrayNode wall = root.putArray("wall");
         for (TownMap.WallSegment segment : map.wall()) {

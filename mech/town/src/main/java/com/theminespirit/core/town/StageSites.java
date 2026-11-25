@@ -112,10 +112,7 @@ public final class StageSites {
         }
         ColumnMask pad = pads.orElseThrow();
         BlockCoord anchor = new BlockCoord(plan.anchor().x(), 0, plan.anchor().z());
-        ColumnMask streets = plan.streets()
-                .main()
-                .union(plan.streets().side())
-                .union(plan.streets().ring());
+        ColumnMask streets = plan.streets().main().union(plan.streets().side());
         ColumnMask enclosure = plan.region();
         FenceLine ring = plan.fence();
         ColumnMask fenceStrip =

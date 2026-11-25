@@ -48,7 +48,7 @@ class WorkZoneTests {
                         anchor.get(1).asInt(),
                         anchor.get(2).asInt()),
                 ColumnMask.rect(minX, minZ, minX + width - 1, minZ + depth - 1),
-                new TownStreets(empty, empty, empty),
+                new TownStreets(empty, empty),
                 List.of(),
                 new FenceLine(List.of(), List.of()),
                 List.of());
@@ -289,7 +289,7 @@ class WorkZoneTests {
         return new TownPlan(
                 new BlockCoord(minX, 70, minZ),
                 ColumnMask.rect(minX, minZ, minX + 19, minZ + 19),
-                new TownStreets(empty, empty, empty),
+                new TownStreets(empty, empty),
                 List.of(),
                 new FenceLine(List.of(), List.of()),
                 List.of());

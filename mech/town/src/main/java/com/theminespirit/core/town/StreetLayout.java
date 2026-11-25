@@ -45,11 +45,6 @@ public final class StreetLayout {
                 centerX - rules.side() / 2,
                 centerZ - rules.side() / 2,
                 rules.side()));
-        tiles.addAll(lay(
-                streets.ring().intersect(within),
-                centerX - rules.ring() / 2,
-                centerZ - rules.ring() / 2,
-                rules.ring()));
         return List.copyOf(tiles);
     }
 

@@ -98,41 +98,6 @@ final class GridBits {
         return out;
     }
 
-    int[] insetDistance(BitSet bits) {
-        int[] distance = new int[size()];
-        Deque<Integer> queue = new ArrayDeque<>();
-        for (int index = 0; index < size(); index++) {
-            if (bits.get(index)) {
-                distance[index] = Integer.MAX_VALUE;
-            } else {
-                queue.add(index);
-            }
-        }
-        for (int x = 0; x < width; x++) {
-            for (int z = 0; z < depth; z++) {
-                boolean edge = x == 0 || z == 0 || x == width - 1 || z == depth - 1;
-                if (edge && bits.get(at(x, z))) {
-                    distance[at(x, z)] = 1;
-                    queue.add(at(x, z));
-                }
-            }
-        }
-        while (!queue.isEmpty()) {
-            int index = queue.poll();
-            int x = index % width;
-            int z = index / width;
-            for (int dz = -1; dz <= 1; dz++) {
-                for (int dx = -1; dx <= 1; dx++) {
-                    if (inside(x + dx, z + dz) && distance[at(x + dx, z + dz)] > distance[index] + 1) {
-                        distance[at(x + dx, z + dz)] = distance[index] + 1;
-                        queue.add(at(x + dx, z + dz));
-                    }
-                }
-            }
-        }
-        return distance;
-    }
-
     boolean inside(int x, int z) {
         return x >= 0 && z >= 0 && x < width && z < depth;
     }

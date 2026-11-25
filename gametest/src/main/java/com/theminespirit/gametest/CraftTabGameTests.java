@@ -138,7 +138,7 @@ public final class CraftTabGameTests {
         TownPlan plan = new TownPlan(
                 new BlockCoord(x1 + 5, min.getY() + 1, z1 + 5),
                 ColumnMask.rect(x1, z1, x2, z2),
-                new TownStreets(ColumnMask.rect(x1, z1, x2, z1), empty, empty),
+                new TownStreets(ColumnMask.rect(x1, z1, x2, z1), empty),
                 List.of(),
                 new FenceLine(List.of(), List.of()),
                 List.of());

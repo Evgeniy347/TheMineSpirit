@@ -233,17 +233,10 @@ class StageSiteTests {
     void protectionCell_StreetCell_True() {
         StageSite site = TownFixtures.flatSite();
         TownPlan plan = TownFixtures.flatPlan();
-        ColumnMask.Cell street =
-                plan
-                        .streets()
-                        .main()
-                        .union(plan.streets().side())
-                        .union(plan.streets().ring())
-                        .cells()
-                        .stream()
-                        .filter(cell -> !site.planCell(cell.x(), site.anchor().y() - 1, cell.z()))
-                        .findFirst()
-                        .orElseThrow(() -> new IllegalStateException("В плане нет улицы вне площадок построек"));
+        ColumnMask.Cell street = plan.streets().main().union(plan.streets().side()).cells().stream()
+                .filter(cell -> !site.planCell(cell.x(), site.anchor().y() - 1, cell.z()))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("В плане нет улицы вне площадок построек"));
         int y = site.anchor().y() - 1;
 
         assertFalse(

@@ -68,7 +68,6 @@ final class TownPreview {
     private static void paint(Graphics2D graphics, TownPlan plan, int x1, int z1, int scale) {
         streets(graphics, plan.streets().main(), x1, z1, scale);
         streets(graphics, plan.streets().side(), x1, z1, scale);
-        streets(graphics, plan.streets().ring(), x1, z1, scale);
         for (Placement plot : plan.placements()) {
             int px = (plot.x() - x1) * scale;
             int pz = (plot.z() - z1) * scale;

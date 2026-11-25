@@ -79,7 +79,7 @@ class SettlementReachTests {
         TownPlan plan = new TownPlan(
                 new BlockCoord(20, 70, 20),
                 ColumnMask.rect(0, 0, 40, 40),
-                new TownStreets(ColumnMask.rect(0, 0, 40, 0), empty, empty),
+                new TownStreets(ColumnMask.rect(0, 0, 40, 0), empty),
                 List.of(),
                 new FenceLine(List.of(new ColumnMask.Cell(-3, 45)), List.of()),
                 List.of());

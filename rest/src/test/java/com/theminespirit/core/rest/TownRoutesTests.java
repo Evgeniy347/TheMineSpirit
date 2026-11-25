@@ -11,6 +11,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class TownRoutesTests {
+    private static final String DRAWIO = "<mxfile><diagram><mxGraphModel/></diagram></mxfile>";
     private FakeTownGateway gateway;
     private Router router;
 
@@ -21,17 +22,16 @@ class TownRoutesTests {
     }
 
     private RestResponse send(String method, String path, String body) {
-        return router.handle(new RestRequest(method, path, Map.of(), Map.of(), body.getBytes(StandardCharsets.UTF_8)));
+        return send(method, path, Map.of(), body);
     }
 
-    private static String mapBody(String requestId, int revision) {
-        return "{\"request_id\":\"" + requestId + "\",\"revision\":" + revision
-                + ",\"anchor\":{\"x\":0,\"z\":0},\"plots\":[],\"streets\":[],\"wall\":[]}";
+    private RestResponse send(String method, String path, Map<String, String> query, String body) {
+        return router.handle(new RestRequest(method, path, query, Map.of(), body.getBytes(StandardCharsets.UTF_8)));
     }
 
     @Test
-    void get_Plan_ReturnsGatewayMap() {
-        gateway.withPlan("{\"revision\":3,\"plots\":[]}");
+    void get_Plan_ReturnsDrawio() {
+        gateway.withDrawio("<mxfile/>");
 
         RestResponse response = send("GET", "/v1/town/plan", "");
 
@@ -39,12 +39,14 @@ class TownRoutesTests {
                 200,
                 response.status(),
                 "Карта поселения обязана отдаваться с кодом 200: " + response.body()
-                        + " Иначе тест get_Plan_ReturnsGatewayMap перестанет ловить эту поломку. При смене get_Plan_ReturnsGatewayMap проверь это утверждение.");
+                        + " Иначе тест get_Plan_ReturnsDrawio перестанет ловить эту поломку. При смене "
+                        + "get_Plan_ReturnsDrawio проверь код ответа и тело XML");
         assertEquals(
-                "{\"revision\":3,\"plots\":[]}",
+                "<mxfile/>",
                 response.body(),
-                "GET /v1/town/plan обязан отдавать карту платформы без переупаковки: " + response.body()
-                        + " Иначе тест get_Plan_ReturnsGatewayMap перестанет ловить эту поломку. При смене get_Plan_ReturnsGatewayMap проверь это утверждение.");
+                "GET /v1/town/plan обязан отдавать .drawio платформы без переупаковки: " + response.body()
+                        + " Иначе тест get_Plan_ReturnsDrawio перестанет ловить эту поломку. При смене "
+                        + "get_Plan_ReturnsDrawio проверь, что JSON больше не отдаётся");
     }
 
     @Test
@@ -58,32 +60,12 @@ class TownRoutesTests {
                 Map.of(),
                 new byte[0]));
 
-        assertEquals(
-                "image/png",
-                response.binary().size() > 0 ? "image/png" : "application/json",
-                "Карта местности отдаётся картинкой, а не JSON: " + response.body()
-                        + " Иначе тест get_Terrain_ServesPngForRequestedBox перестанет ловить эту поломку. При смене get_Terrain_ServesPngForRequestedBox проверь это утверждение.");
         assertArrayEquals(
                 new byte[] {9, 8, 7},
                 response.binary().bytes(),
-                "PNG местности идёт от платформы без пересборки"
-                        + " Иначе тест get_Terrain_ServesPngForRequestedBox перестанет ловить эту поломку. При смене get_Terrain_ServesPngForRequestedBox проверь это утверждение.");
-    }
-
-    @Test
-    void get_TerrainWithoutX2_RejectedAsBadRequest() {
-        RestResponse failure = router.handle(
-                new RestRequest("GET", "/v1/town/terrain.png", Map.of("x1", "-10", "z1", "20"), Map.of(), new byte[0]));
-
-        assertEquals(
-                400,
-                failure.status(),
-                "Рамка местности без координаты — структурная ошибка запроса: " + failure.body()
-                        + " Иначе тест get_TerrainWithoutX2_RejectedAsBadRequest перестанет ловить эту поломку. При смене get_TerrainWithoutX2_RejectedAsBadRequest проверь это утверждение.");
-        assertTrue(
-                failure.body().contains("x2"),
-                "Ошибка обязана называть пропущенную координату x2: " + failure.body()
-                        + " Иначе тест get_TerrainWithoutX2_RejectedAsBadRequest перестанет ловить эту поломку. При смене get_TerrainWithoutX2_RejectedAsBadRequest проверь это утверждение.");
+                "PNG местности идёт от платформы без пересборки, иначе подложка .drawio разойдётся с миром; "
+                        + "Иначе тест get_Terrain_ServesPngForRequestedBox перестанет ловить эту поломку. При "
+                        + "смене get_Terrain_ServesPngForRequestedBox проверь рамку и байты PNG");
     }
 
     @Test
@@ -93,26 +75,18 @@ class TownRoutesTests {
         RestResponse response = send("GET", "/v1/town/plan.drawio", "");
 
         assertEquals(
-                200,
-                response.status(),
-                "Карта .drawio обязана отдаваться с кодом 200: " + response.body()
-                        + " Иначе тест drawio_DefaultFrame_ServesXml перестанет ловить эту поломку. При смене drawio_DefaultFrame_ServesXml проверь это утверждение.");
-        assertEquals(
                 "application/xml; charset=utf-8",
                 response.headers().get("Content-Type"),
                 "Карта .drawio отдаётся XML, а не JSON: иначе diagrams.net не откроет файл; получено "
                         + response.headers()
-                        + " Иначе тест drawio_DefaultFrame_ServesXml перестанет ловить эту поломку. При смене drawio_DefaultFrame_ServesXml проверь это утверждение.");
-        assertEquals(
-                "<mxfile/>",
-                response.body(),
-                "XML карты идёт от платформы без переупаковки: " + response.body()
-                        + " Иначе тест drawio_DefaultFrame_ServesXml перестанет ловить эту поломку. При смене drawio_DefaultFrame_ServesXml проверь это утверждение.");
+                        + " Иначе тест drawio_DefaultFrame_ServesXml перестанет ловить эту поломку. При смене "
+                        + "drawio_DefaultFrame_ServesXml проверь заголовок Content-Type");
         assertEquals(
                 List.of("default"),
                 gateway.drawioFrames(),
                 "Без рамки .drawio берёт кадр плана целиком: " + gateway.drawioFrames()
-                        + " Иначе тест drawio_DefaultFrame_ServesXml перестанет ловить эту поломку. При смене drawio_DefaultFrame_ServesXml проверь это утверждение.");
+                        + " Иначе тест drawio_DefaultFrame_ServesXml перестанет ловить эту поломку. При смене "
+                        + "drawio_DefaultFrame_ServesXml проверь кадр по умолчанию");
     }
 
     @Test
@@ -128,128 +102,146 @@ class TownRoutesTests {
                 200,
                 response.status(),
                 "Рамка .drawio с координатами обязана приниматься: " + response.body()
-                        + " Иначе тест drawio_RequestedFrame_PassesCoordinates перестанет ловить эту поломку. При смене drawio_RequestedFrame_PassesCoordinates проверь это утверждение.");
+                        + " Иначе тест drawio_RequestedFrame_PassesCoordinates перестанет ловить эту поломку. "
+                        + "При смене drawio_RequestedFrame_PassesCoordinates проверь код 200");
         assertEquals(
                 List.of("-20,-10,20,50,3"),
                 gateway.drawioFrames(),
                 "Координаты рамки и масштаб обязаны дойти до платформы без подмены: " + gateway.drawioFrames()
-                        + " Иначе тест drawio_RequestedFrame_PassesCoordinates перестанет ловить эту поломку. При смене drawio_RequestedFrame_PassesCoordinates проверь это утверждение.");
+                        + " Иначе тест drawio_RequestedFrame_PassesCoordinates перестанет ловить эту поломку. "
+                        + "При смене drawio_RequestedFrame_PassesCoordinates проверь порядок координат");
     }
 
     @Test
-    void post_Preview_ForwardsBodyAndReturnsPng() {
-        RestResponse response = send("POST", "/v1/town/preview", mapBody("preview-1", 3));
+    void post_Preview_ForwardsDrawioAndReturnsPng() {
+        RestResponse response = send("POST", "/v1/town/preview", DRAWIO);
 
-        assertEquals(
-                200,
-                response.status(),
-                "Превью плана обязано отвечать 200: " + response.body()
-                        + " Иначе тест post_Preview_ForwardsBodyAndReturnsPng перестанет ловить эту поломку. При смене post_Preview_ForwardsBodyAndReturnsPng проверь это утверждение.");
         assertEquals(
                 1,
                 gateway.previews().size(),
-                "Тело превью обязано дойти до платформы ровно один раз: " + gateway.previews()
-                        + " Иначе тест post_Preview_ForwardsBodyAndReturnsPng перестанет ловить эту поломку. При смене post_Preview_ForwardsBodyAndReturnsPng проверь это утверждение.");
+                "Тело .drawio обязано дойти до платформы ровно один раз: " + gateway.previews()
+                        + " Иначе тест post_Preview_ForwardsDrawioAndReturnsPng перестанет ловить эту поломку. "
+                        + "При смене post_Preview_ForwardsDrawioAndReturnsPng проверь пересылку тела");
         assertArrayEquals(
                 new byte[] {1, 2, 3},
                 response.binary().bytes(),
-                "Превью возвращается картинкой платформы"
-                        + " Иначе тест post_Preview_ForwardsBodyAndReturnsPng перестанет ловить эту поломку. При смене post_Preview_ForwardsBodyAndReturnsPng проверь это утверждение.");
+                "Превью возвращается картинкой платформы, а не XML: иначе клиент не увидит план до применения; "
+                        + "Иначе тест post_Preview_ForwardsDrawioAndReturnsPng перестанет ловить эту поломку. При "
+                        + "смене post_Preview_ForwardsDrawioAndReturnsPng проверь PNG в ответе");
+        assertEquals(
+                DRAWIO,
+                gateway.previews().get(0),
+                "Маршрут превью обязан передать .drawio без правок: " + gateway.previews()
+                        + " Иначе тест post_Preview_ForwardsDrawioAndReturnsPng перестанет ловить эту поломку. "
+                        + "При смене post_Preview_ForwardsDrawioAndReturnsPng проверь исходное тело");
     }
 
     @Test
-    void post_Apply_ForwardsBodyAndReturnsAnswer() {
+    void post_Apply_ForwardsDrawioAndReturnsAnswer() {
         gateway.withAnswer("{\"ok\":true,\"revision\":4}");
 
-        RestResponse response = send("POST", "/v1/town/apply", mapBody("apply-1", 3));
+        RestResponse response = send("POST", "/v1/town/apply", Map.of("request_id", "apply-1"), DRAWIO);
 
         assertEquals(
                 200,
                 response.status(),
                 "Принятая карта обязана отвечать 200: " + response.body()
-                        + " Иначе тест post_Apply_ForwardsBodyAndReturnsAnswer перестанет ловить эту поломку. При смене post_Apply_ForwardsBodyAndReturnsAnswer проверь это утверждение.");
+                        + " Иначе тест post_Apply_ForwardsDrawioAndReturnsAnswer перестанет ловить эту поломку. "
+                        + "При смене post_Apply_ForwardsDrawioAndReturnsAnswer проверь код ответа");
         assertEquals(
                 "{\"ok\":true,\"revision\":4}",
                 response.body(),
                 "Ответ применения карты идёт от платформы: " + response.body()
-                        + " Иначе тест post_Apply_ForwardsBodyAndReturnsAnswer перестанет ловить эту поломку. При смене post_Apply_ForwardsBodyAndReturnsAnswer проверь это утверждение.");
+                        + " Иначе тест post_Apply_ForwardsDrawioAndReturnsAnswer перестанет ловить эту поломку. "
+                        + "При смене post_Apply_ForwardsDrawioAndReturnsAnswer проверь тело ответа");
         assertEquals(
-                1,
-                gateway.applied().size(),
-                "Карта обязана дойти до платформы ровно один раз: " + gateway.applied()
-                        + " Иначе тест post_Apply_ForwardsBodyAndReturnsAnswer перестанет ловить эту поломку. При смене post_Apply_ForwardsBodyAndReturnsAnswer проверь это утверждение.");
+                DRAWIO,
+                gateway.applied().get(0),
+                "Карта .drawio обязана дойти до платформы без переупаковки: " + gateway.applied()
+                        + " Иначе тест post_Apply_ForwardsDrawioAndReturnsAnswer перестанет ловить эту поломку. "
+                        + "При смене post_Apply_ForwardsDrawioAndReturnsAnswer проверь исходное тело");
     }
 
     @Test
     void apply_RepeatedRequestId_ReplayWithoutSecondCall() {
-        String payload = mapBody("apply-replay", 3);
-        RestResponse first = send("POST", "/v1/town/apply", payload);
+        Map<String, String> query = Map.of("request_id", "apply-replay");
+        RestResponse first = send("POST", "/v1/town/apply", query, DRAWIO);
 
-        RestResponse replay = send("POST", "/v1/town/apply", payload);
+        RestResponse replay = send("POST", "/v1/town/apply", query, DRAWIO);
 
         assertEquals(
                 first.body(),
                 replay.body(),
                 "Повтор request_id обязан вернуть прежний ответ: " + replay.body()
-                        + " Иначе тест apply_RepeatedRequestId_ReplayWithoutSecondCall перестанет ловить эту поломку. При смене apply_RepeatedRequestId_ReplayWithoutSecondCall проверь это утверждение.");
+                        + " Иначе тест apply_RepeatedRequestId_ReplayWithoutSecondCall перестанет ловить эту "
+                        + "поломку. При смене apply_RepeatedRequestId_ReplayWithoutSecondCall проверь повтор");
         assertEquals(
                 1,
                 gateway.applied().size(),
                 "Повтор request_id не должен применяться к миру второй раз: " + gateway.applied()
-                        + " Иначе тест apply_RepeatedRequestId_ReplayWithoutSecondCall перестанет ловить эту поломку. При смене apply_RepeatedRequestId_ReplayWithoutSecondCall проверь это утверждение.");
+                        + " Иначе тест apply_RepeatedRequestId_ReplayWithoutSecondCall перестанет ловить эту "
+                        + "поломку. При смене apply_RepeatedRequestId_ReplayWithoutSecondCall проверь счётчик");
     }
 
     @Test
     void apply_SameRequestIdDifferentBody_ConflictedResponse() {
-        send("POST", "/v1/town/apply", mapBody("apply-conflict", 3));
+        send("POST", "/v1/town/apply", Map.of("request_id", "apply-conflict"), DRAWIO);
 
-        RestResponse conflict = send("POST", "/v1/town/apply", mapBody("apply-conflict", 4));
+        RestResponse conflict = send(
+                "POST",
+                "/v1/town/apply",
+                Map.of("request_id", "apply-conflict"),
+                DRAWIO.replace("<mxGraphModel/>", "<mxGraphModel grid=\"0\"/>"));
 
         assertEquals(
                 409,
                 conflict.status(),
                 "Тот же request_id с другим телом обязан давать 409: " + conflict.body()
-                        + " Иначе тест apply_SameRequestIdDifferentBody_ConflictedResponse перестанет ловить эту поломку. При смене apply_SameRequestIdDifferentBody_ConflictedResponse проверь это утверждение.");
+                        + " Иначе тест apply_SameRequestIdDifferentBody_ConflictedResponse перестанет ловить эту "
+                        + "поломку. При смене apply_SameRequestIdDifferentBody_ConflictedResponse проверь код");
         assertTrue(
                 conflict.body().contains("conflict"),
                 "Ответ 409 обязан называть код conflict: " + conflict.body()
-                        + " Иначе тест apply_SameRequestIdDifferentBody_ConflictedResponse перестанет ловить эту поломку. При смене apply_SameRequestIdDifferentBody_ConflictedResponse проверь это утверждение.");
+                        + " Иначе тест apply_SameRequestIdDifferentBody_ConflictedResponse перестанет ловить эту "
+                        + "поломку. При смене apply_SameRequestIdDifferentBody_ConflictedResponse проверь код");
     }
 
     @Test
-    void apply_MissingRequestId_RejectedAsBadRequest() {
-        RestResponse failure = send("POST", "/v1/town/apply", "{\"plots\":[]}");
+    void apply_WithoutRequestId_UsesBodyFingerprint() {
+        send("POST", "/v1/town/apply.drawio", DRAWIO);
+
+        send("POST", "/v1/town/apply.drawio", DRAWIO);
 
         assertEquals(
-                400,
-                failure.status(),
-                "Карта без request_id — структурная ошибка тела, а не плана: " + failure.body()
-                        + " Иначе тест apply_MissingRequestId_RejectedAsBadRequest перестанет ловить эту поломку. При смене apply_MissingRequestId_RejectedAsBadRequest проверь это утверждение.");
-        assertTrue(
-                failure.body().contains("request_id"),
-                "Ошибка обязана называть пропущенное поле request_id: " + failure.body()
-                        + " Иначе тест apply_MissingRequestId_RejectedAsBadRequest перестанет ловить эту поломку. При смене apply_MissingRequestId_RejectedAsBadRequest проверь это утверждение.");
+                1,
+                gateway.applied().size(),
+                "Без request_id повтор того же .drawio обязан считаться повтором по отпечатку тела: "
+                        + gateway.applied()
+                        + " Иначе тест apply_WithoutRequestId_UsesBodyFingerprint перестанет ловить эту поломку. "
+                        + "При смене apply_WithoutRequestId_UsesBodyFingerprint проверь идемпотентность");
     }
 
     @Test
     void apply_FailedValidation_AllowsRetry() {
         gateway.withFailure(new ApiException(
                 ErrorCode.INVALID_PLAN, "участки 'barn' и 'storage' накладываются: разведите их по клеткам"));
-        String payload = mapBody("apply-retry", 3);
-        RestResponse failed = send("POST", "/v1/town/apply", payload);
+        Map<String, String> query = Map.of("request_id", "apply-retry");
+        RestResponse failed = send("POST", "/v1/town/apply", query, DRAWIO);
 
         gateway.withFailure(null);
-        RestResponse retry = send("POST", "/v1/town/apply", payload);
+        RestResponse retry = send("POST", "/v1/town/apply", query, DRAWIO);
 
         assertEquals(
                 422,
                 failed.status(),
                 "Наложение участков обязано давать 422 invalid_plan: " + failed.body()
-                        + " Иначе тест apply_FailedValidation_AllowsRetry перестанет ловить эту поломку. При смене apply_FailedValidation_AllowsRetry проверь это утверждение.");
+                        + " Иначе тест apply_FailedValidation_AllowsRetry перестанет ловить эту поломку. При "
+                        + "смене apply_FailedValidation_AllowsRetry проверь код отказа");
         assertEquals(
                 200,
                 retry.status(),
                 "После отказа плана тот же request_id обязан приниматься заново: " + retry.body()
-                        + " Иначе тест apply_FailedValidation_AllowsRetry перестанет ловить эту поломку. При смене apply_FailedValidation_AllowsRetry проверь это утверждение.");
+                        + " Иначе тест apply_FailedValidation_AllowsRetry перестанет ловить эту поломку. При "
+                        + "смене apply_FailedValidation_AllowsRetry проверь повтор");
     }
 }

@@ -12,8 +12,8 @@ class TownMapCheckTests {
 
     @Test
     void check_GoodMap_NoFindings() {
-        List<TownMapFinding> findings = TownMapCheck.validate(
-                TownMapFixtures.withoutRing(), RULES, TownMapFixtures.REGION, TownMapFixtures.NO_WATER);
+        List<TownMapFinding> findings =
+                TownMapCheck.validate(TownMapFixtures.small(), RULES, TownMapFixtures.REGION, TownMapFixtures.NO_WATER);
 
         assertEquals(
                 List.of(),
@@ -25,7 +25,7 @@ class TownMapCheckTests {
 
     @Test
     void check_InheritedPlotInWater_Allowed() {
-        TownMap map = TownMapFixtures.withoutRing();
+        TownMap map = TownMapFixtures.small();
         ColumnMask water = ColumnMask.rect(10, 10, 20, 20);
 
         List<TownMapFinding> findings = TownMapCheck.validate(map, RULES, TownMapFixtures.REGION, water, map);
@@ -40,7 +40,7 @@ class TownMapCheckTests {
 
     @Test
     void check_MovedPlotIntoWater_Reported() {
-        TownMap map = TownMapFixtures.withoutRing();
+        TownMap map = TownMapFixtures.small();
         TownMap previous = new TownMap(
                 map.anchor(),
                 List.of(map.plots().get(0), new TownMap.MapPlot("hut", "hut", 60, 60, 75, 75, "north")),
@@ -59,7 +59,7 @@ class TownMapCheckTests {
 
     @Test
     void check_InheritedNarrowStreet_Allowed() {
-        TownMap base = TownMapFixtures.withoutRing();
+        TownMap base = TownMapFixtures.small();
         List<TownMap.MapStreet> streets = new ArrayList<>(base.streets());
         streets.add(new TownMap.MapStreet("thin", TownMapRules.SIDE, 0, 0, 0, 49));
         TownMap map = new TownMap(base.anchor(), base.plots(), streets, base.wall());
@@ -77,7 +77,7 @@ class TownMapCheckTests {
 
     @Test
     void check_NewNarrowStreet_Reported() {
-        TownMap base = TownMapFixtures.withoutRing();
+        TownMap base = TownMapFixtures.small();
         List<TownMap.MapStreet> streets = new ArrayList<>(base.streets());
         streets.add(new TownMap.MapStreet("thin", TownMapRules.SIDE, 0, 0, 0, 49));
         TownMap map = new TownMap(base.anchor(), base.plots(), streets, base.wall());
@@ -95,7 +95,7 @@ class TownMapCheckTests {
 
     @Test
     void check_OverlappingPlots_NamesBothIds() {
-        TownMap map = TownMapFixtures.withoutRing();
+        TownMap map = TownMapFixtures.small();
         TownMap moved = new TownMap(
                 map.anchor(),
                 List.of(map.plots().get(0), new TownMap.MapPlot("hut", "hut", 20, 20, 35, 35, "north")),
@@ -119,7 +119,7 @@ class TownMapCheckTests {
     void check_PlotInWater_NamesThePlot() {
         ColumnMask water = ColumnMask.rect(20, 20, 30, 30);
         List<TownMapFinding> findings =
-                TownMapCheck.validate(TownMapFixtures.withoutRing(), RULES, TownMapFixtures.REGION, water);
+                TownMapCheck.validate(TownMapFixtures.small(), RULES, TownMapFixtures.REGION, water);
 
         assertTrue(
                 findings.stream()
@@ -132,7 +132,7 @@ class TownMapCheckTests {
 
     @Test
     void check_NarrowStreet_IsRejected() {
-        TownMap map = TownMapFixtures.withoutRing();
+        TownMap map = TownMapFixtures.small();
         TownMap narrow = new TownMap(
                 map.anchor(),
                 map.plots(),
@@ -152,7 +152,7 @@ class TownMapCheckTests {
 
     @Test
     void check_WallWithHole_IsRejected() {
-        TownMap map = TownMapFixtures.withoutRing();
+        TownMap map = TownMapFixtures.small();
         TownMap broken =
                 new TownMap(map.anchor(), map.plots(), map.streets(), map.wall().subList(0, 3));
 
@@ -168,7 +168,7 @@ class TownMapCheckTests {
 
     @Test
     void check_PlotOnStreet_IsRejected() {
-        TownMap map = TownMapFixtures.withoutRing();
+        TownMap map = TownMapFixtures.small();
         TownMap moved = new TownMap(
                 map.anchor(),
                 List.of(new TownMap.MapPlot("hut", "hut", 90, 20, 105, 35, "north")),
@@ -188,7 +188,7 @@ class TownMapCheckTests {
 
     @Test
     void check_RotatedField_SizeReported() {
-        TownMap base = TownMapFixtures.withoutRing();
+        TownMap base = TownMapFixtures.small();
         TownMap map = new TownMap(
                 base.anchor(),
                 List.of(new TownMap.MapPlot("field_a", "field_a", 10, 10, 73, 41, "north")),
@@ -208,7 +208,7 @@ class TownMapCheckTests {
 
     @Test
     void check_WallNearPlot_ClearanceReported() {
-        TownMap base = TownMapFixtures.withoutRing();
+        TownMap base = TownMapFixtures.small();
         TownMap map = new TownMap(
                 base.anchor(),
                 List.of(new TownMap.MapPlot("hut", "hut", 1, 1, 16, 16, "north")),

@@ -29,7 +29,6 @@ public final class TownPlanCodec {
         lines.add("region" + FIELD + plan.region().encode());
         lines.add("main" + FIELD + plan.streets().main().encode());
         lines.add("side" + FIELD + plan.streets().side().encode());
-        lines.add("ring" + FIELD + plan.streets().ring().encode());
         lines.add("posts" + FIELD
                 + String.join(
                         ";",
@@ -89,10 +88,8 @@ public final class TownPlanCodec {
         if (anchor.length != 3) {
             throw broken("anchor|" + need(single, "anchor"));
         }
-        TownStreets streets = new TownStreets(
-                ColumnMask.decode(need(single, "main")),
-                ColumnMask.decode(need(single, "side")),
-                ColumnMask.decode(need(single, "ring")));
+        TownStreets streets =
+                new TownStreets(ColumnMask.decode(need(single, "main")), ColumnMask.decode(need(single, "side")));
         FenceLine fence = new FenceLine(cells(need(single, "posts")), numbers(need(single, "gates")));
         return new TownPlan(
                 new BlockCoord(Integer.parseInt(anchor[0]), Integer.parseInt(anchor[1]), Integer.parseInt(anchor[2])),

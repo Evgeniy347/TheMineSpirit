@@ -157,7 +157,7 @@ public final class TorchScenesGameTests {
         return new TownPlan(
                 new BlockCoord(x1 + 5, level, z1 + 5),
                 ColumnMask.rect(x1, z1, x2, z2),
-                new TownStreets(ColumnMask.rect(x1, z1, x2, z1), empty, empty),
+                new TownStreets(ColumnMask.rect(x1, z1, x2, z1), empty),
                 places,
                 new FenceLine(List.of(), List.of()),
                 List.of());

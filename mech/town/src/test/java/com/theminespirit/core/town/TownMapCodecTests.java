@@ -26,21 +26,22 @@ class TownMapCodecTests {
     }
 
     @Test
-    void codec_RingStreet_StaysWithoutCoordinates() {
+    void codec_MainStreet_KeepsCoordinatesAndRevision() {
         TownMap map = TownMapFixtures.small();
         String json = TownMapCodec.encode(map, 3, REGION);
 
         assertTrue(
-                json.contains("\"kind\" : \"ring\""),
-                "Кольцевая улица уходит в JSON только видом: её полоса считается от стены и контура, "
-                        + "а координаты прямоугольника для кривого берега бессмысленны; без этого поля "
-                        + "при загрузке кольцо станет пустым"
-                        + " Иначе тест codec_RingStreet_StaysWithoutCoordinates перестанет ловить эту поломку. При смене codec_RingStreet_StaysWithoutCoordinates проверь это утверждение.");
+                json.contains("\"kind\" : \"main\"") && json.contains("\"x1\" : 95") && json.contains("\"x2\" : 101"),
+                "Улица уходит в JSON с координатами: без них проезд не восстановить, и дома окажутся на дороге; "
+                        + "получено " + json
+                        + " Иначе тест codec_MainStreet_KeepsCoordinatesAndRevision перестанет ловить эту поломку. "
+                        + "При смене codec_MainStreet_KeepsCoordinatesAndRevision проверь вид и клетки улицы");
         assertTrue(
                 json.contains("\"revision\" : 3"),
                 "Версия плана обязана попадать в JSON: по ней клиент не затрёт чужие правки; "
                         + "без ревизии две правки подряд затирают друг друга молча"
-                        + " Иначе тест codec_RingStreet_StaysWithoutCoordinates перестанет ловить эту поломку. При смене codec_RingStreet_StaysWithoutCoordinates проверь это утверждение.");
+                        + " Иначе тест codec_MainStreet_KeepsCoordinatesAndRevision перестанет ловить эту поломку. "
+                        + "При смене codec_MainStreet_KeepsCoordinatesAndRevision проверь revision");
     }
 
     @Test

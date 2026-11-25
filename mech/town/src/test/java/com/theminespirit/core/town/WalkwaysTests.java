@@ -14,7 +14,7 @@ class WalkwaysTests {
         return new TownPlan(
                 new BlockCoord(20, 70, 20),
                 ColumnMask.rect(0, 0, 40, 40),
-                new TownStreets(ColumnMask.rect(0, 20, 40, 20), EMPTY, EMPTY),
+                new TownStreets(ColumnMask.rect(0, 20, 40, 20), EMPTY),
                 places,
                 new FenceLine(List.of(new ColumnMask.Cell(0, 20), new ColumnMask.Cell(40, 20)), gates),
                 List.of());

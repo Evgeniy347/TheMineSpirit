@@ -72,7 +72,6 @@ public record TownSnapshot(
         List<Street> streets = new ArrayList<>();
         streets(streets, "main", plan.streets().main());
         streets(streets, "side", plan.streets().side());
-        streets(streets, "ring", plan.streets().ring());
         List<Lot> lots = plan.placements().stream()
                 .map(place -> lot(place, site, progress.getOrDefault(place.id(), Progress.NONE)))
                 .toList();

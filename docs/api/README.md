@@ -97,11 +97,13 @@
 | GET | `/v1/settlement/level` | текущий уровень поселения ([level.md](level.md)) |
 | POST | `/v1/settlement/level/preview` | рассчитать уровень: рельеф, склад земли, вода ([level.md](level.md)) |
 | PUT | `/v1/settlement/level` | задать уровень поселения — единственный способ его сменить ([level.md](level.md)) |
-| GET | `/v1/town/plan` | карта поселения: участки, улицы, стена в JSON ([town.md](town.md)) |
+| GET | `/v1/town/plan` | карта поселения в .drawio: PNG-подложка, участки, улицы и стена ([town.md](town.md)) |
 | GET | `/v1/town/terrain.png` | PNG местности в стиле ванильной карты по рамке x1,z1,x2,z2 ([town.md](town.md)) |
-| GET | `/v1/town/plan.drawio` | карта .drawio: PNG-подложка и фигуры участков, улиц и стены ([town.md](town.md)) |
-| POST | `/v1/town/preview` | PNG: местность с наложенным планом из присланной карты ([town.md](town.md)) |
-| POST | `/v1/town/apply` | проверить и применить карту поселения ([town.md](town.md)) |
+| GET | `/v1/town/plan.drawio` | то же .drawio файлом-вложением ([town.md](town.md)) |
+| POST | `/v1/town/preview` | PNG: местность с наложенным планом из присланного .drawio ([town.md](town.md)) |
+| POST | `/v1/town/preview.drawio` | то же превью с явным адресом .drawio ([town.md](town.md)) |
+| POST | `/v1/town/apply` | проверить и применить .drawio поселения ([town.md](town.md)) |
+| POST | `/v1/town/apply.drawio` | то же применение с явным адресом .drawio ([town.md](town.md)) |
 | GET | `/v1/quarry/search` | лучшие области добычи земли/песка по выгодности ([quarry.md](quarry.md)) |
 | GET | `/v1/quarry/status` | места добычи: запас, остаток, состояние и маршрут ([quarry.md](quarry.md)) |
 | POST | `/v1/quarry/site` | установить место добычи решением стратега или игрока |

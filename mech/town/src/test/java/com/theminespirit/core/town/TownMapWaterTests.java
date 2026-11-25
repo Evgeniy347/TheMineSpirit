@@ -72,7 +72,7 @@ class TownMapWaterTests {
     }
 
     private static TownMap noWall() {
-        TownMap map = TownMapFixtures.withoutRing();
+        TownMap map = TownMapFixtures.small();
         return new TownMap(map.anchor(), map.plots(), map.streets(), List.of());
     }
 

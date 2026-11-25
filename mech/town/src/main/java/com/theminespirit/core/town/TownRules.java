@@ -16,7 +16,7 @@ public record TownRules(Ground ground, Streets streets, Spacing spacing, List<To
     private static final TableSlot<TownRules> SOURCE = new TableSlot<>(TownRules::load);
     private static final Set<String> ROOT = Set.of("ground", "streets", "spacing", "buildings");
     private static final Set<String> GROUND = Set.of("area", "probeRadius", "cliffStep", "slopeWeight", "slopeMax");
-    private static final Set<String> STREETS = Set.of("main", "side", "ring", "ringInset", "blockSize");
+    private static final Set<String> STREETS = Set.of("main", "side", "blockSize");
     private static final Set<String> SPACING = Set.of("gap", "stageMargin", "chestFreePercent", "fenceStrip");
     private static final Set<String> ENTRY =
             Set.of("id", "name", "width", "depth", "quarter", "level", "rotate", "field");
@@ -36,12 +36,11 @@ public record TownRules(Ground ground, Streets streets, Spacing spacing, List<To
         }
     }
 
-    public record Streets(int main, int side, int ring, int ringInset, int blockSize) {
+    public record Streets(int main, int side, int blockSize) {
         public Streets {
-            if (main < 1 || side < 1 || ring < 1 || ringInset < 1 || blockSize <= main) {
-                throw new IllegalArgumentException("Улицы плана: главная " + main + ", боковая " + side
-                        + ", кольцевая " + ring + ", отступ кольца " + ringInset + ", квартал " + blockSize
-                        + ": ширины и отступ положительны, квартал шире главной улицы");
+            if (main < 1 || side < 1 || blockSize <= main) {
+                throw new IllegalArgumentException("Улицы плана: главная " + main + ", боковая " + side + ", квартал "
+                        + blockSize + ": ширины положительны, квартал шире главной улицы");
             }
         }
     }
@@ -115,12 +114,7 @@ public record TownRules(Ground ground, Streets streets, Spacing spacing, List<To
                             number(g, "cliffStep", origin),
                             number(g, "slopeWeight", origin),
                             number(g, "slopeMax", origin)),
-                    new Streets(
-                            number(s, "main", origin),
-                            number(s, "side", origin),
-                            number(s, "ring", origin),
-                            number(s, "ringInset", origin),
-                            number(s, "blockSize", origin)),
+                    new Streets(number(s, "main", origin), number(s, "side", origin), number(s, "blockSize", origin)),
                     new Spacing(
                             number(p, "gap", origin),
                             number(p, "stageMargin", origin),

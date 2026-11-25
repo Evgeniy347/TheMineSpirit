@@ -73,9 +73,7 @@ class TownSnapshotTests {
         int streetCells = snapshot.streets().stream()
                 .mapToInt(street -> (street.x2() - street.x1() + 1) * (street.z2() - street.z1() + 1))
                 .sum();
-        int planned = PLAN.streets().main().count()
-                + PLAN.streets().side().count()
-                + PLAN.streets().ring().count();
+        int planned = PLAN.streets().main().count() + PLAN.streets().side().count();
         assertEquals(
                 planned,
                 streetCells,

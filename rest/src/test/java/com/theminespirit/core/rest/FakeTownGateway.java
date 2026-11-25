@@ -7,15 +7,10 @@ final class FakeTownGateway implements TownGateway {
     private final List<String> applied = new ArrayList<>();
     private final List<String> previews = new ArrayList<>();
     private final List<String> drawioFrames = new ArrayList<>();
-    private String plan = "{\"anchor\":{\"x\":0,\"z\":0},\"plots\":[],\"streets\":[],\"wall\":[]}";
     private String answer = "{\"ok\":true}";
     private String drawio = "<mxfile/>";
     private byte[] image = {1, 2, 3};
     private RuntimeException failure;
-
-    void withPlan(String json) {
-        plan = json;
-    }
 
     void withAnswer(String json) {
         answer = json;
@@ -46,25 +41,6 @@ final class FakeTownGateway implements TownGateway {
     }
 
     @Override
-    public String planJson() {
-        return plan;
-    }
-
-    @Override
-    public byte[] terrainPng(int x1, int z1, int x2, int z2, int scale) {
-        return image;
-    }
-
-    @Override
-    public byte[] previewPng(String body) {
-        previews.add(body);
-        if (failure != null) {
-            throw failure;
-        }
-        return image;
-    }
-
-    @Override
     public String planDrawio() {
         drawioFrames.add("default");
         return drawio;
@@ -77,7 +53,21 @@ final class FakeTownGateway implements TownGateway {
     }
 
     @Override
-    public String applyJson(String body) {
+    public byte[] terrainPng(int x1, int z1, int x2, int z2, int scale) {
+        return image;
+    }
+
+    @Override
+    public byte[] previewDrawio(String body) {
+        previews.add(body);
+        if (failure != null) {
+            throw failure;
+        }
+        return image;
+    }
+
+    @Override
+    public String applyDrawio(String body) {
         applied.add(body);
         if (failure != null) {
             throw failure;

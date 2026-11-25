@@ -1,7 +1,5 @@
 package com.theminespirit.core.rest;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.theminespirit.core.inventory.api.JsonResource;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
@@ -12,7 +10,9 @@ public final class TownRoutes {
     public static final String TERRAIN = "/v1/town/terrain.png";
     public static final String DRAWIO = "/v1/town/plan.drawio";
     public static final String PREVIEW = "/v1/town/preview";
+    public static final String PREVIEW_DRAWIO = "/v1/town/preview.drawio";
     public static final String APPLY = "/v1/town/apply";
+    public static final String APPLY_DRAWIO = "/v1/town/apply.drawio";
     private static final int DEFAULT_SCALE = 2;
 
     private final TownGateway gateway;
@@ -26,11 +26,13 @@ public final class TownRoutes {
 
     public List<Route> routes() {
         return List.of(
-                new Route("GET", PLAN, (request, params) -> RestResponse.ok(gateway.planJson())),
+                new Route("GET", PLAN, (request, params) -> xml(gateway.planDrawio())),
                 new Route("GET", TERRAIN, this::terrain),
                 new Route("GET", DRAWIO, this::drawio),
                 new Route("POST", PREVIEW, this::preview),
-                new Route("POST", APPLY, this::apply));
+                new Route("POST", PREVIEW_DRAWIO, this::preview),
+                new Route("POST", APPLY, this::apply),
+                new Route("POST", APPLY_DRAWIO, this::apply));
     }
 
     private RestResponse terrain(RestRequest request, PathParams ignored) {
@@ -43,7 +45,7 @@ public final class TownRoutes {
     }
 
     private RestResponse drawio(RestRequest request, PathParams ignored) {
-        String xml = request.query().keySet().containsAll(List.of("x1", "z1", "x2", "z2"))
+        String text = request.query().keySet().containsAll(List.of("x1", "z1", "x2", "z2"))
                 ? gateway.planDrawio(
                         coordinate(request, "x1"),
                         coordinate(request, "z1"),
@@ -56,17 +58,17 @@ public final class TownRoutes {
                 Map.of(
                         "Content-Type", "application/xml; charset=utf-8",
                         "Content-Disposition", "attachment; filename=\"town-plan.drawio\""),
-                xml);
+                text);
     }
 
     private RestResponse preview(RestRequest request, PathParams ignored) {
-        return RestResponse.png(gateway.previewPng(new String(request.body(), StandardCharsets.UTF_8)));
+        return RestResponse.png(gateway.previewDrawio(new String(request.body(), StandardCharsets.UTF_8)));
     }
 
     private RestResponse apply(RestRequest request, PathParams ignored) {
         String body = new String(request.body(), StandardCharsets.UTF_8);
-        String requestId = requestId(body);
         String fingerprint = IdempotencyCache.fingerprintOf(Map.of("body", body));
+        String requestId = requestId(request, fingerprint);
         IdempotencyCache.Result verdict = idempotency.check(requestId, fingerprint);
         if (verdict instanceof IdempotencyCache.Result.Replay replay) {
             return RestResponse.ok(replay.storedResponse());
@@ -80,13 +82,22 @@ public final class TownRoutes {
         }
         String response;
         try {
-            response = gateway.applyJson(body);
+            response = gateway.applyDrawio(body);
         } catch (RuntimeException failure) {
             idempotency.release(requestId);
             throw failure;
         }
         idempotency.remember(requestId, fingerprint, response);
         return RestResponse.ok(response);
+    }
+
+    private static String requestId(RestRequest request, String fingerprint) {
+        String explicit = request.query().get("request_id");
+        return explicit == null || explicit.isBlank() ? fingerprint : explicit.trim();
+    }
+
+    private static RestResponse xml(String text) {
+        return new RestResponse(200, Map.of("Content-Type", "application/xml; charset=utf-8"), text);
     }
 
     private static int coordinate(RestRequest request, String name) {
@@ -105,17 +116,5 @@ public final class TownRoutes {
                     "координата " + name + " не число: '" + raw + "'",
                     Map.of("field", name));
         }
-    }
-
-    private static String requestId(String body) {
-        JsonNode root = JsonResource.parse(body, "town");
-        JsonNode id = root.get("request_id");
-        if (id == null || !id.isTextual() || id.asText().isBlank()) {
-            throw new ApiException(
-                    ErrorCode.INVALID_REQUEST,
-                    "нет request_id: без него повтор загрузки карты не отличить от новой",
-                    Map.of("field", "request_id"));
-        }
-        return id.asText();
     }
 }

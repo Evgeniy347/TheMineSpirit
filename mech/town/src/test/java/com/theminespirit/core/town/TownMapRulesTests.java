@@ -16,7 +16,7 @@ class TownMapRulesTests {
     @Test
     void build_Map_KeepsPlotSizeStageAndDoor() {
         TownPlan plan =
-                TownMapRules.build(TownMapFixtures.withoutRing(), RULES, TownMapFixtures.REGION, ANCHOR, building -> 2);
+                TownMapRules.build(TownMapFixtures.small(), RULES, TownMapFixtures.REGION, ANCHOR, building -> 2);
 
         Placement hut = plan.placement("hut").orElseThrow();
         assertEquals(
@@ -41,7 +41,7 @@ class TownMapRulesTests {
 
     @Test
     void build_ExtraOrchard_UsesTemplateSize() {
-        TownMap base = TownMapFixtures.withoutRing();
+        TownMap base = TownMapFixtures.small();
         List<TownMap.MapPlot> plots = new ArrayList<>(base.plots());
         plots.add(new TownMap.MapPlot("orchard_jungle", "orchard_jungle", 40, 60, 55, 75, "north"));
         TownMap map = new TownMap(base.anchor(), plots, base.streets(), base.wall());
@@ -59,7 +59,7 @@ class TownMapRulesTests {
     @Test
     void build_StreetThroughWall_MakesOpening() {
         TownPlan plan =
-                TownMapRules.build(TownMapFixtures.withoutRing(), RULES, TownMapFixtures.REGION, ANCHOR, building -> 1);
+                TownMapRules.build(TownMapFixtures.small(), RULES, TownMapFixtures.REGION, ANCHOR, building -> 1);
 
         assertFalse(
                 plan.fence().gates().isEmpty(),
@@ -76,27 +76,5 @@ class TownMapRulesTests {
                 "Проём стоит на клетке улицы: кладка пропускает проезд, а не соседнюю клетку; "
                         + "иначе духи бьются в стену рядом с проходом"
                         + " Иначе тест build_StreetThroughWall_MakesOpening перестанет ловить эту поломку. При смене build_StreetThroughWall_MakesOpening проверь это утверждение.");
-    }
-
-    @Test
-    void build_RingKind_DerivesBandInsideWall() {
-        TownPlan plan =
-                TownMapRules.build(TownMapFixtures.small(), RULES, TownMapFixtures.REGION, ANCHOR, building -> 1);
-
-        assertFalse(
-                plan.streets().ring().isEmpty(),
-                "Кольцевая улица вида ring размечается полосой от границы: координат у неё нет; пустая полоса "
-                        + "означает, что обход стены потерян"
-                        + " Иначе тест build_RingKind_DerivesBandInsideWall перестанет ловить эту поломку. При смене build_RingKind_DerivesBandInsideWall проверь это утверждение.");
-        assertTrue(
-                plan.streets().ring().contains(4, 100),
-                "Полоса кольца лежит в L-окрестности границы (отступ 2, ширина 5): клетка (4,100) обязана "
-                        + "быть кольцом; иначе полоса сдвинута и упирается в дома"
-                        + " Иначе тест build_RingKind_DerivesBandInsideWall перестанет ловить эту поломку. При смене build_RingKind_DerivesBandInsideWall проверь это утверждение.");
-        assertFalse(
-                plan.streets().ring().contains(50, 100),
-                "В середине участка кольца нет: полоса шириной 5 не заливает весь город; "
-                        + "иначе кольцо съест место под дома"
-                        + " Иначе тест build_RingKind_DerivesBandInsideWall перестанет ловить эту поломку. При смене build_RingKind_DerivesBandInsideWall проверь это утверждение.");
     }
 }

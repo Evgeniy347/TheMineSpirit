@@ -35,21 +35,18 @@ public final class TownMapService {
         return new TownMapService(level);
     }
 
-    public String planJson() {
+    public String applyDrawio(String body) {
+        TownDrawio.Decoded decoded;
+        try {
+            decoded = TownDrawio.decode(body);
+        } catch (IllegalArgumentException broken) {
+            throw new ApiException(ErrorCode.INVALID_PLAN, broken.getMessage(), Map.of());
+        }
+        TownMap map = decoded.map();
         TownRules rules = DataTables.INSTANCE.town().current();
         BlockCoord center = SettlementCenter.of(level);
         TownSurvey.Frame frame = TownSurvey.frame(level, center, rules);
         SettlementPlotStore store = SettlementPlotStore.get(level);
-        TownMap map = TownSurvey.map(store, center, rules, frame, BoardRegistry.get(level), level.getGameTime());
-        return TownMapCodec.encode(map, store.mapRevision(), frame.region());
-    }
-
-    public String apply(String body) {
-        TownRules rules = DataTables.INSTANCE.town().current();
-        BlockCoord center = SettlementCenter.of(level);
-        TownSurvey.Frame frame = TownSurvey.frame(level, center, rules);
-        SettlementPlotStore store = SettlementPlotStore.get(level);
-        TownMap map = TownMapCodec.decode(body);
         if (map.anchor().x() != center.x() || map.anchor().z() != center.z()) {
             throw new ApiException(
                     ErrorCode.INVALID_PLAN,
@@ -62,7 +59,7 @@ public final class TownMapService {
         if (!findings.isEmpty()) {
             throw new ApiException(ErrorCode.INVALID_PLAN, message(findings), details(findings));
         }
-        int revision = TownMapCodec.revision(body);
+        int revision = decoded.revision();
         if (revision >= 0 && revision != store.mapRevision()) {
             throw new ApiException(
                     ErrorCode.CONFLICT,
@@ -92,8 +89,13 @@ public final class TownMapService {
         }
     }
 
-    public byte[] previewPng(String body) {
-        TownMap map = TownMapCodec.decode(body);
+    public byte[] previewDrawio(String body) {
+        TownMap map;
+        try {
+            map = TownDrawio.decode(body).map();
+        } catch (IllegalArgumentException broken) {
+            throw new ApiException(ErrorCode.INVALID_PLAN, broken.getMessage(), Map.of());
+        }
         TownRules rules = DataTables.INSTANCE.town().current();
         BlockCoord center = SettlementCenter.of(level);
         TownSurvey.Frame frame = TownSurvey.frame(level, center, rules);

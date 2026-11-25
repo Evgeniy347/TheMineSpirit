@@ -18,11 +18,6 @@ public final class SpiritTownGateway implements TownGateway {
     }
 
     @Override
-    public String planJson() {
-        return serverCall.call(() -> TownMapService.of(server.overworld()).planJson(), RestTuning.SERVER_CALL_TIMEOUT);
-    }
-
-    @Override
     public byte[] terrainPng(int x1, int z1, int x2, int z2, int scale) {
         return serverCall.call(
                 () -> TownMapService.of(server.overworld()).terrainPng(x1, z1, x2, z2, scale),
@@ -30,9 +25,9 @@ public final class SpiritTownGateway implements TownGateway {
     }
 
     @Override
-    public byte[] previewPng(String body) {
+    public byte[] previewDrawio(String body) {
         return serverCall.call(
-                () -> TownMapService.of(server.overworld()).previewPng(body), RestTuning.SERVER_CALL_TIMEOUT);
+                () -> TownMapService.of(server.overworld()).previewDrawio(body), RestTuning.SERVER_CALL_TIMEOUT);
     }
 
     @Override
@@ -49,7 +44,8 @@ public final class SpiritTownGateway implements TownGateway {
     }
 
     @Override
-    public String applyJson(String body) {
-        return serverCall.call(() -> TownMapService.of(server.overworld()).apply(body), RestTuning.SERVER_CALL_TIMEOUT);
+    public String applyDrawio(String body) {
+        return serverCall.call(
+                () -> TownMapService.of(server.overworld()).applyDrawio(body), RestTuning.SERVER_CALL_TIMEOUT);
     }
 }

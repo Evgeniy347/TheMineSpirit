@@ -29,9 +29,6 @@ public final class TownMapConvert {
         if (!plan.streets().side().isEmpty()) {
             streets.addAll(rects(plan.streets().side(), "side"));
         }
-        if (!plan.streets().ring().isEmpty()) {
-            streets.add(new TownMap.MapStreet("ring", TownMapRules.RING, 0, 0, 0, 0));
-        }
         return new TownMap(
                 new TownMap.MapPoint(plan.anchor().x(), plan.anchor().z()), plots, streets, wall(plan, region));
     }

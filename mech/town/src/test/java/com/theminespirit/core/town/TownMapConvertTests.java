@@ -29,12 +29,6 @@ class TownMapConvertTests {
                         + "миграция сдвигает проезды, и дома оказываются на дороге"
                         + " Иначе тест convert_LegacyPlan_RebuildsSameStreetsAndWall перестанет ловить эту поломку. При смене convert_LegacyPlan_RebuildsSameStreetsAndWall проверь это утверждение.");
         assertEquals(
-                cells(plan.streets().ring()),
-                cells(back.streets().ring()),
-                "Кольцо после круга остаётся той же полосой: правило отступа не зависит от того, "
-                        + "хранилась ли карта прямоугольником или видом ring"
-                        + " Иначе тест convert_LegacyPlan_RebuildsSameStreetsAndWall перестанет ловить эту поломку. При смене convert_LegacyPlan_RebuildsSameStreetsAndWall проверь это утверждение.");
-        assertEquals(
                 new HashSet<>(plan.fence().posts()),
                 new HashSet<>(back.fence().posts()),
                 "Стена переживает экспорт тем же набором клеток: иначе кладка пойдёт по другой линии, "
