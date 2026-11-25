@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge;
 
+import com.mojang.logging.LogUtils;
 import com.theminespirit.core.building.api.BuildBox;
 import com.theminespirit.core.mining.BreakSkipTally;
 import com.theminespirit.core.mining.StandSpots;
@@ -24,6 +25,9 @@ import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 final class ClearBlocked {
+    private static final Logger LOGGER = LogUtils.getLogger();
+    private static final long SLOW_PROTECTION_SCAN_NANOS = 200_000_000L;
+
     record Sweep(
             List<ClearSummary.Leftover> leftover, int unsafe, int noStand, int unreachable, int excluded, int planned) {
         int skipped() {
@@ -79,6 +83,8 @@ final class ClearBlocked {
     }
 
     Sweep dropProtected(List<BlockCoord> remaining, SpiritEntity spirit, boolean demolish, ProtectionMemo memo) {
+        long started = System.nanoTime();
+        int scanned = 0;
         List<ClearSummary.Leftover> leftover = new ArrayList<>();
         int protectedCount = 0;
         for (int index = remaining.size() - 1; index >= 0; index--) {
@@ -86,6 +92,7 @@ final class ClearBlocked {
             if (memo.certified(cell)) {
                 continue;
             }
+            scanned++;
             BlockPos pos = new BlockPos(cell.x(), cell.y(), cell.z());
             BlockState state = level.getBlockState(pos);
             String reason = protectedReason(spirit, pos, state, demolish);
@@ -96,6 +103,15 @@ final class ClearBlocked {
             protectedCount++;
             leftover.add(new ClearSummary.Leftover(cell, blockAt(cell), reason, 0));
             remaining.remove(index);
+        }
+        long spent = System.nanoTime() - started;
+        if (spent >= SLOW_PROTECTION_SCAN_NANOS) {
+            LOGGER.warn(
+                    "[clear] {}: проверка защиты {} клеток заняла {} мс — это время стоит серверный тик;"
+                            + " искать дорогую проверку в защите поселения, а не в самом духе",
+                    spirit.getName().getString(),
+                    scanned,
+                    spent / 1_000_000L);
         }
         return new Sweep(leftover, 0, 0, 0, 0, protectedCount);
     }

@@ -148,7 +148,7 @@ public record StageSite(
     }
 
     public boolean ringPost(int x, int z) {
-        return ring.posts().contains(new ColumnMask.Cell(x, z));
+        return ring.hasPost(x, z);
     }
 
     public boolean levelColumn(int x, int z) {
@@ -255,22 +255,21 @@ public record StageSite(
         return zone.contains(x, z) || fenceStrip.contains(x, z);
     }
 
-    public PlanBuilding protectionBuilding(int x, int y, int z) {
+    public SiteProtection protection(int x, int y, int z) {
         if (!protectionCell(x, y, z)) {
-            return PlanBuilding.NONE;
+            return SiteProtection.NONE;
         }
         PlanBuilding planned = planBuilding(x, y, z);
-        if (planned != PlanBuilding.NONE) {
-            return planned;
-        }
-        if (orchardTree(x, y, z)) {
-            return PlanBuilding.ORCHARD;
-        }
-        return PlanBuilding.NONE;
+        PlanBuilding shown = planned == PlanBuilding.NONE && orchardTree(x, y, z) ? PlanBuilding.ORCHARD : planned;
+        return new SiteProtection(true, shown, shown.area());
+    }
+
+    public PlanBuilding protectionBuilding(int x, int y, int z) {
+        return protection(x, y, z).building();
     }
 
     public String protectionArea(int x, int y, int z) {
-        return protectionBuilding(x, y, z).area();
+        return protection(x, y, z).area();
     }
 
     private boolean extraOrchardCell(int x, int z) {

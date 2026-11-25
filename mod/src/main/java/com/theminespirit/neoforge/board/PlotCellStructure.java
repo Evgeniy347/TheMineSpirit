@@ -3,10 +3,12 @@ package com.theminespirit.neoforge.board;
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
+import com.theminespirit.core.town.SiteProtection;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.api.PlanBuilding;
 import com.theminespirit.neoforge.board.PlotPlanBlocks.Plan;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -25,12 +27,16 @@ public final class PlotCellStructure {
 
     public static boolean isStructure(ServerLevel level, BlockPos pos) {
         StageSite site = site(level);
-        if (site == null || !site.protectionCell(pos.getX(), pos.getY(), pos.getZ())) {
+        if (site == null) {
+            return false;
+        }
+        SiteProtection protection = site.protection(pos.getX(), pos.getY(), pos.getZ());
+        if (!protection.protectedCell()) {
             return false;
         }
         BlockCoord cell = new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
         return plan(site).blocks().containsKey(cell)
-                || (site.protectionBuilding(cell.x(), cell.y(), cell.z()) == PlanBuilding.MINE
+                || (protection.building() == PlanBuilding.MINE
                         && mineFloors(site).contains(cell));
     }
 
@@ -54,7 +60,7 @@ public final class PlotCellStructure {
     private static Plan plan(StageSite site) {
         String rulesHash = DataTables.INSTANCE.stages().status().hash();
         Plan cached = cachedPlan;
-        if (cached == null || !site.equals(cachedSite) || !rulesHash.equals(cachedRulesHash)) {
+        if (cached == null || !Objects.equals(site, cachedSite) || !rulesHash.equals(cachedRulesHash)) {
             try {
                 cached = PlotPlanBlocks.of(site);
             } catch (RuntimeException failure) {

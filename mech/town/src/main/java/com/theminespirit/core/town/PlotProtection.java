@@ -64,14 +64,27 @@ public final class PlotProtection {
             PlanBuilding ownBuilding,
             boolean structureBlock) {
         Objects.requireNonNull(cell, "Клетка не может быть null: без неё не проверить защиту");
+        SiteProtection protection = site == null ? SiteProtection.NONE : site.protection(cell.x(), cell.y(), cell.z());
+        return check(protection, cell, action, ground, ownBuilding, structureBlock);
+    }
+
+    public static Decision check(
+            SiteProtection protection,
+            BlockCoord cell,
+            Action action,
+            Ground ground,
+            PlanBuilding ownBuilding,
+            boolean structureBlock) {
+        Objects.requireNonNull(protection, "Проверка защиты не может быть null: без неё не решить, трогать ли клетку");
+        Objects.requireNonNull(cell, "Клетка не может быть null: без неё не проверить защиту");
         Objects.requireNonNull(action, "Действие не может быть null: от него зависит правило");
         Objects.requireNonNull(ground, "Основание не может быть null: без него не отличить законную ломку");
         Objects.requireNonNull(ownBuilding, "Своя постройка не может быть null: без неё не отличить чужую клетку");
-        if (site == null || !site.protectionCell(cell.x(), cell.y(), cell.z())) {
+        if (!protection.protectedCell()) {
             return new Allowed(ground, PlanBuilding.NONE, "");
         }
-        PlanBuilding building = site.protectionBuilding(cell.x(), cell.y(), cell.z());
-        String area = site.protectionArea(cell.x(), cell.y(), cell.z());
+        PlanBuilding building = protection.building();
+        String area = protection.area();
         if (ground == Ground.CHEST_SALVAGE) {
             return new Allowed(ground, building, area);
         }

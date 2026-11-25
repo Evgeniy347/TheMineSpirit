@@ -7,6 +7,7 @@ import com.theminespirit.core.policy.SettlementBreak;
 import com.theminespirit.core.policy.api.BreakVeto;
 import com.theminespirit.core.policy.api.PolicyId;
 import com.theminespirit.core.town.PlotProtection;
+import com.theminespirit.core.town.SiteProtection;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.api.PlanBuilding;
 import com.theminespirit.neoforge.LevelSafetyView;
@@ -84,10 +85,10 @@ final class ProtectionDecide {
         boolean unprotectArea = level instanceof ServerLevel server
                 && UnprotectService.of(server.getServer()).covers(dimension, coord, System.currentTimeMillis());
         StageSite site = PolicyExcavation.site(level);
+        SiteProtection protection =
+                site == null ? SiteProtection.NONE : site.protection(coord.x(), coord.y(), coord.z());
         PlotProtection.Ground effective = request.ground();
-        if (site != null
-                && request.tended()
-                && site.protectionBuilding(coord.x(), coord.y(), coord.z()) == PlanBuilding.ORCHARD) {
+        if (request.tended() && protection.building() == PlanBuilding.ORCHARD) {
             effective = PlotProtection.Ground.ORCHARD_CARE;
         }
         if (unprotectArea) {
@@ -95,7 +96,7 @@ final class ProtectionDecide {
         }
         boolean structure = level instanceof ServerLevel server && PlotCellStructure.isStructure(server, pos);
         PlotProtection.Decision plot =
-                PlotProtection.check(site, coord, request.action(), effective, request.ownBuilding(), structure);
+                PlotProtection.check(protection, coord, request.action(), effective, request.ownBuilding(), structure);
         if (plot instanceof PlotProtection.Refused refused) {
             if (gate.journaling() && level instanceof ServerLevel server) {
                 PlotBreakLog.refused(
@@ -108,9 +109,7 @@ final class ProtectionDecide {
                     new BlockProtection.Refused(PolicyId.PROTECTED_BLOCKS, refused.reason()));
         }
         boolean planCell = plot instanceof PlotProtection.Allowed allowed
-                && (allowed.building() != PlanBuilding.NONE
-                        || (site != null
-                                && site.protectionBuilding(coord.x(), coord.y(), coord.z()) == PlanBuilding.MINE));
+                && (allowed.building() != PlanBuilding.NONE || protection.building() == PlanBuilding.MINE);
         return new PlotOutcome(inProtectedZone, unprotectArea, planCell, null);
     }
 
