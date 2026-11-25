@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -83,6 +84,56 @@ class TownRoutesTests {
                 failure.body().contains("x2"),
                 "Ошибка обязана называть пропущенную координату x2: " + failure.body()
                         + " Иначе тест get_TerrainWithoutX2_RejectedAsBadRequest перестанет ловить эту поломку. При смене get_TerrainWithoutX2_RejectedAsBadRequest проверь это утверждение.");
+    }
+
+    @Test
+    void drawio_DefaultFrame_ServesXml() {
+        gateway.withDrawio("<mxfile/>");
+
+        RestResponse response = send("GET", "/v1/town/plan.drawio", "");
+
+        assertEquals(
+                200,
+                response.status(),
+                "Карта .drawio обязана отдаваться с кодом 200: " + response.body()
+                        + " Иначе тест drawio_DefaultFrame_ServesXml перестанет ловить эту поломку. При смене drawio_DefaultFrame_ServesXml проверь это утверждение.");
+        assertEquals(
+                "application/xml; charset=utf-8",
+                response.headers().get("Content-Type"),
+                "Карта .drawio отдаётся XML, а не JSON: иначе diagrams.net не откроет файл; получено "
+                        + response.headers()
+                        + " Иначе тест drawio_DefaultFrame_ServesXml перестанет ловить эту поломку. При смене drawio_DefaultFrame_ServesXml проверь это утверждение.");
+        assertEquals(
+                "<mxfile/>",
+                response.body(),
+                "XML карты идёт от платформы без переупаковки: " + response.body()
+                        + " Иначе тест drawio_DefaultFrame_ServesXml перестанет ловить эту поломку. При смене drawio_DefaultFrame_ServesXml проверь это утверждение.");
+        assertEquals(
+                List.of("default"),
+                gateway.drawioFrames(),
+                "Без рамки .drawio берёт кадр плана целиком: " + gateway.drawioFrames()
+                        + " Иначе тест drawio_DefaultFrame_ServesXml перестанет ловить эту поломку. При смене drawio_DefaultFrame_ServesXml проверь это утверждение.");
+    }
+
+    @Test
+    void drawio_RequestedFrame_PassesCoordinates() {
+        RestResponse response = router.handle(new RestRequest(
+                "GET",
+                "/v1/town/plan.drawio",
+                Map.of("x1", "-20", "z1", "-10", "x2", "20", "z2", "50", "scale", "3"),
+                Map.of(),
+                new byte[0]));
+
+        assertEquals(
+                200,
+                response.status(),
+                "Рамка .drawio с координатами обязана приниматься: " + response.body()
+                        + " Иначе тест drawio_RequestedFrame_PassesCoordinates перестанет ловить эту поломку. При смене drawio_RequestedFrame_PassesCoordinates проверь это утверждение.");
+        assertEquals(
+                List.of("-20,-10,20,50,3"),
+                gateway.drawioFrames(),
+                "Координаты рамки и масштаб обязаны дойти до платформы без подмены: " + gateway.drawioFrames()
+                        + " Иначе тест drawio_RequestedFrame_PassesCoordinates перестанет ловить эту поломку. При смене drawio_RequestedFrame_PassesCoordinates проверь это утверждение.");
     }
 
     @Test

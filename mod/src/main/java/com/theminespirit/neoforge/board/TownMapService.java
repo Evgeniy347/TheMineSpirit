@@ -5,6 +5,8 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.rest.ApiException;
 import com.theminespirit.core.rest.ErrorCode;
+import com.theminespirit.core.town.ColumnMask;
+import com.theminespirit.core.town.TownDrawio;
 import com.theminespirit.core.town.TownMap;
 import com.theminespirit.core.town.TownMapCheck;
 import com.theminespirit.core.town.TownMapCodec;
@@ -106,6 +108,30 @@ public final class TownMapService {
 
     public byte[] terrainPng(int x1, int z1, int x2, int z2, int scale) {
         return TownPreview.terrain(level, x1, z1, x2, z2, scale);
+    }
+
+    public String planDrawio() {
+        TownRules rules = DataTables.INSTANCE.town().current();
+        BlockCoord center = SettlementCenter.of(level);
+        TownSurvey.Frame frame = TownSurvey.frame(level, center, rules);
+        ColumnMask region = frame.region();
+        return planDrawio(
+                region.minX(),
+                region.minZ(),
+                region.minX() + region.width() - 1,
+                region.minZ() + region.depth() - 1,
+                TownPreview.SCALE);
+    }
+
+    public String planDrawio(int x1, int z1, int x2, int z2, int scale) {
+        SettlementPlotStore store = SettlementPlotStore.get(level);
+        TownMap map = previous(store);
+        if (map == null) {
+            BlockCoord center = SettlementCenter.of(level);
+            map = new TownMap(new TownMap.MapPoint(center.x(), center.z()), List.of(), List.of(), List.of());
+        }
+        byte[] png = TownPreview.terrain(level, x1, z1, x2, z2, scale);
+        return TownDrawio.encode(map, store.mapRevision(), x1, z1, x2, z2, scale, png);
     }
 
     private static String message(List<TownMapFinding> findings) {

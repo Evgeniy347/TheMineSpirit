@@ -10,6 +10,7 @@ import java.util.Objects;
 public final class TownRoutes {
     public static final String PLAN = "/v1/town/plan";
     public static final String TERRAIN = "/v1/town/terrain.png";
+    public static final String DRAWIO = "/v1/town/plan.drawio";
     public static final String PREVIEW = "/v1/town/preview";
     public static final String APPLY = "/v1/town/apply";
     private static final int DEFAULT_SCALE = 2;
@@ -27,6 +28,7 @@ public final class TownRoutes {
         return List.of(
                 new Route("GET", PLAN, (request, params) -> RestResponse.ok(gateway.planJson())),
                 new Route("GET", TERRAIN, this::terrain),
+                new Route("GET", DRAWIO, this::drawio),
                 new Route("POST", PREVIEW, this::preview),
                 new Route("POST", APPLY, this::apply));
     }
@@ -38,6 +40,23 @@ public final class TownRoutes {
         int z2 = coordinate(request, "z2");
         int scale = request.query().containsKey("scale") ? coordinate(request, "scale") : DEFAULT_SCALE;
         return RestResponse.png(gateway.terrainPng(x1, z1, x2, z2, scale));
+    }
+
+    private RestResponse drawio(RestRequest request, PathParams ignored) {
+        String xml = request.query().keySet().containsAll(List.of("x1", "z1", "x2", "z2"))
+                ? gateway.planDrawio(
+                        coordinate(request, "x1"),
+                        coordinate(request, "z1"),
+                        coordinate(request, "x2"),
+                        coordinate(request, "z2"),
+                        request.query().containsKey("scale") ? coordinate(request, "scale") : DEFAULT_SCALE)
+                : gateway.planDrawio();
+        return new RestResponse(
+                200,
+                Map.of(
+                        "Content-Type", "application/xml; charset=utf-8",
+                        "Content-Disposition", "attachment; filename=\"town-plan.drawio\""),
+                xml);
     }
 
     private RestResponse preview(RestRequest request, PathParams ignored) {
