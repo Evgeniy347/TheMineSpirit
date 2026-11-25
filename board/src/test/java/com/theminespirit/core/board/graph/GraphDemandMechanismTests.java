@@ -112,15 +112,19 @@ class GraphDemandMechanismTests {
                 .orElse(0);
 
         assertEquals(
-                16,
+                8,
                 oneCount,
-                "Одному духу цель еды на этапе 2 — 16: " + single.post()
-                        + " Иначе тест demand_TargetGrowsWithSpirits_RequestCoversWholeShortage перестанет ловить эту поломку. При смене demand_TargetGrowsWithSpirits_RequestCoversWholeShortage проверь это утверждение.");
+                "Одному духу норма еды — 8 и не умножается на этап: рацион задан на духов, а не на"
+                        + " прогресс поселения Иначе тест demand_TargetGrowsWithSpirits_RequestCoversWholeShortage"
+                        + " перестанет ловить эту поломку. При смене demand_TargetGrowsWithSpirits_RequestCoversWholeShortage"
+                        + " проверь graph.json food.perSpirit и GraphLack.threshold.");
         assertEquals(
-                32,
+                16,
                 twoCount,
-                "Двум духам цель еды на этапе 2 — 32: " + pair.post()
-                        + " Иначе тест demand_TargetGrowsWithSpirits_RequestCoversWholeShortage перестанет ловить эту поломку. При смене demand_TargetGrowsWithSpirits_RequestCoversWholeShortage проверь это утверждение.");
+                "Двум духам норма еды — 16: цель растёт только с числом ртов Иначе тест"
+                        + " demand_TargetGrowsWithSpirits_RequestCoversWholeShortage перестанет ловить эту"
+                        + " поломку. При смене demand_TargetGrowsWithSpirits_RequestCoversWholeShortage проверь"
+                        + " graph.json food.perSpirit и GraphTickets.count.");
         assertTrue(
                 twoCount > oneCount,
                 "Цель по типу растёт с числом духов, а не фиксирована: " + oneCount + " → " + twoCount

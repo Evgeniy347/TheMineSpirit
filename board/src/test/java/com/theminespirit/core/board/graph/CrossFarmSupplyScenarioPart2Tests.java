@@ -40,6 +40,26 @@ import org.junit.jupiter.api.Test;
 
 class CrossFarmSupplyScenarioPart2Tests {
     @Test
+    void field_EmptyWithoutSeeds_DefersPlantingAndRaisesGather() {
+        GraphWorld world = stageTwo().with("wheat_seeds", 0).event("field_empty");
+        GraphPlan plan = world.plan();
+        GraphPlan.Task plant = task(plan, "event:field_empty:plant_crop");
+
+        assertFalse(
+                plant.feasible(),
+                "Пустое поле без семян не должно выдавать посев как выполнимый: иначе дух получит"
+                        + " задание, которое заведомо упадёт Иначе тест field_EmptyWithoutSeeds_DefersPlantingAndRaisesGather"
+                        + " перестанет ловить эту поломку. При смене field_EmptyWithoutSeeds_DefersPlantingAndRaisesGather"
+                        + " проверь farm.json field_empty consumes wheat_seeds.");
+        assertTrue(
+                plan.raised("gather_seeds"),
+                "Событие пустого поля обязано поднять сбор семян: иначе plant_crop навсегда останется"
+                        + " невыполнимым и поле не засеется Иначе тест field_EmptyWithoutSeeds_DefersPlantingAndRaisesGather"
+                        + " перестанет ловить эту поломку. При смене field_EmptyWithoutSeeds_DefersPlantingAndRaisesGather"
+                        + " проверь field_empty push wheat_seeds.");
+    }
+
+    @Test
     void hunger_NoFoodButExpeditionReady_HungrySpiritDoesNotLeave() {
         GraphWorld world = stageTwo();
         world.tools("spirit-2", 1);

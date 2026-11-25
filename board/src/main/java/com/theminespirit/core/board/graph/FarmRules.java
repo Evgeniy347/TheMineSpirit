@@ -36,7 +36,7 @@ public final class FarmRules {
         return herds;
     }
 
-    public record Signals(boolean orchardEmpty, boolean hasSapling, boolean hasFeed) {}
+    public record Signals(boolean orchardEmpty, boolean hasFeed) {}
 
     public static Set<String> events(
             Map<String, Integer> herds,
@@ -44,7 +44,6 @@ public final class FarmRules {
             SupplyGraph graph,
             int spirits,
             Crops crops,
-            int seeds,
             Signals signals) {
         Set<String> events = new LinkedHashSet<>();
         if (crops.ready() > 0) {
@@ -53,7 +52,7 @@ public final class FarmRules {
         if (crops.dry() > 0) {
             events.add("crop_dry");
         }
-        if (crops.empty() > 0 && seeds > 0) {
+        if (crops.empty() > 0) {
             events.add("field_empty");
         }
         boolean hungry = adults.values().stream().mapToInt(Integer::intValue).sum() > 0 && !signals.hasFeed();
@@ -67,7 +66,7 @@ public final class FarmRules {
         if (full) {
             events.add("pen_full");
         }
-        if (signals.orchardEmpty() && signals.hasSapling()) {
+        if (signals.orchardEmpty()) {
             events.add("orchard_empty");
         }
         return Set.copyOf(events);

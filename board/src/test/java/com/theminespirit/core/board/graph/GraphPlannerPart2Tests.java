@@ -134,6 +134,25 @@ class GraphPlannerPart2Tests {
     }
 
     @Test
+    void plan_FoodNorm_PerSpirit() {
+        GraphWorld one = GraphWorld.settled();
+        GraphWorld two = GraphWorld.settled().tools("spirit-2", 1);
+        SupplyGraph.Item food = GraphWorld.GRAPH.items().get("food");
+
+        assertTrue(
+                food.perSpirit(),
+                "Запас еды задаётся нормой на духа: иначе восемь единиц на всё поселение кажутся"
+                        + " достаточными, пока шесть голодных ртов ждут работы Иначе тест plan_FoodNorm_PerSpirit"
+                        + " перестанет ловить эту поломку. При смене plan_FoodNorm_PerSpirit проверь graph.json food.");
+        assertEquals(
+                GraphLack.threshold(food, one.state()) * 2,
+                GraphLack.threshold(food, two.state()),
+                "Два духа требуют вдвое больше еды, как и брони: иначе рацион не масштабируется"
+                        + " вместе с поселением Иначе тест plan_FoodNorm_PerSpirit перестанет ловить эту"
+                        + " поломку. При смене plan_FoodNorm_PerSpirit проверь GraphLack.threshold.");
+    }
+
+    @Test
     void plan_ArmorNorms_PerSpiritAndByStage() {
         GraphWorld one = GraphWorld.settled();
         one.stage = 3;

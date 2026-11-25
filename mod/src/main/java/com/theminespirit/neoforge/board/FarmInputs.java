@@ -41,13 +41,10 @@ final class FarmInputs {
         Map<String, Integer> stock = new LinkedHashMap<>(state.stock());
         herds.forEach((herd, count) -> stock.merge(herd, count, Math::max));
         FarmRules.Crops crops = crops(level, scan.home());
-        int seeds = sum(graph, stock, "#seeds");
         StageSite site = scan.stage();
-        boolean orchardEmpty = siteEmpty(level, site.orchardSaplings(), site.orchardWood(), stock);
-        boolean orchardSapling = siteStocked(site.orchardWood(), stock);
+        boolean orchardEmpty = siteEmpty(level, site.orchardSaplings());
         for (OrchardPlot plot : site.extraOrchards()) {
-            orchardEmpty |= siteEmpty(level, plot.saplings(), plot.wood(), stock);
-            orchardSapling |= siteStocked(plot.wood(), stock);
+            orchardEmpty |= siteEmpty(level, plot.saplings());
         }
         Set<String> world = new HashSet<>(state.world());
         orchardGrown(world, level, site.orchardSaplings(), site.orchardWood());
@@ -63,8 +60,7 @@ final class FarmInputs {
                         graph,
                         state.spirits(),
                         crops,
-                        seeds,
-                        new FarmRules.Signals(orchardEmpty, orchardSapling, hasFeed)));
+                        new FarmRules.Signals(orchardEmpty, hasFeed)));
         return new GraphState(
                 stock,
                 state.stage(),
@@ -86,16 +82,10 @@ final class FarmInputs {
         }
     }
 
-    private static boolean siteEmpty(
-            ServerLevel level, List<BlockCoord> spots, String wood, Map<String, Integer> stock) {
-        return siteStocked(wood, stock)
-                && spots.stream()
-                        .anyMatch(spot -> level.isLoaded(pos(spot))
-                                && level.getBlockState(pos(spot)).isAir());
-    }
-
-    private static boolean siteStocked(String wood, Map<String, Integer> stock) {
-        return stock.getOrDefault(wood + "_sapling", 0) > 0;
+    private static boolean siteEmpty(ServerLevel level, List<BlockCoord> spots) {
+        return spots.stream()
+                .anyMatch(spot -> level.isLoaded(pos(spot))
+                        && level.getBlockState(pos(spot)).isAir());
     }
 
     private static boolean grown(ServerLevel level, BlockCoord spot) {

@@ -6,6 +6,7 @@ import static com.theminespirit.core.board.graph.GraphCaseFixtures.ids;
 import static com.theminespirit.core.board.graph.GraphCaseFixtures.materialPlan;
 import static com.theminespirit.core.board.graph.GraphCaseFixtures.tickets;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.board.api.BoardCase;
@@ -156,6 +157,29 @@ class GraphTreeCasesTests {
                 !plan.raised("chop_oak_log"),
                 "Брёвен достаточно — фоновая рубка не мешает посадке сада: " + plan.task("chop_oak_log")
                         + " Иначе тест plan_OrchardEmptyWithSaplings_ReplantsWithoutWaitingBuild перестанет ловить эту поломку. При смене plan_OrchardEmptyWithSaplings_ReplantsWithoutWaitingBuild проверь это утверждение.");
+    }
+
+    @Test
+    void plan_OrchardEmptyWithoutSaplings_RaisesGatherAndDefersPlanting() {
+        GraphWorld world = GraphWorld.settled().with("oak_sapling", 0).event("orchard_empty");
+        GraphPlan plan = world.plan();
+        GraphPlan.Task replant = plan.task("event:orchard_empty:replant_orchard")
+                .orElseThrow(() -> new AssertionError("Пустой сад обязан дать узел посадки: " + ids(plan)));
+
+        assertFalse(
+                replant.feasible(),
+                "Без саженца посадка не должна выдаваться как выполнимая: иначе дух получит"
+                        + " невыполнимую задачу и будет падать вместо добычи саженца Иначе тест"
+                        + " plan_OrchardEmptyWithoutSaplings_RaisesGatherAndDefersPlanting перестанет"
+                        + " ловить эту поломку. При смене plan_OrchardEmptyWithoutSaplings_RaisesGatherAndDefersPlanting"
+                        + " проверь farm.json consumes #saplings и GraphEventFacts.feasible.");
+        assertTrue(
+                plan.raised("gather_oak_sapling"),
+                "Пустой сад без саженца обязан поднять сбор саженцев: иначе replant навсегда останется"
+                        + " невыполнимым, а сад не восстановится Иначе тест"
+                        + " plan_OrchardEmptyWithoutSaplings_RaisesGatherAndDefersPlanting перестанет"
+                        + " ловить эту поломку. При смене plan_OrchardEmptyWithoutSaplings_RaisesGatherAndDefersPlanting"
+                        + " проверь orchard_empty push #saplings.");
     }
 
     @Test

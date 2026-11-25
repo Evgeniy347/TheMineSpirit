@@ -111,7 +111,8 @@
     "food": {
       "xmin": 8,
       "k": 1,
-      "base": 15
+      "base": 15,
+      "perSpirit": true
     },
     "wheat_seeds": {
       "xmin": 8,

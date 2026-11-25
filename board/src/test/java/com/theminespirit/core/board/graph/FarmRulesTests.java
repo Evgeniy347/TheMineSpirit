@@ -30,8 +30,7 @@ class FarmRulesTests {
                 GRAPH,
                 1,
                 new FarmRules.Crops(4, 2, 1),
-                8,
-                new FarmRules.Signals(false, false, true));
+                new FarmRules.Signals(false, true));
 
         assertTrue(
                 events.contains("crop_ready"),
@@ -55,8 +54,7 @@ class FarmRulesTests {
                 GRAPH,
                 1,
                 new FarmRules.Crops(0, 0, 0),
-                0,
-                new FarmRules.Signals(false, false, true));
+                new FarmRules.Signals(false, true));
 
         assertTrue(
                 events.contains("pen_full"),
@@ -72,8 +70,7 @@ class FarmRulesTests {
                 GRAPH,
                 1,
                 new FarmRules.Crops(0, 0, 0),
-                0,
-                new FarmRules.Signals(false, false, false));
+                new FarmRules.Signals(false, false));
 
         assertTrue(
                 events.contains("animal_starving"),
@@ -82,17 +79,39 @@ class FarmRulesTests {
     }
 
     @Test
+    void events_EmptyFieldWithoutSeeds_AddsPlanting() {
+        Set<String> events = FarmRules.events(
+                Map.of(), Map.of(), GRAPH, 1, new FarmRules.Crops(0, 0, 1), new FarmRules.Signals(false, true));
+
+        assertTrue(
+                events.contains("field_empty"),
+                "Пустая грядка без семян всё равно должна дать событие посева: GraphEventFacts отметит"
+                        + " plant_crop невыполнимым, а push wheat_seeds заставит граф добыть семена Иначе"
+                        + " поле останется пустым навсегда Иначе тест events_EmptyFieldWithoutSeeds_AddsPlanting"
+                        + " перестанет ловить эту поломку. При смене events_EmptyFieldWithoutSeeds_AddsPlanting"
+                        + " проверь farm.json field_empty и GraphEventFacts.feasible.");
+    }
+
+    @Test
+    void events_EmptyOrchardWithoutSapling_AddsReplant() {
+        Set<String> events = FarmRules.events(
+                Map.of(), Map.of(), GRAPH, 1, new FarmRules.Crops(0, 0, 0), new FarmRules.Signals(true, true));
+
+        assertTrue(
+                events.contains("orchard_empty"),
+                "Пустое место сада без саженца должно дать событие replant: граф поднимет #saplings,"
+                        + " а сама посадка будет невыполнима до добычи саженца Иначе сад не восстанавливается"
+                        + " после рубки Иначе тест events_EmptyOrchardWithoutSapling_AddsReplant перестанет"
+                        + " ловить эту поломку. При смене events_EmptyOrchardWithoutSapling_AddsReplant проверь"
+                        + " farm.json orchard_empty и GraphHarvestPost.");
+    }
+
+    @Test
     void events_EmptyOrchardWithSapling_AddsReplant() {
         Set<String> empty = FarmRules.events(
-                Map.of(), Map.of(), GRAPH, 1, new FarmRules.Crops(0, 0, 0), 0, new FarmRules.Signals(true, true, true));
+                Map.of(), Map.of(), GRAPH, 1, new FarmRules.Crops(0, 0, 0), new FarmRules.Signals(true, true));
         Set<String> withTree = FarmRules.events(
-                Map.of(),
-                Map.of(),
-                GRAPH,
-                1,
-                new FarmRules.Crops(0, 0, 0),
-                0,
-                new FarmRules.Signals(false, true, true));
+                Map.of(), Map.of(), GRAPH, 1, new FarmRules.Crops(0, 0, 0), new FarmRules.Signals(false, true));
 
         assertTrue(
                 empty.contains("orchard_empty"),

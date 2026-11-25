@@ -259,7 +259,8 @@
         {
           "id": "replant_orchard",
           "case": "BUILD_ORCHARD",
-          "base": 40
+          "base": 40,
+          "consumes": {"#saplings": 1}
         }
       ],
       "push": {
