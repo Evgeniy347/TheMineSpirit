@@ -12,7 +12,7 @@ final class TownWallCheck {
 
     private TownWallCheck() {}
 
-    static void validate(TownMap map, ColumnMask region, ColumnMask water, List<TownMapFinding> findings) {
+    static void validate(TownMap map, ColumnMask region, List<TownMapFinding> findings) {
         Set<ColumnMask.Cell> cells = new HashSet<>();
         boolean broken = false;
         for (TownMap.WallSegment segment : map.wall()) {
@@ -44,11 +44,6 @@ final class TownWallCheck {
             if (!region.contains(cell.x(), cell.z())) {
                 findings.add(new TownMapFinding(
                         "wall", "outside", "стена выходит за границу поселения в " + cell.x() + "," + cell.z()));
-                return;
-            }
-            if (water.contains(cell.x(), cell.z())) {
-                findings.add(
-                        new TownMapFinding("wall", "water", "стена заходит в воду в " + cell.x() + "," + cell.z()));
                 return;
             }
             int degree = 0;

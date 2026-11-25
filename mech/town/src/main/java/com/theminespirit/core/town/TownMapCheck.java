@@ -131,7 +131,7 @@ public final class TownMapCheck {
                     findings);
         }
         checkStreetNetwork(map.streets(), region, previous, findings);
-        TownWallCheck.validate(map, region, water, findings);
+        TownWallCheck.validate(map, region, findings);
         return List.copyOf(findings);
     }
 

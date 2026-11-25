@@ -99,6 +99,20 @@ class TownMapWaterTests {
                         + " Иначе тест check_StreetOverPondAtMaskEdge_WaterFinding перестанет ловить эту поломку. При смене check_StreetOverPondAtMaskEdge_WaterFinding проверь ошибку воды у улицы.");
     }
 
+    @Test
+    void check_WallOverWater_NoWaterFinding() {
+        List<TownMapFinding> findings =
+                TownMapCheck.validate(TownMapFixtures.small(), RULES, TownMapFixtures.REGION, pond(50, 199, 60, 199));
+
+        assertEquals(
+                List.of(),
+                findings,
+                "Стена по воде допустима: граница поселения часто идёт по берегу, и забор не считает воду "
+                        + "препятствием; получено " + findings
+                        + " Иначе тест check_WallOverWater_NoWaterFinding перестанет ловить эту поломку. При смене "
+                        + "check_WallOverWater_NoWaterFinding проверь отсутствие ошибки воды у стены.");
+    }
+
     private static TownMap streetMap() {
         return new TownMap(
                 new TownMap.MapPoint(100, 100),
