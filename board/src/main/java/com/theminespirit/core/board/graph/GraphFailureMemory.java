@@ -131,6 +131,14 @@ public final class GraphFailureMemory {
         return recent(node, target, now, DEFAULT_HALF_LIFE_TICKS);
     }
 
+    public Optional<GraphFeedback.Failure> recentPath(String node, String target, long now) {
+        return recentPath(node, target, now, DEFAULT_HALF_LIFE_TICKS);
+    }
+
+    public Optional<GraphFeedback.Failure> recentPath(String node, String target, long now, double halfLifeTicks) {
+        return recent(node, target, now, halfLifeTicks).filter(failure -> unreachable(failure.need()));
+    }
+
     public Set<String> unreachablePoints(long now, double halfLifeTicks) {
         Set<String> points = new TreeSet<>();
         for (GraphFeedback.Failure failure : facts(now, halfLifeTicks)) {

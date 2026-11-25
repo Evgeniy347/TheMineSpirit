@@ -91,6 +91,28 @@ class GraphFailureMemoryTests {
     }
 
     @Test
+    void recentPath_ItemFailure_DoesNotBlockTargetAsUnreachable() {
+        GraphFailureMemory memory = new GraphFailureMemory();
+        memory.note("more_light_dark_spot", "-75,109,-268", new GraphBlock.Item("torch", 1), 100);
+
+        assertTrue(
+                memory.recentPath("more_light_dark_spot", "-75,109,-268", 100).isEmpty(),
+                "Нехватка факела не доказывает недостижимость точки: recentPath должен пропускать"
+                        + " только отказ пути, иначе освещение заблокируется из-за материала Иначе тест"
+                        + " recentPath_ItemFailure_DoesNotBlockTargetAsUnreachable перестанет ловить"
+                        + " эту поломку. При смене recentPath_ItemFailure_DoesNotBlockTargetAsUnreachable"
+                        + " проверь GraphFailureMemory.unreachable.");
+        memory.note("more_light_dark_spot", "-75,109,-268", new GraphBlock.Path("-75,109,-268"), 120);
+        assertTrue(
+                memory.recentPath("more_light_dark_spot", "-75,109,-268", 120).isPresent(),
+                "После отказа пути та же точка временно блокируется: граф не должен снова выдавать"
+                        + " её другому духу каждые 300 тиков Иначе тест"
+                        + " recentPath_ItemFailure_DoesNotBlockTargetAsUnreachable перестанет ловить"
+                        + " живой случай LIGHTING от 25.11. При смене"
+                        + " recentPath_ItemFailure_DoesNotBlockTargetAsUnreachable проверь MorePost.lightDarkSpot.");
+    }
+
+    @Test
     void saved_RestoredMemory_KeepsDecayAndNeed() {
         GraphFailureMemory memory = new GraphFailureMemory();
         memory.note("chop_jungle_log", "10,64,20", new GraphBlock.Path("10,64,20"), 100);

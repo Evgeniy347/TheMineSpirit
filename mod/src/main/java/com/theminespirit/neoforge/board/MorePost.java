@@ -4,6 +4,7 @@ import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.board.MorePlans;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.api.BoardCase;
+import com.theminespirit.core.board.graph.GraphFailureMemory;
 import com.theminespirit.core.board.graph.GraphPlan;
 import com.theminespirit.core.board.graph.GraphTickets;
 import com.theminespirit.core.observation.BlockCoord;
@@ -101,6 +102,15 @@ final class MorePost {
         BlockCoord dark =
                 MoreScan.darkest(post.level, post.scan.stage().enclosure().cells());
         if (dark == null) {
+            return false;
+        }
+        String point = GraphFailureMemory.target(dark.x(), dark.y(), dark.z());
+        if (post.service
+                .sources
+                .graphFailures()
+                .recentPath(ticket.node(), point, post.now)
+                .isPresent()) {
+            post.waiting().add(ticket.id());
             return false;
         }
         return MoreActions.script(post, ticket, BoardCase.LIGHTING, dark, null);
