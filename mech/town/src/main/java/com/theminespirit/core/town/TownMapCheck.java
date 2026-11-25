@@ -127,7 +127,7 @@ public final class TownMapCheck {
                     ponds,
                     streets,
                     false,
-                    false,
+                    true,
                     findings);
         }
         checkStreetNetwork(map.streets(), region, previous, findings);

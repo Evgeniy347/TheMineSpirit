@@ -54,21 +54,57 @@ class TownMapWaterTests {
     }
 
     @Test
-    void check_StreetOverSmallPond_WaterFinding() {
-        TownMap base = noWall();
-        TownMap map = new TownMap(
-                base.anchor(),
-                List.of(),
-                List.of(new TownMap.MapStreet("pond_street", TownMapRules.SIDE, 9, 59, 15, 65)),
-                List.of());
+    void check_StreetOverSmallPond_NoWaterFinding() {
+        TownMap map = streetMap();
 
         List<TownMapFinding> findings = TownMapCheck.validate(map, RULES, TownMapFixtures.REGION, pond(12, 62, 14, 64));
+
+        assertEquals(
+                List.of(),
+                findings,
+                "Улица поверх лужи допустима: пруды меньше 16×16 игнорируются так же, как под участками; получено "
+                        + findings
+                        + " Иначе тест check_StreetOverSmallPond_NoWaterFinding перестанет ловить эту поломку. При смене check_StreetOverSmallPond_NoWaterFinding проверь отсутствие ошибок у улицы над лужей.");
+    }
+
+    @Test
+    void check_StreetOverLargePond_WaterFinding() {
+        TownMap map = streetMap();
+
+        List<TownMapFinding> findings = TownMapCheck.validate(map, RULES, TownMapFixtures.REGION, pond(12, 62, 27, 77));
 
         assertTrue(
                 findings.stream()
                         .anyMatch(finding -> "water".equals(finding.kind()) && "pond_street".equals(finding.object())),
-                "Улица поверх лужи недопустима: дорога не застраивает воду даже малого пруда; получено " + findings
-                        + " Иначе тест check_StreetOverSmallPond_WaterFinding перестанет ловить эту поломку. При смене check_StreetOverSmallPond_WaterFinding проверь это утверждение.");
+                "Улица поверх пруда 16×16 и больше — ошибка: это уже озеро, а не лужа, и дорога по воде не пройдёт; "
+                        + "получено " + findings
+                        + " Иначе тест check_StreetOverLargePond_WaterFinding перестанет ловить эту поломку. При смене check_StreetOverLargePond_WaterFinding проверь ошибку воды у улицы.");
+    }
+
+    @Test
+    void check_StreetOverPondAtMaskEdge_WaterFinding() {
+        TownMap map = new TownMap(
+                new TownMap.MapPoint(100, 100),
+                List.of(),
+                List.of(new TownMap.MapStreet("pond_street", TownMapRules.SIDE, 0, 59, 6, 65)),
+                List.of());
+
+        List<TownMapFinding> findings = TownMapCheck.validate(map, RULES, TownMapFixtures.REGION, pond(0, 60, 2, 62));
+
+        assertTrue(
+                findings.stream()
+                        .anyMatch(finding -> "water".equals(finding.kind()) && "pond_street".equals(finding.object())),
+                "Вода у края пробы считается открытой и для дороги: уходящий за край водоём не лужа; получено "
+                        + findings
+                        + " Иначе тест check_StreetOverPondAtMaskEdge_WaterFinding перестанет ловить эту поломку. При смене check_StreetOverPondAtMaskEdge_WaterFinding проверь ошибку воды у улицы.");
+    }
+
+    private static TownMap streetMap() {
+        return new TownMap(
+                new TownMap.MapPoint(100, 100),
+                List.of(),
+                List.of(new TownMap.MapStreet("pond_street", TownMapRules.SIDE, 9, 59, 15, 65)),
+                List.of());
     }
 
     private static TownMap noWall() {
