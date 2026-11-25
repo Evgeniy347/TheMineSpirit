@@ -17,9 +17,10 @@ class ProtectionMemoTests {
 
         assertTrue(
                 memo.certified(cell),
-                "Клетка без защиты не проверяется повторно, пока ревизии аренды и журнала те же: иначе"
-                        + " проверка защиты снова идёт по всей площади расчистки каждый такт"
-                        + " Иначе тест certify_SameStamp_StaysKnown перестанет ловить эту поломку. При смене certify_SameStamp_StaysKnown проверь это утверждение.");
+                "Клетка без защиты не проверяется повторно, пока ключ памятки тот же (окно времени и поколение "
+                        + "плана): иначе проверка защиты снова идёт по всей площади расчистки каждый такт и держит "
+                        + "серверный тик. При смене certify_SameStamp_StaysKnown проверь ClearBlocked.protectionStamp "
+                        + "и ClearSweepRun.pick");
     }
 
     @Test
@@ -32,9 +33,31 @@ class ProtectionMemoTests {
 
         assertFalse(
                 memo.certified(cell),
-                "Смена ревизии аренды или плана сбрасывает памятку: иначе новая аренда не защитила бы"
-                        + " клетку, которую дух уже считает свободной"
-                        + " Иначе тест refresh_NewStamp_ForgetsKnownCells перестанет ловить эту поломку. При смене refresh_NewStamp_ForgetsKnownCells проверь это утверждение.");
+                "Смена ключа памятки сбрасывает проверенные клетки: без этого новый план или истёкшее разрешение "
+                        + "не защитили бы клетку, которую дух уже считает свободной, и он снёс бы чужую постройку. "
+                        + "При смене refresh_NewStamp_ForgetsKnownCells проверь StageSite.protection и "
+                        + "PlotCellStructure.generation");
+    }
+
+    @Test
+    void certify_LargeSweep_KeepsCertificatesBetweenPicks() {
+        ProtectionMemo memo = new ProtectionMemo();
+        memo.refresh(11);
+        for (int index = 0; index < 50_000; index++) {
+            memo.certify(new BlockCoord(index, 64, index % 97));
+        }
+        memo.refresh(11);
+        boolean all = true;
+        for (int index = 0; index < 50_000; index++) {
+            all &= memo.certified(new BlockCoord(index, 64, index % 97));
+        }
+
+        assertTrue(
+                all,
+                "Памятка большой сессии расчистки обязана пережить следующий такт при том же ключе: иначе "
+                        + "проверка защиты повторяет проход по сотням тысяч клеток и сервер замирает на секунды. "
+                        + "При смене certify_LargeSweep_KeepsCertificatesBetweenPicks проверь ClearBlocked."
+                        + "dropProtected и размер ключа памятки");
     }
 
     @Test

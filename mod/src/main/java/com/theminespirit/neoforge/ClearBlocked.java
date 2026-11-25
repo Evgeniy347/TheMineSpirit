@@ -10,10 +10,8 @@ import com.theminespirit.core.mining.api.MiningSafety;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.policy.ProtectionMemo;
-import com.theminespirit.neoforge.board.BoardRegistry;
 import com.theminespirit.neoforge.board.PlotCellStructure;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
-import com.theminespirit.neoforge.lease.LeaseData;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.BlockPos;
@@ -27,6 +25,7 @@ import org.slf4j.Logger;
 final class ClearBlocked {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final long SLOW_PROTECTION_SCAN_NANOS = 200_000_000L;
+    private static final long PROTECTION_REFRESH_MS = 60_000L;
 
     record Sweep(
             List<ClearSummary.Leftover> leftover, int unsafe, int noStand, int unreachable, int excluded, int planned) {
@@ -70,16 +69,9 @@ final class ClearBlocked {
         return new Sweep(leftover, 0, 0, 0, excluded, 0);
     }
 
-    static long protectionStamp(SpiritEntity spirit) {
-        long lease = 0;
-        long ledger = 0;
-        if (spirit.level() instanceof ServerLevel server) {
-            lease = LeaseData.get(server).revision();
-            ledger = BoardRegistry.peek(server)
-                    .map(service -> service.board().ledger().revision())
-                    .orElse(0L);
-        }
-        return lease * 31L + ledger * 131L + PlotCellStructure.generation() * 7919L;
+    static long protectionStamp() {
+        long window = System.currentTimeMillis() / PROTECTION_REFRESH_MS;
+        return window * 104729L + PlotCellStructure.generation() * 7919L;
     }
 
     Sweep dropProtected(List<BlockCoord> remaining, SpiritEntity spirit, boolean demolish, ProtectionMemo memo) {

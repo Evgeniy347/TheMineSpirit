@@ -70,7 +70,7 @@ final class ClearSweepRun {
         }
         session.apply(session.blocked.dropExcluded(session.remaining));
         session.apply(session.blocked.dropPlanned(session.remaining));
-        protection.refresh(ClearBlocked.protectionStamp(session.spirit));
+        protection.refresh(ClearBlocked.protectionStamp());
         session.apply(session.blocked.dropProtected(session.remaining, session.spirit, session.demolish, protection));
         session.noteSkipped(session.felling.dropPartial(session.remaining));
         if (session.remaining.isEmpty()) {
