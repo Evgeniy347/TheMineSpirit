@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.board.GraphBlock;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -100,6 +101,37 @@ class DigGraphPlannerTests {
                 CrossScene.workNotBehind(plan, rescue),
                 "Жизнь выше обычной работы: " + plan.tasks()
                         + " Иначе тест stuckSpirit_NotTrapped_GetsRescueAndRestore перестанет ловить эту поломку. При смене stuckSpirit_NotTrapped_GetsRescueAndRestore проверь это утверждение.");
+    }
+
+    @Test
+    void stuckSpirit_ToolFailure_KeepsRescueFeasibleAndRaisesPickaxe() {
+        GraphWorld world = GraphWorld.settled().facts(facts(stuck(false, true, null)));
+        world.tools("spirit-1", -1);
+        world.blocks(new GraphBlock("rescue_spirit", "", new GraphBlock.Tool("pickaxe", 0, "spirit-1")));
+        GraphPlan plan = world.plan();
+        GraphPlan.Task rescue = plan.tasks().stream()
+                .filter(task -> "rescue_spirit".equals(task.id()))
+                .findFirst()
+                .orElseThrow();
+
+        assertTrue(
+                rescue.feasible(),
+                "Нехватка кирки у застрявшего духа не должна убирать само спасение: граф обязан оставить"
+                        + " rescue выполнимым, чтобы RescueGroupPost выбрал помощника с киркой, а не оставил"
+                        + " духа в ловушке Иначе тест stuckSpirit_ToolFailure_KeepsRescueFeasibleAndRaisesPickaxe"
+                        + " перестанет ловить живой случай spirit-1 от 25.11. При смене"
+                        + " stuckSpirit_ToolFailure_KeepsRescueFeasibleAndRaisesPickaxe проверь GraphBlocks"
+                        + " и RescueGroupPost.");
+        assertTrue(
+                plan.tasks().stream()
+                        .filter(task ->
+                                task.id().contains("pickaxe@") && task.id().endsWith("@spirit-1"))
+                        .anyMatch(GraphPlan.Task::raised),
+                "Вместе с выполнимым спасением граф поднимает кирку застрявшему духу: иначе самоспасение"
+                        + " снова упрётся в камень без инструмента Иначе тест"
+                        + " stuckSpirit_ToolFailure_KeepsRescueFeasibleAndRaisesPickaxe перестанет ловить"
+                        + " эту поломку. При смене stuckSpirit_ToolFailure_KeepsRescueFeasibleAndRaisesPickaxe"
+                        + " проверь GraphBlocks.pushNeed и живой rescue.");
     }
 
     @Test

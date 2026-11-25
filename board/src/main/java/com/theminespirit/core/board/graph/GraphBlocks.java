@@ -41,9 +41,14 @@ final class GraphBlocks {
                 continue;
             }
             String reason = text(need);
-            blocked.put(block.node(), reason);
+            boolean rescue = rescue(block.node());
+            if (!rescue || need instanceof GraphBlock.Impossible) {
+                blocked.put(block.node(), reason);
+            }
             if (need instanceof GraphBlock.Impossible impossible) {
-                notice(impossible.node(), "невозможно: " + reason);
+                if (!rescue) {
+                    notice(impossible.node(), "невозможно: " + reason);
+                }
                 continue;
             }
             if (need instanceof GraphBlock.Item item
@@ -51,9 +56,11 @@ final class GraphBlocks {
                     && graph.producers(item.item()).isEmpty()) {
                 String missing = "нет источника " + item.item() + " в данных графа: нужда " + item.count()
                         + " не снимется ни добычей, ни крафтом";
-                blocked.put(block.node(), missing);
-                notice(block.node(), "невозможно: " + missing);
-                continue;
+                if (!rescue) {
+                    blocked.put(block.node(), missing);
+                    notice(block.node(), "невозможно: " + missing);
+                    continue;
+                }
             }
             pushNeed(
                     block.node(),
@@ -67,6 +74,10 @@ final class GraphBlocks {
             return new GraphBlock.Item(GraphNames.graphItem(item.item()), item.count());
         }
         return need;
+    }
+
+    private static boolean rescue(String node) {
+        return "rescue_spirit".equals(node) || node.startsWith("rescue_spirit@");
     }
 
     @Nullable
