@@ -16,9 +16,11 @@ final class StagePlotSurvey {
         BlockCoord center = SettlementPlot.center(homes);
         TownSurvey.town(level, service, store, center, now);
         Optional<SettlementPlot> stored = store.plot();
-        if (stored.isPresent() && stored.orElseThrow().covers(center)) {
-            return Optional.of(PlotWood.checked(level, service, store, stored.orElseThrow(), now));
+        if (stored.isEmpty()) {
+            return Optional.empty();
         }
-        return Optional.empty();
+        SettlementPlot plot = stored.orElseThrow();
+        plot.requireCovered(center);
+        return Optional.of(PlotWood.checked(level, service, store, plot, now));
     }
 }

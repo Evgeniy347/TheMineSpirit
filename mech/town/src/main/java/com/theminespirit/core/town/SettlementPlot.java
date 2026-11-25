@@ -58,6 +58,14 @@ public record SettlementPlot(BlockCoord anchor, int min, int max, int columns, S
         return Math.abs(center.x() - anchor.x()) <= DRIFT && Math.abs(center.z() - anchor.z()) <= DRIFT;
     }
 
+    public void requireCovered(BlockCoord center) {
+        Objects.requireNonNull(center, "Центр домов не может быть null: проверяется, тот ли это участок");
+        if (!covers(center)) {
+            throw new IllegalStateException("Участок " + anchor + " не покрывает центр поселения " + center
+                    + " (допуск " + DRIFT + "): поселение сдвинулось, участок нужно перемерить");
+        }
+    }
+
     public SettlementPlot withWood(String species) {
         return new SettlementPlot(anchor, min, max, columns, species);
     }

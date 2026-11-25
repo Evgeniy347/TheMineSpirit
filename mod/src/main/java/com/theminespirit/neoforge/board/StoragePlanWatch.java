@@ -1,8 +1,6 @@
 package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.BoardLedger;
-import com.theminespirit.core.board.BoardRules;
-import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.StageCatalog;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.api.BoardCase;
@@ -11,7 +9,6 @@ import com.theminespirit.core.inventory.ContainerSnapshot;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.ChestSpace;
 import com.theminespirit.core.town.SettlementReach;
-import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.neoforge.terminal.CraftTerminalService;
 import java.util.ArrayList;
@@ -28,45 +25,6 @@ final class StoragePlanWatch {
 
     static boolean handles(String node) {
         return NODE.equals(node);
-    }
-
-    static void tick(ServerLevel level, BoardService service) {
-        Optional<TownPlan> town = SettlementPlotStore.get(level).town();
-        if (town.isEmpty()) {
-            return;
-        }
-        Optional<StageSite> site = SettlementPlotStore.liveSite(level);
-        if (site.isEmpty()) {
-            return;
-        }
-        BoardLedger ledger = service.board().ledger();
-        long now = level.getGameTime();
-        for (String id :
-                pending(ledger, town.orElseThrow(), site.orElseThrow().anchor().y())) {
-            Optional<StageCatalog.Entry> entry = StageCatalog.entry(id);
-            Optional<BlockCoord> origin = StageCatalog.origin(
-                    id, town.orElseThrow(), site.orElseThrow().anchor().y());
-            String ticketId = "storage_build:" + id;
-            if (entry.isEmpty()
-                    || origin.isEmpty()
-                    || service.board().find(ticketId).isPresent()) {
-                continue;
-            }
-            service.submit(
-                    new BoardTicket(
-                            ticketId,
-                            BoardCase.BUILD_PLACED,
-                            Optional.empty(),
-                            BoardRules.priorityOf(BoardCase.BUILD_PLACED),
-                            now,
-                            1,
-                            BoardTicket.ALWAYS_CAUSE,
-                            List.of(),
-                            Map.of()),
-                    TicketTarget.at(origin.orElseThrow())
-                            .withScheme(entry.orElseThrow().scheme())
-                            .withBuilding(id));
-        }
     }
 
     static boolean post(GraphPost post, GraphTickets.Ticket ticket) {
@@ -91,9 +49,12 @@ final class StoragePlanWatch {
                             ticket.task().priority(),
                             ticket.id(),
                             Map.of()),
-                    TicketTarget.at(origin.orElseThrow())
-                            .withScheme(entry.orElseThrow().scheme())
-                            .withBuilding(id));
+                    StagePlacePost.level(
+                            TicketTarget.at(origin.orElseThrow())
+                                    .withScheme(entry.orElseThrow().scheme())
+                                    .withBuilding(id),
+                            post,
+                            id));
         }
         return true;
     }

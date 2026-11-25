@@ -56,7 +56,7 @@ final class StagePlacePost {
         return true;
     }
 
-    private static TicketTarget level(TicketTarget target, GraphPost post, String node) {
+    static TicketTarget level(TicketTarget target, GraphPost post, String node) {
         return SettlementPlotStore.get(post.level)
                 .town()
                 .flatMap(town -> town.placement(node))
