@@ -3,7 +3,8 @@ package com.theminespirit.neoforge;
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.mining.ClearOrder;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.policy.ProtectionMemo;
+import com.theminespirit.core.policy.PlanFilterGate;
+import com.theminespirit.neoforge.board.PlotCellStructure;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -28,7 +29,7 @@ final class ClearSweepRun {
     private @Nullable SweepPillar pillar;
     private @Nullable PillarDismantler dismantler;
     private final SweepUnload unload;
-    private final ProtectionMemo protection = new ProtectionMemo();
+    private final PlanFilterGate planFilter = new PlanFilterGate();
     private boolean finishAfterDescent;
     private int approachSpent;
     private int approaches;
@@ -69,9 +70,10 @@ final class ClearSweepRun {
             session.remaining.remove(0);
         }
         session.apply(session.blocked.dropExcluded(session.remaining));
-        session.apply(session.blocked.dropPlanned(session.remaining));
-        protection.refresh(ClearBlocked.protectionStamp());
-        session.apply(session.blocked.dropProtected(session.remaining, session.spirit, session.demolish, protection));
+        if (planFilter.due(PlotCellStructure.generation())) {
+            session.apply(session.blocked.dropPlanned(session.remaining));
+            session.apply(session.blocked.dropProtected(session.remaining, session.spirit, session.demolish));
+        }
         session.noteSkipped(session.felling.dropPartial(session.remaining));
         if (session.remaining.isEmpty()) {
             finish();

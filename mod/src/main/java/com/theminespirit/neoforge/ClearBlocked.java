@@ -9,8 +9,6 @@ import com.theminespirit.core.mining.api.BreakSafety;
 import com.theminespirit.core.mining.api.MiningSafety;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.BlockProtection;
-import com.theminespirit.core.policy.ProtectionMemo;
-import com.theminespirit.neoforge.board.PlotCellStructure;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +23,6 @@ import org.slf4j.Logger;
 final class ClearBlocked {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final long SLOW_PROTECTION_SCAN_NANOS = 200_000_000L;
-    private static final long PROTECTION_REFRESH_MS = 60_000L;
 
     record Sweep(
             List<ClearSummary.Leftover> leftover, int unsafe, int noStand, int unreachable, int excluded, int planned) {
@@ -69,27 +66,16 @@ final class ClearBlocked {
         return new Sweep(leftover, 0, 0, 0, excluded, 0);
     }
 
-    static long protectionStamp() {
-        long window = System.currentTimeMillis() / PROTECTION_REFRESH_MS;
-        return window * 104729L + PlotCellStructure.generation() * 7919L;
-    }
-
-    Sweep dropProtected(List<BlockCoord> remaining, SpiritEntity spirit, boolean demolish, ProtectionMemo memo) {
+    Sweep dropProtected(List<BlockCoord> remaining, SpiritEntity spirit, boolean demolish) {
         long started = System.nanoTime();
-        int scanned = 0;
         List<ClearSummary.Leftover> leftover = new ArrayList<>();
         int protectedCount = 0;
         for (int index = remaining.size() - 1; index >= 0; index--) {
             BlockCoord cell = remaining.get(index);
-            if (memo.certified(cell)) {
-                continue;
-            }
-            scanned++;
             BlockPos pos = new BlockPos(cell.x(), cell.y(), cell.z());
             BlockState state = level.getBlockState(pos);
             String reason = protectedReason(spirit, pos, state, demolish);
             if (reason == null) {
-                memo.certify(cell);
                 continue;
             }
             protectedCount++;
@@ -102,7 +88,7 @@ final class ClearBlocked {
                     "[clear] {}: проверка защиты {} клеток заняла {} мс — это время стоит серверный тик;"
                             + " искать дорогую проверку в защите поселения, а не в самом духе",
                     spirit.getName().getString(),
-                    scanned,
+                    remaining.size() + protectedCount,
                     spent / 1_000_000L);
         }
         return new Sweep(leftover, 0, 0, 0, 0, protectedCount);

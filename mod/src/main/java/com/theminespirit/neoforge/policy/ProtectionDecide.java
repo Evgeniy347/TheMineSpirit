@@ -94,7 +94,9 @@ final class ProtectionDecide {
         if (unprotectArea) {
             effective = PlotProtection.Ground.PLAYER_COMMAND;
         }
-        boolean structure = level instanceof ServerLevel server && PlotCellStructure.isStructure(server, pos);
+        boolean structure = protection.protectedCell()
+                && level instanceof ServerLevel server
+                && PlotCellStructure.isStructure(server, pos);
         PlotProtection.Decision plot =
                 PlotProtection.check(protection, coord, request.action(), effective, request.ownBuilding(), structure);
         if (plot instanceof PlotProtection.Refused refused) {

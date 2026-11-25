@@ -22,14 +22,28 @@ public final class PlotCellStructure {
     private static @Nullable Plan cachedPlan;
     private static Set<BlockCoord> cachedMine = Set.of();
     private static long generation;
+    private static @Nullable BlockPos checkedCell;
+    private static boolean checkedWithSite;
+    private static long checkedGeneration = -1;
+    private static boolean checkedStructure;
 
     private PlotCellStructure() {}
 
     public static boolean isStructure(ServerLevel level, BlockPos pos) {
         StageSite site = site(level);
-        if (site == null) {
-            return false;
+        boolean hasSite = site != null;
+        if (pos.equals(checkedCell) && checkedWithSite == hasSite && checkedGeneration == generation) {
+            return checkedStructure;
         }
+        boolean found = hasSite && computeStructure(site, pos);
+        checkedCell = pos.immutable();
+        checkedWithSite = hasSite;
+        checkedGeneration = generation;
+        checkedStructure = found;
+        return found;
+    }
+
+    private static boolean computeStructure(StageSite site, BlockPos pos) {
         SiteProtection protection = site.protection(pos.getX(), pos.getY(), pos.getZ());
         if (!protection.protectedCell()) {
             return false;

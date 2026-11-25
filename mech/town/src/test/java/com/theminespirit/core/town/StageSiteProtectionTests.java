@@ -58,7 +58,7 @@ class StageSiteProtectionTests {
                     protection,
                     at + " незащищённая клетка не несёт постройки — иначе расчистка пропускает обычный блок "
                             + "как чужую стену и не убирает его. При смене StageSite.protection проверь "
-                            + "ProtectionMemo и подсчёт пропусков в ClearAreaSession");
+                            + "ClearSweepRun.pick и подсчёт пропусков в ClearAreaSession");
         }
     }
 
