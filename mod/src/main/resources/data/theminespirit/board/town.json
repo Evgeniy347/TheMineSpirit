@@ -5,7 +5,7 @@
   "buildings": [
     {"id": "hut", "name": "Хижина", "width": 16, "depth": 16, "quarter": "nw", "level": true, "field": false, "rotate": true},
     {"id": "yard", "name": "Двор", "width": 16, "depth": 16, "quarter": "any", "level": true, "field": false, "rotate": true},
-    {"id": "mine", "name": "Спуск в шахту", "width": 5, "depth": 15, "quarter": "any", "level": true, "field": false, "rotate": false},
+    {"id": "mine", "name": "Спуск в шахту", "width": 16, "depth": 16, "quarter": "any", "level": true, "field": false, "rotate": false},
     {"id": "plaza", "name": "Площадь", "width": 32, "depth": 32, "quarter": "center", "level": true, "field": false, "rotate": true},
     {"id": "family_house_a", "name": "Дом семьи", "width": 32, "depth": 32, "quarter": "nw", "level": true, "field": false, "rotate": true},
     {"id": "family_house_b", "name": "Дом семьи", "width": 32, "depth": 32, "quarter": "nw", "level": true, "field": false, "rotate": true},

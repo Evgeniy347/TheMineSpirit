@@ -79,18 +79,20 @@ class MinePlotTests {
     }
 
     @Test
-    void snapshot_MineLot_MatchesMinePlot() {
+    void snapshot_MineLot_MatchesPlacement() {
         TownSnapshot snapshot = TownSnapshot.of(PLAN, SITE, Map.of(), List.of());
         TownSnapshot.Lot lot = snapshot.lots().stream()
                 .filter(found -> StageSites.MINE.equals(found.id()))
                 .findFirst()
                 .orElseThrow();
-        MinePlot plot = SITE.minePlot();
+        Placement mine = SITE.mine();
         assertEquals(
-                List.of(plot.x1(), plot.z1(), plot.width(), plot.depth()),
+                List.of(mine.x(), mine.z(), mine.width(), mine.depth()),
                 List.of(lot.x(), lot.z(), lot.width(), lot.depth()),
-                "На «Плане» участок шахты — тот же прямоугольник спуска, что рисует вкладка «Шахта»"
-                        + " Иначе тест snapshot_MineLot_MatchesMinePlot перестанет ловить эту поломку. При смене snapshot_MineLot_MatchesMinePlot проверь это утверждение.");
+                "На «Плане» участок шахты — площадка 16×16, а не подземный спуск: иначе вместо участка рисуется "
+                        + "полоса тоннеля и площадку не видно; получено " + lot
+                        + " Иначе тест snapshot_MineLot_MatchesPlacement перестанет ловить эту поломку. При смене "
+                        + "snapshot_MineLot_MatchesPlacement проверь прямоугольник участка.");
     }
 
     private static MineLayout layout() {

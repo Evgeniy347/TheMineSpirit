@@ -90,19 +90,7 @@ public record TownSnapshot(
     }
 
     private static Lot lot(Placement place, StageSite site, Progress progress) {
-        if (StageSites.MINE.equals(place.id())) {
-            MinePlot mine = site.minePlot();
-            return new Lot(
-                    place.id(),
-                    place.name(),
-                    place.stage(),
-                    mine.x1(),
-                    mine.z1(),
-                    mine.width(),
-                    mine.depth(),
-                    place.facing().id(),
-                    progress);
-        }
+        Objects.requireNonNull(site, "Место этапа не может быть null: снимок карты берётся из него");
         return new Lot(
                 place.id(),
                 place.name(),
