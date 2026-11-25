@@ -24,7 +24,9 @@ class TownDrawioTests {
                         && xml.contains("tmKind=\"plot\" tmId=\"hut\"")
                         && xml.contains("<mxGeometry x=\"20\" y=\"60\" width=\"32\" height=\"32\" as=\"geometry\"/>")
                         && xml.contains("tmKind=\"street\" tmId=\"main\"")
-                        && xml.contains("tmKind=\"wall\" tmX1=\"-20\"")
+                        && xml.contains("fillColor=#000000;rotation=0;")
+                        && xml.contains("<mxGeometry x=\"1\" y=\"19\" width=\"80\" height=\"4\" as=\"geometry\"/>")
+                        && !xml.contains("edge=\"1\" parent=\"1\" tmKind=\"wall\"")
                         && xml.contains("tmKind=\"meta\" tmFormat=\"1\" tmRevision=\"9\""),
                 "Выгрузка .drawio обязана нести PNG-подложку и фигуры в пикселях рамки: drawio режет style по «;», "
                         + "поэтому data URI идёт без «;base64» и картинка стоит последней; иначе подложка не "
@@ -64,6 +66,7 @@ class TownDrawioTests {
         assertTrue(
                 xml.contains("кольцо: ring")
                         && xml.contains("tmKindValue=\"side\"")
+                        && xml.contains("fillColor=#000000;rotation=45;")
                         && xml.contains("tmKind=\"wall\" tmX1=\"0\" tmZ1=\"0\" tmX2=\"10\" tmZ2=\"10\""),
                 "Кольцевая улица обязана подписываться, а боковая и диагональная стена — рисоваться отдельными "
                         + "фигурами: без этого в .drawio пропадут улица без координат и косая стена, и план "

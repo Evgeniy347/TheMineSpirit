@@ -151,15 +151,25 @@ public final class TownDrawio {
         int index = 0;
         for (TownMap.WallSegment segment : map.wall()) {
             index++;
-            edge(
+            double ax = pixel(segment.x1(), x1, scale);
+            double az = pixel(segment.z1(), z1, scale);
+            double bx = pixel(segment.x2(), x1, scale);
+            double bz = pixel(segment.z2(), z1, scale);
+            int length = Math.max(1, (int) Math.round(Math.hypot(bx - ax, bz - az)));
+            int thickness = Math.max(2, 2 * scale);
+            int rotation = (int) Math.round(Math.toDegrees(Math.atan2(bz - az, bx - ax)));
+            int left = (int) Math.round((ax + bx) / 2.0 - length / 2.0);
+            int top = (int) Math.round((az + bz) / 2.0 - thickness / 2.0);
+            vertex(
                     xml,
                     "wall-" + index,
                     "",
-                    "endArrow=none;html=1;rounded=0;strokeColor=#282828;strokeWidth=" + Math.max(2, 3 * scale) + ";",
-                    pixel(segment.x1(), x1, scale),
-                    pixel(segment.z1(), z1, scale),
-                    pixel(segment.x2(), x1, scale),
-                    pixel(segment.z2(), z1, scale),
+                    "rounded=0;whiteSpace=wrap;html=1;strokeWidth=1;strokeColor=#000000;fillColor=#000000;rotation="
+                            + rotation + ";",
+                    left,
+                    top,
+                    length,
+                    thickness,
                     "tmKind=\"wall\" tmX1=\"" + segment.x1() + "\" tmZ1=\"" + segment.z1() + "\" tmX2=\"" + segment.x2()
                             + "\" tmZ2=\"" + segment.z2() + "\"");
         }
