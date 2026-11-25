@@ -71,6 +71,10 @@ public final class SettlementScan {
         public static Strays empty() {
             return new Strays(Map.of(), List.of(), List.of(), List.of(), 0, 0);
         }
+
+        public static Strays unmeasured() {
+            return new Strays(Map.of(), List.of(), List.of(), List.of(), 1, 0);
+        }
     }
 
     private SettlementScan() {}
@@ -79,13 +83,32 @@ public final class SettlementScan {
         Objects.requireNonNull(columns, "Колонки участка не могут быть null: сканировать нечего");
         Objects.requireNonNull(rules, "Правила лишнего не могут быть null: без них не отличить мусор");
         Objects.requireNonNull(world, "Мир не может быть null: без него блоки не прочитать");
+        return Objects.requireNonNull(
+                scanSlice(columns, 0, columns.size(), level, rules, world).done(),
+                "Полный скан обязан вернуть результат: бюджет равен числу колонок");
+    }
+
+    public record Slice(
+            int nextIndex, boolean more, @Nullable Strays done) {}
+
+    public static Slice scanSlice(
+            List<ColumnMask.Cell> columns, int fromIndex, int columnBudget, int level, StrayRules rules, World world) {
+        Objects.requireNonNull(columns, "Колонки участка не могут быть null: сканировать нечего");
+        Objects.requireNonNull(rules, "Правила лишнего не могут быть null: без них не отличить мусор");
+        Objects.requireNonNull(world, "Мир не может быть null: без него блоки не прочитать");
+        if (fromIndex < 0 || fromIndex > columns.size()) {
+            throw new IllegalArgumentException("Срез скана от колонки " + fromIndex + " при размере " + columns.size()
+                    + ": продолжать можно только внутри списка");
+        }
         Map<BlockCoord, Integer> pits = new LinkedHashMap<>();
         List<BlockCoord> mounds = new ArrayList<>();
         List<BlockCoord> pillars = new ArrayList<>();
         List<StrayGroups.Cell> strays = new ArrayList<>();
         int unknown = 0;
         int natural = 0;
-        for (ColumnMask.Cell column : columns) {
+        int end = Math.min(columns.size(), fromIndex + Math.max(1, columnBudget));
+        for (int index = fromIndex; index < end; index++) {
+            ColumnMask.Cell column = columns.get(index);
             int x = column.x();
             int z = column.z();
             if (!world.loaded(x, z)) {
@@ -136,7 +159,9 @@ public final class SettlementScan {
                 }
             }
         }
-        return new Strays(pits, mounds, pillars, strays, unknown, natural);
+        boolean more = end < columns.size();
+        Strays done = more ? null : new Strays(pits, mounds, pillars, strays, unknown, natural);
+        return new Slice(end, more, done);
     }
 
     private static void raisedInto(

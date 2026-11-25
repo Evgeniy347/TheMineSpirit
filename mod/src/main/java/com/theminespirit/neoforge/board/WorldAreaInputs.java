@@ -53,14 +53,14 @@ final class WorldAreaInputs {
 
     private WorldAreaInputs() {}
 
-    static GraphWorldFacts of(
+    static GraphWorldFacts facts(
             ServerLevel level,
             BoardService service,
             FirstStepsRunner.StageScan scan,
             Optional<TownPlan> town,
-            Map<String, GraphFacts.Building> buildings) {
+            Map<String, GraphFacts.Building> buildings,
+            SettlementScan.Strays found) {
         StageSite site = scan.stage();
-        SettlementScan.Strays found = WorldAreaScan.scan(level, site, town);
         List<GraphSiteFacts.Stray> strays = new ArrayList<>(strays(found, placements(service)));
         Set<GraphFacts.Position> seen = new HashSet<>();
         strays.forEach(stray -> seen.add(stray.position()));

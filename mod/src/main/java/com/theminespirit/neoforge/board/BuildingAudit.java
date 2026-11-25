@@ -77,9 +77,9 @@ final class BuildingAudit {
     }
 
     static BuildingAuditInputs.Audit clearing(ServerLevel level, StageSite site, long now) {
-        SettlementScan.Strays found =
-                WorldAreaScan.scan(level, site, SettlementPlotStore.get(level).town());
-        if (found.unknown() > 0) {
+        SettlementScan.Strays found = WorldAreaScan.scanOrNull(
+                level, site, SettlementPlotStore.get(level).town());
+        if (found == null || found.unknown() > 0) {
             return new BuildingAuditInputs.Audit(0, 0, Map.of(), Map.of(), 0, 1);
         }
         Set<ColumnMask.Cell> defective = new LinkedHashSet<>();
