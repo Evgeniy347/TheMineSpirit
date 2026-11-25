@@ -10,16 +10,23 @@ public final class RespawnCell {
 
     private RespawnCell() {}
 
-    public record Terrain(Predicate<BlockCoord> floor, Predicate<BlockCoord> air) {
+    public record Terrain(Predicate<BlockCoord> floor, Predicate<BlockCoord> air, Predicate<BlockCoord> surface) {
         public Terrain {
             Objects.requireNonNull(floor, "Пол клетки возрождения не может быть null: без него дух провалится");
             Objects.requireNonNull(air, "Свободная клетка не может быть null: без неё дух застрянет в блоке");
+            Objects.requireNonNull(
+                    surface, "Открытое небо клетки возрождения не может быть null: иначе дух появится под землёй");
         }
     }
 
-    public static Optional<BlockCoord> base(Optional<BlockCoord> plotAnchor, Optional<BlockCoord> home) {
+    public static Optional<BlockCoord> base(
+            Optional<BlockCoord> plotAnchor, Optional<BlockCoord> plazaCenter, Optional<BlockCoord> home) {
         Objects.requireNonNull(plotAnchor, "Якорь участка задаётся Optional.empty(), а не null");
+        Objects.requireNonNull(plazaCenter, "Центр площади задаётся Optional.empty(), а не null");
         Objects.requireNonNull(home, "Дом духа задаётся Optional.empty(), а не null");
+        if (plazaCenter.isPresent()) {
+            return plazaCenter;
+        }
         return plotAnchor.isPresent() ? plotAnchor : home;
     }
 
@@ -69,7 +76,8 @@ public final class RespawnCell {
         BlockCoord above = new BlockCoord(feet.x(), feet.y() + 1, feet.z());
         return terrain.floor().test(floor)
                 && terrain.air().test(feet)
-                && terrain.air().test(above);
+                && terrain.air().test(above)
+                && terrain.surface().test(feet);
     }
 
     private static long distance(BlockCoord first, BlockCoord second) {

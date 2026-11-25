@@ -1,6 +1,7 @@
 package com.theminespirit.core.town;
 
 import com.theminespirit.core.observation.BlockCoord;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -13,6 +14,8 @@ public record TownPlan(
         FenceLine fence,
         List<String> unplaced,
         List<PathLine> paths) {
+    public static final String PLAZA_NAME = "Площадь";
+
     public TownPlan {
         Objects.requireNonNull(anchor, "Якорь плана не может быть null: от него размечен участок");
         Objects.requireNonNull(region, "Контур плана не может быть null");
@@ -48,6 +51,12 @@ public record TownPlan(
     public Optional<Placement> placement(String id) {
         Objects.requireNonNull(id, "id постройки не может быть null");
         return placements.stream().filter(place -> place.id().equals(id)).findFirst();
+    }
+
+    public Optional<Placement> plaza() {
+        return placements.stream()
+                .filter(place -> PLAZA_NAME.equals(place.name()))
+                .min(Comparator.comparing(Placement::id));
     }
 
     public boolean onPlot(int x, int z) {

@@ -23,8 +23,13 @@ import java.util.Objects;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
@@ -126,6 +131,7 @@ public final class SpiritRespawnService {
             return;
         }
         SpiritRespawnStore.get(level).remove(entry.id());
+        flash(level, born);
         SpiritWorldLog.deathRespawn(level, spirit, entry.death(), born);
         LOGGER.info(
                 "[respawn] дух {} погиб ({}, {}, {}, {}) → возрождён в ({}, {}, {})",
@@ -145,8 +151,12 @@ public final class SpiritRespawnService {
     }
 
     private static Optional<BlockCoord> baseOf(ServerLevel level, SpiritEntity spirit) {
-        Optional<BlockCoord> plot = SettlementPlotStore.get(level).plot().map(SettlementPlot::anchor);
-        return RespawnCell.base(plot, spirit.home());
+        SettlementPlotStore store = SettlementPlotStore.get(level);
+        Optional<BlockCoord> plot = store.plot().map(SettlementPlot::anchor);
+        Optional<BlockCoord> plaza = plot.flatMap(anchor -> store.town()
+                .flatMap(plan ->
+                        plan.plaza().map(place -> new BlockCoord(place.centerX(), anchor.y(), place.centerZ()))));
+        return RespawnCell.base(plot, plaza, spirit.home());
     }
 
     private static RespawnCell.Terrain terrain(ServerLevel level) {
@@ -156,7 +166,38 @@ public final class SpiritRespawnService {
                     return level.getBlockState(pos).isFaceSturdy(level, pos, Direction.UP);
                 },
                 cell -> level.getBlockState(new BlockPos(cell.x(), cell.y(), cell.z()))
-                        .isAir());
+                        .isAir(),
+                cell -> level.canSeeSky(new BlockPos(cell.x(), cell.y(), cell.z())));
+    }
+
+    private static void flash(ServerLevel level, BlockCoord born) {
+        LightningBolt bolt = EntityType.LIGHTNING_BOLT.create(level);
+        if (bolt == null) {
+            LOGGER.warn("[respawn] молния возрождения не создана: тип сущности недоступен, дух появится без вспышки");
+        } else {
+            bolt.moveTo(born.x() + 0.5D, born.y(), born.z() + 0.5D);
+            bolt.setVisualOnly(true);
+            level.addFreshEntity(bolt);
+        }
+        level.sendParticles(
+                ParticleTypes.SOUL_FIRE_FLAME,
+                born.x() + 0.5D,
+                born.y() + 0.7D,
+                born.z() + 0.5D,
+                24,
+                0.4D,
+                0.6D,
+                0.4D,
+                0.02D);
+        level.playSound(
+                null,
+                born.x() + 0.5D,
+                born.y(),
+                born.z() + 0.5D,
+                SoundEvents.SOUL_ESCAPE,
+                SoundSource.NEUTRAL,
+                1.0F,
+                1.0F);
     }
 
     private static void dropInventory(SpiritEntity spirit) {

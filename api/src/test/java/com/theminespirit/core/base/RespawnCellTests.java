@@ -19,9 +19,20 @@ class RespawnCellTests {
 
         assertEquals(
                 plot,
-                RespawnCell.base(plot, home),
-                "Якорь участка — главная точка базы: дом духа не имеет права увести возрождение с участка поселения"
+                RespawnCell.base(plot, Optional.empty(), home),
+                "Якорь участка — главная точка базы, когда площади нет: дом духа не имеет права увести возрождение с участка поселения"
                         + " Иначе тест base_PlotAnchorAndHome_UsesPlotAnchor перестанет ловить эту поломку. При смене base_PlotAnchorAndHome_UsesPlotAnchor проверь это утверждение.");
+    }
+
+    @Test
+    void base_PlazaCenter_WinsOverPlotAnchorAndHome() {
+        BlockCoord plaza = new BlockCoord(30, 64, 30);
+
+        assertEquals(
+                Optional.of(plaza),
+                RespawnCell.base(Optional.of(BASE), Optional.of(plaza), Optional.of(new BlockCoord(1, 70, 1))),
+                "Центр площади — точка возрождения, когда площадь есть в плане: иначе духи появляются в точке основания поселения, а не на площади"
+                        + " При смене base_PlazaCenter_WinsOverPlotAnchorAndHome проверь это утверждение.");
     }
 
     @Test
@@ -30,7 +41,7 @@ class RespawnCellTests {
 
         assertEquals(
                 home,
-                RespawnCell.base(Optional.empty(), home),
+                RespawnCell.base(Optional.empty(), Optional.empty(), home),
                 "Без плана участка дух возрождается у своего дома: иначе возрождение некуда привязать"
                         + " При смене base_NoPlotAndHome_UsesHome проверь это утверждение.");
     }
@@ -39,7 +50,7 @@ class RespawnCellTests {
     void base_NoPlotAndNoHome_ReturnsEmpty() {
         assertEquals(
                 Optional.empty(),
-                RespawnCell.base(Optional.empty(), Optional.empty()),
+                RespawnCell.base(Optional.empty(), Optional.empty(), Optional.empty()),
                 "Без базы и дома возрождать некуда: запись не должна создаваться, дух не появится в случайной точке"
                         + " Иначе тест base_NoPlotAndNoHome_ReturnsEmpty перестанет ловить эту поломку. При смене base_NoPlotAndNoHome_ReturnsEmpty проверь это утверждение.");
     }
@@ -105,6 +116,17 @@ class RespawnCellTests {
     }
 
     @Test
+    void nearest_CellUnderRoof_IsRejected() {
+        RespawnCell.Terrain terrain = terrain(Set.of(floor(BASE)), Set.of(), Set.of(BASE));
+
+        assertEquals(
+                Optional.empty(),
+                RespawnCell.nearest(BASE, terrain),
+                "Клетка без открытого неба не годится: иначе дух возродится под землёй, в пещере или под крышей, а не на поверхности поселения"
+                        + " При смене nearest_CellUnderRoof_IsRejected проверь это утверждение.");
+    }
+
+    @Test
     void nearest_NegativeRadius_Throws() {
         RespawnCell.Terrain terrain = terrain(Set.of(floor(BASE)), Set.of());
 
@@ -120,8 +142,14 @@ class RespawnCellTests {
     }
 
     private static RespawnCell.Terrain terrain(Set<BlockCoord> floors, Set<BlockCoord> solids) {
+        return terrain(floors, solids, Set.of());
+    }
+
+    private static RespawnCell.Terrain terrain(Set<BlockCoord> floors, Set<BlockCoord> solids, Set<BlockCoord> roof) {
         Set<BlockCoord> floorBlocks = new HashSet<>(floors);
         Set<BlockCoord> solidBlocks = new HashSet<>(solids);
-        return new RespawnCell.Terrain(floorBlocks::contains, cell -> !solidBlocks.contains(cell));
+        Set<BlockCoord> roofBlocks = new HashSet<>(roof);
+        return new RespawnCell.Terrain(
+                floorBlocks::contains, cell -> !solidBlocks.contains(cell), cell -> !roofBlocks.contains(cell));
     }
 }
