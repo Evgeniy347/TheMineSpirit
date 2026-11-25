@@ -35,6 +35,9 @@ import org.jspecify.annotations.Nullable;
 
 public final class FloatingScan {
     private static final String AIR = "minecraft:air";
+    private static String placedDimension = "";
+    private static long placedRevision = Long.MIN_VALUE;
+    private static List<BlockCoord> placedCellList = List.of();
     private static final BlockProtection PROTECTION =
             DataTables.INSTANCE.protection().current();
 
@@ -114,10 +117,22 @@ public final class FloatingScan {
     }
 
     static List<BlockCoord> placed(ServerLevel level, ColumnMask area) {
-        return LeaseData.get(level).book().orphanedCells().stream()
+        List<BlockCoord> cells = placedCells(level);
+        return cells.stream().filter(cell -> area.contains(cell.x(), cell.z())).toList();
+    }
+
+    private static List<BlockCoord> placedCells(ServerLevel level) {
+        String dimension = level.dimension().location().toString();
+        long revision = LeaseData.get(level).book().revision();
+        if (dimension.equals(placedDimension) && revision == placedRevision) {
+            return placedCellList;
+        }
+        placedCellList = LeaseData.get(level).book().orphanedCells().stream()
                 .map(LeaseCell::pos)
-                .filter(cell -> area.contains(cell.x(), cell.z()))
                 .toList();
+        placedDimension = dimension;
+        placedRevision = revision;
+        return placedCellList;
     }
 
     static final class Scan implements FloatingBlocks.World {

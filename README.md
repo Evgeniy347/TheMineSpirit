@@ -147,7 +147,7 @@ curl -s 'http://<хост>:<порт>/v1/spirits/<uuid духа>/decisions?limit
 | [CLAUDE.md](CLAUDE.md) | вход для Claude Code, отсылает к AGENTS.md |
 | [docs/FIXING.md](docs/FIXING.md), [docs/CONVENTIONS.md](docs/CONVENTIONS.md), [docs/TESTING.md](docs/TESTING.md), [docs/testing/CROSS-MATRIX.md](docs/testing/CROSS-MATRIX.md), [docs/testing/CROSS-MATRIX-INTERRUPT.md](docs/testing/CROSS-MATRIX-INTERRUPT.md), [docs/testing/CROSS-MATRIX-NO-PAIR.md](docs/testing/CROSS-MATRIX-NO-PAIR.md), [docs/testing/CROSS-MATRIX-NOTES.md](docs/testing/CROSS-MATRIX-NOTES.md), [docs/testing/GRAPH-DEMAND.md](docs/testing/GRAPH-DEMAND.md), [docs/GIT.md](docs/GIT.md) | код, тесты, git; матрица пересечений механик, непересекающиеся пары, техдолг; реестр цепочек спроса графа |
 | [docs/PUBLISH.md](docs/PUBLISH.md) | публикация мода (только по согласованию) |
-| [docs/LEAD-AGENT.md](docs/LEAD-AGENT.md), [docs/EXECUTOR-MODELS.md](docs/EXECUTOR-MODELS.md) | главный агент, приёмка, модели-исполнители |
+| [docs/LEAD-AGENT.md](docs/LEAD-AGENT.md), [docs/EXECUTOR-MODELS.md](docs/EXECUTOR-MODELS.md) | текущий режим одного агента; старые обёртки `oc-results` запрещены; модели — только для отдельно согласованных исполнителей |
 | [docs/api/README.md](docs/api/README.md) | контракт REST-сервиса духов, формат плана и построек |
 | [docs/tactics/README.md](docs/tactics/README.md), [docs/STRATEGIST.md](docs/STRATEGIST.md), [docs/HOT-RELOAD.md](docs/HOT-RELOAD.md) | тактика, стратег, горячая перезагрузка таблиц |
 | [docs/research/README.md](docs/research/README.md) | карта знаний о похожих проектах и лицензиях |
@@ -169,12 +169,12 @@ curl -s 'http://<хост>:<порт>/v1/spirits/<uuid духа>/decisions?limit
 | [scripts/live-debug.sh](scripts/live-debug.sh), [scripts/live-debug/](scripts/live-debug/), [scripts/dev-server.sh](scripts/dev-server.sh), [scripts/dev-server/](scripts/dev-server/) | живая отладка: копия сервера на ПК, замок, hotswap, eval, брейкпоинты; [docs/LIVE-DEBUG.md](docs/LIVE-DEBUG.md) |
 | [scripts/progress.sh](scripts/progress.sh) | прогресс плана: «сделано N» из `todo.md` + открытые пункты |
 | [scripts/logq.sh](scripts/logq.sh), [scripts/logdb/](scripts/logdb/), `scripts/logdb/fixtures/`, `scripts/logdb/tests/` | база логов: `cell`, `spirit`, `ticket`, `failures`, `blocks`, `deaths`, `stuck`, `items`, `where`, `health`, `text`, `sql`, `schema`; загрузчик JSONL и старых логов, схема в `scripts/logdb/schema.json` |
-| [scripts/opencode-task.sh](scripts/opencode-task.sh), [scripts/opencode-start.sh](scripts/opencode-start.sh) | исполнитель opencode с надзором (ПК / сервер в tmux) |
-| [scripts/opencode-status.sh](scripts/opencode-status.sh), [scripts/opencode-status-notify.sh](scripts/opencode-status-notify.sh) | статус исполнителя; сводка в Telegram раз в 5 мин |
-| [scripts/opencode-pick-model.sh](scripts/opencode-pick-model.sh) | выбор бесплатной модели opencode по свежим сбоям и загрузке |
+| [scripts/opencode-task.sh](scripts/opencode-task.sh), [scripts/opencode-start.sh](scripts/opencode-start.sh) | исполнитель opencode с надзором (ПК / сервер в tmux); только по отдельному решению владельца, не основной цикл |
+| [scripts/opencode-status.sh](scripts/opencode-status.sh), [scripts/opencode-status-notify.sh](scripts/opencode-status-notify.sh) | статус исполнителя; используется только в согласованном режиме исполнителей |
+| [scripts/opencode-pick-model.sh](scripts/opencode-pick-model.sh) | выбор модели opencode; только в согласованном режиме исполнителей |
 | [scripts/strategist.sh](scripts/strategist.sh) | надзор агента-стратега (`start/stop/status/once/smoke/logs`) |
 | [scripts/mem-guard.sh](scripts/mem-guard.sh) | сторож памяти domovoy (SIGSTOP/SIGCONT тяжёлой java) |
-| [scripts/lead/](scripts/lead/) | инструменты главного агента: `oc-watch.sh`, `chkq.sh` (очередь приёмки), `agent-list.sh`, `nice-guard.sh`, `orphan-sweep.sh`, `orphan-sweep-win.sh`, `orphans-win.sh` (сироты test.sh/gradlew/java, только показывает), `res-pc.ps1`, `keepawake.ps1` |
+| [scripts/lead/](scripts/lead/) | инструменты главного агента: `orphans-win.sh` (сироты test.sh/gradlew/java, только показывает), `orphan-sweep-win.sh`, `res-pc.ps1`, `keepawake.ps1`; `oc-watch.sh`, `chkq.sh`, `agent-list.sh`, `nice-guard.sh` относятся к режиму исполнителей |
 | [scripts/install-git-hooks.sh](scripts/install-git-hooks.sh), [scripts/git-hooks/](scripts/git-hooks/) | хуки: формат коммита, зелёный коммит, запрет перезаписи истории |
 | [scripts/testing/](scripts/testing/) | проверки скриптов на подделках: `check-test-runner.sh`, `check-gametest-lock.sh`, `check-opencode-task.sh`, `check-orphan-sweep-win.sh`, `check-pre-commit.sh`, `check-commit-msg.sh`, `check-history-hooks.sh`, `check-chkq.sh`, `check-strategist.sh`, `check-hang-watch.sh`, `check-nightly-analyzers.sh`, `check-publish.sh` (негодный jar не доходит до установки); `check-static-analysis-cache.sh` — живая проверка кэша SpotBugs/PMD и отсутствия дублирующего анализа в :gametest |
 

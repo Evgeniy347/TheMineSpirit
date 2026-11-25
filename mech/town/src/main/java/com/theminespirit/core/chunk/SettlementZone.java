@@ -36,15 +36,15 @@ public final class SettlementZone {
             throw new IllegalArgumentException("Радиус обмера поселения не может быть отрицательным: " + probeRadius);
         }
         Set<ChunkCoord> chunks = spiritChunks(spirits);
-        Set<ColumnMask.Cell> postSet = Set.copyOf(posts);
-        if (Objects.equals(plan, this.plan)
+        if ((same(plan, this.plan) || Objects.equals(plan, this.plan))
                 && spiritRadius == this.spiritRadius
                 && probeRadius == this.probeRadius
                 && anchors.equals(this.anchors)
-                && postSet.equals(this.posts)
-                && chunks.equals(this.spiritChunks)) {
+                && chunks.equals(this.spiritChunks)
+                && (same(posts, this.posts) || Set.copyOf(posts).equals(this.posts))) {
             return false;
         }
+        Set<ColumnMask.Cell> postSet = Set.copyOf(posts);
         this.plan = plan;
         this.anchors = Set.copyOf(anchors);
         this.posts = postSet;
@@ -54,6 +54,11 @@ public final class SettlementZone {
         this.work = SettlementChunks.workZone(plan, this.anchors, spirits, spiritRadius);
         this.settlement = SettlementChunks.settlement(plan, this.anchors, probeRadius, this.posts);
         return true;
+    }
+
+    @SuppressWarnings("ReferenceEquality")
+    private static boolean same(@Nullable Object left, @Nullable Object right) {
+        return left == right;
     }
 
     public Set<ChunkCoord> workZone() {

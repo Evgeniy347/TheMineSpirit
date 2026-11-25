@@ -5,6 +5,7 @@ import com.theminespirit.core.chunk.SettlementZone;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.ColumnMask;
+import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
 import java.util.Collection;
@@ -17,6 +18,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.event.server.ServerStoppingEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 public final class SettlementChunkLifecycle {
@@ -24,6 +26,9 @@ public final class SettlementChunkLifecycle {
     private static final Set<ServerLevel> WOKEN = ConcurrentHashMap.newKeySet();
     private static final Set<ServerLevel> REPORTED = ConcurrentHashMap.newKeySet();
     private static final Map<ServerLevel, SettlementZone> ZONES = new ConcurrentHashMap<>();
+    private static Object postsPlan;
+    private static Object postsSite;
+    private static Set<ColumnMask.Cell> postsCache = Set.of();
 
     private SettlementChunkLifecycle() {}
 
@@ -46,19 +51,26 @@ public final class SettlementChunkLifecycle {
                     SpiritRegistry.get(level).positions().values();
             TownPlan plan = SettlementPlotStore.get(level).town().orElse(null);
             SettlementZone zone = ZONES.computeIfAbsent(level, key -> new SettlementZone());
-            Set<ColumnMask.Cell> posts = new LinkedHashSet<>();
-            if (plan != null) {
-                posts.addAll(plan.fence().posts());
+            StageSite site = SettlementPlotStore.liveSite(level).orElse(null);
+            if (!sameReference(plan, postsPlan) || !sameReference(site, postsSite)) {
+                Set<ColumnMask.Cell> posts = new LinkedHashSet<>();
+                if (plan != null) {
+                    posts.addAll(plan.fence().posts());
+                }
+                if (site != null) {
+                    posts.addAll(site.ring().posts());
+                }
+                postsCache = Set.copyOf(posts);
+                postsPlan = plan;
+                postsSite = site;
             }
-            SettlementPlotStore.liveSite(level)
-                    .ifPresent(site -> posts.addAll(site.ring().posts()));
             boolean changed = zone.update(
                     plan,
                     SettlementAnchorStore.get(level).anchors(),
                     spirits,
                     SpiritConfig.radiusFor(level),
                     DataTables.INSTANCE.town().current().ground().probeRadius(),
-                    posts);
+                    postsCache);
             if (changed) {
                 WorkZoneRegistry.update(level, zone.workZone());
             }
@@ -80,5 +92,10 @@ public final class SettlementChunkLifecycle {
         ZONES.clear();
         WorkZoneRegistry.clear();
         SettlementChunkTickets.clear();
+    }
+
+    @SuppressWarnings("ReferenceEquality")
+    private static boolean sameReference(@Nullable Object left, @Nullable Object right) {
+        return left == right;
     }
 }
