@@ -74,15 +74,16 @@ final class GraphNeeds {
             Map.Entry<String, Integer> first = missing.entrySet().iterator().next();
             return new GraphBlock.Item(first.getKey(), first.getValue());
         }
-        String tool = ToolGate.required(ticket).orElse(null);
-        if (tool != null && holder != null && !ToolGate.allows(ticket, items)) {
-            return new GraphBlock.Tool(tool, 0, holder);
+        for (String tool : ToolGate.requiredAll(ticket)) {
+            if (holder != null && items.stream().noneMatch(item -> item.endsWith(tool))) {
+                return new GraphBlock.Tool(tool, 0, holder);
+            }
         }
         if (fact == FailureFact.NO_MATERIAL) {
             return new GraphBlock.Item(SCAFFOLD_MATERIAL, 1);
         }
         if (fact == FailureFact.NO_TOOL) {
-            String missingTool = tool != null ? tool : ToolGate.PICKAXE;
+            String missingTool = ToolGate.required(ticket).orElse(ToolGate.PICKAXE);
             return new GraphBlock.Tool(missingTool, 0, holder == null ? "" : holder);
         }
         if (fact == FailureFact.NIGHT) {

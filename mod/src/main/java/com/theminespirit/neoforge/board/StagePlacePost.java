@@ -42,7 +42,7 @@ final class StagePlacePost {
         if (!WoodSpecies.OAK.equals(wood)) {
             target = target.withWood(wood);
         }
-        List<String> modifiers = tilled(entry.scheme()) ? List.of(ToolGate.TOOL_MODIFIER + "hoe") : List.of();
+        List<String> modifiers = tools(entry.scheme());
         post.submit(
                 post.ticket(
                         ticket.id(),
@@ -71,12 +71,22 @@ final class StagePlacePost {
                 .orElse(target);
     }
 
-    private static boolean tilled(String scheme) {
+    private static List<String> tools(String scheme) {
         return DataTables.INSTANCE
                 .presets()
                 .current()
                 .byId(scheme)
-                .map(preset -> SchematicGround.tilled(preset.schematic()))
-                .orElse(false);
+                .map(preset -> {
+                    boolean tilled = SchematicGround.tilled(preset.schematic());
+                    boolean walkway = SchematicGround.walkway(preset.schematic());
+                    if (tilled && walkway) {
+                        return List.of(ToolGate.TOOLS_MODIFIER + "hoe,shovel");
+                    }
+                    if (tilled) {
+                        return List.of(ToolGate.TOOL_MODIFIER + "hoe");
+                    }
+                    return walkway ? List.of(ToolGate.TOOL_MODIFIER + "shovel") : List.<String>of();
+                })
+                .orElseGet(List::of);
     }
 }

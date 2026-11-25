@@ -84,6 +84,41 @@ class ToolGateTests {
     }
 
     @Test
+    void allows_MultipleTools_RequiresHoeAndShovel() {
+        BoardTicket ticket = new BoardTicket(
+                "graph:building:wheat_field",
+                BoardCase.BUILD_PLACED,
+                Optional.empty(),
+                60,
+                0,
+                1,
+                BoardTicket.ALWAYS_CAUSE,
+                List.of(),
+                Map.of(),
+                List.of(ToolGate.TOOLS_MODIFIER + "hoe,shovel"));
+
+        assertEquals(
+                List.of("hoe", "shovel"),
+                ToolGate.requiredAll(ticket),
+                "Схема грядки требует и тяпку, и лопату: список инструментов должен сохранять оба"
+                        + " требования Иначе тест allows_MultipleTools_RequiresHoeAndShovel перестанет"
+                        + " ловить живой случай wheat_field от 25.11. При смене"
+                        + " allows_MultipleTools_RequiresHoeAndShovel проверь ToolGate.requiredAll.");
+        assertTrue(
+                ToolGate.allows(ticket, List.of("minecraft:wooden_hoe", "minecraft:wooden_shovel")),
+                "С двумя инструментами грядка выдаётся: иначе граф не сможет построить поле с пашней"
+                        + " и тропой Иначе тест allows_MultipleTools_RequiresHoeAndShovel перестанет"
+                        + " ловить эту поломку. При смене allows_MultipleTools_RequiresHoeAndShovel"
+                        + " проверь DispatchRound.tooled.");
+        assertFalse(
+                ToolGate.allows(ticket, List.of("minecraft:wooden_hoe")),
+                "Одной тяпки недостаточно: dirt_path требует лопату, и задание должно ждать её,"
+                        + " а не падать посреди стройки Иначе тест allows_MultipleTools_RequiresHoeAndShovel"
+                        + " перестанет ловить эту поломку. При смене"
+                        + " allows_MultipleTools_RequiresHoeAndShovel проверь StagePlacePost.tools.");
+    }
+
+    @Test
     void allowsFromStock_AxeOnly_TakeBeforeChop() {
         BoardTicket chop = new BoardTicket(
                 "graph:chop_jungle_log",

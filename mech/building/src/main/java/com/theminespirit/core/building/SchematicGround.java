@@ -55,6 +55,12 @@ public final class SchematicGround {
         return false;
     }
 
+    public static boolean walkway(Schematic schematic) {
+        Objects.requireNonNull(schematic, "Схема не может быть null: без неё неизвестно, есть ли тропа");
+        return schematic.blocks().stream()
+                .anyMatch(entry -> !entry.optional() && SchematicActions.isWalkway(entry.block()));
+    }
+
     public static boolean walkwayPlaced(String wantedBlock, String cellBlock) {
         Objects.requireNonNull(wantedBlock, "Блок схемы не может быть null: без него нечего сверять");
         Objects.requireNonNull(cellBlock, "Блок клетки не может быть null: без него нечего сверять");

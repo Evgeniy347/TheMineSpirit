@@ -66,6 +66,22 @@ class SchematicGroundLayerTests {
                         + " Иначе тест orchard_BottomLayerHasNoFarmland_DoesNotNeedHoe перестанет ловить эту поломку. При смене orchard_BottomLayerHasNoFarmland_DoesNotNeedHoe проверь это утверждение.");
     }
 
+    @Test
+    void wheatFieldAndOrchard_HaveWalkway_NeedShovel() {
+        assertTrue(
+                SchematicGround.walkway(schematic("wheat_field_1")),
+                "У грядки есть тропа dirt_path: без признака билет не потребует лопату и стройка"
+                        + " будет падать на первом же блоке тропы Иначе тест"
+                        + " wheatFieldAndOrchard_HaveWalkway_NeedShovel перестанет ловить живой случай 25.11."
+                        + " При смене wheatFieldAndOrchard_HaveWalkway_NeedShovel проверь StagePlacePost"
+                        + " и SchematicActions.isWalkway.");
+        assertTrue(
+                SchematicGround.walkway(schematic("orchard_1")),
+                "У сада тоже есть тропа: лопата нужна ему наравне с грядкой Иначе тест"
+                        + " wheatFieldAndOrchard_HaveWalkway_NeedShovel перестанет ловить эту поломку."
+                        + " При смене wheatFieldAndOrchard_HaveWalkway_NeedShovel проверь orchard_1.");
+    }
+
     private static Schematic schematic(String id) {
         return DataTables.INSTANCE
                 .presets()

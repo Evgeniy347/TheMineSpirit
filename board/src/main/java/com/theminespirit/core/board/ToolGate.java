@@ -4,8 +4,10 @@ import com.theminespirit.core.base.NamespacedId;
 import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.board.api.ToolsConfig;
 import com.theminespirit.core.forestry.api.TreeSpecies;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -15,6 +17,7 @@ public final class ToolGate {
     public static final String PICKAXE = ToolsConfig.PICKAXE;
     public static final String AXE = ToolsConfig.AXE;
     public static final String TOOL_MODIFIER = "tool=";
+    public static final String TOOLS_MODIFIER = "tools=";
     public static final String CARRY_MODIFIER = "carry=";
 
     public enum Hands {
@@ -71,12 +74,25 @@ public final class ToolGate {
 
     public static Optional<String> required(BoardTicket ticket) {
         Objects.requireNonNull(ticket, "Задание не может быть null: инструмент берётся из его модификаторов");
+        return requiredAll(ticket).stream().findFirst();
+    }
+
+    public static List<String> requiredAll(BoardTicket ticket) {
+        Objects.requireNonNull(ticket, "Задание не может быть null: инструменты берутся из его модификаторов");
         for (String modifier : ticket.modifiers()) {
-            if (modifier.startsWith(TOOL_MODIFIER)) {
-                return Optional.of(modifier.substring(TOOL_MODIFIER.length()));
+            if (modifier.startsWith(TOOLS_MODIFIER)) {
+                return Arrays.stream(modifier.substring(TOOLS_MODIFIER.length()).split(",", -1))
+                        .map(String::trim)
+                        .filter(tool -> !tool.isEmpty())
+                        .toList();
             }
         }
-        return required(ticket.boardCase());
+        for (String modifier : ticket.modifiers()) {
+            if (modifier.startsWith(TOOL_MODIFIER)) {
+                return List.of(modifier.substring(TOOL_MODIFIER.length()));
+            }
+        }
+        return required(ticket.boardCase()).map(List::of).orElseGet(List::of);
     }
 
     public static Optional<String> carry(BoardTicket ticket) {
@@ -108,9 +124,8 @@ public final class ToolGate {
 
     public static boolean allows(BoardTicket ticket, Collection<String> items) {
         Objects.requireNonNull(ticket, "Задание не может быть null: инструмент берётся из его модификаторов");
-        return required(ticket)
-                .map(suffix -> items.stream().anyMatch(item -> item.endsWith(suffix)))
-                .orElse(true);
+        Objects.requireNonNull(items, "Инвентарь не может быть null: пустой — пустой набор");
+        return requiredAll(ticket).stream().allMatch(suffix -> items.stream().anyMatch(item -> item.endsWith(suffix)));
     }
 
     public static boolean allowsFromStock(BoardTicket ticket, Collection<String> stock) {
@@ -124,17 +139,17 @@ public final class ToolGate {
         Objects.requireNonNull(ticket, "Задание не может быть null: износ проверяют у его инструмента");
         Objects.requireNonNull(items, "Инвентарь не может быть null: пустой — пустой набор");
         Objects.requireNonNull(wornItems, "Изношенные предметы не могут быть null: целые — пустой набор");
-        Optional<String> required = required(ticket);
-        if (required.isEmpty()) {
-            return false;
+        for (String suffix : requiredAll(ticket)) {
+            long matching = items.stream().filter(item -> item.endsWith(suffix)).count();
+            if (matching == 0) {
+                continue;
+            }
+            long worn = wornItems.stream().filter(item -> item.endsWith(suffix)).count();
+            if (worn >= matching) {
+                return true;
+            }
         }
-        String suffix = required.orElseThrow();
-        long matching = items.stream().filter(item -> item.endsWith(suffix)).count();
-        if (matching == 0) {
-            return false;
-        }
-        long worn = wornItems.stream().filter(item -> item.endsWith(suffix)).count();
-        return worn >= matching;
+        return false;
     }
 
     public static boolean allows(BoardCase boardCase, Collection<String> items) {
@@ -168,13 +183,12 @@ public final class ToolGate {
             BoardTicket ticket, Collection<String> items, boolean walledIn, @Nullable String supplyItem) {
         Objects.requireNonNull(ticket, "Задание не может быть null: проверяется его инструмент");
         Objects.requireNonNull(items, "Инвентарь не может быть null: пустой — пустой набор");
-        Optional<String> declared = required(ticket);
-        Optional<String> tool = declared.isPresent() ? declared : required(ticket.boardCase(), supplyItem);
-        if (tool.isEmpty()) {
-            return new Keep();
-        }
-        String missing = tool.orElseThrow();
-        if (items.stream().anyMatch(item -> item.endsWith(missing))) {
+        List<String> required = requiredAll(ticket);
+        String missing = required.stream()
+                .filter(tool -> items.stream().noneMatch(item -> item.endsWith(tool)))
+                .findFirst()
+                .orElse(null);
+        if (missing == null) {
             return new Keep();
         }
         if (walledIn) {
