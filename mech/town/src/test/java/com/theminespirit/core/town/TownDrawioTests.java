@@ -19,14 +19,16 @@ class TownDrawioTests {
         String xml = TownDrawio.encode(map("hut"), 9, -20, -10, 20, 50, 2, new byte[] {1, 2, 3});
 
         assertTrue(
-                xml.contains("data:image/png;base64,AQID")
+                xml.contains("image=data:image/png,AQID;")
+                        && !xml.contains(";base64,")
                         && xml.contains("tmKind=\"plot\" tmId=\"hut\"")
                         && xml.contains("<mxGeometry x=\"20\" y=\"60\" width=\"32\" height=\"32\" as=\"geometry\"/>")
                         && xml.contains("tmKind=\"street\" tmId=\"main\"")
                         && xml.contains("tmKind=\"wall\" tmX1=\"-20\"")
                         && xml.contains("tmKind=\"meta\" tmFormat=\"1\" tmRevision=\"9\""),
-                "Выгрузка .drawio обязана нести PNG-подложку и фигуры в пикселях рамки: без этого diagrams.net "
-                        + "покажет пустой лист, а координаты участков разъедутся с картой мира; получено "
+                "Выгрузка .drawio обязана нести PNG-подложку и фигуры в пикселях рамки: drawio режет style по «;», "
+                        + "поэтому data URI идёт без «;base64» и картинка стоит последней; иначе подложка не "
+                        + "отрисуется, а координаты участков разъедутся с миром; получено "
                         + xml.length()
                         + " символов Иначе тест encode_MapWithPlotStreetWall_EmbedsPngAndGeometry перестанет ловить "
                         + "эту поломку. При смене encode_MapWithPlotStreetWall_EmbedsPngAndGeometry проверь подложку, "

@@ -57,8 +57,9 @@ public final class TownDrawio {
                 xml,
                 "terrain",
                 "",
-                "shape=image;image=data:image/png;base64," + data
-                        + ";imageAspect=0;aspect=fixed;movable=0;resizable=0;deletable=0;",
+                "shape=image;verticalLabelPosition=bottom;labelBackgroundColor=default;verticalAlign=top;"
+                        + "aspect=fixed;imageAspect=0;movable=0;resizable=0;deletable=0;image=data:image/png,"
+                        + data + ";",
                 0,
                 0,
                 width,
