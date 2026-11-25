@@ -30,7 +30,8 @@ class BoardTasksTestsPart2 {
                 new ActivityTickets.Crew(Optional.of(leader), crew),
                 100,
                 0,
-                new ActivityTickets.Plan("mine_vein", "mine", 6000, new ScriptCall("mine_vein", Map.of()))));
+                new ActivityTickets.Plan("mine_vein", "mine", 6000, new ScriptCall("mine_vein", Map.of())),
+                Map.of()));
         board.submit(expedition);
         board.holds().hold(expedition.id(), "нет команды: нужно 2 духа, рядом 1");
 

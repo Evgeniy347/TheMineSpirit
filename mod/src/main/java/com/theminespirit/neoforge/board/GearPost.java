@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
+import com.theminespirit.core.board.BoardReserve;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.ToolSet;
 import com.theminespirit.core.board.api.BoardCase;
@@ -52,16 +53,17 @@ final class GearPost {
                 byId.put(fact.id(), spirit);
             }
         }
+        List<GraphFacts.Chest> chests = chests(post);
         Optional<GearRules.Equip> found = GearRules.equipTarget(
                 facts,
                 id -> {
                     SpiritEntity spirit = byId.get(id);
                     return spirit == null || busy(post, spirit);
                 },
-                post.facts.chests(),
+                chests,
                 settings);
         if (found.isEmpty()) {
-            if (GearRules.anyUpgrade(facts, post.facts.chests(), settings)) {
+            if (GearRules.anyUpgrade(facts, chests, settings)) {
                 post.waiting().add(ticket.id());
             }
             return false;
@@ -74,7 +76,12 @@ final class GearPost {
         BlockCoord chest = StorePost.at(chosen.upgrade().chest());
         ActivityPlans.Plan plan =
                 ActivityPlans.equip(chest, post.craftPoint(), chosen.upgrade().item());
-        return GraphActivityPost.launch(post, spirit, BoardCase.ACTIVITY_ARM, plan);
+        return GraphActivityPost.launchWithRequirements(
+                post,
+                spirit,
+                BoardCase.ACTIVITY_ARM,
+                plan,
+                Map.of(chosen.upgrade().item(), 1));
     }
 
     private static boolean craftArmor(GraphPost post, GraphTickets.Ticket ticket) {
@@ -127,6 +134,10 @@ final class GearPost {
             return true;
         }
         return false;
+    }
+
+    private static List<GraphFacts.Chest> chests(GraphPost post) {
+        return GearRules.availableChests(post.facts.chests(), BoardReserve.items(post.service.board()));
     }
 
     private static boolean busy(GraphPost post, SpiritEntity spirit) {

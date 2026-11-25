@@ -22,7 +22,14 @@ public final class ActivityTickets {
 
     public record Plan(String script, String target, int plannedTicks, TaskNode task) {}
 
-    public record Request(Identity identity, Crew crew, int priority, long createdAt, Plan plan) {}
+    public record Request(
+            Identity identity, Crew crew, int priority, long createdAt, Plan plan, Map<String, Integer> requiredItems) {
+        public Request {
+            Objects.requireNonNull(plan, "План занятия не может быть null: духу нечего исполнять");
+            requiredItems = Map.copyOf(Objects.requireNonNull(
+                    requiredItems, "Требования занятия не могут быть null: пустой запас задают пустой картой"));
+        }
+    }
 
     private ActivityTickets() {}
 
@@ -51,7 +58,7 @@ public final class ActivityTickets {
                 1,
                 identity.cause(),
                 List.of(),
-                Map.of(),
+                request.requiredItems(),
                 details(plan.script(), plan.target(), members.leader(), crew, plan.plannedTicks()),
                 crew);
     }

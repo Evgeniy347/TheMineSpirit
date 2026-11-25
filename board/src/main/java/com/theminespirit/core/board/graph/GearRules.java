@@ -61,6 +61,24 @@ public final class GearRules {
         return false;
     }
 
+    public static List<GraphFacts.Chest> availableChests(List<GraphFacts.Chest> chests, Map<String, Integer> reserved) {
+        Objects.requireNonNull(chests, "Сундуки не могут быть null: без них нечего брать");
+        Objects.requireNonNull(reserved, "Бронь не может быть null: пустая бронь задаётся пустой картой");
+        return chests.stream()
+                .map(chest -> {
+                    Map<String, Integer> contents = new LinkedHashMap<>();
+                    chest.contents().forEach((item, count) -> {
+                        int held = reserved.getOrDefault(shortId(item), 0);
+                        if (count > held) {
+                            contents.put(item, count - held);
+                        }
+                    });
+                    return new GraphFacts.Chest(
+                            chest.position(), contents, chest.freeSlots(), chest.totalSlots(), chest.reach());
+                })
+                .toList();
+    }
+
     public static Optional<Upgrade> equipUpgrade(
             GraphFacts.Spirit spirit, List<GraphFacts.Chest> chests, GearInputs.Settings settings) {
         Objects.requireNonNull(spirit, "Дух не может быть null: снаряжение подбирают ему");

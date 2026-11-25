@@ -45,6 +45,23 @@ public final class BoardActivities {
         return CASES.contains(boardCase);
     }
 
+    public static boolean open(Board board, String cause) {
+        Objects.requireNonNull(board, "Доска занятий не может быть null: дубликат ищут на ней");
+        Objects.requireNonNull(cause, "Причина занятия не может быть null: без неё не отличить повтор");
+        for (BoardTicket ticket : board.tickets()) {
+            if (!isActivity(ticket.boardCase()) || !cause.equals(ticket.cause())) {
+                continue;
+            }
+            BoardStatus status = board.statusOf(ticket.id()).orElse(null);
+            if (status == BoardStatus.PENDING
+                    || status == BoardStatus.WAITING_RESOURCES
+                    || status == BoardStatus.ASSIGNED) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static boolean stale(BoardTicket ticket, @Nullable BoardStatus status, Set<String> liveCauses) {
         if (RestTickets.is(ticket.id())) {
             return status == BoardStatus.DONE;

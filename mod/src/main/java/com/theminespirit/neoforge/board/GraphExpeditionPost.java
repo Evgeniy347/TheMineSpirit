@@ -63,7 +63,8 @@ final class GraphExpeditionPost {
                             GraphActivityPost.priority(post),
                             MINE,
                             plan(bottom),
-                            null));
+                            null,
+                            Map.of()));
         }
         List<UUID> crew = GraphActivityPost.ticket(post, ticket.id())
                 .map(BoardTicket::executors)

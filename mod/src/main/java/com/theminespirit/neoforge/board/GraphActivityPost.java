@@ -9,6 +9,7 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.jspecify.annotations.Nullable;
@@ -23,12 +24,15 @@ final class GraphActivityPost {
             int priority,
             String script,
             TaskNode task,
-            @Nullable String hold) {}
+            @Nullable String hold,
+            Map<String, Integer> requiredItems) {}
 
     private GraphActivityPost() {}
 
     static boolean request(GraphPost post, String key, int priority, BoardCase activity, String script, TaskNode task) {
-        return post(post, new Post(key, activity, new Crew(Optional.empty(), List.of()), priority, script, task, null));
+        return post(
+                post,
+                new Post(key, activity, new Crew(Optional.empty(), List.of()), priority, script, task, null, Map.of()));
     }
 
     static boolean launch(GraphPost post, SpiritEntity spirit, BoardCase activity, ActivityPlans.Plan plan) {
@@ -41,7 +45,27 @@ final class GraphActivityPost {
                         priority(post),
                         plan.script(),
                         plan.task(),
-                        null));
+                        null,
+                        Map.of()));
+    }
+
+    static boolean launchWithRequirements(
+            GraphPost post,
+            SpiritEntity spirit,
+            BoardCase activity,
+            ActivityPlans.Plan plan,
+            Map<String, Integer> requiredItems) {
+        return post(
+                post,
+                new Post(
+                        id(post, Optional.of(spirit.getUUID())),
+                        activity,
+                        new Crew(Optional.of(spirit.getUUID()), List.of()),
+                        priority(post),
+                        plan.script(),
+                        plan.task(),
+                        null,
+                        requiredItems));
     }
 
     static boolean launchNow(GraphPost post, SpiritEntity spirit, BoardCase activity, ActivityPlans.Plan plan) {
@@ -55,7 +79,8 @@ final class GraphActivityPost {
                         priority(post),
                         plan.script(),
                         plan.task(),
-                        null))) {
+                        null,
+                        Map.of()))) {
             return false;
         }
         return post.service.activities().start(id, spirit, plan.task(), post.now);
@@ -63,6 +88,11 @@ final class GraphActivityPost {
 
     static boolean post(GraphPost post, Post request) {
         String cause = post.current == null ? "activity:" + request.script() : post.current.id();
+        if (post.current != null
+                && BoardActivities.open(post.service.board(), cause)
+                && post.service.board().find(request.id()).isEmpty()) {
+            return true;
+        }
         int planned = post.current == null ? 0 : post.current.task().ticks();
         String target = BoardActivities.targetOf(request.task());
         ActivityTickets.Request ticket = new ActivityTickets.Request(
@@ -70,7 +100,8 @@ final class GraphActivityPost {
                 new ActivityTickets.Crew(request.crew().leader(), request.crew().team()),
                 request.priority(),
                 post.now,
-                new ActivityTickets.Plan(request.script(), target == null ? "" : target, planned, request.task()));
+                new ActivityTickets.Plan(request.script(), target == null ? "" : target, planned, request.task()),
+                request.requiredItems());
         return post.service.activities().post(ticket, point(post, request.task()), request.hold());
     }
 

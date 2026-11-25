@@ -200,6 +200,26 @@ class GearInputsPart2Tests {
     }
 
     @Test
+    void availableChests_ReservedTool_SubtractsOnlyReservedCount() {
+        GraphFacts.Chest chest = chest(Map.of(
+                "minecraft:wooden_pickaxe", 2,
+                "minecraft:stone_pickaxe", 1));
+
+        var available = GearRules.availableChests(List.of(chest), Map.of("wooden_pickaxe", 1));
+
+        assertEquals(
+                Map.of(
+                        "minecraft:wooden_pickaxe", 1,
+                        "minecraft:stone_pickaxe", 1),
+                available.get(0).contents(),
+                "Бронь занятия убирает из выбора ровно одну кирку: иначе второй дух снова получит"
+                        + " тот же последний предмет и упадёт с «в контейнере 0 из 1» Иначе тест"
+                        + " availableChests_ReservedTool_SubtractsOnlyReservedCount перестанет ловить"
+                        + " живой случай 25.11. При смене availableChests_ReservedTool_SubtractsOnlyReservedCount"
+                        + " проверь GearPost.equip и BoardReserve.items.");
+    }
+
+    @Test
     void missingArmor_StageOne_LeatherHelmet() {
         GraphFacts.Spirit spirit = spirit(null, List.of(), List.of());
         assertEquals(

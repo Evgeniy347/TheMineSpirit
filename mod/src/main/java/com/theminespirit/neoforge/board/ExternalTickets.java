@@ -11,6 +11,7 @@ import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.TaskNode;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.jspecify.annotations.Nullable;
@@ -38,8 +39,8 @@ public final class ExternalTickets {
                 new ActivityTickets.Crew(Optional.of(spiritId), List.of()),
                 BoardRules.priorityOf(BoardCase.ACTIVITY_EXTERNAL),
                 now,
-                new ActivityTickets.Plan(
-                        script == null ? "" : script, targetLabel == null ? "" : targetLabel, 0, plan));
+                new ActivityTickets.Plan(script == null ? "" : script, targetLabel == null ? "" : targetLabel, 0, plan),
+                Map.of());
         BoardTicket ticket = ActivityTickets.ticket(request).withTitle(title);
         TicketTarget goal = TicketTarget.at(at).withPlan(plan);
         BoardOutcome outcome = service.submit(ticket, goal);
