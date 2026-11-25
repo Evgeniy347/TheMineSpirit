@@ -19,7 +19,7 @@ import net.minecraft.server.level.ServerLevel;
 final class GraphBuildInputs {
     private GraphBuildInputs() {}
 
-    static Map<String, Built> of(
+    static BuildingStates of(
             ServerLevel level, BoardService service, FirstStepsRunner.StageScan scan, SupplyGraph graph) {
         BoardLedger ledger = service.board().ledger();
         Map<String, Built> buildings = new HashMap<>(StageBuilt.of(scan.facts()));
@@ -36,7 +36,7 @@ final class GraphBuildInputs {
         buildings.putAll(planBuilt(level, service, scan, town));
         PlanStatesInputs.apply(level, scan, town, ledger, graph, buildings);
         FarmBuilt.apply(service, level, scan, ledger, graph, town, buildings);
-        return buildings;
+        return BuildingStates.of(level, buildings);
     }
 
     private static Map<String, Built> planBuilt(

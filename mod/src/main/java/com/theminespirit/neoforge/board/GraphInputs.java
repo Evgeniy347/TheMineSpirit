@@ -63,7 +63,7 @@ final class GraphInputs {
         PHASES.clear();
         int stage = service.board().ledger().stage();
         long started = System.nanoTime();
-        Map<String, Built> buildings = GraphBuildInputs.of(level, service, scan, graph);
+        BuildingStates buildings = GraphBuildInputs.of(level, service, scan, graph);
         mark("buildings", started);
         Optional<TownPlan> town = SettlementPlotStore.get(level).town();
         LifeInputs.Input life = LifeInputs.of(level, spirits, around.events());
