@@ -9,6 +9,7 @@ import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.ColumnMask;
 import com.theminespirit.core.town.PlotContour;
 import com.theminespirit.core.town.TerrainGrid;
+import com.theminespirit.core.town.TownDrawio;
 import com.theminespirit.core.town.TownMap;
 import com.theminespirit.core.town.TownMapCodec;
 import com.theminespirit.core.town.TownMapConvert;
@@ -52,30 +53,16 @@ final class TownSurvey {
             Frame frame,
             BoardService service,
             long now) {
-        Optional<TownMap> stored = decodeStored(store);
-        if (stored.isPresent()
-                && TownMapCodec.format(store.mapJson().orElseThrow()) < TownMapCodec.FORMAT
-                && store.town().isPresent()) {
-            TownMap converted = TownMapConvert.of(store.town().orElseThrow(), frame.region());
-            int revision = store.mapRevision() + 1;
-            store.putMap(
-                    TownMapCodec.encode(converted, revision, frame.region()),
-                    store.town().orElseThrow(),
-                    revision);
-            LOGGER.info(
-                    "[plot] карта пересобрана по новому формату: участков {}, улиц {}",
-                    converted.plots().size(),
-                    converted.streets().size());
-            return converted;
-        }
+        Optional<TownMap> stored = decodeStored(store, frame);
         if (stored.isPresent()) {
             return stored.orElseThrow();
         }
         if (store.town().isPresent()) {
             TownPlan legacy = store.town().orElseThrow();
             TownMap converted = TownMapConvert.of(legacy, frame.region());
-            String json = TownMapCodec.encode(converted, 1, frame.region());
-            store.putMap(json, legacy, 1);
+            String xml = TownDrawio.encodeStored(
+                    converted, 1, bounds(frame, 0), bounds(frame, 1), bounds(frame, 2), bounds(frame, 3), 2);
+            store.putMap(xml, legacy, 1);
             LOGGER.info(
                     "[plot] старый план пересобран в карту: участков {}, улиц {}, отрезков стены {}",
                     converted.plots().size(),
@@ -95,22 +82,61 @@ final class TownSurvey {
         }
         TownMap empty = new TownMap(new TownMap.MapPoint(center.x(), center.z()), List.of(), List.of(), List.of());
         TownPlan plan = TownMapRules.build(empty, rules, frame.region(), center, TownSurvey::stageOf);
-        store.putMap(TownMapCodec.encode(empty, 1, frame.region()), plan, 1);
+        store.putMap(
+                TownDrawio.encodeStored(
+                        empty, 1, bounds(frame, 0), bounds(frame, 1), bounds(frame, 2), bounds(frame, 3), 2),
+                plan,
+                1);
         LOGGER.info("[plot] карта поселения пуста: ждём раскладку стратега через REST");
         return empty;
     }
 
-    private static Optional<TownMap> decodeStored(SettlementPlotStore store) {
-        Optional<String> json = store.mapJson();
-        if (json.isEmpty()) {
+    private static Optional<TownMap> decodeStored(SettlementPlotStore store, Frame frame) {
+        Optional<String> text = store.mapText();
+        if (text.isEmpty()) {
             return Optional.empty();
         }
+        String raw = text.orElseThrow();
         try {
-            return Optional.of(TownMapCodec.decode(json.orElseThrow()));
-        } catch (IllegalArgumentException broken) {
-            LOGGER.error("[plot] сохранённая карта не читается, план пуст: {}", broken.getMessage());
-            return Optional.empty();
+            return Optional.of(TownDrawio.decode(raw).map());
+        } catch (IllegalArgumentException drawio) {
+            try {
+                TownMap legacy = TownMapCodec.decode(raw);
+                TownMap cleaned = new TownMap(
+                        legacy.anchor(),
+                        legacy.plots(),
+                        legacy.streets().stream()
+                                .filter(street -> !"ring".equals(street.kind()))
+                                .toList(),
+                        legacy.wall());
+                store.rewriteMap(TownDrawio.encodeStored(
+                        cleaned,
+                        store.mapRevision(),
+                        bounds(frame, 0),
+                        bounds(frame, 1),
+                        bounds(frame, 2),
+                        bounds(frame, 3),
+                        2));
+                LOGGER.info(
+                        "[plot] карта переведена из JSON в .drawio: участков {}, улиц {}, отрезков стены {}",
+                        cleaned.plots().size(),
+                        cleaned.streets().size(),
+                        cleaned.wall().size());
+                return Optional.of(cleaned);
+            } catch (IllegalArgumentException json) {
+                LOGGER.error("[plot] сохранённая карта не читается, план пуст: {}", drawio.getMessage());
+                return Optional.empty();
+            }
         }
+    }
+
+    private static int bounds(Frame frame, int index) {
+        return switch (index) {
+            case 0 -> frame.region().minX();
+            case 1 -> frame.region().minZ();
+            case 2 -> frame.region().minX() + frame.region().width() - 1;
+            default -> frame.region().minZ() + frame.region().depth() - 1;
+        };
     }
 
     static int stageOf(String building) {

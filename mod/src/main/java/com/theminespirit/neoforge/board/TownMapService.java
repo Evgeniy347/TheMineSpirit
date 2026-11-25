@@ -19,6 +19,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import net.minecraft.server.level.ServerLevel;
 import org.slf4j.Logger;
 
@@ -69,7 +70,7 @@ public final class TownMapService {
         }
         TownPlan plan = TownMapRules.build(map, rules, frame.region(), center, TownSurvey::stageOf);
         int next = Math.max(store.mapRevision(), revision) + 1;
-        store.putMap(TownMapCodec.encode(map, next, frame.region()), plan, next);
+        store.putMap(stored(map, next, frame.region()), plan, next);
         LOGGER.info(
                 "[plot] карта применена: ревизия {}, участков {}, улиц {}, отрезков стены {}",
                 next,
@@ -81,12 +82,31 @@ public final class TownMapService {
     }
 
     private static TownMap previous(SettlementPlotStore store) {
-        try {
-            return store.mapJson().map(TownMapCodec::decode).orElse(null);
-        } catch (IllegalArgumentException broken) {
-            LOGGER.warn("[plot] прежняя карта не читается, унаследованных объектов нет: {}", broken.getMessage());
+        Optional<String> text = store.mapText();
+        if (text.isEmpty()) {
             return null;
         }
+        try {
+            return TownDrawio.decode(text.orElseThrow()).map();
+        } catch (IllegalArgumentException drawio) {
+            try {
+                return TownMapCodec.decode(text.orElseThrow());
+            } catch (IllegalArgumentException json) {
+                LOGGER.warn("[plot] прежняя карта не читается, унаследованных объектов нет: {}", drawio.getMessage());
+                return null;
+            }
+        }
+    }
+
+    private static String stored(TownMap map, int revision, ColumnMask region) {
+        return TownDrawio.encodeStored(
+                map,
+                revision,
+                region.minX(),
+                region.minZ(),
+                region.minX() + region.width() - 1,
+                region.minZ() + region.depth() - 1,
+                2);
     }
 
     public byte[] previewDrawio(String body) {

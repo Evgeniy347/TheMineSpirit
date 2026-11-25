@@ -1,6 +1,7 @@
 package com.theminespirit.core.town;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -104,6 +105,28 @@ class TownDrawioTests {
                         + "нового; получено " + decoded.revision()
                         + " Иначе тест decode_EncodedDrawio_RestoresMapAndRevision перестанет ловить эту поломку. "
                         + "При смене decode_EncodedDrawio_RestoresMapAndRevision проверь tmRevision");
+    }
+
+    @Test
+    void encodeStored_WithoutPng_KeepsMapForWorld() {
+        TownMap source = map("hut");
+
+        String xml = TownDrawio.encodeStored(source, 5, -20, -10, 20, 50, 2);
+        TownMap decoded = TownDrawio.decode(xml).map();
+
+        assertFalse(
+                xml.contains("image=data:image/png"),
+                "Служебная карта в мире хранится без PNG-подложки: иначе NBT раздувается на сотни килобайт "
+                        + "на каждое сохранение; получено " + xml.length()
+                        + " Иначе тест encodeStored_WithoutPng_KeepsMapForWorld перестанет ловить эту поломку. При "
+                        + "смене encodeStored_WithoutPng_KeepsMapForWorld проверь отсутствие картинки");
+        assertEquals(
+                source,
+                decoded,
+                "Служебная карта без подложки читается обратно один в один: иначе мир теряет участки после "
+                        + "перезапуска; получено " + decoded
+                        + " Иначе тест encodeStored_WithoutPng_KeepsMapForWorld перестанет ловить эту поломку. При "
+                        + "смене encodeStored_WithoutPng_KeepsMapForWorld проверь участки и стену");
     }
 
     @Test

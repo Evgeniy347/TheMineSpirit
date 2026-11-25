@@ -2,6 +2,7 @@ package com.theminespirit.core.town;
 
 import java.util.Base64;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 public final class TownDrawio {
     public static final int FORMAT = 2;
@@ -16,8 +17,20 @@ public final class TownDrawio {
     }
 
     public static String encode(TownMap map, int revision, int x1, int z1, int x2, int z2, int scale, byte[] png) {
-        Objects.requireNonNull(map, "Карта не может быть null: без участков и стены выгружать нечего");
         Objects.requireNonNull(png, "Подложка не может быть null: .drawio без картинки не открыть");
+        if (png.length == 0) {
+            throw new IllegalArgumentException("Подложка пуста: PNG для .drawio не отдан");
+        }
+        return build(map, revision, x1, z1, x2, z2, scale, png);
+    }
+
+    public static String encodeStored(TownMap map, int revision, int x1, int z1, int x2, int z2, int scale) {
+        return build(map, revision, x1, z1, x2, z2, scale, null);
+    }
+
+    private static String build(
+            TownMap map, int revision, int x1, int z1, int x2, int z2, int scale, byte @Nullable [] png) {
+        Objects.requireNonNull(map, "Карта не может быть null: без участков и стены выгружать нечего");
         if (scale < 1 || scale > 8) {
             throw new IllegalArgumentException("Масштаб " + scale + ": допустимо 1..8 пикселей на блок");
         }
@@ -25,12 +38,10 @@ public final class TownDrawio {
             throw new IllegalArgumentException(
                     "Рамка " + x1 + "," + z1 + " → " + x2 + "," + z2 + " пуста: нужны x1<x2 и z1<z2");
         }
-        if (png.length == 0) {
-            throw new IllegalArgumentException("Подложка пуста: PNG для .drawio не отдан");
-        }
         int width = (x2 - x1 + 1) * scale;
         int height = (z2 - z1 + 1) * scale;
-        StringBuilder xml = new StringBuilder(64 * 1024 + png.length * 4 / 3);
+        int bytes = png == null ? 0 : png.length;
+        StringBuilder xml = new StringBuilder(64 * 1024 + bytes * 4 / 3);
         xml.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
         xml.append("<mxfile host=\"app.diagrams.net\" agent=\"The Mine Spirit\" type=\"device\">\n");
         xml.append("  <diagram id=\"town\" name=\"")
@@ -48,7 +59,9 @@ public final class TownDrawio {
         xml.append("      <root>\n");
         xml.append("        <mxCell id=\"0\"/>\n");
         xml.append("        <mxCell id=\"1\" parent=\"0\"/>\n");
-        image(xml, png, width, height);
+        if (png != null) {
+            image(xml, png, width, height);
+        }
         plots(xml, map, x1, z1, scale);
         streets(xml, map, x1, z1, scale);
         walls(xml, map, x1, z1, scale);

@@ -47,7 +47,7 @@ public final class SettlementPlotStore extends SavedData {
 
     private @Nullable SettlementPlot plot;
     private @Nullable TownPlan town;
-    private @Nullable String mapJson;
+    private @Nullable String mapText;
     private int mapRevision;
     private @Nullable BlockCoord home;
     private final Map<Integer, StageSite> sites = new HashMap<>();
@@ -68,20 +68,25 @@ public final class SettlementPlotStore extends SavedData {
         return Optional.ofNullable(town);
     }
 
-    public Optional<String> mapJson() {
-        return Optional.ofNullable(mapJson);
+    public Optional<String> mapText() {
+        return Optional.ofNullable(mapText);
     }
 
     public int mapRevision() {
         return mapRevision;
     }
 
-    public void putMap(String json, TownPlan next, int revision) {
-        mapJson = Objects.requireNonNull(json, "JSON карты не может быть null: применять нечего");
+    public void putMap(String xml, TownPlan next, int revision) {
+        mapText = Objects.requireNonNull(xml, "Текст карты не может быть null: применять нечего");
         town = Objects.requireNonNull(next, "План карты не может быть null: по нему строят духи");
         mapRevision = revision;
         forgetHome();
         sites.clear();
+        setDirty();
+    }
+
+    public void rewriteMap(String xml) {
+        mapText = Objects.requireNonNull(xml, "Текст карты не может быть null: переносить нечего");
         setDirty();
     }
 
@@ -234,7 +239,7 @@ public final class SettlementPlotStore extends SavedData {
         }
         if (tag.contains(MAP)) {
             try {
-                store.mapJson = TownMapCodec.unpack(tag.getByteArray(MAP));
+                store.mapText = TownMapCodec.unpack(tag.getByteArray(MAP));
                 store.mapRevision = tag.getInt(MAP_REV);
             } catch (IllegalArgumentException | IllegalStateException broken) {
                 LOGGER.error("[plot] сохранённая карта поселения не читается: {}", broken.getMessage());
@@ -269,8 +274,8 @@ public final class SettlementPlotStore extends SavedData {
         if (plan != null) {
             tag.putByteArray(TOWN, TownPlanCodec.encodePacked(plan));
         }
-        if (mapJson != null) {
-            tag.putByteArray(MAP, TownMapCodec.pack(mapJson));
+        if (mapText != null) {
+            tag.putByteArray(MAP, TownMapCodec.pack(mapText));
             tag.putInt(MAP_REV, mapRevision);
         }
         return tag;

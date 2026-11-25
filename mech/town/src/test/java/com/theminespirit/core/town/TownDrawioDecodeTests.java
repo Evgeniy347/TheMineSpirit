@@ -142,8 +142,12 @@ class TownDrawioDecodeTests {
         String cells = "<mxCell tmKind=\"wall\" style=\"rotation=abc;\" tmX1=\"0\" tmZ1=\"0\" tmX2=\"4\" tmZ2=\"4\">"
                 + "<mxGeometry x=\"0\" y=\"0\" width=\"8\" height=\"4\" as=\"geometry\"/></mxCell>";
 
-        IllegalArgumentException failure =
-                assertThrows(IllegalArgumentException.class, () -> TownDrawio.decode(doc(cells)));
+        IllegalArgumentException failure = assertThrows(
+                IllegalArgumentException.class,
+                () -> TownDrawio.decode(doc(cells)),
+                "Нечисловой поворот стены обязан отклоняться, а не угадываться: иначе ограда уезжает в "
+                        + "случайную сторону; Иначе тест decode_BadWallRotation_RejectsWall перестанет ловить эту "
+                        + "поломку. При смене decode_BadWallRotation_RejectsWall проверь отказ");
 
         assertTrue(
                 failure.getMessage().contains("Поворот"),
