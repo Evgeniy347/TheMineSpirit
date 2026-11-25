@@ -24,6 +24,28 @@ public final class BoardReserve {
         return new StockView(free(stock.available(), items(board)));
     }
 
+    public static boolean take(Map<String, Integer> stock, Map<String, Integer> held, Map<String, Integer> required) {
+        Objects.requireNonNull(stock, "Запас не может быть null: пустой задают пустой картой");
+        Objects.requireNonNull(held, "Бронь прохода не может быть null: пустая задаётся пустой картой");
+        Objects.requireNonNull(required, "Требования не могут быть null: пустые задают пустой картой");
+        Map<String, Integer> free = new HashMap<>();
+        free(stock, held).forEach((item, count) -> free.put(shortId(item), count));
+        for (Map.Entry<String, Integer> need : required.entrySet()) {
+            if (free.getOrDefault(shortId(need.getKey()), 0) < need.getValue()) {
+                return false;
+            }
+        }
+        required.forEach((item, count) -> held.merge(shortId(item), count, Integer::sum));
+        return true;
+    }
+
+    public static void release(Map<String, Integer> held, Map<String, Integer> required) {
+        Objects.requireNonNull(held, "Бронь прохода не может быть null: освобождать нечего");
+        Objects.requireNonNull(required, "Требования не могут быть null: освобождать нечего");
+        required.forEach((item, count) -> held.merge(shortId(item), -count, Integer::sum));
+        held.values().removeIf(count -> count <= 0);
+    }
+
     public static Map<String, Integer> free(Map<String, Integer> stock, Map<String, Integer> reserved) {
         Objects.requireNonNull(stock, "Запас не может быть null: пустой задают пустой картой");
         Objects.requireNonNull(reserved, "Бронь не может быть null: пустую задают пустой картой");

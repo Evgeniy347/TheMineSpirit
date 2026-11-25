@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.BoardOutcome;
+import com.theminespirit.core.board.BoardReserve;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.MaterialSource;
@@ -20,6 +21,7 @@ import com.theminespirit.core.board.route.RouteResource;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.planner.api.CraftedItems;
 import com.theminespirit.neoforge.SpiritEntity;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -50,6 +52,7 @@ final class GraphPost {
     final GatherPost demands = new GatherPost(this);
     GraphTickets.@Nullable Ticket current;
     private final Set<String> waiting = new HashSet<>();
+    private final Map<String, Integer> postedRequirements = new HashMap<>();
     private @Nullable BlockCoord craft;
     private @Nullable OpenPrefixes openPrefixes;
 
@@ -249,12 +252,15 @@ final class GraphPost {
         return GraphTicketFactory.leveled(base, level, dependsOn);
     }
 
-    BoardTicket dated(BoardTicket base, long createdAt) {
-        return GraphTicketFactory.dated(base, createdAt);
-    }
-
     BoardOutcome submit(BoardTicket ticket, TicketTarget target) {
+        if (!BoardReserve.take(stock.available(), postedRequirements, ticket.requiredItems())) {
+            waiting.add(ticket.id());
+            return BoardOutcome.GATE_BLOCKED;
+        }
         BoardOutcome outcome = service.submit(ticket, target);
+        if (outcome != BoardOutcome.ACCEPTED) {
+            BoardReserve.release(postedRequirements, ticket.requiredItems());
+        }
         if (outcome == BoardOutcome.DUPLICATE) service.board().reprioritize(ticket.id(), ticket.priority());
         if (outcome == BoardOutcome.ACCEPTED && openPrefixes != null) openPrefixes.posted(ticket.id());
         return outcome;

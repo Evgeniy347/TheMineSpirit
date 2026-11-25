@@ -102,7 +102,7 @@ final class StageStepOpener {
                 reserve.keySet().retainAll(need.keySet());
             }
             BoardOutcome submitted = post.submit(
-                    post.dated(
+                    GraphTicketFactory.dated(
                             post.ticket(
                                     FirstStepsRunner.partId(caseValue, part),
                                     caseValue,
