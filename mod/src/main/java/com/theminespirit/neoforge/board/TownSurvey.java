@@ -11,7 +11,6 @@ import com.theminespirit.core.town.PlotContour;
 import com.theminespirit.core.town.TerrainGrid;
 import com.theminespirit.core.town.TownDrawio;
 import com.theminespirit.core.town.TownMap;
-import com.theminespirit.core.town.TownMapCodec;
 import com.theminespirit.core.town.TownMapConvert;
 import com.theminespirit.core.town.TownMapRules;
 import com.theminespirit.core.town.TownPlan;
@@ -53,7 +52,7 @@ final class TownSurvey {
             Frame frame,
             BoardService service,
             long now) {
-        Optional<TownMap> stored = decodeStored(store, frame);
+        Optional<TownMap> stored = decodeStored(store);
         if (stored.isPresent()) {
             return stored.orElseThrow();
         }
@@ -91,42 +90,16 @@ final class TownSurvey {
         return empty;
     }
 
-    private static Optional<TownMap> decodeStored(SettlementPlotStore store, Frame frame) {
+    private static Optional<TownMap> decodeStored(SettlementPlotStore store) {
         Optional<String> text = store.mapText();
         if (text.isEmpty()) {
             return Optional.empty();
         }
-        String raw = text.orElseThrow();
         try {
-            return Optional.of(TownDrawio.decode(raw).map());
-        } catch (IllegalArgumentException drawio) {
-            try {
-                TownMap legacy = TownMapCodec.decode(raw);
-                TownMap cleaned = new TownMap(
-                        legacy.anchor(),
-                        legacy.plots(),
-                        legacy.streets().stream()
-                                .filter(street -> !"ring".equals(street.kind()))
-                                .toList(),
-                        legacy.wall());
-                store.rewriteMap(TownDrawio.encodeStored(
-                        cleaned,
-                        store.mapRevision(),
-                        bounds(frame, 0),
-                        bounds(frame, 1),
-                        bounds(frame, 2),
-                        bounds(frame, 3),
-                        2));
-                LOGGER.info(
-                        "[plot] карта переведена из JSON в .drawio: участков {}, улиц {}, отрезков стены {}",
-                        cleaned.plots().size(),
-                        cleaned.streets().size(),
-                        cleaned.wall().size());
-                return Optional.of(cleaned);
-            } catch (IllegalArgumentException json) {
-                LOGGER.error("[plot] сохранённая карта не читается, план пуст: {}", drawio.getMessage());
-                return Optional.empty();
-            }
+            return Optional.of(TownDrawio.decode(text.orElseThrow()).map());
+        } catch (IllegalArgumentException broken) {
+            LOGGER.error("[plot] сохранённая карта не читается, план пуст: {}", broken.getMessage());
+            return Optional.empty();
         }
     }
 

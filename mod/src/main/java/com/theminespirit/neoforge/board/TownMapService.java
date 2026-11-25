@@ -9,7 +9,6 @@ import com.theminespirit.core.town.ColumnMask;
 import com.theminespirit.core.town.TownDrawio;
 import com.theminespirit.core.town.TownMap;
 import com.theminespirit.core.town.TownMapCheck;
-import com.theminespirit.core.town.TownMapCodec;
 import com.theminespirit.core.town.TownMapFinding;
 import com.theminespirit.core.town.TownMapRules;
 import com.theminespirit.core.town.TownPlan;
@@ -88,13 +87,9 @@ public final class TownMapService {
         }
         try {
             return TownDrawio.decode(text.orElseThrow()).map();
-        } catch (IllegalArgumentException drawio) {
-            try {
-                return TownMapCodec.decode(text.orElseThrow());
-            } catch (IllegalArgumentException json) {
-                LOGGER.warn("[plot] прежняя карта не читается, унаследованных объектов нет: {}", drawio.getMessage());
-                return null;
-            }
+        } catch (IllegalArgumentException broken) {
+            LOGGER.warn("[plot] прежняя карта не читается, унаследованных объектов нет: {}", broken.getMessage());
+            return null;
         }
     }
 

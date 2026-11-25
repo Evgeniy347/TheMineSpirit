@@ -6,10 +6,10 @@ import com.theminespirit.core.board.BuildingWoods;
 import com.theminespirit.core.board.SettlementLevel;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
+import com.theminespirit.core.town.PackedText;
 import com.theminespirit.core.town.SettlementPlot;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.StageSites;
-import com.theminespirit.core.town.TownMapCodec;
 import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.core.town.TownPlanCodec;
 import java.util.HashMap;
@@ -82,11 +82,6 @@ public final class SettlementPlotStore extends SavedData {
         mapRevision = revision;
         forgetHome();
         sites.clear();
-        setDirty();
-    }
-
-    public void rewriteMap(String xml) {
-        mapText = Objects.requireNonNull(xml, "Текст карты не может быть null: переносить нечего");
         setDirty();
     }
 
@@ -239,7 +234,7 @@ public final class SettlementPlotStore extends SavedData {
         }
         if (tag.contains(MAP)) {
             try {
-                store.mapText = TownMapCodec.unpack(tag.getByteArray(MAP));
+                store.mapText = PackedText.unpack(tag.getByteArray(MAP));
                 store.mapRevision = tag.getInt(MAP_REV);
             } catch (IllegalArgumentException | IllegalStateException broken) {
                 LOGGER.error("[plot] сохранённая карта поселения не читается: {}", broken.getMessage());
@@ -275,7 +270,7 @@ public final class SettlementPlotStore extends SavedData {
             tag.putByteArray(TOWN, TownPlanCodec.encodePacked(plan));
         }
         if (mapText != null) {
-            tag.putByteArray(MAP, TownMapCodec.pack(mapText));
+            tag.putByteArray(MAP, PackedText.pack(mapText));
             tag.putInt(MAP_REV, mapRevision);
         }
         return tag;
