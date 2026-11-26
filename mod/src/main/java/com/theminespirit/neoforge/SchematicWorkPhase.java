@@ -51,8 +51,9 @@ final class SchematicWorkPhase {
                         || host.approachStand.y() < host.site.origin().y())) {
             BlockCoord top = new BlockCoord(
                     host.feet().x(), host.site.origin().y(), host.feet().z());
-            BlockCoord surface = StandSearch.nearest(top, host.site::standable);
-            if (surface != null) {
+            BlockCoord surface = StandSearch.nearest(
+                    top, cell -> cell.y() >= host.site.origin().y() && host.site.standable(cell));
+            if (surface.y() >= host.site.origin().y() && host.site.standable(surface)) {
                 host.approach.cancel();
                 host.beginApproach(surface);
                 return ScriptStatus.RUNNING;

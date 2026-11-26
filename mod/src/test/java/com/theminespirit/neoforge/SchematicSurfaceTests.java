@@ -14,7 +14,7 @@ class SchematicSurfaceTests {
                 Files.readString(Path.of("mod/src/main/java/com/theminespirit/neoforge/SchematicWorkPhase.java"));
         String compact = source.replaceAll("\\s+", "");
         int guard = compact.indexOf("SchematicGround.tilled(host.site.schematic())");
-        int nearest = compact.indexOf("StandSearch.nearest(top,host.site::standable)", guard);
+        int nearest = compact.indexOf("StandSearch.nearest(", guard);
         int cancel = compact.indexOf("host.approach.cancel();", guard);
         int approach = compact.indexOf("host.beginApproach(surface)", guard);
         int planning = compact.indexOf("host.ticks++;", guard);
@@ -29,5 +29,11 @@ class SchematicSurfaceTests {
                 "Подход к подземной стоянке отменяется, а подход к поверхности сохраняется: иначе старый "
                         + "маршрут снова уводит духа под грядку. При смене "
                         + "tick_TilledSchemeBelowSurface_ReturnsBeforePlanning проверь approachStand.");
+        assertTrue(
+                compact.contains("cell.y()>=host.site.origin().y()&&host.site.standable(cell)")
+                        && compact.contains("surface.y()>=host.site.origin().y()&&host.site.standable(surface)"),
+                "StandSearch не может вернуть клетку ниже пашни или центр без опоры: иначе дух снова "
+                        + "оказывается на y=63 и проваливает схему. При смене "
+                        + "tick_TilledSchemeBelowSurface_ReturnsBeforePlanning проверь фильтр поверхности.");
     }
 }
