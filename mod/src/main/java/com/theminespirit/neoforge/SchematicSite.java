@@ -95,7 +95,13 @@ final class SchematicSite {
     }
 
     int standBase() {
-        return BuildStandLevel.standBase(minY, SchematicGround.groundLayer(schematic));
+        return standBase(schematic, origin);
+    }
+
+    static int standBase(Schematic schematic, BlockCoord origin) {
+        return SchematicGround.tilled(schematic)
+                ? origin.y()
+                : BuildStandLevel.standBase(origin.y(), SchematicGround.groundLayer(schematic));
     }
 
     BuildRotation rotation() {
