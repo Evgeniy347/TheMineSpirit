@@ -107,6 +107,7 @@ final class ClearSweepRun {
                 scaffold.startStep();
                 return;
             }
+            triedAnchors.add(anchor == null ? feet() : anchor.coord());
             scaffold.startDescent();
             if (session.state != ClearAreaSession.State.DESCEND) {
                 session.fail("стою на своих подмостях, но своих клеток для разбора нет: нужен откат аренды");
@@ -186,6 +187,7 @@ final class ClearSweepRun {
     void breakTick() {
         if (breaks.tick() == ClearBreaks.Result.BROKEN) {
             anchor = null;
+            triedAnchors.clear();
             unload.reset();
         }
     }
@@ -199,7 +201,6 @@ final class ClearSweepRun {
 
     private void afterDismantle() {
         anchor = null;
-        triedAnchors.clear();
     }
 
     private boolean riseAllowed() {
