@@ -7,7 +7,7 @@ import org.jspecify.annotations.Nullable;
 
 final class ClearAnchor {
     static final int MAX_RISE = 24;
-    static final int BELOW = 2;
+    static final int BELOW = 4;
 
     record Stand(int x, int y, int z) {
         BlockCoord coord() {

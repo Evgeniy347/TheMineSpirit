@@ -89,6 +89,19 @@ class ClearAnchorTests {
     }
 
     @Test
+    void best_StandThreeAboveTarget_CoversTopLayer() {
+        ClearAnchor.Stand high = new ClearAnchor.Stand(0, 67, 0);
+        List<BlockCoord> top = List.of(new BlockCoord(1, 64, 0));
+
+        assertEquals(
+                high,
+                ClearAnchor.best(top, List.of(high), new BlockCoord(0, 64, 0), REACH, Set.of()),
+                "Верхний слой холма можно снять со стоянки на три блока выше: иначе clear_area снова "
+                        + "строит бесполезные столбы и не расчищает wheat_field. При смене "
+                        + "best_StandThreeAboveTarget_CoversTopLayer проверь ClearAnchor.BELOW и живую поле.");
+    }
+
+    @Test
     void best_StandDeepBelowSpirit_IsNotChosen() {
         ClearAnchor.Stand pit = new ClearAnchor.Stand(0, 45, 0);
         ClearAnchor.Stand near = new ClearAnchor.Stand(3, 64, 0);
