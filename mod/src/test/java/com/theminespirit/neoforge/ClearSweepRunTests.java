@@ -10,6 +10,18 @@ import org.junit.jupiter.api.Test;
 
 class ClearSweepRunTests {
     @Test
+    void pick_TopmostTargets_AnchorDoesNotOpenLowerLayer() throws IOException {
+        String source = Files.readString(Path.of("mod/src/main/java/com/theminespirit/neoforge/ClearSweepRun.java"));
+
+        assertTrue(
+                source.contains("ClearOrder.topmost(session.remaining")
+                        && source.contains("ClearStands.best(session, triedAnchors, highest)"),
+                "Стойка выбирается только для верхнего оставшегося слоя: иначе недостижимый верх открывает "
+                        + "нижние ящики и расчистка идёт не сверху вниз. При смене "
+                        + "pick_TopmostTargets_AnchorDoesNotOpenLowerLayer проверь ClearStands.best и живое поле.");
+    }
+
+    @Test
     void pillar_NoHigherTargets_TriesAnotherStandAfterDescent() throws IOException {
         String source = Files.readString(Path.of("mod/src/main/java/com/theminespirit/neoforge/ClearSweepRun.java"));
         String compact = source.replaceAll("\\s+", "");

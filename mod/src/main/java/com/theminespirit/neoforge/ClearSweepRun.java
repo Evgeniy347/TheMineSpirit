@@ -78,6 +78,12 @@ final class ClearSweepRun {
             finish();
             return;
         }
+        List<BlockCoord> highest = ClearOrder.topmost(session.remaining, cell -> !session.targets.clear(cell));
+        if (highest.isEmpty()) {
+            session.remaining.clear();
+            finish();
+            return;
+        }
         boolean onPillar = PillarDownScript.ownBelow(session.spirit);
         if (unload.tryStart()) {
             return;
@@ -117,7 +123,8 @@ final class ClearSweepRun {
         if (!session.spirit.onGround()) {
             return;
         }
-        ClearAnchor.Stand chosen = anchor();
+        ClearAnchor.Stand chosen = ClearStands.best(session, triedAnchors, highest);
+        anchor = chosen;
         if (chosen == null) {
             session.unreachable += session.remaining.size();
             session.noteSkipped(session.remaining.size());
@@ -215,16 +222,6 @@ final class ClearSweepRun {
         }
         anchor = null;
         session.state = ClearAreaSession.State.PICK;
-    }
-
-    private ClearAnchor.@Nullable Stand anchor() {
-        ClearAnchor.Stand cached = anchor;
-        if (cached != null) {
-            return cached;
-        }
-        ClearAnchor.Stand chosen = ClearStands.best(session, triedAnchors);
-        anchor = chosen;
-        return chosen;
     }
 
     private BlockCoord feet() {

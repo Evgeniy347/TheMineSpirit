@@ -24,15 +24,11 @@ final class ClearStands {
 
     private ClearStands() {}
 
-    static ClearAnchor.@Nullable Stand best(ClearAreaSession session, Set<BlockCoord> tried) {
+    static ClearAnchor.@Nullable Stand best(ClearAreaSession session, Set<BlockCoord> tried, List<BlockCoord> targets) {
         BlockPos feet = session.spirit.blockPosition();
         List<ClearAnchor.Stand> stands = stands(session);
         ClearAnchor.Stand chosen = ClearAnchor.best(
-                session.remaining,
-                stands,
-                new BlockCoord(feet.getX(), feet.getY(), feet.getZ()),
-                horizontalReach(),
-                tried);
+                targets, stands, new BlockCoord(feet.getX(), feet.getY(), feet.getZ()), horizontalReach(), tried);
         if (chosen == null) {
             LOGGER.info(
                     "[clear] {}: якорь не найден: клеток {}, стоянок {}, опробовано {}, дух {}",
