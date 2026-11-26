@@ -25,6 +25,31 @@ class ChestReachTests {
     }
 
     @Test
+    void reachableStock_UnreachableChest_DoesNotSpendCarriedStock() {
+        Map<String, Integer> stock = Map.of("minecraft:bread", 14, "minecraft:oak_log", 8);
+        Map<String, Integer> carried = Map.of("minecraft:bread", 4);
+        List<GraphFacts.Chest> chests =
+                List.of(new GraphFacts.Chest(AT, Map.of("minecraft:bread", 10), 10, 27, GraphFacts.Reach.NO_PATH));
+
+        assertEquals(
+                Map.of("bread", 4, "oak_log", 8),
+                ChestReach.reachableStock(stock, chests, carried),
+                "Недостижимый сундук списывает только сундучный запас, а не хлеб в инвентаре духов: иначе граф "
+                        + "объявляет еду и грядки невыполнимыми при полном инвентаре. При смене "
+                        + "reachableStock_UnreachableChest_DoesNotSpendCarriedStock проверь живой wheat_field.");
+        assertEquals(
+                Map.of("bread", 3),
+                ChestReach.reachableStock(
+                        Map.of("minecraft:bread", 3),
+                        List.of(new GraphFacts.Chest(
+                                AT, Map.of("minecraft:bread", 10), 10, 27, GraphFacts.Reach.NO_PATH)),
+                        Map.of("minecraft:bread", 3)),
+                "Даже завышенный список недостижимых сундуков не стирает переносимой запас: иначе любой временный "
+                        + "сундук блокирует всю работу духа. При смене "
+                        + "reachableStock_UnreachableChest_DoesNotSpendCarriedStock проверь нижнюю границу carried.");
+    }
+
+    @Test
     void reachableStock_UnknownReach_KeepsStock() {
         Map<String, Integer> stock = Map.of("minecraft:bread", 12);
         List<GraphFacts.Chest> chests =
@@ -68,6 +93,44 @@ class ChestReachTests {
                 ChestReach.verdict(true, false),
                 "Сундук вне границы поселения недостижим тем же правилом, что и выдача еды"
                         + " Иначе тест verdict_UnloadedChunk_IsUnknownNotNoPath перестанет ловить эту поломку. При смене verdict_UnloadedChunk_IsUnknownNotNoPath проверь это утверждение.");
+    }
+
+    @Test
+    void plan_WheatFieldStockCarried_UnreachableChestDoesNotBlock() {
+        GraphWorld world = GraphWorld.settled();
+        Map<String, Integer> carried = Map.of("minecraft:wheat_seeds", 8, "minecraft:dirt", 8);
+        GraphFacts facts = GraphFacts.empty()
+                .withChests(List.of(new GraphFacts.Chest(
+                        AT,
+                        Map.of("minecraft:wheat_seeds", 64, "minecraft:dirt", 64),
+                        0,
+                        128,
+                        GraphFacts.Reach.NO_PATH)));
+        Map<String, Integer> available = ChestReach.reachableStock(carried, facts.chests(), carried);
+        GraphState state = new GraphState(
+                GraphNames.stock(
+                        available, StockCatalog.defaultTable().nutrition().keySet()),
+                world.stage,
+                world.kits,
+                world.buildings,
+                world.materials,
+                world.storageFree,
+                world.events,
+                world.world,
+                world.distances,
+                world.stations,
+                Map.of(),
+                facts);
+
+        GraphPlan plan = GraphPlanner.plan(world.graph, state);
+
+        assertTrue(
+                plan.task("building:wheat_field")
+                        .filter(GraphPlan.Task::feasible)
+                        .isPresent(),
+                "Семена и земля в инвентаре делают wheat_field выполнимым, даже если временные сундуки недоступны: "
+                        + "иначе пищевой приоритет блокируется ложной нехваткой. При смене "
+                        + "plan_WheatFieldStockCarried_UnreachableChestDoesNotBlock проверь живое поле.");
     }
 
     @Test

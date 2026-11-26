@@ -30,6 +30,16 @@ public final class ChestReach {
         return Map.copyOf(reachable);
     }
 
+    public static Map<String, Integer> reachableStock(
+            Map<String, Integer> available, List<GraphFacts.Chest> chests, Map<String, Integer> carried) {
+        Objects.requireNonNull(available, "Запас не может быть null: пустой задают пустой картой");
+        Objects.requireNonNull(chests, "Сундуки не могут быть null: без них — пустой список");
+        Objects.requireNonNull(carried, "Инвентарь духов не может быть null: пустой задают пустой картой");
+        Map<String, Integer> reachable = new LinkedHashMap<>(reachableStock(available, chests));
+        carried.forEach((item, count) -> reachable.merge(GraphNames.graphItem(item), count, Math::max));
+        return Map.copyOf(reachable);
+    }
+
     public static GraphFacts.Reach verdict(boolean loaded, boolean covered) {
         if (!loaded) {
             return GraphFacts.Reach.UNKNOWN;

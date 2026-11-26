@@ -193,7 +193,11 @@ final class GraphInputWork {
                                 GraphNames.stock(
                                         ChestReach.reachableStock(
                                                 stock.available(),
-                                                required(facts, "FACT_BASE").chests()),
+                                                required(facts, "FACT_BASE").chests(),
+                                                service.supply()
+                                                        .parts()
+                                                        .carried()
+                                                        .available()),
                                         StockCatalog.defaultTable().nutrition().keySet()),
                                 stage,
                                 required(kits, "BASE_INPUTS"),

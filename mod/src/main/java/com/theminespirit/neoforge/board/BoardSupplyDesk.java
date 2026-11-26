@@ -26,6 +26,7 @@ final class BoardSupplyDesk {
     private final Map<String, TicketTarget> targets;
     private final Map<String, Long> closed = new HashMap<>();
     private StockView stock = new StockView(Map.of());
+    private StockParts parts = new StockParts(new StockView(Map.of()), new StockView(Map.of()));
     private List<GraphBlock> shortages = List.of();
 
     BoardSupplyDesk(Board board, StockReader reader, Map<String, TicketTarget> targets) {
@@ -44,8 +45,13 @@ final class BoardSupplyDesk {
 
     StockParts refresh(ServerLevel level, List<SpiritEntity> spirits) {
         StockReader.Snapshot snapshot = reader.collect(level, spirits);
-        stock = snapshot.parts().total();
-        return snapshot.parts();
+        parts = snapshot.parts();
+        stock = parts.total();
+        return parts;
+    }
+
+    StockParts parts() {
+        return parts;
     }
 
     void ensure(ServerLevel level, BoardService service, List<SpiritEntity> spirits, long now) {
