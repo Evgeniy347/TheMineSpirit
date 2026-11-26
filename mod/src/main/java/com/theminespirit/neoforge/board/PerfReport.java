@@ -18,10 +18,9 @@ final class PerfReport {
         if (lastTick >= 0 && serverTick - lastTick < WINDOW_TICKS && serverTick >= lastTick) {
             return;
         }
-        boolean first = lastTick < 0;
         lastTick = serverTick;
         List<Perf.Line> lines = Perf.report();
-        if (first || lines.isEmpty()) {
+        if (lines.isEmpty()) {
             return;
         }
         LOGGER.info(
