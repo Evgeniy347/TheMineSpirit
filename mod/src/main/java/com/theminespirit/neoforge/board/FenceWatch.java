@@ -2,6 +2,7 @@ package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.FenceRepairs;
+import com.theminespirit.core.log.Perf;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.FenceLedger;
 import com.theminespirit.neoforge.SpiritConfig;
@@ -54,14 +55,19 @@ public final class FenceWatch {
     }
 
     static Map<BlockCoord, String> liveBreaks(ServerLevel level) {
-        return FenceLedger.get(level)
-                .retainLive(
-                        at -> {
-                            BlockPos block = pos(at);
-                            return !level.hasChunk(block.getX() >> 4, block.getZ() >> 4)
-                                    || !isFence(level.getBlockState(block));
-                        },
-                        SCAN_BUDGET);
+        long started = System.nanoTime();
+        FenceLedger ledger = FenceLedger.get(level);
+        Perf.record("board.src.fence.ledger", System.nanoTime() - started);
+        started = System.nanoTime();
+        Map<BlockCoord, String> live = ledger.retainLive(
+                at -> {
+                    BlockPos block = pos(at);
+                    return !level.hasChunk(block.getX() >> 4, block.getZ() >> 4)
+                            || !isFence(level.getBlockState(block));
+                },
+                SCAN_BUDGET);
+        Perf.record("board.src.fence.scan", System.nanoTime() - started);
+        return live;
     }
 
     static boolean isFence(BlockState state) {
