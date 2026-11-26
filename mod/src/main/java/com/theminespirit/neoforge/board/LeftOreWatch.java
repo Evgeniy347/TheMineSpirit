@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.chunk.LevelChunk;
 
 public final class LeftOreWatch {
     static final String PREFIX = "left_ore:";
@@ -44,10 +45,11 @@ public final class LeftOreWatch {
 
     private static boolean live(ServerLevel level, MineOreLedger ledger, BlockCoord pos) {
         BlockPos block = new BlockPos(pos.x(), pos.y(), pos.z());
-        if (!level.isLoaded(block)) {
+        LevelChunk chunk = level.getChunkSource().getChunkNow(block.getX() >> 4, block.getZ() >> 4);
+        if (chunk == null) {
             return true;
         }
-        if (MineOres.kindOf(BlockStates.idOf(level.getBlockState(block))) == MineOres.Kind.NONE) {
+        if (MineOres.kindOf(BlockStates.idOf(chunk.getBlockState(block))) == MineOres.Kind.NONE) {
             ledger.forget(pos);
             return false;
         }

@@ -65,6 +65,26 @@ class BoardRegistryTests {
     }
 
     @Test
+    void leftOreWatch_UnloadedChunk_ReadsOnlyLoadedChunkState() throws IOException {
+        String source =
+                Files.readString(Path.of("mod/src/main/java/com/theminespirit/neoforge/board/LeftOreWatch.java"));
+        String compact = source.replaceAll("\\s+", "");
+
+        assertTrue(
+                compact.contains("getChunkNow(block.getX()>>4,block.getZ()>>4)")
+                        && compact.contains("chunk.getBlockState(block)"),
+                "Память оставленной руды обязана читать BlockState из уже открытого чанка: иначе "
+                        + "ServerLevel.getBlockState ждёт частично загруженный чанк и холодная пересборка стоит "
+                        + "секунды. При смене leftOreWatch_UnloadedChunk_ReadsOnlyLoadedChunkState проверь "
+                        + "LeftOreWatch.live и src.left_ore.");
+        assertFalse(
+                compact.contains("level.getBlockState(block)"),
+                "Для старой памяти руды нельзя читать блок через ServerLevel: иначе холодный src.left_ore "
+                        + "снова блокирует серверный тик. При смене leftOreWatch_UnloadedChunk_ReadsOnlyLoadedChunkState "
+                        + "проверь LeftOreWatch.live.");
+    }
+
+    @Test
     void finishReport_Diagnostics_DeferredFromCriticalTick() throws IOException {
         String source =
                 Files.readString(Path.of("mod/src/main/java/com/theminespirit/neoforge/board/GraphSource.java"));
