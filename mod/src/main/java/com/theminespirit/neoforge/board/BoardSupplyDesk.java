@@ -82,7 +82,7 @@ final class BoardSupplyDesk {
 
     private List<BlockCoord> gateCenters(ServerLevel level, List<SpiritEntity> spirits) {
         List<BlockCoord> centers = new ArrayList<>();
-        Optional<BlockCoord> home = HomePoint.of(level, spirits);
+        Optional<BlockCoord> home = HomePoint.center(level, spirits);
         for (BoardTicket ticket : board.tickets()) {
             BoardStatus status = board.statusOf(ticket.id()).orElse(null);
             if (status != BoardStatus.PENDING && status != BoardStatus.WAITING_RESOURCES) {

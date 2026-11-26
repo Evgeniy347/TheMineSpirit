@@ -29,6 +29,11 @@ public final class HomePoint {
                         () -> Optional.of(HomeStand.at(level, home, List.of(spirit), Optional.empty())));
     }
 
+    public static Optional<BlockCoord> center(ServerLevel level, List<? extends HomedSpirit> spirits) {
+        Optional<BlockCoord> center = SettlementHome.center(SettlementHome.homes(spirits));
+        return center.isPresent() ? center : SettlementPlotStore.liveSite(level).map(StageSite::anchor);
+    }
+
     public static Optional<BlockCoord> of(ServerLevel level, List<? extends HomedSpirit> spirits) {
         SettlementPlotStore store = SettlementPlotStore.get(level);
         Optional<BlockCoord> center = SettlementHome.center(SettlementHome.homes(spirits));
