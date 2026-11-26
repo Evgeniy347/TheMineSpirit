@@ -25,6 +25,11 @@ class BoardSupplyDeskTests {
                 reader.contains("StockScan"),
                 "Блочный StockScan удалён: иначе лишний обход снова займёт секунды в стартовом тике. "
                         + "При смене stock_LoadedContainers_UsesRegistryWithoutBlockWalk проверь ChestSnapshots.positions.");
+        assertTrue(
+                reader.contains("board.stock.open") && reader.contains("board.stock.map"),
+                "Чтение контейнеров разделено на открытие и маппинг: иначе следующий холодный старт "
+                        + "снова покажет только общие 2660 мс. При смене stock_LoadedContainers_UsesRegistryWithoutBlockWalk "
+                        + "проверь StockReader.collect и PerfReport.");
     }
 
     @Test

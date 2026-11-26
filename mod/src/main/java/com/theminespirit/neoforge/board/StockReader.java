@@ -65,16 +65,25 @@ public final class StockReader {
         Perf.record("board.stock.known", System.nanoTime() - phase);
         phase = System.nanoTime();
         int reads = 0;
+        long checkNanos = 0;
+        long openNanos = 0;
+        long mapNanos = 0;
         for (BlockCoord pos : positions) {
             if (reads >= containerBudget) {
                 break;
             }
-            if (!ChestSnapshots.countable(level, pos)) {
+            long step = System.nanoTime();
+            boolean countable = ChestSnapshots.countable(level, pos);
+            checkNanos += System.nanoTime() - step;
+            if (!countable) {
                 continue;
             }
             BlockPos at = new BlockPos(pos.x(), pos.y(), pos.z());
+            step = System.nanoTime();
             ContainerAccess.Open open = ContainerAccess.open(level, at);
+            openNanos += System.nanoTime() - step;
             if (open instanceof ContainerAccess.Opened container) {
+                step = System.nanoTime();
                 StackMapper mapper = new StackMapper();
                 for (Stack stack : mapper.mapPresent(container.container())) {
                     add(chests, stack);
@@ -82,6 +91,7 @@ public final class StockReader {
                 for (int slot = 0; slot < container.container().getContainerSize(); slot++) {
                     addPotion(chests, container.container().getItem(slot));
                 }
+                mapNanos += System.nanoTime() - step;
                 reads++;
             }
         }
@@ -92,6 +102,9 @@ public final class StockReader {
                     containerBudget);
         }
         Perf.record("board.stock.containers", System.nanoTime() - phase);
+        Perf.record("board.stock.countable", checkNanos);
+        Perf.record("board.stock.open", openNanos);
+        Perf.record("board.stock.map", mapNanos);
         return new Snapshot(new StockParts(new StockView(chests), new StockView(carried)), reads);
     }
 
