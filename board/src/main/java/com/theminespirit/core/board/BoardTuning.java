@@ -23,7 +23,7 @@ public final class BoardTuning {
 
     public static final int STOCK_READ_BUDGET = 8;
 
-    public static final int STOCK_BLOCK_BUDGET = 4096;
+    public static final int STOCK_BLOCK_BUDGET = 512;
 
     public static final long FAIL_BACKOFF_TICKS = 200;
     public static final long STARVE_TICKS = 12000;

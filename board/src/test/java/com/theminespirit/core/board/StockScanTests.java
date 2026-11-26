@@ -117,6 +117,43 @@ class StockScanTests {
     }
 
     @Test
+    void scan_SlicesResume_CoversWholeVolumeOnce() {
+        BlockCoord first = new BlockCoord(-1, 64, -1);
+        BlockCoord last = new BlockCoord(1, 64, 1);
+        FakeBlocks blocks = new FakeBlocks().containerAt(first).containerAt(last);
+        long next = 0;
+        int reads = 0;
+        Set<BlockCoord> found = new HashSet<>();
+        for (int slice = 0; slice < 10; slice++) {
+            StockScan.Slice part = StockScan.scan(List.of(CENTER), 1, 0, next, 2, blocks);
+            reads += part.blockReads();
+            found.addAll(part.containers());
+            next = part.nextIndex();
+            if (!part.more()) {
+                break;
+            }
+        }
+
+        assertEquals(
+                9,
+                reads,
+                "Срезы по 2 блока проходят куб 3×3 ровно один раз: иначе либо теряются сундуки, либо "
+                        + "повторные чтения снова раздувают пересборку. При смене scan_SlicesResume_CoversWholeVolumeOnce "
+                        + "проверь StockScan.position, StockReader.scan и полный радиус запасов.");
+        assertEquals(
+                9,
+                next,
+                "После последнего среза курсор стоит в конце объёма: иначе следующий проход начнётся "
+                        + "не с начала и часть сундуков останется ненайденной. При смене "
+                        + "scan_SlicesResume_CoversWholeVolumeOnce проверь StockScan.total и StockReader.scanning.");
+        assertTrue(
+                found.containsAll(List.of(first, last)),
+                "Первый и последний сундуки объёма находятся в разных срезах: иначе граница среза "
+                        + "теряет крайние клетки и склад выглядит пустым. При смене "
+                        + "scan_SlicesResume_CoversWholeVolumeOnce проверь StockScan.scan и StockReader.discovered.");
+    }
+
+    @Test
     void containers_EmptyCenters_ReadsNothing() {
         FakeBlocks blocks = new FakeBlocks().containerAt(CENTER);
 

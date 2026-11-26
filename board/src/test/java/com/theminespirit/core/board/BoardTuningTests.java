@@ -125,14 +125,14 @@ class BoardTuningTests {
     @Test
     void stockBlockBudget_Is_BoundedSample() {
         assertEquals(
-                4096,
+                512,
                 BoardTuning.STOCK_BLOCK_BUDGET,
-                "Снимок запасов читает не больше 4096 блоков за пересборку (образец ветки 32): "
-                        + "без этого предела обход куба вокруг каждого духа грузил чанки на "
-                        + "главном потоке — причина 41-минутного GameTest"
-                        + " При смене stockBlockBudget_Is_BoundedSample проверь это утверждение.");
+                "Снимок запасов читает не больше 512 блоков за пересборку: иначе стартовый обход 4096 блоков "
+                        + "занимал 2461 мс и держал первый тик сервера. Полный радиус теперь проходит "
+                        + "возобновляемыми срезами StockScan.scan. При смене stockBlockBudget_Is_BoundedSample "
+                        + "проверь StockReader.scan, StockScanTests и TickWatch после запуска.");
         assertEquals(
-                4096,
+                512,
                 BoardTuning.stockBlockBudget(),
                 "Бюджет блоков читается из живой таблицы: иначе /reload не изменил бы предел обхода"
                         + " При смене stockBlockBudget_Is_BoundedSample проверь это утверждение.");

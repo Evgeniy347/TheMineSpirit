@@ -17,7 +17,6 @@ import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.inventory.ContainerAccess;
 import com.theminespirit.neoforge.inventory.StackMapper;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -43,7 +42,10 @@ public final class StockReader {
 
     private final int containerBudget;
     private final int blockBudget;
-    private int cursor;
+    private final Set<BlockCoord> discovered = new LinkedHashSet<>();
+    private List<BlockCoord> scanCenters = List.of();
+    private long scanNext;
+    private boolean scanning;
 
     public StockReader(int containerBudget, int blockBudget) {
         if (containerBudget <= 0) {
@@ -69,12 +71,7 @@ public final class StockReader {
                 add(carried, spirit.getMainHandItem());
             }
         }
-        StockScan.Result found = StockScan.containers(
-                rotate(centers),
-                SpiritConfig.storageSearchRadius(),
-                BoardConfig.current().facts().stockScanHeight(),
-                blockBudget,
-                blocks(level));
+        Scan found = scan(level, centers);
         int reads = 0;
         for (BlockCoord pos : StockScan.knownFirst(ChestSnapshots.positions(level), found.containers())) {
             if (reads >= containerBudget) {
@@ -129,6 +126,33 @@ public final class StockReader {
         return ChestSnapshots.read(level, List.copyOf(positions));
     }
 
+    private Scan scan(ServerLevel level, List<BlockCoord> centers) {
+        if (!scanning || !scanCenters.equals(centers)) {
+            scanCenters = List.copyOf(centers);
+            scanNext = 0;
+            scanning = true;
+            discovered.clear();
+        }
+        StockScan.Slice slice = StockScan.scan(
+                centers,
+                SpiritConfig.storageSearchRadius(),
+                BoardConfig.current().facts().stockScanHeight(),
+                scanNext,
+                blockBudget,
+                blocks(level));
+        discovered.addAll(slice.containers());
+        scanNext = slice.nextIndex();
+        if (!slice.more()) {
+            scanning = false;
+            List<BlockCoord> found = List.copyOf(discovered);
+            discovered.clear();
+            return new Scan(found, slice.blockReads());
+        }
+        return new Scan(List.copyOf(discovered), slice.blockReads());
+    }
+
+    private record Scan(List<BlockCoord> containers, int blockReads) {}
+
     private static StockScan.Blocks blocks(ServerLevel level) {
         Set<Block> allowed = ContainerAccess.allowedBlocks();
         return new StockScan.Blocks() {
@@ -143,16 +167,6 @@ public final class StockReader {
                         .getBlock());
             }
         };
-    }
-
-    private List<BlockCoord> rotate(List<BlockCoord> centers) {
-        if (centers.size() <= 1) {
-            return centers;
-        }
-        List<BlockCoord> ordered = new ArrayList<>(centers);
-        Collections.rotate(ordered, -(cursor % ordered.size()));
-        cursor++;
-        return ordered;
     }
 
     private static void add(Map<String, Integer> available, ItemStack stack) {

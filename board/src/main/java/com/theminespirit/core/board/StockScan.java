@@ -28,6 +28,17 @@ public final class StockScan {
         }
     }
 
+    public record Slice(List<BlockCoord> containers, int blockReads, long nextIndex, boolean more) {
+        public Slice {
+            Objects.requireNonNull(containers, "containers не может быть null: пустой список задают пустым");
+            containers = List.copyOf(containers);
+            if (blockReads < 0 || nextIndex < 0) {
+                throw new IllegalArgumentException(
+                        "Срез обхода " + blockReads + "/" + nextIndex + " не бывает отрицательным");
+            }
+        }
+    }
+
     private StockScan() {}
 
     public static List<BlockCoord> knownFirst(List<BlockCoord> known, List<BlockCoord> scanned) {
@@ -40,6 +51,17 @@ public final class StockScan {
 
     public static Result containers(
             List<BlockCoord> centers, int radiusBlocks, int heightBlocks, int blockBudget, Blocks blocks) {
+        Slice slice = scan(centers, radiusBlocks, heightBlocks, 0, blockBudget, blocks);
+        return new Result(slice.containers(), slice.blockReads());
+    }
+
+    public static Slice scan(
+            List<BlockCoord> centers,
+            int radiusBlocks,
+            int heightBlocks,
+            long fromIndex,
+            int blockBudget,
+            Blocks blocks) {
         Objects.requireNonNull(centers, "centers не может быть null: обход идёт вокруг центров заявок");
         Objects.requireNonNull(blocks, "blocks не может быть null: без источника блоков обход бессмыслен");
         if (radiusBlocks < 0) {
@@ -50,33 +72,45 @@ public final class StockScan {
             throw new IllegalArgumentException(
                     "heightBlocks равен " + heightBlocks + " и отрицателен: высота обхода не бывает отрицательной");
         }
+        if (fromIndex < 0) {
+            throw new IllegalArgumentException(
+                    "fromIndex равен " + fromIndex + " и отрицателен: срез продолжает обход, а не начинает его заново");
+        }
         if (blockBudget <= 0) {
             throw new IllegalArgumentException(
                     "blockBudget равен " + blockBudget + " и не положителен: снимок без бюджета читает мир целиком");
         }
         List<BlockCoord> ordered = new ArrayList<>(new LinkedHashSet<>(centers));
+        long total = total(ordered, radiusBlocks, heightBlocks);
+        long start = Math.min(fromIndex, total);
+        long end = Math.min(total, start + blockBudget);
         Set<BlockCoord> found = new HashSet<>();
-        int reads = 0;
-        for (BlockCoord center : ordered) {
-            for (int dx = -radiusBlocks; dx <= radiusBlocks; dx++) {
-                for (int dz = -radiusBlocks; dz <= radiusBlocks; dz++) {
-                    for (int dy = -heightBlocks; dy <= heightBlocks; dy++) {
-                        if (reads >= blockBudget) {
-                            return new Result(order(found, ordered), reads);
-                        }
-                        BlockCoord pos = new BlockCoord(center.x() + dx, center.y() + dy, center.z() + dz);
-                        reads++;
-                        if (!blocks.isLoaded(pos)) {
-                            continue;
-                        }
-                        if (blocks.isContainer(pos)) {
-                            found.add(pos);
-                        }
-                    }
-                }
+        for (long index = start; index < end; index++) {
+            BlockCoord pos = position(ordered, radiusBlocks, heightBlocks, index);
+            if (blocks.isLoaded(pos) && blocks.isContainer(pos)) {
+                found.add(pos);
             }
         }
-        return new Result(order(found, ordered), reads);
+        return new Slice(order(found, ordered), (int) (end - start), end, end < total);
+    }
+
+    private static long total(List<BlockCoord> centers, int radiusBlocks, int heightBlocks) {
+        long width = 2L * radiusBlocks + 1;
+        long height = 2L * heightBlocks + 1;
+        return centers.size() * width * width * height;
+    }
+
+    private static BlockCoord position(List<BlockCoord> centers, int radiusBlocks, int heightBlocks, long index) {
+        long width = 2L * radiusBlocks + 1;
+        long height = 2L * heightBlocks + 1;
+        long perCenter = width * width * height;
+        BlockCoord center = centers.get((int) (index / perCenter));
+        long within = index % perCenter;
+        int dx = (int) (within / (width * height)) - radiusBlocks;
+        long rest = within % (width * height);
+        int dz = (int) (rest / height) - radiusBlocks;
+        int dy = (int) (rest % height) - heightBlocks;
+        return new BlockCoord(center.x() + dx, center.y() + dy, center.z() + dz);
     }
 
     private static List<BlockCoord> order(Set<BlockCoord> found, List<BlockCoord> centers) {
