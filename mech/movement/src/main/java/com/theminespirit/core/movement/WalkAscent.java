@@ -67,7 +67,7 @@ public final class WalkAscent {
     public static Command next(BlockCoord cell, Pose pose, Body body) {
         double targetX = cell.x() + CENTER;
         double targetZ = cell.z() + CENTER;
-        if (arrived(cell, pose)) {
+        if (arrived(cell, pose, body)) {
             return new Command(Step.ARRIVED, targetX, cell.y(), targetZ);
         }
         boolean rising = cell.y() > pose.feet().y();
@@ -111,7 +111,9 @@ public final class WalkAscent {
         return sameCell && onGround;
     }
 
-    private static boolean arrived(BlockCoord cell, Pose pose) {
-        return pose.feet().equals(cell) && horizontal(pose, cell.x() + CENTER, cell.z() + CENTER) < ARRIVAL;
+    private static boolean arrived(BlockCoord cell, Pose pose, Body body) {
+        return pose.feet().equals(cell)
+                && horizontal(pose, cell.x() + CENTER, cell.z() + CENTER) < ARRIVAL
+                && (body.onGround() || body.inWater() || body.onClimbable());
     }
 }

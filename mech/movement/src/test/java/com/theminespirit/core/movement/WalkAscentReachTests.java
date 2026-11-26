@@ -78,16 +78,54 @@ class WalkAscentReachTests {
     }
 
     @Test
-    void next_AirborneOverCell_Arrives() {
+    void next_AirborneOverCell_DoesNotArrive() {
         Pose over = new Pose(new BlockCoord(0, 0, 0), 0.27, 0.0, 0.5);
         Command command = WalkAscent.next(new BlockCoord(0, 0, 0), over, new Body(false, false, false));
 
         assertEquals(
+                Step.MOVE,
+                command.step(),
+                "Падение сквозь клетку не считается прибытием: иначе маршрут переключается на следующий шаг "
+                        + "без посадки, суммирует высоту и убивает раненого духа (26.11, spirit-2: -129,59,-454 "
+                        + "→ -130,57,-454). При смене arrived проверь спуск dig_out: шаг завершается только "
+                        + "на опоре, в воде или на лестнице");
+    }
+
+    @Test
+    void next_GroundedOverCell_Arrives() {
+        Pose over = new Pose(new BlockCoord(0, 0, 0), 0.27, 0.0, 0.5);
+        Command command = WalkAscent.next(new BlockCoord(0, 0, 0), over, new Body(true, false, false));
+
+        assertEquals(
                 Step.ARRIVED,
                 command.step(),
-                "Дух над центром клетки без опоры уже пришёл: иначе на завершающем шаге у края он висит "
-                        + "60 тиков с дистанцией 0.23 и маршрут сходит с него (окно 30, spirit-6 у -174,71,-489). "
-                        + "При смене arrived проверь живой сход с уступа: дух не ждёт опоры под центром клетки");
+                "Прибытие на опору завершает шаг без довода к центру: иначе дух топчется у края клетки "
+                        + "и маршрут сходит по таймауту. При смене arrived проверь обычный ход и завершение "
+                        + "маршрута на земле");
+    }
+
+    @Test
+    void next_InWaterOverCell_Arrives() {
+        Pose over = new Pose(new BlockCoord(0, 0, 0), 0.27, 0.0, 0.5);
+        Command command = WalkAscent.next(new BlockCoord(0, 0, 0), over, new Body(false, true, false));
+
+        assertEquals(
+                Step.ARRIVED,
+                command.step(),
+                "В воде прибытие не требует опоры: иначе плавательный маршрут будет ждать земли под водой "
+                        + "и зависнет. При смене arrived проверь вход в пруд и всплытие из ямы");
+    }
+
+    @Test
+    void next_OnClimbableOverCell_Arrives() {
+        Pose over = new Pose(new BlockCoord(0, 0, 0), 0.27, 0.0, 0.5);
+        Command command = WalkAscent.next(new BlockCoord(0, 0, 0), over, new Body(false, false, true));
+
+        assertEquals(
+                Step.ARRIVED,
+                command.step(),
+                "На лестнице прибытие не требует опоры под ногами: иначе подъём будет ждать пола и сорвётся. "
+                        + "При смене arrived проверь маршрут по лестнице и выход на площадку");
     }
 
     @Test
