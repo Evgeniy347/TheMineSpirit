@@ -8,6 +8,7 @@ import com.theminespirit.core.board.StockScan;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.inventory.ContainerSnapshot;
 import com.theminespirit.core.inventory.Stack;
+import com.theminespirit.core.log.Perf;
 import com.theminespirit.core.mining.api.LeftOreRules;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.ColumnMask;
@@ -61,6 +62,7 @@ public final class StockReader {
     }
 
     public Snapshot collect(ServerLevel level, List<SpiritEntity> spirits, List<BlockCoord> centers) {
+        long phase = System.nanoTime();
         Map<String, Integer> chests = new HashMap<>();
         Map<String, Integer> carried = new HashMap<>();
         for (SpiritEntity spirit : spirits) {
@@ -71,9 +73,16 @@ public final class StockReader {
                 add(carried, spirit.getMainHandItem());
             }
         }
+        Perf.record("board.stock.carried", System.nanoTime() - phase);
+        phase = System.nanoTime();
         Scan found = scan(level, centers);
+        Perf.record("board.stock.scan", System.nanoTime() - phase);
+        phase = System.nanoTime();
+        List<BlockCoord> positions = StockScan.knownFirst(ChestSnapshots.registered(level), found.containers());
+        Perf.record("board.stock.known", System.nanoTime() - phase);
+        phase = System.nanoTime();
         int reads = 0;
-        for (BlockCoord pos : StockScan.knownFirst(ChestSnapshots.registered(level), found.containers())) {
+        for (BlockCoord pos : positions) {
             if (reads >= containerBudget) {
                 break;
             }
@@ -99,6 +108,7 @@ public final class StockReader {
                             + "дочитаются на следующей пересборке",
                     containerBudget);
         }
+        Perf.record("board.stock.containers", System.nanoTime() - phase);
         return new Snapshot(new StockParts(new StockView(chests), new StockView(carried)), found.blockReads(), reads);
     }
 

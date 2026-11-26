@@ -37,5 +37,12 @@ class BoardSupplyDeskTests {
                 center.contains("HomeStand") || center.contains("RetreatPath"),
                 "Дешёвый центр не ищет стоянку и не строит BFS: иначе холодный старт снова попадает в stock. "
                         + "При смене gateCenters_StockScan_DoesNotBuildWalkableComponent проверь HomePoint.center.");
+        String reader =
+                Files.readString(Path.of("mod/src/main/java/com/theminespirit/neoforge/board/StockReader.java"));
+        assertTrue(
+                reader.contains("board.stock.scan") && reader.contains("board.stock.containers"),
+                "Фазы stock разделены замерами: иначе следующий холодный старт снова покажет только общие "
+                        + "2519 мс без виновного участка. При смене gateCenters_StockScan_DoesNotBuildWalkableComponent "
+                        + "проверь StockReader.collect и PerfReport.");
     }
 }
