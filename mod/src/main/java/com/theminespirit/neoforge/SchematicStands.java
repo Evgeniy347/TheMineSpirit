@@ -36,6 +36,9 @@ final class SchematicStands {
             Set<BlockCoord> blockers = SchematicWalkways.free(host.site.primaries(), host.site.standBlockers());
             stand = choose(host, cells, world, excluded, blockers, outsideOnly, reaches);
         }
+        if (stand.isEmpty() && walkKnown) {
+            stand = choose(host, cells, stands, excluded, occupied, outsideOnly, reaches);
+        }
         if (stand.isEmpty() && !host.standsRetried && !host.excludedStands.isEmpty()) {
             host.standsRetried = true;
             excluded.clear();
