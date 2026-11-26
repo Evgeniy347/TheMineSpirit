@@ -121,7 +121,7 @@ final class DispatchPick {
 
     static BlockCoord reachTarget(TicketTarget target) {
         BlockCoord origin = target.target();
-        if (target.schemeFile() == null) {
+        if (target.schemeFile() == null || target.leveling() != null) {
             return origin;
         }
         return PresetLibrary.current()
