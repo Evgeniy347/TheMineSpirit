@@ -1,9 +1,14 @@
 package com.theminespirit.neoforge.board;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.ColumnMask;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -17,10 +22,29 @@ class ChestSnapshotsTests {
         assertEquals(
                 List.of(inside),
                 ChestSnapshots.registered(List.of(inside, outside), Optional.of(ColumnMask.rect(0, 0, 10, 10))),
-                "Горячий снимок запасов берёт из реестра только сундуки поселения: иначе дальние координаты "
-                        + "раздувают выборку, а повторный обход всех block entity снова задержит пересборку. "
+                "Резервный список без плана фильтрует реестр по границам поселения: иначе дальние координаты "
+                        + "раздуют выборку, а повторный обход всех block entity снова задержит пересборку. "
                         + "При смене registered_InsideAndOutsideArea_KeepsOnlySettlementChests проверь "
                         + "StockReader.collect, ChestSnapshots.positions и SettlementChestWatch.");
+    }
+
+    @Test
+    void positions_WithArea_ReadsLoadedChunksWithoutStaleRegistry() throws IOException {
+        String source =
+                Files.readString(Path.of("mod/src/main/java/com/theminespirit/neoforge/board/ChestSnapshots.java"));
+        String compact = source.replaceAll("\\s+", "");
+
+        assertTrue(
+                compact.contains("returnarea.isPresent()?inArea(level,area.orElseThrow()):registered(level);"),
+                "С планом поселения горячий снимок обязан брать только загруженные block entity: иначе сотни "
+                        + "старых адресов реестра снова съедают секунды в countable. При смене "
+                        + "positions_WithArea_ReadsLoadedChunksWithoutStaleRegistry проверь StockReader.collect "
+                        + "и холодный board.stock.countable.");
+        assertFalse(
+                compact.contains("newLinkedHashSet<>(registered(level))"),
+                "Реестр не должен добавляться к загруженным контейнерам при наличии плана: иначе мёртвые "
+                        + "координаты возвращают холодный фриз. При смене "
+                        + "positions_WithArea_ReadsLoadedChunksWithoutStaleRegistry проверь ChestSnapshots.positions.");
     }
 
     @Test

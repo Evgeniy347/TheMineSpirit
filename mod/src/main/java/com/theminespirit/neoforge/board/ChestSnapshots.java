@@ -9,10 +9,8 @@ import com.theminespirit.neoforge.SettlementChestStore;
 import com.theminespirit.neoforge.inventory.ContainerAccess;
 import com.theminespirit.neoforge.inventory.StackMapper;
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
@@ -37,9 +35,7 @@ final class ChestSnapshots {
 
     static List<BlockCoord> positions(ServerLevel level) {
         Optional<ColumnMask> area = area(level);
-        Set<BlockCoord> found = new LinkedHashSet<>(registered(level));
-        area.ifPresent(mask -> found.addAll(inArea(level, mask)));
-        return List.copyOf(found);
+        return area.isPresent() ? inArea(level, area.orElseThrow()) : registered(level);
     }
 
     static List<BlockCoord> registered(ServerLevel level) {
