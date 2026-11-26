@@ -43,7 +43,8 @@ final class StageStepOpener {
                 level, post.service, caseValue, stage, post.stock.available(), post.scan.wood(), post.now);
         TicketTarget target = FirstStepsRunner.targetFor(level, caseValue, stage, wood);
         if (caseValue == BoardCase.CLEAR_GROUNDS) {
-            target = target.withLeveling(SettlementGround.leveling(level, stage));
+            target = target.withLeveling(SettlementGround.leveling(
+                    level, stage, post.service.board().ledger().stage()));
         }
         if (caseValue == BoardCase.BUILD_HOUSE) {
             target = target.withLeveling(hutLeveling(level, stage));

@@ -112,14 +112,14 @@ class PlotLevelingTests {
     }
 
     @Test
-    void plan_HighCliff_CutAtMostTen() {
+    void plan_HighCliff_CutToLevel() {
         PlotLeveling plan = PlotLeveling.plan(ANCHOR, square(ANCHOR, 1), (x, z) -> x == 1 && z == 1 ? 90 : 64);
 
         assertEquals(
-                List.of(new PlotLeveling.Box(1, 64, 1, 1, 73, 1)),
+                List.of(new PlotLeveling.Box(1, 64, 1, 1, 89, 1)),
                 plan.cut(),
-                "Скала выше десяти срезается только на десять блоков (решение 16)"
-                        + " Иначе тест plan_HighCliff_CutAtMostTen перестанет ловить эту поломку. При смене plan_HighCliff_CutAtMostTen проверь это утверждение.");
+                "Скала срезается до уровня участка целиком: иначе верхние блоки остаются висеть над схемой. "
+                        + "При смене plan_HighCliff_CutToLevel проверь PlotLeveling.plan и cutTopDown.");
     }
 
     @Test

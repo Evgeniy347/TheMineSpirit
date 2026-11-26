@@ -33,9 +33,9 @@ class SiteLevelsTestsExtraTests {
 
         assertEquals(
                 List.of(
-                        new PlotLeveling.Box(tall.x(), LEVEL, tall.z(), tall.x(), LEVEL, tall.z()),
+                        new PlotLeveling.Box(tall.x(), LEVEL + 2, tall.z(), tall.x(), LEVEL + 2, tall.z()),
                         new PlotLeveling.Box(tall.x(), LEVEL + 1, tall.z(), tall.x(), LEVEL + 1, tall.z()),
-                        new PlotLeveling.Box(tall.x(), LEVEL + 2, tall.z(), tall.x(), LEVEL + 2, tall.z())),
+                        new PlotLeveling.Box(tall.x(), LEVEL, tall.z(), tall.x(), LEVEL, tall.z())),
                 plan.cut(),
                 "Выравнивание срезает всё лишнее выше уровня, слой за слоем"
                         + " Иначе тест leveling_MixedColumns_CutAboveFillBelow перестанет ловить эту поломку. При смене leveling_MixedColumns_CutAboveFillBelow проверь это утверждение.");

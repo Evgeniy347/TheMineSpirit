@@ -36,26 +36,21 @@ class RouteRemovalPlanTests {
                 "Снятие старой тропы чистит её клетки скриптом clear_area: " + calls
                         + " Иначе тест removal_ClearGroundsPlan_ClearsTrailWithoutBuildingItBack перестанет ловить эту поломку. При смене removal_ClearGroundsPlan_ClearsTrailWithoutBuildingItBack проверь это утверждение.");
         assertEquals(
-                2,
+                1,
                 clears.size(),
-                "Каждая клетка тропы — своя колонка: один подъём на колонку, а не плита, к дальнему краю "
-                        + "которой дух не подойдёт: " + calls
-                        + " Иначе тест removal_ClearGroundsPlan_ClearsTrailWithoutBuildingItBack перестанет ловить эту поломку. При смене removal_ClearGroundsPlan_ClearsTrailWithoutBuildingItBack проверь это утверждение.");
+                "Соседние клетки одного слоя объединяются в один ряд: иначе план снова дробит простую тропу "
+                        + "на лишние подъёмы. При смене removal_ClearGroundsPlan_ClearsTrailWithoutBuildingItBack "
+                        + "проверь PlotLeveling.cutTopDown и LevelRepair.plan.");
         assertEquals(
                 3,
                 clears.get(0).params().get("x1"),
-                "Срезка начинается с первой клетки старой тропы"
-                        + " Иначе тест removal_ClearGroundsPlan_ClearsTrailWithoutBuildingItBack перестанет ловить эту поломку. При смене removal_ClearGroundsPlan_ClearsTrailWithoutBuildingItBack проверь это утверждение.");
-        assertEquals(
-                3,
-                clears.get(0).params().get("x2"),
-                "Первая колонка — ровно одна клетка тропы"
-                        + " Иначе тест removal_ClearGroundsPlan_ClearsTrailWithoutBuildingItBack перестанет ловить эту поломку. При смене removal_ClearGroundsPlan_ClearsTrailWithoutBuildingItBack проверь это утверждение.");
+                "Срезка начинается с первой клетки старой тропы: иначе край тропы останется в мире. "
+                        + "При смене removal_ClearGroundsPlan_ClearsTrailWithoutBuildingItBack проверь RouteTrail.removal.");
         assertEquals(
                 4,
-                clears.get(1).params().get("x1"),
-                "Срезка доходит до последней клетки старой тропы"
-                        + " Иначе тест removal_ClearGroundsPlan_ClearsTrailWithoutBuildingItBack перестанет ловить эту поломку. При смене removal_ClearGroundsPlan_ClearsTrailWithoutBuildingItBack проверь это утверждение.");
+                clears.get(0).params().get("x2"),
+                "Ряд доходит до последней клетки тропы: иначе снятие будет неполным. При смене "
+                        + "removal_ClearGroundsPlan_ClearsTrailWithoutBuildingItBack проверь LevelRepair.orderedCut.");
         assertEquals(
                 64,
                 clears.get(0).params().get("y1"),

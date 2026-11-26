@@ -12,6 +12,7 @@ import com.theminespirit.core.board.SubmitGate;
 import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.board.api.ConfigStamp;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.town.ColumnMask;
 import com.theminespirit.core.town.FloatingBlocks;
 import com.theminespirit.core.town.PlannedBlock;
 import com.theminespirit.core.town.StageSite;
@@ -66,7 +67,7 @@ final class PlanDemolition {
         String world = level.dimension().location().toString();
         List<FloatingBlocks.Finding> findings = FloatingScanCycle.find(level, site, town.region());
         Collected collected = collect(level, service, site, town, scope, findings);
-        List<BlockCoord> stray = stray(collected);
+        List<BlockCoord> stray = stray(collected, site);
         List<PlannedBlock> blocks = stray.stream()
                 .map(cell -> new PlannedBlock(cell, StagePlans.AIR))
                 .toList();
@@ -137,9 +138,9 @@ final class PlanDemolition {
         return scope == DemolitionScope.FLOATING ? base : FarmStray.withFarm(base, level, site, town, plan);
     }
 
-    private static List<BlockCoord> stray(Collected collected) {
+    private static List<BlockCoord> stray(Collected collected, StageSite site) {
         List<BlockCoord> candidates = collected.treeCells().isEmpty() ? collected.remove() : collected.treeCells();
-        List<BlockCoord> sorted = order(candidates, Set.copyOf(collected.fences()));
+        List<BlockCoord> sorted = order(candidates, Set.copyOf(collected.fences()), site.streets());
         return collected.treeCells().isEmpty()
                 ? DemolitionKey.piece(sorted)
                 : DemolitionKey.treePiece(sorted, collected.stand());
@@ -197,10 +198,11 @@ final class PlanDemolition {
         return pieces;
     }
 
-    static List<BlockCoord> order(List<BlockCoord> candidates, Set<BlockCoord> fences) {
+    static List<BlockCoord> order(List<BlockCoord> candidates, Set<BlockCoord> fences, ColumnMask streets) {
         return candidates.stream()
                 .distinct()
                 .sorted(Comparator.comparing((BlockCoord at) -> !fences.contains(at))
+                        .thenComparing((BlockCoord at) -> !streets.contains(at.x(), at.z()))
                         .thenComparing(Comparator.comparingInt(BlockCoord::y).reversed())
                         .thenComparing(Comparator.naturalOrder()))
                 .toList();

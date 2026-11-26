@@ -8,6 +8,7 @@ import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.script.api.CatalogLimits;
+import com.theminespirit.core.town.ColumnMask;
 import com.theminespirit.core.town.PlotLeveling;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -35,24 +36,6 @@ public final class LevelRepair {
 
     private static List<BlockCoord> kept(List<BlockCoord> cells, Predicate<BlockCoord> planned) {
         return cells.stream().filter(at -> !planned.test(at)).toList();
-    }
-
-    private static List<PlotLeveling.Box> splitColumns(List<PlotLeveling.Box> boxes) {
-        Map<String, int[]> grouped = new LinkedHashMap<>();
-        for (PlotLeveling.Box box : boxes) {
-            for (int x = box.x1(); x <= box.x2(); x++) {
-                int columnX = x;
-                for (int z = box.z1(); z <= box.z2(); z++) {
-                    int columnZ = z;
-                    String key = columnX + "," + columnZ;
-                    int[] range =
-                            grouped.computeIfAbsent(key, ignored -> new int[] {columnX, columnZ, box.y1(), box.y2()});
-                    range[2] = Math.min(range[2], box.y1());
-                    range[3] = Math.max(range[3], box.y2());
-                }
-            }
-        }
-        return columns(grouped, true);
     }
 
     private static List<PlotLeveling.Box> columns(List<BlockCoord> cells, boolean topDown) {
@@ -101,21 +84,26 @@ public final class LevelRepair {
         return new PlotLeveling.Box(at[0], from, at[1], at[0], to, at[1]);
     }
 
-    private static List<PlotLeveling.Box> columns(Map<String, int[]> grouped, boolean topDown) {
-        List<PlotLeveling.Box> boxes = new ArrayList<>(grouped.size());
-        grouped.values()
-                .forEach(range ->
-                        boxes.add(new PlotLeveling.Box(range[0], range[2], range[1], range[0], range[3], range[1])));
-        Comparator<PlotLeveling.Box> order = topDown
-                ? Comparator.comparingInt(PlotLeveling.Box::y2)
-                        .reversed()
-                        .thenComparingInt(PlotLeveling.Box::x1)
-                        .thenComparingInt(PlotLeveling.Box::z1)
-                : Comparator.comparingInt(PlotLeveling.Box::y1)
-                        .thenComparingInt(PlotLeveling.Box::x1)
-                        .thenComparingInt(PlotLeveling.Box::z1);
-        boxes.sort(order);
-        return List.copyOf(boxes);
+    static List<PlotLeveling.Box> orderedCut(List<PlotLeveling.Box> layers, ColumnMask streets) {
+        List<PlotLeveling.Box> paths = new ArrayList<>();
+        List<PlotLeveling.Box> rest = new ArrayList<>();
+        for (PlotLeveling.Box box : layers) {
+            for (int z = box.z1(); z <= box.z2(); z++) {
+                int start = box.x1();
+                boolean street = streets.contains(start, z);
+                for (int x = start + 1; x <= box.x2() + 1; x++) {
+                    boolean next = x <= box.x2() && streets.contains(x, z);
+                    if (x > box.x2() || next != street) {
+                        PlotLeveling.Box run = new PlotLeveling.Box(start, box.y1(), z, x - 1, box.y2(), z);
+                        (street ? paths : rest).add(run);
+                        start = x;
+                        street = next;
+                    }
+                }
+            }
+        }
+        paths.addAll(rest);
+        return List.copyOf(paths);
     }
 
     public record Progress(int done, int total) {}
@@ -161,8 +149,10 @@ public final class LevelRepair {
         PlotLeveling leveling = Objects.requireNonNull(
                 target.leveling(), "Восстановление выравнивания без плана: срезать и подсыпать нечего");
         List<TaskNode> steps = new ArrayList<>();
-        splitColumns(leveling.cut())
-                .forEach(box -> steps.add(retried(new ScriptCall("clear_area", params(box, Map.of())))));
+        List<PlotLeveling.Box> cut = target.work() == null
+                ? leveling.cutTopDown()
+                : orderedCut(leveling.cutTopDown(), target.work().site().streets());
+        cut.forEach(box -> steps.add(retried(new ScriptCall("clear_area", params(box, Map.of())))));
         if (!leveling.cut().isEmpty()) {
             steps.add(retried(new ScriptCall(
                     "collect_drops", Map.of("radius", CatalogLimits.DROP_RADIUS_MAX, "filter", dropFilter(leveling)))));

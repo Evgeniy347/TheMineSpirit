@@ -34,20 +34,28 @@ public final class SiteLevels {
     }
 
     public static PlotLeveling leveling(StageSite site, IntBinaryOperator tops, Predicate<BlockCoord> planned) {
+        return leveling(site, tops, planned, site.zone());
+    }
+
+    public static PlotLeveling leveling(
+            StageSite site, IntBinaryOperator tops, Predicate<BlockCoord> planned, ColumnMask area) {
         Objects.requireNonNull(planned, "Признак плана не может быть null: без него расчистка срежет постройку");
-        return new PlotLeveling(extra(site, tops, planned), fill(site, tops, planned), PlotLeveling.DEFAULT_BLOCK);
+        Objects.requireNonNull(area, "Площадь выравнивания не может быть null: без неё расчистка не знает границы");
+        return new PlotLeveling(
+                extra(site, tops, planned, area), fill(site, tops, planned, area), PlotLeveling.DEFAULT_BLOCK);
     }
 
     public static List<PlotLeveling.Box> extra(StageSite site, IntBinaryOperator tops) {
-        return extra(site, tops, at -> building(site, at.x(), at.y(), at.z()));
+        return extra(site, tops, at -> building(site, at.x(), at.y(), at.z()), site.zone());
     }
 
-    private static List<PlotLeveling.Box> extra(StageSite site, IntBinaryOperator tops, Predicate<BlockCoord> planned) {
+    private static List<PlotLeveling.Box> extra(
+            StageSite site, IntBinaryOperator tops, Predicate<BlockCoord> planned, ColumnMask area) {
         Objects.requireNonNull(tops, "Высоты колонок не могут быть null: без них лишнего над уровнем не найти");
         Objects.requireNonNull(planned, "Признак плана не может быть null: постройки плана не срезают");
         int level = level(site);
-        Map<Integer, Map<Integer, List<Integer>>> layers = new TreeMap<>();
-        for (ColumnMask.Cell column : site.zone().cells()) {
+        Map<Integer, Map<Integer, List<Integer>>> layers = new TreeMap<>(Comparator.reverseOrder());
+        for (ColumnMask.Cell column : area.cells()) {
             if (site.mineColumn(column.x(), column.z())) {
                 continue;
             }
@@ -69,11 +77,12 @@ public final class SiteLevels {
         return List.copyOf(boxes);
     }
 
-    private static List<PlotLeveling.Box> fill(StageSite site, IntBinaryOperator tops, Predicate<BlockCoord> planned) {
+    private static List<PlotLeveling.Box> fill(
+            StageSite site, IntBinaryOperator tops, Predicate<BlockCoord> planned, ColumnMask area) {
         Objects.requireNonNull(tops, "Высоты колонок не могут быть null: без них низин до уровня не найти");
         int level = level(site);
         Map<Integer, Map<Integer, List<Integer>>> layers = new TreeMap<>();
-        for (ColumnMask.Cell column : site.zone().cells()) {
+        for (ColumnMask.Cell column : area.cells()) {
             if (site.mineColumn(column.x(), column.z())) {
                 continue;
             }

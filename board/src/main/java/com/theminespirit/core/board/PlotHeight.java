@@ -1,7 +1,6 @@
 package com.theminespirit.core.board;
 
 import com.theminespirit.core.town.ColumnMask;
-import com.theminespirit.core.town.PlotLeveling;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.function.IntBinaryOperator;
@@ -39,8 +38,8 @@ public record PlotHeight(int level, int cut, int fill, int surplusPercent) {
         int cut = 0;
         int fill = 0;
         for (int height : heights) {
-            cut += Math.max(0, Math.min(height - level, PlotLeveling.MAX_SHIFT));
-            fill += Math.max(0, Math.min(level - height, PlotLeveling.MAX_SHIFT));
+            cut += Math.max(0, height - level);
+            fill += Math.max(0, level - height);
         }
         return new PlotHeight(level, cut, fill, rules.surplusPercent());
     }

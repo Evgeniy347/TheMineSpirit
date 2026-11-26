@@ -3,6 +3,7 @@ package com.theminespirit.neoforge.board;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.town.ColumnMask;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
@@ -15,7 +16,7 @@ class PlanDemolitionOrderTests {
 
         assertEquals(
                 List.of(fence, highDirt),
-                PlanDemolition.order(List.of(highDirt, fence), Set.of(fence)),
+                PlanDemolition.order(List.of(highDirt, fence), Set.of(fence), ColumnMask.rect(100, 100, 100, 100)),
                 "Столб-заглушка обязан идти в уборку первым: иначе задача на снос забора ждёт тысячи чужих клеток"
                         + " При смене order_FenceAmongTallerStrays_FenceGoesFirst проверь это утверждение.");
     }
@@ -66,13 +67,25 @@ class PlanDemolitionOrderTests {
     }
 
     @Test
+    void order_StreetBeforeTallerStray_StreetGoesFirst() {
+        BlockCoord street = new BlockCoord(0, 68, 0);
+        BlockCoord high = new BlockCoord(1, 70, 1);
+
+        assertEquals(
+                List.of(street, high),
+                PlanDemolition.order(List.of(high, street), Set.of(), ColumnMask.rect(0, 0, 0, 0)),
+                "Тропинка важнее высокого мусора вне улицы: иначе доступ к постройкам остаётся заваленным. "
+                        + "При смене order_StreetBeforeTallerStray_StreetGoesFirst проверь PlanDemolition.order.");
+    }
+
+    @Test
     void order_WithoutFences_TallestGoesFirst() {
         BlockCoord low = new BlockCoord(0, 68, 0);
         BlockCoord high = new BlockCoord(1, 70, 1);
 
         assertEquals(
                 List.of(high, low),
-                PlanDemolition.order(List.of(low, high), Set.of()),
+                PlanDemolition.order(List.of(low, high), Set.of(), ColumnMask.rect(100, 100, 100, 100)),
                 "Без заглушек очередь прежняя: выше — раньше"
                         + " Иначе тест order_WithoutFences_TallestGoesFirst перестанет ловить эту поломку. При смене order_WithoutFences_TallestGoesFirst проверь это утверждение.");
     }

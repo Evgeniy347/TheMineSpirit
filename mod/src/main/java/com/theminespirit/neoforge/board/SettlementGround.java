@@ -3,8 +3,10 @@ package com.theminespirit.neoforge.board;
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.LevelingRules;
 import com.theminespirit.core.board.MineDescentBottom;
+import com.theminespirit.core.board.StageRules;
 import com.theminespirit.core.board.WaterLevel;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.town.ColumnMask;
 import com.theminespirit.core.town.PlotLeveling;
 import com.theminespirit.core.town.SiteLevels;
 import com.theminespirit.core.town.StageSite;
@@ -51,9 +53,9 @@ public final class SettlementGround {
                 .orElseGet(() -> new WaterScan(levels.length, Integer.MIN_VALUE, Integer.MIN_VALUE));
     }
 
-    static PlotLeveling leveling(ServerLevel level, StageSite site) {
+    static PlotLeveling leveling(ServerLevel level, StageSite site, int stage) {
         IntBinaryOperator tops = tops(level, site.anchor().y() + 1);
-        PlotLeveling plan = SiteLevels.leveling(site, tops, PlotPlanBlocks.of(site)::planned);
+        PlotLeveling plan = SiteLevels.leveling(site, tops, PlotPlanBlocks.of(site)::planned, area(site, stage));
         if (!plan.cut().isEmpty() || !plan.fill().isEmpty()) {
             LOGGER.info(
                     "Выравнивание до y0={} (проходы y0+1={}): срезка {} боксов, подсыпка {} боксов",
@@ -69,6 +71,19 @@ public final class SettlementGround {
             }
         }
         return plan;
+    }
+
+    static ColumnMask area(StageSite site, int stage) {
+        ColumnMask area = site.streets();
+        List<String> plan = StageRules.current().plans().get(stage - 1);
+        for (String id : plan) {
+            for (var place : site.placements()) {
+                if (id.equals(place.id())) {
+                    area = area.union(place.mask());
+                }
+            }
+        }
+        return area;
     }
 
     static IntBinaryOperator plotFeet(ServerLevel level, StageSite site) {

@@ -30,9 +30,9 @@ class SiteLevelsTests {
 
         assertEquals(
                 List.of(
-                        new PlotLeveling.Box(cell.x(), LEVEL, cell.z(), cell.x(), LEVEL, cell.z()),
+                        new PlotLeveling.Box(cell.x(), LEVEL + 2, cell.z(), cell.x(), LEVEL + 2, cell.z()),
                         new PlotLeveling.Box(cell.x(), LEVEL + 1, cell.z(), cell.x(), LEVEL + 1, cell.z()),
-                        new PlotLeveling.Box(cell.x(), LEVEL + 2, cell.z(), cell.x(), LEVEL + 2, cell.z())),
+                        new PlotLeveling.Box(cell.x(), LEVEL, cell.z(), cell.x(), LEVEL, cell.z())),
                 extra,
                 "Лишним считается только то, что выше уровня: блок на уровне y — опора, его не срезают"
                         + " Иначе тест extra_ColumnHigherThanLevel_StartsOneAboveLevel перестанет ловить эту поломку. При смене extra_ColumnHigherThanLevel_StartsOneAboveLevel проверь это утверждение.");
@@ -198,8 +198,8 @@ class SiteLevelsTests {
 
         assertEquals(
                 List.of(
-                        new PlotLeveling.Box(built.x(), LEVEL + 1, built.z(), built.x(), LEVEL + 1, built.z()),
-                        new PlotLeveling.Box(built.x(), LEVEL + 2, built.z(), built.x(), LEVEL + 2, built.z())),
+                        new PlotLeveling.Box(built.x(), LEVEL + 2, built.z(), built.x(), LEVEL + 2, built.z()),
+                        new PlotLeveling.Box(built.x(), LEVEL + 1, built.z(), built.x(), LEVEL + 1, built.z())),
                 cut.cut(),
                 "Схема плана защищает только свои блоки: чужой сундук над площадкой двора попадает в срезку, "
                         + "а не прячется за широкой колонкой постройки"

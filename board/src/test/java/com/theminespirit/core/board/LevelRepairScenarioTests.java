@@ -10,6 +10,7 @@ import com.theminespirit.core.plan.FallbackNode;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.core.town.ColumnMask;
 import com.theminespirit.core.town.PlotLeveling;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -19,6 +20,26 @@ import org.junit.jupiter.api.Test;
 
 class LevelRepairScenarioTests {
     private static final BlockCoord ANCHOR = new BlockCoord(0, 64, 0);
+
+    @Test
+    void orderedCut_StreetLayers_GoBeforeOtherLayers() {
+        List<PlotLeveling.Box> layers = List.of(
+                new PlotLeveling.Box(0, 65, 0, 0, 65, 0),
+                new PlotLeveling.Box(1, 65, 0, 1, 65, 0),
+                new PlotLeveling.Box(0, 64, 0, 0, 64, 0),
+                new PlotLeveling.Box(1, 64, 0, 1, 64, 0));
+
+        assertEquals(
+                List.of(
+                        new PlotLeveling.Box(0, 65, 0, 0, 65, 0),
+                        new PlotLeveling.Box(0, 64, 0, 0, 64, 0),
+                        new PlotLeveling.Box(1, 65, 0, 1, 65, 0),
+                        new PlotLeveling.Box(1, 64, 0, 1, 64, 0)),
+                LevelRepair.orderedCut(layers, ColumnMask.rect(0, 0, 0, 0)),
+                "Сначала все слои тропинки, затем остальной участок: иначе доступ к постройкам ждёт уборки "
+                        + "тысяч клеток вне улиц. При смене orderedCut_StreetLayers_GoBeforeOtherLayers проверь "
+                        + "LevelRepair.plan и PlanDemolition.order.");
+    }
 
     @Test
     void plan_HoleAndExtra_CutThenBatchedLayersBottomUp() {
@@ -97,7 +118,7 @@ class LevelRepairScenarioTests {
     }
 
     @Test
-    void plan_ExtrasInOneColumn_OneClearAreaTopDown() {
+    void plan_ExtrasInOneColumn_ClearsEachLayerTopDown() {
         PlotLeveling leveling = LevelRepair.leveling(
                 List.of(), List.of(new BlockCoord(3, 70, 3), new BlockCoord(3, 71, 3), new BlockCoord(3, 72, 3)));
         assertEquals(
@@ -125,19 +146,21 @@ class LevelRepairScenarioTests {
                 .filter(call -> "clear_area".equals(call.script()))
                 .toList();
         assertEquals(
-                1,
-                cut.size(),
-                "Один clear_area на высокий столб, а не на каждую клетку"
-                        + " Иначе тест plan_ExtrasInOneColumn_OneClearAreaTopDown перестанет ловить эту поломку. При смене plan_ExtrasInOneColumn_OneClearAreaTopDown проверь это утверждение.");
-        assertEquals(
-                72,
-                cut.get(0).params().get("y2"),
-                "Верх ящика равен верхней цели: подъём доводит духа до неё"
-                        + " Иначе тест plan_ExtrasInOneColumn_OneClearAreaTopDown перестанет ловить эту поломку. При смене plan_ExtrasInOneColumn_OneClearAreaTopDown проверь это утверждение.");
+                List.of(72, 71, 70),
+                cut.stream().map(call -> call.params().get("y2")).toList(),
+                "Высокая колонка режется послойно сверху вниз: иначе дух снова строит столб и не снимает "
+                        + "опору. При смене plan_ExtrasInOneColumn_ClearsEachLayerTopDown проверь LevelRepair.plan.");
+        assertTrue(
+                cut.stream()
+                        .allMatch(call ->
+                                call.params().get("y1").equals(call.params().get("y2"))),
+                "Каждый clear_area — один слой: иначе перепад между соседними проходами снова заставит "
+                        + "духа строить столб. При смене plan_ExtrasInOneColumn_ClearsEachLayerTopDown проверь "
+                        + "PlotLeveling.cutTopDown.");
     }
 
     @Test
-    void plan_SlabCut_SplitIntoColumnsForOneClimbEach() {
+    void plan_SlabCut_ClearsRowsTopDown() {
         PlotLeveling leveling = new PlotLeveling(
                 List.of(new PlotLeveling.Box(3, 70, 3, 4, 70, 3), new PlotLeveling.Box(3, 71, 3, 4, 71, 3)),
                 List.of(),
@@ -150,21 +173,15 @@ class LevelRepairScenarioTests {
                 .filter(call -> "clear_area".equals(call.script()))
                 .toList();
         assertEquals(
-                2,
-                cut.size(),
-                "Плита из двух колонок — две работы: дух поднимается к своей колонке, а не пытается достать "
-                        + "дальние клетки плиты с одной стоянки («нет подхода» к y=97 в живом журнале)"
-                        + " Иначе тест plan_SlabCut_SplitIntoColumnsForOneClimbEach перестанет ловить эту поломку. При смене plan_SlabCut_SplitIntoColumnsForOneClimbEach проверь это утверждение.");
+                List.of(71, 70),
+                cut.stream().map(call -> call.params().get("y1")).toList(),
+                "Плита режется рядами сверху вниз: дух не роет траншею и не создаёт перепад выше одного блока. "
+                        + "При смене plan_SlabCut_ClearsRowsTopDown проверь LevelRepair.plan.");
         assertEquals(
-                70,
-                cut.get(0).params().get("y1"),
-                "Колонка режется от нижней клетки плиты"
-                        + " Иначе тест plan_SlabCut_SplitIntoColumnsForOneClimbEach перестанет ловить эту поломку. При смене plan_SlabCut_SplitIntoColumnsForOneClimbEach проверь это утверждение.");
-        assertEquals(
-                71,
-                cut.get(0).params().get("y2"),
-                "и до верхней: один подъём на всю колонку"
-                        + " Иначе тест plan_SlabCut_SplitIntoColumnsForOneClimbEach перестанет ловить эту поломку. При смене plan_SlabCut_SplitIntoColumnsForOneClimbEach проверь это утверждение.");
+                List.of(71, 70),
+                cut.stream().map(call -> call.params().get("y2")).toList(),
+                "Каждый ряд — однослойный ящик: иначе соседние проходы создают перепад и дух снова "
+                        + "застревает на столбе. При смене plan_SlabCut_ClearsRowsTopDown проверь PlotLeveling.cutTopDown.");
     }
 
     @Test
