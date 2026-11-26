@@ -60,6 +60,28 @@ class CrossFarmSupplyScenarioPart2Tests {
     }
 
     @Test
+    void field_EmptyWithFarmlandAndSeeds_PlantsWithoutTilling() {
+        GraphWorld world = stageTwo()
+                .built("wheat_field", Built.BUILT)
+                .with("farmland", 8)
+                .with("wheat_seeds", 8)
+                .event("field_empty");
+        GraphPlan plan = world.plan();
+        GraphPlan.Task plant = task(plan, "event:field_empty:plant_crop");
+
+        assertTrue(
+                plant.feasible(),
+                "Готовая пашня и семена делают посев выполнимым без лишней вспашки: иначе граф снова "
+                        + "заказывает till_soil и блокирует посадку. При смене field_EmptyWithFarmlandAndSeeds_PlantsWithoutTilling "
+                        + "проверь FarmInputs.stock и farm.json field_empty.");
+        assertTrue(
+                plan.task("till_soil").isEmpty(),
+                "Когда пашня уже есть, повторная вспашка не нужна: иначе дух ходит к сухой земле у дома "
+                        + "и продовольственная цепочка стоит. При смене field_EmptyWithFarmlandAndSeeds_PlantsWithoutTilling "
+                        + "проверь FarmInputs.crops и GraphPlanner.roots.");
+    }
+
+    @Test
     void hunger_NoFoodButExpeditionReady_HungrySpiritDoesNotLeave() {
         GraphWorld world = stageTwo();
         world.tools("spirit-2", 1);

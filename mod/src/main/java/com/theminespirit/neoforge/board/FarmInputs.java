@@ -40,8 +40,10 @@ final class FarmInputs {
         Map<String, Integer> herds = FarmRules.herdCounts(species);
         Map<String, Integer> stock = new LinkedHashMap<>(state.stock());
         herds.forEach((herd, count) -> stock.merge(herd, count, Math::max));
-        FarmRules.Crops crops = crops(level, scan.home());
         StageSite site = scan.stage();
+        BlockCoord field = field(site, scan.home());
+        FarmRules.Crops crops = crops(level, field);
+        stock.merge("farmland", crops.farmland(), Math::max);
         boolean orchardEmpty = siteEmpty(level, site.orchardSaplings());
         for (OrchardPlot plot : site.extraOrchards()) {
             orchardEmpty |= siteEmpty(level, plot.saplings());
@@ -76,6 +78,15 @@ final class FarmInputs {
                 state.facts());
     }
 
+    static BlockCoord field(StageSite site, BlockCoord fallback) {
+        return site.fields().stream()
+                .filter(placement -> "wheat_field".equals(placement.id()))
+                .findFirst()
+                .map(placement ->
+                        new BlockCoord(placement.centerX(), site.anchor().y(), placement.centerZ()))
+                .orElse(fallback);
+    }
+
     private static void orchardGrown(Set<String> world, ServerLevel level, List<BlockCoord> spots, String wood) {
         if (spots.stream().anyMatch(spot -> grown(level, spot))) {
             world.add("orchard:" + wood);
@@ -108,6 +119,7 @@ final class FarmInputs {
         int ready = 0;
         int dry = 0;
         int empty = 0;
+        int farmland = 0;
         for (int dx = -BoardConfig.current().facts().farmScanRadius();
                 dx <= BoardConfig.current().facts().farmScanRadius();
                 dx++) {
@@ -125,6 +137,7 @@ final class FarmInputs {
                             ready++;
                         }
                     } else if (state.is(Blocks.FARMLAND)) {
+                        farmland++;
                         if (state.getValue(FarmBlock.MOISTURE) == 0) {
                             dry++;
                         }
@@ -135,7 +148,7 @@ final class FarmInputs {
                 }
             }
         }
-        return new FarmRules.Crops(ready, dry, empty);
+        return new FarmRules.Crops(ready, dry, empty, farmland);
     }
 
     private static int sum(SupplyGraph graph, Map<String, Integer> stock, String node) {

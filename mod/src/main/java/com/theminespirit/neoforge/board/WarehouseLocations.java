@@ -3,15 +3,20 @@ package com.theminespirit.neoforge.board;
 import com.theminespirit.core.board.BoardLedger;
 import com.theminespirit.core.board.StageCatalog;
 import com.theminespirit.core.board.WarehouseChests;
+import com.theminespirit.core.building.SchematicBlocks;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.TownPlan;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.state.BlockState;
 import org.jspecify.annotations.Nullable;
 
 final class WarehouseLocations {
@@ -73,12 +78,27 @@ final class WarehouseLocations {
                     .byId(entry.orElseThrow().scheme())
                     .orElseThrow()
                     .schematic();
+            BlockState actual = level.getBlockState(new BlockPos(cell.x(), cell.y(), cell.z()));
             if (schematic.entries(origin).stream()
-                    .anyMatch(block -> block.pos().equals(cell) && block.block().endsWith("chest"))) {
+                    .anyMatch(block -> block.pos().equals(cell)
+                            && SchematicBlocks.isChest(block.block())
+                            && chestMatches(block.block(), block.state(), actual))) {
                 return true;
             }
         }
         return false;
+    }
+
+    static boolean chestMatches(String block, Map<String, String> state, BlockState actual) {
+        Map<String, String> actualState = new HashMap<>();
+        actual.getProperties()
+                .forEach(property -> actualState.put(
+                        property.getName(), actual.getValue(property).toString()));
+        return chestMatches(block, state, actualState);
+    }
+
+    static boolean chestMatches(String block, Map<String, String> state, Map<String, String> actual) {
+        return SchematicBlocks.isChest(block) && state.equals(actual);
     }
 
     static @Nullable TownPlan town(ServerLevel level) {

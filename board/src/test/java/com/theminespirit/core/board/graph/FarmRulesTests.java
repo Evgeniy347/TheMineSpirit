@@ -29,7 +29,7 @@ class FarmRulesTests {
                 Map.of("herd_cow", 2),
                 GRAPH,
                 1,
-                new FarmRules.Crops(4, 2, 1),
+                new FarmRules.Crops(4, 2, 1, 3),
                 new FarmRules.Signals(false, true));
 
         assertTrue(
@@ -53,7 +53,7 @@ class FarmRulesTests {
                 Map.of("herd_cow", 10),
                 GRAPH,
                 1,
-                new FarmRules.Crops(0, 0, 0),
+                new FarmRules.Crops(0, 0, 0, 0),
                 new FarmRules.Signals(false, true));
 
         assertTrue(
@@ -69,7 +69,7 @@ class FarmRulesTests {
                 Map.of("herd_cow", 3),
                 GRAPH,
                 1,
-                new FarmRules.Crops(0, 0, 0),
+                new FarmRules.Crops(0, 0, 0, 0),
                 new FarmRules.Signals(false, false));
 
         assertTrue(
@@ -81,7 +81,7 @@ class FarmRulesTests {
     @Test
     void events_EmptyFieldWithoutSeeds_AddsPlanting() {
         Set<String> events = FarmRules.events(
-                Map.of(), Map.of(), GRAPH, 1, new FarmRules.Crops(0, 0, 1), new FarmRules.Signals(false, true));
+                Map.of(), Map.of(), GRAPH, 1, new FarmRules.Crops(0, 0, 1, 1), new FarmRules.Signals(false, true));
 
         assertTrue(
                 events.contains("field_empty"),
@@ -95,7 +95,7 @@ class FarmRulesTests {
     @Test
     void events_EmptyOrchardWithoutSapling_AddsReplant() {
         Set<String> events = FarmRules.events(
-                Map.of(), Map.of(), GRAPH, 1, new FarmRules.Crops(0, 0, 0), new FarmRules.Signals(true, true));
+                Map.of(), Map.of(), GRAPH, 1, new FarmRules.Crops(0, 0, 0, 0), new FarmRules.Signals(true, true));
 
         assertTrue(
                 events.contains("orchard_empty"),
@@ -109,9 +109,9 @@ class FarmRulesTests {
     @Test
     void events_EmptyOrchardWithSapling_AddsReplant() {
         Set<String> empty = FarmRules.events(
-                Map.of(), Map.of(), GRAPH, 1, new FarmRules.Crops(0, 0, 0), new FarmRules.Signals(true, true));
+                Map.of(), Map.of(), GRAPH, 1, new FarmRules.Crops(0, 0, 0, 0), new FarmRules.Signals(true, true));
         Set<String> withTree = FarmRules.events(
-                Map.of(), Map.of(), GRAPH, 1, new FarmRules.Crops(0, 0, 0), new FarmRules.Signals(false, true));
+                Map.of(), Map.of(), GRAPH, 1, new FarmRules.Crops(0, 0, 0, 0), new FarmRules.Signals(false, true));
 
         assertTrue(
                 empty.contains("orchard_empty"),

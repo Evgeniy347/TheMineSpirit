@@ -15,7 +15,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import net.minecraft.server.level.ServerLevel;
+import org.jspecify.annotations.Nullable;
 
 final class StoragePlanWatch {
     static final List<String> LOTS = List.of("storage", "storage_2", "storage_3");
@@ -79,13 +81,26 @@ final class StoragePlanWatch {
         }
     }
 
-    static Space space(ServerLevel level) {
+    static Space space(ServerLevel level, BoardLedger ledger) {
+        Set<BlockCoord> cells = WarehouseLocations.storeCells(level, ledger);
+        List<ContainerSnapshot> chests = ChestSnapshots.read(level, List.copyOf(cells));
+        SettlementReach reach = CraftTerminalService.reach(level).orElse(null);
+        return space(chests, cells, reach);
+    }
+
+    static Space space(List<ContainerSnapshot> chests, Set<BlockCoord> cells) {
+        return space(chests, cells, null);
+    }
+
+    private static Space space(List<ContainerSnapshot> chests, Set<BlockCoord> cells, @Nullable SettlementReach reach) {
         List<ChestSpace.Spot> spots = new ArrayList<>();
-        for (ContainerSnapshot snapshot : StockReader.chests(level)) {
+        for (ContainerSnapshot snapshot : chests) {
+            if (!cells.contains(snapshot.pos())) {
+                continue;
+            }
             BlockCoord chest = snapshot.pos();
             spots.add(new ChestSpace.Spot(chest, snapshot.freeSlots(), snapshot.slotCount()));
         }
-        SettlementReach reach = CraftTerminalService.reach(level).orElse(null);
         ChestSpace space = ChestSpace.of(spots, reach);
         return new Space(space.free(), space.slots());
     }

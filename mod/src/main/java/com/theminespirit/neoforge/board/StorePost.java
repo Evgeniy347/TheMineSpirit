@@ -8,7 +8,10 @@ import com.theminespirit.core.board.graph.StoreRules;
 import com.theminespirit.core.board.graph.StoreTransfer;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.SpiritEntity;
+import java.util.Comparator;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 
@@ -53,10 +56,21 @@ final class StorePost {
 
     private static boolean transfer(GraphPost post, GraphTickets.Ticket ticket) {
         SpiritEntity spirit = idle(post).orElse(null);
+        Set<GraphFacts.Position> warehouse =
+                WarehouseLocations.storeCells(post.level, post.service.board().ledger()).stream()
+                        .map(cell -> new GraphFacts.Position(cell.x(), cell.y(), cell.z()))
+                        .collect(Collectors.toSet());
+        boolean hasRoom = post.facts.chests().stream()
+                .filter(chest -> warehouse.contains(chest.position()))
+                .filter(chest -> chest.reach() != GraphFacts.Reach.NO_PATH)
+                .anyMatch(chest -> chest.freeSlots() > 0);
+        if (!hasRoom) {
+            post.waiting().add(ticket.id());
+            return false;
+        }
         if (ticket.node().contains(DELIVER)) {
-            if (!StoreTransfer.hasFreeChest(post.facts.chests())
-                    || post.facts.spirits().values().stream()
-                            .noneMatch(fact -> !fact.inventory().isEmpty())) {
+            if (post.facts.spirits().values().stream()
+                    .noneMatch(fact -> !fact.inventory().isEmpty())) {
                 return true;
             }
             if (spirit == null) {
@@ -64,12 +78,14 @@ final class StorePost {
                 return false;
             }
             GraphFacts.Chest to = post.facts.chests().stream()
+                    .filter(chest -> warehouse.contains(chest.position()))
+                    .filter(chest -> chest.reach() != GraphFacts.Reach.NO_PATH)
                     .filter(chest -> chest.freeSlots() > 0)
-                    .findFirst()
+                    .max(Comparator.comparingInt(GraphFacts.Chest::freeSlots))
                     .orElseThrow();
             return launch(post, spirit, ActivityPlans.unload(at(to.position())));
         }
-        Optional<StoreTransfer.Move> move = StoreTransfer.chestMove(post.facts.chests());
+        Optional<StoreTransfer.Move> move = StoreTransfer.chestMove(post.facts.chests(), warehouse);
         if (move.isEmpty()) {
             return true;
         }

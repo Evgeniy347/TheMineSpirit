@@ -173,6 +173,46 @@ class TicketStoragePlansTests {
                         + " Иначе тест gatherMaterials_DirtPath_TramplesGroundInsteadOfGatheringItem перестанет ловить эту поломку. При смене gatherMaterials_DirtPath_TramplesGroundInsteadOfGatheringItem проверь это утверждение.");
     }
 
+    @Test
+    void gatherMaterials_BreadCraft_AcquiresWheatAndCraftsBread() {
+        TicketTarget target =
+                TicketTarget.at(SITE).withCraft("minecraft:bread", 2).withCount(2);
+
+        List<ScriptCall> calls = calls(TicketPlans.plan(BoardCase.GATHER_MATERIALS, target));
+        ScriptCall acquire = calls.stream()
+                .filter(call -> "acquire".equals(call.script()))
+                .findFirst()
+                .orElseThrow();
+        ScriptCall craft = calls.stream()
+                .filter(call -> "craft".equals(call.script()))
+                .findFirst()
+                .orElseThrow();
+
+        assertEquals(
+                "wheat",
+                acquire.params().get("item"),
+                "Перед хлебом план берёт пшеницу: иначе CraftScript начнёт без сырья и билет снова упадёт. "
+                        + "При смене gatherMaterials_BreadCraft_AcquiresWheatAndCraftsBread проверь "
+                        + "ToolCraftPlan.materials, graph.json craft_bread и GraphCrafting.way.");
+        assertEquals(
+                6,
+                acquire.params().get("count"),
+                "Два хлеба расходуют шесть пшеницы: иначе одна партия зерна будет использована дважды и "
+                        + "второй крафт останется без материалов. При смене "
+                        + "gatherMaterials_BreadCraft_AcquiresWheatAndCraftsBread проверь BoardReserve и yield craft_bread.");
+        assertEquals(
+                "minecraft:bread",
+                craft.params().get("item"),
+                "Последний шаг крафтит хлеб, а не добывает абстрактный food: иначе граф зациклится на "
+                        + "невозможном acquire bread. При смене gatherMaterials_BreadCraft_AcquiresWheatAndCraftsBread "
+                        + "проверь GraphCrafting.item и TicketStoragePlans.gatherMaterials.");
+        assertEquals(
+                2,
+                craft.params().get("count"),
+                "Крафт выполняет ровно заказанные два хлеба: иначе складский минимум не закроется. При смене "
+                        + "gatherMaterials_BreadCraft_AcquiresWheatAndCraftsBread проверь ticket.count и StoreMinimums.");
+    }
+
     private static List<ScriptCall> calls(TaskNode node) {
         List<ScriptCall> calls = new ArrayList<>();
         collect(node, calls);

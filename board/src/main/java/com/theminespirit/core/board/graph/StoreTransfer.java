@@ -2,6 +2,7 @@ package com.theminespirit.core.board.graph;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public final class StoreTransfer {
     private static final int MOVE_LIMIT = 16;
@@ -19,11 +20,7 @@ public final class StoreTransfer {
 
     private StoreTransfer() {}
 
-    public static boolean hasFreeChest(List<GraphFacts.Chest> chests) {
-        return chests.stream().anyMatch(chest -> chest.freeSlots() > 0);
-    }
-
-    public static Optional<Move> chestMove(List<GraphFacts.Chest> chests) {
+    public static Optional<Move> chestMove(List<GraphFacts.Chest> chests, Set<GraphFacts.Position> destinations) {
         GraphFacts.Chest from = null;
         for (GraphFacts.Chest chest : chests) {
             if (chest.freeSlots() > 0 || chest.contents().isEmpty()) {
@@ -38,7 +35,9 @@ public final class StoreTransfer {
         }
         GraphFacts.Chest to = null;
         for (GraphFacts.Chest chest : chests) {
-            if (chest.freeSlots() <= 0 || chest.position().equals(from.position())) {
+            if (chest.freeSlots() <= 0
+                    || chest.position().equals(from.position())
+                    || !destinations.contains(chest.position())) {
                 continue;
             }
             if (to == null || to.freeSlots() < chest.freeSlots()) {

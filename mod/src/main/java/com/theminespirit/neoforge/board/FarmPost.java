@@ -79,11 +79,12 @@ final class FarmPost {
         if (!handlesEvent(node)) {
             return false;
         }
+        BlockCoord field = FarmInputs.field(post.scan.stage(), post.scan.home());
         if ("harvest_crop".equals(node)) {
-            return launch(post, ActivityPlans.harvestCrop(post.scan.home()));
+            return launch(post, ActivityPlans.harvestCrop(field));
         }
         if ("plant_crop".equals(node)) {
-            return launch(post, ActivityPlans.plantCrop(post.scan.home(), "wheat", 8));
+            return launch(post, ActivityPlans.plantCrop(field, "wheat", 8));
         }
         BlockCoord home = post.scan.home();
         Species species = herdSpecies(post.level, home);
@@ -96,13 +97,14 @@ final class FarmPost {
     }
 
     private static boolean special(GraphPost post, GraphTickets.Ticket ticket) {
+        BlockCoord field = FarmInputs.field(post.scan.stage(), post.scan.home());
         return switch (ticket.node()) {
             case "till_soil" -> {
                 till(post, ticket.id());
                 yield true;
             }
-            case "plant_crop" -> launch(post, ActivityPlans.plantCrop(post.scan.home(), "wheat", 8));
-            case "harvest_crop" -> launch(post, ActivityPlans.harvestCrop(post.scan.home()));
+            case "plant_crop" -> launch(post, ActivityPlans.plantCrop(field, "wheat", 8));
+            case "harvest_crop" -> launch(post, ActivityPlans.harvestCrop(field));
             case "milk_animal" ->
                 post.stock.available().getOrDefault("bucket", 0) > 0
                         && launch(post, ActivityPlans.milk(post.scan.home(), 1));
@@ -132,7 +134,8 @@ final class FarmPost {
         if (HOE.changed("till:" + spirit.getUUID(), "есть")) {
             LOGGER.info("[ферма] нужна тяпка {}: взял — пашу", spirit.displayName());
         }
-        return GraphActivityPost.launch(post, spirit, BoardCase.ACTIVITY_FARM, ActivityPlans.till(post.scan.home()));
+        BlockCoord field = FarmInputs.field(post.scan.stage(), post.scan.home());
+        return GraphActivityPost.launch(post, spirit, BoardCase.ACTIVITY_FARM, ActivityPlans.till(field));
     }
 
     private static @Nullable SpiritEntity idleWithHoe(GraphPost post) {

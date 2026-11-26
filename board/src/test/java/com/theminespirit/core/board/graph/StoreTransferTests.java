@@ -1,12 +1,12 @@
 package com.theminespirit.core.board.graph;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class StoreTransferTests {
@@ -15,9 +15,11 @@ class StoreTransferTests {
 
     @Test
     void chestMove_FullChestAndFreeChest_MovesMostCommonItem() {
-        StoreTransfer.Move move = StoreTransfer.chestMove(List.of(
-                        chest(FIRST, Map.of("minecraft:oak_log", 40, "minecraft:coal", 24), 0),
-                        chest(SECOND, Map.of(), 27)))
+        StoreTransfer.Move move = StoreTransfer.chestMove(
+                        List.of(
+                                chest(FIRST, Map.of("minecraft:oak_log", 40, "minecraft:coal", 24), 0),
+                                chest(SECOND, Map.of(), 27)),
+                        Set.of(FIRST, SECOND))
                 .orElseThrow();
 
         assertEquals(
@@ -43,10 +45,31 @@ class StoreTransferTests {
     }
 
     @Test
+    void chestMove_WarehouseOnly_IgnoresFreeTemporaryChest() {
+        GraphFacts.Position warehouse = new GraphFacts.Position(5, 64, 1);
+
+        StoreTransfer.Move move = StoreTransfer.chestMove(
+                        List.of(
+                                chest(FIRST, Map.of("minecraft:oak_log", 40), 0),
+                                chest(SECOND, Map.of(), 27),
+                                chest(warehouse, Map.of(), 20)),
+                        Set.of(warehouse))
+                .orElseThrow();
+
+        assertEquals(
+                warehouse,
+                move.to(),
+                "Приёмник ограничен клетками склада: временный сундук не должен перехватывать перенос, иначе "
+                        + "временные сундуки будут бесконечно перекладываться друг в друга и склад останется пустым. "
+                        + "При смене StoreTransfer.chestMove проверь StorePost.transfer и живой перенос temp→warehouse.");
+    }
+
+    @Test
     void chestMove_NoFullChest_Empty() {
         assertTrue(
                 StoreTransfer.chestMove(
-                                List.of(chest(FIRST, Map.of("minecraft:oak_log", 40), 5), chest(SECOND, Map.of(), 27)))
+                                List.of(chest(FIRST, Map.of("minecraft:oak_log", 40), 5), chest(SECOND, Map.of(), 27)),
+                                Set.of(FIRST, SECOND))
                         .isEmpty(),
                 "Пока сундук не заполнен, перестановка не нужна"
                         + " Иначе тест chestMove_NoFullChest_Empty перестанет ловить эту поломку. При смене chestMove_NoFullChest_Empty проверь это утверждение.");
@@ -55,23 +78,10 @@ class StoreTransferTests {
     @Test
     void chestMove_OnlyFullChests_Empty() {
         assertTrue(
-                StoreTransfer.chestMove(List.of(chest(FIRST, Map.of("minecraft:oak_log", 40), 0)))
+                StoreTransfer.chestMove(List.of(chest(FIRST, Map.of("minecraft:oak_log", 40), 0)), Set.of(FIRST))
                         .isEmpty(),
                 "Из полного сундука некуда переставить: нужен свободный"
                         + " Иначе тест chestMove_OnlyFullChests_Empty перестанет ловить эту поломку. При смене chestMove_OnlyFullChests_Empty проверь это утверждение.");
-    }
-
-    @Test
-    void hasFreeChest_AnyFreeSlot_True() {
-        assertTrue(
-                StoreTransfer.hasFreeChest(
-                        List.of(chest(FIRST, Map.of("minecraft:oak_log", 40), 0), chest(SECOND, Map.of(), 1))),
-                "Один свободный слот — уже место для несомого"
-                        + " Иначе тест hasFreeChest_AnyFreeSlot_True перестанет ловить эту поломку. При смене hasFreeChest_AnyFreeSlot_True проверь это утверждение.");
-        assertFalse(
-                StoreTransfer.hasFreeChest(List.of(chest(FIRST, Map.of("minecraft:oak_log", 40), 0))),
-                "Заполненный склад не принимает несомое"
-                        + " Иначе тест hasFreeChest_AnyFreeSlot_True перестанет ловить эту поломку. При смене hasFreeChest_AnyFreeSlot_True проверь это утверждение.");
     }
 
     @Test

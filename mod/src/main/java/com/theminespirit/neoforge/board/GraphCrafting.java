@@ -1,11 +1,13 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.base.NamespacedId;
 import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.board.graph.GraphNames;
 import com.theminespirit.core.board.graph.GraphPlan;
 import com.theminespirit.core.board.graph.GraphTickets;
+import com.theminespirit.core.board.graph.SupplyGraph;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -55,6 +57,41 @@ final class GraphCrafting {
                 TicketTarget.at(post.craftPoint())
                         .withSupply(log, plans.charcoalLogs())
                         .withCount(plans.charcoalBatch()));
+        return true;
+    }
+
+    static boolean handles(GraphTickets.Ticket ticket, GraphPlan.Task task) {
+        return task.boardCase() == BoardCase.GATHER_MATERIALS
+                && (ticket.node().startsWith("craft_") || "bake_bread".equals(ticket.node()));
+    }
+
+    static String item(SupplyGraph graph, GraphPlan.Task task, String wood) {
+        String item = GraphNames.item(graph, task.makes(), wood);
+        if ("food".equals(item) && ("craft_food".equals(task.id()) || "bake_bread".equals(task.id()))) {
+            item = "bread";
+        }
+        return item.indexOf(':') < 0 ? NamespacedId.MINECRAFT + item : item;
+    }
+
+    boolean post(GraphTickets.Ticket ticket, GraphPlan.Task task) {
+        return task.spirit().isPresent() ? spiritCraft(ticket, task) : handles(ticket, task) && way(ticket, task);
+    }
+
+    boolean way(GraphTickets.Ticket ticket, GraphPlan.Task task) {
+        String item = item(post.graph, task, post.scan.wood());
+        if (!GraphItemIds.known(item)) {
+            return false;
+        }
+        int count = Math.max(1, ticket.count());
+        post.submit(
+                post.ticket(
+                        ticket.id(),
+                        task.boardCase(),
+                        Optional.empty(),
+                        task.priority(),
+                        ticket.id(),
+                        post.items(task)),
+                TicketTarget.at(post.craftPoint()).withCraft(item, count).withCount(count));
         return true;
     }
 

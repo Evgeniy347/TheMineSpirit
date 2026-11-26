@@ -104,6 +104,13 @@ class GraphStoreFarmFragmentsTests {
 
         assertEquals(
                 "wheat_field",
+                GRAPH.way("till_soil").orElseThrow().building(),
+                "Вспашка обслуживает уже существующую грядку: без building граф требует farmland до стройки "
+                        + "и посылает духа к сухой земле у дома, иначе продовольственная цепочка встаёт. "
+                        + "При смене farmFragment_FarmNodes_AreDeclared проверь "
+                        + "FarmInputs.field и живой wheat_field.");
+        assertEquals(
+                "wheat_field",
                 GRAPH.way("plant_crop").orElseThrow().building(),
                 "Посев привязан к грядке пшеницы"
                         + " Иначе тест farmFragment_FarmNodes_AreDeclared перестанет ловить эту поломку. При смене farmFragment_FarmNodes_AreDeclared проверь это утверждение.");

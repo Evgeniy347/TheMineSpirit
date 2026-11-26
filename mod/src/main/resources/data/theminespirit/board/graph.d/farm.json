@@ -71,6 +71,7 @@
       },
       "tool": "hoe",
       "tier": "wooden",
+      "building": "wheat_field",
       "ticks": 120,
       "implemented": true
     },

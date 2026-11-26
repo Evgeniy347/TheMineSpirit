@@ -66,7 +66,10 @@ final class GraphPreparation {
         private Phase phase = Phase.QUARRY;
         private QuarryWatch.@Nullable Result quarries;
         private GraphSurroundings.@Nullable Around around;
+        private @Nullable GraphInputWork inputs;
         private @Nullable GraphState state;
+        private @Nullable List<SupplyGraph.Building> builtWork;
+        private int builtCursor;
         private @Nullable GraphPlan plan;
         private GraphTickets.@Nullable Result result;
 
@@ -126,20 +129,45 @@ final class GraphPreparation {
                 case STATE -> {
                     GraphSurroundings.Around surroundings = requireAround();
                     long started = System.nanoTime();
-                    state = GraphInputs.state(level, service, spirits, stock, scan, graph, surroundings);
-                    GraphInputs.lastPhases().forEach((name, millis) -> phases.merge("in." + name, millis, Long::sum));
+                    GraphInputWork current = inputs;
+                    if (current == null) {
+                        current = GraphInputs.work(level, service, spirits, stock, scan, graph, surroundings);
+                        inputs = current;
+                    }
+                    GraphState collected = current.advance();
+                    if (collected != null) {
+                        state = collected;
+                        current.phases().forEach((name, millis) -> phases.merge("in." + name, millis, Long::sum));
+                        inputs = null;
+                        phase = Phase.BUILT;
+                    }
                     mark(phases, "state", started);
-                    phase = Phase.BUILT;
                     yield null;
                 }
                 case BUILT -> {
                     GraphState facts = requireState();
                     if (deep) {
                         long started = System.nanoTime();
-                        settleBuilt(level, service, stock, scan, graph, facts);
+                        if (builtWork == null) {
+                            builtWork = graph.buildings().values().stream()
+                                    .filter(building -> StageBuilt.ids().contains(building.id())
+                                            && facts.built(building.id()) != GraphState.Built.BUILT)
+                                    .toList();
+                            builtCursor = 0;
+                        }
+                        int end = Math.min(builtWork.size(), builtCursor + 4);
+                        while (builtCursor < end) {
+                            SupplyGraph.Building building = builtWork.get(builtCursor++);
+                            StageSettle.settle(level, service, stock, scan, building.boardCase(), level.getGameTime());
+                        }
                         mark(phases, "built", started);
+                        if (builtCursor >= builtWork.size()) {
+                            builtWork = null;
+                            phase = Phase.PLAN;
+                        }
+                    } else {
+                        phase = Phase.PLAN;
                     }
-                    phase = Phase.PLAN;
                     yield null;
                 }
                 case PLAN -> {
@@ -198,21 +226,6 @@ final class GraphPreparation {
 
         private GraphPlan requirePlan() {
             return Objects.requireNonNull(plan, "План графа не построен: фаза PLAN пропущена");
-        }
-    }
-
-    private static void settleBuilt(
-            ServerLevel level,
-            BoardService service,
-            StockView stock,
-            FirstStepsRunner.StageScan scan,
-            SupplyGraph graph,
-            GraphState state) {
-        for (SupplyGraph.Building building : graph.buildings().values()) {
-            if (!StageBuilt.ids().contains(building.id()) || state.built(building.id()) == GraphState.Built.BUILT) {
-                continue;
-            }
-            StageSettle.settle(level, service, stock, scan, building.boardCase(), level.getGameTime());
         }
     }
 

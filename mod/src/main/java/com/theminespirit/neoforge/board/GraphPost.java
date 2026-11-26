@@ -118,8 +118,8 @@ final class GraphPost {
         if (ToolSet.isTool(boardCase) && task.spirit().isPresent()) {
             return tool(ticket, task);
         }
-        if (task.spirit().isPresent()) {
-            return new GraphCrafting(this).spiritCraft(ticket, task);
+        if (task.spirit().isPresent() || GraphCrafting.handles(ticket, task)) {
+            return new GraphCrafting(this).post(ticket, task);
         }
         if (StorePost.way(this, ticket)) {
             return true;

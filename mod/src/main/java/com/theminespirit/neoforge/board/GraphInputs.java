@@ -8,26 +8,20 @@ import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.board.api.ToolFate;
 import com.theminespirit.core.board.api.ToolsConfig;
-import com.theminespirit.core.board.graph.ChestReach;
 import com.theminespirit.core.board.graph.GraphBuildingMaterials;
 import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.core.board.graph.GraphKits;
 import com.theminespirit.core.board.graph.GraphNames;
-import com.theminespirit.core.board.graph.GraphState;
 import com.theminespirit.core.board.graph.GraphState.Built;
 import com.theminespirit.core.board.graph.StageBuilt;
 import com.theminespirit.core.board.graph.SupplyGraph;
-import com.theminespirit.core.intellect.StockCatalog;
 import com.theminespirit.core.log.Perf;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.repair.RepairCalculator;
 import com.theminespirit.core.repair.RepairData;
-import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.neoforge.SpiritEntity;
-import com.theminespirit.neoforge.terminal.CraftOrders;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -38,21 +32,9 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
 
 final class GraphInputs {
-    private static final Map<String, Long> PHASES = new LinkedHashMap<>();
-
     private GraphInputs() {}
 
-    static Map<String, Long> lastPhases() {
-        return Map.copyOf(PHASES);
-    }
-
-    static void mark(String name, long started) {
-        long elapsed = System.nanoTime() - started;
-        Perf.record("graph.in." + name, elapsed);
-        PHASES.merge(name, elapsed / 1_000_000, Long::sum);
-    }
-
-    static GraphState state(
+    static GraphInputWork work(
             ServerLevel level,
             BoardService service,
             List<SpiritEntity> spirits,
@@ -60,60 +42,14 @@ final class GraphInputs {
             FirstStepsRunner.StageScan scan,
             SupplyGraph graph,
             GraphSurroundings.Around around) {
-        PHASES.clear();
-        int stage = service.board().ledger().stage();
-        long started = System.nanoTime();
-        BuildingStates buildings = GraphBuildInputs.of(level, service, scan, graph);
-        mark("buildings", started);
-        Optional<TownPlan> town = SettlementPlotStore.get(level).town();
-        LifeInputs.Input life = LifeInputs.of(level, spirits, around.events());
-        Set<String> events = events(level, service, scan, stock, buildings, life);
-        started = System.nanoTime();
-        GraphFacts baseFacts = GraphFactInputs.of(service, spirits, graph, buildings, scan, town, around);
-        mark("factBase", started);
-        started = System.nanoTime();
-        GraphFacts listed = baseFacts
-                .withThreats(life.threats())
-                .withPlayers(LifeInputs.players(level))
-                .withPlanBreaches(GraphFactInputs.planBreaches(level));
-        mark("factLists", started);
-        started = System.nanoTime();
-        GraphFacts chests = listed.withChests(
-                GraphFactInputs.chestFacts(StockReader.chests(level), GraphFactInputs.reachAt(level)));
-        mark("factChests", started);
-        started = System.nanoTime();
-        GraphFacts feedback = chests.withFeedback(GraphWorldFeedbackInputs.of(level, spirits, scan.home(), service));
-        mark("factFeedback", started);
-        started = System.nanoTime();
-        GraphFacts world = feedback.withWorld(WorldFactsCache.facts(level, service, scan, town, buildings));
-        mark("factWorld", started);
-        started = System.nanoTime();
-        GraphFacts facts = DigInputs.apply(level, spirits, world);
-        mark("factDig", started);
-        GraphStockNote.log(facts, spirits);
-        List<GraphBlock> blocks = blocks(service, graph);
-        started = System.nanoTime();
-        GraphState state = new GraphState(
-                        GraphNames.stock(
-                                ChestReach.reachableStock(stock.available(), facts.chests()),
-                                StockCatalog.defaultTable().nutrition().keySet()),
-                        stage,
-                        kits(spirits, graph),
-                        buildings,
-                        materials(level, service, stock, scan, graph, buildings, facts),
-                        StoragePlanWatch.space(level).freePercent(),
-                        events,
-                        around.world(),
-                        around.distances(),
-                        GraphFactInputs.stationCounts(graph, buildings))
-                .withOrders(GraphNames.need(CraftOrders.shortage(level)))
-                .withFacts(
-                        GraphStoreInputs.of(facts, level, graph), graph.costs().life());
-        mark("base", started);
-        return layers(state, level, service, spirits, scan, graph, around).withBlocks(blocks);
+        return new GraphInputWork(level, service, spirits, stock, scan, graph, around);
     }
 
-    private static Set<String> events(
+    static void mark(String name, long started) {
+        Perf.record("graph.in." + name, System.nanoTime() - started);
+    }
+
+    static Set<String> events(
             ServerLevel level,
             BoardService service,
             FirstStepsRunner.StageScan scan,
@@ -128,7 +64,7 @@ final class GraphInputs {
         return events;
     }
 
-    private static List<GraphBlock> blocks(BoardService service, SupplyGraph graph) {
+    static List<GraphBlock> blocks(BoardService service, SupplyGraph graph) {
         List<GraphBlock> blocks = new ArrayList<>(service.board().failures().graphBlocks());
         blocks.addAll(service.supply().shortages());
         blocks.addAll(service.sources
@@ -136,47 +72,6 @@ final class GraphInputs {
                 .pathBlocks(service.board().now(), graph.costs().choice().failureHalfLife(), (int)
                         Math.ceil(graph.costs().choice().failureTargets())));
         return blocks;
-    }
-
-    private static GraphState layers(
-            GraphState state,
-            ServerLevel level,
-            BoardService service,
-            List<SpiritEntity> spirits,
-            FirstStepsRunner.StageScan scan,
-            SupplyGraph graph,
-            GraphSurroundings.Around around) {
-        long started = System.nanoTime();
-        GraphState more3 = More3Inputs.apply(
-                More2Inputs.apply(
-                        MoreInputs.apply(
-                                FarmInputs.apply(StoreInputs.apply(state, level, graph), level, graph, scan),
-                                level,
-                                service,
-                                scan,
-                                graph),
-                        level,
-                        scan),
-                level,
-                service,
-                spirits,
-                graph,
-                around,
-                scan);
-        mark("more3", started);
-        started = System.nanoTime();
-        GraphState more4 = More4Inputs.apply(more3, level, spirits, scan, graph);
-        mark("more4", started);
-        started = System.nanoTime();
-        GraphState more5 = More5World.apply(more4, level, graph, scan, around);
-        mark("more5", started);
-        started = System.nanoTime();
-        GraphState more7 = More7Inputs.apply(more5, level, graph, scan);
-        mark("more7", started);
-        started = System.nanoTime();
-        GraphState done = More6Inputs.apply(more7, level, around, scan);
-        mark("more6", started);
-        return done;
     }
 
     static Map<String, Map<String, Integer>> kits(List<SpiritEntity> spirits, SupplyGraph graph) {
@@ -211,7 +106,7 @@ final class GraphInputs {
         return Optional.of(itemId);
     }
 
-    private static Map<String, Map<String, Integer>> materials(
+    static Map<String, Map<String, Integer>> materials(
             ServerLevel level,
             BoardService service,
             StockView stock,

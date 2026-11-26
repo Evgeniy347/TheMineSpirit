@@ -10,11 +10,11 @@ import org.jspecify.annotations.Nullable;
 public final class FarmRules {
     private static final Set<String> EVENT_TASKS = Set.of("harvest_crop", "plant_crop", "feed_animals");
 
-    public record Crops(int ready, int dry, int empty) {
+    public record Crops(int ready, int dry, int empty, int farmland) {
         public Crops {
-            if (ready < 0 || dry < 0 || empty < 0) {
-                throw new IllegalArgumentException(
-                        "Грядки " + ready + "/" + dry + "/" + empty + " не бывают отрицательными: отсутствие — ноль");
+            if (ready < 0 || dry < 0 || empty < 0 || farmland < 0) {
+                throw new IllegalArgumentException("Грядки " + ready + "/" + dry + "/" + empty + "/" + farmland
+                        + " не бывают отрицательными: отсутствие — ноль");
             }
         }
     }
