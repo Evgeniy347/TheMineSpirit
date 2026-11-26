@@ -65,6 +65,26 @@ class BoardRegistryTests {
     }
 
     @Test
+    void finishReport_Diagnostics_DeferredFromCriticalTick() throws IOException {
+        String source =
+                Files.readString(Path.of("mod/src/main/java/com/theminespirit/neoforge/board/GraphSource.java"));
+        String finish = source.substring(
+                source.indexOf("private Set<String> finish"), source.indexOf("public static Set<String> events"));
+
+        assertTrue(
+                finish.contains("new GraphReport(half") && source.contains("reporting.advance(reporter, decisionLog)"),
+                "Критический finish обязан отдавать билеты сразу, а диагностику ставить в отдельный шаблон: "
+                        + "иначе отчёты снова складывают холодные паузы в один тик. При смене "
+                        + "finishReport_Diagnostics_DeferredFromCriticalTick проверь GraphSource.advance, "
+                        + "GraphReport.advance и graph.src.finish.");
+        assertFalse(
+                finish.contains("reporter.report(") && finish.contains("reporter.builds("),
+                "Отчёты не должны выполняться внутри finish: иначе graph.src.finish снова упирается в аудит "
+                        + "мира. При смене finishReport_Diagnostics_DeferredFromCriticalTick проверь "
+                        + "GraphReport.advance и graph.src.report.");
+    }
+
+    @Test
     void stageBootstrap_Removed_StartupAuditClassIsAbsent() {
         assertThrows(
                 ClassNotFoundException.class,

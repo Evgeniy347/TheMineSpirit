@@ -4,11 +4,8 @@ import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardActivities;
 import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.board.BoardStatus;
-import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.StockView;
-import com.theminespirit.core.board.VitalGate;
 import com.theminespirit.core.board.graph.GraphCadence;
-import com.theminespirit.core.board.graph.GraphDecisions;
 import com.theminespirit.core.board.graph.GraphPlan;
 import com.theminespirit.core.board.graph.GraphState;
 import com.theminespirit.core.board.graph.GraphTickets;
@@ -59,6 +56,7 @@ public final class GraphSource {
 
     private GraphSource.@Nullable Half pending;
     private GraphPreparation.@Nullable Work preparation;
+    private @Nullable GraphReport reporting;
 
     public Set<String> tick(
             ServerLevel level,
@@ -95,6 +93,12 @@ public final class GraphSource {
     }
 
     public void advance() {
+        if (reporting != null) {
+            reporting.advance(reporter, decisionLog);
+            if (reporting.done()) {
+                reporting = null;
+            }
+        }
         GraphPreparation.Work work = preparation;
         if (work == null) {
             return;
@@ -134,6 +138,7 @@ public final class GraphSource {
                 half.graph(),
                 half.now());
         List<String> unconnected = new ArrayList<>();
+        long started = System.nanoTime();
         GraphStanding.seed(post, half.plan().tasks(), half.result().live());
         for (GraphTickets.Ticket ticket : half.result().post()) {
             BoardStatus status = half.service().board().statusOf(ticket.id()).orElse(null);
@@ -158,6 +163,8 @@ public final class GraphSource {
                 }
             }
         }
+        Perf.record("graph.src.finish.post", System.nanoTime() - started);
+        started = System.nanoTime();
         post.flush();
         StageWorldGate.apply(
                 half.level(),
@@ -165,6 +172,8 @@ public final class GraphSource {
                 half.scan().stage(),
                 half.scan().wood(),
                 half.state().facts());
+        Perf.record("graph.src.finish.flush", System.nanoTime() - started);
+        started = System.nanoTime();
         for (GraphPlan.Task task : half.plan().tasks()) {
             if (task.implemented() && task.priority() > 0) {
                 for (String id : GraphTicketIds.ids(task, half.graph())) {
@@ -182,19 +191,10 @@ public final class GraphSource {
                 }
             }
         }
-        reporter.report(half.plan(), half.result(), unconnected, freeSpirit(half), half.now());
-        decisionLog.note(half.plan(), half.now(), vitals(half));
-        decisionLog.noteFailures(half.state(), half.now());
-        reporter.world(half.level(), half.state(), half.now());
-        reporter.builds(half.level(), half.service(), half.graph(), half.state(), half.scan(), half.now());
-        if (half.deep()) {
-            long started = System.nanoTime();
-            reporter.deep(half);
-            Perf.record("graph.src.deep", System.nanoTime() - started);
-        }
-        reporter.strategist(half.level(), half.graph(), half.state(), half.plan(), half.now());
+        Perf.record("graph.src.finish.priorities", System.nanoTime() - started);
         cadence.finished(half.now(), half.signals());
         lastLive = post.live(half.result().live());
+        reporting = new GraphReport(half, List.copyOf(unconnected));
         return lastLive;
     }
 
@@ -231,41 +231,7 @@ public final class GraphSource {
         return Set.copyOf(events);
     }
 
-    private static List<GraphDecisions.Vital> vitals(Half half) {
-        List<GraphDecisions.Vital> rows = new ArrayList<>();
-        for (SpiritEntity spirit : half.spirits()) {
-            if (spirit.isRemoved()) {
-                continue;
-            }
-            Map<String, String> needs = SpiritVitals.needs(spirit);
-            if (needs.isEmpty()) {
-                continue;
-            }
-            String id = spirit.getUUID().toString();
-            String doing = half.service().board().assignedTo(spirit.getUUID()).stream()
-                    .filter(ticket -> VitalGate.blocksWork(ticket, needs))
-                    .map(BoardTicket::id)
-                    .findFirst()
-                    .orElse("");
-            String task = half.plan().tasks().stream()
-                    .filter(candidate -> candidate.spirit().filter(id::equals).isPresent())
-                    .map(candidate -> GraphTickets.PREFIX + candidate.id())
-                    .filter(ticket -> VitalGate.satisfies(ticket, needs))
-                    .findFirst()
-                    .orElse("");
-            needs.forEach((need, reason) -> rows.add(new GraphDecisions.Vital(id, need, reason, task, doing)));
-        }
-        return List.copyOf(rows);
-    }
-
     private static boolean closed(BoardStatus status) {
         return status == BoardStatus.DONE || status == BoardStatus.FAILED || status == BoardStatus.CANCELLED;
-    }
-
-    private static boolean freeSpirit(Half half) {
-        return half.spirits().stream()
-                .anyMatch(spirit -> !spirit.isRemoved()
-                        && half.service().board().assignedTo(spirit.getUUID()).isEmpty()
-                        && half.service().board().occupation(spirit.getUUID()).isEmpty());
     }
 }
