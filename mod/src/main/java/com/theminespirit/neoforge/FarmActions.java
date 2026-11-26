@@ -3,6 +3,7 @@ package com.theminespirit.neoforge;
 import com.theminespirit.core.farming.FarmJob;
 import com.theminespirit.core.farming.api.CropKind;
 import com.theminespirit.core.mining.ToolReserve;
+import com.theminespirit.core.policy.BlockProtection;
 import java.util.List;
 import java.util.Objects;
 import net.minecraft.core.BlockPos;
@@ -63,7 +64,9 @@ public final class FarmActions {
 
     boolean till(BlockPos ground) {
         int slot = hoeSlot();
-        if (slot == NO_SLOT || !tillable(level.getBlockState(ground), level.getBlockState(ground.above()))) {
+        if (slot == NO_SLOT
+                || spirit.protectionGate().checkPlace(ground) instanceof BlockProtection.Refused
+                || !tillable(level.getBlockState(ground), level.getBlockState(ground.above()))) {
             return false;
         }
         ItemStack hoe = spirit.getInventory().getItem(slot);

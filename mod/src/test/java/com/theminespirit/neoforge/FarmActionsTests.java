@@ -24,5 +24,10 @@ class FarmActionsTests {
                 "Вспашка ставит farmland через общий SpiritBlocks.place: иначе изменение не попадёт в журнал "
                         + "и аудит мира снова увидит пустую клетку. При смене till_ValidSoil_UsesSharedBlockPlacement "
                         + "проверь BlockPlacer.farmland, SpiritBlocks.place и BuildGap.");
+        assertTrue(
+                compact.contains("protectionGate().checkPlace(ground)instanceofBlockProtection.Refused"),
+                "Прямая вспашка обязана проверять защиту до setBlock: иначе дух изменит блок в запрещённой "
+                        + "зоне в обход политик. При смене till_ValidSoil_UsesSharedBlockPlacement проверь "
+                        + "ProtectionGate.checkPlace, FarmWork и BlockPlacer.farmland.");
     }
 }
