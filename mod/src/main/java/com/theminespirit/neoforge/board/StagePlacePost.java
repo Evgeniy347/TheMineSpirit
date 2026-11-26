@@ -10,6 +10,7 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.OrchardSites;
 import com.theminespirit.core.town.PlotLeveling;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -42,7 +43,7 @@ final class StagePlacePost {
         if (!WoodSpecies.OAK.equals(wood)) {
             target = target.withWood(wood);
         }
-        List<String> modifiers = tools(entry.scheme());
+        List<String> modifiers = tools(target, entry.scheme());
         post.submit(
                 post.ticket(
                         ticket.id(),
@@ -71,22 +72,35 @@ final class StagePlacePost {
                 .orElse(target);
     }
 
-    private static List<String> tools(String scheme) {
+    private static List<String> tools(TicketTarget target, String scheme) {
         return DataTables.INSTANCE
                 .presets()
                 .current()
                 .byId(scheme)
                 .map(preset -> {
-                    boolean tilled = SchematicGround.tilled(preset.schematic());
-                    boolean walkway = SchematicGround.walkway(preset.schematic());
-                    if (tilled && walkway) {
-                        return List.of(ToolGate.TOOLS_MODIFIER + "hoe,shovel");
+                    boolean leveling = target.leveling() != null
+                            && (!target.leveling().cut().isEmpty()
+                                    || !target.leveling().fill().isEmpty());
+                    List<String> base = new ArrayList<>();
+                    if (SchematicGround.tilled(preset.schematic())) {
+                        base.add("hoe");
                     }
-                    if (tilled) {
-                        return List.of(ToolGate.TOOL_MODIFIER + "hoe");
+                    if (SchematicGround.walkway(preset.schematic())) {
+                        base.add("shovel");
                     }
-                    return walkway ? List.of(ToolGate.TOOL_MODIFIER + "shovel") : List.<String>of();
+                    List<String> required = requiredTools(base, leveling);
+                    return required.isEmpty()
+                            ? List.<String>of()
+                            : List.of(ToolGate.TOOLS_MODIFIER + String.join(",", required));
                 })
                 .orElseGet(List::of);
+    }
+
+    static List<String> requiredTools(List<String> base, boolean leveling) {
+        List<String> required = new ArrayList<>(base);
+        if (leveling) {
+            required.add(ToolGate.PICKAXE);
+        }
+        return List.copyOf(required);
     }
 }
