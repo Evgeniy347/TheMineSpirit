@@ -141,6 +141,10 @@ final class PlanSteps {
                 new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN))));
     }
 
+    static ScriptCall acquireStrict(String item, int count) {
+        return new ScriptCall("acquire", Map.of("item", item, "count", count));
+    }
+
     static ScriptCall gotoPoint(BlockCoord point) {
         return new ScriptCall("goto", Map.of("x", point.x(), "y", point.y(), "z", point.z()));
     }
