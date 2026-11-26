@@ -73,7 +73,7 @@ public final class StockReader {
         }
         Scan found = scan(level, centers);
         int reads = 0;
-        for (BlockCoord pos : StockScan.knownFirst(ChestSnapshots.positions(level), found.containers())) {
+        for (BlockCoord pos : StockScan.knownFirst(ChestSnapshots.registered(level), found.containers())) {
             if (reads >= containerBudget) {
                 break;
             }
@@ -112,7 +112,7 @@ public final class StockReader {
     }
 
     public static List<ContainerSnapshot> chests(ServerLevel level) {
-        return ChestSnapshots.read(level, ChestSnapshots.positions(level));
+        return ChestSnapshots.read(level, ChestSnapshots.registered(level));
     }
 
     public static List<ContainerSnapshot> chests(ServerLevel level, ColumnMask area) {

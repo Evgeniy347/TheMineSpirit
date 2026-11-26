@@ -36,14 +36,23 @@ final class ChestSnapshots {
     }
 
     static List<BlockCoord> positions(ServerLevel level) {
-        Set<BlockCoord> found = new LinkedHashSet<>();
         Optional<ColumnMask> area = area(level);
-        for (BlockCoord pos : SettlementChestStore.get(level).chests().all()) {
+        Set<BlockCoord> found = new LinkedHashSet<>(registered(level));
+        area.ifPresent(mask -> found.addAll(inArea(level, mask)));
+        return List.copyOf(found);
+    }
+
+    static List<BlockCoord> registered(ServerLevel level) {
+        return registered(SettlementChestStore.get(level).chests().all(), area(level));
+    }
+
+    static List<BlockCoord> registered(List<BlockCoord> known, Optional<ColumnMask> area) {
+        List<BlockCoord> found = new ArrayList<>();
+        for (BlockCoord pos : known) {
             if (area.map(mask -> mask.contains(pos.x(), pos.z())).orElse(true)) {
                 found.add(pos);
             }
         }
-        area.ifPresent(mask -> found.addAll(inArea(level, mask)));
         return List.copyOf(found);
     }
 
