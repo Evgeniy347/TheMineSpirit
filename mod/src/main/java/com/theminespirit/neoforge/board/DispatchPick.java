@@ -6,15 +6,19 @@ import com.theminespirit.core.board.DispatchReach;
 import com.theminespirit.core.board.DispatchRound;
 import com.theminespirit.core.board.EatNeed;
 import com.theminespirit.core.board.SpiritView;
+import com.theminespirit.core.board.StandSearch;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.hunger.SpiritHunger;
+import com.theminespirit.core.mining.api.MiningSafety;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.neoforge.LevelSafetyView;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +31,7 @@ final class DispatchPick {
     private final DispatchRound round;
     private final Map<UUID, SpiritEntity> entities = new LinkedHashMap<>();
     private final Map<UUID, DispatchRound.Candidate> candidates = new LinkedHashMap<>();
+    private final Map<TicketTarget, BlockCoord> approachTargets = new HashMap<>();
     private final List<String> stockTools;
     private final DispatchReach.@Nullable Cache reach;
 
@@ -116,7 +121,21 @@ final class DispatchPick {
         SpiritEntity entity =
                 Objects.requireNonNull(entities.get(spirit.id()), "Кандидат выдачи потерял сущность духа");
         BlockCoord from = at(entity);
-        return DispatchReach.allows(reach, spirit.id(), from, reachTarget(target));
+        return DispatchReach.allows(reach, spirit.id(), from, approachTarget(target));
+    }
+
+    private BlockCoord approachTarget(TicketTarget target) {
+        return approachTargets.computeIfAbsent(target, this::standNear);
+    }
+
+    private BlockCoord standNear(TicketTarget target) {
+        BlockCoord point = reachTarget(target);
+        if (target.leveling() == null || entities.isEmpty()) {
+            return point;
+        }
+        LevelSafetyView view =
+                new LevelSafetyView(entities.values().iterator().next().level());
+        return StandSearch.nearest(point, cell -> MiningSafety.canStand(cell, view));
     }
 
     static BlockCoord reachTarget(TicketTarget target) {

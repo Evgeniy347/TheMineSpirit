@@ -20,9 +20,9 @@ class DispatchPickTests {
                 new BlockCoord(10, 60, -5),
                 DispatchPick.reachTarget(target),
                 "До выравнивания проверяется origin, а не вход схемы: первый шаг — clear_area, иначе путь "
-                        + "к ещё не построенному входу в яме ложно блокирует поле. При смене "
-                        + "reachTarget_LevelingSchematic_UsesOriginBeforeEntrance проверь StagePlans.placed "
-                        + "и живую выдачу graph:building:wheat_field");
+                        + "к ещё не построенному входу в яме ложно блокирует поле; от origin доска затем ищет "
+                        + "ближайшую безопасную стоянку. При смене reachTarget_LevelingSchematic_UsesOriginBeforeEntrance "
+                        + "проверь StagePlans.placed, DispatchPick.standNear и живую выдачу graph:building:wheat_field");
     }
 
     @Test
