@@ -1,14 +1,40 @@
 package com.theminespirit.neoforge.board;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.PlotLeveling;
+import com.theminespirit.core.town.StageWork;
+import com.theminespirit.core.town.TownFixtures;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class DispatchPickTests {
+    @Test
+    void needsStand_WorkWithoutLeveling_SearchesSafeApproach() {
+        TicketTarget target =
+                TicketTarget.at(new BlockCoord(10, 60, -5)).withWork(new StageWork(TownFixtures.flatSite(), List.of()));
+
+        assertTrue(
+                DispatchPick.needsStand(target),
+                "Работа постройки без явного leveling всё равно требует безопасной стоянки: иначе путь "
+                        + "проверяется к твёрдому origin и поле остаётся без исполнителя. При смене "
+                        + "needsStand_WorkWithoutLeveling_SearchesSafeApproach проверь DispatchPick.standNear "
+                        + "и живой waitReason wheat_field.");
+    }
+
+    @Test
+    void needsStand_PlainTarget_KeepsExactPoint() {
+        assertFalse(
+                DispatchPick.needsStand(TicketTarget.at(new BlockCoord(10, 60, -5))),
+                "Обычная активность без схемы должна идти в точную цель: иначе StandSearch уведёт духа "
+                        + "от контейнера или моба. При смене needsStand_PlainTarget_KeepsExactPoint проверь "
+                        + "DispatchPick.reachTarget и TicketTarget.work.");
+    }
+
     @Test
     void reachTarget_LevelingSchematic_UsesOriginBeforeEntrance() {
         TicketTarget target = TicketTarget.at(new BlockCoord(10, 60, -5))

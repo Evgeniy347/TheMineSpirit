@@ -131,13 +131,18 @@ final class DispatchPick {
 
     private BlockCoord standNear(TicketTarget target) {
         BlockCoord point = reachTarget(target);
-        if (target.leveling() == null || entities.isEmpty()) {
+        if (!needsStand(target) || entities.isEmpty()) {
             return point;
         }
-        BlockCoord top = new BlockCoord(point.x(), reachHeight(target), point.z());
+        int y = target.leveling() == null ? point.y() : reachHeight(target);
+        BlockCoord top = new BlockCoord(point.x(), y, point.z());
         LevelSafetyView view =
                 new LevelSafetyView(entities.values().iterator().next().level());
         return StandSearch.nearest(top, cell -> MiningSafety.canStand(cell, view));
+    }
+
+    static boolean needsStand(TicketTarget target) {
+        return target.leveling() != null || target.work() != null || target.schemeFile() != null;
     }
 
     static int reachHeight(TicketTarget target) {
