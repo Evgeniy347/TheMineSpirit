@@ -39,9 +39,9 @@
       загрузка падала по OOM (починено потоковым чтением и обрезкой, 0.1.4049). Нужна ротация/сжатие:
       периодически переписывать журнал без старых `SUBMITTED/POSTED` (оставлять `DONE/REOPENED` и хвост),
       предел размера с записью в журнал доски, тест на обрезку большого файла без чтения целиком.
-- [ ] Техдолг perf: после порционного графа 25.11 остались одиночные фазы `graph.src.state` до 162 мс
-  и `graph.src.built` до 82 мс; `WorldFactsCache` и тиковые сканы столбов/аренд исправлены. Резать
-  `GraphInputs.state` и `settleBuilt` по внутренним шагам, если живой замер снова превысит 100 мс.
+- [ ] Техдолг perf: `GraphInputs.state` и `settleBuilt` разделены на тиковые шаги, после прогрева
+  `graph.src.state` ≤94 мс; стартовый `graph.stage` всё ещё достигает 341 мс (`FirstStepsRunner.tick`),
+  а первый `BoardService` — 577 мс. Резать `StageWorldFacts.buildFacts` и аудит постройки по срезам.
 - [ ] Техдолг testaudit: разнести `neoforge`-сессии длиннее 300 строк — `FarmSession`, `HarvestSession`,
       `ClearAreaSession`, `SafeMineSession`, `DescentSession`, `HerdSession`, `HiveSession`, `DemoSession`:
       общий каркас шага, отмены и подвешивания вместо копий; после — убрать записи из `config/filesize-baseline.txt`.
