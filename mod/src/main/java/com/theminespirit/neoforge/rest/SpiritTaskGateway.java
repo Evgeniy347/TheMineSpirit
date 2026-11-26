@@ -2,7 +2,6 @@ package com.theminespirit.neoforge.rest;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.RestTickets;
-import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.ScanRadius;
 import com.theminespirit.core.observation.WorldObservation;
@@ -95,13 +94,20 @@ public final class SpiritTaskGateway implements TaskGateway {
     }
 
     private static void rejectIfBusy(SpiritEntity spirit, String bot) {
-        if (spirit.taskStatus().filter(status -> status == RunStatus.RUNNING).isPresent()) {
+        Optional<String> refusal = ExternalTaskStart.refusal(spirit.taskStatus().orElse(null), boardAssigned(spirit));
+        if (refusal.isPresent()) {
             throw new ApiException(
-                    ErrorCode.CONFLICT,
-                    "Дух '" + bot + "' уже выполняет задачу, поставленную вне REST (команда или планировщик "
-                            + "ИИ): отмените её или дождитесь завершения, вытеснения нет",
-                    Map.of("id", bot));
+                    ErrorCode.CONFLICT, "Дух '" + bot + "': " + refusal.orElseThrow(), Map.of("id", bot));
         }
+    }
+
+    private static boolean boardAssigned(SpiritEntity spirit) {
+        if (!(spirit.level() instanceof ServerLevel level)) {
+            return false;
+        }
+        return BoardRegistry.peek(level)
+                .map(service -> !service.board().assignedTo(spirit.getUUID()).isEmpty())
+                .orElse(false);
     }
 
     private SpiritEntity living(String bot) {
