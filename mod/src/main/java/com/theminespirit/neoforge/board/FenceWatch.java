@@ -54,7 +54,7 @@ public final class FenceWatch {
     static Map<BlockCoord, String> liveBreaks(ServerLevel level) {
         return FenceLedger.get(level).retainLive(at -> {
             BlockPos block = pos(at);
-            return !level.isLoaded(block) || !isFence(level.getBlockState(block));
+            return !level.hasChunk(block.getX() >> 4, block.getZ() >> 4) || !isFence(level.getBlockState(block));
         });
     }
 

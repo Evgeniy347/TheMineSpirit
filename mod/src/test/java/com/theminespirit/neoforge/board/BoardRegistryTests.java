@@ -31,6 +31,25 @@ class BoardRegistryTests {
     }
 
     @Test
+    void fenceWatch_UnloadedChunk_UsesHasChunkBeforeBlockState() throws IOException {
+        String source = Files.readString(Path.of("mod/src/main/java/com/theminespirit/neoforge/board/FenceWatch.java"));
+        String compact = source.replaceAll("\\s+", "");
+
+        assertTrue(
+                compact.contains(
+                        "!level.hasChunk(block.getX()>>4,block.getZ()>>4)||!isFence(level.getBlockState(block))"),
+                "Проверка сломанного забора обязана отсекать незагруженный чанк до чтения блока: иначе "
+                        + "isLoaded пускает getBlockState в синхронную загрузку и холодная пересборка стоит "
+                        + "секунды. При смене fenceWatch_UnloadedChunk_UsesHasChunkBeforeBlockState проверь "
+                        + "FenceWatch.liveBreaks и src.fence.");
+        assertFalse(
+                compact.contains("!level.isLoaded(block)||"),
+                "Для старой памяти забора isLoaded не заменяет hasChunk: иначе холодный src.fence снова "
+                        + "блокирует серверный тик. При смене fenceWatch_UnloadedChunk_UsesHasChunkBeforeBlockState "
+                        + "проверь FenceWatch.liveBreaks.");
+    }
+
+    @Test
     void stageBootstrap_Removed_StartupAuditClassIsAbsent() {
         assertThrows(
                 ClassNotFoundException.class,
