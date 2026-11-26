@@ -12,7 +12,7 @@ final class DigOutExit {
 
     static boolean fixedCeiling(Level level, BlockPos feet) {
         BlockPos ceiling = feet.above(2);
-        return !DigOutBackfill.passable(level, ceiling) && !RescueBreach.breakable(level.getBlockState(ceiling));
+        return !DigOutSpace.passable(level, ceiling) && !RescueBreach.breakable(level.getBlockState(ceiling));
     }
 
     static boolean surfaced(Level level, BlockPos feet, DigOutRestore restore) {

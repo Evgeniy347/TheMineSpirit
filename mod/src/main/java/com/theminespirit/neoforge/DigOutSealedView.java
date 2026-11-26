@@ -29,7 +29,7 @@ final class DigOutSealedView implements SealedSpace.View {
                 || state.getBlock() instanceof TrapDoorBlock) {
             return true;
         }
-        return DigOutBackfill.passable(level, pos);
+        return DigOutSpace.passable(level, pos);
     }
 
     @Override

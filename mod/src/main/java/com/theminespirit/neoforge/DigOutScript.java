@@ -28,7 +28,6 @@ public final class DigOutScript implements ScriptInstance {
     private final GotoParams target;
     private final boolean rescue;
     private final boolean descending;
-    private final DigOutBackfill backfill;
     private final BlockBreaker breaker;
     private final BlockPlacer placer;
     private final DigOutFloor stepFloor;
@@ -65,13 +64,6 @@ public final class DigOutScript implements ScriptInstance {
         this.rollback = new DigOutRollback(lease);
         this.stepFloor = new DigOutFloor(spirit, level, placer, lease);
         this.restore = new DigOutRestore(spirit, level);
-        boolean sealedNow = sealed(level, spirit.blockPosition());
-        this.backfill = new DigOutBackfill(
-                spirit,
-                level,
-                placer,
-                !descending && !sealedNow && target.y() > spirit.blockPosition().getY(),
-                restore);
     }
 
     static ScriptFactory factory(SpiritEntity spirit) {
@@ -113,7 +105,9 @@ public final class DigOutScript implements ScriptInstance {
             BlockState inside = level.getBlockState(stuck);
             BlockBreaker.Begin begin = breaker.begin(stuck);
             if (begin instanceof BlockBreaker.Started) {
-                restore.remember(stuck, inside);
+                if (!lease.contains(stuck)) {
+                    restore.remember(stuck, inside);
+                }
                 lease.broken(stuck, inside);
                 breaking = true;
                 return ScriptStatus.RUNNING;
@@ -133,7 +127,7 @@ public final class DigOutScript implements ScriptInstance {
         boolean goalReached =
                 DigOutEnd.reached(level, feet, new BlockCoord(target.x(), target.y(), target.z()), descending);
         if (DigOutExit.surfaced(level, feet, restore) || goalReached) {
-            DigOutEnd.finish(spirit, level, feet, backfill, restore, rollback, placer);
+            DigOutEnd.finish(spirit, level, feet, restore, rollback, placer);
             outcome = ScriptStatus.SUCCEEDED;
             return outcome;
         }
@@ -151,19 +145,18 @@ public final class DigOutScript implements ScriptInstance {
         List<BlockPos> clear =
                 sideways ? List.of(ahead.above(), ahead) : List.of(feet.above(2), ahead.above(), ahead.above(2));
         for (BlockPos cell : clear) {
-            if (DigOutObstacle.obstacle(DigOutBackfill.passable(level, cell), DigOutBackfill.water(level, cell))) {
+            if (DigOutObstacle.obstacle(DigOutSpace.passable(level, cell), DigOutSpace.water(level, cell))) {
                 return dig(cell);
             }
         }
         BlockPos step = sideways ? ahead : ahead.above();
         BlockPos floor = step.below();
-        if (DigOutBackfill.passable(level, floor) || DigOutBackfill.water(level, floor)) {
+        if (DigOutSpace.passable(level, floor) || DigOutSpace.water(level, floor)) {
             Optional<String> refusal = stepFloor.place(floor);
             if (refusal.isPresent()) {
                 return turnOrFail("пол ступени " + floor.toShortString() + " не подложить: " + refusal.get());
             }
         }
-        backfill.remember(feet);
         next = step;
         stepTicks = 0;
         DigOutStep.moveTo(spirit, next);
@@ -198,7 +191,6 @@ public final class DigOutScript implements ScriptInstance {
 
     private ScriptStatus walkTick(BlockPos feet) {
         if (feet.equals(next)) {
-            backfill.close();
             next = null;
             steps++;
             turns = 0;
@@ -225,7 +217,9 @@ public final class DigOutScript implements ScriptInstance {
         BlockState before = level.getBlockState(cell);
         return switch (breaker.begin(cell)) {
             case BlockBreaker.Started ignored -> {
-                restore.remember(cell, before);
+                if (!lease.contains(cell)) {
+                    restore.remember(cell, before);
+                }
                 lease.broken(cell, before);
                 breaking = true;
                 yield ScriptStatus.RUNNING;

@@ -5,6 +5,7 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.board.TreeSurface;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.FluidTags;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -25,5 +26,15 @@ final class DigOutSpace {
         BlockState under = level.getBlockState(cell.below());
         boolean woodBelow = under.is(BlockTags.LOGS) || under.is(BlockTags.LEAVES);
         return TreeSurface.sky(height, cell.getY(), woodBelow);
+    }
+
+    static boolean passable(Level level, BlockPos pos) {
+        BlockState state = level.getBlockState(pos);
+        return state.getCollisionShape(level, pos).isEmpty()
+                && state.getFluidState().isEmpty();
+    }
+
+    static boolean water(Level level, BlockPos cell) {
+        return level.getFluidState(cell).is(FluidTags.WATER);
     }
 }

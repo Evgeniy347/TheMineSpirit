@@ -19,11 +19,9 @@ final class DigOutEnd {
             SpiritEntity spirit,
             Level level,
             BlockPos feet,
-            DigOutBackfill backfill,
             DigOutRestore restore,
             DigOutRollback rollback,
             BlockPlacer placer) {
-        backfill.report();
         rollback.forgetReturned(restore.returnSpoil());
         rollback.close();
         PlanBreachRestore.restore(spirit, level, placer, feet);
