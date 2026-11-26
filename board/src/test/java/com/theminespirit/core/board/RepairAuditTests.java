@@ -2,6 +2,7 @@ package com.theminespirit.core.board;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.api.BuildRotation;
@@ -46,6 +47,45 @@ class RepairAuditTests {
                 List.of(),
                 repairAudit(scheme(), world, Set.of()).fixes(),
                 "Ремонт возвращает постройку к схеме: после правок мир совпадает со схемой Иначе тест audit_MissingBlock_PlacesBySchemeAndRepairsToIt перестанет ловить эту поломку. При смене audit_MissingBlock_PlacesBySchemeAndRepairsToIt проверь это утверждение.");
+    }
+
+    @Test
+    void audit_EmptyWheatCell_RequestsSchematicResowingAndGrownWheatIsKept() {
+        Schematic field = new Schematic(
+                3,
+                1,
+                1,
+                List.of(
+                        new Schematic.Entry(0, 0, 0, "wheat[age=0]"),
+                        new Schematic.Entry(1, 0, 0, "dirt"),
+                        new Schematic.Entry(2, 0, 0, "dirt")));
+        Map<BlockCoord, String> world = new HashMap<>();
+        world.put(ORIGIN, AIR);
+        world.put(new BlockCoord(11, 64, 10), "minecraft:dirt");
+        world.put(new BlockCoord(12, 64, 10), "minecraft:dirt");
+
+        RepairAudit.Report empty = RepairAudit.audit(
+                field, ORIGIN, BuildRotation.NONE, new MapWorld(world, Set.of()), RepairData.defaults());
+
+        assertEquals(
+                3,
+                empty.total(),
+                "Схема содержит три клетки поля: иначе аудит не проверяет посев. При смене "
+                        + "audit_EmptyWheatCell_RequestsSchematicResowingAndGrownWheatIsKept проверь Schematic.entries.");
+        assertEquals(
+                List.of(new RepairAudit.Fix(ORIGIN, RepairAudit.Action.PLACE, "minecraft:wheat[age=0]", AIR)),
+                empty.fixes(),
+                "Пустая клетка пшеницы — повреждение схемы: иначе после урожая поле не засеется. При смене "
+                        + "audit_EmptyWheatCell_RequestsSchematicResowingAndGrownWheatIsKept проверь repair.json "
+                        + "и StagePlans.placed.");
+        world.put(ORIGIN, "minecraft:wheat[age=7]");
+        RepairAudit.Report grown = RepairAudit.audit(
+                field, ORIGIN, BuildRotation.NONE, new MapWorld(world, Set.of()), RepairData.defaults());
+        assertTrue(
+                grown.fixes().isEmpty(),
+                "Выросший колос принимается любой степени зрелости: иначе ремонт будет снимать и пересаживать "
+                        + "урожай каждый аудит. При смене audit_EmptyWheatCell_RequestsSchematicResowingAndGrownWheatIsKept "
+                        + "проверь BlockMatch.matches.");
     }
 
     private static RepairAudit.Report repairAudit(

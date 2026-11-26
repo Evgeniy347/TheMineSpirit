@@ -1,13 +1,11 @@
 package com.theminespirit.neoforge.board;
 
-import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.Applicability;
 import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.board.BreedingRules;
 import com.theminespirit.core.board.CaseMaterials;
 import com.theminespirit.core.board.EatNeed;
 import com.theminespirit.core.board.SpiritView;
-import com.theminespirit.core.board.StateChangeLog;
 import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.api.BoardCase;
@@ -17,15 +15,12 @@ import com.theminespirit.core.board.graph.FarmWays;
 import com.theminespirit.core.board.graph.GraphPlan;
 import com.theminespirit.core.board.graph.GraphTickets;
 import com.theminespirit.core.engine.RunStatus;
-import com.theminespirit.core.farming.FarmJob;
-import com.theminespirit.core.farming.api.CropKind;
 import com.theminespirit.core.hunger.SpiritHunger;
 import com.theminespirit.core.husbandry.api.PetKind;
 import com.theminespirit.core.husbandry.api.Species;
 import com.theminespirit.core.intellect.FishingNeeds;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
-import com.theminespirit.neoforge.FarmActions;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.husbandry.HerdSpecies;
 import com.theminespirit.neoforge.husbandry.HerdSurvey;
@@ -35,11 +30,8 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
-import org.slf4j.Logger;
 
 final class FarmPost {
-    private static final Logger LOGGER = LogUtils.getLogger();
-    private static final StateChangeLog HOE = new StateChangeLog();
 
     private FarmPost() {}
 
@@ -83,9 +75,6 @@ final class FarmPost {
         if ("harvest_crop".equals(node)) {
             return launch(post, ActivityPlans.harvestCrop(field));
         }
-        if ("plant_crop".equals(node)) {
-            return launch(post, ActivityPlans.plantCrop(field, "wheat", 8));
-        }
         BlockCoord home = post.scan.home();
         Species species = herdSpecies(post.level, home);
         if (species == null) {
@@ -99,11 +88,6 @@ final class FarmPost {
     private static boolean special(GraphPost post, GraphTickets.Ticket ticket) {
         BlockCoord field = FarmInputs.field(post.scan.stage(), post.scan.home());
         return switch (ticket.node()) {
-            case "till_soil" -> {
-                till(post, ticket.id());
-                yield true;
-            }
-            case "plant_crop" -> launch(post, ActivityPlans.plantCrop(field, "wheat", 8));
             case "harvest_crop" -> launch(post, ActivityPlans.harvestCrop(field));
             case "milk_animal" ->
                 post.stock.available().getOrDefault("bucket", 0) > 0
@@ -118,38 +102,6 @@ final class FarmPost {
             }
             default -> CropPost.way(post, ticket);
         };
-    }
-
-    private static boolean till(GraphPost post, String ticketId) {
-        SpiritEntity spirit = idleWithHoe(post);
-        if (spirit == null) {
-            SpiritEntity idle = StorePost.idle(post).orElse(null);
-            if (idle != null && HOE.changed("till:" + idle.getUUID(), "нет")) {
-                LOGGER.info(
-                        "[ферма] нужна тяпка {}: нет — граф ставит её крафт (узел craft_tool:hoe)", idle.displayName());
-            }
-            post.waiting().add(ticketId);
-            return false;
-        }
-        if (HOE.changed("till:" + spirit.getUUID(), "есть")) {
-            LOGGER.info("[ферма] нужна тяпка {}: взял — пашу", spirit.displayName());
-        }
-        BlockCoord field = FarmInputs.field(post.scan.stage(), post.scan.home());
-        return GraphActivityPost.launch(post, spirit, BoardCase.ACTIVITY_FARM, ActivityPlans.till(field));
-    }
-
-    private static @Nullable SpiritEntity idleWithHoe(GraphPost post) {
-        for (SpiritEntity spirit : post.spirits) {
-            if (spirit.isRemoved()
-                    || !post.service.board().assignedTo(spirit.getUUID()).isEmpty()
-                    || post.service.board().occupation(spirit.getUUID()).isPresent()) {
-                continue;
-            }
-            if (new FarmActions(spirit).hasSupplies(FarmJob.TILL, CropKind.ANY)) {
-                return spirit;
-            }
-        }
-        return null;
     }
 
     private static boolean launch(GraphPost post, ActivityPlans.Plan plan) {

@@ -8,7 +8,7 @@ import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
 public final class FarmRules {
-    private static final Set<String> EVENT_TASKS = Set.of("harvest_crop", "plant_crop", "feed_animals");
+    private static final Set<String> EVENT_TASKS = Set.of("harvest_crop", "feed_animals");
 
     public record Crops(int ready, int dry, int empty, int farmland) {
         public Crops {

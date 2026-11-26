@@ -24,9 +24,6 @@
     }
   },
   "ways": [
-    {"id": "more2_sow_food", "case": "GATHER_MATERIALS", "makes": "more2:food_plan",
-     "yield": 1, "weight": 1.686108972, "consumes": {"#seeds": 1}, "ticks": 160,
-     "implemented": true, "todo": "more2:food_low"},
     {"id": "more2_breed_food", "case": "BREED_ANIMALS", "makes": "more2:food_plan",
      "yield": 1, "weight": 0.566218906, "consumes": {"#crops": 4}, "ticks": 220,
      "implemented": true, "todo": "more2:food_low"},
@@ -64,11 +61,10 @@
   "events": {
     "more2_food_low": {
       "tasks": [
-        {"id": "more2_sow_food", "case": "GATHER_MATERIALS", "base": 55, "consumes": {"#seeds": 1}, "implemented": true},
         {"id": "more2_breed_food", "case": "BREED_ANIMALS", "base": 50, "consumes": {"#crops": 4}, "implemented": true}
       ],
-      "push": {"food": 8, "#seeds": 5, "#crops": 4},
-      "advice": ["sow_and_breed_before_food_runs_out"]
+      "push": {"food": 8, "#crops": 4},
+      "advice": ["repair_field_by_schematic_and_breed_before_food_runs_out"]
     },
     "more2_inventory_full": {
       "tasks": [

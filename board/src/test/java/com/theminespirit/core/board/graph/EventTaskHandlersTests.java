@@ -1,5 +1,6 @@
 package com.theminespirit.core.board.graph;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -53,7 +54,7 @@ class EventTaskHandlersTests {
 
     @Test
     void farmEvents_TaskIdFromGraph_IsHandled() {
-        for (String event : List.of("crop_ready", "field_empty", "animal_starving")) {
+        for (String event : List.of("crop_ready", "animal_starving")) {
             GraphEvent known = GRAPH.events().get(event);
             assertFalse(
                     known == null || known.tasks().isEmpty(),
@@ -63,8 +64,15 @@ class EventTaskHandlersTests {
             assertTrue(
                     FarmRules.handlesEvent(task),
                     "Обработчик фермы обязан узнавать задание события '" + event + "', а видит '" + task
-                            + "': посев и сбор иначе уходят в общий сбор предметов"
-                            + " При смене farmEvents_TaskIdFromGraph_IsHandled проверь это утверждение.");
+                            + "': жатва и кормление иначе уходят в общий сбор предметов. При смене "
+                            + "farmEvents_TaskIdFromGraph_IsHandled проверь FarmRules.EVENT_TASKS.");
         }
+        GraphEvent empty = GRAPH.events().get("field_empty");
+        assertEquals(
+                "repair:wheat_field",
+                empty.tasks().get(0).id(),
+                "Пустое поле заказывает ремонт схемы, а не ручной посев: иначе после урожая пшеницу нечем "
+                        + "восстановить. При смене farmEvents_TaskIdFromGraph_IsHandled проверь WorldPost.post "
+                        + "и RepairAudit.");
     }
 }

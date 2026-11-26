@@ -1,6 +1,5 @@
 package com.theminespirit.core.board.graph;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.inventory.api.JsonResource;
@@ -238,25 +237,5 @@ class GraphChoicePart3Tests {
                 "Полный загон сдерживает разведение: " + held
                         + " против  Иначе тест herdFull_FullPen_StopsBreeding перестанет ловить эту поломку. При смене herdFull_FullPen_StopsBreeding проверь это утверждение."
                         + neutral);
-    }
-
-    @Test
-    void fieldFull_FullField_StopsSowing() {
-        GraphWorld world = GraphWorld.settled();
-        world.event(More2Rules.FOOD_LOW);
-        world.event(More7Rules.FIELD_FULL);
-        GraphPlan neutral = GraphPlanner.plan(GRAPH, world.state());
-        GraphPlan held = GraphPlanner.plan(tuned("{\"fieldFull\": 0.5}"), world.state());
-        String sow = "event:" + More2Rules.FOOD_LOW + ":more2_sow_food";
-        String breed = "event:" + More2Rules.FOOD_LOW + ":more2_breed_food";
-        assertTrue(
-                held.priority(sow) < neutral.priority(sow),
-                "Полное поле сдерживает посев: " + held.priority(sow)
-                        + " против  Иначе тест fieldFull_FullField_StopsSowing перестанет ловить эту поломку. При смене fieldFull_FullField_StopsSowing проверь это утверждение."
-                        + neutral.priority(sow));
-        assertEquals(
-                neutral.priority(breed),
-                held.priority(breed),
-                "Полное поле не трогает животноводство Иначе тест fieldFull_FullField_StopsSowing перестанет ловить эту поломку. При смене fieldFull_FullField_StopsSowing проверь это утверждение.");
     }
 }

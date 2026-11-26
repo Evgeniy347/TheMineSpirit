@@ -58,22 +58,6 @@ public final class MorePlans {
                 new ScriptCall("safe_mine", Map.of("mode", SAFE_MINE_MODE, "direction", SAFE_MINE_DIRECTION)));
     }
 
-    public static TaskNode plantCrop(BlockCoord at, String crop) {
-        Objects.requireNonNull(at, "Поле не может быть null: без него дух не знает, где сажать");
-        Objects.requireNonNull(crop, "Культура не может быть null: без неё дух не знает, что сажать");
-        return sequence(
-                gotoPoint(at),
-                new ScriptCall(
-                        "plant_crop",
-                        Map.of(
-                                "crop",
-                                crop,
-                                "radius",
-                                BoardConfig.current().plans().farmRadius(),
-                                "count",
-                                BoardConfig.current().plans().farmCount())));
-    }
-
     public static TaskNode closeDoor(BlockCoord door) {
         Objects.requireNonNull(door, "Дверь не может быть null: без неё нечего закрывать");
         return sequence(

@@ -42,7 +42,7 @@ class FarmRulesTests {
                         + " Иначе тест events_ReadyCropsAndDryField_AreAdded перестанет ловить эту поломку. При смене events_ReadyCropsAndDryField_AreAdded проверь это утверждение.");
         assertTrue(
                 events.contains("field_empty"),
-                "Свободная клетка и семена — событие посева"
+                "Свободная клетка — событие ремонта схемы"
                         + " Иначе тест events_ReadyCropsAndDryField_AreAdded перестанет ловить эту поломку. При смене events_ReadyCropsAndDryField_AreAdded проверь это утверждение.");
     }
 
@@ -79,17 +79,16 @@ class FarmRulesTests {
     }
 
     @Test
-    void events_EmptyFieldWithoutSeeds_AddsPlanting() {
+    void events_EmptyFieldWithoutSeeds_AddsSchematicRepair() {
         Set<String> events = FarmRules.events(
                 Map.of(), Map.of(), GRAPH, 1, new FarmRules.Crops(0, 0, 1, 1), new FarmRules.Signals(false, true));
 
         assertTrue(
                 events.contains("field_empty"),
-                "Пустая грядка без семян всё равно должна дать событие посева: GraphEventFacts отметит"
-                        + " plant_crop невыполнимым, а push wheat_seeds заставит граф добыть семена Иначе"
-                        + " поле останется пустым навсегда Иначе тест events_EmptyFieldWithoutSeeds_AddsPlanting"
-                        + " перестанет ловить эту поломку. При смене events_EmptyFieldWithoutSeeds_AddsPlanting"
-                        + " проверь farm.json field_empty и GraphEventFacts.feasible.");
+                "Пустая грядка без семян всё равно даёт событие ремонта схемы: push wheat_seeds заставит "
+                        + "граф добыть семена, иначе поле останется пустым навсегда. При смене "
+                        + "events_EmptyFieldWithoutSeeds_AddsSchematicRepair проверь farm.json field_empty, "
+                        + "RepairAudit и GraphEventFacts.feasible.");
     }
 
     @Test

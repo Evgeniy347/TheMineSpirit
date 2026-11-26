@@ -102,18 +102,15 @@ class GraphStoreFarmFragmentsTests {
                 "Грядка строится действием build_farm"
                         + " Иначе тест farmFragment_FarmNodes_AreDeclared перестанет ловить эту поломку. При смене farmFragment_FarmNodes_AreDeclared проверь это утверждение.");
 
+        assertTrue(
+                GRAPH.way("till_soil").isEmpty() && GRAPH.way("plant_crop").isEmpty(),
+                "Ручные вспашка и посев удалены: иначе граф создаёт второй путь фермы в обход схемы. При смене "
+                        + "farmFragment_FarmNodes_AreDeclared проверь farm.json ways и StagePlans.placed.");
         assertEquals(
                 "wheat_field",
-                GRAPH.way("till_soil").orElseThrow().building(),
-                "Вспашка обслуживает уже существующую грядку: без building граф требует farmland до стройки "
-                        + "и посылает духа к сухой земле у дома, иначе продовольственная цепочка встаёт. "
-                        + "При смене farmFragment_FarmNodes_AreDeclared проверь "
-                        + "FarmInputs.field и живой wheat_field.");
-        assertEquals(
-                "wheat_field",
-                GRAPH.way("plant_crop").orElseThrow().building(),
-                "Посев привязан к грядке пшеницы"
-                        + " Иначе тест farmFragment_FarmNodes_AreDeclared перестанет ловить эту поломку. При смене farmFragment_FarmNodes_AreDeclared проверь это утверждение.");
+                GRAPH.way("harvest_crop").orElseThrow().building(),
+                "Жатва остаётся привязана к грядке пшеницы: иначе дух собирает урожай у дома. При смене "
+                        + "farmFragment_FarmNodes_AreDeclared проверь FarmInputs.field и живой wheat_field.");
         assertTrue(
                 GRAPH.way("feed_animals").orElseThrow().consumes().containsKey("#crops"),
                 "Кормление стада расходует урожай"
@@ -196,6 +193,11 @@ class GraphStoreFarmFragmentsTests {
                     "Событие входа фермы объявлено: " + event
                             + " Иначе тест farmFragment_FarmEvents_AreDeclared перестанет ловить эту поломку. При смене farmFragment_FarmEvents_AreDeclared проверь это утверждение.");
         }
+        assertEquals(
+                "repair:wheat_field",
+                GRAPH.events().get("field_empty").tasks().get(0).id(),
+                "Пустое поле заказывает ремонт схемы: иначе после урожая пшеницу нечем засеять. При смене "
+                        + "farmFragment_FarmEvents_AreDeclared проверь RepairAudit и repair.json.");
         GraphEvent orchard = GRAPH.events().get("orchard_empty");
         assertEquals(
                 "replant_orchard",
@@ -214,8 +216,6 @@ class GraphStoreFarmFragmentsTests {
                 "transfer_item",
                 "sort_chest",
                 "restock_food",
-                "till_soil",
-                "plant_crop",
                 "harvest_crop",
                 "feed_animals",
                 "lure_animal",

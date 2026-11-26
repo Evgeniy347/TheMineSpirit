@@ -17,54 +17,19 @@ class ActivityPlansTests {
     private static final BlockCoord AT = new BlockCoord(10, 64, -5);
 
     @Test
-    void till_Plan_GoesToFieldThenHoes() {
-        ActivityPlans.Plan plan = ActivityPlans.till(AT);
-
-        assertEquals(
-                "till",
-                plan.script(),
-                "Занятие называет скрипт мотыги Иначе тест till_Plan_GoesToFieldThenHoes перестанет ловить эту поломку. При смене till_Plan_GoesToFieldThenHoes проверь это утверждение.");
-        List<ScriptCall> calls = calls(plan.task());
-        assertEquals(
-                "goto",
-                calls.get(0).script(),
-                "Сначала дух идёт к грядке Иначе тест till_Plan_GoesToFieldThenHoes перестанет ловить эту поломку. При смене till_Plan_GoesToFieldThenHoes проверь это утверждение.");
-        assertEquals(
-                "till",
-                calls.get(1).script(),
-                "Затем пашет Иначе тест till_Plan_GoesToFieldThenHoes перестанет ловить эту поломку. При смене till_Plan_GoesToFieldThenHoes проверь это утверждение.");
-    }
-
-    @Test
-    void plantCrop_Plan_NamesWheat() {
-        List<ScriptCall> calls = calls(ActivityPlans.plantCrop(AT, "wheat", 8).task());
-
-        assertEquals(
-                "plant_crop",
-                calls.get(1).script(),
-                "Посев идёт скриптом plant_crop Иначе тест plantCrop_Plan_NamesWheat перестанет ловить эту поломку. При смене plantCrop_Plan_NamesWheat проверь это утверждение.");
-        assertEquals(
-                "wheat",
-                calls.get(1).params().get("crop"),
-                "Сажают пшеницу Иначе тест plantCrop_Plan_NamesWheat перестанет ловить эту поломку. При смене plantCrop_Plan_NamesWheat проверь это утверждение.");
-        assertEquals(
-                8,
-                calls.get(1).params().get("count"),
-                "Число клеток передаётся плану Иначе тест plantCrop_Plan_NamesWheat перестанет ловить эту поломку. При смене plantCrop_Plan_NamesWheat проверь это утверждение.");
-    }
-
-    @Test
-    void harvestCrop_Plan_ReplantsByDefault() {
+    void harvestCrop_Plan_DoesNotReplantOutsideSchematic() {
         ScriptCall harvest = calls(ActivityPlans.harvestCrop(AT).task()).get(1);
 
         assertEquals(
                 "harvest_crop",
                 harvest.script(),
-                "Урожай собирают своим скриптом Иначе тест harvestCrop_Plan_ReplantsByDefault перестанет ловить эту поломку. При смене harvestCrop_Plan_ReplantsByDefault проверь это утверждение.");
+                "Урожай собирают своим скриптом Иначе тест harvestCrop_Plan_DoesNotReplantOutsideSchematic перестанет ловить эту поломку. При смене harvestCrop_Plan_DoesNotReplantOutsideSchematic проверь это утверждение.");
         assertEquals(
-                true,
+                false,
                 harvest.params().get("replant"),
-                "После уборки грядку засевают снова Иначе тест harvestCrop_Plan_ReplantsByDefault перестанет ловить эту поломку. При смене harvestCrop_Plan_ReplantsByDefault проверь это утверждение.");
+                "После уборки пшеницу засевает только ремонт схемы: иначе появляется второй, ручной путь посадки "
+                        + "в обход wheat_field_1. При смене harvestCrop_Plan_DoesNotReplantOutsideSchematic проверь "
+                        + "farm.json field_empty и RepairAudit.");
     }
 
     @Test

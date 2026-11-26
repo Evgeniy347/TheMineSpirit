@@ -44,7 +44,6 @@ final class More2Post {
             return false;
         }
         return switch (ticket.node()) {
-            case "more2_sow_food" -> sowFood(post, ticket);
             case "more2_breed_food" -> breedFood(post, ticket);
             case "more2_unload_carry" ->
                 MoreActions.script(post, ticket, BoardCase.ACTIVITY_UNLOAD, home(post), MorePlans.unload(true));
@@ -59,15 +58,6 @@ final class More2Post {
             case "more2_build_trail" -> trail(post, ticket);
             default -> false;
         };
-    }
-
-    private static boolean sowFood(GraphPost post, GraphTickets.Ticket ticket) {
-        BlockCoord at = foodPoint(post.scan);
-        return MoreActions.script(post, ticket, BoardCase.ACTIVITY_FARM, at, MorePlans.plantCrop(at, "wheat"));
-    }
-
-    static BlockCoord foodPoint(FirstStepsRunner.StageScan scan) {
-        return FarmInputs.field(scan.stage(), scan.home());
     }
 
     private static boolean breedFood(GraphPost post, GraphTickets.Ticket ticket) {

@@ -122,8 +122,9 @@ class CrossPathScenarioTests {
         GraphPlan plan = plan(world, facts);
 
         assertFalse(
-                task(plan, "event:field_empty:plant_crop").feasible(),
-                "Поле в незагруженном чанке не сеется вслепую: граф держит посев невыполнимым: " + ids(plan)
+                task(plan, "event:field_empty:repair:wheat_field").feasible(),
+                "Поле в незагруженном чанке не ремонтируется вслепую: граф держит ремонт схемы невыполнимым: "
+                        + ids(plan)
                         + " Иначе тест path_UnknownFieldAndTerrain_GraphWaitsInsteadOfGuessing перестанет ловить эту поломку. При смене path_UnknownFieldAndTerrain_GraphWaitsInsteadOfGuessing проверь это утверждение.");
         assertTrue(
                 task(plan, "event:backfill:backfill").feasible(),

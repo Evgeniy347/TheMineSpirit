@@ -44,9 +44,9 @@ class ActivityBoardScenarioPart2Tests {
     }
 
     @Test
-    void openCause_PendingFarmActivity_BlocksDuplicatePlanting() {
+    void openCause_PendingHarvest_BlocksDuplicateHarvest() {
         Board board = new Board(() -> 0);
-        String cause = "graph:event:field_empty:plant_crop";
+        String cause = "graph:event:crop_ready:harvest_crop";
         UUID spirit = id("spirit-1");
         String ticketId = cause + ":" + spirit;
         board.submit(ActivityTickets.ticket(new ActivityTickets.Request(
@@ -54,28 +54,26 @@ class ActivityBoardScenarioPart2Tests {
                 new ActivityTickets.Crew(Optional.of(spirit), List.of()),
                 35,
                 0,
-                new ActivityTickets.Plan("plant_crop", "", 200, new ScriptCall("plant_crop", Map.of())),
+                new ActivityTickets.Plan("harvest_crop", "", 200, new ScriptCall("harvest_crop", Map.of())),
                 Map.of())));
 
         assertTrue(
                 BoardActivities.open(board, cause),
-                "Открытое занятие с тем же узлом графа обязано блокировать повторную посадку: иначе"
-                        + " второй дух получит ту же грядку и упадёт с «пустой земли нет» Иначе тест"
-                        + " openCause_PendingFarmActivity_BlocksDuplicatePlanting перестанет ловить живой"
-                        + " случай 25.11. При смене openCause_PendingFarmActivity_BlocksDuplicatePlanting"
-                        + " проверь GraphActivityPost.post и BoardActivities.open.");
+                "Открытое занятие с тем же узлом графа обязано блокировать повторную жатву: иначе"
+                        + " второй дух получит ту же грядку и потратит семена на пустой проход. При смене "
+                        + "openCause_PendingHarvest_BlocksDuplicateHarvest проверь GraphActivityPost.post и "
+                        + "BoardActivities.open.");
         assertFalse(
-                BoardActivities.open(board, "graph:event:crop_ready:harvest_crop"),
-                "Другое событие не блокируется открытой посадкой: иначе сбор урожая будет ждать"
-                        + " постороннее задание Иначе тест openCause_PendingFarmActivity_BlocksDuplicatePlanting"
-                        + " перестанет ловить эту поломку. При смене"
-                        + " openCause_PendingFarmActivity_BlocksDuplicatePlanting проверь сравнение cause.");
+                BoardActivities.open(board, "graph:event:field_empty:repair:wheat_field"),
+                "Другое событие не блокируется открытой жатвой: иначе ремонт схемы будет ждать"
+                        + " постороннее задание. При смене openCause_PendingHarvest_BlocksDuplicateHarvest "
+                        + "проверь сравнение cause.");
         assertTrue(
                 BoardActivities.openId(board, ticketId),
                 "Открытый id занятия признаётся обновляемым: иначе GraphActivityPost не сможет"
                         + " пополнить команду уже выставленного похода Иначе тест"
-                        + " openCause_PendingFarmActivity_BlocksDuplicatePlanting перестанет ловить"
-                        + " эту поломку. При смене openCause_PendingFarmActivity_BlocksDuplicatePlanting"
+                        + " openCause_PendingHarvest_BlocksDuplicateHarvest перестанет ловить"
+                        + " эту поломку. При смене openCause_PendingHarvest_BlocksDuplicateHarvest"
                         + " проверь GraphExpeditionPost и BoardActivities.openId.");
         board.claim(ticketId, spirit, 0);
         board.complete(ticketId);
@@ -83,8 +81,8 @@ class ActivityBoardScenarioPart2Tests {
                 BoardActivities.openId(board, ticketId),
                 "Закрытый id не считается открытым: иначе старый билет того же духа будет вечно"
                         + " обходить защиту от дубликата cause Иначе тест"
-                        + " openCause_PendingFarmActivity_BlocksDuplicatePlanting перестанет ловить"
-                        + " повтор till_soil от 25.11. При смене"
-                        + " openCause_PendingFarmActivity_BlocksDuplicatePlanting проверь openId.");
+                        + " openCause_PendingHarvest_BlocksDuplicateHarvest перестанет ловить"
+                        + " повторную жатву. При смене"
+                        + " openCause_PendingHarvest_BlocksDuplicateHarvest проверь openId.");
     }
 }

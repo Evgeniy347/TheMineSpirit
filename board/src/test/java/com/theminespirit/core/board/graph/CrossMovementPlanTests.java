@@ -32,8 +32,7 @@ class CrossMovementPlanTests {
         BlockCoord at = new BlockCoord(3, 64, 3);
         BlockCoord chest = new BlockCoord(1, 64, 1);
 
-        assertMovesFirst("жатва", ActivityPlans.till(at).task(), "till");
-        assertMovesFirst("посев", ActivityPlans.plantCrop(at, "wheat", 4).task(), "plant_crop");
+        assertMovesFirst("жатва", ActivityPlans.harvestCrop(at).task(), "harvest_crop");
         assertMovesFirst("кормление", ActivityPlans.feed(at, Species.SHEEP, 4).task(), "feed");
         assertMovesFirst("дойка", ActivityPlans.milk(at, 2).task(), "milk");
         assertMovesFirst("крафт", ActivityPlans.craft(at, "torch", 4).task(), "craft");

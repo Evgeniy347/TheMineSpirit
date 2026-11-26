@@ -108,32 +108,6 @@ class MorePlansTests {
     }
 
     @Test
-    void plantCrop_FieldGiven_SowsWheat() {
-        SequenceNode plan = sequence(MorePlans.plantCrop(AT, "wheat"));
-        ScriptCall plant = script(plan.steps().get(1), 0);
-        assertEquals(
-                "plant_crop",
-                plant.script(),
-                "Еда на поле — посадка культуры"
-                        + " Иначе тест plantCrop_FieldGiven_SowsWheat перестанет ловить эту поломку. При смене plantCrop_FieldGiven_SowsWheat проверь это утверждение.");
-        assertEquals(
-                "wheat",
-                plant.params().get("crop"),
-                "Культура задаётся id"
-                        + " Иначе тест plantCrop_FieldGiven_SowsWheat перестанет ловить эту поломку. При смене plantCrop_FieldGiven_SowsWheat проверь это утверждение.");
-        assertEquals(
-                BoardConfig.current().plans().farmRadius(),
-                plant.params().get("radius"),
-                "Радиус поиска поля ограничен"
-                        + " Иначе тест plantCrop_FieldGiven_SowsWheat перестанет ловить эту поломку. При смене plantCrop_FieldGiven_SowsWheat проверь это утверждение.");
-        assertEquals(
-                BoardConfig.current().plans().farmCount(),
-                plant.params().get("count"),
-                "За один подход сажают ограниченное число клеток"
-                        + " Иначе тест plantCrop_FieldGiven_SowsWheat перестанет ловить эту поломку. При смене plantCrop_FieldGiven_SowsWheat проверь это утверждение.");
-    }
-
-    @Test
     void closeDoor_DoorGiven_TargetsDoorCell() {
         SequenceNode plan = sequence(MorePlans.closeDoor(AT));
         ScriptCall close = script(plan.steps().get(1), 0);

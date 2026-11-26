@@ -42,7 +42,6 @@ final class GraphFragmentCases {
                     true,
                     true,
                     List.of(
-                            way("more2_sow_food"),
                             way("more2_breed_food"),
                             way("more2_unload_carry"),
                             way("more2_put_out_fire"),
@@ -64,7 +63,7 @@ final class GraphFragmentCases {
                             "more2:stage_ready",
                             "more2:bed_ready",
                             "more2:trail"),
-                    List.of("more2_trade_villager", "more2_load_carry", "more2_batch_carry"),
+                    List.of("more2_trade_villager", "more2_load_carry", "more2_batch_carry", "more2_sow_food"),
                     List.of("more2_villager_trade"),
                     List.of(),
                     List.of(),

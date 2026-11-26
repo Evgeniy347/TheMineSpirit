@@ -40,7 +40,6 @@ public record RepairData(
             "dandelion",
             "short_grass",
             "tall_grass",
-            "wheat",
             "carrots",
             "potatoes",
             "beetroots",

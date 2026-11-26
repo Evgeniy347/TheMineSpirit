@@ -31,36 +31,6 @@ public final class ActivityPlans {
 
     private ActivityPlans() {}
 
-    public static Plan till(BlockCoord at) {
-        return new Plan(
-                "till",
-                sequence(
-                        gotoPoint(at),
-                        new ScriptCall(
-                                "till",
-                                Map.of(
-                                        RADIUS,
-                                        CatalogLimits.FARM_RADIUS_DEFAULT,
-                                        COUNT,
-                                        CatalogLimits.TILL_COUNT_DEFAULT))));
-    }
-
-    public static Plan plantCrop(BlockCoord at, String crop, int count) {
-        return new Plan(
-                "plant_crop",
-                sequence(
-                        gotoPoint(at),
-                        new ScriptCall(
-                                "plant_crop",
-                                Map.of(
-                                        CROP,
-                                        crop,
-                                        RADIUS,
-                                        CatalogLimits.FARM_RADIUS_DEFAULT,
-                                        COUNT,
-                                        Math.max(1, Math.min(count, CatalogLimits.COUNT_MAX))))));
-    }
-
     public static Plan harvestCrop(BlockCoord at) {
         return harvestCrop(at, "any");
     }
@@ -72,7 +42,7 @@ public final class ActivityPlans {
                         gotoPoint(at),
                         new ScriptCall(
                                 "harvest_crop",
-                                Map.of(CROP, crop, RADIUS, CatalogLimits.FARM_RADIUS_DEFAULT, "replant", true))));
+                                Map.of(CROP, crop, RADIUS, CatalogLimits.FARM_RADIUS_DEFAULT, "replant", false))));
     }
 
     public static Plan milk(BlockCoord at, int count) {

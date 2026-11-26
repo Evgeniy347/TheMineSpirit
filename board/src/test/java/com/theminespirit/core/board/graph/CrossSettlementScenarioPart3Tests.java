@@ -40,7 +40,7 @@ class CrossSettlementScenarioPart3Tests {
         GraphPlan plan = plan(world, facts);
         GraphPlan.Task seeds = task(plan, "gather_seeds");
         GraphPlan.Task feed = task(plan, "event:animal_starving:feed_animals");
-        GraphPlan.Task plant = task(plan, "event:field_empty:plant_crop");
+        GraphPlan.Task repair = task(plan, "event:field_empty:repair:wheat_field");
         assertTrue(
                 seeds.feasible(),
                 "Без урожая граф идёт за семенами, а не кормит скот воздухом:  Иначе тест husbandry_StarvingAnimalsNoCrops_SeedsOutrankFeedingAndSowing перестанет ловить эту поломку. При смене husbandry_StarvingAnimalsNoCrops_SeedsOutrankFeedingAndSowing проверь это утверждение."
@@ -49,10 +49,16 @@ class CrossSettlementScenarioPart3Tests {
                 feed.feasible(),
                 "Кормить животных нечем: feed_animals ждёт урожай:  Иначе тест husbandry_StarvingAnimalsNoCrops_SeedsOutrankFeedingAndSowing перестанет ловить эту поломку. При смене husbandry_StarvingAnimalsNoCrops_SeedsOutrankFeedingAndSowing проверь это утверждение."
                         + ids(plan));
-        assertFalse(
-                plant.feasible(),
-                "Сеять нечем: plant_crop ждёт семена:  Иначе тест husbandry_StarvingAnimalsNoCrops_SeedsOutrankFeedingAndSowing перестанет ловить эту поломку. При смене husbandry_StarvingAnimalsNoCrops_SeedsOutrankFeedingAndSowing проверь это утверждение."
-                        + ids(plan));
+        assertEquals(
+                BoardCase.REPAIR_BUILDING,
+                repair.boardCase(),
+                "Пустое поле восстанавливается ремонтом схемы, а не ручным посевом: иначе пшеница снова "
+                        + "появится в обход wheat_field_1. При смене husbandry_StarvingAnimalsNoCrops_SeedsOutrankFeedingAndSowing "
+                        + "проверь farm.json field_empty.");
+        assertTrue(
+                plan.task("plant_crop").isEmpty(),
+                "Ручной посев удалён из графа: иначе без семян останется невыполнимый legacy-узел. При смене "
+                        + "husbandry_StarvingAnimalsNoCrops_SeedsOutrankFeedingAndSowing проверь farm.json ways.");
         assertTrue(
                 seeds.priority() > feed.priority(),
                 "Семена важнее невыполнимого кормления:  Иначе тест husbandry_StarvingAnimalsNoCrops_SeedsOutrankFeedingAndSowing перестанет ловить эту поломку. При смене husbandry_StarvingAnimalsNoCrops_SeedsOutrankFeedingAndSowing проверь это утверждение."
