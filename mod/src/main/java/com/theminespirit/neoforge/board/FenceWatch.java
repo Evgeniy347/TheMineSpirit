@@ -19,6 +19,7 @@ import net.minecraft.world.level.block.FenceGateBlock;
 import net.minecraft.world.level.block.IronBarsBlock;
 import net.minecraft.world.level.block.WallBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.LevelChunk;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.event.level.BlockEvent;
 
@@ -62,8 +63,8 @@ public final class FenceWatch {
         Map<BlockCoord, String> live = ledger.retainLive(
                 at -> {
                     BlockPos block = pos(at);
-                    return !level.hasChunk(block.getX() >> 4, block.getZ() >> 4)
-                            || !isFence(level.getBlockState(block));
+                    LevelChunk chunk = level.getChunkSource().getChunkNow(block.getX() >> 4, block.getZ() >> 4);
+                    return chunk == null || !isFence(chunk.getBlockState(block));
                 },
                 SCAN_BUDGET);
         Perf.record("board.src.fence.scan", System.nanoTime() - started);

@@ -31,36 +31,36 @@ class BoardRegistryTests {
     }
 
     @Test
-    void fenceWatch_UnloadedChunk_UsesHasChunkBeforeBlockState() throws IOException {
+    void fenceWatch_UnloadedChunk_ReadsOnlyLoadedChunkState() throws IOException {
         String source = Files.readString(Path.of("mod/src/main/java/com/theminespirit/neoforge/board/FenceWatch.java"));
         String compact = source.replaceAll("\\s+", "");
 
         assertTrue(
-                compact.contains(
-                        "!level.hasChunk(block.getX()>>4,block.getZ()>>4)||!isFence(level.getBlockState(block))"),
-                "Проверка сломанного забора обязана отсекать незагруженный чанк до чтения блока: иначе "
-                        + "isLoaded пускает getBlockState в синхронную загрузку и холодная пересборка стоит "
-                        + "секунды. При смене fenceWatch_UnloadedChunk_UsesHasChunkBeforeBlockState проверь "
-                        + "FenceWatch.liveBreaks и src.fence.");
+                compact.contains("getChunkNow(block.getX()>>4,block.getZ()>>4)")
+                        && compact.contains("chunk==null||!isFence(chunk.getBlockState(block))"),
+                "Проверка сломанного забора обязана читать состояние только из уже открытого чанка: иначе "
+                        + "ServerLevel.getBlockState ждёт частично загруженный чанк и холодная пересборка стоит "
+                        + "секунды. При смене fenceWatch_UnloadedChunk_ReadsOnlyLoadedChunkState проверь "
+                        + "FenceWatch.liveBreaks и board.src.fence.scan.");
         assertFalse(
-                compact.contains("!level.isLoaded(block)||"),
-                "Для старой памяти забора isLoaded не заменяет hasChunk: иначе холодный src.fence снова "
-                        + "блокирует серверный тик. При смене fenceWatch_UnloadedChunk_UsesHasChunkBeforeBlockState "
+                compact.contains("level.getBlockState(block)"),
+                "Для старой памяти забора нельзя читать блок через ServerLevel: иначе холодный src.fence "
+                        + "снова блокирует серверный тик. При смене fenceWatch_UnloadedChunk_ReadsOnlyLoadedChunkState "
                         + "проверь FenceWatch.liveBreaks.");
     }
 
     @Test
-    void craterWatch_UnloadedChunk_UsesHasChunkBeforeBlockState() throws IOException {
+    void craterWatch_UnloadedChunk_ReadsOnlyLoadedChunkState() throws IOException {
         String source =
                 Files.readString(Path.of("mod/src/main/java/com/theminespirit/neoforge/board/CraterWatch.java"));
         String compact = source.replaceAll("\\s+", "");
 
         assertTrue(
-                compact.contains(
-                        "!level.hasChunk(block.getX()>>4,block.getZ()>>4)||level.getBlockState(block).isAir()"),
+                compact.contains("getChunkNow(block.getX()>>4,block.getZ()>>4)")
+                        && compact.contains("chunk==null||chunk.getBlockState(block).isAir()"),
                 "Память воронок обязана сохранять незагруженную клетку без чтения блока: иначе getBlockState "
                         + "синхронно грузит чанк и холодная пересборка снова зависает. При смене "
-                        + "craterWatch_UnloadedChunk_UsesHasChunkBeforeBlockState проверь CraterWatch.liveCauses "
+                        + "craterWatch_UnloadedChunk_ReadsOnlyLoadedChunkState проверь CraterWatch.liveCauses "
                         + "и src.crater.");
     }
 

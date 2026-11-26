@@ -15,6 +15,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.monster.Creeper;
+import net.minecraft.world.level.chunk.LevelChunk;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.event.level.ExplosionEvent;
 
@@ -56,8 +57,8 @@ public final class CraterWatch {
     static Set<String> liveCauses(ServerLevel level, BoardService service) {
         return service.craters().retainLive(pos -> {
             BlockPos block = new BlockPos(pos.x(), pos.y(), pos.z());
-            return !level.hasChunk(block.getX() >> 4, block.getZ() >> 4)
-                    || level.getBlockState(block).isAir();
+            LevelChunk chunk = level.getChunkSource().getChunkNow(block.getX() >> 4, block.getZ() >> 4);
+            return chunk == null || chunk.getBlockState(block).isAir();
         });
     }
 
