@@ -56,6 +56,23 @@ class ClearSweepRunTests {
     }
 
     @Test
+    void stands_UnreachableSummit_KeepsNearbyBase() throws IOException {
+        String source = Files.readString(Path.of("mod/src/main/java/com/theminespirit/neoforge/ClearStands.java"));
+        String compact = source.replaceAll("\\s+", "");
+        int scan = compact.indexOf("privatestatic@NullableCandidatesstand(");
+        int loop = compact.indexOf("for(inty=top;y>=low;y--)", scan);
+        int nearest = compact.indexOf("intdistance=Math.abs(y-spiritY);", loop);
+        int returned = compact.indexOf(
+                "returnhighest==null?null:newCandidates(highest,nearest==null?highest:nearest);", nearest);
+
+        assertTrue(
+                scan >= 0 && loop > scan && nearest > loop && returned > nearest,
+                "Колонна оставляет и вершину, и ближайшую к духу базу: иначе недостижимый холм перекрывает "
+                        + "стоянку у поля и clear_area стоит без пути. При смене "
+                        + "stands_UnreachableSummit_KeepsNearbyBase проверь ClearStands.stand и живой wheat_field.");
+    }
+
+    @Test
     void pillar_NoHigherTargets_TriesAnotherStandAfterDescent() throws IOException {
         String source = Files.readString(Path.of("mod/src/main/java/com/theminespirit/neoforge/ClearSweepRun.java"));
         String compact = source.replaceAll("\\s+", "");

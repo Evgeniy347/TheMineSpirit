@@ -22,6 +22,8 @@ final class ClearStands {
     private static final int COLUMNS = 256;
     private static final int STANDS_MAX = 2048;
 
+    private record Candidates(ClearAnchor.Stand top, ClearAnchor.Stand near) {}
+
     private ClearStands() {}
 
     static ClearAnchor.@Nullable Stand best(
@@ -70,9 +72,10 @@ final class ClearStands {
         for (BlockCoord column : columns) {
             for (int dx = -1; dx <= 1; dx++) {
                 for (int dz = -1; dz <= 1; dz++) {
-                    ClearAnchor.Stand found = stand(session, column.x() + dx, column.z() + dz, minY, maxY, targets);
+                    Candidates found = stand(session, column.x() + dx, column.z() + dz, minY, maxY, targets);
                     if (found != null) {
-                        stands.add(found);
+                        stands.add(found.top());
+                        stands.add(found.near());
                     }
                 }
             }
@@ -80,7 +83,7 @@ final class ClearStands {
                 break;
             }
         }
-        ClearAnchor.Stand here = stand(
+        Candidates here = stand(
                 session,
                 spiritAt.getX(),
                 spiritAt.getZ(),
@@ -88,16 +91,21 @@ final class ClearStands {
                 Math.max(maxY, spiritAt.getY()),
                 targets);
         if (here != null) {
-            stands.add(here);
+            stands.add(here.top());
+            stands.add(here.near());
         }
         return new ArrayList<>(stands);
     }
 
-    private static ClearAnchor.@Nullable Stand stand(
+    private static @Nullable Candidates stand(
             ClearAreaSession session, int x, int z, int minY, int maxY, Set<BlockCoord> targets) {
         Level level = session.level;
         int top = maxY + 1;
         int low = minY - ClearAnchor.MAX_RISE - 2;
+        ClearAnchor.@Nullable Stand highest = null;
+        ClearAnchor.@Nullable Stand nearest = null;
+        int spiritY = session.spirit.blockPosition().getY();
+        int nearestDistance = Integer.MAX_VALUE;
         for (int y = top; y >= low; y--) {
             BlockPos feetPos = new BlockPos(x, y, z);
             BlockState feet = level.getBlockState(feetPos);
@@ -121,8 +129,16 @@ final class ClearStands {
             if (!MiningSafety.canStand(coord, session.safety)) {
                 continue;
             }
-            return new ClearAnchor.Stand(x, y, z);
+            ClearAnchor.Stand candidate = new ClearAnchor.Stand(x, y, z);
+            if (highest == null) {
+                highest = candidate;
+            }
+            int distance = Math.abs(y - spiritY);
+            if (distance < nearestDistance) {
+                nearest = candidate;
+                nearestDistance = distance;
+            }
         }
-        return null;
+        return highest == null ? null : new Candidates(highest, nearest == null ? highest : nearest);
     }
 }
