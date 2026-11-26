@@ -26,6 +26,39 @@ class DispatchPickTests {
     }
 
     @Test
+    void reachHeight_LevelingSchematic_UsesTopOfOriginColumn() {
+        TicketTarget target = TicketTarget.at(new BlockCoord(10, 60, -5))
+                .withScheme("wheat_field_1")
+                .withLeveling(new PlotLeveling(
+                        List.of(
+                                new PlotLeveling.Box(10, 60, -5, 10, 70, -5),
+                                new PlotLeveling.Box(20, 60, -5, 20, 90, -5)),
+                        List.of(),
+                        PlotLeveling.DEFAULT_BLOCK));
+
+        assertEquals(
+                70,
+                DispatchPick.reachHeight(target),
+                "Путь к выравниваемой схеме проверяется от верха колонны origin: иначе низкая стоянка "
+                        + "снова не пускает духа к верхнему слою холма. При смене "
+                        + "reachHeight_LevelingSchematic_UsesTopOfOriginColumn проверь DispatchPick.standNear.");
+    }
+
+    @Test
+    void reachHeight_LevelingWithoutOriginCut_KeepsOriginHeight() {
+        TicketTarget target = TicketTarget.at(new BlockCoord(10, 60, -5))
+                .withLeveling(new PlotLeveling(
+                        List.of(new PlotLeveling.Box(20, 60, -5, 20, 70, -5)), List.of(), PlotLeveling.DEFAULT_BLOCK));
+
+        assertEquals(
+                60,
+                DispatchPick.reachHeight(target),
+                "Без срезки в колонне origin высота проверки остаётся у origin: иначе чужой холм перемещает "
+                        + "цель задания. При смене reachHeight_LevelingWithoutOriginCut_KeepsOriginHeight "
+                        + "проверь PlotLeveling.Box и живой wheat_field.");
+    }
+
+    @Test
     void reachTarget_SchematicBuilding_UsesEntranceInsteadOfOrigin() {
         TicketTarget target = TicketTarget.at(new BlockCoord(10, 60, -5)).withScheme("wheat_field_1");
 

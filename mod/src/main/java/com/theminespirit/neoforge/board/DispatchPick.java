@@ -14,6 +14,7 @@ import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.hunger.SpiritHunger;
 import com.theminespirit.core.mining.api.MiningSafety;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.town.PlotLeveling;
 import com.theminespirit.neoforge.LevelSafetyView;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.ArrayList;
@@ -133,9 +134,25 @@ final class DispatchPick {
         if (target.leveling() == null || entities.isEmpty()) {
             return point;
         }
+        BlockCoord top = new BlockCoord(point.x(), reachHeight(target), point.z());
         LevelSafetyView view =
                 new LevelSafetyView(entities.values().iterator().next().level());
-        return StandSearch.nearest(point, cell -> MiningSafety.canStand(cell, view));
+        return StandSearch.nearest(top, cell -> MiningSafety.canStand(cell, view));
+    }
+
+    static int reachHeight(TicketTarget target) {
+        BlockCoord point = reachTarget(target);
+        if (target.leveling() == null) {
+            return point.y();
+        }
+        return target.leveling().cut().stream()
+                .filter(box -> point.x() >= box.x1()
+                        && point.x() <= box.x2()
+                        && point.z() >= box.z1()
+                        && point.z() <= box.z2())
+                .mapToInt(PlotLeveling.Box::y2)
+                .max()
+                .orElse(point.y());
     }
 
     static BlockCoord reachTarget(TicketTarget target) {
