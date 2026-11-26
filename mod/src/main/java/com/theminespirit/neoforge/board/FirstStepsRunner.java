@@ -10,7 +10,9 @@ import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.ToolSet;
 import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.building.MineLayout;
+import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.building.Schematic;
+import com.theminespirit.core.building.SchematicGround;
 import com.theminespirit.core.building.api.WoodSpecies;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
@@ -21,6 +23,7 @@ import com.theminespirit.core.town.TownSnapshot;
 import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.EnumSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -182,15 +185,36 @@ public final class FirstStepsRunner {
 
     static BuildGap.Gap gap(ServerLevel level, BoardCase step, int buildingLevel, StageSite stage, String fallback) {
         String wood = woodFor(step, BuildingWoodChoice.stored(level, step, stage, fallback));
-        return BuildGap.trace(
-                TicketPlans.plan(step, buildingLevel, targetFor(level, step, buildingLevel, stage, wood)),
-                wood,
-                probe(level),
-                SCHEMES);
+        TicketTarget target = targetFor(level, step, buildingLevel, stage, wood);
+        return BuildGap.trace(auditPlan(step, buildingLevel, target), wood, probe(level), SCHEMES);
     }
 
     static BuildGap.Gap gapAt(ServerLevel level, BoardCase step, TicketTarget target, String wood) {
-        return BuildGap.trace(TicketPlans.plan(step, 1, target), wood, probe(level), SCHEMES);
+        return BuildGap.trace(auditPlan(step, 1, target), wood, probe(level), SCHEMES);
+    }
+
+    private static TaskNode auditPlan(BoardCase step, int level, TicketTarget target) {
+        return farmScheme(target) ? schematicOnly(target) : TicketPlans.plan(step, level, target);
+    }
+
+    private static boolean farmScheme(TicketTarget target) {
+        return target.schemeFile() != null
+                && PresetLibrary.current()
+                        .byId(target.schemeFile())
+                        .map(preset -> SchematicGround.tilled(preset.schematic()))
+                        .orElse(false);
+    }
+
+    private static TaskNode schematicOnly(TicketTarget target) {
+        Map<String, Object> params = new LinkedHashMap<>();
+        params.put("file", target.schemeFile());
+        params.put("x", target.target().x());
+        params.put("y", target.target().y());
+        params.put("z", target.target().z());
+        if (target.wood() != null) {
+            params.put("wood", target.wood());
+        }
+        return new ScriptCall("build_schematic", Map.copyOf(params));
     }
 
     private static TicketTarget targetFor(
