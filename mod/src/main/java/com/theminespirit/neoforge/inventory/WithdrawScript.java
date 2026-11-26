@@ -11,6 +11,7 @@ import com.theminespirit.core.script.TransferParams;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.log.SpiritWorldLog;
 import java.util.List;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.Container;
@@ -25,12 +26,21 @@ public final class WithdrawScript extends ContainerTask {
     private String scanned = "";
 
     public WithdrawScript(SpiritEntity spirit, TransferParams params) {
-        super(spirit, scanTarget(params), params.radius());
+        super(spirit, scanTarget(spirit, params), params.radius());
         this.params = params;
     }
 
-    private static ContainerTarget scanTarget(TransferParams params) {
-        return params.container() instanceof ContainerTarget.Nearest ? ContainerTarget.AUTO : params.container();
+    private static ContainerTarget scanTarget(SpiritEntity spirit, TransferParams params) {
+        if (params.container() instanceof ContainerTarget.Nearest
+                || params.container() instanceof ContainerTarget.Auto) {
+            return ChestWithdrawal.inside(spirit) ? ContainerTarget.SETTLEMENT : ContainerTarget.AUTO;
+        }
+        return params.container();
+    }
+
+    @Override
+    protected boolean canTransferRemotely(BlockPos pos) {
+        return ChestWithdrawal.allowed(spirit, pos);
     }
 
     @Override
@@ -132,7 +142,7 @@ public final class WithdrawScript extends ContainerTask {
         if (moved >= params.count()) {
             return ScriptStatus.SUCCEEDED;
         }
-        return failed("в сундуках рядом только " + moved + " из " + params.count() + " '" + params.item()
+        return failed("в доступных сундуках только " + moved + " из " + params.count() + " '" + params.item()
                 + "': перенесено " + moved + ", остального нет ни в одном" + scanned);
     }
 

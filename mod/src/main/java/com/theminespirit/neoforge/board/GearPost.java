@@ -74,8 +74,7 @@ final class GearPost {
             return false;
         }
         BlockCoord chest = StorePost.at(chosen.upgrade().chest());
-        ActivityPlans.Plan plan =
-                ActivityPlans.equip(chest, post.craftPoint(), chosen.upgrade().item());
+        ActivityPlans.Plan plan = ActivityPlans.equip(chest, chosen.upgrade().item());
         return GraphActivityPost.launchWithRequirements(
                 post,
                 spirit,

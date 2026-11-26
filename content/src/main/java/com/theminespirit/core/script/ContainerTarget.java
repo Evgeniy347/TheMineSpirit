@@ -8,16 +8,19 @@ public sealed interface ContainerTarget
                 ContainerTarget.Position,
                 ContainerTarget.Auto,
                 ContainerTarget.Warehouse,
-                ContainerTarget.Yard {
+                ContainerTarget.Yard,
+                ContainerTarget.Settlement {
     ContainerTarget NEAREST = new Nearest();
     ContainerTarget AUTO = new Auto();
     ContainerTarget WAREHOUSE = new Warehouse();
     ContainerTarget YARD = new Yard();
+    ContainerTarget SETTLEMENT = new Settlement();
 
     static ContainerTarget parse(String text) {
         Objects.requireNonNull(
                 text,
-                "Цель контейнера не может быть null: 'nearest', 'auto', 'warehouse', 'yard' " + "или координаты x,y,z");
+                "Цель контейнера не может быть null: 'nearest', 'auto', 'warehouse', 'yard', 'settlement' "
+                        + "или координаты x,y,z");
         String trimmed = text.strip();
         if ("nearest".equalsIgnoreCase(trimmed)) {
             return NEAREST;
@@ -31,10 +34,13 @@ public sealed interface ContainerTarget
         if ("yard".equalsIgnoreCase(trimmed)) {
             return YARD;
         }
+        if ("settlement".equalsIgnoreCase(trimmed)) {
+            return SETTLEMENT;
+        }
         String[] parts = trimmed.split(",", -1);
         if (parts.length != 3) {
             throw new IllegalArgumentException("Контейнер '" + text + "' задан неверно: ожидалось 'nearest', "
-                    + "'auto', 'warehouse', 'yard' или координаты блока x,y,z (например \"12,64,-7\"). Получено "
+                    + "'auto', 'warehouse', 'yard', 'settlement' или координаты блока x,y,z (например \"12,64,-7\"). Получено "
                     + parts.length + " части вместо 3");
         }
         return new Position(
@@ -76,6 +82,8 @@ public sealed interface ContainerTarget
     record Warehouse() implements ContainerTarget {}
 
     record Yard() implements ContainerTarget {}
+
+    record Settlement() implements ContainerTarget {}
 
     record Position(int x, int y, int z) implements ContainerTarget {}
 }

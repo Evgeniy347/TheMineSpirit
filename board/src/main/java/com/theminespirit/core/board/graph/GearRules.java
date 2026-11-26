@@ -74,7 +74,12 @@ public final class GearRules {
                         }
                     });
                     return new GraphFacts.Chest(
-                            chest.position(), contents, chest.freeSlots(), chest.totalSlots(), chest.reach());
+                            chest.position(),
+                            contents,
+                            chest.freeSlots(),
+                            chest.totalSlots(),
+                            chest.reach(),
+                            chest.remoteWithdraw());
                 })
                 .toList();
     }
@@ -87,7 +92,7 @@ public final class GearRules {
         Upgrade best = null;
         int bestRank = -1;
         for (GraphFacts.Chest chest : chests) {
-            if (chest.reach() == GraphFacts.Reach.NO_PATH) {
+            if (!chest.retrievable()) {
                 continue;
             }
             for (String item : chest.contents().keySet()) {
@@ -141,7 +146,7 @@ public final class GearRules {
         Objects.requireNonNull(chests, "Сундуки не могут быть null: без них нечего брать");
         Map<String, Integer> best = new LinkedHashMap<>();
         for (GraphFacts.Chest chest : chests) {
-            if (chest.reach() == GraphFacts.Reach.NO_PATH) {
+            if (!chest.retrievable()) {
                 continue;
             }
             for (String item : chest.contents().keySet()) {

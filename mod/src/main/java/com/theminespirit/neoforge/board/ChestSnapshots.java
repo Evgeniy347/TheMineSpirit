@@ -3,8 +3,6 @@ package com.theminespirit.neoforge.board;
 import com.theminespirit.core.inventory.ContainerSnapshot;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.ColumnMask;
-import com.theminespirit.core.town.StageSite;
-import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.neoforge.SettlementChestStore;
 import com.theminespirit.neoforge.inventory.ContainerAccess;
 import com.theminespirit.neoforge.inventory.StackMapper;
@@ -26,11 +24,7 @@ final class ChestSnapshots {
     private ChestSnapshots() {}
 
     static Optional<ColumnMask> area(ServerLevel level) {
-        Optional<ColumnMask> town = SettlementPlotStore.get(level).town().map(TownPlan::region);
-        if (town.isPresent()) {
-            return town;
-        }
-        return SettlementPlotStore.liveSite(level).map(StageSite::enclosure);
+        return SettlementPlotStore.settlementArea(level);
     }
 
     static List<BlockCoord> positions(ServerLevel level) {

@@ -6,6 +6,7 @@ import com.theminespirit.core.board.BuildingWoods;
 import com.theminespirit.core.board.SettlementLevel;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
+import com.theminespirit.core.town.ColumnMask;
 import com.theminespirit.core.town.PackedText;
 import com.theminespirit.core.town.SettlementPlot;
 import com.theminespirit.core.town.StageSite;
@@ -58,6 +59,11 @@ public final class SettlementPlotStore extends SavedData {
 
     public static SettlementPlotStore get(ServerLevel level) {
         return level.getDataStorage().computeIfAbsent(FACTORY, DATA_NAME);
+    }
+
+    public static Optional<ColumnMask> settlementArea(ServerLevel level) {
+        Optional<ColumnMask> town = get(level).town().map(TownPlan::region);
+        return town.isPresent() ? town : liveSite(level).map(StageSite::enclosure);
     }
 
     public Optional<SettlementPlot> plot() {

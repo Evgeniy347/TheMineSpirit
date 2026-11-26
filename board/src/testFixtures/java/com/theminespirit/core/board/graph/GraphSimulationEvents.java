@@ -85,7 +85,12 @@ final class GraphSimulationEvents {
     private static void emptyChests(GraphWorld world) {
         world.facts = world.facts.withChests(world.facts.chests().stream()
                 .map(chest -> new GraphFacts.Chest(
-                        chest.position(), Map.of(), chest.totalSlots(), chest.totalSlots(), GraphFacts.Reach.UNKNOWN))
+                        chest.position(),
+                        Map.of(),
+                        chest.totalSlots(),
+                        chest.totalSlots(),
+                        GraphFacts.Reach.UNKNOWN,
+                        chest.remoteWithdraw()))
                 .toList());
     }
 

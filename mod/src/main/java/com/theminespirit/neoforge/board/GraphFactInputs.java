@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
@@ -166,7 +167,9 @@ public final class GraphFactInputs {
     }
 
     static List<GraphFacts.Chest> chestFacts(
-            List<ContainerSnapshot> snapshots, Function<BlockCoord, GraphFacts.Reach> reachAt) {
+            List<ContainerSnapshot> snapshots,
+            Function<BlockCoord, GraphFacts.Reach> reachAt,
+            Predicate<BlockCoord> remoteAt) {
         List<GraphFacts.Chest> chests = new ArrayList<>();
         for (ContainerSnapshot snapshot : snapshots) {
             Map<String, Integer> contents = new LinkedHashMap<>();
@@ -181,7 +184,8 @@ public final class GraphFactInputs {
                     contents,
                     snapshot.freeSlots(),
                     snapshot.slotCount(),
-                    reachAt.apply(pos)));
+                    reachAt.apply(pos),
+                    remoteAt.test(pos)));
         }
         return chests;
     }

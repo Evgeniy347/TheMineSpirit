@@ -78,23 +78,30 @@ class ActivityPlansTests {
     @Test
     void equip_Plan_WithdrawsFromChestThenEquips() {
         List<ScriptCall> calls =
-                calls(ActivityPlans.equip(AT, AT, "minecraft:iron_pickaxe").task());
+                calls(ActivityPlans.equip(AT, "minecraft:iron_pickaxe").task());
 
         assertEquals(
+                2,
+                calls.size(),
+                "Забрать вещь и надеть её можно без отдельного goto: внутри поселения withdraw работает "
+                        + "дистанционно, а снаружи сам ищет подход. Иначе тест "
+                        + "equip_Plan_WithdrawsFromChestThenEquips перестанет ловить эту поломку. При смене "
+                        + "equip_Plan_WithdrawsFromChestThenEquips проверь ContainerTask и живой сундук.");
+        assertEquals(
                 "withdraw",
-                calls.get(1).script(),
+                calls.get(0).script(),
                 "Вещь сначала берут из сундука Иначе тест equip_Plan_WithdrawsFromChestThenEquips перестанет ловить эту поломку. При смене equip_Plan_WithdrawsFromChestThenEquips проверь это утверждение.");
         assertEquals(
                 "10,64,-5",
-                calls.get(1).params().get("container"),
+                calls.get(0).params().get("container"),
                 "Сундук назван координатами Иначе тест equip_Plan_WithdrawsFromChestThenEquips перестанет ловить эту поломку. При смене equip_Plan_WithdrawsFromChestThenEquips проверь это утверждение.");
         assertEquals(
                 "equip",
-                calls.get(2).script(),
+                calls.get(1).script(),
                 "Затем надевают Иначе тест equip_Plan_WithdrawsFromChestThenEquips перестанет ловить эту поломку. При смене equip_Plan_WithdrawsFromChestThenEquips проверь это утверждение.");
         assertEquals(
                 "minecraft:iron_pickaxe",
-                calls.get(2).params().get("item"),
+                calls.get(1).params().get("item"),
                 "Надевают ту же вещь Иначе тест equip_Plan_WithdrawsFromChestThenEquips перестанет ловить эту поломку. При смене equip_Plan_WithdrawsFromChestThenEquips проверь это утверждение.");
     }
 
@@ -138,25 +145,37 @@ class ActivityPlansTests {
 
     @Test
     void moveItem_Plan_WithdrawsFromOneAndDepositsIntoOther() {
-        List<ScriptCall> calls =
-                calls(ActivityPlans.moveItem(AT, new BlockCoord(20, 64, 0), AT, "minecraft:oak_log", 16)
-                        .task());
+        List<ScriptCall> calls = calls(ActivityPlans.moveItem(AT, new BlockCoord(20, 64, 0), "minecraft:oak_log", 16)
+                .task());
 
         assertEquals(
+                3,
+                calls.size(),
+                "Перенос состоит из получения, подхода к приёмнику и выгрузки: отдельный подход к источнику "
+                        + "не нужен. Иначе тест moveItem_Plan_WithdrawsFromOneAndDepositsIntoOther перестанет "
+                        + "ловить эту поломку. При смене moveItem_Plan_WithdrawsFromOneAndDepositsIntoOther "
+                        + "проверь ActivityPlans.moveItem.");
+        assertEquals(
                 "withdraw",
-                calls.get(1).script(),
+                calls.get(0).script(),
                 "Из полного сундука берут Иначе тест moveItem_Plan_WithdrawsFromOneAndDepositsIntoOther перестанет ловить эту поломку. При смене moveItem_Plan_WithdrawsFromOneAndDepositsIntoOther проверь это утверждение.");
         assertEquals(
                 "10,64,-5",
-                calls.get(1).params().get("container"),
+                calls.get(0).params().get("container"),
                 "Источник — первый сундук Иначе тест moveItem_Plan_WithdrawsFromOneAndDepositsIntoOther перестанет ловить эту поломку. При смене moveItem_Plan_WithdrawsFromOneAndDepositsIntoOther проверь это утверждение.");
         assertEquals(
+                "goto",
+                calls.get(1).script(),
+                "К приёмнику дух идёт физически: дистанционная выгрузка запрещена. Иначе тест "
+                        + "moveItem_Plan_WithdrawsFromOneAndDepositsIntoOther перестанет ловить эту поломку. "
+                        + "При смене moveItem_Plan_WithdrawsFromOneAndDepositsIntoOther проверь DepositScript.");
+        assertEquals(
                 "deposit",
-                calls.get(3).script(),
+                calls.get(2).script(),
                 "В свободный сундук кладут Иначе тест moveItem_Plan_WithdrawsFromOneAndDepositsIntoOther перестанет ловить эту поломку. При смене moveItem_Plan_WithdrawsFromOneAndDepositsIntoOther проверь это утверждение.");
         assertEquals(
                 "20,64,0",
-                calls.get(3).params().get("container"),
+                calls.get(2).params().get("container"),
                 "Приёмник — второй сундук Иначе тест moveItem_Plan_WithdrawsFromOneAndDepositsIntoOther перестанет ловить эту поломку. При смене moveItem_Plan_WithdrawsFromOneAndDepositsIntoOther проверь это утверждение.");
     }
 

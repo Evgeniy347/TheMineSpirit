@@ -30,6 +30,49 @@ class GearUnreachableChestTests {
     }
 
     @Test
+    void events_RemoteChestWithPickaxe_EquipsInsteadOfCraft() {
+        Set<String> events = GearInputs.events(
+                facts(
+                        Map.of("spirit-1", spirit("mining", List.of())),
+                        List.of(remoteChest(Map.of("minecraft:stone_pickaxe", 1)))),
+                1);
+
+        assertTrue(
+                events.contains(GearInputs.EQUIP_BEST),
+                "Кирка в сундуке с дистанционным получением закрывает нужду: иначе граф ставит лишний крафт "
+                        + "при готовом инструменте. При смене events_RemoteChestWithPickaxe_EquipsInsteadOfCraft "
+                        + "проверь GraphFacts.Chest.retrievable и живой сундук.");
+        assertFalse(
+                events.contains(GearInputs.CRAFT_TOOL + "pickaxe"),
+                "Готовый дистанционный инструмент отменяет крафт: иначе дух тратит ресурсы на дубликат. "
+                        + "При смене events_RemoteChestWithPickaxe_EquipsInsteadOfCraft проверь GearInputs.events.");
+    }
+
+    @Test
+    void equipUpgrade_RemoteChest_Selected() {
+        GraphFacts.Spirit spirit = spirit(null, List.of(tool("pickaxe")));
+        GraphFacts.Chest chest = remoteChest(Map.of("minecraft:iron_pickaxe", 1));
+
+        assertTrue(
+                GearRules.equipUpgrade(spirit, List.of(chest), GearInputs.settings())
+                        .isPresent(),
+                "Обновка из удалённого сундука выбирается: получить её можно без физического пути. Иначе "
+                        + "граф заказывает лишний крафт при готовом инструменте. При смене "
+                        + "equipUpgrade_RemoteChest_Selected проверь GearRules.equipUpgrade и ActivityPlans.equip.");
+    }
+
+    @Test
+    void chestToolRanks_RemoteChest_Counted() {
+        Map<String, Integer> ranks = GearRules.chestToolRanks(
+                List.of(remoteChest(Map.of("minecraft:stone_pickaxe", 1))), GearInputs.settings());
+
+        assertTrue(
+                ranks.getOrDefault("pickaxe", -1) >= 0,
+                "Ранг инструмента в удалённом сундуке учитывается: иначе граф не видит готового инструмента. "
+                        + "При смене chestToolRanks_RemoteChest_Counted проверь GearRules.chestToolRanks.");
+    }
+
+    @Test
     void equipUpgrade_UnreachableChest_Skipped() {
         GraphFacts.Spirit spirit = spirit(null, List.of(tool("pickaxe")));
         GraphFacts.Chest chest = unreachableChest(Map.of("minecraft:iron_pickaxe", 1));
@@ -77,6 +120,11 @@ class GearUnreachableChestTests {
 
     private static GraphFacts.Chest unreachableChest(Map<String, Integer> contents) {
         return new GraphFacts.Chest(new GraphFacts.Position(0, 92, 0), contents, 10, 27, GraphFacts.Reach.NO_PATH);
+    }
+
+    private static GraphFacts.Chest remoteChest(Map<String, Integer> contents) {
+        return new GraphFacts.Chest(
+                new GraphFacts.Position(0, 92, 0), contents, 10, 27, GraphFacts.Reach.NO_PATH, true);
     }
 
     private static GraphFacts facts(Map<String, GraphFacts.Spirit> spirits, List<GraphFacts.Chest> chests) {

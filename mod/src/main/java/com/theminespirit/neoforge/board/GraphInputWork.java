@@ -11,6 +11,7 @@ import com.theminespirit.core.intellect.StockCatalog;
 import com.theminespirit.core.log.Perf;
 import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.inventory.ChestWithdrawal;
 import com.theminespirit.neoforge.terminal.CraftOrders;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -119,8 +120,10 @@ final class GraphInputWork {
             case FACT_CHESTS -> {
                 long started = System.nanoTime();
                 facts = required(facts, "FACT_BASE")
-                        .withChests(
-                                GraphFactInputs.chestFacts(StockReader.chests(level), GraphFactInputs.reachAt(level)));
+                        .withChests(GraphFactInputs.chestFacts(
+                                StockReader.chests(level),
+                                GraphFactInputs.reachAt(level),
+                                ChestWithdrawal.remoteWithdrawal(level, spirits)));
                 mark("factChests", started);
                 step = Step.FACT_FEEDBACK;
                 yield null;

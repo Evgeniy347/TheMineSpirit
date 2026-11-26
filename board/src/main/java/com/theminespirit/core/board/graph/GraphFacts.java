@@ -158,7 +158,13 @@ public record GraphFacts(
         }
     }
 
-    public record Chest(Position position, Map<String, Integer> contents, int freeSlots, int totalSlots, Reach reach) {
+    public record Chest(
+            Position position,
+            Map<String, Integer> contents,
+            int freeSlots,
+            int totalSlots,
+            Reach reach,
+            boolean remoteWithdraw) {
         public Chest {
             Objects.requireNonNull(position, "позиция сундука не может быть null: без неё не дойти до склада");
             contents = Map.copyOf(
@@ -168,6 +174,14 @@ public record GraphFacts(
                 throw new IllegalArgumentException("Свободных слотов " + freeSlots + " из " + totalSlots
                         + ": число слотов не отрицательно и не больше общего");
             }
+        }
+
+        public Chest(Position position, Map<String, Integer> contents, int freeSlots, int totalSlots, Reach reach) {
+            this(position, contents, freeSlots, totalSlots, reach, false);
+        }
+
+        public boolean retrievable() {
+            return reach != Reach.NO_PATH || remoteWithdraw;
         }
     }
 

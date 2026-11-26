@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.board;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.core.board.graph.GraphFailureMemory;
@@ -23,7 +24,7 @@ class GraphFactInputsTests {
                 Arrays.asList(new Stack("minecraft:oak_log", 0, 5, 64), null, new Stack("minecraft:coal", 0, 2, 64)));
 
         List<GraphFacts.Chest> chests =
-                GraphFactInputs.chestFacts(List.of(snapshot), ignored -> GraphFacts.Reach.UNKNOWN);
+                GraphFactInputs.chestFacts(List.of(snapshot), ignored -> GraphFacts.Reach.UNKNOWN, ignored -> false);
 
         assertEquals(
                 1,
@@ -63,7 +64,8 @@ class GraphFactInputsTests {
         ContainerSnapshot snapshot =
                 new ContainerSnapshot(new BlockCoord(1, 64, 2), List.of(new Stack("minecraft:bread", 0, 5, 64)));
 
-        GraphFacts.Chest chest = GraphFactInputs.chestFacts(List.of(snapshot), ignored -> GraphFacts.Reach.NO_PATH)
+        GraphFacts.Chest chest = GraphFactInputs.chestFacts(
+                        List.of(snapshot), ignored -> GraphFacts.Reach.NO_PATH, ignored -> false)
                 .get(0);
 
         assertEquals(
@@ -72,6 +74,33 @@ class GraphFactInputsTests {
                 "Факт достижимости сундука обязан попадать во вход графа: иначе еда в недостижимом сундуке "
                         + "считается выполнимой задачей"
                         + " При смене chestFacts_ReachFromWorld_MarksUnreachableChest проверь это утверждение.");
+    }
+
+    @Test
+    void chestFacts_RemoteWithdrawal_KeepsPhysicalReachForUnload() {
+        ContainerSnapshot snapshot =
+                new ContainerSnapshot(new BlockCoord(1, 64, 2), List.of(new Stack("minecraft:bread", 0, 5, 64)));
+
+        GraphFacts.Chest chest = GraphFactInputs.chestFacts(
+                        List.of(snapshot), ignored -> GraphFacts.Reach.NO_PATH, pos -> true)
+                .get(0);
+
+        assertTrue(
+                chest.remoteWithdraw(),
+                "Сундук поселения помечается как доступный для дистанционного получения: иначе граф снова "
+                        + "считает запасы недоступными. При смене chestFacts_RemoteWithdrawal_KeepsPhysicalReachForUnload "
+                        + "проверь ChestWithdrawal.remoteWithdrawal.");
+        assertTrue(
+                chest.retrievable(),
+                "Для получения предмета физический путь не требуется: иначе удалённый сундук не закрывает "
+                        + "нехватку еды и материалов. При смене chestFacts_RemoteWithdrawal_KeepsPhysicalReachForUnload "
+                        + "проверь GraphFacts.Chest.retrievable.");
+        assertEquals(
+                GraphFacts.Reach.NO_PATH,
+                chest.reach(),
+                "Физическая достижимость остаётся NO_PATH для выгрузки: иначе граф отправит духа сдавать "
+                        + "вещи в недостижимый сундук. При смене chestFacts_RemoteWithdrawal_KeepsPhysicalReachForUnload "
+                        + "проверь StorePost и OverloadPost.");
     }
 
     @Test

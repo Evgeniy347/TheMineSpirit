@@ -25,6 +25,20 @@ class ChestReachTests {
     }
 
     @Test
+    void reachableStock_RemoteChestWithoutPath_KeepsContents() {
+        Map<String, Integer> stock = Map.of("minecraft:bread", 12, "minecraft:oak_log", 8);
+        List<GraphFacts.Chest> chests = List.of(
+                new GraphFacts.Chest(AT, Map.of("minecraft:bread", 10), 10, 27, GraphFacts.Reach.NO_PATH, true));
+
+        assertEquals(
+                stock,
+                ChestReach.reachableStock(stock, chests, Map.of()),
+                "Сундук с дистанционным получением остаётся запасом даже без физического пути: иначе граф "
+                        + "блокирует еду и материалы, которые дух может взять на месте. При смене "
+                        + "reachableStock_RemoteChestWithoutPath_KeepsContents проверь GraphFacts.Chest.retrievable.");
+    }
+
+    @Test
     void reachableStock_UnreachableChest_DoesNotSpendCarriedStock() {
         Map<String, Integer> stock = Map.of("minecraft:bread", 14, "minecraft:oak_log", 8);
         Map<String, Integer> carried = Map.of("minecraft:bread", 4);
@@ -131,6 +145,40 @@ class ChestReachTests {
                 "Семена и земля в инвентаре делают wheat_field выполнимым, даже если временные сундуки недоступны: "
                         + "иначе пищевой приоритет блокируется ложной нехваткой. При смене "
                         + "plan_WheatFieldStockCarried_UnreachableChestDoesNotBlock проверь живое поле.");
+    }
+
+    @Test
+    void plan_WheatFieldStockInRemoteChest_IsFeasible() {
+        GraphWorld world = GraphWorld.settled();
+        Map<String, Integer> stock = Map.of("minecraft:wheat_seeds", 8, "minecraft:dirt", 8);
+        GraphFacts facts = GraphFacts.empty()
+                .withChests(List.of(new GraphFacts.Chest(AT, stock, 0, 128, GraphFacts.Reach.NO_PATH, true)));
+        Map<String, Integer> available = ChestReach.reachableStock(stock, facts.chests(), Map.of());
+        GraphState state = new GraphState(
+                GraphNames.stock(
+                        available, StockCatalog.defaultTable().nutrition().keySet()),
+                world.stage,
+                world.kits,
+                world.buildings,
+                world.materials,
+                world.storageFree,
+                world.events,
+                world.world,
+                world.distances,
+                world.stations,
+                Map.of(),
+                facts);
+
+        GraphPlan plan = GraphPlanner.plan(world.graph, state);
+
+        assertTrue(
+                plan.task("building:wheat_field")
+                        .filter(GraphPlan.Task::feasible)
+                        .isPresent(),
+                "Семена и земля в удалённом сундуке поселения делают wheat_field выполнимым: получение не "
+                        + "требует пути, а выгрузка остаётся отдельным физическим действием. Иначе граф "
+                        + "блокирует пищевое поле при готовом запасе. При смене "
+                        + "plan_WheatFieldStockInRemoteChest_IsFeasible проверь живое поле и WithdrawScript.");
     }
 
     @Test

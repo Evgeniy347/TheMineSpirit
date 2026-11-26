@@ -65,6 +65,62 @@ class StoreTransferTests {
     }
 
     @Test
+    void chestMove_RemoteSourceWithoutPath_MovesToPhysicalWarehouse() {
+        StoreTransfer.Move move = StoreTransfer.chestMove(
+                        List.of(
+                                chest(FIRST, Map.of("minecraft:oak_log", 40), 0, GraphFacts.Reach.NO_PATH, true),
+                                chest(SECOND, Map.of(), 27, GraphFacts.Reach.PATH, false)),
+                        Set.of(SECOND))
+                .orElseThrow();
+
+        assertEquals(
+                FIRST,
+                move.from(),
+                "Источник без пути выбирается, если получение из него дистанционное: иначе временный сундук "
+                        + "никогда не опустеет. При смене chestMove_RemoteSourceWithoutPath_MovesToPhysicalWarehouse "
+                        + "проверь StorePost.transfer и WithdrawScript.");
+        assertEquals(
+                SECOND,
+                move.to(),
+                "Приёмник остаётся физически достижимым: дистанционная выгрузка запрещена. Иначе перенос "
+                        + "зависнет в сундуке без пути. При смене "
+                        + "chestMove_RemoteSourceWithoutPath_MovesToPhysicalWarehouse проверь ActivityPlans.moveItem.");
+    }
+
+    @Test
+    void chestMove_SourceWithoutPathOrRemote_IsSkipped() {
+        assertTrue(
+                StoreTransfer.chestMove(
+                                List.of(
+                                        chest(
+                                                FIRST,
+                                                Map.of("minecraft:oak_log", 40),
+                                                0,
+                                                GraphFacts.Reach.NO_PATH,
+                                                false),
+                                        chest(SECOND, Map.of(), 27, GraphFacts.Reach.PATH, false)),
+                                Set.of(SECOND))
+                        .isEmpty(),
+                "Обычный сундук без пути не становится источником переноса: иначе граф выдаёт невыполнимую "
+                        + "задачу. При смене chestMove_SourceWithoutPathOrRemote_IsSkipped проверь "
+                        + "GraphFacts.Chest.retrievable и StoreTransfer.");
+    }
+
+    @Test
+    void chestMove_RemoteDestinationWithoutPath_RejectsUnload() {
+        assertTrue(
+                StoreTransfer.chestMove(
+                                List.of(
+                                        chest(FIRST, Map.of("minecraft:oak_log", 40), 0),
+                                        chest(SECOND, Map.of(), 27, GraphFacts.Reach.NO_PATH, true)),
+                                Set.of(SECOND))
+                        .isEmpty(),
+                "Дистанционное получение не превращается в дистанционную выгрузку: сундук без пути не может "
+                        + "быть приёмником. Иначе перенос зависнет в запрещённой операции. При смене "
+                        + "chestMove_RemoteDestinationWithoutPath_RejectsUnload проверь StoreTransfer и DepositScript.");
+    }
+
+    @Test
     void chestMove_NoFullChest_Empty() {
         assertTrue(
                 StoreTransfer.chestMove(
@@ -99,6 +155,15 @@ class StoreTransferTests {
     }
 
     private static GraphFacts.Chest chest(GraphFacts.Position position, Map<String, Integer> contents, int free) {
-        return new GraphFacts.Chest(position, contents, free, free + contents.size(), GraphFacts.Reach.UNKNOWN);
+        return chest(position, contents, free, GraphFacts.Reach.UNKNOWN, false);
+    }
+
+    private static GraphFacts.Chest chest(
+            GraphFacts.Position position,
+            Map<String, Integer> contents,
+            int free,
+            GraphFacts.Reach reach,
+            boolean remote) {
+        return new GraphFacts.Chest(position, contents, free, free + contents.size(), reach, remote);
     }
 }

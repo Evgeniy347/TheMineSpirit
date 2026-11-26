@@ -14,7 +14,7 @@ public final class ChestReach {
         Objects.requireNonNull(chests, "Сундуки не могут быть null: без них — пустой список");
         Map<String, Integer> unreachable = new HashMap<>();
         for (GraphFacts.Chest chest : chests) {
-            if (chest.reach() != GraphFacts.Reach.NO_PATH) {
+            if (chest.retrievable()) {
                 continue;
             }
             chest.contents()

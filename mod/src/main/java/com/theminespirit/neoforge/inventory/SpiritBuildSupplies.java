@@ -39,17 +39,22 @@ public final class SpiritBuildSupplies implements BuildSupplies {
         if (maxCount == 0) {
             return List.of();
         }
-        BlockLocator.Search search = BlockLocator.search(
-                spirit.level(),
-                spirit.blockPosition(),
-                SpiritConfig.storageSearchRadius(),
-                ContainerAccess.allowedBlocks());
-        List<BlockPos> found = new ArrayList<>();
-        while (!search.done()) {
-            found.addAll(search.step(4));
+        List<BlockPos> found;
+        if (ChestWithdrawal.inside(spirit)) {
+            found = ChestWithdrawal.positions(spirit);
+        } else {
+            BlockLocator.Search search = BlockLocator.search(
+                    spirit.level(),
+                    spirit.blockPosition(),
+                    SpiritConfig.storageSearchRadius(),
+                    ContainerAccess.allowedBlocks());
+            found = new ArrayList<>();
+            while (!search.done()) {
+                found.addAll(search.step(4));
+            }
+            found.sort(Comparator.comparingDouble(spirit.blockPosition()::distSqr)
+                    .thenComparing(Comparator.naturalOrder()));
         }
-        found.sort(
-                Comparator.comparingDouble(spirit.blockPosition()::distSqr).thenComparing(Comparator.naturalOrder()));
         List<ScriptCall> steps = new ArrayList<>();
         int rest = maxCount;
         for (BlockPos pos : found) {

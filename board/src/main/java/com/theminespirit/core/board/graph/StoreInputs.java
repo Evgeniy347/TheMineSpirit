@@ -40,7 +40,7 @@ public final class StoreInputs {
     private static Map<String, Integer> counts(List<GraphFacts.Chest> chests) {
         Map<String, Integer> counts = new HashMap<>();
         for (GraphFacts.Chest chest : chests) {
-            if (chest.reach() == GraphFacts.Reach.NO_PATH) {
+            if (!chest.retrievable()) {
                 continue;
             }
             chest.contents().forEach((item, count) -> counts.merge(GraphNames.graphItem(item), count, Integer::sum));

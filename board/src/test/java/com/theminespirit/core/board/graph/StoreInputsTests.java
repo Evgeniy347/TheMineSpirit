@@ -89,6 +89,27 @@ class StoreInputsTests {
     }
 
     @Test
+    void stageReqs_RemoteChestWithoutPath_CountsStoredFood() {
+        StoreMinimums settings = new StoreMinimums(Map.of("bread", new StoreMinimums.Entry(16, 0)));
+        List<GraphFacts.Chest> chests = List.of(new GraphFacts.Chest(
+                new GraphFacts.Position(1, 64, 1),
+                Map.of("minecraft:bread", 10),
+                17,
+                27,
+                GraphFacts.Reach.NO_PATH,
+                true));
+
+        GraphSiteFacts.StageReqs reqs = StoreInputs.stageReqs(EMPTY, settings, SupplyGraph.loadDefault(), chests);
+
+        assertEquals(
+                10,
+                reqs.actual().get("bread"),
+                "Еда в сундуке с дистанционным получением считается складским запасом: иначе граф заказывает "
+                        + "лишнюю добычу при готовом хлебе. При смене stageReqs_RemoteChestWithoutPath_CountsStoredFood "
+                        + "проверь StoreInputs.counts и живой склад.");
+    }
+
+    @Test
     void stageReqs_MissingItemInChests_IsZeroNotAbsent() {
         StoreMinimums settings = new StoreMinimums(Map.of("bread", new StoreMinimums.Entry(16, 4)));
 

@@ -17,6 +17,8 @@ class ContainerTargetTests {
                 "  nearest  |NEAREST",
                 "auto|AUTO",
                 "  AUTO  |AUTO",
+                "settlement|SETTLEMENT",
+                "  SETTLEMENT  |SETTLEMENT",
                 "12,64,-7|POSITION",
                 "0,0,0|POSITION",
                 "-30000000,319,30000000|POSITION",
@@ -28,6 +30,7 @@ class ContainerTargetTests {
         boolean matches = switch (expected) {
             case "NEAREST" -> target instanceof ContainerTarget.Nearest;
             case "AUTO" -> target instanceof ContainerTarget.Auto;
+            case "SETTLEMENT" -> target instanceof ContainerTarget.Settlement;
             default -> target instanceof ContainerTarget.Position;
         };
         assertEquals(

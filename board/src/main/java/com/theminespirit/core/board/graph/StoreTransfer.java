@@ -23,7 +23,9 @@ public final class StoreTransfer {
     public static Optional<Move> chestMove(List<GraphFacts.Chest> chests, Set<GraphFacts.Position> destinations) {
         GraphFacts.Chest from = null;
         for (GraphFacts.Chest chest : chests) {
-            if (chest.freeSlots() > 0 || chest.contents().isEmpty()) {
+            if (!chest.retrievable()
+                    || chest.freeSlots() > 0
+                    || chest.contents().isEmpty()) {
                 continue;
             }
             if (from == null || count(from) < count(chest)) {
@@ -35,7 +37,8 @@ public final class StoreTransfer {
         }
         GraphFacts.Chest to = null;
         for (GraphFacts.Chest chest : chests) {
-            if (chest.freeSlots() <= 0
+            if (chest.reach() == GraphFacts.Reach.NO_PATH
+                    || chest.freeSlots() <= 0
                     || chest.position().equals(from.position())
                     || !destinations.contains(chest.position())) {
                 continue;

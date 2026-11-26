@@ -14,6 +14,7 @@ import com.theminespirit.core.inventory.Stack;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.script.api.CatalogLimits;
+import com.theminespirit.neoforge.inventory.ChestWithdrawal;
 import com.theminespirit.neoforge.inventory.ContainerAccess;
 import com.theminespirit.neoforge.inventory.InventoryTables;
 import com.theminespirit.neoforge.inventory.StackMapper;
@@ -92,6 +93,7 @@ final class BuildSupplyTrip {
         }
         List<ScriptCall> steps = new ArrayList<>();
         Set<BlockPos> seen = new HashSet<>();
+        boolean remote = ChestWithdrawal.inside(spirit);
         Predicate<BlockPos> reachable = BuildSupplyReach.reachable(site, coord(spirit.blockPosition()));
         for (BlockPos pos : chests) {
             if (freeSlots <= 0) {
@@ -101,7 +103,7 @@ final class BuildSupplyTrip {
             if (!seen.add(pos) || (!other.equals(pos) && seen.contains(other))) {
                 continue;
             }
-            if (!spirit.level().isLoaded(pos) || !reachable.test(pos)) {
+            if (!spirit.level().isLoaded(pos) || (!remote && !reachable.test(pos))) {
                 continue;
             }
             if (!(ContainerAccess.open(spirit.level(), pos) instanceof ContainerAccess.Opened opened)) {
@@ -254,6 +256,9 @@ final class BuildSupplyTrip {
     }
 
     static List<BlockPos> containers(SpiritEntity spirit) {
+        if (ChestWithdrawal.inside(spirit)) {
+            return ChestWithdrawal.positions(spirit);
+        }
         SettlementChests registry = registry(spirit);
         BlockCoord feet = coord(spirit.blockPosition());
         List<BlockPos> found = new ArrayList<>();

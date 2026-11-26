@@ -93,11 +93,10 @@ public final class ActivityPlans {
                                         CatalogLimits.STATION_RADIUS_DEFAULT))));
     }
 
-    public static Plan equip(BlockCoord chest, BlockCoord at, String item) {
+    public static Plan equip(BlockCoord chest, String item) {
         return new Plan(
                 "equip",
                 sequence(
-                        gotoPoint(at),
                         new ScriptCall(
                                 WITHDRAW,
                                 Map.of(
@@ -136,29 +135,26 @@ public final class ActivityPlans {
                                 Map.of(CONTAINER, container(at), RADIUS, CatalogLimits.CONTAINER_RADIUS_DEFAULT))));
     }
 
-    public static Plan withdraw(BlockCoord from, BlockCoord at, String item, int count) {
+    public static Plan withdraw(BlockCoord from, String item, int count) {
         return new Plan(
                 WITHDRAW,
-                sequence(
-                        gotoPoint(at),
-                        new ScriptCall(
-                                WITHDRAW,
-                                Map.of(
-                                        CONTAINER,
-                                        container(from),
-                                        ITEM,
-                                        item,
-                                        COUNT,
-                                        Math.max(1, Math.min(count, CatalogLimits.COUNT_MAX)),
-                                        RADIUS,
-                                        CatalogLimits.CONTAINER_RADIUS_DEFAULT))));
+                new ScriptCall(
+                        WITHDRAW,
+                        Map.of(
+                                CONTAINER,
+                                container(from),
+                                ITEM,
+                                item,
+                                COUNT,
+                                Math.max(1, Math.min(count, CatalogLimits.COUNT_MAX)),
+                                RADIUS,
+                                CatalogLimits.CONTAINER_RADIUS_DEFAULT)));
     }
 
-    public static Plan moveItem(BlockCoord from, BlockCoord to, BlockCoord at, String item, int count) {
+    public static Plan moveItem(BlockCoord from, BlockCoord to, String item, int count) {
         return new Plan(
                 "deposit",
                 sequence(
-                        gotoPoint(at),
                         new ScriptCall(
                                 WITHDRAW,
                                 Map.of(

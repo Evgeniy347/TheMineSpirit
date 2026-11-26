@@ -95,7 +95,7 @@ final class StorePost {
         }
         StoreTransfer.Move known = move.orElseThrow();
         BlockCoord from = at(known.from());
-        return launch(post, spirit, ActivityPlans.moveItem(from, at(known.to()), from, known.item(), known.count()));
+        return launch(post, spirit, ActivityPlans.moveItem(from, at(known.to()), known.item(), known.count()));
     }
 
     private static boolean takeSmelted(GraphPost post, GraphTickets.Ticket ticket) {
@@ -110,7 +110,7 @@ final class StorePost {
         }
         GraphFacts.Station station = furnace.orElseThrow();
         BlockCoord point = at(station.position());
-        return launch(post, spirit, ActivityPlans.withdraw(point, point, station.output(), FURNACE_BATCH));
+        return launch(post, spirit, ActivityPlans.withdraw(point, station.output(), FURNACE_BATCH));
     }
 
     private static boolean sort(GraphPost post, GraphTickets.Ticket ticket) {

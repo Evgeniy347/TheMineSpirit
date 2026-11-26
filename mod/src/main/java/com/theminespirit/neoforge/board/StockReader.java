@@ -116,6 +116,10 @@ public final class StockReader {
         }
     }
 
+    public static List<BlockCoord> containerPositions(ServerLevel level) {
+        return ChestSnapshots.positions(level);
+    }
+
     public static List<ContainerSnapshot> chests(ServerLevel level) {
         return ChestSnapshots.read(level, ChestSnapshots.registered(level));
     }

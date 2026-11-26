@@ -29,8 +29,7 @@ abstract class ContainerTask implements ScriptInstance {
     protected Container container;
     protected BlockPos containerPos;
 
-    private final ContainerFinder finder;
-    private final AutoContainerScan scan;
+    private final ContainerLocation location;
     private final ReachApproach approach;
     private Phase phase = Phase.FIND;
     private AutoMove current;
@@ -44,9 +43,7 @@ abstract class ContainerTask implements ScriptInstance {
 
     protected ContainerTask(SpiritEntity spirit, ContainerTarget target, int radius) {
         this.spirit = spirit;
-        ContainerScan.Choice choice = ContainerScan.of(spirit, target, radius);
-        this.finder = choice.finder();
-        this.scan = choice.scan();
+        this.location = new ContainerLocation(ContainerScan.of(spirit, target, radius));
         this.approach = ReachApproach.withRoutes(spirit);
     }
 
@@ -67,6 +64,10 @@ abstract class ContainerTask implements ScriptInstance {
     }
 
     protected boolean skipAsDone() {
+        return false;
+    }
+
+    protected boolean canTransferRemotely(BlockPos pos) {
         return false;
     }
 
@@ -141,7 +142,7 @@ abstract class ContainerTask implements ScriptInstance {
     }
 
     public int maxSlicesPerTick() {
-        return isAuto() ? scan.maxSlicesPerTick() : finder.maxSlicesPerTick();
+        return location.maxSlicesPerTick();
     }
 
     public int maxMovesPerTick() {
@@ -166,52 +167,40 @@ abstract class ContainerTask implements ScriptInstance {
     }
 
     private boolean isAuto() {
-        return scan != null;
+        return location.auto();
     }
 
     private void find() {
-        if (isAuto()) {
-            if (!scan.tick()) {
-                return;
-            }
-            advanceAuto();
-            return;
-        }
-        if (!finder.tick()) {
-            return;
-        }
-        if (finder.found() == null) {
-            fail(finder.refusal());
-            return;
-        }
-        BlockPos pos = finder.found();
-        switch (ContainerAccess.open(finder.level(), pos)) {
-            case ContainerAccess.Opened opened -> {
-                container = opened.container();
-                containerPos = pos.immutable();
-                approach.begin(pos);
-                phase = Phase.APPROACH;
-            }
-            case ContainerAccess.Refused refused -> fail(refused.reason());
+        ContainerLocation.Result found = location.tick(() -> nextAutoMove(location.autoScan()));
+        switch (found) {
+            case ContainerLocation.Waiting ignored -> {}
+            case ContainerLocation.Finished ignored -> finishAutoMoves();
+            case ContainerLocation.Failed failed -> fail(failed.reason());
+            case ContainerLocation.Ready ready -> accept(ready);
         }
     }
 
-    private void advanceAuto() {
-        AutoMove move = nextAutoMove(scan);
-        if (move == null) {
-            ScriptStatus done = finishAuto();
-            if (done == ScriptStatus.FAILED) {
-                fail(finishReason != null ? finishReason : "перенос не завершён: перенесено " + movedTotal());
-            } else {
-                succeed();
-            }
-            return;
+    private void finishAutoMoves() {
+        ScriptStatus done = finishAuto();
+        if (done == ScriptStatus.FAILED) {
+            fail(finishReason != null ? finishReason : "перенос не завершён: перенесено " + movedTotal());
+        } else {
+            succeed();
         }
-        current = move;
-        container = move.container();
-        containerPos = new BlockPos(move.pos().x(), move.pos().y(), move.pos().z());
-        approach.begin(containerPos);
-        phase = Phase.APPROACH;
+    }
+
+    private void accept(ContainerLocation.Ready ready) {
+        current = ready.move();
+        container = ready.container();
+        containerPos = ready.pos();
+        if (canTransferRemotely(containerPos)) {
+            spirit.showInHand(shownWhileTransferring());
+            runner = current == null ? beginTransfer(container) : current.runner();
+            phase = Phase.TRANSFER;
+        } else {
+            approach.begin(containerPos);
+            phase = Phase.APPROACH;
+        }
     }
 
     private void approach() {
@@ -260,10 +249,10 @@ abstract class ContainerTask implements ScriptInstance {
         holdOpen();
         ContainerSort.apply(container, InventoryTables.values());
         if (isAuto()) {
-            scan.updateSnapshot(current.snapshotIndex());
+            location.updateSnapshot(current.snapshotIndex());
             current = null;
             runner = null;
-            advanceAuto();
+            find();
             return;
         }
         ScriptStatus done = finish(movedTotal(), runner == null ? TransferRunner.Shortage.NONE : runner.shortage());

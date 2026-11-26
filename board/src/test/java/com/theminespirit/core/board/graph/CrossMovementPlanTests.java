@@ -36,8 +36,14 @@ class CrossMovementPlanTests {
         assertMovesFirst("кормление", ActivityPlans.feed(at, Species.SHEEP, 4).task(), "feed");
         assertMovesFirst("дойка", ActivityPlans.milk(at, 2).task(), "milk");
         assertMovesFirst("крафт", ActivityPlans.craft(at, "torch", 4).task(), "craft");
-        assertMovesFirst(
-                "броня", ActivityPlans.equip(chest, at, "iron_chestplate").task(), "equip");
+        List<String> equipScripts = new ArrayList<>();
+        collect(ActivityPlans.equip(chest, "iron_chestplate").task(), equipScripts);
+        assertEquals(
+                List.of("withdraw", "equip"),
+                equipScripts,
+                "Броня берётся без принудительного goto: внутри поселения withdraw дистанционный, снаружи "
+                        + "сам ищет подход. Иначе тест movement_WorkCards_MoveToTargetThenAct перестанет ловить "
+                        + "эту поломку. При смене movement_WorkCards_MoveToTargetThenAct проверь ActivityPlans.equip.");
         List<String> unloadScripts = new ArrayList<>();
         collect(ActivityPlans.unload(at).task(), unloadScripts);
         assertEquals(
@@ -50,9 +56,23 @@ class CrossMovementPlanTests {
                 ((ScriptCall) ActivityPlans.unload(at).task()).params().get("container"),
                 "Сундук назван координатами — подход ищет стоянку у самой цели"
                         + " Иначе тест movement_WorkCards_MoveToTargetThenAct перестанет ловить эту поломку. При смене movement_WorkCards_MoveToTargetThenAct проверь это утверждение.");
-        assertMovesFirst(
-                "перенос", ActivityPlans.moveItem(chest, at, at, "bread", 1).task(), "deposit");
-        assertMovesFirst("еда", ActivityPlans.withdraw(chest, at, "bread", 2).task(), "withdraw");
+        List<String> transferScripts = new ArrayList<>();
+        collect(ActivityPlans.moveItem(chest, at, "bread", 1).task(), transferScripts);
+        assertEquals(
+                List.of("withdraw", "goto", "deposit"),
+                transferScripts,
+                "Перенос берёт предмет дистанционно, но выгрузка по-прежнему идёт к сундуку: иначе появится "
+                        + "запрещённая удалённая сдача. Иначе тест movement_WorkCards_MoveToTargetThenAct "
+                        + "перестанет ловить эту поломку. При смене movement_WorkCards_MoveToTargetThenAct "
+                        + "проверь ActivityPlans.moveItem.");
+        List<String> foodScripts = new ArrayList<>();
+        collect(ActivityPlans.withdraw(chest, "bread", 2).task(), foodScripts);
+        assertEquals(
+                List.of("withdraw"),
+                foodScripts,
+                "Получение еды не добавляет отдельный goto: подход при необходимости делает WithdrawScript. "
+                        + "Иначе тест movement_WorkCards_MoveToTargetThenAct перестанет ловить эту поломку. "
+                        + "При смене movement_WorkCards_MoveToTargetThenAct проверь ActivityPlans.withdraw.");
         assertMovesFirst("плавка", ActivityPlans.smelt(at, "iron_ore", 2).task(), "smelt");
 
         List<String> chop = scripts(BoardCase.GATHER_MATERIALS, chopTarget());
