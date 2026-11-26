@@ -50,12 +50,12 @@
       "name": "Домашняя грядка",
       "case": "BUILD_PLACED",
       "stage": 1,
-      "base": 67,
+      "base": 320,
       "materials": {
         "wheat_seeds": 8,
         "dirt": 8
       },
-      "optional": true,
+      "optional": false,
       "implemented": true
     }
   },

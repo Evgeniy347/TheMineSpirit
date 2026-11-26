@@ -94,9 +94,10 @@ class GraphStoreFarmFragmentsTests {
 
         SupplyGraph.Building field = GRAPH.buildings().get("wheat_field");
         assertTrue(
-                field != null && field.stage() == 1 && field.optional(),
-                "Грядка пшеницы этапа 1 — необязательная постройка, чтобы не требовать её каждый цикл"
-                        + " Иначе тест farmFragment_FarmNodes_AreDeclared перестанет ловить эту поломку. При смене farmFragment_FarmNodes_AreDeclared проверь это утверждение.");
+                field != null && field.stage() == 1 && !field.optional(),
+                "Грядка пшеницы обязательна для пищевого приоритета: иначе её вес снова упадёт ниже "
+                        + "верстака и поле будет вытесняться хозяйственными мелочами. При смене "
+                        + "farmFragment_FarmNodes_AreDeclared проверь graph.d/farm.json и GraphChoice.");
         assertTrue(
                 GRAPH.implemented("wheat_field"),
                 "Грядка строится действием build_farm"

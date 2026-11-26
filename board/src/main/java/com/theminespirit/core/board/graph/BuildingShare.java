@@ -17,7 +17,7 @@ final class BuildingShare {
         if (tooled && grounded && GraphLack.stocked(graph, state, GraphLack.materials(graph, state, id))) {
             return 1.0;
         }
-        return graph.decay() * graph.decay() * graph.decay();
+        return graph.decay();
     }
 
     static double luck(SupplyGraph graph, GraphState state, boolean aboveKit, SupplyGraph.Way way) {

@@ -101,7 +101,7 @@ class GraphMutationTests {
     }
 
     @Test
-    void plan_MaterialsReady_BuildingOutranksStockTopUp() {
+    void plan_MaterialsReady_FoodFieldDirtOutranksHut() {
         GraphPlan plan = GraphWorld.settled()
                 .with("oak_log", 64)
                 .with("oak_planks", 64)
@@ -110,10 +110,16 @@ class GraphMutationTests {
                 .plan();
 
         assertTrue(
-                plan.priority("building:hut") > plan.priority("dig_dirt"),
-                "Материалы хижины на складе — стройка важнее пополнения запаса земли до порога: хижина "
-                        + plan.priority("building:hut") + ", земля " + plan.priority("dig_dirt")
-                        + " Иначе тест plan_MaterialsReady_BuildingOutranksStockTopUp перестанет ловить эту поломку. При смене plan_MaterialsReady_BuildingOutranksStockTopUp проверь это утверждение.");
+                plan.priority("building:wheat_field") > plan.priority("building:hut"),
+                "Обязательное поле важнее хижины: иначе пищевой приоритет снова уступает жилью: поле "
+                        + plan.priority("building:wheat_field") + ", хижина " + plan.priority("building:hut")
+                        + ", земля " + plan.priority("dig_dirt")
+                        + ". При смене plan_MaterialsReady_FoodFieldDirtOutranksHut проверь graph.d/farm.json.");
+        assertTrue(
+                plan.priority("dig_dirt") > plan.priority("building:hut"),
+                "Без земли поле поднимает добычу земли выше хижины: иначе обязательная пашня останется "
+                        + "без материала. При смене plan_MaterialsReady_FoodFieldDirtOutranksHut проверь "
+                        + "GraphChoice и фермерский узел.");
     }
 
     @Test
