@@ -40,6 +40,31 @@ class GraphExplainTests {
     }
 
     @Test
+    void of_BlockedTask_ShowsSpecificReason() {
+        GraphPlan.Task blocked = new GraphPlan.Task(
+                "building:wheat_field",
+                BoardCase.BUILD_PLACED,
+                "wheat_field",
+                Optional.empty(),
+                90,
+                Map.of(),
+                false,
+                false,
+                true,
+                100,
+                "нет инструмента shovel у spirit-1");
+        GraphPlan plan = plan(blocked, task("chop_jungle_log", 80, true));
+
+        String why = GraphExplain.of(plan, 1).decisions().get(0).why();
+
+        assertTrue(
+                why.contains("нет инструмента shovel у spirit-1"),
+                "Конкретная блокировка графа видна в решении: иначе оператор снова видит только общую "
+                        + "нехватку и не знает, чей провал держит постройку. При смене "
+                        + "of_BlockedTask_ShowsSpecificReason проверь GraphBlocks.blockedTask и живой wheat_field.");
+    }
+
+    @Test
     void of_ChosenAndNext_ExplainsWeightGap() {
         GraphPlan plan =
                 plan(task("make:dirt", 80, true), task("chop_oak_log", 60, true), task("make:planks", 40, false));

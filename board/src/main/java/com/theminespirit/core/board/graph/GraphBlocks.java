@@ -37,7 +37,7 @@ final class GraphBlocks {
         Map<String, Double> scores = flow.solve();
         for (GraphBlock block : state.blocks()) {
             GraphBlock.Need need = normalized(block.need());
-            if (satisfied(need)) {
+            if (satisfied(block.node(), need)) {
                 continue;
             }
             String reason = text(need);
@@ -103,7 +103,10 @@ final class GraphBlocks {
                 reason);
     }
 
-    private boolean satisfied(GraphBlock.Need need) {
+    private boolean satisfied(String node, GraphBlock.Need need) {
+        if (node.startsWith(BUILDING) && need instanceof GraphBlock.Tool tool) {
+            return state.bestTier(tool.kind()) >= tool.rank();
+        }
         if (need instanceof GraphBlock.Item item) {
             return count(item.item()) >= item.count();
         }

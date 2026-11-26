@@ -114,7 +114,12 @@ final class GraphReporter {
     }
 
     private static String why(SupplyGraph graph, GraphState state, GraphPlan.Task task) {
-        return task.feasible() ? "" : "?(" + GraphWhy.building(graph, state, task.makes()) + ")";
+        if (task.feasible()) {
+            return "";
+        }
+        return task.blocked().isBlank()
+                ? "?(" + GraphWhy.building(graph, state, task.makes()) + ")"
+                : "?(" + task.blocked() + ")";
     }
 
     private static String buildingsText(GraphSource.Half half) {

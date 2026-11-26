@@ -43,13 +43,17 @@ public final class GraphExplain {
 
     private static String why(GraphPlan.Task chosen, GraphPlan.@Nullable Task next) {
         if (!chosen.feasible()) {
-            return "выше по весу, но неосуществима сейчас: нет материалов или инструмента";
+            return chosen.blocked().isBlank()
+                    ? "выше по весу, но неосуществима сейчас: нет материалов или инструмента"
+                    : "выше по весу, но неосуществима сейчас: " + chosen.blocked();
         }
         if (next == null) {
             return "других работ граф не нашёл";
         }
         if (!next.feasible()) {
-            return "следующая неосуществима сейчас: нет материалов или инструмента";
+            return next.blocked().isBlank()
+                    ? "следующая неосуществима сейчас: нет материалов или инструмента"
+                    : "следующая неосуществима сейчас: " + next.blocked();
         }
         int gap = chosen.priority() - next.priority();
         return gap > 0 ? "вес ниже на " + gap : "тот же вес, ниже по порядку графа";
