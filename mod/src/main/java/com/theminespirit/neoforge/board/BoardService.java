@@ -171,7 +171,6 @@ public final class BoardService {
     public BoardOutcome submit(BoardTicket ticket, TicketTarget target) {
         BoardOutcome outcome = board.submit(ticket);
         if (outcome == BoardOutcome.ACCEPTED) {
-            dispatch.submitted();
             targets.put(ticket.id(), target);
             journal.record(BoardLog.Event.POSTED, ticket, null, board.now());
             persistBoard();

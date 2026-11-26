@@ -11,7 +11,6 @@ import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.TransferTicket;
 import com.theminespirit.core.coordinator.work.WorkKind;
 import com.theminespirit.core.coordinator.work.WorkTarget;
-import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.neoforge.SpiritEntity;
@@ -21,7 +20,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 import net.minecraft.server.level.ServerLevel;
 import org.slf4j.Logger;
 
@@ -36,9 +34,7 @@ final class BoardDispatchDesk {
     private final CrafterMemory crafters = new CrafterMemory();
     private final TransferWait transferWait = new TransferWait();
     private final OrphanTaskWatch orphans = new OrphanTaskWatch();
-    private boolean freshTickets;
     private long lastDispatch;
-    private long lastReachGeneration;
     private int claims;
     private final IssueSteps timer = new IssueSteps();
     private final DispatchTrouble trouble = new DispatchTrouble(this);
@@ -55,25 +51,19 @@ final class BoardDispatchDesk {
         return claims;
     }
 
-    void submitted() {
-        freshTickets = true;
-    }
-
     void retainTickets(Set<String> alive) {
         settlement.retain(alive);
     }
 
     void tick(ServerLevel level, long now) {
-        long reachGeneration = host.sources.rescueReach().generation();
-        if (reachGeneration != lastReachGeneration) {
-            lastReachGeneration = reachGeneration;
-            freshTickets = true;
-        }
-        if (now - lastDispatch >= BoardTuning.dispatchRetryTicks() && (freshTickets || holderFreed(level))) {
+        if (due(now, lastDispatch)) {
             lastDispatch = now;
-            freshTickets = false;
             issue(level, SpiritCensus.all(level), now);
         }
+    }
+
+    static boolean due(long now, long lastDispatch) {
+        return now - lastDispatch >= BoardTuning.dispatchRetryTicks();
     }
 
     void reconcile(List<SpiritEntity> spirits, boolean census) {
@@ -125,16 +115,6 @@ final class BoardDispatchDesk {
 
     long issuedGeneration(String ticketId) {
         return settlement.issuedGeneration(ticketId);
-    }
-
-    private boolean holderFreed(ServerLevel level) {
-        for (UUID holder : board.assignedCounts().keySet()) {
-            if (level.getEntity(holder) instanceof SpiritEntity spirit
-                    && spirit.taskStatus().orElse(null) != RunStatus.RUNNING) {
-                return true;
-            }
-        }
-        return false;
     }
 
     void issue(ServerLevel level, List<SpiritEntity> spirits, long now) {
