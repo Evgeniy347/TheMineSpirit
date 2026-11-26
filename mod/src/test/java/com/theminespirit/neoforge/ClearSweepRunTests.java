@@ -73,6 +73,20 @@ class ClearSweepRunTests {
     }
 
     @Test
+    void stands_TargetWithinReach_SearchesFullRadius() throws IOException {
+        String source = Files.readString(Path.of("mod/src/main/java/com/theminespirit/neoforge/ClearStands.java"));
+        String compact = source.replaceAll("\\s+", "");
+
+        assertTrue(
+                compact.contains("intreach=horizontalReach();")
+                        && compact.contains("for(intdx=-reach;dx<=reach;dx++)")
+                        && compact.contains("for(intdz=-reach;dz<=reach;dz++)"),
+                "Стойка ищется во всём радиусе досягаемости: иначе цель в двух блоках объявляется "
+                        + "недостижимой, хотя соседняя опора есть. При смене stands_TargetWithinReach_SearchesFullRadius "
+                        + "проверь ClearStands.stands и живой ящик (-220…-216,66,-437).");
+    }
+
+    @Test
     void pillar_NoHigherTargets_TriesAnotherStandAfterDescent() throws IOException {
         String source = Files.readString(Path.of("mod/src/main/java/com/theminespirit/neoforge/ClearSweepRun.java"));
         String compact = source.replaceAll("\\s+", "");

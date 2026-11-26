@@ -101,8 +101,8 @@ public final class RescueReach {
                 remember(probe, verdict(probe, result), now);
                 pending.remove(probe.key);
             } else if (now - probe.started >= PROBE_TTL_TICKS) {
-                remember(probe, new Verdict(false, "поиск не уложился: срок"), now);
                 pending.remove(probe.key);
+                generation++;
             }
         }
 

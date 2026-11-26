@@ -69,9 +69,10 @@ final class ClearStands {
             maxY = Math.max(maxY, cell.y());
         }
         Set<ClearAnchor.Stand> stands = new LinkedHashSet<>();
+        int reach = horizontalReach();
         for (BlockCoord column : columns) {
-            for (int dx = -1; dx <= 1; dx++) {
-                for (int dz = -1; dz <= 1; dz++) {
+            for (int dx = -reach; dx <= reach; dx++) {
+                for (int dz = -reach; dz <= reach; dz++) {
                     Candidates found = stand(session, column.x() + dx, column.z() + dz, minY, maxY, targets);
                     if (found != null) {
                         stands.add(found.top());
