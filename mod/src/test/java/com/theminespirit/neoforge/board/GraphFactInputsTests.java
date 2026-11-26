@@ -3,6 +3,7 @@ package com.theminespirit.neoforge.board;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.theminespirit.core.board.graph.GraphFacts;
+import com.theminespirit.core.board.graph.GraphFailureMemory;
 import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.inventory.ContainerSnapshot;
 import com.theminespirit.core.inventory.Stack;
@@ -71,6 +72,25 @@ class GraphFactInputsTests {
                 "Факт достижимости сундука обязан попадать во вход графа: иначе еда в недостижимом сундуке "
                         + "считается выполнимой задачей"
                         + " При смене chestFacts_ReachFromWorld_MarksUnreachableChest проверь это утверждение.");
+    }
+
+    @Test
+    void reach_KnownPathFailure_MarksChestUnreachable() {
+        BlockCoord failed = new BlockCoord(1, 64, 2);
+        Set<String> failures = Set.of(GraphFailureMemory.target(failed.x(), failed.y(), failed.z()));
+
+        assertEquals(
+                GraphFacts.Reach.NO_PATH,
+                GraphFactInputs.reach(failures, failed, true, true),
+                "Сундук с недавним отказом пути больше не считается достижимым: иначе снаряжение, еда и "
+                        + "переносы снова выдадут ту же недоступную цель и провалятся по тайм-ауту. При смене "
+                        + "GraphFactInputs.reach проверь GearRules.equipUpgrade, StorePost.transfer и ChestReach.");
+        assertEquals(
+                GraphFacts.Reach.PATH,
+                GraphFactInputs.reach(failures, new BlockCoord(3, 64, 2), true, true),
+                "Соседний сундук без отказа пути остаётся достижимым: иначе память одной точки заблокирует "
+                        + "весь склад и лишит духов еды и инструментов. При смене GraphFactInputs.reach проверь "
+                        + "GraphFailureMemory.target и живой сундук рядом с воронкой.");
     }
 
     @Test

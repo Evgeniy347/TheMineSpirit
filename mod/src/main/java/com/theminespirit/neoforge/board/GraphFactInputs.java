@@ -4,6 +4,7 @@ import com.theminespirit.core.board.StageCatalog;
 import com.theminespirit.core.board.StageRules;
 import com.theminespirit.core.board.graph.ChestReach;
 import com.theminespirit.core.board.graph.GraphFacts;
+import com.theminespirit.core.board.graph.GraphFailureMemory;
 import com.theminespirit.core.board.graph.GraphFeedback;
 import com.theminespirit.core.board.graph.GraphKits;
 import com.theminespirit.core.board.graph.GraphSiteFacts;
@@ -24,6 +25,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -186,11 +188,27 @@ public final class GraphFactInputs {
 
     static Function<BlockCoord, GraphFacts.Reach> reachAt(ServerLevel level) {
         Optional<SettlementReach> reach = CraftTerminalService.reach(level);
-        return pos -> {
-            boolean loaded = level.isLoaded(new BlockPos(pos.x(), pos.y(), pos.z()));
-            boolean covered = reach.map(found -> found.covers(pos.x(), pos.z())).orElse(true);
-            return ChestReach.verdict(loaded, covered);
-        };
+        Set<String> failed = BoardRegistry.peek(level)
+                .map(service -> {
+                    SupplyGraph graph = DataTables.INSTANCE.graph().current();
+                    return service.sources.graphUnreachablePoints(
+                            service.board().now(), graph.costs().choice().failureHalfLife());
+                })
+                .orElseGet(Set::of);
+        return pos -> reach(
+                failed,
+                pos,
+                level.isLoaded(new BlockPos(pos.x(), pos.y(), pos.z())),
+                reach.map(found -> found.covers(pos.x(), pos.z())).orElse(true));
+    }
+
+    static GraphFacts.Reach reach(Set<String> failed, BlockCoord pos, boolean loaded, boolean covered) {
+        GraphFacts.Reach verdict = ChestReach.verdict(loaded, covered);
+        if (verdict != GraphFacts.Reach.NO_PATH
+                && failed.contains(GraphFailureMemory.target(pos.x(), pos.y(), pos.z()))) {
+            return GraphFacts.Reach.NO_PATH;
+        }
+        return verdict;
     }
 
     static List<GraphFacts.Resource> resourceFacts(GraphSurroundings.Around around, SupplyGraph graph) {
