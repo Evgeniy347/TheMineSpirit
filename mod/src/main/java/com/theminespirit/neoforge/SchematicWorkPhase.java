@@ -7,7 +7,6 @@ import com.theminespirit.core.building.ReachPlanner;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicActions;
 import com.theminespirit.core.building.SchematicBlocks;
-import com.theminespirit.core.building.SpiritReach;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.observation.BlockCoord;
@@ -218,16 +217,20 @@ final class SchematicWorkPhase {
     }
 
     private ScriptStatus clearStep(List<BlockCoord> clear) {
-        SpiritReach reach = SpiritReach.current();
         ReachPlanner.World world = host.placement.clearWorld();
-        for (BlockCoord cell : ReachPlanner.workableNow(reach, host.feet(), clear, world)) {
+        for (BlockCoord cell : clear) {
             BlockPos pos = SchematicSite.toPos(cell);
+            if (ReachPlanner.inBody(host.feet(), cell)
+                    || !world.ready(cell)
+                    || !BreakReach.reachableFrom(host.spirit.blockPosition(), pos)) {
+                continue;
+            }
             host.clearLease().broken(pos, host.level.getBlockState(pos));
             BlockBreaker.Begin begin = host.breaker.beginRepair(pos);
             switch (begin) {
                 case BlockBreaker.Started ignored -> {
                     host.breaking = cell;
-                    host.breakingId = BlockStates.idOf(host.level.getBlockState(SchematicSite.toPos(cell)));
+                    host.breakingId = BlockStates.idOf(host.level.getBlockState(pos));
                     return ScriptStatus.RUNNING;
                 }
                 case BlockBreaker.Protected refused -> host.blocked.put(cell, "очистка запрещена: " + refused.reason());
@@ -238,7 +241,11 @@ final class SchematicWorkPhase {
                 }
             }
         }
-        return host.placement.moveTowards(clear, world, false);
+        return host.placement.moveTowards(
+                clear,
+                world,
+                false,
+                (stand, cell) -> BreakReach.reachableFrom(SchematicSite.toPos(stand), SchematicSite.toPos(cell)));
     }
 
     private Set<Schematic.PlacedEntry> phaseNow(

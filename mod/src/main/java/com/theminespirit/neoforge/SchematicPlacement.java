@@ -1,8 +1,6 @@
 package com.theminespirit.neoforge;
 
 import com.mojang.logging.LogUtils;
-import com.theminespirit.core.building.BuildPit;
-import com.theminespirit.core.building.BuildStandLevel;
 import com.theminespirit.core.building.BuildTuning;
 import com.theminespirit.core.building.CellPartition;
 import com.theminespirit.core.building.ReachPlanner;
@@ -20,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.BiPredicate;
 import net.minecraft.world.phys.Vec3;
 import org.slf4j.Logger;
 
@@ -181,38 +180,15 @@ final class SchematicPlacement {
     }
 
     ScriptStatus moveTowards(List<BlockCoord> cells, ReachPlanner.World base, boolean outsideOnly) {
-        if (BuildPit.needsEscape(host.feet().y(), host.site.origin().y(), host.pit::trapped)) {
-            host.pit.escape(host.feet());
-            return ScriptStatus.RUNNING;
-        }
-        ReachPlanner.World stands = BuildStandLevel.atOrAbove(base, host.site.standBase());
-        Set<BlockCoord> occupied = SchematicWalkways.free(host.site.primaries(), host.site.schemeCells());
-        Optional<Set<BlockCoord>> reachable = host.site.walkable(host.feet(), BuildSchematicScript.WALK_MARGIN);
-        boolean walkKnown =
-                host.site.networkBox(BuildSchematicScript.WALK_MARGIN).contains(host.feet()) && reachable.isPresent();
-        ReachPlanner.World world = walkKnown ? BuildStandPath.walkableOnly(stands, reachable.orElseThrow()) : stands;
-        Optional<BlockCoord> stand =
-                BuildStandPath.choose(cells, world, host.excludedStands, occupied, outsideOnly, host.feet());
-        if (stand.isEmpty()) {
-            Set<BlockCoord> blockers = SchematicWalkways.free(host.site.primaries(), host.site.standBlockers());
-            stand = BuildStandPath.choose(cells, world, host.excludedStands, blockers, outsideOnly, host.feet());
-        }
-        if (stand.isEmpty() && !host.standsRetried && !host.excludedStands.isEmpty()) {
-            host.standsRetried = true;
-            host.excludedStands.clear();
-            stand = BuildStandPath.choose(cells, world, host.excludedStands, occupied, outsideOnly, host.feet());
-        }
-        if (stand.isEmpty()) {
-            for (BlockCoord cell : cells) {
-                host.blocked.putIfAbsent(
-                        cell,
-                        "ни с одной стоянки не дотянуться" + (outsideOnly ? " снаружи постройки" : "")
-                                + (walkKnown ? " пешком от " + host.feet() : "")
-                                + (host.lastRefusal.isBlank() ? "" : "; " + host.lastRefusal));
-            }
-            return ScriptStatus.RUNNING;
-        }
-        return beginApproach(stand.get());
+        return moveTowards(cells, base, outsideOnly, SpiritReach.current()::reaches);
+    }
+
+    ScriptStatus moveTowards(
+            List<BlockCoord> cells,
+            ReachPlanner.World base,
+            boolean outsideOnly,
+            BiPredicate<BlockCoord, BlockCoord> reaches) {
+        return SchematicStands.moveTowards(host, cells, base, outsideOnly, reaches);
     }
 
     ScriptStatus beginApproach(BlockCoord stand) {

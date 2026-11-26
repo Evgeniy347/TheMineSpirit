@@ -91,14 +91,15 @@ class DigOutRuleGuardTests {
     }
 
     @Test
-    void buildPit_SchematicPlacement_ChecksTrappedBeforeEscape() {
-        String text = read(SourceFiles.path("neoforge/SchematicPlacement.java"));
+    void buildPit_SchematicStands_ChecksTrappedBeforeEscape() {
+        String text = read(SourceFiles.path("neoforge/SchematicStands.java"));
 
         assertTrue(
                 escapeAfterTrapped(text),
                 "Стройка не запускает DigOut на любом «ниже низа схемы»: копать вверх полным поиском пути надо "
                         + "только запертому духу (BuildPit.needsEscape → pit.escape). Цена: дух на земле под крышей "
-                        + "склада ищет путь на y=80, падает за 3,4 с и повторяет При смене buildPit_SchematicPlacement_ChecksTrappedBeforeEscape проверь это утверждение.");
+                        + "склада ищет путь на y=80, падает за 3,4 с и повторяет При смене "
+                        + "buildPit_SchematicStands_ChecksTrappedBeforeEscape проверь это утверждение.");
     }
 
     @Test
