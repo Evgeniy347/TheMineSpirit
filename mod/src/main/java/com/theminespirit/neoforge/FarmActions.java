@@ -8,9 +8,9 @@ import java.util.Objects;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.BlockItem;
@@ -20,7 +20,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.item.context.DirectionalPlaceContext;
-import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -64,18 +63,23 @@ public final class FarmActions {
 
     boolean till(BlockPos ground) {
         int slot = hoeSlot();
-        if (slot == NO_SLOT) {
+        if (slot == NO_SLOT || !tillable(level.getBlockState(ground), level.getBlockState(ground.above()))) {
             return false;
         }
         ItemStack hoe = spirit.getInventory().getItem(slot);
-        UseOnContext context = new UseOnContext(level, null, InteractionHand.MAIN_HAND, hoe, topFace(ground));
-        InteractionResult result = hoe.getItem().useOn(context);
-        if (!result.consumesAction() || !level.getBlockState(ground).is(Blocks.FARMLAND)) {
+        if (!SpiritBlocks.place(
+                        (ServerLevel) level, ground, Blocks.FARMLAND.defaultBlockState(), spirit, "minecraft:farmland")
+                || !level.getBlockState(ground).is(Blocks.FARMLAND)) {
             return false;
         }
         SpiritGesture.workOn(spirit, ground);
         hoe.hurtAndBreak(1, spirit, EquipmentSlot.MAINHAND);
         return true;
+    }
+
+    private static boolean tillable(BlockState ground, BlockState above) {
+        return above.isAir()
+                && (ground.is(Blocks.DIRT) || ground.is(Blocks.GRASS_BLOCK) || ground.is(Blocks.DIRT_PATH));
     }
 
     boolean plant(BlockPos ground, CropKind kind) {
