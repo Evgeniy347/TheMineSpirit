@@ -2,6 +2,7 @@ package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.DispatchBusy;
+import com.theminespirit.core.board.DispatchReach;
 import com.theminespirit.core.board.DispatchRound;
 import com.theminespirit.core.board.EatNeed;
 import com.theminespirit.core.board.SpiritView;
@@ -16,6 +17,7 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import org.jspecify.annotations.Nullable;
@@ -25,10 +27,17 @@ final class DispatchPick {
     private final Map<UUID, SpiritEntity> entities = new LinkedHashMap<>();
     private final Map<UUID, DispatchRound.Candidate> candidates = new LinkedHashMap<>();
     private final List<String> stockTools;
+    private final DispatchReach.@Nullable Cache reach;
 
     DispatchPick(DispatchRound round, List<SpiritEntity> spirits, StockView stock) {
+        this(round, spirits, stock, null);
+    }
+
+    DispatchPick(
+            DispatchRound round, List<SpiritEntity> spirits, StockView stock, DispatchReach.@Nullable Cache reach) {
         this.round = round;
         this.stockTools = stockTools(stock);
+        this.reach = reach;
         for (SpiritEntity spirit : spirits) {
             entities.put(spirit.getUUID(), spirit);
             candidates.put(spirit.getUUID(), candidate(spirit, stockTools));
@@ -66,7 +75,7 @@ final class DispatchPick {
         String supply = target == null ? null : target.supplyItem();
         if (ticket.assignee().isPresent()) {
             DispatchRound.Candidate own = candidates.get(ticket.assignee().orElseThrow());
-            if (own != null) {
+            if (own != null && reachable(own, target)) {
                 Optional<DispatchRound.Candidate> chosen = round.choose(ticket, List.of(own), supply);
                 if (chosen.isPresent()) {
                     return entities.get(chosen.orElseThrow().id());
@@ -89,6 +98,7 @@ final class DispatchPick {
                     (int) Math.floor(entities.get(spirit.id()).getY()),
                     target.target().y()));
         }
+        preference.removeIf(spirit -> !reachable(spirit, target));
         preference.sort(Comparator.<DispatchRound.Candidate>comparingInt(
                         spirit -> crafter.filter(spirit.id()::equals).isPresent() ? 0 : 1)
                 .thenComparingDouble(spirit -> distance(entities.get(spirit.id()), target))
@@ -96,6 +106,18 @@ final class DispatchPick {
         return round.choose(ticket, preference, supply)
                 .map(spirit -> entities.get(spirit.id()))
                 .orElse(null);
+    }
+
+    private boolean reachable(DispatchRound.Candidate spirit, @Nullable TicketTarget target) {
+        if (reach == null || target == null) {
+            return true;
+        }
+        SpiritEntity entity =
+                Objects.requireNonNull(entities.get(spirit.id()), "Кандидат выдачи потерял сущность духа");
+        BlockCoord from = at(entity);
+        BlockCoord to = new BlockCoord(
+                target.target().x(), target.target().y(), target.target().z());
+        return DispatchReach.allows(reach, spirit.id(), from, to);
     }
 
     String whyChosen(BoardTicket ticket, SpiritEntity spirit, CrafterMemory crafters) {
@@ -110,7 +132,12 @@ final class DispatchPick {
 
     String why(BoardTicket ticket, @Nullable TicketTarget target) {
         String supply = target == null ? null : target.supplyItem();
-        return round.why(ticket, new ArrayList<>(candidates.values()), supply);
+        List<DispatchRound.Candidate> spirits = new ArrayList<>(candidates.values());
+        String why = round.why(ticket, spirits, supply);
+        if (reach != null && target != null && spirits.stream().noneMatch(spirit -> reachable(spirit, target))) {
+            return why + "; путь до цели не найден или ещё проверяется";
+        }
+        return why;
     }
 
     private static double distance(@Nullable SpiritEntity spirit, @Nullable TicketTarget target) {

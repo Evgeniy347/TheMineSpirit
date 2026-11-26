@@ -38,6 +38,7 @@ final class BoardDispatchDesk {
     private final OrphanTaskWatch orphans = new OrphanTaskWatch();
     private boolean freshTickets;
     private long lastDispatch;
+    private long lastReachGeneration;
     private int claims;
     private final IssueSteps timer = new IssueSteps();
     private final DispatchTrouble trouble = new DispatchTrouble(this);
@@ -63,6 +64,11 @@ final class BoardDispatchDesk {
     }
 
     void tick(ServerLevel level, long now) {
+        long reachGeneration = host.sources.rescueReach().generation();
+        if (reachGeneration != lastReachGeneration) {
+            lastReachGeneration = reachGeneration;
+            freshTickets = true;
+        }
         if (now - lastDispatch >= BoardTuning.dispatchRetryTicks() && (freshTickets || holderFreed(level))) {
             lastDispatch = now;
             freshTickets = false;
@@ -147,7 +153,8 @@ final class BoardDispatchDesk {
         trouble.withdrawForVitals(spirits, claimable);
         step = timer.lap("vitals", step);
         DispatchRound round = new DispatchRound(board, now);
-        DispatchPick pick = new DispatchPick(round, spirits, stock);
+        DispatchPick pick =
+                new DispatchPick(round, spirits, stock, NavigationReach.create(level, host.sources.rescueReach(), now));
         step = timer.lap("candidates", step);
         Optional<BlockCoord> settlementHome = HomePoint.of(level, spirits);
         timer.lap("home", step);
