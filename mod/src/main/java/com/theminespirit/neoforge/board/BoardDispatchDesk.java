@@ -9,6 +9,7 @@ import com.theminespirit.core.board.DispatchRound;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.TransferTicket;
+import com.theminespirit.core.board.graph.GraphTickets;
 import com.theminespirit.core.coordinator.work.WorkKind;
 import com.theminespirit.core.coordinator.work.WorkTarget;
 import com.theminespirit.core.observation.BlockCoord;
@@ -166,12 +167,22 @@ final class BoardDispatchDesk {
         for (BoardTicket displaced : batch.round().drainDisplaced(spirit.getUUID())) {
             settlement.displace(spirit, displaced, ticket);
         }
-        if (targets.get(ticket.id()) == null && batch.settlementHome().isEmpty()) {
-            board.noteWait(ticket.id(), "поселение без дома: заданию некуда идти");
-            return false;
-        }
         TicketTarget base = targets.get(ticket.id());
         if (base == null) {
+            boolean graphOwned = ticket.id().startsWith(GraphTickets.PREFIX)
+                    || ticket.cause().startsWith(GraphTickets.PREFIX);
+            if (graphOwned || ticket.id().startsWith("demolish_chest:")) {
+                board.cancel(ticket.id());
+                host.persistBoard();
+                LOGGER.info(
+                        "[board] задание {} снято: цель не восстановилась после перезапуска, граф поставит его заново",
+                        ticket.id());
+                return false;
+            }
+            if (batch.settlementHome().isEmpty()) {
+                board.noteWait(ticket.id(), "поселение без дома: заданию некуда идти");
+                return false;
+            }
             base = TicketTarget.at(batch.settlementHome().orElseThrow());
         }
         board.noteWait(ticket.id(), null);
