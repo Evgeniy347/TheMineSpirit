@@ -93,6 +93,10 @@ public final class BlockPlacer {
             return new Protected(PolicyId.PROTECTED_BLOCKS, refused.reason());
         }
         if (action) {
+            Begin soil = prepareSoil(spirit, level, target, blockId);
+            if (soil != null) {
+                return soil;
+            }
             return SchematicActions.isTilled(blockId)
                     ? farmland(spirit, level, target)
                     : PathTrample.trample(spirit, target);
@@ -145,6 +149,63 @@ public final class BlockPlacer {
         return level instanceof ServerLevel server
                 ? SettlementPlotStore.liveSite(server).orElse(null)
                 : null;
+    }
+
+    static boolean needsSoil(BlockState state) {
+        return needsSoil(BlockStates.idOf(state));
+    }
+
+    static boolean needsSoil(String blockId) {
+        return !"minecraft:air".equals(blockId) && !SchematicActions.isTrampleGround(blockId);
+    }
+
+    private static @Nullable Begin prepareSoil(SpiritEntity spirit, Level level, BlockPos target, String blockId) {
+        BlockState current = level.getBlockState(target);
+        if (!needsSoil(current)) {
+            return null;
+        }
+        if (!PathTrample.hasTool(spirit, blockId)) {
+            return new Refused(
+                    RefuseReason.NO_MATERIAL,
+                    "нет инструмента для подготовки почвы под '" + blockId + "': сначала нужен инструмент");
+        }
+        if (!PlotGround.natural(current) || current.getDestroySpeed(level, target) < 0) {
+            return new Refused(
+                    RefuseReason.NO_SUPPORT,
+                    "блок " + BlockStates.idOf(current) + " в " + target.toShortString()
+                            + " нельзя заменить землёй: это не природный грунт");
+        }
+        if (!PlaceSupport.hasSupport(level, target, Blocks.DIRT.defaultBlockState())) {
+            return new Refused(
+                    RefuseReason.NO_SUPPORT,
+                    "под клеткой " + target.toShortString() + " нет опоры: пашню и тропу не на чем держать");
+        }
+        Item soil = spirit.getInventory().countItem(Items.DIRT) > 0
+                ? Items.DIRT
+                : spirit.getInventory().countItem(Items.GRASS_BLOCK) > 0 ? Items.GRASS_BLOCK : null;
+        if (soil == null) {
+            return new Refused(
+                    RefuseReason.NO_MATERIAL,
+                    "нет земли, чтобы заменить " + BlockStates.idOf(current) + " в " + target.toShortString());
+        }
+        if (!(level instanceof ServerLevel server)
+                || !SpiritBlocks.destroy(server, target, true, spirit, "GROUND_PREP")
+                || !level.getBlockState(target).isAir()) {
+            return new Refused(
+                    RefuseReason.NO_SUPPORT,
+                    "не удалось снять " + BlockStates.idOf(current) + " в " + target.toShortString()
+                            + ": почву под схему не подготовить");
+        }
+        spirit.getInventory().removeItemType(soil, 1);
+        BlockState soilState =
+                Items.DIRT.equals(soil) ? Blocks.DIRT.defaultBlockState() : Blocks.GRASS_BLOCK.defaultBlockState();
+        if (!SpiritBlocks.place(server, target, soilState, spirit, "GROUND_PREP")) {
+            spirit.getInventory().addItem(new ItemStack(soil));
+            return new Refused(
+                    RefuseReason.NO_SUPPORT,
+                    "земля в " + target.toShortString() + " не поставилась: пашню и тропу не подготовить");
+        }
+        return null;
     }
 
     private static Begin farmland(SpiritEntity spirit, Level level, BlockPos target) {
