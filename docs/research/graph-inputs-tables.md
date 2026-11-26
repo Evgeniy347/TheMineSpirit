@@ -93,7 +93,7 @@
 | `FirstStepsRunner` | `first:*` этапа 1 (10+ кейсов) | вход stage facts; узел stage/building; удалить | главный обход: этап 1 вне графа |
 | `StageSchedule` | переоткрывает `first:*` и шаги этапа | вход stage gate; узел stage; удалить | дубли с `GraphPost` |
 | `StageReopen`/`StageClose`/`StageOpen` | открывает/снимает шаги этапа по ledger | вход ledger; узел completion by audit; оставить переходы | журнал закрывает вместо мира |
-| `StageWorldGate`/`StageBootstrap` | гейт этапа по миру, переоткрытие | вход stage facts; оставить state | регресс этапа |
+| `StageWorldGate` | гейт этапа по миру, переоткрытие | вход stage facts из графа; оставить state | регресс этапа |
 | `StageSettle`/`PlanCompletion` | закрытие/сверка плана | вход audit; оставить completion | журнал vs мир |
 | `SettlementStageService` | REST open/close/rollback этапа | вход stage; оставить стратегу | прямой обход графа |
 | `SpiritBoardGateway` | REST `POST /board/tasks` | вход order/event или узел; ограничить | внешняя задача вне графа |
