@@ -1,7 +1,9 @@
 package com.theminespirit.core.board;
 
 import com.theminespirit.core.board.api.BoardCase;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -13,6 +15,7 @@ public final class BoardLedger {
     public record BuildingMark(BoardCase boardCase, int level) {}
 
     private final Set<String> built = new LinkedHashSet<>();
+    private final Map<String, Set<String>> owners = new HashMap<>();
     private long doneTotal;
     private long reopenedTotal;
     private @Nullable StageGate gate;
@@ -93,18 +96,48 @@ public final class BoardLedger {
 
     public void forget(BoardCase boardCase, int level) {
         Objects.requireNonNull(boardCase, "Кейс снятия отметки не может быть null: без него непонятно, что снимать");
-        built.remove(key(boardCase, level));
+        String key = key(boardCase, level);
+        built.remove(key);
+        owners.remove(key);
         gate = null;
         revision++;
     }
 
     public void complete(BoardCase boardCase, int level) {
+        complete(boardCase, level, null);
+    }
+
+    public void complete(BoardCase boardCase, int level, @Nullable String ticketId) {
         note(boardCase, level);
+        if (ticketId != null) {
+            owners.computeIfAbsent(key(boardCase, level), ignored -> new LinkedHashSet<>())
+                    .add(ticketId);
+        }
         doneTotal++;
     }
 
     public void reopen(BoardCase boardCase, int level) {
-        forget(boardCase, level);
+        reopen(boardCase, level, null);
+    }
+
+    public void reopen(BoardCase boardCase, int level, @Nullable String ticketId) {
+        String key = key(boardCase, level);
+        Set<String> holders = owners.get(key);
+        if (ticketId != null && holders != null && !holders.contains(ticketId)) {
+            reopenedTotal++;
+            return;
+        }
+        if (ticketId != null && holders != null) {
+            holders.remove(ticketId);
+            if (!holders.isEmpty()) {
+                reopenedTotal++;
+                return;
+            }
+        }
+        owners.remove(key);
+        built.remove(key);
+        gate = null;
+        revision++;
         reopenedTotal++;
     }
 
@@ -128,13 +161,16 @@ public final class BoardLedger {
     }
 
     public void forgetPlan(String planId, int level) {
-        built.remove(planKey(planId, level));
+        String key = planKey(planId, level);
+        built.remove(key);
+        owners.remove(key);
         gate = null;
         revision++;
     }
 
     public void clear() {
         built.clear();
+        owners.clear();
         gate = null;
         revision++;
     }

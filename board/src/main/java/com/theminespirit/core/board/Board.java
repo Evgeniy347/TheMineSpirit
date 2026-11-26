@@ -269,7 +269,7 @@ public final class Board {
             return false;
         }
         statuses.put(ticketId, BoardStatus.DONE);
-        ledger.complete(ticket.boardCase(), ticket.level());
+        ledger.complete(ticket.boardCase(), ticket.level(), ticket.id());
         events.transition(BoardLog.Event.DONE, ticket, null, nowTicks.getAsLong());
         ticketFailures.remove(ticketId);
         lastFailReasons.remove(ticketId);

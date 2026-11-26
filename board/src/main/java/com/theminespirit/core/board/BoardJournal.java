@@ -105,13 +105,13 @@ public final class BoardJournal {
                     }
                     BoardLogEntry entry = compatible.get();
                     if (entry.event() == BoardLog.Event.DONE) {
-                        ledger.complete(entry.boardCase(), entry.level());
+                        ledger.complete(entry.boardCase(), entry.level(), entry.ticketId());
                         if (entry.boardCase() == BoardCase.BUILD_PLACED) {
                             StageCatalog.planId(entry.ticketId()).ifPresent(id -> ledger.notePlan(id, entry.level()));
                         }
                         restored++;
                     } else if (entry.event() == BoardLog.Event.REOPENED) {
-                        ledger.reopen(entry.boardCase(), entry.level());
+                        ledger.reopen(entry.boardCase(), entry.level(), entry.ticketId());
                         if (entry.boardCase() == BoardCase.BUILD_PLACED) {
                             StageCatalog.planId(entry.ticketId()).ifPresent(id -> ledger.forgetPlan(id, entry.level()));
                         }

@@ -168,7 +168,7 @@ final class TicketLifecycle {
         }
         RescuePlans.complete(stuckSpirits, ticket, holder, nowTicks.getAsLong());
         statuses.put(ticketId, BoardStatus.DONE);
-        ledger.complete(ticket.boardCase(), ticket.level());
+        ledger.complete(ticket.boardCase(), ticket.level(), ticket.id());
         events.transition(BoardLog.Event.DONE, ticket, claimAssignees.get(ticketId), nowTicks.getAsLong());
         ticketFailures.remove(ticketId);
         lastFailReasons.remove(ticketId);
@@ -214,7 +214,7 @@ final class TicketLifecycle {
         tickets.remove(ticketId);
         statuses.remove(ticketId);
         claimAssignees.remove(ticketId);
-        ledger.reopen(ticket.boardCase(), ticket.level());
+        ledger.reopen(ticket.boardCase(), ticket.level(), ticket.id());
         events.transition(BoardLog.Event.REOPENED, ticket, null, nowTicks.getAsLong());
         return true;
     }
