@@ -107,6 +107,9 @@ final class GraphBlocks {
         if (node.startsWith(BUILDING) && need instanceof GraphBlock.Tool tool) {
             return state.bestTier(tool.kind()) >= tool.rank();
         }
+        if (node.startsWith(BUILDING) && need instanceof GraphBlock.Path) {
+            return true;
+        }
         if (need instanceof GraphBlock.Item item) {
             return count(item.item()) >= item.count();
         }
