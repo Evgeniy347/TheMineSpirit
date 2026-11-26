@@ -57,7 +57,7 @@ final class More3Post {
                         BoardConfig.current().facts().dangerWorkRadius())) {
                     continue;
                 }
-                if (ActivityLaunch.launchNow(post, spirit, BoardCase.ACTIVITY_MOVE, "goto", gotoPoint(home))) {
+                if (ActivityLaunch.launchOn(post, spirit, BoardCase.ACTIVITY_MOVE, "goto", gotoPoint(home))) {
                     return true;
                 }
             }

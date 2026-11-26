@@ -4,6 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.board.graph.GraphFacts;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -11,6 +14,27 @@ import org.junit.jupiter.api.Test;
 
 class ActivityLaunchTests {
     private static final UUID SPIRIT = UUID.fromString("c48663b4-da59-43d9-9804-81a680580300");
+
+    @Test
+    void dangerAvoidance_AssignedSpirit_UsesGuardedLaunch() throws IOException {
+        String source = Files.readString(Path.of("mod/src/main/java/com/theminespirit/neoforge/board/More3Post.java"));
+        String avoidance = source.substring(
+                source.indexOf("private static boolean avoidDanger"),
+                source.indexOf("private static boolean recoverDrops"));
+
+        assertTrue(
+                avoidance.contains("ActivityLaunch.launchOn(post, spirit"),
+                "Избегание прошлой опасности обязано проверять занятость духа: иначе launchNow перезапишет "
+                        + "wheat_field и оставит битет ASSIGNED без исполнения. При смене "
+                        + "dangerAvoidance_AssignedSpirit_UsesGuardedLaunch проверь More3Post.avoidDanger и "
+                        + "ActivityLaunch.busy.");
+        assertFalse(
+                avoidance.contains("ActivityLaunch.launchNow"),
+                "Прошлая danger_spot не является немедленной угрозой жизни и не может обходить гейт билета: "
+                        + "иначе поле снова вытесняется goto. При смене "
+                        + "dangerAvoidance_AssignedSpirit_UsesGuardedLaunch проверь More3Post.avoidDanger и "
+                        + "DisplacedClaims.");
+    }
 
     @Test
     void stuck_StuckTrappedOrInTrap_IsNotSentToActivity() {

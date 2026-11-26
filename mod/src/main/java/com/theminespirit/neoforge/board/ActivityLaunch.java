@@ -28,11 +28,6 @@ final class ActivityLaunch {
         return start(post, spirit, activity, script, task);
     }
 
-    static boolean launchNow(GraphPost post, SpiritEntity spirit, BoardCase activity, String script, TaskNode task) {
-        return !spirit.isRemoved()
-                && GraphActivityPost.launchNow(post, spirit, activity, new ActivityPlans.Plan(script, task));
-    }
-
     private static boolean start(
             GraphPost post, SpiritEntity spirit, BoardCase activity, String script, TaskNode task) {
         return GraphActivityPost.launch(post, spirit, activity, new ActivityPlans.Plan(script, task));

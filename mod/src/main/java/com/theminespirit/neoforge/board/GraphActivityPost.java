@@ -68,24 +68,6 @@ final class GraphActivityPost {
                         requiredItems));
     }
 
-    static boolean launchNow(GraphPost post, SpiritEntity spirit, BoardCase activity, ActivityPlans.Plan plan) {
-        String id = id(post, Optional.of(spirit.getUUID()));
-        if (!post(
-                post,
-                new Post(
-                        id,
-                        activity,
-                        new Crew(Optional.of(spirit.getUUID()), List.of()),
-                        priority(post),
-                        plan.script(),
-                        plan.task(),
-                        null,
-                        Map.of()))) {
-            return false;
-        }
-        return post.service.activities().start(id, spirit, plan.task(), post.now);
-    }
-
     static boolean post(GraphPost post, Post request) {
         String cause = post.current == null ? "activity:" + request.script() : post.current.id();
         if (post.current != null
