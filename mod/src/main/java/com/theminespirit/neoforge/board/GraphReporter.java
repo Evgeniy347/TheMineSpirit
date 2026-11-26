@@ -60,8 +60,7 @@ final class GraphReporter {
         String buildings = buildingsText(half) + " "
                 + half.plan().tasks().stream()
                         .filter(task -> task.id().startsWith("building:"))
-                        .map(task ->
-                                readiness(half.level(), half.service(), half.graph(), half.state(), half.scan(), task))
+                        .map(task -> readiness(half.service(), half.graph(), half.state(), task))
                         .toList()
                 + " сундуков двора " + half.scan().facts().chests() + " у "
                 + half.scan().stage().workYard()
@@ -99,19 +98,16 @@ final class GraphReporter {
         }
     }
 
-    private static String readiness(
-            ServerLevel level,
-            BoardService service,
-            SupplyGraph graph,
-            GraphState state,
-            FirstStepsRunner.StageScan scan,
-            GraphPlan.Task task) {
+    private static String readiness(BoardService service, SupplyGraph graph, GraphState state, GraphPlan.Task task) {
         SupplyGraph.Building building = graph.buildings().get(task.makes());
         if (building == null || !StageBuilt.ids().contains(task.makes())) {
             return task.makes() + "=" + task.priority() + why(graph, state, task);
         }
         TownSnapshot.Progress progress =
-                FirstStepsRunner.progress(level, service, building.boardCase(), scan.stage(), scan.wood());
+                service.tickets.progress.last(building.id()).orElse(null);
+        if (progress == null) {
+            return task.makes() + "=" + task.priority() + why(graph, state, task);
+        }
         int percent = progress.total() == 0 ? 0 : progress.done() * 100 / progress.total();
         return task.makes() + "=" + percent + "%(" + progress.done() + "/" + progress.total() + ")"
                 + why(graph, state, task);
@@ -125,7 +121,10 @@ final class GraphReporter {
         Map<String, String> shown = new TreeMap<>();
         half.state().buildings().forEach((id, state) -> shown.put(id, state.toString()));
         for (String id : List.of("mine", "wheat_field", "streets")) {
-            GraphObserve.progressOf(half.level(), half.service(), half.graph(), half.state(), half.scan(), id)
+            half.service()
+                    .tickets
+                    .progress
+                    .last(id)
                     .filter(progress -> progress.total() > 0)
                     .ifPresent(progress -> {
                         int percent = progress.done() * 100 / progress.total();

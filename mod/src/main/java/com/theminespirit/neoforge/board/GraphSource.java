@@ -188,7 +188,9 @@ public final class GraphSource {
         reporter.world(half.level(), half.state(), half.now());
         reporter.builds(half.level(), half.service(), half.graph(), half.state(), half.scan(), half.now());
         if (half.deep()) {
+            long started = System.nanoTime();
             reporter.deep(half);
+            Perf.record("graph.src.deep", System.nanoTime() - started);
         }
         reporter.strategist(half.level(), half.graph(), half.state(), half.plan(), half.now());
         cadence.finished(half.now(), half.signals());
