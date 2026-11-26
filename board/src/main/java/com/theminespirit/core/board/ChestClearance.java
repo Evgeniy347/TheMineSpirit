@@ -30,14 +30,14 @@ public final class ChestClearance {
 
     public record Decision(Action action, List<Move> moves, int neededSlots, int freeSlots, String reason) {
         public Decision {
-            Objects.requireNonNull(action, "Решение по сундуку не может быть null: без него не выбрать действие");
+            Objects.requireNonNull(action, "Решение по контейнеру не может быть null: без него не выбрать действие");
             moves = List.copyOf(Objects.requireNonNull(moves, "Переносы не могут быть null: пустые — пустой список"));
             if (neededSlots < 0 || freeSlots < 0) {
                 throw new IllegalArgumentException(
                         "Слоты " + neededSlots + "/" + freeSlots + ": места не бывает отрицательного, пустое — ноль");
             }
             if (reason == null || reason.isBlank()) {
-                throw new IllegalArgumentException("Причина решения по сундуку пуста: без неё не объяснить перенос");
+                throw new IllegalArgumentException("Причина решения по контейнеру пуста: без неё не объяснить перенос");
             }
         }
 
@@ -49,13 +49,13 @@ public final class ChestClearance {
     private ChestClearance() {}
 
     public static Decision decide(ContainerSnapshot chest, boolean inWarehousePlan, List<ContainerSnapshot> warehouse) {
-        Objects.requireNonNull(chest, "Сундук не может быть null: по нему решают, что с ним делать");
-        Objects.requireNonNull(warehouse, "Сундуки склада не могут быть null: пустые задают пустым списком");
+        Objects.requireNonNull(chest, "Контейнер не может быть null: по нему решают, что с ним делать");
+        Objects.requireNonNull(warehouse, "Контейнеры склада не могут быть null: пустые задают пустым списком");
         if (inWarehousePlan) {
-            return new Decision(Action.KEEP, List.of(), 0, 0, "сундук стоит в клетке плана склада — не трогаем");
+            return new Decision(Action.KEEP, List.of(), 0, 0, "контейнер стоит в клетке плана склада — не трогаем");
         }
         if (empty(chest)) {
-            return new Decision(Action.REMOVE, List.of(), 0, 0, "сундук пуст — ломаем");
+            return new Decision(Action.REMOVE, List.of(), 0, 0, "контейнер пуст — ломаем");
         }
         int needed = neededSlots(chest, warehouse);
         int free = freeSlots(warehouse);
@@ -77,7 +77,7 @@ public final class ChestClearance {
     }
 
     public static boolean empty(ContainerSnapshot chest) {
-        Objects.requireNonNull(chest, "Сундук не может быть null: пустоту видно по его слотам");
+        Objects.requireNonNull(chest, "Контейнер не может быть null: пустоту видно по его слотам");
         for (Stack stack : chest.slots()) {
             if (stack != null) {
                 return false;
@@ -87,7 +87,7 @@ public final class ChestClearance {
     }
 
     public static List<Move> moves(ContainerSnapshot chest) {
-        Objects.requireNonNull(chest, "Сундук не может быть null: без него нечего выносить");
+        Objects.requireNonNull(chest, "Контейнер не может быть null: без него нечего выносить");
         Map<String, Integer> counts = new LinkedHashMap<>();
         for (Stack stack : chest.slots()) {
             if (stack != null) {
@@ -100,8 +100,8 @@ public final class ChestClearance {
     }
 
     public static int neededSlots(ContainerSnapshot chest, List<ContainerSnapshot> warehouse) {
-        Objects.requireNonNull(chest, "Сундук не может быть null: без него нечего выносить");
-        Objects.requireNonNull(warehouse, "Сундуки склада не могут быть null: по ним считают место");
+        Objects.requireNonNull(chest, "Контейнер не может быть null: без него нечего выносить");
+        Objects.requireNonNull(warehouse, "Контейнери склада не могут быть null: по ним считают место");
         Map<Kind, Integer> counts = new LinkedHashMap<>();
         for (Stack stack : chest.slots()) {
             if (stack != null) {
@@ -126,7 +126,7 @@ public final class ChestClearance {
     }
 
     public static int freeSlots(List<ContainerSnapshot> warehouse) {
-        Objects.requireNonNull(warehouse, "Сундуки склада не могут быть null: по ним считают место");
+        Objects.requireNonNull(warehouse, "Контейнери склада не могут быть null: по ним считают место");
         int free = 0;
         for (ContainerSnapshot container : warehouse) {
             free += container.freeSlots();

@@ -19,7 +19,8 @@ public final class BreakSkipTally {
         NO_STAND("без стоянки"),
         UNBREAKABLE("неразрушим"),
         VANISHED("исчез"),
-        SUPPORTS_SELF("опора под духом");
+        SUPPORTS_SELF("опора под духом"),
+        CONTAINER_NOT_EMPTY("контейнер не пуст");
 
         private final String title;
 

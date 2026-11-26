@@ -13,6 +13,7 @@ final class BreakSkips {
             case UNBREAKABLE -> BreakSkipTally.Reason.UNBREAKABLE;
             case AIR -> BreakSkipTally.Reason.VANISHED;
             case SUPPORTS_SELF -> BreakSkipTally.Reason.SUPPORTS_SELF;
+            case CONTAINER_NOT_EMPTY -> BreakSkipTally.Reason.CONTAINER_NOT_EMPTY;
             case NEED_TOOL ->
                 throw new IllegalArgumentException(
                         "Отказ «нужен инструмент» — не пропуск блока: его обрабатывает вызывающий");

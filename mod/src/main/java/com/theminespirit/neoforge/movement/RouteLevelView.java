@@ -6,6 +6,7 @@ import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.route.RouteCell;
 import com.theminespirit.core.route.RouteWorld;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.inventory.ContainerAccess;
 import com.theminespirit.neoforge.policy.ProtectionGate;
 import java.util.HashMap;
 import java.util.Map;
@@ -89,6 +90,11 @@ public final class RouteLevelView implements RouteWorld {
         FluidState fluid = state.getFluidState();
         if (fluid.is(FluidTags.LAVA) || hazard(state)) {
             return RouteCell.LAVA;
+        }
+        if (ContainerAccess.allowed(state)
+                && level.getBlockEntity(cursor) instanceof Container container
+                && !container.isEmpty()) {
+            return RouteCell.BLOCKED;
         }
         if (state.getBlock() instanceof DoorBlock
                 || state.getBlock() instanceof FenceGateBlock

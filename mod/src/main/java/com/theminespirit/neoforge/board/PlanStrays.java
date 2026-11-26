@@ -2,6 +2,7 @@ package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.mining.UnreachableCells;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.town.FloatingBlocks;
 import com.theminespirit.core.town.SettlementScan;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.StrayGroups;
@@ -37,6 +38,9 @@ final class PlanStrays {
         int guarded = 0;
         for (StrayGroups.Cell cell : strays) {
             BlockCoord at = cell.at();
+            if (FloatingBlocks.containerPath(FloatingBlocks.pathOf(cell.blockId()))) {
+                continue;
+            }
             String guardedReason = DemolitionLeftovers.reason(
                     level, site, plan, at, level.getBlockState(new BlockPos(at.x(), at.y(), at.z())));
             if (guardedReason != null) {

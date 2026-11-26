@@ -12,7 +12,6 @@ import com.theminespirit.core.town.FloatingBlocks;
 import com.theminespirit.core.town.FloatingCleanup;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.neoforge.BlockStates;
-import com.theminespirit.neoforge.SettlementChestStore;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -119,9 +118,10 @@ final class DemolitionCollect {
                     }
                 }
                 case DRAIN_CHEST -> {
-                    if (track(level, at)) {
-                        found.notes.add("сундук " + at + " вне плана не пуст — содержимое уйдёт в сундуки двора");
+                    if (finding.kind() == FloatingBlocks.Kind.STATION && needed(level, ctx.plan(), finding.blockId())) {
+                        reopen(ctx.service(), finding.blockId());
                     }
+                    found.notes.add("контейнер " + at + " вне плана не пуст — содержимое уйдёт на склад до сноса");
                 }
                 case RELOCATE_STATION -> {
                     reopen(ctx.service(), finding.blockId());
@@ -187,10 +187,6 @@ final class DemolitionCollect {
         return !(level.getBlockEntity(pos(at)) instanceof Container container) || container.isEmpty();
     }
 
-    private static boolean track(ServerLevel level, BlockCoord at) {
-        return SettlementChestStore.get(level).track(pos(at));
-    }
-
     private static List<BlockCoord> merged(List<BlockCoord> current, List<BlockCoord> next) {
         Set<BlockCoord> cells = new HashSet<>(current);
         cells.addAll(next);
@@ -208,8 +204,12 @@ final class DemolitionCollect {
     }
 
     private static void reopen(BoardService service, String blockId) {
-        BoardCase wanted =
-                "furnace".equals(FloatingBlocks.pathOf(blockId)) ? BoardCase.CRAFT_FURNACE : BoardCase.STOCK_CHESTS;
+        String path = FloatingBlocks.pathOf(blockId);
+        BoardCase wanted = switch (path) {
+            case "furnace", "blast_furnace", "smoker" -> BoardCase.CRAFT_FURNACE;
+            case "brewing_stand" -> BoardCase.CRAFT_BREWING_STAND;
+            default -> BoardCase.STOCK_CHESTS;
+        };
         for (BoardTicket ticket : List.copyOf(service.board().tickets())) {
             if (ticket.boardCase() != wanted) {
                 continue;

@@ -33,12 +33,12 @@ public final class ChestPlans {
 
     public static TaskNode demolish(
             ContainerSnapshot chest, List<BlockCoord> cells, @Nullable BlockCoord deposit, List<BlockCoord> covers) {
-        Objects.requireNonNull(chest, "Сундук не может быть null: его содержимое выносят до слома");
-        Objects.requireNonNull(cells, "Клетки сундука не могут быть null: ломать нечего");
+        Objects.requireNonNull(chest, "Контейнер не может быть null: его содержимое выносят до слома");
+        Objects.requireNonNull(cells, "Клетки контейнера не могут быть null: ломать нечего");
         if (cells.isEmpty()) {
-            throw new IllegalArgumentException("У сноса сундука нет ни одной клетки: ломать нечего");
+            throw new IllegalArgumentException("У сноса контейнера нет ни одной клетки: ломать нечего");
         }
-        Objects.requireNonNull(covers, "Крышки сундука не могут быть null: пустые — пустой список");
+        Objects.requireNonNull(covers, "Крышки контейнера не могут быть null: пустые — пустой список");
         String target = deposit == null ? WAREHOUSE : coord(deposit);
         List<TaskNode> steps = new ArrayList<>();
         for (BlockCoord cover : covers) {
@@ -91,9 +91,9 @@ public final class ChestPlans {
     }
 
     public static TaskNode breakOnly(List<BlockCoord> cells) {
-        Objects.requireNonNull(cells, "Клетки сундука не могут быть null: ломать нечего");
+        Objects.requireNonNull(cells, "Клетки контейнера не могут быть null: ломать нечего");
         if (cells.isEmpty()) {
-            throw new IllegalArgumentException("У сундука нет ни одной клетки: ломать нечего");
+            throw new IllegalArgumentException("У контейнера нет ни одной клетки: ломать нечего");
         }
         List<TaskNode> steps = new ArrayList<>(cells.size());
         for (BlockCoord cell : cells) {

@@ -244,6 +244,10 @@ class FloatingBlocksTests {
             blocks.put(new BlockCoord(x, y, z), id);
         }
 
+        void markTemporary(BlockCoord at) {
+            temporary.add(at);
+        }
+
         FloatingBlocks.Finding only(int x, int y, int z) {
             return FloatingBlocks.classify(new BlockCoord(x, y, z), this).orElseThrow();
         }

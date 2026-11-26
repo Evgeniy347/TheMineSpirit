@@ -16,6 +16,7 @@ public final class FloatingBlocks {
         FENCE,
         CHEST,
         REGISTERED_CHEST,
+        CONTAINER,
         STATION,
         STUMP,
         TREE,
@@ -105,7 +106,8 @@ public final class FloatingBlocks {
         }
         if (world.temporary(at)) {
             int height = Math.max(0, at.y() - world.groundY(at.x(), at.z()) - 1);
-            return Optional.of(new Finding(at, Kind.OTHER, id, height, temporary(height)));
+            Kind kind = kind(id, false, false);
+            return Optional.of(new Finding(at, kind, id, height, temporary(height)));
         }
         boolean log = world.log(at);
         boolean leaf = pathOf(id).endsWith("_leaves");
@@ -136,13 +138,16 @@ public final class FloatingBlocks {
         if (chestPath(path)) {
             return registered ? Kind.REGISTERED_CHEST : Kind.CHEST;
         }
-        return STATIONS.contains(path) ? Kind.STATION : Kind.OTHER;
+        if (STATIONS.contains(path)) {
+            return Kind.STATION;
+        }
+        return containerPath(path) ? Kind.CONTAINER : Kind.OTHER;
     }
 
     public static boolean countedInGraph(Finding finding) {
         Objects.requireNonNull(finding, "Находка не может быть null: по её виду решают, входит ли она в граф");
         return switch (finding.kind()) {
-            case CHEST, REGISTERED_CHEST, STATION -> false;
+            case CHEST, REGISTERED_CHEST, CONTAINER, STATION -> false;
             case FENCE, STUMP, TREE, OTHER -> true;
         };
     }
@@ -162,8 +167,24 @@ public final class FloatingBlocks {
         return colon < 0 ? blockId : blockId.substring(colon + 1);
     }
 
+    public static boolean containerPath(String path) {
+        return chestPath(path)
+                || "hopper".equals(path)
+                || "furnace".equals(path)
+                || "blast_furnace".equals(path)
+                || "smoker".equals(path)
+                || "dispenser".equals(path)
+                || "dropper".equals(path)
+                || "brewing_stand".equals(path)
+                || "chiseled_bookshelf".equals(path);
+    }
+
     private static boolean chestPath(String path) {
-        return "chest".equals(path) || "trapped_chest".equals(path) || "barrel".equals(path) || path.endsWith("_chest");
+        return "chest".equals(path)
+                || "trapped_chest".equals(path)
+                || "barrel".equals(path)
+                || path.endsWith("_chest")
+                || path.endsWith("_shulker_box");
     }
 
     private static boolean fence(String path) {

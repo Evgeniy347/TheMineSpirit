@@ -54,15 +54,6 @@ public final class PlotCellStructure {
                         && mineFloors(site).contains(cell));
     }
 
-    static boolean plannedChest(ServerLevel level, BlockCoord cell) {
-        StageSite site = site(level);
-        if (site == null) {
-            return false;
-        }
-        String block = plan(site).blocks().get(cell);
-        return block != null && block.endsWith("chest");
-    }
-
     public static long generation() {
         return generation;
     }

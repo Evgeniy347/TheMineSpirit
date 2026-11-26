@@ -104,8 +104,8 @@ public final class ChestDemolition {
                     }
                 }
                 case WAIT -> {
-                    if (CHANGES.changed("chest-wait:" + at, decision.reason())) {
-                        LOGGER.info("[warehouse] сундук {} ждёт: {}", at, decision.reason());
+                    if (CHANGES.changed("container-wait:" + at, decision.reason())) {
+                        LOGGER.info("[warehouse] контейнер {} ждёт: {}", at, decision.reason());
                     }
                 }
             }
@@ -139,11 +139,11 @@ public final class ChestDemolition {
             return false;
         }
         LOGGER.info(
-                "[warehouse] сундук {}: {} (вещей {}, слотов нужно {} из {})",
+                "[warehouse] контейнер {}: {} (вещей {}, слотов нужно {} из {})",
                 at,
                 ContainerAccess.open(post.level, new BlockPos(at.x(), at.y(), at.z())) instanceof ContainerAccess.Opened
                         ? decision.reason()
-                        : "крышка закрыта — сломать и сразу подобрать содержимое с разгрузкой на склад",
+                        : "контейнер недоступен — сломать и сразу подобрать содержимое с разгрузкой на склад",
                 ChestClearance.moves(chest).size(),
                 decision.neededSlots(),
                 decision.freeSlots());

@@ -81,12 +81,42 @@ class FloatingCleanupTests {
     }
 
     @Test
+    void decide_FullHopperWithYard_IsDrained() {
+        assertEquals(
+                FloatingCleanup.Action.DRAIN_CHEST,
+                FloatingCleanup.decide(
+                        finding(FloatingBlocks.Kind.CONTAINER), new FloatingCleanup.Rooms(true, false, false, false)),
+                "Непустой контейнер сначала переносят на склад: иначе снос воронки или раздатчика потеряет "
+                        + "содержимое. При смене decide_FullHopperWithYard_IsDrained проверь ChestPlans.demolish.");
+    }
+
+    @Test
+    void decide_FullStationWithYard_IsDrainedBeforeRelocation() {
+        assertEquals(
+                FloatingCleanup.Action.DRAIN_CHEST,
+                FloatingCleanup.decide(
+                        finding(FloatingBlocks.Kind.STATION), new FloatingCleanup.Rooms(true, false, false, true)),
+                "Непустая станция тоже сначала опустошается: иначе перестановка печи выбросит ресурсы. При смене "
+                        + "decide_FullStationWithYard_IsDrainedBeforeRelocation проверь DemolitionCollect и ChestDemolition.");
+    }
+
+    @Test
+    void decide_ProtectedFullStation_IsSkipped() {
+        assertEquals(
+                FloatingCleanup.Action.SKIP_PROTECTED,
+                FloatingCleanup.decide(
+                        finding(FloatingBlocks.Kind.STATION), new FloatingCleanup.Rooms(true, true, false, true)),
+                "Защищённая станция игрока не опустошается: иначе правило переноса обойдёт защиту постройки. "
+                        + "При смене decide_ProtectedFullStation_IsSkipped проверь DemolitionGuard.");
+    }
+
+    @Test
     void decide_StationNeededByPlan_IsRelocated() {
         assertEquals(
                 FloatingCleanup.Action.RELOCATE_STATION,
                 FloatingCleanup.decide(
-                        finding(FloatingBlocks.Kind.STATION), new FloatingCleanup.Rooms(true, false, false, true)),
-                "Нужная плану станция не пропадает: её снимают и ставят заново по схеме двора"
+                        finding(FloatingBlocks.Kind.STATION), new FloatingCleanup.Rooms(true, false, true, true)),
+                "Нужная плану пустая станция не пропадает: её снимают и ставят заново по схеме двора"
                         + " Иначе тест decide_StationNeededByPlan_IsRelocated перестанет ловить эту поломку. При смене decide_StationNeededByPlan_IsRelocated проверь это утверждение.");
     }
 
@@ -95,8 +125,8 @@ class FloatingCleanupTests {
         assertEquals(
                 FloatingCleanup.Action.REMOVE,
                 FloatingCleanup.decide(
-                        finding(FloatingBlocks.Kind.STATION), new FloatingCleanup.Rooms(true, false, false, false)),
-                "Лишняя станция вне плана снимается, чтобы не висеть в воздухе"
+                        finding(FloatingBlocks.Kind.STATION), new FloatingCleanup.Rooms(true, false, true, false)),
+                "Лишняя пустая станция вне плана снимается, чтобы не висеть в воздухе"
                         + " Иначе тест decide_StationNotNeeded_IsRemoved перестанет ловить эту поломку. При смене decide_StationNotNeeded_IsRemoved проверь это утверждение.");
     }
 

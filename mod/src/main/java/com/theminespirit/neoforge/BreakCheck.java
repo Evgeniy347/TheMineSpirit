@@ -2,7 +2,9 @@ package com.theminespirit.neoforge;
 
 import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.tactics.api.adapter.Visibility;
+import com.theminespirit.neoforge.inventory.ContainerAccess;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.Container;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
@@ -41,6 +43,17 @@ final class BreakCheck {
         if (targetState.isAir()) {
             return refusals.refused(
                     target, BlockBreaker.RefuseReason.AIR, "в " + target.toShortString() + " воздух: ломать нечего");
+        }
+        if (!escaping
+                && !rescue
+                && ContainerAccess.allowed(targetState)
+                && level.getBlockEntity(target) instanceof Container container
+                && !container.isEmpty()) {
+            return refusals.refused(
+                    target,
+                    BlockBreaker.RefuseReason.CONTAINER_NOT_EMPTY,
+                    "контейнер " + target.toShortString() + " не пуст: сначала перенести содержимое на склад, "
+                            + "иначе снос потеряет вещи");
         }
         double hardness = targetState.getDestroySpeed(level, target);
         if (hardness < 0) {

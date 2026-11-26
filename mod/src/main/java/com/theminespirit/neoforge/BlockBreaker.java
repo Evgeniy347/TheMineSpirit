@@ -48,7 +48,8 @@ public final class BlockBreaker {
         OUT_OF_REACH,
         NO_SIGHT,
         NEED_TOOL,
-        SUPPORTS_SELF
+        SUPPORTS_SELF,
+        CONTAINER_NOT_EMPTY
     }
 
     public sealed interface Begin permits Started, Refused, Protected {}

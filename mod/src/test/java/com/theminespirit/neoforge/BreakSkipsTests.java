@@ -7,6 +7,16 @@ import org.junit.jupiter.api.Test;
 
 class BreakSkipsTests {
     @Test
+    void containerNotEmpty_RefusalTallied_MapsToContainerReason() {
+        assertEquals(
+                BreakSkipTally.Reason.CONTAINER_NOT_EMPTY,
+                BreakSkips.reason(BlockBreaker.RefuseReason.CONTAINER_NOT_EMPTY),
+                "Отказ по непустому контейнеру учитывается отдельно: иначе перенос содержимого будет "
+                        + "выглядеть как обычный пропуск блока. При смене containerNotEmpty_RefusalTallied_MapsToContainerReason "
+                        + "проверь BreakCheck и ChestPlans.");
+    }
+
+    @Test
     void supportsSelf_RefusalTallied_MapsToSelfSupportReason() {
         assertEquals(
                 BreakSkipTally.Reason.SUPPORTS_SELF,

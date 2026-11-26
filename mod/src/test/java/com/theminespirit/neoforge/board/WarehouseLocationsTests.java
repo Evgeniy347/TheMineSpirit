@@ -8,9 +8,9 @@ import org.junit.jupiter.api.Test;
 
 class WarehouseLocationsTests {
     @Test
-    void chestMatches_SingleChestInDoubleChestCell_DoesNotProtectTemporaryChest() {
+    void containerMatches_SingleChestInDoubleChestCell_DoesNotProtectTemporaryChest() {
         assertFalse(
-                WarehouseLocations.chestMatches(
+                WarehouseLocations.containerMatches(
                         "chest", Map.of("facing", "east", "type", "left"), Map.of("facing", "east", "type", "single")),
                 "Одиночный сундук в будущей клетке двойного складского сундука не является постройкой плана: "
                         + "иначе, если защитить его только по координате, пустой временный сундук навсегда займёт "
@@ -19,9 +19,27 @@ class WarehouseLocationsTests {
     }
 
     @Test
-    void chestMatches_MatchingDoubleChestState_ProtectsPlannedChest() {
+    void containerMatches_MatchingHopperState_ProtectsPlannedContainer() {
         assertTrue(
-                WarehouseLocations.chestMatches(
+                WarehouseLocations.containerMatches("hopper", Map.of("facing", "north"), Map.of("facing", "north")),
+                "Воронка со состоянием схемы защищена от сноса: иначе запланированная логистика будет "
+                        + "разобрана как временный контейнер. При смене containerMatches_MatchingHopperState_ProtectsPlannedContainer "
+                        + "проверь WarehouseLocations.planned и ChestDemolition.removable.");
+    }
+
+    @Test
+    void containerMatches_NonContainerBlock_IsNotProtectedAsContainer() {
+        assertFalse(
+                WarehouseLocations.containerMatches("stone", Map.of(), Map.of()),
+                "Обычный блок не получает защиту контейнера: иначе снос лишнего камня перестанет работать. "
+                        + "При смене containerMatches_NonContainerBlock_IsNotProtectedAsContainer проверь "
+                        + "FloatingBlocks.containerPath.");
+    }
+
+    @Test
+    void containerMatches_MatchingDoubleChestState_ProtectsPlannedChest() {
+        assertTrue(
+                WarehouseLocations.containerMatches(
                         "chest", Map.of("facing", "east", "type", "left"), Map.of("facing", "east", "type", "left")),
                 "Сундук с состоянием схемы защищён от сноса: иначе пустой готовый складской сундук будут "
                         + "ломать как временный и склад потеряет вместимость. При смене WarehouseLocations.planned "

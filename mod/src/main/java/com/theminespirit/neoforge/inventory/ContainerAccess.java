@@ -10,15 +10,25 @@ import net.minecraft.world.Container;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.ChestBlock;
-import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.RandomizableContainerBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.ChestType;
 
 public final class ContainerAccess {
-    private static final IdFilter ALLOWED = IdFilter.of(
-            List.of("minecraft:chest", "minecraft:trapped_chest", "minecraft:barrel", "minecraft:*shulker_box"));
+    private static final IdFilter ALLOWED = IdFilter.of(List.of(
+            "minecraft:chest",
+            "minecraft:trapped_chest",
+            "minecraft:barrel",
+            "minecraft:*shulker_box",
+            "minecraft:hopper",
+            "minecraft:furnace",
+            "minecraft:blast_furnace",
+            "minecraft:smoker",
+            "minecraft:dispenser",
+            "minecraft:dropper",
+            "minecraft:brewing_stand",
+            "minecraft:chiseled_bookshelf"));
 
     private ContainerAccess() {}
 
@@ -29,7 +39,11 @@ public final class ContainerAccess {
     public record Refused(String reason) implements Open {}
 
     public static boolean allowed(BlockState state) {
-        return ALLOWED.matches(BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString());
+        return allowedId(BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString());
+    }
+
+    public static boolean allowedId(String id) {
+        return ALLOWED.matches(id);
     }
 
     public static Open open(Level level, BlockPos pos) {
@@ -46,10 +60,10 @@ public final class ContainerAccess {
         }
         BlockState state = level.getBlockState(pos);
         String id = BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString();
-        if (!ALLOWED.matches(id)) {
+        if (!allowedId(id)) {
             return new Refused("блок " + id + " в " + pos.toShortString() + " не допустимый контейнер: "
-                    + "годятся сундуки (в том числе двойные), бочки и шалкер-боксы, а печи, воронки, "
-                    + "раздатчики и эндер-сундук запрещены");
+                    + "годятся сундуки, бочки, шалкер-боксы, воронки, печи, раздатчики, капельницы, "
+                    + "варочные стойки и резные книжные полки; эндер-сундук запрещён");
         }
         BlockEntity entity = level.getBlockEntity(pos);
         if (entity instanceof RandomizableContainerBlockEntity random && random.getLootTable() != null) {
@@ -83,8 +97,8 @@ public final class ContainerAccess {
             }
             return new Opened(both);
         }
-        if (entity instanceof BaseContainerBlockEntity base) {
-            return new Opened(base);
+        if (entity instanceof Container container) {
+            return new Opened(container);
         }
         return new Refused(
                 "блок " + id + " в " + pos.toShortString() + " без блочной сущности контейнера: открыть нечего");
