@@ -120,6 +120,11 @@ class TaskJournalFallbackTests {
         }
 
         @Override
+        public BoardTask unblock(String ticketId) {
+            throw new AssertionError("Тест только читает задание: разблокировка не нужна");
+        }
+
+        @Override
         public List<BoardLogEntry> log(int limit) {
             return List.of();
         }

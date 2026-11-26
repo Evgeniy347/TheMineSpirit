@@ -205,6 +205,10 @@ public final class BoardService {
         return tickets.reopen(ticketId);
     }
 
+    public boolean unblock(String ticketId) {
+        return tickets.unblock(ticketId);
+    }
+
     public boolean cancel(ServerLevel level, String ticketId) {
         return tickets.cancel(level, ticketId);
     }

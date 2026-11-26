@@ -82,6 +82,11 @@ public final class SpiritBoardGateway implements BoardGateway {
     }
 
     @Override
+    public BoardTask unblock(String ticketId) {
+        return serverCall.call(() -> unblockTask(ticketId), RestTuning.SERVER_CALL_TIMEOUT);
+    }
+
+    @Override
     public List<BoardLogEntry> log(int limit) {
         return serverCall.call(
                 () -> BoardRegistry.get(server.overworld()).journal().last(limit), RestTuning.SERVER_CALL_TIMEOUT);
@@ -132,6 +137,21 @@ public final class SpiritBoardGateway implements BoardGateway {
                                 .getOrDefault(ticket.id(), BoardTiming.NONE),
                         service.targetOf(ticket.id(), server.overworld(), List.of())
                                 .orElse(null)));
+    }
+
+    private BoardTask unblockTask(String ticketId) {
+        BoardService service = BoardRegistry.get(server.overworld());
+        if (!service.unblock(ticketId)) {
+            throw new ApiException(
+                    ErrorCode.CONFLICT,
+                    "Задание '" + ticketId + "' не найдено или не имеет статус BLOCKED: снимать блокировку нечего",
+                    Map.of("id", ticketId));
+        }
+        return findTask(ticketId)
+                .orElseThrow(() -> new ApiException(
+                        ErrorCode.INTERNAL,
+                        "Задание '" + ticketId + "' разблокировано, но не читается обратно",
+                        Map.of("id", ticketId)));
     }
 
     private BoardTask createTask(BoardTaskRequest request) {

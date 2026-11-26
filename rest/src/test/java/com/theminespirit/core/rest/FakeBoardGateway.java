@@ -15,6 +15,7 @@ final class FakeBoardGateway implements BoardGateway {
     private final Map<String, BoardTask> restored = new LinkedHashMap<>();
     private final List<String> submits = new ArrayList<>();
     private final List<String> cancels = new ArrayList<>();
+    private final List<String> unblocks = new ArrayList<>();
     private final List<BoardLogEntry> log = new ArrayList<>();
     private BoardTaskRequest lastRequest;
 
@@ -24,6 +25,10 @@ final class FakeBoardGateway implements BoardGateway {
 
     List<String> cancels() {
         return cancels;
+    }
+
+    List<String> unblocks() {
+        return unblocks;
     }
 
     int size() {
@@ -105,6 +110,32 @@ final class FakeBoardGateway implements BoardGateway {
                 task.cause());
         tasks.put(ticketId, cancelled);
         return cancelled;
+    }
+
+    @Override
+    public BoardTask unblock(String ticketId) {
+        BoardTask task = tasks.get(ticketId);
+        if (task == null || !"BLOCKED".equals(task.status())) {
+            throw new ApiException(
+                    ErrorCode.CONFLICT,
+                    "Задание доски '" + ticketId + "' не найдено или не BLOCKED",
+                    Map.of("id", ticketId));
+        }
+        unblocks.add(ticketId);
+        BoardTask pending = new BoardTask(
+                task.id(),
+                task.boardCase(),
+                task.priority(),
+                task.assignee(),
+                "PENDING",
+                task.requiredItems(),
+                task.missing(),
+                task.dependsOn(),
+                task.createdAt(),
+                task.level(),
+                task.cause());
+        tasks.put(ticketId, pending);
+        return pending;
     }
 
     @Override

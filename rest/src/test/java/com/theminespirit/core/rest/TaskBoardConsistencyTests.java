@@ -201,6 +201,11 @@ class TaskBoardConsistencyTests {
         }
 
         @Override
+        public BoardTask unblock(String ticketId) {
+            throw new AssertionError("Тест только читает задания: разблокировка не нужна");
+        }
+
+        @Override
         public List<BoardLogEntry> log(int limit) {
             return List.of();
         }

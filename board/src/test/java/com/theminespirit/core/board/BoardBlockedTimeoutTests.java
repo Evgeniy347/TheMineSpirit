@@ -1,6 +1,7 @@
 package com.theminespirit.core.board;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.board.api.BoardCase;
@@ -55,6 +56,33 @@ class BoardBlockedTimeoutTests {
                         + "живой шахты в observe9"
                         + " Иначе тест механику перестанет ловить эту поломку. При смене механику проверь это утверждение.");
         return now[0];
+    }
+
+    @Test
+    void unblock_BlockedTicket_ClearsFailuresAndReturnsPending() {
+        long[] now = {0};
+        Board board = new Board(() -> now[0]);
+        blocked(board, now);
+
+        assertTrue(
+                board.failures().unblock(ID, now[0]),
+                "Ручная разблокировка снимает BLOCKED: иначе оператор не сможет вернуть задание после "
+                        + "исправления условия. При смене unblock_BlockedTicket_ClearsFailuresAndReturnsPending "
+                        + "проверь BoardFailureDesk.unblock и REST /unblock.");
+        assertEquals(
+                BoardStatus.PENDING,
+                board.statusOf(ID).orElse(null),
+                "После ручной разблокировки билет ждёт исполнителя: иначе работа останется выключенной. "
+                        + "При смене unblock_BlockedTicket_ClearsFailuresAndReturnsPending проверь BlockedBook.release.");
+        assertEquals(
+                0,
+                board.ticketFailures(ID),
+                "Счётчик провалов обнуляется: иначе следующий отказ снова мгновенно заблокирует исправленное "
+                        + "задание. При смене unblock_BlockedTicket_ClearsFailuresAndReturnsPending проверь очистку failures.");
+        assertFalse(
+                board.failures().unblock(ID, now[0]),
+                "Повторная разблокировка не создаёт второе событие: иначе журнал заполнится ложными UNBLOCKED. "
+                        + "При смене unblock_BlockedTicket_ClearsFailuresAndReturnsPending проверь проверку статуса BLOCKED.");
     }
 
     @Test

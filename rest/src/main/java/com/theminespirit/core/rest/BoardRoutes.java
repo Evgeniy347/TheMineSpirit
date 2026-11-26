@@ -21,6 +21,7 @@ public final class BoardRoutes {
                 new Route("GET", "/v1/board", this::list),
                 new Route("GET", "/v1/board/log", this::log),
                 new Route("POST", "/v1/board/tasks", this::create),
+                new Route("POST", "/v1/board/tasks/{id}/unblock", this::unblock),
                 new Route("DELETE", "/v1/board/tasks/{id}", this::cancel));
     }
 
@@ -59,6 +60,10 @@ public final class BoardRoutes {
         }
         idempotency.remember(requestId, fingerprint, response);
         return RestResponse.json(202, response);
+    }
+
+    private RestResponse unblock(RestRequest ignoredRequest, PathParams params) {
+        return RestResponse.ok(BoardJson.toJson(gateway.unblock(params.get("id"))));
     }
 
     private RestResponse cancel(RestRequest ignoredRequest, PathParams params) {

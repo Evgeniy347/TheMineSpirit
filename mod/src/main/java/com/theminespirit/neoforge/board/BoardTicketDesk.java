@@ -46,6 +46,14 @@ final class BoardTicketDesk {
         return reopened;
     }
 
+    boolean unblock(String ticketId) {
+        boolean unblocked = board.failures().unblock(ticketId, board.now());
+        if (unblocked) {
+            host.persistBoard();
+        }
+        return unblocked;
+    }
+
     boolean cancel(ServerLevel level, String ticketId) {
         Map<UUID, Set<String>> holders = new HashMap<>();
         collectHolders(ticketId, holders, new HashSet<>());

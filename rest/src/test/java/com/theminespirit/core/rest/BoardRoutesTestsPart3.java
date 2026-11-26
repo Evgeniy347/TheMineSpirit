@@ -46,16 +46,22 @@ class BoardRoutesTestsPart3 {
     }
 
     @Test
-    void routes_ThreeEndpoints_AreRegistered() {
+    void routes_AllEndpoints_AreRegistered() {
         Set<String> keys = new HashSet<>();
         new BoardRoutes(gateway, idempotency)
                 .routes()
                 .forEach(route -> keys.add(route.method() + " " + route.pattern()));
 
         assertEquals(
-                Set.of("GET /v1/board", "GET /v1/board/log", "POST /v1/board/tasks", "DELETE /v1/board/tasks/{id}"),
+                Set.of(
+                        "GET /v1/board",
+                        "GET /v1/board/log",
+                        "POST /v1/board/tasks",
+                        "POST /v1/board/tasks/{id}/unblock",
+                        "DELETE /v1/board/tasks/{id}"),
                 keys,
-                "Чеклист п.21 добавляет к трём маршрутам доски наблюдение журнала"
-                        + " Иначе тест routes_ThreeEndpoints_AreRegistered перестанет ловить эту поломку. При смене routes_ThreeEndpoints_AreRegistered проверь это утверждение.");
+                "Доска обязана давать наблюдение, постановку, снятие блокировки и отмену: иначе оператор "
+                        + "не сможет вернуть задание после исправления причины. При смене "
+                        + "routes_AllEndpoints_AreRegistered проверь BoardRoutes.routes.");
     }
 }

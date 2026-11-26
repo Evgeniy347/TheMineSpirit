@@ -28,6 +28,8 @@ public interface BoardGateway {
 
     BoardTask cancel(String ticketId);
 
+    BoardTask unblock(String ticketId);
+
     List<BoardLogEntry> log(int limit);
 
     default List<BoardLogEntry> log(int limit, long sinceTick) {
