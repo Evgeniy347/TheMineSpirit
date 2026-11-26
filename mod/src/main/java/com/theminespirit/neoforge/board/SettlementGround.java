@@ -3,8 +3,11 @@ package com.theminespirit.neoforge.board;
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.LevelingRules;
 import com.theminespirit.core.board.MineDescentBottom;
+import com.theminespirit.core.board.StageCatalog;
 import com.theminespirit.core.board.StageRules;
 import com.theminespirit.core.board.WaterLevel;
+import com.theminespirit.core.building.PresetLibrary;
+import com.theminespirit.core.building.SchematicGround;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.ColumnMask;
 import com.theminespirit.core.town.PlotLeveling;
@@ -78,12 +81,19 @@ public final class SettlementGround {
         List<String> plan = StageRules.current().plans().get(stage - 1);
         for (String id : plan) {
             for (var place : site.placements()) {
-                if (id.equals(place.id())) {
+                if (id.equals(place.id()) && !tilled(place.id())) {
                     area = area.union(place.mask());
                 }
             }
         }
         return area;
+    }
+
+    private static boolean tilled(String id) {
+        return StageCatalog.entry(id)
+                .flatMap(entry -> PresetLibrary.current().byId(entry.scheme()))
+                .map(preset -> SchematicGround.tilled(preset.schematic()))
+                .orElse(false);
     }
 
     static IntBinaryOperator plotFeet(ServerLevel level, StageSite site) {

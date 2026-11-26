@@ -16,7 +16,7 @@ class SettlementGroundTests {
     private static final StageSite SITE = TownFixtures.flatSite();
 
     @Test
-    void area_CurrentStage_IncludesStreetsAndPriorityPlotsOnly() {
+    void area_CurrentStage_IncludesStreetsButExcludesTilledFields() {
         ColumnMask area = SettlementGround.area(SITE, 1);
         ColumnMask.Cell street = SITE.streets().cells().getFirst();
         Placement field = SITE.fields().stream()
@@ -27,15 +27,16 @@ class SettlementGroundTests {
         assertTrue(
                 area.contains(street.x(), street.z()),
                 "Расчистка этапа включает тропинки: иначе постройки останутся без прохода. При смене "
-                        + "area_CurrentStage_IncludesStreetsAndPriorityPlotsOnly проверь SettlementGround.area.");
-        assertTrue(
+                        + "area_CurrentStage_IncludesStreetsButExcludesTilledFields проверь SettlementGround.area.");
+        assertFalse(
                 area.contains(field.centerX(), field.centerZ()),
-                "Расчистка этапа включает пашню: иначе поле будет ждать уборки вне текущего плана. При смене "
-                        + "area_CurrentStage_IncludesStreetsAndPriorityPlotsOnly проверь StageRules.plans.");
+                "Общая расчистка не включает пашню: иначе first:clear_grounds сносит готовую землю, "
+                        + "воду и посевы. При смене area_CurrentStage_IncludesStreetsButExcludesTilledFields "
+                        + "проверь SettlementGround.area и живой wheat_field.");
         assertTrue(
                 SITE.zone().cells().stream().anyMatch(cell -> !area.contains(cell.x(), cell.z())),
                 "Дикая территория вне улиц и участков этапа не входит в уборку: иначе clearing снова станет "
-                        + "тысячами лишних боксов. При смене area_CurrentStage_IncludesStreetsAndPriorityPlotsOnly "
+                        + "тысячами лишних боксов. При смене area_CurrentStage_IncludesStreetsButExcludesTilledFields "
                         + "проверь SiteLevels.leveling и живой first:clear_grounds.");
     }
 
@@ -58,7 +59,7 @@ class SettlementGroundTests {
                                 && box.z1() <= outside.z()
                                 && box.z2() >= outside.z()),
                 "Высокий блок вне выбранной площади не создаёт срезку: иначе граф снова расчищает весь "
-                        + " wilderness вместо улиц и текущих участков. При смене leveling_RequestedArea_IgnoresHighBlocksOutside "
+                        + " дикую территорию вместо улиц и текущих участков. При смене leveling_RequestedArea_IgnoresHighBlocksOutside "
                         + "проверь SiteLevels.extra и SettlementGround.leveling.");
     }
 }
