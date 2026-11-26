@@ -1,7 +1,6 @@
 package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
-import com.theminespirit.core.board.BoardActivities;
 import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.StockView;
@@ -14,7 +13,6 @@ import com.theminespirit.core.log.Perf;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.terminal.CraftOrders;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -54,8 +52,8 @@ public final class GraphSource {
             boolean deep,
             Set<String> signals) {}
 
-    private GraphSource.@Nullable Half pending;
     private GraphPreparation.@Nullable Work preparation;
+    private @Nullable GraphPosting posting;
     private @Nullable GraphReport reporting;
 
     public Set<String> tick(
@@ -66,11 +64,13 @@ public final class GraphSource {
             Set<String> events,
             long now) {
         phases.clear();
-        if (pending != null) {
+        if (posting != null) {
             long started = System.nanoTime();
-            Set<String> done = finish(pending);
+            if (posting.advance()) {
+                finishPosting(posting);
+            }
             mark("finish", started);
-            return done;
+            return lastLive;
         }
         long started = System.nanoTime();
         Set<String> signals = new HashSet<>(GraphSignals.of(events, spirits, service, now));
@@ -107,12 +107,13 @@ public final class GraphSource {
                 preparation = null;
                 lastLive = Set.of();
             } else if (half != null) {
-                pending = half;
+                posting = new GraphPosting(half, pets);
                 preparation = null;
+                lastLive = new HashSet<>(half.result().live());
             }
         } catch (RuntimeException error) {
             preparation = null;
-            pending = null;
+            posting = null;
             throw error;
         }
     }
@@ -127,44 +128,11 @@ public final class GraphSource {
         phases.merge(name, elapsed / 1_000_000, Long::sum);
     }
 
-    private Set<String> finish(Half half) {
-        pending = null;
-        GraphPost post = new GraphPost(
-                half.level(),
-                half.service(),
-                half.spirits(),
-                half.stock(),
-                new GraphPost.Site(half.scan(), half.around(), pets, half.state()),
-                half.graph(),
-                half.now());
-        List<String> unconnected = new ArrayList<>();
+    private void finishPosting(GraphPosting work) {
+        GraphSource.Half half = work.half();
+        GraphPost post = work.post();
+        List<String> unconnected = work.unconnected();
         long started = System.nanoTime();
-        GraphStanding.seed(post, half.plan().tasks(), half.result().live());
-        for (GraphTickets.Ticket ticket : half.result().post()) {
-            BoardStatus status = half.service().board().statusOf(ticket.id()).orElse(null);
-            boolean activity = BoardActivities.isActivity(ticket.task().boardCase());
-            if (status == BoardStatus.DONE) {
-                if (activity) {
-                    continue;
-                }
-                half.service().board().reopen(ticket.id());
-            } else if (status == BoardStatus.BLOCKED) {
-                if (!half.service().board().failures().unblock(ticket.id(), half.now())) {
-                    continue;
-                }
-            } else if (status != null && !activity) {
-                continue;
-            } else if (activity && closed(status)) {
-                continue;
-            }
-            if (!TicketIsolation.post(ticket.id(), () -> post.post(ticket))) {
-                if (!post.waiting().contains(ticket.id())) {
-                    unconnected.add(ticket.id());
-                }
-            }
-        }
-        Perf.record("graph.src.finish.post", System.nanoTime() - started);
-        started = System.nanoTime();
         post.flush();
         StageWorldGate.apply(
                 half.level(),
@@ -194,8 +162,8 @@ public final class GraphSource {
         Perf.record("graph.src.finish.priorities", System.nanoTime() - started);
         cadence.finished(half.now(), half.signals());
         lastLive = post.live(half.result().live());
-        reporting = new GraphReport(half, List.copyOf(unconnected));
-        return lastLive;
+        posting = null;
+        reporting = new GraphReport(half, unconnected);
     }
 
     public static Set<String> events(
@@ -231,7 +199,7 @@ public final class GraphSource {
         return Set.copyOf(events);
     }
 
-    private static boolean closed(BoardStatus status) {
+    static boolean closed(BoardStatus status) {
         return status == BoardStatus.DONE || status == BoardStatus.FAILED || status == BoardStatus.CANCELLED;
     }
 }

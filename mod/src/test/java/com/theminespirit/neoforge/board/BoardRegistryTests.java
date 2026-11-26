@@ -104,11 +104,34 @@ class BoardRegistryTests {
     }
 
     @Test
+    void ticketPosting_Batches_CriticalFinishSkipsAllTickets() throws IOException {
+        String posting =
+                Files.readString(Path.of("mod/src/main/java/com/theminespirit/neoforge/board/GraphPosting.java"));
+        String source =
+                Files.readString(Path.of("mod/src/main/java/com/theminespirit/neoforge/board/GraphSource.java"));
+        String finish = source.substring(
+                source.indexOf("private void finishPosting"), source.indexOf("public static Set<String> events"));
+
+        assertTrue(
+                posting.contains("TICKET_BUDGET = 8")
+                        && posting.contains("cursor + TICKET_BUDGET")
+                        && source.contains("new GraphPosting(half, pets)"),
+                "Постановка билетов должна идти пакетами вне finish: иначе холодный цикл всех заданий снова "
+                        + "останавливает сервер на сотни миллисекунд. При смене ticketPosting_Batches_CriticalFinishSkipsAllTickets "
+                        + "проверь GraphPosting.advance и graph.src.finish.");
+        assertFalse(
+                finish.contains("for (GraphTickets.Ticket"),
+                "Критический finish не должен обходить все билеты: иначе пакетное разбиение теряет смысл. "
+                        + "При смене ticketPosting_Batches_CriticalFinishSkipsAllTickets проверь GraphSource.finishPosting "
+                        + "и GraphPosting.advance.");
+    }
+
+    @Test
     void finishReport_Diagnostics_DeferredFromCriticalTick() throws IOException {
         String source =
                 Files.readString(Path.of("mod/src/main/java/com/theminespirit/neoforge/board/GraphSource.java"));
         String finish = source.substring(
-                source.indexOf("private Set<String> finish"), source.indexOf("public static Set<String> events"));
+                source.indexOf("private void finishPosting"), source.indexOf("public static Set<String> events"));
 
         assertTrue(
                 finish.contains("new GraphReport(half") && source.contains("reporting.advance(reporter, decisionLog)"),
