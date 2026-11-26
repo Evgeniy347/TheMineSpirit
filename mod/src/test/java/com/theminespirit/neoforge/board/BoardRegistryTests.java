@@ -85,6 +85,25 @@ class BoardRegistryTests {
     }
 
     @Test
+    void stageScan_Preparation_IsSeparatePhase() throws IOException {
+        String source =
+                Files.readString(Path.of("mod/src/main/java/com/theminespirit/neoforge/board/GraphPreparation.java"));
+        String start = source.substring(
+                source.indexOf("static GraphPreparation.Work start"), source.indexOf("static final class Work"));
+
+        assertTrue(
+                start.contains("return new Work(") && source.contains("case STAGE ->"),
+                "Тяжёлый скан этапа обязан быть отдельной фазой: иначе GraphSource.start снова выполняет "
+                        + "FirstStepsRunner.tick в одном серверном тике. При смене stageScan_Preparation_IsSeparatePhase "
+                        + "проверь GraphPreparation.advance и graph.src.stage.");
+        assertFalse(
+                start.contains("FirstStepsRunner.tick("),
+                "Старт подготовки не должен сканировать мир: иначе холодный graph.src.stage возвращается. "
+                        + "При смене stageScan_Preparation_IsSeparatePhase проверь GraphPreparation.start и "
+                        + "GraphSource.advance.");
+    }
+
+    @Test
     void finishReport_Diagnostics_DeferredFromCriticalTick() throws IOException {
         String source =
                 Files.readString(Path.of("mod/src/main/java/com/theminespirit/neoforge/board/GraphSource.java"));

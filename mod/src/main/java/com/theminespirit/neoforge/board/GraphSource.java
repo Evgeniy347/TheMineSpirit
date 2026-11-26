@@ -86,9 +86,6 @@ public final class GraphSource {
         }
         preparation = GraphPreparation.start(
                 level, service, spirits, stock, quarries, graph, now, deep, events, signals, phases);
-        if (preparation == null) {
-            lastLive = Set.of();
-        }
         return lastLive;
     }
 
@@ -106,7 +103,10 @@ public final class GraphSource {
         try {
             Half half = work.advance();
             phases.putAll(work.phases());
-            if (half != null) {
+            if (work.empty()) {
+                preparation = null;
+                lastLive = Set.of();
+            } else if (half != null) {
                 pending = half;
                 preparation = null;
             }

@@ -19,6 +19,7 @@ import org.jspecify.annotations.Nullable;
 
 final class GraphPreparation {
     enum Phase {
+        STAGE,
         QUARRY,
         AROUND,
         STATE,
@@ -30,7 +31,7 @@ final class GraphPreparation {
 
     private GraphPreparation() {}
 
-    static GraphPreparation.@Nullable Work start(
+    static GraphPreparation.Work start(
             ServerLevel level,
             BoardService service,
             List<SpiritEntity> spirits,
@@ -42,12 +43,7 @@ final class GraphPreparation {
             Set<String> events,
             Set<String> signals,
             Map<String, Long> phases) {
-        long started = System.nanoTime();
-        Optional<FirstStepsRunner.StageScan> scan = FirstStepsRunner.tick(level, service, spirits, stock, now);
-        mark(phases, "stage", started);
-        return scan.map(value -> new Work(
-                        level, service, spirits, stock, quarryWatch, value, graph, now, deep, events, signals, phases))
-                .orElse(null);
+        return new Work(level, service, spirits, stock, quarryWatch, graph, now, deep, events, signals, phases);
     }
 
     static final class Work {
@@ -56,14 +52,15 @@ final class GraphPreparation {
         private final List<SpiritEntity> spirits;
         private final StockView stock;
         private final QuarryWatch quarryWatch;
-        private final FirstStepsRunner.StageScan scan;
+        private Optional<FirstStepsRunner.StageScan> scan = Optional.empty();
         private final SupplyGraph graph;
         private final long now;
         private final boolean deep;
         private final Set<String> events;
         private final Set<String> signals;
         private final Map<String, Long> phases;
-        private Phase phase = Phase.QUARRY;
+        private Phase phase = Phase.STAGE;
+        private boolean empty;
         private QuarryWatch.@Nullable Result quarries;
         private GraphSurroundings.@Nullable Around around;
         private @Nullable GraphInputWork inputs;
@@ -79,7 +76,6 @@ final class GraphPreparation {
                 List<SpiritEntity> spirits,
                 StockView stock,
                 QuarryWatch quarryWatch,
-                FirstStepsRunner.StageScan scan,
                 SupplyGraph graph,
                 long now,
                 boolean deep,
@@ -91,7 +87,6 @@ final class GraphPreparation {
             this.spirits = spirits;
             this.stock = stock;
             this.quarryWatch = quarryWatch;
-            this.scan = scan;
             this.graph = graph;
             this.now = now;
             this.deep = deep;
@@ -102,24 +97,39 @@ final class GraphPreparation {
 
         GraphSource.@Nullable Half advance() {
             return switch (phase) {
+                case STAGE -> {
+                    long started = System.nanoTime();
+                    Optional<FirstStepsRunner.StageScan> found =
+                            FirstStepsRunner.tick(level, service, spirits, stock, now);
+                    mark(phases, "stage", started);
+                    if (found.isPresent()) {
+                        scan = found;
+                        phase = Phase.QUARRY;
+                    } else {
+                        empty = true;
+                        phase = Phase.DONE;
+                    }
+                    yield null;
+                }
                 case QUARRY -> {
                     long started = System.nanoTime();
-                    quarries = quarryWatch.tick(level, scan.home(), now);
+                    quarries = quarryWatch.tick(level, requireScan().home(), now);
                     mark(phases, "quarry", started);
                     phase = Phase.AROUND;
                     yield null;
                 }
                 case AROUND -> {
                     QuarryWatch.Result found = requireQuarries();
+                    FirstStepsRunner.StageScan current = requireScan();
                     long started = System.nanoTime();
                     around = GraphSurroundings.of(
                                     level,
                                     service,
-                                    scan.home(),
+                                    current.home(),
                                     found.nearest(),
                                     found.distances(),
-                                    TreeCenterLogs.centers(scan.stage()),
-                                    cell -> scan.stage().orchardTerritory(cell.x(), cell.z()))
+                                    TreeCenterLogs.centers(current.stage()),
+                                    cell -> current.stage().orchardTerritory(cell.x(), cell.z()))
                             .with(events)
                             .withRoutes(found.events(), found.world());
                     mark(phases, "around", started);
@@ -131,7 +141,7 @@ final class GraphPreparation {
                     long started = System.nanoTime();
                     GraphInputWork current = inputs;
                     if (current == null) {
-                        current = GraphInputs.work(level, service, spirits, stock, scan, graph, surroundings);
+                        current = GraphInputs.work(level, service, spirits, stock, requireScan(), graph, surroundings);
                         inputs = current;
                     }
                     GraphState collected = current.advance();
@@ -158,7 +168,8 @@ final class GraphPreparation {
                         int end = Math.min(builtWork.size(), builtCursor + 4);
                         while (builtCursor < end) {
                             SupplyGraph.Building building = builtWork.get(builtCursor++);
-                            StageSettle.settle(level, service, stock, scan, building.boardCase(), level.getGameTime());
+                            StageSettle.settle(
+                                    level, service, stock, requireScan(), building.boardCase(), level.getGameTime());
                         }
                         mark(phases, "built", started);
                         if (builtCursor >= builtWork.size()) {
@@ -195,13 +206,21 @@ final class GraphPreparation {
             return Map.copyOf(phases);
         }
 
+        boolean empty() {
+            return empty;
+        }
+
+        private FirstStepsRunner.StageScan requireScan() {
+            return scan.orElseThrow(() -> new IllegalStateException("Скан этапа не выполнен: фаза STAGE пропущена"));
+        }
+
         private GraphSource.Half half() {
             return new GraphSource.Half(
                     level,
                     service,
                     spirits,
                     stock,
-                    scan,
+                    requireScan(),
                     Objects.requireNonNull(around, "Окружение графа не посчитано: фаза AROUND пропущена"),
                     Objects.requireNonNull(state, "Вход графа не собран: фаза STATE пропущена"),
                     Objects.requireNonNull(plan, "План графа не построен: фаза PLAN пропущена"),
