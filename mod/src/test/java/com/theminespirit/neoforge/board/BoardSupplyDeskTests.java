@@ -44,6 +44,12 @@ class BoardSupplyDeskTests {
                 "Фазы stock разделены замерами: иначе следующий холодный старт снова покажет только общие "
                         + "2519 мс без виновного участка. При смене gateCenters_StockScan_DoesNotBuildWalkableComponent "
                         + "проверь StockReader.collect и PerfReport.");
+        assertTrue(
+                reader.contains("ContainerAccess.allowed(level.getBlockState")
+                        && !reader.contains("ContainerAccess.allowedBlocks()"),
+                "Скан проверяет только найденный блок: иначе построение полного набора реестра снова "
+                        + "займёт 1841 мс в холодном тике. При смене gateCenters_StockScan_DoesNotBuildWalkableComponent "
+                        + "проверь StockReader.blocks и ContainerAccess.allowed.");
         String report = Files.readString(Path.of("mod/src/main/java/com/theminespirit/neoforge/board/PerfReport.java"));
         assertTrue(
                 report.contains("if (lines.isEmpty())") && !report.contains("boolean first"),

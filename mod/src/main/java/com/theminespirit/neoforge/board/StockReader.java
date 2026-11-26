@@ -32,7 +32,6 @@ import net.minecraft.world.item.PickaxeItem;
 import net.minecraft.world.item.alchemy.PotionContents;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import org.slf4j.Logger;
 
@@ -164,7 +163,6 @@ public final class StockReader {
     private record Scan(List<BlockCoord> containers, int blockReads) {}
 
     private static StockScan.Blocks blocks(ServerLevel level) {
-        Set<Block> allowed = ContainerAccess.allowedBlocks();
         return new StockScan.Blocks() {
             @Override
             public boolean isLoaded(BlockCoord pos) {
@@ -173,8 +171,7 @@ public final class StockReader {
 
             @Override
             public boolean isContainer(BlockCoord pos) {
-                return allowed.contains(level.getBlockState(new BlockPos(pos.x(), pos.y(), pos.z()))
-                        .getBlock());
+                return ContainerAccess.allowed(level.getBlockState(new BlockPos(pos.x(), pos.y(), pos.z())));
             }
         };
     }
