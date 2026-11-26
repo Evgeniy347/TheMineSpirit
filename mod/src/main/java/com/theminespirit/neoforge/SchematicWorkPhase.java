@@ -46,12 +46,14 @@ final class SchematicWorkPhase {
             return host.report.fail("не удалось выйти из ямы: " + host.pit.escapeFailure());
         }
         if (SchematicGround.tilled(host.site.schematic())
-                && !host.approach.isActive()
-                && host.feet().y() < host.site.origin().y()) {
+                && host.feet().y() < host.site.origin().y()
+                && (host.approachStand == null
+                        || host.approachStand.y() < host.site.origin().y())) {
             BlockCoord top = new BlockCoord(
                     host.feet().x(), host.site.origin().y(), host.feet().z());
             BlockCoord surface = StandSearch.nearest(top, host.site::standable);
             if (surface != null) {
+                host.approach.cancel();
                 host.beginApproach(surface);
                 return ScriptStatus.RUNNING;
             }

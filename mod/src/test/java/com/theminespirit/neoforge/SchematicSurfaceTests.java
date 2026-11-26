@@ -15,18 +15,19 @@ class SchematicSurfaceTests {
         String compact = source.replaceAll("\\s+", "");
         int guard = compact.indexOf("SchematicGround.tilled(host.site.schematic())");
         int nearest = compact.indexOf("StandSearch.nearest(top,host.site::standable)", guard);
+        int cancel = compact.indexOf("host.approach.cancel();", guard);
         int approach = compact.indexOf("host.beginApproach(surface)", guard);
         int planning = compact.indexOf("host.ticks++;", guard);
 
         assertTrue(
-                guard >= 0 && nearest > guard && approach > nearest && planning > approach,
+                guard >= 0 && nearest > guard && cancel > nearest && approach > cancel && planning > approach,
                 "Пашня под землёй сначала возвращает духа на поверхность: иначе стройка снова начинается "
                         + "внутри farmland и не доходит до края. При смене tick_TilledSchemeBelowSurface_ReturnsBeforePlanning "
                         + "проверь SchematicWorkPhase.tick и живой wheat_field.");
         assertTrue(
-                compact.contains("!host.approach.isActive()&&host.feet().y()<host.site.origin().y()"),
-                "Уже начатый подход к поверхности не перезапускается каждый тик: иначе дух никогда не "
-                        + "сдвинется с места. При смене tick_TilledSchemeBelowSurface_ReturnsBeforePlanning "
-                        + "проверь защиту approach.isActive.");
+                compact.contains("host.approachStand==null||host.approachStand.y()<host.site.origin().y()"),
+                "Подход к подземной стоянке отменяется, а подход к поверхности сохраняется: иначе старый "
+                        + "маршрут снова уводит духа под грядку. При смене "
+                        + "tick_TilledSchemeBelowSurface_ReturnsBeforePlanning проверь approachStand.");
     }
 }
