@@ -48,6 +48,21 @@ class GraphWhyTests {
     }
 
     @Test
+    void building_EmptyActualBillWithoutStartStock_NamesStaticShare() {
+        GraphState state = new GraphState(
+                Map.of(), 1, Map.of(), Map.of(), Map.of("wheat_field", Map.of()), 50, Set.of(), Set.of());
+
+        String why = GraphWhy.building(GRAPH, state, "wheat_field");
+
+        assertTrue(
+                why.contains("стартовый набор материалов 0% < 25%"),
+                "Пустая фактическая смета не скрывает отдельный стартовый порог графа: иначе обязательное поле "
+                        + "снова блокируется сообщением «граф не назвал причину». Получено: " + why
+                        + " При смене building_EmptyActualBillWithoutStartStock_NamesStaticShare проверь GraphTaskBuilder "
+                        + "и живой wheat_field.");
+    }
+
+    @Test
     void building_UnknownId_SaysNotInGraph() {
         assertEquals(
                 "постройки ghost нет в графе",

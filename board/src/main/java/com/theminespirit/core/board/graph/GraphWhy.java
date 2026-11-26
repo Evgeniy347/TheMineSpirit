@@ -30,6 +30,11 @@ public final class GraphWhy {
             reasons.add(
                     "материалов " + Math.round(share * 100) + "% < " + Math.round(graph.buildStartShare() * 100) + "%");
         }
+        double startShare = GraphLack.share(graph, state, building.materials());
+        if (startShare < graph.buildStartShare()) {
+            reasons.add("стартовый набор материалов " + Math.round(startShare * 100) + "% < "
+                    + Math.round(graph.buildStartShare() * 100) + "%");
+        }
         return reasons.isEmpty() ? "граф не назвал причину" : String.join(", ", reasons);
     }
 }
