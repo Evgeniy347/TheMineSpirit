@@ -9,31 +9,48 @@ import org.junit.jupiter.api.Test;
 
 class SchematicSurfaceTests {
     @Test
-    void tick_TilledSchemeBelowSurface_ReturnsBeforePlanning() throws IOException {
+    void tick_BelowSurface_DelegatesBeforePlanning() throws IOException {
         String source =
                 Files.readString(Path.of("mod/src/main/java/com/theminespirit/neoforge/SchematicWorkPhase.java"));
         String compact = source.replaceAll("\\s+", "");
-        int guard = compact.indexOf("SchematicGround.tilled(host.site.schematic())");
-        int nearest = compact.indexOf("StandSearch.nearest(", guard);
-        int cancel = compact.indexOf("host.approach.cancel();", guard);
-        int approach = compact.indexOf("host.beginApproach(surface)", guard);
-        int planning = compact.indexOf("host.ticks++;", guard);
+        int recovery = compact.indexOf("Optional<ScriptStatus>recovered=recovery.tick();");
+        int returned = compact.indexOf("returnrecovered.orElseThrow();", recovery);
+        int planning = compact.indexOf("host.ticks++;", recovery);
 
         assertTrue(
-                guard >= 0 && nearest > guard && cancel > nearest && approach > cancel && planning > approach,
-                "Пашня под землёй сначала возвращает духа на поверхность: иначе стройка снова начинается "
-                        + "внутри farmland и не доходит до края. При смене tick_TilledSchemeBelowSurface_ReturnsBeforePlanning "
+                recovery >= 0 && returned > recovery && planning > returned,
+                "Пока дух ниже пашни, основной автомат отдаёт тик восстановлению поверхности: иначе стройка "
+                        + "снова начинается внутри farmland. При смене tick_BelowSurface_DelegatesBeforePlanning "
                         + "проверь SchematicWorkPhase.tick и живой wheat_field.");
+    }
+
+    @Test
+    void recovery_ActiveSurfaceApproach_TicksInsteadOfRestarting() throws IOException {
+        String source =
+                Files.readString(Path.of("mod/src/main/java/com/theminespirit/neoforge/SchematicSurfaceRecovery.java"));
+        String compact = source.replaceAll("\\s+", "");
+
         assertTrue(
-                compact.contains("host.approachStand==null||host.approachStand.y()<host.site.origin().y()"),
-                "Подход к подземной стоянке отменяется, а подход к поверхности сохраняется: иначе старый "
-                        + "маршрут снова уводит духа под грядку. При смене "
-                        + "tick_TilledSchemeBelowSurface_ReturnsBeforePlanning проверь approachStand.");
+                compact.contains("if(stand==null||!host.approach.isActive())")
+                        && compact.contains("returnOptional.of(approachTick())")
+                        && compact.contains("caseARRIVED->"),
+                "Начатый выход к поверхности продолжает тикать, а не перезапускается каждый тик: иначе дух "
+                        + "никогда не выйдет из ямы. При смене recovery_ActiveSurfaceApproach_TicksInsteadOfRestarting "
+                        + "проверь SchematicSurfaceRecovery.approachTick.");
+    }
+
+    @Test
+    void recovery_NoSafeSurface_FailsWithClearReason() throws IOException {
+        String source =
+                Files.readString(Path.of("mod/src/main/java/com/theminespirit/neoforge/SchematicSurfaceRecovery.java"));
+        String compact = source.replaceAll("\\s+", "");
+
         assertTrue(
                 compact.contains("cell.y()>=host.site.origin().y()&&host.site.standable(cell)")
-                        && compact.contains("surface.y()>=host.site.origin().y()&&host.site.standable(surface)"),
-                "StandSearch не может вернуть клетку ниже пашни или центр без опоры: иначе дух снова "
-                        + "оказывается на y=63 и проваливает схему. При смене "
-                        + "tick_TilledSchemeBelowSurface_ReturnsBeforePlanning проверь фильтр поверхности.");
+                        && compact.contains("surface.y()<host.site.origin().y()||!host.site.standable(surface)")
+                        && compact.contains("нетбезопаснойстоянкинаповерхностипашни"),
+                "Нет безопасной поверхности — понятный провал, а не расхождение со схемой: иначе оператор "
+                        + "снова видит 31 недостижимую клетку без причины. При смене "
+                        + "recovery_NoSafeSurface_FailsWithClearReason проверь фильтр StandSearch и живое поле.");
     }
 }
