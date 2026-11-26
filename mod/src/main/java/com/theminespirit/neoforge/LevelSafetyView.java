@@ -33,6 +33,9 @@ public final class LevelSafetyView implements SafetyView {
         Objects.requireNonNull(coord, "Координата не может быть null: неизвестно, какую клетку читать");
         reads++;
         BlockPos pos = new BlockPos(coord.x(), coord.y(), coord.z());
+        if (!level.hasChunk(pos.getX() >> 4, pos.getZ() >> 4)) {
+            return Cell.SOLID;
+        }
         return toCell(level.getBlockState(pos), pos);
     }
 

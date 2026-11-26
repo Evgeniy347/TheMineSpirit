@@ -30,6 +30,9 @@ public final class NetworkLevelView implements SafetyView {
     @Override
     public Cell cellAt(BlockCoord coord) {
         BlockPos pos = new BlockPos(coord.x(), coord.y(), coord.z());
+        if (!level.hasChunk(pos.getX() >> 4, pos.getZ() >> 4)) {
+            return Cell.SOLID;
+        }
         BlockState state = level.getBlockState(pos);
         Passage.Cell passage = passage(coord, state);
         if (passage != null && passage.routePassable()) {
