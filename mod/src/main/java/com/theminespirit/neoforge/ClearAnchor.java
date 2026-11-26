@@ -15,6 +15,14 @@ final class ClearAnchor {
         }
     }
 
+    static BlockCoord column(BlockCoord coord) {
+        return new BlockCoord(coord.x(), 0, coord.z());
+    }
+
+    static boolean sameColumn(BlockCoord coord, Stand stand) {
+        return coord.x() == stand.x() && coord.z() == stand.z();
+    }
+
     private ClearAnchor() {}
 
     static @Nullable Stand best(

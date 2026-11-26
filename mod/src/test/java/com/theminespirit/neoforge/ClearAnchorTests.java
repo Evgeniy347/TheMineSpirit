@@ -1,7 +1,9 @@
 package com.theminespirit.neoforge;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.List;
@@ -116,6 +118,27 @@ class ClearAnchorTests {
                 "Спуск в глубокую яму ради охвата не выбирается: иначе дух бесконечно ищет путь к точке на 19 "
                         + "ниже (живой лог 22.11, -168,49,-493) и клетки не снимаются вовсе, поэтому берём стоянку "
                         + "уровня духа. При смене best_StandDeepBelowSpirit_IsNotChosen проверь порог BELOW");
+    }
+
+    @Test
+    void column_DifferentHeights_IdentifiesRejectedScaffold() {
+        BlockCoord rejected = ClearAnchor.column(new BlockCoord(-120, 68, -460));
+
+        assertEquals(
+                new BlockCoord(-120, 0, -460),
+                rejected,
+                "Колонка хранит только x и z: иначе отвергнутый столб ниже духа считается новой стоянкой и цикл "
+                        + "подъёма повторяется. При смене column_DifferentHeights_IdentifiesRejectedScaffold "
+                        + "проверь живую клетку (-120,68,-460).");
+        assertTrue(
+                ClearAnchor.sameColumn(rejected, new ClearAnchor.Stand(-120, 67, -460)),
+                "Стойка в отвергнутой колонне не меняет её номер: иначе clear_area снова строит бесполезный "
+                        + "столб. При смене column_DifferentHeights_IdentifiesRejectedScaffold проверь sameColumn.");
+        assertFalse(
+                ClearAnchor.sameColumn(rejected, new ClearAnchor.Stand(-119, 67, -460)),
+                "Соседняя колонна остаётся доступной: иначе запрет одного подъёма оставляет соседние клетки "
+                        + "нерасчищенными. При смене column_DifferentHeights_IdentifiesRejectedScaffold "
+                        + "проверь сравнение обеих горизонтальных координат.");
     }
 
     @Test

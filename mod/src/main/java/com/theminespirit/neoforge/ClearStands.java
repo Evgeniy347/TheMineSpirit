@@ -24,9 +24,12 @@ final class ClearStands {
 
     private ClearStands() {}
 
-    static ClearAnchor.@Nullable Stand best(ClearAreaSession session, Set<BlockCoord> tried, List<BlockCoord> targets) {
+    static ClearAnchor.@Nullable Stand best(
+            ClearAreaSession session, Set<BlockCoord> tried, List<BlockCoord> targets, Set<BlockCoord> blockedColumns) {
         BlockPos feet = session.spirit.blockPosition();
-        List<ClearAnchor.Stand> stands = stands(session);
+        List<ClearAnchor.Stand> stands = stands(session).stream()
+                .filter(stand -> blockedColumns.stream().noneMatch(column -> ClearAnchor.sameColumn(column, stand)))
+                .toList();
         ClearAnchor.Stand chosen = ClearAnchor.best(
                 targets, stands, new BlockCoord(feet.getX(), feet.getY(), feet.getZ()), horizontalReach(), tried);
         if (chosen == null) {

@@ -23,6 +23,7 @@ final class ClearSweepRun {
     private final ClearAreaSession session;
     private final ClearBreaks breaks;
     private final Set<BlockCoord> triedAnchors = new HashSet<>();
+    private final Set<BlockCoord> triedColumns = new HashSet<>();
     private ClearAnchor.@Nullable Stand anchor;
     private final ClearSweepScaffold scaffold;
     private final SweepUnload unload;
@@ -109,10 +110,12 @@ final class ClearSweepRun {
             return;
         }
         if (onPillar) {
-            if (scaffold.canRise() && riseAllowed()) {
+            BlockCoord column = ClearAnchor.column(feet());
+            if (!triedColumns.contains(column) && scaffold.canRise() && riseAllowed()) {
                 scaffold.startStep();
                 return;
             }
+            triedColumns.add(column);
             triedAnchors.add(anchor == null ? feet() : anchor.coord());
             scaffold.startDescent();
             if (session.state != ClearAreaSession.State.DESCEND) {
@@ -123,7 +126,7 @@ final class ClearSweepRun {
         if (!session.spirit.onGround()) {
             return;
         }
-        ClearAnchor.Stand chosen = ClearStands.best(session, triedAnchors, highest);
+        ClearAnchor.Stand chosen = ClearStands.best(session, triedAnchors, highest, triedColumns);
         anchor = chosen;
         if (chosen == null) {
             session.unreachable += session.remaining.size();
@@ -133,10 +136,12 @@ final class ClearSweepRun {
             return;
         }
         if (chosen.x() == from.x() && chosen.y() == from.y() && chosen.z() == from.z()) {
-            if (scaffold.canRise() && riseAllowed()) {
+            BlockCoord column = ClearAnchor.column(from);
+            if (!triedColumns.contains(column) && scaffold.canRise() && riseAllowed()) {
                 scaffold.startStep();
                 return;
             }
+            triedColumns.add(column);
             triedAnchors.add(chosen.coord());
             anchor = null;
             session.state = ClearAreaSession.State.PICK;
@@ -195,6 +200,7 @@ final class ClearSweepRun {
         if (breaks.tick() == ClearBreaks.Result.BROKEN) {
             anchor = null;
             triedAnchors.clear();
+            triedColumns.clear();
             unload.reset();
         }
     }
