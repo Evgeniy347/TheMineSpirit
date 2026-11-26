@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
@@ -17,16 +18,23 @@ class LevelSafetyViewTests {
                 .replaceAll("\\s+", "");
 
         assertTrue(
-                safety.contains("if(!level.hasChunk(pos.getX()>>4,pos.getZ()>>4)){returnCell.SOLID;}")
-                        && safety.indexOf("hasChunk") < safety.indexOf("getBlockState"),
-                "Незагруженный чанк помечается непроходимым до getBlockState: иначе HomeStand снова "
-                        + "синхронно грузит мир и стартовый stock занимает секунды. При смене "
-                        + "cellAt_UnloadedChunk_DoesNotLoadWorld проверь JFR startup4177 и HomeStand.");
+                safety.contains("getChunkNow(pos.getX()>>4,pos.getZ()>>4)")
+                        && safety.contains("chunk.getBlockState(pos)"),
+                "Незагруженный чанк помечается непроходимым до чтения BlockState: иначе HomeStand снова "
+                        + "синхронно грузит мир и холодный поиск стоянки занимает секунды. При смене "
+                        + "cellAt_UnloadedChunk_DoesNotLoadWorld проверь LevelSafetyView, HomeStand и "
+                        + "board.issue.home.");
         assertTrue(
-                network.contains("if(!level.hasChunk(pos.getX()>>4,pos.getZ()>>4)){returnCell.SOLID;}")
-                        && network.indexOf("hasChunk") < network.indexOf("getBlockState"),
-                "Сетевой обход тоже не грузит чанки: иначе поиск компонента стоянки повторит блокировку "
-                        + "серверного потока. При смене cellAt_UnloadedChunk_DoesNotLoadWorld проверь "
+                network.contains("getChunkNow(pos.getX()>>4,pos.getZ()>>4)")
+                        && network.contains("chunk.getBlockState(pos)"),
+                "Сетевой обход тоже читает только открытый чанк: иначе поиск компонента стоянки повторит "
+                        + "блокировку серверного потока. При смене cellAt_UnloadedChunk_DoesNotLoadWorld проверь "
                         + "NetworkLevelView и RetreatPath.walkable.");
+        assertFalse(
+                safety.contains("level.getBlockState(pos)") || network.contains("level.getBlockState(pos)"),
+                "Горячие навигационные виды не должны обращаться к ServerLevel.getBlockState: иначе "
+                        + "частично загруженный чанк снова останавливает серверный тик. При смене "
+                        + "cellAt_UnloadedChunk_DoesNotLoadWorld проверь NetworkLevelView.tallBelow и "
+                        + "LevelSafetyView.cellAt.");
     }
 }

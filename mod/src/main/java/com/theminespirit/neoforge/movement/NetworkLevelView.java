@@ -12,6 +12,7 @@ import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.FenceGateBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.chunk.LevelChunk;
 import org.jspecify.annotations.Nullable;
 
 public final class NetworkLevelView implements SafetyView {
@@ -30,16 +31,17 @@ public final class NetworkLevelView implements SafetyView {
     @Override
     public Cell cellAt(BlockCoord coord) {
         BlockPos pos = new BlockPos(coord.x(), coord.y(), coord.z());
-        if (!level.hasChunk(pos.getX() >> 4, pos.getZ() >> 4)) {
+        LevelChunk chunk = level.getChunkSource().getChunkNow(pos.getX() >> 4, pos.getZ() >> 4);
+        if (chunk == null) {
             return Cell.SOLID;
         }
-        BlockState state = level.getBlockState(pos);
+        BlockState state = chunk.getBlockState(pos);
         Passage.Cell passage = passage(coord, state);
         if (passage != null && passage.routePassable()) {
             return Cell.PASSABLE;
         }
         Cell cell = cells.cellAt(coord);
-        if (cell == Cell.PASSABLE && tallBelow(pos)) {
+        if (cell == Cell.PASSABLE && tallBelow(pos, chunk)) {
             return Cell.SOLID;
         }
         if (cell == Cell.SOLID && state.getCollisionShape(level, pos).max(Direction.Axis.Y) <= LOW_BLOCK) {
@@ -61,8 +63,8 @@ public final class NetworkLevelView implements SafetyView {
         return null;
     }
 
-    private boolean tallBelow(BlockPos pos) {
+    private boolean tallBelow(BlockPos pos, LevelChunk chunk) {
         BlockPos below = pos.below();
-        return level.getBlockState(below).getCollisionShape(level, below).max(Direction.Axis.Y) > FULL_BLOCK;
+        return chunk.getBlockState(below).getCollisionShape(level, below).max(Direction.Axis.Y) > FULL_BLOCK;
     }
 }

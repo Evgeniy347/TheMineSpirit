@@ -18,6 +18,7 @@ import net.minecraft.world.level.block.PowderSnowBlock;
 import net.minecraft.world.level.block.SweetBerryBushBlock;
 import net.minecraft.world.level.block.WebBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.material.FluidState;
 
 public final class LevelSafetyView implements SafetyView {
@@ -33,10 +34,11 @@ public final class LevelSafetyView implements SafetyView {
         Objects.requireNonNull(coord, "Координата не может быть null: неизвестно, какую клетку читать");
         reads++;
         BlockPos pos = new BlockPos(coord.x(), coord.y(), coord.z());
-        if (!level.hasChunk(pos.getX() >> 4, pos.getZ() >> 4)) {
+        LevelChunk chunk = level.getChunkSource().getChunkNow(pos.getX() >> 4, pos.getZ() >> 4);
+        if (chunk == null) {
             return Cell.SOLID;
         }
-        return toCell(level.getBlockState(pos), pos);
+        return toCell(chunk.getBlockState(pos), pos);
     }
 
     public int reads() {
