@@ -62,8 +62,12 @@ final class More2Post {
     }
 
     private static boolean sowFood(GraphPost post, GraphTickets.Ticket ticket) {
-        BlockCoord at = home(post);
+        BlockCoord at = foodPoint(post.scan);
         return MoreActions.script(post, ticket, BoardCase.ACTIVITY_FARM, at, MorePlans.plantCrop(at, "wheat"));
+    }
+
+    static BlockCoord foodPoint(FirstStepsRunner.StageScan scan) {
+        return FarmInputs.field(scan.stage(), scan.home());
     }
 
     private static boolean breedFood(GraphPost post, GraphTickets.Ticket ticket) {
