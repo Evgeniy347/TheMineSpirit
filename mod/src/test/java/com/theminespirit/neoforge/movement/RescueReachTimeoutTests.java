@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.movement;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -18,6 +19,12 @@ class RescueReachTimeoutTests {
     void cache_SearchTimeout_DoesNotBecomeNegativeVerdict() {
         RescueReach.Cache cache = RescueReach.cache();
         cache.request(FLAT, cell -> false, HELPER, FROM, TARGET, 0);
+        assertEquals(
+                200,
+                cache.pendingTicks(HELPER, FROM, TARGET, 200),
+                "Возраст незавершённого поиска доступен выдаче: иначе временная выдача не сможет "
+                        + "отличить медленный путь от зависшего. При смене cache_SearchTimeout_DoesNotBecomeNegativeVerdict "
+                        + "проверь RescueReach.Cache.pendingTicks.");
 
         cache.advance(1200, 1L);
 

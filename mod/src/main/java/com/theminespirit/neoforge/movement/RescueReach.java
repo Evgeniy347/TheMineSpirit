@@ -69,6 +69,12 @@ public final class RescueReach {
             return entry == null ? null : entry.verdict();
         }
 
+        public long pendingTicks(UUID helper, BlockCoord from, BlockCoord target, long now) {
+            Objects.requireNonNull(helper, "Помощник не может быть null: кэш адресный");
+            Probe probe = pending.get(new Key(helper, from, target));
+            return probe == null ? -1 : Math.max(0, now - probe.started);
+        }
+
         public void request(
                 NavWorld world,
                 Predicate<BlockCoord> water,
