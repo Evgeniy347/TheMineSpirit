@@ -123,22 +123,6 @@ class BoardTuningTests {
     }
 
     @Test
-    void stockBlockBudget_Is_BoundedSample() {
-        assertEquals(
-                512,
-                BoardTuning.STOCK_BLOCK_BUDGET,
-                "Снимок запасов читает не больше 512 блоков за пересборку: иначе стартовый обход 4096 блоков "
-                        + "занимал 2461 мс и держал первый тик сервера. Полный радиус теперь проходит "
-                        + "возобновляемыми срезами StockScan.scan. При смене stockBlockBudget_Is_BoundedSample "
-                        + "проверь StockReader.scan, StockScanTests и TickWatch после запуска.");
-        assertEquals(
-                512,
-                BoardTuning.stockBlockBudget(),
-                "Бюджет блоков читается из живой таблицы: иначе /reload не изменил бы предел обхода"
-                        + " При смене stockBlockBudget_Is_BoundedSample проверь это утверждение.");
-    }
-
-    @Test
     void failBackoff_Is_TenSeconds() {
         assertEquals(
                 200,
@@ -250,7 +234,6 @@ class BoardTuningTests {
                 (long) BoardTuning.CRATER_BLOCKS_ESTIMATE_RADIUS,
                 (long) BoardTuning.MAX_PRIORITY,
                 (long) BoardTuning.STOCK_READ_BUDGET,
-                (long) BoardTuning.STOCK_BLOCK_BUDGET,
                 BoardTuning.FAIL_BACKOFF_TICKS,
                 BoardTuning.CASE_FAIL_PAUSE_TICKS,
                 BoardTuning.CASE_FAIL_MULTIPLIER,

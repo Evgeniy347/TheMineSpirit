@@ -2,9 +2,7 @@ package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.base.NamespacedId;
-import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.board.StockParts;
-import com.theminespirit.core.board.StockScan;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.inventory.ContainerSnapshot;
 import com.theminespirit.core.inventory.Stack;
@@ -13,7 +11,6 @@ import com.theminespirit.core.mining.api.LeftOreRules;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.ColumnMask;
 import com.theminespirit.neoforge.SettlementChestStore;
-import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.inventory.ContainerAccess;
 import com.theminespirit.neoforge.inventory.StackMapper;
@@ -41,26 +38,16 @@ public final class StockReader {
     private static final String SPLASH_PREFIX = "splash_potion_";
 
     private final int containerBudget;
-    private final int blockBudget;
-    private final Set<BlockCoord> discovered = new LinkedHashSet<>();
-    private List<BlockCoord> scanCenters = List.of();
-    private long scanNext;
-    private boolean scanning;
 
-    public StockReader(int containerBudget, int blockBudget) {
+    public StockReader(int containerBudget) {
         if (containerBudget <= 0) {
             throw new IllegalArgumentException("containerBudget равен " + containerBudget
                     + " и не положителен: снимок без бюджета читает склад целиком за пересборку");
         }
-        if (blockBudget <= 0) {
-            throw new IllegalArgumentException("blockBudget равен " + blockBudget
-                    + " и не положителен: снимок без бюджета обходит мир целиком за пересборку");
-        }
         this.containerBudget = containerBudget;
-        this.blockBudget = blockBudget;
     }
 
-    public Snapshot collect(ServerLevel level, List<SpiritEntity> spirits, List<BlockCoord> centers) {
+    public Snapshot collect(ServerLevel level, List<SpiritEntity> spirits) {
         long phase = System.nanoTime();
         Map<String, Integer> chests = new HashMap<>();
         Map<String, Integer> carried = new HashMap<>();
@@ -74,10 +61,7 @@ public final class StockReader {
         }
         Perf.record("board.stock.carried", System.nanoTime() - phase);
         phase = System.nanoTime();
-        Scan found = scan(level, centers);
-        Perf.record("board.stock.scan", System.nanoTime() - phase);
-        phase = System.nanoTime();
-        List<BlockCoord> positions = StockScan.knownFirst(ChestSnapshots.registered(level), found.containers());
+        List<BlockCoord> positions = ChestSnapshots.positions(level);
         Perf.record("board.stock.known", System.nanoTime() - phase);
         phase = System.nanoTime();
         int reads = 0;
@@ -108,14 +92,13 @@ public final class StockReader {
                     containerBudget);
         }
         Perf.record("board.stock.containers", System.nanoTime() - phase);
-        return new Snapshot(new StockParts(new StockView(chests), new StockView(carried)), found.blockReads(), reads);
+        return new Snapshot(new StockParts(new StockView(chests), new StockView(carried)), reads);
     }
 
-    public record Snapshot(StockParts parts, int blockReads, int containers) {
+    public record Snapshot(StockParts parts, int containers) {
         public Snapshot {
-            if (blockReads < 0 || containers < 0) {
-                throw new IllegalArgumentException("Счётчики снимка не бывают отрицательными: чтений " + blockReads
-                        + ", контейнеров " + containers);
+            if (containers < 0) {
+                throw new IllegalArgumentException("Контейнеров в снимке " + containers + ": счётчик не отрицателен");
             }
         }
     }
@@ -133,47 +116,6 @@ public final class StockReader {
         }
         positions.addAll(ChestSnapshots.inArea(level, area));
         return ChestSnapshots.read(level, List.copyOf(positions));
-    }
-
-    private Scan scan(ServerLevel level, List<BlockCoord> centers) {
-        if (!scanning || !scanCenters.equals(centers)) {
-            scanCenters = List.copyOf(centers);
-            scanNext = 0;
-            scanning = true;
-            discovered.clear();
-        }
-        StockScan.Slice slice = StockScan.scan(
-                centers,
-                SpiritConfig.storageSearchRadius(),
-                BoardConfig.current().facts().stockScanHeight(),
-                scanNext,
-                blockBudget,
-                blocks(level));
-        discovered.addAll(slice.containers());
-        scanNext = slice.nextIndex();
-        if (!slice.more()) {
-            scanning = false;
-            List<BlockCoord> found = List.copyOf(discovered);
-            discovered.clear();
-            return new Scan(found, slice.blockReads());
-        }
-        return new Scan(List.copyOf(discovered), slice.blockReads());
-    }
-
-    private record Scan(List<BlockCoord> containers, int blockReads) {}
-
-    private static StockScan.Blocks blocks(ServerLevel level) {
-        return new StockScan.Blocks() {
-            @Override
-            public boolean isLoaded(BlockCoord pos) {
-                return level.isLoaded(new BlockPos(pos.x(), pos.y(), pos.z()));
-            }
-
-            @Override
-            public boolean isContainer(BlockCoord pos) {
-                return ContainerAccess.allowed(level.getBlockState(new BlockPos(pos.x(), pos.y(), pos.z())));
-            }
-        };
     }
 
     private static void add(Map<String, Integer> available, ItemStack stack) {

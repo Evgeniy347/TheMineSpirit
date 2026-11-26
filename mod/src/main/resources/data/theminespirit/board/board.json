@@ -104,7 +104,6 @@
     "maxPending": 64,
     "maxActivePerSpirit": 1,
     "stockReadBudget": 8,
-    "stockBlockBudget": 512,
     "failBackoffTicks": 200,
     "starveTicks": 12000,
     "caseFailPauseTicks": 1200,

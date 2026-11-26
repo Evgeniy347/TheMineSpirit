@@ -23,8 +23,6 @@ public final class BoardTuning {
 
     public static final int STOCK_READ_BUDGET = 8;
 
-    public static final int STOCK_BLOCK_BUDGET = 512;
-
     public static final long FAIL_BACKOFF_TICKS = 200;
     public static final long STARVE_TICKS = 12000;
 
@@ -68,7 +66,6 @@ public final class BoardTuning {
             "maxRepairPending",
             "maxActivePerSpirit",
             "stockReadBudget",
-            "stockBlockBudget",
             "failBackoffTicks",
             "starveTicks",
             "caseFailPauseTicks",
@@ -133,10 +130,6 @@ public final class BoardTuning {
 
     public static int stockReadBudget() {
         return (int) interval("stockReadBudget", STOCK_READ_BUDGET);
-    }
-
-    public static int stockBlockBudget() {
-        return (int) interval("stockBlockBudget", STOCK_BLOCK_BUDGET);
     }
 
     public static long starveTicks() {

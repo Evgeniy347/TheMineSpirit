@@ -15,11 +15,9 @@ import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.neoforge.SpiritEntity;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import net.minecraft.server.level.ServerLevel;
 
 final class BoardSupplyDesk {
@@ -45,7 +43,7 @@ final class BoardSupplyDesk {
     }
 
     StockParts refresh(ServerLevel level, List<SpiritEntity> spirits) {
-        StockReader.Snapshot snapshot = reader.collect(level, spirits, gateCenters(level, spirits));
+        StockReader.Snapshot snapshot = reader.collect(level, spirits);
         stock = snapshot.parts().total();
         return snapshot.parts();
     }
@@ -78,29 +76,6 @@ final class BoardSupplyDesk {
             SupplyTickets.issue(level, service, targets, center, request, BoardCase.SUPPLY_SITE, now);
         }
         shortages = SupplyGate.shortages(decision);
-    }
-
-    private List<BlockCoord> gateCenters(ServerLevel level, List<SpiritEntity> spirits) {
-        List<BlockCoord> centers = new ArrayList<>();
-        Optional<BlockCoord> home = HomePoint.center(level, spirits);
-        for (BoardTicket ticket : board.tickets()) {
-            BoardStatus status = board.statusOf(ticket.id()).orElse(null);
-            if (status != BoardStatus.PENDING && status != BoardStatus.WAITING_RESOURCES) {
-                continue;
-            }
-            if (ticket.requiredItems().isEmpty()) {
-                continue;
-            }
-            TicketTarget target = targets.get(ticket.id());
-            BlockCoord center = target != null ? target.target() : home.orElse(null);
-            if (center != null && !centers.contains(center)) {
-                centers.add(center);
-            }
-        }
-        if (centers.isEmpty() && home.isPresent()) {
-            centers.add(home.orElseThrow());
-        }
-        return centers;
     }
 
     private boolean hasActiveSupply(String item) {

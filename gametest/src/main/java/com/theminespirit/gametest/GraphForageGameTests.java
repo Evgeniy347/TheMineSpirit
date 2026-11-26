@@ -134,7 +134,7 @@ public final class GraphForageGameTests {
         return new BoardService(
                 board,
                 new HerdCycles(board),
-                new StockReader(BoardTuning.stockReadBudget(), BoardTuning.stockBlockBudget()),
+                new StockReader(BoardTuning.stockReadBudget()),
                 BoardSources.create(),
                 new JournalService(journalPath));
     }

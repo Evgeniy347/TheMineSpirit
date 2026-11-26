@@ -89,7 +89,7 @@ public final class BoardService {
         return new BoardService(
                 board,
                 new HerdCycles(board),
-                new StockReader(BoardTuning.stockReadBudget(), BoardTuning.stockBlockBudget()),
+                new StockReader(BoardTuning.stockReadBudget()),
                 BoardSources.create(),
                 journal,
                 BoardStateStore.get(level));
