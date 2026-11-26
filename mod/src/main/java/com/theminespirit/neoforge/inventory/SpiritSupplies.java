@@ -86,11 +86,15 @@ public final class SpiritSupplies implements AcquireSupplies {
             return List.of();
         }
         BlockPos center = spirit.blockPosition();
-        BlockLocator.Search search =
-                BlockLocator.search(spirit.level(), center, radius, ContainerAccess.allowedBlocks());
         List<BlockPos> found = new ArrayList<>();
-        while (!search.done()) {
-            found.addAll(search.step(SLICES_PER_TICK));
+        if (ChestWithdrawal.inside(spirit)) {
+            found.addAll(ChestWithdrawal.positions(spirit));
+        } else {
+            BlockLocator.Search search =
+                    BlockLocator.search(spirit.level(), center, radius, ContainerAccess.allowedBlocks());
+            while (!search.done()) {
+                found.addAll(search.step(SLICES_PER_TICK));
+            }
         }
         found.sort(Comparator.comparingDouble((BlockPos pos) -> pos.distSqr(center))
                 .thenComparing(Comparator.naturalOrder()));
