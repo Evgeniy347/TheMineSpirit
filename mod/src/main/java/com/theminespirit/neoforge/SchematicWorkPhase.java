@@ -1,12 +1,14 @@
 package com.theminespirit.neoforge;
 
 import com.mojang.logging.LogUtils;
+import com.theminespirit.core.board.StandSearch;
 import com.theminespirit.core.building.BuildPhase;
 import com.theminespirit.core.building.BuildPlanner;
 import com.theminespirit.core.building.ReachPlanner;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicActions;
 import com.theminespirit.core.building.SchematicBlocks;
+import com.theminespirit.core.building.SchematicGround;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.observation.BlockCoord;
@@ -42,6 +44,17 @@ final class SchematicWorkPhase {
         }
         if (escaping == ScriptStatus.FAILED) {
             return host.report.fail("не удалось выйти из ямы: " + host.pit.escapeFailure());
+        }
+        if (SchematicGround.tilled(host.site.schematic())
+                && !host.approach.isActive()
+                && host.feet().y() < host.site.origin().y()) {
+            BlockCoord top = new BlockCoord(
+                    host.feet().x(), host.site.origin().y(), host.feet().z());
+            BlockCoord surface = StandSearch.nearest(top, host.site::standable);
+            if (surface != null) {
+                host.beginApproach(surface);
+                return ScriptStatus.RUNNING;
+            }
         }
         host.ticks++;
         if (host.pit.stalled(host.ticks, host.placed, host.cleared, host.trips)) {
