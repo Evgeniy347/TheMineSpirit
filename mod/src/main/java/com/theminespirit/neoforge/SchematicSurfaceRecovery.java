@@ -5,6 +5,7 @@ import com.theminespirit.core.building.SchematicGround;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.Optional;
+import net.minecraft.core.BlockPos;
 import org.jspecify.annotations.Nullable;
 
 final class SchematicSurfaceRecovery {
@@ -32,11 +33,25 @@ final class SchematicSurfaceRecovery {
                 stand = null;
                 return Optional.of(host.report.fail("нет безопасной стоянки на поверхности пашни у " + top));
             }
+            if (surface.x() == host.feet().x() && surface.z() == host.feet().z() && verticalClear(surface)) {
+                DigOutStep.moveTo(host.spirit, new BlockPos(surface.x(), surface.y(), surface.z()));
+                stand = null;
+                return Optional.of(ScriptStatus.RUNNING);
+            }
             stand = surface;
             host.beginApproach(surface);
             return Optional.of(ScriptStatus.RUNNING);
         }
         return Optional.of(approachTick());
+    }
+
+    private boolean verticalClear(BlockCoord surface) {
+        for (int y = host.feet().y() + 1; y <= surface.y(); y++) {
+            if (!DigOutSpace.passable(host.spirit.level(), new BlockPos(surface.x(), y, surface.z()))) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private ScriptStatus approachTick() {

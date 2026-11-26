@@ -40,6 +40,22 @@ class SchematicSurfaceTests {
     }
 
     @Test
+    void recovery_ClearVerticalColumn_LeavesPitWithoutPath() throws IOException {
+        String source =
+                Files.readString(Path.of("mod/src/main/java/com/theminespirit/neoforge/SchematicSurfaceRecovery.java"));
+        String compact = source.replaceAll("\\s+", "");
+
+        assertTrue(
+                compact.contains("verticalClear(surface)")
+                        && compact.contains("DigOutSpace.passable(")
+                        && compact.contains("DigOutStep.moveTo("),
+                "Свободная колонна над ямой позволяет двигать духа к поверхности без поиска пути: иначе "
+                        + "аварийный подход зависает и стройка не начинается. При смене "
+                        + "recovery_ClearVerticalColumn_LeavesPitWithoutPath проверь SchematicSurfaceRecovery "
+                        + "и живой wheat_field.");
+    }
+
+    @Test
     void recovery_NoSafeSurface_FailsWithClearReason() throws IOException {
         String source =
                 Files.readString(Path.of("mod/src/main/java/com/theminespirit/neoforge/SchematicSurfaceRecovery.java"));
