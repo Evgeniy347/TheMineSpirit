@@ -59,6 +59,7 @@ public final class RescueReach {
     public static final class Cache {
         private final Map<Key, Entry> verdicts = new LinkedHashMap<>();
         private final Map<Key, Probe> pending = new LinkedHashMap<>();
+        private final Map<Key, Long> deferred = new LinkedHashMap<>();
         private long generation;
         private int cursor;
 
@@ -71,8 +72,13 @@ public final class RescueReach {
 
         public long pendingTicks(UUID helper, BlockCoord from, BlockCoord target, long now) {
             Objects.requireNonNull(helper, "Помощник не может быть null: кэш адресный");
-            Probe probe = pending.get(new Key(helper, from, target));
-            return probe == null ? -1 : Math.max(0, now - probe.started);
+            Key key = new Key(helper, from, target);
+            Probe probe = pending.get(key);
+            if (probe != null) {
+                return Math.max(0, now - probe.started);
+            }
+            Long deferredAt = deferred.get(key);
+            return deferredAt == null ? -1 : Math.max(0, now - deferredAt);
         }
 
         public void request(
@@ -89,8 +95,10 @@ public final class RescueReach {
                 return;
             }
             if (pending.size() >= MAX_PENDING) {
+                deferred.putIfAbsent(key, now);
                 return;
             }
+            deferred.remove(key);
             pending.put(key, new Probe(key, world, water, now));
         }
 
@@ -122,6 +130,7 @@ public final class RescueReach {
             }
             verdicts.clear();
             pending.clear();
+            deferred.clear();
             generation++;
         }
 
@@ -141,6 +150,7 @@ public final class RescueReach {
 
         private void prune(long now) {
             verdicts.entrySet().removeIf(entry -> now - entry.getValue().at() >= VERDICT_TTL_TICKS);
+            deferred.entrySet().removeIf(entry -> now - entry.getValue() >= PROBE_TTL_TICKS);
         }
 
         private static Verdict verdict(Probe probe, NavResult result) {

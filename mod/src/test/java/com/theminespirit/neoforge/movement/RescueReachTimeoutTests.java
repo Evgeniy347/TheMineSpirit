@@ -46,6 +46,23 @@ class RescueReachTimeoutTests {
                         + "удаление pending без remember.");
     }
 
+    @Test
+    void cache_PendingQueueFull_StillAgesDeferredRequest() {
+        RescueReach.Cache cache = RescueReach.cache();
+        for (int index = 0; index < 16; index++) {
+            cache.request(FLAT, cell -> false, HELPER, FROM, new BlockCoord(index + 1, 64, 0), 0);
+        }
+        BlockCoord deferredTarget = new BlockCoord(100, 64, 0);
+        cache.request(FLAT, cell -> false, HELPER, FROM, deferredTarget, 0);
+
+        assertEquals(
+                200,
+                cache.pendingTicks(HELPER, FROM, deferredTarget, 200),
+                "Запрос сверх лимита тоже получает возраст: иначе 16 поисков навсегда оставят "
+                        + "остальных духов без заданий. При смене cache_PendingQueueFull_StillAgesDeferredRequest "
+                        + "проверь RescueReach.Cache.deferred и NavigationReach.");
+    }
+
     private static final class Flat implements NavWorld {
         @Override
         public boolean available(int x, int z) {
