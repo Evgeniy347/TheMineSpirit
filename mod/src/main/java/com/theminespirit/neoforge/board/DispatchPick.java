@@ -184,7 +184,23 @@ final class DispatchPick {
         List<DispatchRound.Candidate> spirits = new ArrayList<>(candidates.values());
         String why = round.why(ticket, spirits, supply);
         if (reach != null && target != null && spirits.stream().noneMatch(spirit -> reachable(spirit, target))) {
-            return why + "; путь до цели не найден или ещё проверяется";
+            BlockCoord approach = approachTarget(target);
+            StringBuilder paths = new StringBuilder();
+            for (DispatchRound.Candidate spirit : spirits) {
+                if (!paths.isEmpty()) {
+                    paths.append(", ");
+                }
+                paths.append(spirit.name())
+                        .append('=')
+                        .append(reach.verdict(
+                                        spirit.id(),
+                                        at(Objects.requireNonNull(
+                                                entities.get(spirit.id()), "Кандидат выдачи потерял сущность духа")),
+                                        approach)
+                                .map(DispatchReach.Verdict::why)
+                                .orElse("проверяется"));
+            }
+            return why + "; путь до цели " + approach + " не найден: " + paths;
         }
         return why;
     }
