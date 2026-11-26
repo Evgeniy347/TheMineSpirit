@@ -98,12 +98,13 @@ final class BuildPitWatch {
         }
     }
 
-    boolean stalled(long ticks, int placed, int cleared, int trips) {
-        long now = placed * 1_000_003L + cleared * 1_001L + trips;
+    boolean stalled(long ticks, int placed, int cleared, int trips, int basePrepared) {
+        long now = placed * 1_000_003L + cleared * 1_001L + trips + basePrepared * 1_009L;
         return watch.stalled(ticks, now);
     }
 
-    void stalledReport(BlockCoord feet, int placed, int cleared, int trips, Map<BlockCoord, String> blocked) {
+    void stalledReport(
+            BlockCoord feet, int placed, int cleared, int trips, int basePrepared, Map<BlockCoord, String> blocked) {
         List<String> first = new ArrayList<>(SAMPLE);
         for (Schematic.PlacedEntry entry : site.missing()) {
             if (first.size() == SAMPLE) {
@@ -112,12 +113,13 @@ final class BuildPitWatch {
             first.add(entry.block() + "@" + entry.pos() + " — " + why(entry, blocked));
         }
         LOGGER.warn(
-                "Стройка {}: {} тиков без прогресса (поставлено {}, очищено {}, заходов {}), дух {}; первые "
-                        + "недостижимые: {}",
+                "Стройка {}: {} тиков без прогресса (поставлено {}, очищено {}, оснований {}, заходов {}), "
+                        + "дух {}; первые недостижимые: {}",
                 buildKey,
                 StallWatch.REPORT_TICKS,
                 placed,
                 cleared,
+                basePrepared,
                 trips,
                 feet,
                 first);

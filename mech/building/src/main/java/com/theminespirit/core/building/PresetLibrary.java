@@ -8,6 +8,7 @@ import com.theminespirit.core.reload.api.TableSlot;
 import com.theminespirit.core.reload.api.TableStatus;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -261,6 +262,19 @@ public final class PresetLibrary {
                     && !SchematicBlocks.isSecondaryPart(entry.block(), entry.state())) {
                 counts.merge(SchematicBlocks.itemOf(entry.block()), 1, Integer::sum);
             }
+        }
+        if (SchematicGround.tilled(schematic)) {
+            Set<BlockCoord> columns = new HashSet<>();
+            for (Schematic.Entry entry : schematic.blocks()) {
+                if (!entry.optional()
+                        && entry.dy() == 0
+                        && (SchematicActions.isTilled(entry.block())
+                                || SchematicActions.isWalkway(entry.block())
+                                || SchematicActions.isFluidPlaced(entry.block()))) {
+                    columns.add(new BlockCoord(entry.dx(), 0, entry.dz()));
+                }
+            }
+            counts.merge("minecraft:dirt", columns.size(), Integer::sum);
         }
         return Map.copyOf(counts);
     }

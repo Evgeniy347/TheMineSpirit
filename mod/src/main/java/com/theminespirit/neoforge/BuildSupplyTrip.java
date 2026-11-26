@@ -192,6 +192,9 @@ final class BuildSupplyTrip {
                         .toString());
             }
         }
+        if (SchematicFieldBase.missingBaseCount(site) > 0) {
+            needed.add("minecraft:dirt");
+        }
         return needed;
     }
 

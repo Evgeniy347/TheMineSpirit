@@ -9,8 +9,19 @@ import java.util.function.ToIntFunction;
 public final class BuildPhase {
     public static final int BAND_HEIGHT = 4;
     private static final List<String> ROUGH_SUFFIXES = List.of("_stairs", "_slab", "_wall");
-    private static final List<String> FINISH =
-            List.of("chest", "trapped_chest", "torch", "wall_torch", "soul_torch", "soul_wall_torch", "water", "lava");
+    private static final List<String> FINISH = List.of(
+            "chest",
+            "trapped_chest",
+            "torch",
+            "wall_torch",
+            "soul_torch",
+            "soul_wall_torch",
+            "water",
+            "lava",
+            "wheat",
+            "carrots",
+            "potatoes",
+            "beetroots");
 
     private BuildPhase() {}
 
@@ -45,9 +56,15 @@ public final class BuildPhase {
     }
 
     public static <T> List<T> current(List<T> unfinished, ToIntFunction<T> heightAboveBottom, Predicate<T> rough) {
+        return current(unfinished, heightAboveBottom, rough, cell -> 0);
+    }
+
+    public static <T> List<T> current(
+            List<T> unfinished, ToIntFunction<T> heightAboveBottom, Predicate<T> rough, ToIntFunction<T> finishOrder) {
         Objects.requireNonNull(unfinished, "Незаконченные клетки не могут быть null: пустой список задаётся пустым");
         Objects.requireNonNull(heightAboveBottom, "Высота клетки не может быть null: без неё нет полосы");
         Objects.requireNonNull(rough, "Признак черновой клетки не может быть null: без него нет этапа");
+        Objects.requireNonNull(finishOrder, "Порядок отделки не может быть null: без него вода обгонит опору");
         int lowest = Integer.MAX_VALUE;
         for (T cell : unfinished) {
             if (rough.test(cell)) {
@@ -55,7 +72,14 @@ public final class BuildPhase {
             }
         }
         if (lowest == Integer.MAX_VALUE) {
-            return List.copyOf(unfinished);
+            int first = Integer.MAX_VALUE;
+            for (T cell : unfinished) {
+                first = Math.min(first, finishOrder.applyAsInt(cell));
+            }
+            int stage = first;
+            return unfinished.stream()
+                    .filter(cell -> finishOrder.applyAsInt(cell) == stage)
+                    .toList();
         }
         boolean floorLeft = false;
         for (T cell : unfinished) {

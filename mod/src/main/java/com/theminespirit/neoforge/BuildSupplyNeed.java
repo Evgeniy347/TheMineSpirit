@@ -30,6 +30,10 @@ final class BuildSupplyNeed {
                 }
             }
         }
+        int baseMissing = SchematicFieldBase.missingBaseCount(site);
+        if (baseMissing > inventory.countItem(Items.DIRT)) {
+            need.merge(Items.DIRT, baseMissing - inventory.countItem(Items.DIRT), Integer::sum);
+        }
         for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
             ItemStack stack = inventory.getItem(slot);
             if (!stack.isEmpty()) {

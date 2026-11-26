@@ -32,6 +32,8 @@ public final class SchematicActions {
     private static final String COARSE_DIRT = "coarse_dirt";
     private static final String ROOTED_DIRT = "rooted_dirt";
     private static final String MYCELIUM = "mycelium";
+    private static final Set<String> LIGHTS = Set.of(
+            "torch", "wall_torch", "soul_torch", "soul_wall_torch", "lantern", "glowstone", "sea_lantern", "campfire");
 
     private SchematicActions() {}
 
@@ -81,6 +83,15 @@ public final class SchematicActions {
     public static boolean isFluidPlaced(String blockId) {
         Objects.requireNonNull(blockId, "Id блока не может быть null: без него неизвестно, льётся ли он ведром");
         return WATER.equals(SchematicBlocks.path(blockId));
+    }
+
+    public static int finishOrder(String blockId) {
+        Objects.requireNonNull(blockId, "Блок не может быть null: без него неизвестен порядок отделки");
+        String path = SchematicBlocks.path(blockId);
+        if (isFluidPlaced(blockId)) {
+            return 0;
+        }
+        return LIGHTS.contains(path) ? 1 : 2;
     }
 
     public static boolean isDecorFlower(String blockId) {

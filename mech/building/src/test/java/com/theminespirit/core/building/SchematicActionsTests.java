@@ -103,6 +103,25 @@ class SchematicActionsTests {
     }
 
     @Test
+    void finishOrder_FieldBlocks_ReturnsWaterLightCropsOrder() {
+        assertEquals(
+                0,
+                SchematicActions.finishOrder("minecraft:water"),
+                "Вода ждёт готовой земли: иначе источник ставится в воздух и разливается ниже грядки. "
+                        + "При смене finishOrder_FieldBlocks_ReturnsWaterLightCropsOrder проверь BuildPhase и живое поле.");
+        assertEquals(
+                1,
+                SchematicActions.finishOrder("minecraft:torch"),
+                "Освещение идёт до посевов: иначе семена могут выпасть ночью без факела. "
+                        + "При смене finishOrder_FieldBlocks_ReturnsWaterLightCropsOrder проверь wheat_field_1.");
+        assertEquals(
+                2,
+                SchematicActions.finishOrder("minecraft:wheat"),
+                "Семена остаются последними: иначе до воды и факела поле ещё не готово. "
+                        + "При смене finishOrder_FieldBlocks_ReturnsWaterLightCropsOrder проверь порядок finish-этапа.");
+    }
+
+    @Test
     void buildEntry_StoneWithItem_IsBuildEntry() {
         assertTrue(
                 SchematicActions.buildEntry("minecraft:stone", true),

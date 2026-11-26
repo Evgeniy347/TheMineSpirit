@@ -71,6 +71,7 @@ final class BuildSchematicScript implements ScriptInstance {
     long ticks;
     int placed;
     int cleared;
+    int basePrepared;
     int failed;
     int finishWaits;
     boolean standsRetried;
@@ -127,6 +128,7 @@ final class BuildSchematicScript implements ScriptInstance {
     final SchematicPlanPhase planPhase;
     final SchematicResult report;
     final SchematicPlacement placement;
+    final SchematicFieldBase fieldBase;
     private final SchematicWorkPhase workPhase;
 
     BuildSchematicScript(SpiritEntity spirit, BuildSchematicParams params) {
@@ -168,6 +170,7 @@ final class BuildSchematicScript implements ScriptInstance {
         this.planPhase = new SchematicPlanPhase(this);
         this.report = new SchematicResult(this);
         this.placement = new SchematicPlacement(this);
+        this.fieldBase = new SchematicFieldBase(this);
         this.workPhase = new SchematicWorkPhase(this);
         if (level instanceof ServerLevel server) {
             PathNetworkService.beginSite(server, buildKey, site.networkBox(SITE_NETWORK_RING), site.doorCells());

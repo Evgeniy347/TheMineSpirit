@@ -48,7 +48,8 @@ class BuildPhaseTests {
                 "minecraft:dark_oak_trapdoor",
                 "minecraft:potted_poppy",
                 "minecraft:wall_torch",
-                "minecraft:water")) {
+                "minecraft:water",
+                "minecraft:wheat")) {
             assertFalse(
                     BuildPhase.rough(block),
                     "'" + block + "' — отделка: ставится после всех черновых работ в любом порядке, иначе дух "
@@ -88,6 +89,53 @@ class BuildPhaseTests {
                 current(List.of(roof, lantern, upperWall)),
                 "Нижняя полоса застроена — очередь следующих 4 слоёв, а не крыши и не отделки"
                         + " Иначе тест current_LowBandDone_NextBandNow перестанет ловить эту поломку. При смене current_LowBandDone_NextBandNow проверь это утверждение.");
+    }
+
+    @Test
+    void current_FinishOrder_WaterThenLightThenSeeds() {
+        Cell earth = new Cell("minecraft:farmland", 0);
+        Cell water = new Cell("minecraft:water", 0);
+        Cell torch = new Cell("minecraft:torch", 1);
+        Cell wheat = new Cell("minecraft:wheat", 1);
+        List<Cell> cells = List.of(wheat, torch, water, earth);
+
+        assertEquals(
+                List.of(earth),
+                BuildPhase.current(
+                        cells,
+                        Cell::y,
+                        cell -> BuildPhase.rough(cell.block()),
+                        cell -> SchematicActions.finishOrder(cell.block())),
+                "Пока осталась земля, вода и посев ждут: иначе источник оказывается в воздухе и разливается "
+                        + "ниже грядки. При смене current_FinishOrder_WaterThenLightThenSeeds проверь "
+                        + "SchematicWorkPhase и wheat_field_1.");
+        assertEquals(
+                List.of(water),
+                BuildPhase.current(
+                        List.of(wheat, torch, water),
+                        Cell::y,
+                        cell -> BuildPhase.rough(cell.block()),
+                        cell -> SchematicActions.finishOrder(cell.block())),
+                "После земли вода ставится первой: иначе источник оказывается в воздухе и разливается ниже поля. "
+                        + "При смене current_FinishOrder_WaterThenLightThenSeeds проверь SchematicWorkPhase и wheat_field_1.");
+        assertEquals(
+                List.of(torch),
+                BuildPhase.current(
+                        List.of(wheat, torch),
+                        Cell::y,
+                        cell -> BuildPhase.rough(cell.block()),
+                        cell -> SchematicActions.finishOrder(cell.block())),
+                "Факел ставится до семян: иначе ночью новый посев может выпасть без освещения. "
+                        + "При смене current_FinishOrder_WaterThenLightThenSeeds проверь порядок отделки поля.");
+        assertEquals(
+                List.of(wheat),
+                BuildPhase.current(
+                        List.of(wheat),
+                        Cell::y,
+                        cell -> BuildPhase.rough(cell.block()),
+                        cell -> SchematicActions.finishOrder(cell.block())),
+                "После воды и факела остаются семена: иначе стройка объявляет поле готовым до посева. "
+                        + "При смене current_FinishOrder_WaterThenLightThenSeeds проверь мягкие клетки wheat.");
     }
 
     @Test

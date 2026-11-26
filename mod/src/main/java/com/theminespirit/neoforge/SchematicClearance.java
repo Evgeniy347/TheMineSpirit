@@ -66,7 +66,9 @@ final class SchematicClearance {
                 continue;
             }
             if (current.isAir()
-                    || current.canBeReplaced()
+                    || (current.canBeReplaced() && current.getFluidState().isEmpty())
+                    || (SchematicActions.isFluidPlaced(entry.block())
+                            && current.getFluidState().equals(site.wanted(entry).getFluidState()))
                     || current.is(site.wanted(entry).getBlock())
                     || BlockMatch.matches(BlockStates.idOf(current), entry.block())
                     || (SchematicBlocks.isFloor(entry.block())

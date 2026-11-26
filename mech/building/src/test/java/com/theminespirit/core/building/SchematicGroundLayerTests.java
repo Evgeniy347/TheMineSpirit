@@ -1,9 +1,11 @@
 package com.theminespirit.core.building;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.reload.DataTables;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 class SchematicGroundLayerTests {
@@ -80,6 +82,44 @@ class SchematicGroundLayerTests {
                 "У сада тоже есть тропа: лопата нужна ему наравне с грядкой Иначе тест"
                         + " wheatFieldAndOrchard_HaveWalkway_NeedShovel перестанет ловить эту поломку."
                         + " При смене wheatFieldAndOrchard_HaveWalkway_NeedShovel проверь orchard_1.");
+    }
+
+    @Test
+    void wheatField_MaterialPlan_IncludesEarthBaseAndFourTorches() {
+        Schematic field = schematic("wheat_field_1");
+        long torches = field.blocks().stream()
+                .filter(entry -> "minecraft:torch".equals(entry.block()))
+                .count();
+        int paths = (int) field.blocks().stream()
+                .filter(entry -> SchematicActions.isWalkway(entry.block()))
+                .count();
+        long columns = field.blocks().stream()
+                .filter(entry -> entry.dy() == 0
+                        && (SchematicActions.isTilled(entry.block())
+                                || SchematicActions.isWalkway(entry.block())
+                                || SchematicActions.isFluidPlaced(entry.block())))
+                .map(entry -> entry.dx() + "," + entry.dz())
+                .distinct()
+                .count();
+        Map<String, Integer> materials = PresetLibrary.countMaterials(field);
+
+        assertEquals(
+                4,
+                torches,
+                "У грядки четыре обязательных факела: без этого ночью семена выпадают, а световое правило "
+                        + "схемы не выполняется. При смене wheatField_MaterialPlan_IncludesEarthBaseAndFourTorches "
+                        + "проверь wheat_field_1.");
+        assertEquals(
+                4,
+                materials.get("minecraft:torch"),
+                "Факелы входят в смету: иначе дух строит поле без света и граф не приносит их. "
+                        + "При смене wheatField_MaterialPlan_IncludesEarthBaseAndFourTorches проверь countMaterials.");
+        assertEquals(
+                paths + (int) columns,
+                materials.get("minecraft:dirt"),
+                "Смета содержит землю тропы и отдельный слой основания под каждой колонной поля: иначе "
+                        + "вода выливается ниже грядки. При смене wheatField_MaterialPlan_IncludesEarthBaseAndFourTorches "
+                        + "проверь PresetLibrary.countMaterials.");
     }
 
     private static Schematic schematic(String id) {

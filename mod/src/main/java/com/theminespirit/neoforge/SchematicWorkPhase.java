@@ -50,8 +50,8 @@ final class SchematicWorkPhase {
             return recovered.orElseThrow();
         }
         host.ticks++;
-        if (host.pit.stalled(host.ticks, host.placed, host.cleared, host.trips)) {
-            host.pit.stalledReport(host.feet(), host.placed, host.cleared, host.trips, host.blocked);
+        if (host.pit.stalled(host.ticks, host.placed, host.cleared, host.trips, host.basePrepared)) {
+            host.pit.stalledReport(host.feet(), host.placed, host.cleared, host.trips, host.basePrepared, host.blocked);
         }
         host.placement.refreshShare();
         if (host.supplyRunner != null) {
@@ -148,6 +148,10 @@ final class SchematicWorkPhase {
         clear.removeIf(host.blocked::containsKey);
         if (!clear.isEmpty()) {
             return clearStep(clear);
+        }
+        Optional<ScriptStatus> base = host.fieldBase.tick();
+        if (base.isPresent()) {
+            return base.orElseThrow();
         }
         if (host.ticks - host.lastPlaceTick < BuildPace.intervalTicks(host.spirit)) {
             return ScriptStatus.RUNNING;
@@ -266,7 +270,8 @@ final class SchematicWorkPhase {
         List<Schematic.PlacedEntry> now = BuildPhase.current(
                 unfinished,
                 entry -> entry.pos().y() - host.bottomY,
-                entry -> BuildPhase.rough(entry.block()) && host.site.supported(entry));
+                entry -> BuildPhase.rough(entry.block()) && host.site.supported(entry),
+                entry -> SchematicActions.finishOrder(entry.block()));
         int band = now.size() == unfinished.size()
                 ? -1
                 : BuildPhase.band(now.get(0).pos().y() - host.bottomY);
