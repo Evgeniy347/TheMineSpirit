@@ -193,6 +193,7 @@ public final class RouteWalk {
     }
 
     private Optional<String> jump(BlockCoord cell) {
+        if (RouteJump.tryLong(spirit, cell)) return Optional.empty();
         WalkAscent.Command command = WalkAscent.next(cell, pose(), body(cell));
         if (command.step() == WalkAscent.Step.ARRIVED) {
             return advance();
@@ -201,9 +202,7 @@ public final class RouteWalk {
         if (early.isPresent()) return early;
         spirit.getNavigation().stop();
         spirit.getMoveControl().setWantedPosition(cell.x() + 0.5, cell.y(), cell.z() + 0.5, SPEED);
-        if (spirit.onGround() && atEdge(cell)) {
-            spirit.getJumpControl().jump();
-        }
+        if (spirit.onGround() && atEdge(cell)) spirit.getJumpControl().jump();
         return Optional.empty();
     }
 
