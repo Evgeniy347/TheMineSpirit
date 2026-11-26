@@ -1,5 +1,6 @@
 package com.theminespirit.core.board;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.board.api.BoardCase;
@@ -14,6 +15,7 @@ import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.town.PlotLeveling;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 class ToolTicketPlansTests {
@@ -71,6 +73,23 @@ class ToolTicketPlansTests {
                 scripts(plan).contains("build_schematic"),
                 "После выравнивания грядка строится по схеме — " + scripts(plan)
                         + " Иначе тест plan_PlacedWithLeveling_LevelsBeforeBuild перестанет ловить эту поломку. При смене plan_PlacedWithLeveling_LevelsBeforeBuild проверь это утверждение.");
+    }
+
+    @Test
+    void plan_PlacedWithoutLeveling_GoesToSchematicEntrance() {
+        TaskNode plan = TicketPlans.plan(
+                BoardCase.BUILD_PLACED,
+                1,
+                TicketTarget.at(new BlockCoord(10, 60, -5)).withScheme("wheat_field_1"));
+
+        ScriptCall gotoCall = calls(plan, "goto").get(0);
+
+        assertEquals(
+                Map.of("x", 17, "y", 61, "z", -3),
+                gotoCall.params(),
+                "Перед стройкой дух идёт к входу схемы, а не к её углу: иначе wheat_field снова получает "
+                        + "goto в рельеф и clear_area без прогресса. При смене plan_PlacedWithoutLeveling_GoesToSchematicEntrance "
+                        + "проверь StagePlans.placed, Preset.entry и живой участок (-134,64,-467).");
     }
 
     private static List<ScriptCall> calls(TaskNode root, String script) {

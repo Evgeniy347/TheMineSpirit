@@ -8,6 +8,7 @@ import com.theminespirit.core.board.EatNeed;
 import com.theminespirit.core.board.SpiritView;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.hunger.SpiritHunger;
 import com.theminespirit.core.observation.BlockCoord;
@@ -115,9 +116,21 @@ final class DispatchPick {
         SpiritEntity entity =
                 Objects.requireNonNull(entities.get(spirit.id()), "Кандидат выдачи потерял сущность духа");
         BlockCoord from = at(entity);
-        BlockCoord to = new BlockCoord(
-                target.target().x(), target.target().y(), target.target().z());
-        return DispatchReach.allows(reach, spirit.id(), from, to);
+        return DispatchReach.allows(reach, spirit.id(), from, reachTarget(target));
+    }
+
+    static BlockCoord reachTarget(TicketTarget target) {
+        BlockCoord origin = target.target();
+        if (target.schemeFile() == null) {
+            return origin;
+        }
+        return PresetLibrary.current()
+                .byId(target.schemeFile())
+                .map(preset -> new BlockCoord(
+                        origin.x() + preset.entry().x(),
+                        origin.y() + preset.entry().y(),
+                        origin.z() + preset.entry().z()))
+                .orElse(origin);
     }
 
     String whyChosen(BoardTicket ticket, SpiritEntity spirit, CrafterMemory crafters) {

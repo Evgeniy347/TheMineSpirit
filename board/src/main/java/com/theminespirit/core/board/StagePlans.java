@@ -2,6 +2,7 @@ package com.theminespirit.core.board;
 
 import com.theminespirit.core.base.NamespacedId;
 import com.theminespirit.core.board.api.BoardCase;
+import com.theminespirit.core.building.Preset;
 import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.building.SchematicActions;
 import com.theminespirit.core.building.SchematicBlocks;
@@ -75,19 +76,23 @@ public final class StagePlans {
         if (target.leveling() != null) {
             steps.add(LevelRepair.plan(target));
         }
-        steps.add(PlanSteps.gotoPoint(origin));
-        PresetLibrary.current()
-                .byId(scheme)
-                .ifPresent(preset -> PresetLibrary.countMaterials(preset.schematic())
-                        .forEach((item, count) -> {
-                            if (SchematicActions.isActionPlaced(item)) {
-                                return;
-                            }
-                            String id = target.wood() == null ? item : WoodSpecies.swap(item, target.wood());
-                            steps.add(PlanSteps.acquire(
-                                    id.contains(":") ? id : NamespacedId.MINECRAFT + id,
-                                    Math.min(count, CatalogLimits.COUNT_MAX)));
-                        }));
+        Optional<Preset> preset = PresetLibrary.current().byId(scheme);
+        BlockCoord entry = preset.map(value -> new BlockCoord(
+                        origin.x() + value.entry().x(),
+                        origin.y() + value.entry().y(),
+                        origin.z() + value.entry().z()))
+                .orElse(origin);
+        steps.add(PlanSteps.gotoPoint(entry));
+        preset.ifPresent(value -> PresetLibrary.countMaterials(value.schematic())
+                .forEach((item, count) -> {
+                    if (SchematicActions.isActionPlaced(item)) {
+                        return;
+                    }
+                    String id = target.wood() == null ? item : WoodSpecies.swap(item, target.wood());
+                    steps.add(PlanSteps.acquire(
+                            id.contains(":") ? id : NamespacedId.MINECRAFT + id,
+                            Math.min(count, CatalogLimits.COUNT_MAX)));
+                }));
         Map<String, Object> params = new LinkedHashMap<>();
         params.put("file", scheme);
         params.put("x", origin.x());
