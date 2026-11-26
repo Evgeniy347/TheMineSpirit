@@ -22,6 +22,8 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.event.level.BlockEvent;
 
 public final class FenceWatch {
+    private static final int SCAN_BUDGET = 8;
+
     private FenceWatch() {}
 
     public static void register(IEventBus bus) {
@@ -52,10 +54,14 @@ public final class FenceWatch {
     }
 
     static Map<BlockCoord, String> liveBreaks(ServerLevel level) {
-        return FenceLedger.get(level).retainLive(at -> {
-            BlockPos block = pos(at);
-            return !level.hasChunk(block.getX() >> 4, block.getZ() >> 4) || !isFence(level.getBlockState(block));
-        });
+        return FenceLedger.get(level)
+                .retainLive(
+                        at -> {
+                            BlockPos block = pos(at);
+                            return !level.hasChunk(block.getX() >> 4, block.getZ() >> 4)
+                                    || !isFence(level.getBlockState(block));
+                        },
+                        SCAN_BUDGET);
     }
 
     static boolean isFence(BlockState state) {

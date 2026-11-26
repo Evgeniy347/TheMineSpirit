@@ -34,8 +34,12 @@ public final class FenceLedger extends SavedData {
     }
 
     public Map<BlockCoord, String> retainLive(Predicate<BlockCoord> stillBroken) {
+        return retainLive(stillBroken, Integer.MAX_VALUE);
+    }
+
+    public Map<BlockCoord, String> retainLive(Predicate<BlockCoord> stillBroken, int budget) {
         int before = breaks.size();
-        Map<BlockCoord, String> live = breaks.retainLive(stillBroken);
+        Map<BlockCoord, String> live = breaks.retainLive(stillBroken, budget);
         if (breaks.size() != before) {
             setDirty();
         }

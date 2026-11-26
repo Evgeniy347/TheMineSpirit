@@ -54,9 +54,11 @@ public final class CraterWatch {
     }
 
     static Set<String> liveCauses(ServerLevel level, BoardService service) {
-        return service.craters()
-                .retainLive(pos -> level.getBlockState(new BlockPos(pos.x(), pos.y(), pos.z()))
-                        .isAir());
+        return service.craters().retainLive(pos -> {
+            BlockPos block = new BlockPos(pos.x(), pos.y(), pos.z());
+            return !level.hasChunk(block.getX() >> 4, block.getZ() >> 4)
+                    || level.getBlockState(block).isAir();
+        });
     }
 
     static List<BlockCoord> centers(BoardService service) {

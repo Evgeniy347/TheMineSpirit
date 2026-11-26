@@ -40,6 +40,87 @@ class FenceBreaksTests {
     }
 
     @Test
+    void retainLive_Budget_ChecksOnlySliceAndKeepsKnownLive() {
+        FenceBreaks breaks = new FenceBreaks(3);
+        BlockCoord first = new BlockCoord(1, 64, 1);
+        BlockCoord second = new BlockCoord(2, 64, 2);
+        BlockCoord third = new BlockCoord(3, 64, 3);
+        breaks.remember(first, "oak_fence");
+        breaks.remember(second, "oak_fence");
+        breaks.remember(third, "oak_fence");
+        int[] checks = {0};
+
+        Map<BlockCoord, String> one = breaks.retainLive(
+                at -> {
+                    checks[0]++;
+                    return true;
+                },
+                1);
+        Map<BlockCoord, String> two = breaks.retainLive(
+                at -> {
+                    checks[0]++;
+                    return true;
+                },
+                1);
+        Map<BlockCoord, String> three = breaks.retainLive(
+                at -> {
+                    checks[0]++;
+                    return true;
+                },
+                1);
+
+        assertEquals(
+                Map.of(first, "oak_fence"),
+                one,
+                "Первый пакет проверяет одну клетку и сразу сохраняет её живую причину: иначе до конца скана "
+                        + "ремонт забора может исчезнуть с доски. При смене retainLive_Budget_ChecksOnlySliceAndKeepsKnownLive "
+                        + "проверь FenceWatch.liveBreaks и BoardSources.tick.");
+        assertEquals(
+                Map.of(first, "oak_fence", second, "oak_fence"),
+                two,
+                "Второй пакет добавляет следующую живую клетку, не теряя уже найденную: иначе причина ремонта "
+                        + "мигает между пересборками. При смене retainLive_Budget_ChecksOnlySliceAndKeepsKnownLive "
+                        + "проверь FenceBreaks.live.");
+        assertEquals(
+                Map.of(first, "oak_fence", second, "oak_fence", third, "oak_fence"),
+                three,
+                "После трёх пакетов в живом наборе все три клетки: иначе память потеряет часть сломанных "
+                        + "клеток и ремонт до них не дойдёт; бюджет ограничивает один тик, а не весь скан. "
+                        + "При смене retainLive_Budget_ChecksOnlySliceAndKeepsKnownLive проверь FenceBreaks.retainLive.");
+        assertEquals(
+                3,
+                checks[0],
+                "За три вызова проверены ровно три адреса: иначе пакетный скан снова выполняет полный обход "
+                        + "и возвращает холодный фриз. При смене retainLive_Budget_ChecksOnlySliceAndKeepsKnownLive "
+                        + "проверь бюджет FenceWatch.SCAN_BUDGET.");
+    }
+
+    @Test
+    void retainLive_CompletedScan_RechecksRepairedCell() {
+        FenceBreaks breaks = new FenceBreaks(1);
+        BlockCoord broken = new BlockCoord(1, 64, 1);
+        breaks.remember(broken, "oak_fence");
+
+        assertEquals(
+                Map.of(broken, "oak_fence"),
+                breaks.retainLive(at -> true, 1),
+                "Первый пакет запоминает сломанный забор: иначе причина ремонта не попадёт на доску. "
+                        + "При смене retainLive_CompletedScan_RechecksRepairedCell проверь FenceBreaks.live.");
+        assertEquals(
+                Map.of(),
+                breaks.retainLive(at -> false, 1),
+                "После завершения круга клетка проверяется заново и починенный забор удаляется: иначе "
+                        + "память навсегда останется с уже целым блоком. При смене "
+                        + "retainLive_CompletedScan_RechecksRepairedCell проверь scanCursor и FenceWatch.liveBreaks.");
+        assertEquals(
+                0,
+                breaks.size(),
+                "Починенная клетка не остаётся в памяти после повторного скана: иначе граф будет бесконечно "
+                        + "ставить тот же ремонт. При смене retainLive_CompletedScan_RechecksRepairedCell проверь "
+                        + "FenceBreaks.retainLive.");
+    }
+
+    @Test
     void remember_OverCapacity_DropsOldestCell() {
         FenceBreaks breaks = new FenceBreaks(2);
         breaks.remember(new BlockCoord(0, 64, 0), "oak_fence");
@@ -67,5 +148,12 @@ class FenceBreaksTests {
                 () -> new FenceBreaks(0),
                 "Память забора без ёмкости не проверяет живые клетки: конструктор обязан отказать"
                         + " Иначе тест remember_InvalidArguments_AreRejected перестанет ловить эту поломку. При смене remember_InvalidArguments_AreRejected проверь это утверждение.");
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> breaks.retainLive(at -> true, 0),
+                "Нулевой бюджет не продвигает скан и снова оставляет полный обход следующему тику: иначе "
+                        + "холодный фриз возвращается, поэтому память обязана отказать. При смене "
+                        + "remember_InvalidArguments_AreRejected проверь "
+                        + "FenceBreaks.retainLive и FenceWatch.SCAN_BUDGET.");
     }
 }

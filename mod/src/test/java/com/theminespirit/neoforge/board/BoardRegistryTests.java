@@ -50,6 +50,21 @@ class BoardRegistryTests {
     }
 
     @Test
+    void craterWatch_UnloadedChunk_UsesHasChunkBeforeBlockState() throws IOException {
+        String source =
+                Files.readString(Path.of("mod/src/main/java/com/theminespirit/neoforge/board/CraterWatch.java"));
+        String compact = source.replaceAll("\\s+", "");
+
+        assertTrue(
+                compact.contains(
+                        "!level.hasChunk(block.getX()>>4,block.getZ()>>4)||level.getBlockState(block).isAir()"),
+                "Память воронок обязана сохранять незагруженную клетку без чтения блока: иначе getBlockState "
+                        + "синхронно грузит чанк и холодная пересборка снова зависает. При смене "
+                        + "craterWatch_UnloadedChunk_UsesHasChunkBeforeBlockState проверь CraterWatch.liveCauses "
+                        + "и src.crater.");
+    }
+
+    @Test
     void stageBootstrap_Removed_StartupAuditClassIsAbsent() {
         assertThrows(
                 ClassNotFoundException.class,
