@@ -115,10 +115,13 @@ class BoardRegistryTests {
         assertTrue(
                 posting.contains("TICKET_BUDGET = 8")
                         && posting.contains("cursor + TICKET_BUDGET")
+                        && posting.contains("PRIORITY_BUDGET = 32")
+                        && posting.contains("priorityCursor + PRIORITY_BUDGET")
                         && source.contains("new GraphPosting(half, pets)"),
-                "Постановка билетов должна идти пакетами вне finish: иначе холодный цикл всех заданий снова "
-                        + "останавливает сервер на сотни миллисекунд. При смене ticketPosting_Batches_CriticalFinishSkipsAllTickets "
-                        + "проверь GraphPosting.advance и graph.src.finish.");
+                "Постановка билетов и обновление приоритетов должны идти пакетами вне finish: иначе холодный "
+                        + "цикл всех заданий снова останавливает сервер на сотни миллисекунд. При смене "
+                        + "ticketPosting_Batches_CriticalFinishSkipsAllTickets проверь GraphPosting.advance, "
+                        + "GraphPosting.updatePriorities и graph.src.finish.");
         assertFalse(
                 finish.contains("for (GraphTickets.Ticket"),
                 "Критический finish не должен обходить все билеты: иначе пакетное разбиение теряет смысл. "

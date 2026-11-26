@@ -25,11 +25,11 @@ class StartupAuditGuardTests {
                         + "проверь BoardRegistry.get, GraphSource.finish и TickWatch после прогрева.");
         assertTrue(
                 SourceFiles.javaUnder(BOARD)
-                        .get(BOARD.resolve("GraphSource.java"))
+                        .get(BOARD.resolve("GraphPosting.java"))
                         .contains("half.state().facts()"),
                 "Гейт этапа остаётся подключённым к фактам графа: иначе удаление стартового аудита "
                         + "остановит проверку готовности построек. При смене StartupAuditGuardTests проверь "
-                        + "StageWorldGate.apply в GraphSource.finish.");
+                        + "StageWorldGate.apply в GraphPosting.flush.");
     }
 
     @Test

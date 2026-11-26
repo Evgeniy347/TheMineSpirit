@@ -1,6 +1,5 @@
 package com.theminespirit.neoforge.board;
 
-import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.StockView;
@@ -21,10 +20,8 @@ import java.util.Set;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.monster.Monster;
 import org.jspecify.annotations.Nullable;
-import org.slf4j.Logger;
 
 public final class GraphSource {
-    private static final Logger LOGGER = LogUtils.getLogger();
     private static final long DEEP_INTERVAL_TICKS = 1200;
 
     final GraphDecisionNote decisionLog = new GraphDecisionNote();
@@ -130,40 +127,10 @@ public final class GraphSource {
 
     private void finishPosting(GraphPosting work) {
         GraphSource.Half half = work.half();
-        GraphPost post = work.post();
-        List<String> unconnected = work.unconnected();
-        long started = System.nanoTime();
-        post.flush();
-        StageWorldGate.apply(
-                half.level(),
-                half.service(),
-                half.scan().stage(),
-                half.scan().wood(),
-                half.state().facts());
-        Perf.record("graph.src.finish.flush", System.nanoTime() - started);
-        started = System.nanoTime();
-        for (GraphPlan.Task task : half.plan().tasks()) {
-            if (task.implemented() && task.priority() > 0) {
-                for (String id : GraphTicketIds.ids(task, half.graph())) {
-                    try {
-                        half.service().board().reprioritize(id, task.priority());
-                    } catch (RuntimeException error) {
-                        LOGGER.error(
-                                "[incident] граф не смог обновить приоритет задания {} до {}: {}; "
-                                        + "остальные задания и тик сервера идут",
-                                id,
-                                task.priority(),
-                                String.valueOf(error.getMessage()),
-                                error);
-                    }
-                }
-            }
-        }
-        Perf.record("graph.src.finish.priorities", System.nanoTime() - started);
         cadence.finished(half.now(), half.signals());
-        lastLive = post.live(half.result().live());
+        lastLive = work.post().live(half.result().live());
         posting = null;
-        reporting = new GraphReport(half, unconnected);
+        reporting = new GraphReport(half, work.unconnected());
     }
 
     public static Set<String> events(
