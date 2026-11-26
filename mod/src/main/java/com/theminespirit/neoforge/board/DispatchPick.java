@@ -88,11 +88,6 @@ final class DispatchPick {
                     return entities.get(chosen.orElseThrow().id());
                 }
             }
-            boolean stuck = own != null
-                    && round.board().stuck().isStuck(own.id(), round.board().now());
-            if (!stuck) {
-                return null;
-            }
         }
         Optional<UUID> crafter = crafters.remembered(ticket.id());
         if (crafter.filter(round::awaited).isPresent()) {

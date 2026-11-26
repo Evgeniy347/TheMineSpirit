@@ -1,6 +1,7 @@
 package com.theminespirit.core.board;
 
 import com.theminespirit.core.board.api.BoardCase;
+import com.theminespirit.core.board.graph.GraphTickets;
 import com.theminespirit.core.board.graph.VitalNeeds;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -138,7 +139,7 @@ public final class DispatchRound {
         if (held.getOrDefault(spirit.id(), 0) >= BoardTuning.maxActivePerSpirit()) {
             return Optional.of("держит " + heldIds(spirit.id()));
         }
-        if (ticket.assignee().filter(owner -> !owner.equals(spirit.id())).isPresent() && !reassignable(ticket, now)) {
+        if (ticket.assignee().filter(owner -> !owner.equals(spirit.id())).isPresent() && !reassignable(ticket)) {
             return Optional.of("задание другого духа");
         }
         if (!board.availableTo(spirit.id(), ticket, now)) {
@@ -171,11 +172,16 @@ public final class DispatchRound {
         return vitalPaths.computeIfAbsent(spirit.id(), id -> VitalChain.withPath(spirit.needs(), board, id));
     }
 
-    private boolean reassignable(BoardTicket ticket, long now) {
-        return ticket.boardCase() == BoardCase.TRANSFER_ITEM
-                && ticket.assignee()
-                        .filter(owner -> board.stuck().isStuck(owner, now))
-                        .isPresent();
+    boolean reassignable(BoardTicket ticket) {
+        if (ticket.boardCase() == BoardCase.RESCUE_SPIRIT) {
+            return false;
+        }
+        if (ticket.boardCase() == BoardCase.TRANSFER_ITEM) {
+            return ticket.assignee()
+                    .filter(owner -> board.stuck().isStuck(owner, now))
+                    .isPresent();
+        }
+        return ticket.id().startsWith(GraphTickets.PREFIX) || ticket.cause().startsWith(GraphTickets.PREFIX);
     }
 
     public Optional<Candidate> choose(BoardTicket ticket, List<Candidate> preference) {

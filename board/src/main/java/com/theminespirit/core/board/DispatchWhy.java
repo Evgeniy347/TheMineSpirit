@@ -20,7 +20,8 @@ final class DispatchWhy {
         List<String> busy = new ArrayList<>();
         int eligible = 0;
         for (DispatchRound.Candidate spirit : spirits) {
-            if (ticket.assignee().filter(owner -> !owner.equals(spirit.id())).isPresent()) {
+            if (ticket.assignee().filter(owner -> !owner.equals(spirit.id())).isPresent()
+                    && !round.reassignable(ticket)) {
                 continue;
             }
             eligible++;
@@ -37,6 +38,10 @@ final class DispatchWhy {
             return ticket.assignee().isPresent() ? "своего духа нет в мире" : "нет духов";
         }
         if (groups.isEmpty()) {
+            if (!free.isEmpty()) {
+                return "ждёт свободного духа: " + distinct(free, 4)
+                        + (busy.isEmpty() ? "" : "; ещё занято " + busy.size());
+            }
             return "ждёт свободного духа: заняты " + eligible + " (" + distinct(busy, 4) + ")";
         }
         List<String> blockerLines = new ArrayList<>();
