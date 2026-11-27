@@ -43,4 +43,29 @@ class AuditTicketGuardTests {
                         + " и GroupRef теряются, а тактика возвращается к пересчёту. При смене ветки DUPLICATE"
                         + " перепроверь BoardService.submit и TicketTargets.fillBuilding.");
     }
+
+    @Test
+    void auditExecution_SingleFactCheck_HasNoWorldRescan() throws IOException {
+        String source = Files.readString(Path.of("mod/src/main/java/com/theminespirit/neoforge/AuditGroupScript.java"));
+        String compact = source.replaceAll("\\s+", "");
+
+        assertTrue(
+                compact.contains("MAX_ITEMS=64")
+                        && compact.contains(".limit(MAX_ITEMS)")
+                        && compact.contains("AuditFactCheck.of(item,actual)")
+                        && compact.contains("AuditMisses.of(")
+                        && compact.contains("groups.quarantine(ref.id())"),
+                "Тактика аудита берёт до 64 предметов, делает одну проверку факта и сразу пишет инцидент:"
+                        + " иначе повторный diff скроет промах, а огромный билет займёт весь тик. При смене"
+                        + " тактики перепроверь AuditGroupScript.tick.");
+        assertFalse(
+                compact.contains("StageBuilds.of(")
+                        || compact.contains("TicketPlans.plan(")
+                        || compact.contains("RepairAudit.audit(")
+                        || compact.contains("BuildGap.trace(")
+                        || compact.contains("SettlementScan.")
+                        || compact.contains("SchematicClearance"),
+                "Тактика исполняет готовый DiffItem без пересчёта схемы: иначе инвариант И-2 нарушен, и"
+                        + " дух снова читает мир целиком. При смене тактики перепроверь запрещённые вызовы.");
+    }
 }

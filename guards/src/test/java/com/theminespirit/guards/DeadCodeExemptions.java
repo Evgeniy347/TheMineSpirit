@@ -14,18 +14,6 @@ final class DeadCodeExemptions {
                     "Подсистема аудита поселения (ТЗ town-audit): право касания подключит тактика DiffItem"
                             + " в блоке 10; снять после блока 10."),
             new Exemption(
-                    "core/board/audit/AuditMiss.java|field|AuditMiss#ALREADY_DONE",
-                    "Подсистема аудита поселения (ТЗ town-audit): вид промаха ALREADY_DONE подключит тактика"
-                            + " при одиночной проверке факта в блоке 10; снять после блока 10."),
-            new Exemption(
-                    "core/board/audit/AuditMiss.java|field|AuditMiss#FOREIGN_BLOCK",
-                    "Подсистема аудита поселения (ТЗ town-audit): вид промаха FOREIGN_BLOCK подключит тактика"
-                            + " при одиночной проверке факта в блоке 10; снять после блока 10."),
-            new Exemption(
-                    "core/board/audit/DiffItem.java|method|DiffItem#satisfiedBy",
-                    "Подсистема аудита поселения (ТЗ town-audit): проверку готового предмета подключит"
-                            + " тактика в блоке 10; снять после блока 10."),
-            new Exemption(
                     "core/board/audit/Group.java|method|Group#pendingPercent",
                     "Подсистема аудита поселения (ТЗ town-audit): долю невыполненного подключит граф и REST"
                             + " в блоках 7–8; снять после блока 8."),

@@ -47,6 +47,7 @@ final class BuildingScriptPack extends SpiritScriptPack {
                 "place_descent_stairs",
                 spirit -> params -> new PlaceDescentStairsScript(spirit, DigDescentParams.from(params)));
         put("build_schematic", spirit -> params -> buildSchematic(spirit, BuildSchematicParams.from(params)));
+        put("audit_group", spirit -> params -> new AuditGroupScript(spirit, params));
         put("build_farm", spirit -> params -> new BuildFarmScript(spirit, BuildFarmParams.from(params)));
         put("build_fence", spirit -> params -> new BuildFenceScript(spirit, BuildFenceParams.from(params)));
         put("build_shelter", spirit -> params -> new BuildShelterScript(spirit));

@@ -37,8 +37,8 @@
       тесты порядка и сторожи.
 9. [x] Билет: `GroupRef` в `TicketTarget`, починка потери `plan` при повторной постановке,
       `StageBuilds.of` вне пути выдачи аудита.
-10. [ ] Тактика выполняет `DiffItem` с одиночной проверкой факта; `SchematicClearance.missing()/toClear()`
-       вне боевого пути; `StrayGroups`/`PitGroups` уплотнены.
+10. [x] Тактика выполняет `DiffItem` с одиночной проверкой факта; `SchematicClearance.missing()/toClear()`
+       вне боевого пути аудита; `StrayGroups`/`PitGroups` заменены подгруппами `ground`.
 11. [ ] Удаление старого: `WorldAreaScan.LAST/Sliced/CACHE_TICKS`, `BuiltAuditCache`, `BuildingAudit.SCHEMES/GAPS`,
        `RepairAuditWatch`, `WorldAreaInputs.cachedHouse`, `auditIntervalTicks`; миграция ~15 тест-классов.
 

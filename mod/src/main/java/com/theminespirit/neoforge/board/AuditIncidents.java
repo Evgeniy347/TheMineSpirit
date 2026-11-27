@@ -11,12 +11,12 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import org.slf4j.Logger;
 
-final class AuditIncidents {
+public final class AuditIncidents {
     private static final Logger LOGGER = LogUtils.getLogger();
 
     private AuditIncidents() {}
 
-    static void report(ServerLevel level, AuditMiss miss) {
+    public static void report(ServerLevel level, AuditMiss miss) {
         String text = miss.text();
         LOGGER.warn("[audit-miss] {}", text);
         SpiritLog.auditMiss(

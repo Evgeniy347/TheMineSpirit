@@ -1,6 +1,8 @@
 package com.theminespirit.core.board.audit;
 
+import com.theminespirit.core.board.ConstructionBatches.ChunkCell;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.town.PlotCells;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -19,6 +21,7 @@ public final class GroupRegistry {
     private long fillVersion = -1;
     private @Nullable AuditRegistry facts;
     private Map<String, List<Expectation>> expectations = Map.of();
+    private final Map<String, List<Expectation>> groupCells = new LinkedHashMap<>();
     private final Map<String, Group> groups = new LinkedHashMap<>();
     private final Map<BlockCoord, String> owners = new HashMap<>();
     private final Set<String> dirty = new LinkedHashSet<>();
@@ -38,6 +41,8 @@ public final class GroupRegistry {
             nextOwners.put(expectation.cell(), key);
         }
         expectations = Map.copyOf(next);
+        groupCells.clear();
+        next.forEach((key, cells) -> groupCells.put(key, List.copyOf(cells)));
         owners.clear();
         owners.putAll(nextOwners);
         groups.clear();
@@ -63,8 +68,12 @@ public final class GroupRegistry {
         while (iterator.hasNext() && rebuilt < budget) {
             String key = iterator.next();
             iterator.remove();
-            groups.put(key, build(key, facts, revision));
-            rebuilt++;
+            if (key.startsWith("group:ground@")) {
+                rebuilt += ground(key, facts, revision);
+            } else {
+                groups.put(key, build(key, facts, revision, firstSubject(key)));
+                rebuilt++;
+            }
         }
         return rebuilt;
     }
@@ -99,8 +108,26 @@ public final class GroupRegistry {
     }
 
     public void release(String ticket) {
-        tickets.remove(ticket);
+        String group = tickets.remove(ticket);
         facts().released(ticket);
+        if (group != null && groups.containsKey(group)) {
+            groups.put(group, build(group, facts(), revision, firstSubject(group)));
+        }
+    }
+
+    public void block(String group, String reason) {
+        Group current = groups.get(group);
+        if (current == null) {
+            return;
+        }
+        tickets.entrySet().removeIf(entry -> {
+            if (!entry.getValue().equals(group)) {
+                return false;
+            }
+            facts().released(entry.getKey());
+            return true;
+        });
+        groups.put(group, current.withStatus(Group.Status.BLOCKED, reason));
     }
 
     public void quarantine(String group) {
@@ -130,8 +157,52 @@ public final class GroupRegistry {
         return total;
     }
 
-    private Group build(String key, AuditRegistry facts, long planRevision) {
+    private String firstSubject(String key) {
+        if (key.startsWith("group:ground:")) {
+            int start = "group:ground:".length();
+            int at = key.indexOf('@');
+            return key.substring(start, at < 0 ? key.length() : at);
+        }
         List<Expectation> cells = expectations.get(key);
+        return cells == null || cells.isEmpty() ? "" : cells.get(0).source().subject();
+    }
+
+    private int ground(String key, AuditRegistry facts, long planRevision) {
+        List<Expectation> cells = expectations.get(key);
+        if (cells == null || cells.isEmpty()) {
+            return 0;
+        }
+        Expectation first = cells.get(0);
+        ChunkCell chunk = GroupKeys.chunk(first.source(), first.cell());
+        int levelY = cells.stream()
+                .filter(expectation -> expectation.wanted().kind() == Wanted.Kind.GROUND)
+                .mapToInt(expectation -> expectation.wanted().level() + 1)
+                .findFirst()
+                .orElse(first.cell().y());
+        Map<String, List<Expectation>> parts = new LinkedHashMap<>();
+        for (Expectation expectation : cells) {
+            String subject = expectation.wanted().kind() == Wanted.Kind.GROUND
+                    ? "pit"
+                    : expectation.cell().y() < levelY + PlotCells.FREE_HEIGHT ? "stray" : "floating";
+            parts.computeIfAbsent(subject, ignored -> new ArrayList<>()).add(expectation);
+        }
+        groups.remove(key);
+        int rebuilt = 0;
+        for (Map.Entry<String, List<Expectation>> part : parts.entrySet()) {
+            String partKey = Group.pending(Group.Kind.GROUND, part.getKey(), chunk, List.of(), 0)
+                    .key();
+            groupCells.put(partKey, List.copyOf(part.getValue()));
+            groups.put(partKey, build(partKey, facts, planRevision, part.getKey()));
+            for (Expectation expectation : part.getValue()) {
+                owners.put(expectation.cell(), partKey);
+            }
+            rebuilt++;
+        }
+        return rebuilt;
+    }
+
+    private Group build(String key, AuditRegistry facts, long planRevision, String subject) {
+        List<Expectation> cells = groupCells.get(key);
         if (cells == null || cells.isEmpty()) {
             throw new IllegalStateException("Группа " + key + " без ожиданий: пересобирать нечего");
         }
@@ -166,7 +237,7 @@ public final class GroupRegistry {
         String reason = unknown > 0 ? "чанк не заполнен" : "";
         return new Group(
                 GroupKeys.kind(first.source()),
-                first.source().subject(),
+                subject,
                 GroupKeys.chunk(first.source(), first.cell()),
                 items,
                 cells.size(),

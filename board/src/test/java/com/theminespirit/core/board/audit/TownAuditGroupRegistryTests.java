@@ -62,7 +62,7 @@ class TownAuditGroupRegistryTests {
                         + " и склад смешаются в одну работу с разным приоритетом. При смене группировки перепроверь GroupKeys.");
         Group building = groups.group("group:building:storage_3");
         Group street = groups.group("group:street:s-7@0,0");
-        Group ground = groups.group("group:ground@0,0");
+        Group ground = groups.group("group:ground:pit@0,0");
         assertEquals(
                 Group.Status.PENDING,
                 building.status(),

@@ -32,6 +32,7 @@ class ScriptRegistryGuardTests {
             "build_farm",
             "build_fence",
             "build_schematic",
+            "audit_group",
             "build_shelter",
             "capture",
             "cast_obsidian",

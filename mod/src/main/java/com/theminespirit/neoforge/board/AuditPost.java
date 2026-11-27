@@ -38,7 +38,8 @@ final class AuditPost {
         Map<String, Integer> required = AuditGraphFacts.materials(snapshot);
         TicketTarget target = TicketTarget.at(snapshot.items().get(0).cell())
                 .withGroup(ref)
-                .withPlan(new ScriptCall("audit_group", Map.of("group", ref.id(), "revision", ref.revision())));
+                .withPlan(new ScriptCall(
+                        "audit_group", Map.of("group", ref.id(), "revision", ref.revision(), "ticket", source.id())));
         Optional<UUID> owner = source.task().spirit().map(UUID::fromString);
         BoardTicket ticket = post.ticket(
                 source.id(),
