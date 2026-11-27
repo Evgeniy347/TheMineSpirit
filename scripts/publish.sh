@@ -299,7 +299,6 @@ if [ -n "$verify_only" ]; then
 fi
 
 run_gradle() {
-    # Одноразовый демон и все дочерние JVM сборки попадают в общий ограниченный scope.
     if [ "$PUBLISH_REMOTE" = 0 ] && [ "$SERVER_DIR" = /opt/minecraft/server ]; then
         systemd-run --user --scope --unit="theminespirit-build-$$" \
             --property=MemoryMax=6G --property=CPUQuota=300% \
