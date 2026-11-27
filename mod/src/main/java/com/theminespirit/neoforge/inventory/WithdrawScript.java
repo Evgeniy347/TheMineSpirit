@@ -90,12 +90,16 @@ public final class WithdrawScript extends ContainerTask {
                 current == null ? -1 : freeSlots(current),
                 current == null ? -1 : current.getContainerSize(),
                 moved,
-                shortage == TransferRunner.Shortage.NONE ? "взято" : "в контейнере не хватает предмета");
+                shortage == TransferRunner.Shortage.NONE
+                        ? "взято"
+                        : params.leftover() && moved > 0 ? "взято доступное" : "в контейнере не хватает предмета");
         return switch (shortage) {
             case NONE -> ScriptStatus.SUCCEEDED;
             case SOURCE_LACK ->
-                failed("в контейнере только " + moved + " из " + params.count() + " '" + params.item()
-                        + "': перенесено " + moved + ", остального в контейнере нет");
+                params.leftover() && moved > 0
+                        ? ScriptStatus.SUCCEEDED
+                        : failed("в контейнере только " + moved + " из " + params.count() + " '" + params.item()
+                                + "': перенесено " + moved + ", остального в контейнере нет");
             case DEST_FULL ->
                 failed("инвентарь духа полон: перенесено " + moved + " из " + params.count() + " '" + params.item()
                         + "', остальное осталось в контейнере");
@@ -139,7 +143,7 @@ public final class WithdrawScript extends ContainerTask {
     @Override
     protected ScriptStatus finishAuto() {
         int moved = movedTotal();
-        if (moved >= params.count()) {
+        if (moved >= params.count() || (params.leftover() && moved > 0)) {
             return ScriptStatus.SUCCEEDED;
         }
         return failed("в доступных сундуках только " + moved + " из " + params.count() + " '" + params.item()

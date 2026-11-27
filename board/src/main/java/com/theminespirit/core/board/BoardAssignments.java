@@ -78,7 +78,10 @@ final class BoardAssignments {
     }
 
     private boolean holds(BoardTicket ticket, UUID spirit) {
-        return ticket.inCrew(spirit) || spirit.equals(claims.get(ticket.id()));
+        UUID claimed = claims.get(ticket.id());
+        return spirit.equals(claimed)
+                || ticket.executors().contains(spirit)
+                || (claimed == null && ticket.assignee().filter(spirit::equals).isPresent());
     }
 
     private @Nullable UUID holder(BoardTicket ticket) {

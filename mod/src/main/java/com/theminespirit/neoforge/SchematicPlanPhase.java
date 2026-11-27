@@ -6,6 +6,7 @@ import com.theminespirit.core.building.BuildPlanner;
 import com.theminespirit.core.building.BuildTuning;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicBlocks;
+import com.theminespirit.core.building.SchematicGround;
 import com.theminespirit.core.building.SpiritReach;
 import com.theminespirit.core.building.api.BuildRotation;
 import com.theminespirit.core.engine.ScriptStatus;
@@ -37,7 +38,7 @@ final class SchematicPlanPhase {
 
     void startPlan() {
         host.planChecked = true;
-        if (host.squad.size() > 1) {
+        if (host.squad.size() > 1 || SchematicGround.tilled(host.site.schematic())) {
             return;
         }
         host.planBegan = System.nanoTime();

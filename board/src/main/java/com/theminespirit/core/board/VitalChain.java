@@ -31,7 +31,10 @@ public final class VitalChain {
 
     private static boolean leads(BoardTicket ticket, Board board, UUID spirit) {
         BoardStatus status = board.statusOf(ticket.id()).orElse(null);
-        return (status == BoardStatus.PENDING || status == BoardStatus.ASSIGNED)
+        return (status == BoardStatus.PENDING
+                        || status == BoardStatus.ASSIGNED
+                        || status == BoardStatus.WAITING_RESOURCES
+                        || status == BoardStatus.BLOCKED)
                 && ticket.boardCase() != BoardCase.ACTIVITY_SENSE
                 && ticket.assignee().map(spirit::equals).orElse(true);
     }

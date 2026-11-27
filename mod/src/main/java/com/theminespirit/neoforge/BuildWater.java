@@ -5,9 +5,13 @@ import com.theminespirit.core.board.FluidPlans;
 import com.theminespirit.core.building.BuildKey;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.script.api.FluidKind;
 import com.theminespirit.neoforge.board.FluidSources;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.Items;
@@ -32,7 +36,14 @@ final class BuildWater {
         }
         Optional<BlockCoord> source = FluidSources.nearest(server, cell, FluidKind.WATER);
         if (source.isEmpty()) {
-            String reason = "нет источника воды в радиусе: воду ведром не набрать";
+            List<TaskNode> fetched =
+                    new ArrayList<>(BuildSupplyTrip.exact(spirit, site, Map.of(Items.WATER_BUCKET, 1)));
+            if (!fetched.isEmpty()) {
+                fetched.add(FluidPlans.pourFromBucket(FluidKind.WATER, cell));
+                LOGGER.info("Стройка {}: заполненное ведро для клетки {} берётся со склада", buildKey, cell);
+                return new Plan(Optional.of(new SequenceNode(List.copyOf(fetched))), "");
+            }
+            String reason = "нет источника воды и заполненного ведра на складе";
             LOGGER.info("Стройка {}: нет источника воды для клетки {} — ищу дальше", buildKey, cell);
             return new Plan(Optional.empty(), reason);
         }

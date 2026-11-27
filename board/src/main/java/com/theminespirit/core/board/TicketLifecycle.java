@@ -79,9 +79,13 @@ final class TicketLifecycle {
             BoardStatus current = statuses.get(ticket.id());
             boolean stage = StageTicket.stage(ticket.id());
             boolean changed = BoardRules.changed(current, ticket, existing, stage);
-            boolean retry = current == BoardStatus.FAILED
-                    && !recentlyFailed(ticket.id(), now)
-                    && (stage || BoardRules.retriedFromWorld(ticket.boardCase()));
+            boolean terminal = current == BoardStatus.FAILED
+                    || current == BoardStatus.CANCELLED
+                    || (current == BoardStatus.DONE && ticket.boardCase() == BoardCase.RESTOCK_FOOD);
+            boolean retry = !recentlyFailed(ticket.id(), now)
+                    && ((ticket.fromGraph() && terminal)
+                            || (current == BoardStatus.FAILED
+                                    && (stage || BoardRules.retriedFromWorld(ticket.boardCase()))));
             if (current == BoardStatus.BLOCKED) {
                 if (changed) {
                     tickets.put(ticket.id(), ticket);

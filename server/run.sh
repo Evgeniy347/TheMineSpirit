@@ -11,5 +11,8 @@ if [ -n "${MINESPIRIT_JDWP_PORT:-}" ]; then
     JDWP="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=127.0.0.1:${MINESPIRIT_JDWP_PORT}"
 fi
 
+# Ограничиваем только JVM, не затрагивая другие процессы пользователя.
 # shellcheck disable=SC2086
-java $JDWP @user_jvm_args.txt @libraries/net/neoforged/neoforge/21.1.257/unix_args.txt "$@"
+exec systemd-run --user --scope --unit="theminespirit-$$" \
+    --property=MemoryMax=6G --property=CPUQuota=300% \
+    java $JDWP @user_jvm_args.txt @libraries/net/neoforged/neoforge/21.1.257/unix_args.txt "$@"

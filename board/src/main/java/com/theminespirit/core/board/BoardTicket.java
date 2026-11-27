@@ -258,11 +258,6 @@ public record BoardTicket(
         return !executors.isEmpty();
     }
 
-    public boolean inCrew(UUID spirit) {
-        Objects.requireNonNull(spirit, "Дух команды не может быть null: участник — конкретный дух");
-        return assignee.filter(spirit::equals).isPresent() || executors.contains(spirit);
-    }
-
     public boolean replacesDone(BoardTicket before, boolean stage) {
         return !stage && (ALWAYS_CAUSE.equals(cause) || !sameDetails(before));
     }

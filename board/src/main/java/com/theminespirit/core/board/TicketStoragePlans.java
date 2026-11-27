@@ -157,7 +157,9 @@ final class TicketStoragePlans {
                         COUNT,
                         RESTOCK_FOOD_COUNT,
                         RADIUS,
-                        CatalogLimits.CONTAINER_RADIUS_DEFAULT));
+                        CatalogLimits.CONTAINER_RADIUS_DEFAULT,
+                        "leftover",
+                        true));
     }
 
     private static ScriptCall gotoPoint(BlockCoord point) {

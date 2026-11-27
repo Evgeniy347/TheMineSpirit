@@ -29,7 +29,7 @@ import net.minecraft.world.phys.AABB;
 import org.jspecify.annotations.Nullable;
 
 final class SchematicSite {
-    private static final Set<String> DERIVED = Set.of("shape");
+    private static final Set<String> DERIVED = Set.of("shape", "moisture");
     final Level level;
     final BuildRotation rotation;
     final Schematic schematic;

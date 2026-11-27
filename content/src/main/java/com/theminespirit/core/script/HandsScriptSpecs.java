@@ -61,7 +61,8 @@ final class HandsScriptSpecs {
                                 ParamSpec.text(CONTAINER, false, NEAREST),
                                 ParamSpec.text(ITEM, true),
                                 ParamSpec.integer(COUNT, true, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX),
-                                containerRadius()),
+                                containerRadius(),
+                                ParamSpec.bool("leftover", false, false)),
                         List.of("контейнер доступен"),
                         List.of("предметы в инвентаре", "контейнер отсортирован")),
                 spec(

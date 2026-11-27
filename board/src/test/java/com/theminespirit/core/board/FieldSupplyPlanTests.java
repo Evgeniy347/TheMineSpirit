@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
 
 class FieldSupplyPlanTests {
     @Test
-    void placed_FieldPlan_RequiresTorchesAndSkipsWaterBuckets() {
+    void placed_FieldPlan_RequiresTorchesAndWaterBuckets() {
         TicketTarget target = TicketTarget.at(new BlockCoord(-134, 63, -467)).withScheme("wheat_field_1");
         TaskNode plan = StagePlans.plan(BoardCase.BUILD_PLACED, 1, target).orElseThrow();
         List<ScriptCall> calls = new ArrayList<>();
@@ -26,27 +26,27 @@ class FieldSupplyPlanTests {
                         .anyMatch(call -> "acquire".equals(call.script())
                                 && "minecraft:torch".equals(call.params().get("item"))),
                 "Поле обязательно получает факелы до стройки: иначе семена выпадают ночью. При смене "
-                        + "placed_FieldPlan_RequiresTorchesAndSkipsWaterBuckets проверь StagePlans.placed.");
-        assertFalse(
+                        + "placed_FieldPlan_RequiresTorchesAndWaterBuckets проверь StagePlans.placed.");
+        assertTrue(
                 calls.stream()
                         .anyMatch(call -> "acquire".equals(call.script())
                                 && "minecraft:water_bucket".equals(call.params().get("item"))),
-                "План поля не требует ведра, если вода уже стоит: иначе acquire снова уходит в шахту за "
-                        + "лишним материалом. При смене placed_FieldPlan_RequiresTorchesAndSkipsWaterBuckets "
-                        + "проверь пропуск water_bucket.");
+                "План поля требует заполненные вёдра: иначе потерянный источник не попадает в потребность "
+                        + "графа и ремонт воды нечем выполнить. При смене placed_FieldPlan_RequiresTorchesAndWaterBuckets "
+                        + "проверь StagePlans.placed.");
         assertFalse(
                 calls.stream().anyMatch(call -> "wait".equals(call.script())),
                 "Отказ получения факела не проглатывается ожиданием: иначе стройка начинается без света. "
-                        + "При смене placed_FieldPlan_RequiresTorchesAndSkipsWaterBuckets проверь acquireStrict.");
+                        + "При смене placed_FieldPlan_RequiresTorchesAndWaterBuckets проверь acquireStrict.");
         assertFalse(
                 calls.stream().anyMatch(call -> "goto".equals(call.script())),
                 "Пашня не делает лишний goto к входу: иначе готовая схема не успевает провериться и "
-                        + "дух снова застревает в рельефе. При смене placed_FieldPlan_RequiresTorchesAndSkipsWaterBuckets "
+                        + "дух снова застревает в рельефе. При смене placed_FieldPlan_RequiresTorchesAndWaterBuckets "
                         + "проверь StagePlans.placed.");
         assertFalse(
                 calls.stream().anyMatch(call -> "clear_area".equals(call.script())),
                 "Пашня не запускает общую расчистку перед схемой: иначе готовые земля, вода и посевы "
-                        + "сносятся повторно. При смене placed_FieldPlan_RequiresTorchesAndSkipsWaterBuckets "
+                        + "сносятся повторно. При смене placed_FieldPlan_RequiresTorchesAndWaterBuckets "
                         + "проверь StagePlans.placed.");
     }
 

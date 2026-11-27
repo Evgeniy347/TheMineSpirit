@@ -111,7 +111,8 @@ public final class DispatchRound {
         }
         boolean ownRescue = ticket.boardCase() == BoardCase.RESCUE_SPIRIT
                 && ticket.assignee().filter(spirit.id()::equals).isPresent();
-        if (!ownRescue) {
+        boolean vitalWork = VitalGate.satisfies(ticket.id(), spirit.needs());
+        if (!ownRescue && !vitalWork) {
             Optional<StuckSpirits.Stuck> stuck = board.stuck().of(spirit.id(), now);
             if (stuck.isPresent()) {
                 StuckSpirits.Stuck mark = stuck.orElseThrow();
@@ -138,7 +139,7 @@ public final class DispatchRound {
         if (ticket.assignee().filter(owner -> !owner.equals(spirit.id())).isPresent() && !reassignable(ticket)) {
             return Optional.of("задание другого духа");
         }
-        if (!board.availableTo(spirit.id(), ticket, now)) {
+        if (!vitalWork && !board.availableTo(spirit.id(), ticket, now)) {
             return Optional.of("на паузе кейса " + ticket.boardCase() + " после "
                     + board.consecutiveFailures(spirit.id(), ticket.boardCase()) + " провалов");
         }

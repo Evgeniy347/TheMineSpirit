@@ -203,12 +203,13 @@ public final class BuildGap {
                 return;
             }
             String item = bare(WoodSpecies.swap(SchematicBlocks.itemOf(block), wood));
+            String placedBlock = bare(WoodSpecies.swap(SchematicBlocks.placementBlock(block), wood));
             String standing = probe.block(at);
             boolean walkway = SchematicActions.isWalkway(block);
             boolean done = probe.deferred(at)
                     || (walkway
                             ? SchematicGround.walkwayPlaced(block, probe.rawBlock(at))
-                            : BlockMatch.matches(standing, item));
+                            : BlockMatch.matches(standing, placedBlock));
             if (!done && walkway && SchematicActions.isWalkway(probe.rawBlock(below(at)))) {
                 lifted.add(at);
             }

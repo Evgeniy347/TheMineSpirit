@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.observation.BlockCoord;
@@ -11,6 +12,8 @@ import com.theminespirit.core.town.PlotLeveling;
 import com.theminespirit.core.town.StageWork;
 import com.theminespirit.core.town.TownFixtures;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 class DispatchPickTests {
@@ -36,6 +39,34 @@ class DispatchPickTests {
                 "Сундуки строятся по месту и требуют пути: иначе их начнут ставить в любую удалённую "
                         + "точку. При смене localWork_LocalScripts_DoNotRequireGlobalPath проверь "
                         + "DispatchPick.localWork.");
+    }
+
+    @Test
+    void remoteFood_SettlementDeposit_SkipsApproachButNearestDoesNot() {
+        BoardTicket ticket = new BoardTicket(
+                "graph:restock_food@spirit",
+                BoardCase.RESTOCK_FOOD,
+                Optional.empty(),
+                50,
+                0L,
+                1,
+                BoardTicket.ALWAYS_CAUSE,
+                List.of(),
+                Map.of());
+        TicketTarget remote = TicketTarget.at(new BlockCoord(10, 60, -5))
+                .withSupply("bread", 8)
+                .withDeposit(new BlockCoord(11, 60, -5));
+
+        assertTrue(
+                DispatchPick.remoteFood(ticket, remote),
+                "Выбор сундука поселения делает получение еды дистанционным"
+                        + " Иначе тест remoteFood_SettlementDeposit_SkipsApproachButNearestDoesNot перестанет ловить эту поломку. "
+                        + "При смене remoteFood_SettlementDeposit_SkipsApproachButNearestDoesNot проверь DispatchPick.remoteFood.");
+        assertFalse(
+                DispatchPick.remoteFood(ticket, TicketTarget.at(remote.target()).withSupply("bread", 8)),
+                "Без выбранного сундука получение остаётся локальным и требует пути"
+                        + " Иначе тест remoteFood_SettlementDeposit_SkipsApproachButNearestDoesNot перестанет ловить эту поломку. "
+                        + "При смене remoteFood_SettlementDeposit_SkipsApproachButNearestDoesNot проверь это утверждение.");
     }
 
     @Test

@@ -5,6 +5,7 @@ import com.theminespirit.core.building.BuildClutter;
 import com.theminespirit.core.building.BuildPhase;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicActions;
+import com.theminespirit.core.building.SchematicBlocks;
 import com.theminespirit.core.building.SettlementChests;
 import com.theminespirit.core.inventory.BaseKit;
 import com.theminespirit.core.inventory.DepositSelection;
@@ -184,9 +185,12 @@ final class BuildSupplyTrip {
     private static Set<String> neededItems(SchematicSite site) {
         Set<String> needed = new HashSet<>();
         for (Schematic.PlacedEntry entry : site.primaries()) {
-            if (BlockItems.hasBlockItem(entry.block())
-                    && !SchematicActions.isActionPlaced(entry.block())
-                    && !site.matches(entry)) {
+            if (site.matches(entry)) {
+                continue;
+            }
+            if (SchematicActions.isFluidPlaced(entry.block())) {
+                needed.add(SchematicBlocks.itemOf(entry.block()));
+            } else if (BlockItems.hasBlockItem(entry.block()) && !SchematicActions.isActionPlaced(entry.block())) {
                 needed.add(BuiltInRegistries.ITEM
                         .getKey(BlockItems.itemFor(entry.block()))
                         .toString());

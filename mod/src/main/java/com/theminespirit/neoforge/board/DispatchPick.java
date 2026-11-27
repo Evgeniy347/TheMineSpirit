@@ -19,6 +19,7 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.PlotLeveling;
 import com.theminespirit.neoforge.LevelSafetyView;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.inventory.ChestWithdrawal;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -84,7 +85,7 @@ final class DispatchPick {
         String supply = target == null ? null : target.supplyItem();
         if (ticket.assignee().isPresent()) {
             DispatchRound.Candidate own = candidates.get(ticket.assignee().orElseThrow());
-            if (own != null && (localWork(ticket.boardCase()) || reachable(own, target))) {
+            if (own != null && (worksWithoutApproach(ticket, target, own) || reachable(own, target))) {
                 Optional<DispatchRound.Candidate> chosen = round.choose(ticket, List.of(own), supply);
                 if (chosen.isPresent()) {
                     return entities.get(chosen.orElseThrow().id());
@@ -102,7 +103,7 @@ final class DispatchPick {
                     (int) Math.floor(entities.get(spirit.id()).getY()),
                     target.target().y()));
         }
-        preference.removeIf(spirit -> !localWork(ticket.boardCase()) && !reachable(spirit, target));
+        preference.removeIf(spirit -> !worksWithoutApproach(ticket, target, spirit) && !reachable(spirit, target));
         preference.sort(Comparator.<DispatchRound.Candidate>comparingInt(
                         spirit -> crafter.filter(spirit.id()::equals).isPresent() ? 0 : 1)
                 .thenComparingDouble(spirit -> distance(entities.get(spirit.id()), target))
@@ -110,6 +111,22 @@ final class DispatchPick {
         return round.choose(ticket, preference, supply)
                 .map(spirit -> entities.get(spirit.id()))
                 .orElse(null);
+    }
+
+    private boolean worksWithoutApproach(
+            BoardTicket ticket, @Nullable TicketTarget target, DispatchRound.Candidate spirit) {
+        if (localWork(ticket.boardCase())) {
+            return true;
+        }
+        if (!remoteFood(ticket, target)) {
+            return false;
+        }
+        SpiritEntity entity = entities.get(spirit.id());
+        return entity != null && ChestWithdrawal.inside(entity);
+    }
+
+    static boolean remoteFood(BoardTicket ticket, @Nullable TicketTarget target) {
+        return ticket.boardCase() == BoardCase.RESTOCK_FOOD && target != null && target.deposit() != null;
     }
 
     private boolean reachable(DispatchRound.Candidate spirit, @Nullable TicketTarget target) {
@@ -200,7 +217,11 @@ final class DispatchPick {
         String supply = target == null ? null : target.supplyItem();
         List<DispatchRound.Candidate> spirits = new ArrayList<>(candidates.values());
         String why = round.why(ticket, spirits, supply);
-        if (reach != null && target != null && spirits.stream().noneMatch(spirit -> reachable(spirit, target))) {
+        if (reach != null
+                && target != null
+                && spirits.stream()
+                        .noneMatch(
+                                spirit -> worksWithoutApproach(ticket, target, spirit) || reachable(spirit, target))) {
             BlockCoord approach = approachTarget(target);
             StringBuilder paths = new StringBuilder();
             for (DispatchRound.Candidate spirit : spirits) {

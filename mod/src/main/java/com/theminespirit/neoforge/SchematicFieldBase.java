@@ -31,8 +31,9 @@ final class SchematicFieldBase {
         this.host = host;
         List<BlockCoord> cells = new ArrayList<>();
         if (SchematicGround.tilled(host.site.schematic())) {
+            int groundY = groundY(host.site.schematic(), host.site.origin());
             for (Schematic.PlacedEntry entry : host.site.primaries()) {
-                if (entry.pos().y() == host.site.origin().y()
+                if (entry.pos().y() == groundY
                         && (SchematicActions.isTilled(entry.block())
                                 || SchematicActions.isWalkway(entry.block())
                                 || SchematicActions.isFluidPlaced(entry.block()))) {
@@ -43,13 +44,18 @@ final class SchematicFieldBase {
         this.ground = List.copyOf(cells);
     }
 
+    static int groundY(Schematic schematic, BlockCoord origin) {
+        return SchematicGround.groundLayer(schematic) ? origin.y() - 1 : origin.y();
+    }
+
     static int missingBaseCount(SchematicSite site) {
         if (!SchematicGround.tilled(site.schematic())) {
             return 0;
         }
         int missing = 0;
+        int groundY = groundY(site.schematic(), site.origin());
         for (Schematic.PlacedEntry entry : site.primaries()) {
-            if (entry.pos().y() == site.origin().y()
+            if (entry.pos().y() == groundY
                     && (SchematicActions.isTilled(entry.block())
                             || SchematicActions.isWalkway(entry.block())
                             || SchematicActions.isFluidPlaced(entry.block()))

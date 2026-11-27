@@ -3,6 +3,7 @@ package com.theminespirit.neoforge;
 import com.theminespirit.core.building.PathGround;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicActions;
+import com.theminespirit.core.building.SchematicBlocks;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Predicate;
@@ -20,6 +21,10 @@ final class BuildSupplyNeed {
         Map<Item, Integer> need = new LinkedHashMap<>();
         for (Schematic.PlacedEntry entry : site.primaries()) {
             if (!site.matches(entry) && phase.test(entry)) {
+                if (SchematicActions.isFluidPlaced(entry.block())) {
+                    need.merge(itemOf(SchematicBlocks.itemOf(entry.block())), 1, Integer::sum);
+                    continue;
+                }
                 if (BlockItems.hasBlockItem(entry.block()) && !SchematicActions.isActionPlaced(entry.block())) {
                     need.merge(BlockItems.itemFor(entry.block()), 1, Integer::sum);
                     continue;

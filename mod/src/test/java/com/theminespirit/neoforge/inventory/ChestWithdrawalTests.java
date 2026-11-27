@@ -41,6 +41,24 @@ class ChestWithdrawalTests {
     }
 
     @Test
+    void withdraw_PartialFood_SucceedsWhenLeftoverAllowed() throws IOException {
+        String plan =
+                Files.readString(Path.of("board/src/main/java/com/theminespirit/core/board/TicketStoragePlans.java"));
+        int start = plan.indexOf("static TaskNode restockFood");
+        String restock = plan.substring(start, plan.indexOf("private static ScriptCall gotoPoint", start))
+                .replaceAll("\\s+", "");
+        String withdraw =
+                Files.readString(Path.of("mod/src/main/java/com/theminespirit/neoforge/inventory/WithdrawScript.java"));
+
+        assertTrue(
+                restock.contains("\"leftover\",true") && withdraw.contains("params.leftover()"),
+                "RESTOCK_FOOD забирает доступную часть еды и закрывается: иначе запас 1–47 хлеба даёт "
+                        + "FAILED после полезного переноса и голод не получает подтверждённого источника"
+                        + " При смене withdraw_PartialFood_SucceedsWhenLeftoverAllowed проверь TicketStoragePlans.restockFood "
+                        + "и WithdrawScript.finish/finishAuto.");
+    }
+
+    @Test
     void remoteTransfer_OnlyWithdrawBypassesApproach_DepositKeepsPhysicalAccess() throws IOException {
         String withdraw =
                 Files.readString(Path.of("mod/src/main/java/com/theminespirit/neoforge/inventory/WithdrawScript.java"));
