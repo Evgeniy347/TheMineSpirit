@@ -480,6 +480,7 @@ acquire_build_lock() {
 
 snapshot_world() {
     local version="$1" script="$SERVER_DIR/scripts/world-snapshot.sh" snapshot_label archive
+    local -a archives=()
     snapshot_label="publish-$version"
     if [ ! -x "$script" ]; then
         echo "ОШИБКА: нет $script — снимок мира перед выкладкой не сделать" >&2
@@ -490,8 +491,9 @@ snapshot_world() {
         echo "ОШИБКА: снимок мира не создан, публикация остановлена до остановки сервера" >&2
         return 1
     fi
-    archive="$(ls -1t "$WORLD_BACKUPS"/world-*-"$snapshot_label".tar.zst 2>/dev/null | head -n 1)"
-    if [ -z "$archive" ]; then
+    archives=("$WORLD_BACKUPS"/world-*-"$snapshot_label".tar.zst)
+    archive="${archives[0]:-}"
+    if [ -z "$archive" ] || [ ! -f "$archive" ]; then
         echo "ОШИБКА: архива с меткой $snapshot_label нет в $WORLD_BACKUPS (снимок пропущен другим процессом?)" >&2
         return 1
     fi

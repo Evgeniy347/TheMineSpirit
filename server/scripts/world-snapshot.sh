@@ -133,10 +133,12 @@ prune_archives() {
 
 enforce_free_space() {
     local free path
+    local -a paths=()
     free="$(free_mb)"
     while [ -n "$free" ] && [ "$free" -lt "$MIN_FREE_MB" ]; do
-        path="$(ls -1 "$WORLD_BACKUPS"/world-*.tar.zst 2>/dev/null | head -n 1)"
-        if [ -z "$path" ]; then
+        paths=("$WORLD_BACKUPS"/world-*.tar.zst)
+        path="${paths[0]}"
+        if [ ! -f "$path" ]; then
             echo "мало места: свободно ${free} МБ, архивов больше нет (нужно ${MIN_FREE_MB} МБ)" >&2
             return 1
         fi
