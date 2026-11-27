@@ -190,6 +190,9 @@ final class GraphMoreFarmPost {
                 continue;
             }
             String id = ticket.id() + "@" + fact.id();
+            if (post.done(id)) {
+                post.service.reopen(id);
+            }
             if (post.open(id)) {
                 continue;
             }
