@@ -7,7 +7,6 @@ import com.theminespirit.core.board.CaseMaterials;
 import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.TransferCarriers;
-import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.planner.api.Ingredient;
 import com.theminespirit.core.social.TransferOrder;
@@ -51,11 +50,8 @@ final class TransferBuildDesk {
         if (computed.isEmpty()) {
             return false;
         }
-        BlockCoord yard = SettlementPlotStore.liveSite(level)
-                .map(site -> site.workYard())
-                .orElseGet(() -> builder.home().orElseGet(() -> TransferStockDesk.at(builder)));
-        Map<String, Integer> pooled = TransferStockDesk.hasSettlementChest(level, yard)
-                ? TransferStockDesk.chestStock(level, service, yard, build.id())
+        Map<String, Integer> pooled = TransferStockDesk.hasSettlementChest(builder)
+                ? TransferStockDesk.chestStock(level, service, builder, build.id())
                 : Map.of();
         List<Ingredient> materials = materials(trimmed(computed.orElseThrow(), builder, pooled));
         if (materials.isEmpty()) {
@@ -131,8 +127,7 @@ final class TransferBuildDesk {
             List<Ingredient> materials) {
         StackMapper mapper = new StackMapper();
         RecipeKnowledge recipes = RecipeKnowledge.of(level);
-        BlockCoord home = builder.home().orElseGet(() -> TransferStockDesk.at(builder));
-        boolean chest = TransferStockDesk.hasSettlementChest(level, home);
+        boolean chest = TransferStockDesk.hasSettlementChest(builder);
         return TransferPlanner.planForCraft(new TransferPlanner.CraftRequest(
                 build.boardCase().name().toLowerCase(Locale.ROOT),
                 builder.getUUID(),

@@ -1,7 +1,7 @@
 core/board/Board.java	507
 core/board/BoardConfigTests.java	403
 core/board/BoardTests.java	967
-core/board/TicketPlansTests.java	1134
+core/board/TicketPlansTests.java	1084
 core/plan/PlanValidatorRulesTests.java	359
 core/planner/FallbackPlannerTests.java	326
 core/planner/ResourceResolverTests.java	545

@@ -78,7 +78,7 @@ public record CraftPlan(
         for (IngredientSpec slot : slots) {
             String best = slot.alternatives().get(0);
             for (String alternative : slot.alternatives()) {
-                if (left.getOrDefault(alternative, 0) > left.getOrDefault(best, 0)) {
+                if (Math.max(0, left.getOrDefault(alternative, 0)) > Math.max(0, left.getOrDefault(best, 0))) {
                     best = alternative;
                 }
             }

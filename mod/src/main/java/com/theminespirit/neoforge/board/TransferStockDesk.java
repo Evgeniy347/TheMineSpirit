@@ -1,6 +1,5 @@
 package com.theminespirit.neoforge.board;
 
-import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.inventory.BaseKit;
@@ -8,12 +7,11 @@ import com.theminespirit.core.inventory.KitFor;
 import com.theminespirit.core.inventory.NeedsOfPlan;
 import com.theminespirit.core.inventory.Stack;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.script.api.CatalogLimits;
 import com.theminespirit.core.social.TransferSource;
-import com.theminespirit.neoforge.SettlementChestStore;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.crafting.ItemIds;
 import com.theminespirit.neoforge.crafting.RecipeKnowledge;
+import com.theminespirit.neoforge.inventory.ChestWithdrawal;
 import com.theminespirit.neoforge.inventory.ContainerAccess;
 import com.theminespirit.neoforge.inventory.StackMapper;
 import java.util.ArrayList;
@@ -26,8 +24,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
 
 final class TransferStockDesk {
-    private static final int CHEST_PROBES = 4;
-
     private TransferStockDesk() {}
 
     static List<TransferSource> sources(
@@ -47,17 +43,12 @@ final class TransferStockDesk {
         return sources;
     }
 
-    static Map<String, Integer> chestStock(ServerLevel level, BoardService service, BlockCoord home, String craftId) {
+    static Map<String, Integer> chestStock(
+            ServerLevel level, BoardService service, SpiritEntity spirit, String craftId) {
         Map<String, Integer> containers = new HashMap<>();
         StackMapper mapper = new StackMapper();
-        for (BlockCoord pos : SettlementChestStore.get(level).chests().nearest(home, CHEST_PROBES)) {
-            int dx = pos.x() - home.x();
-            int dz = pos.z() - home.z();
-            if (dx * dx + dz * dz > CatalogLimits.CONTAINER_RADIUS_DEFAULT * CatalogLimits.CONTAINER_RADIUS_DEFAULT) {
-                continue;
-            }
-            if (ContainerAccess.open(level, new BlockPos(pos.x(), pos.y(), pos.z()))
-                    instanceof ContainerAccess.Opened opened) {
+        for (BlockPos pos : ChestWithdrawal.positions(spirit)) {
+            if (ContainerAccess.open(level, pos) instanceof ContainerAccess.Opened opened) {
                 for (Stack stack : stacks(opened.container(), mapper)) {
                     if (stack != null) {
                         containers.merge(stack.item(), stack.count(), Integer::sum);
@@ -95,22 +86,8 @@ final class TransferStockDesk {
         return normalized;
     }
 
-    static boolean hasSettlementChest(ServerLevel level, BlockCoord home) {
-        for (BlockCoord pos : SettlementChestStore.get(level).chests().nearest(home, CHEST_PROBES)) {
-            int dx = pos.x() - home.x();
-            int dz = pos.z() - home.z();
-            if (dx * dx + dz * dz
-                            > BoardConfig.current().facts().chestSearchRadius()
-                                    * BoardConfig.current().facts().chestSearchRadius()
-                    || Math.abs(pos.y() - home.y())
-                            > BoardConfig.current().facts().chestSearchRadius()) {
-                return false;
-            }
-            if (ContainerAccess.allowed(level.getBlockState(new BlockPos(pos.x(), pos.y(), pos.z())))) {
-                return true;
-            }
-        }
-        return false;
+    static boolean hasSettlementChest(SpiritEntity spirit) {
+        return !ChestWithdrawal.positions(spirit).isEmpty();
     }
 
     static String modifier(BoardTicket ticket, String prefix) {

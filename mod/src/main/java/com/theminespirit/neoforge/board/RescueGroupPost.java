@@ -67,7 +67,6 @@ final class RescueGroupPost {
             RescueReach.Verdict reach = cache.verdict(spirit.getUUID(), at, home, post.now);
             if (reach == null) {
                 cache.request(world, water, spirit.getUUID(), at, home, post.now);
-                pending = true;
             } else {
                 pathHome.put(spirit.getUUID(), reach.reachable());
             }

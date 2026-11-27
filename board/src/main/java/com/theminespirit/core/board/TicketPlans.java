@@ -185,7 +185,7 @@ public final class TicketPlans {
                                 WITHDRAW,
                                 Map.of(
                                         CONTAINER,
-                                        "auto",
+                                        "settlement",
                                         ITEM,
                                         target.supplyItem(),
                                         COUNT,

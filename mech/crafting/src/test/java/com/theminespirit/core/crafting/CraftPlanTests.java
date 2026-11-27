@@ -134,6 +134,28 @@ class CraftPlanTests {
     }
 
     @Test
+    void of_EmptyAlternatives_ReportsOneSpeciesWithTotalShortage() {
+        RecipeSpec recipe = RecipeSpec.shapeless(
+                "table",
+                "crafting_table",
+                1,
+                List.of(
+                        IngredientSpec.of("birch_planks", "oak_planks", "spruce_planks", "jungle_planks"),
+                        IngredientSpec.of("birch_planks", "oak_planks", "spruce_planks", "jungle_planks"),
+                        IngredientSpec.of("birch_planks", "oak_planks", "spruce_planks", "jungle_planks"),
+                        IngredientSpec.of("birch_planks", "oak_planks", "spruce_planks", "jungle_planks")));
+
+        CraftPlan plan = CraftPlan.of(recipe, 1, Map.of());
+
+        assertEquals(
+                Map.of("birch_planks", 4),
+                plan.missing(),
+                "Пустой запас пород даёт одну нехватку на четыре доски, а не по одной доске каждой породы: "
+                        + "иначе сообщение требует невозможный набор и не объясняет реальный дефицит. При смене "
+                        + "of_EmptyAlternatives_ReportsOneSpeciesWithTotalShortage проверь CraftPlan.wishedDemand.");
+    }
+
+    @Test
     void of_ZeroCount_IsRejected() {
         assertThrows(
                 IllegalArgumentException.class,

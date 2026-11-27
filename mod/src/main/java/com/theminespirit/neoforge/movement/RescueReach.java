@@ -39,12 +39,10 @@ public final class RescueReach {
         private final Key key;
         private final NavAStarSession session;
         private final Predicate<BlockCoord> water;
-        private final long started;
 
-        private Probe(Key key, NavWorld world, Predicate<BlockCoord> water, long now) {
+        private Probe(Key key, NavWorld world, Predicate<BlockCoord> water) {
             this.key = key;
             this.water = water;
-            this.started = now;
             this.session = new NavAStarSession(
                     new NavContext(world, WALK_ONLY, 0),
                     key.from().x(),
@@ -70,17 +68,6 @@ public final class RescueReach {
             return entry == null ? null : entry.verdict();
         }
 
-        public long pendingTicks(UUID helper, BlockCoord from, BlockCoord target, long now) {
-            Objects.requireNonNull(helper, "Помощник не может быть null: кэш адресный");
-            Key key = new Key(helper, from, target);
-            Probe probe = pending.get(key);
-            if (probe != null) {
-                return Math.max(0, now - probe.started);
-            }
-            Long deferredAt = deferred.get(key);
-            return deferredAt == null ? -1 : Math.max(0, now - deferredAt);
-        }
-
         public void request(
                 NavWorld world,
                 Predicate<BlockCoord> water,
@@ -99,7 +86,7 @@ public final class RescueReach {
                 return;
             }
             deferred.remove(key);
-            pending.put(key, new Probe(key, world, water, now));
+            pending.put(key, new Probe(key, world, water));
         }
 
         public void advance(long now, long budgetNanos) {
@@ -114,9 +101,6 @@ public final class RescueReach {
             if (result != null) {
                 remember(probe, verdict(probe, result), now);
                 pending.remove(probe.key);
-            } else if (now - probe.started >= PROBE_TTL_TICKS) {
-                pending.remove(probe.key);
-                generation++;
             }
         }
 

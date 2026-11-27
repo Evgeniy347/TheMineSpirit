@@ -12,7 +12,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.FluidTags;
 
 final class NavigationReach implements DispatchReach.Cache {
-    private static final long PROVISIONAL_TICKS = 200;
     private final RescueReach.Cache cache;
     private final LevelNavWorld world;
     private final Predicate<BlockCoord> water;
@@ -36,9 +35,7 @@ final class NavigationReach implements DispatchReach.Cache {
         if (verdict != null) {
             return Optional.of(new DispatchReach.Verdict(verdict.reachable(), verdict.why()));
         }
-        return cache.pendingTicks(spirit, from, target, now) >= PROVISIONAL_TICKS
-                ? Optional.of(new DispatchReach.Verdict(true, "путь проверяется: временная выдача"))
-                : Optional.empty();
+        return Optional.empty();
     }
 
     @Override

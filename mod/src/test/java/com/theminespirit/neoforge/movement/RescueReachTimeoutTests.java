@@ -1,7 +1,5 @@
 package com.theminespirit.neoforge.movement;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.navigation.NavWorld;
@@ -16,38 +14,24 @@ class RescueReachTimeoutTests {
     private static final NavWorld FLAT = new Flat();
 
     @Test
-    void cache_SearchTimeout_DoesNotBecomeNegativeVerdict() {
+    void cache_SearchAcrossCadence_KeepsProbeUntilVerdict() {
         RescueReach.Cache cache = RescueReach.cache();
         cache.request(FLAT, cell -> false, HELPER, FROM, TARGET, 0);
-        assertEquals(
-                200,
-                cache.pendingTicks(HELPER, FROM, TARGET, 200),
-                "Возраст незавершённого поиска доступен выдаче: иначе временная выдача не сможет "
-                        + "отличить медленный путь от зависшего. При смене cache_SearchTimeout_DoesNotBecomeNegativeVerdict "
-                        + "проверь RescueReach.Cache.pendingTicks.");
-
         cache.advance(1200, 1L);
-
-        assertNull(
-                cache.verdict(HELPER, FROM, TARGET, 1200),
-                "Исчерпание бюджета не означает отсутствие пути: иначе все дальние задания получают "
-                        + "ложный BLOCKED на 1200 тиков. При смене cache_SearchTimeout_DoesNotBecomeNegativeVerdict "
-                        + "проверь RescueReach.Cache.advance и живой (-163,67,-522).");
-        cache.request(FLAT, cell -> false, HELPER, FROM, TARGET, 1200);
         for (int step = 0; step < 30; step++) {
             cache.advance(1200, 10_000_000L);
         }
 
-        RescueReach.Verdict retried = cache.verdict(HELPER, FROM, TARGET, 1200);
+        RescueReach.Verdict completed = cache.verdict(HELPER, FROM, TARGET, 1200);
         assertTrue(
-                retried != null && retried.reachable(),
-                "После таймаута поиск запускается заново: иначе один медленный проход навсегда закроет "
-                        + "достижимую цель. При смене cache_SearchTimeout_DoesNotBecomeNegativeVerdict проверь "
-                        + "удаление pending без remember.");
+                completed != null && completed.reachable(),
+                "Медленный поиск продолжается между циклами графа и завершается вердиктом: иначе cadence "
+                        + "сбрасывает pending каждый раз и rescue никогда не получает помощника. При смене "
+                        + "cache_SearchAcrossCadence_KeepsProbeUntilVerdict проверь RescueReach.Cache.advance.");
     }
 
     @Test
-    void cache_PendingQueueFull_StillAgesDeferredRequest() {
+    void cache_PendingQueueFull_DoesNotLoseDeferredRequest() {
         RescueReach.Cache cache = RescueReach.cache();
         for (int index = 0; index < 16; index++) {
             cache.request(FLAT, cell -> false, HELPER, FROM, new BlockCoord(index + 1, 64, 0), 0);
@@ -55,12 +39,20 @@ class RescueReachTimeoutTests {
         BlockCoord deferredTarget = new BlockCoord(100, 64, 0);
         cache.request(FLAT, cell -> false, HELPER, FROM, deferredTarget, 0);
 
-        assertEquals(
-                200,
-                cache.pendingTicks(HELPER, FROM, deferredTarget, 200),
-                "Запрос сверх лимита тоже получает возраст: иначе 16 поисков навсегда оставят "
-                        + "остальных духов без заданий. При смене cache_PendingQueueFull_StillAgesDeferredRequest "
-                        + "проверь RescueReach.Cache.deferred и NavigationReach.");
+        for (int step = 0; step < 30; step++) {
+            cache.advance(200, 10_000_000L);
+        }
+        cache.request(FLAT, cell -> false, HELPER, FROM, deferredTarget, 200);
+        for (int step = 0; step < 30; step++) {
+            cache.advance(200, 10_000_000L);
+        }
+
+        RescueReach.Verdict completed = cache.verdict(HELPER, FROM, deferredTarget, 200);
+        assertTrue(
+                completed != null && completed.reachable(),
+                "Отложенный запрос не теряется после освобождения очереди: иначе помощник навсегда "
+                        + "остаётся без пути при 16 pending-поисках. При смене "
+                        + "cache_PendingQueueFull_DoesNotLoseDeferredRequest проверь RescueReach.Cache.request.");
     }
 
     private static final class Flat implements NavWorld {

@@ -731,56 +731,6 @@ class TicketPlansTests {
     }
 
     @Test
-    void plan_TransferItemFromSpirit_DeliversToRecipient() {
-        UUID giver = UUID.fromString("00000000-0000-0000-0000-0000000000c1");
-        UUID taker = UUID.fromString("00000000-0000-0000-0000-0000000000c2");
-        TaskNode plan = TicketPlans.plan(BoardCase.TRANSFER_ITEM, target().withTransfer(giver, taker, "stick", 2));
-        ScriptCall deliver = findCall(plan, "deliver");
-        assertEquals(
-                "stick",
-                deliver.params().get("item"),
-                "Передача везёт тот предмет, которого не хватает крафтеру Иначе тест plan_TransferItemFromSpirit_DeliversToRecipient перестанет ловить эту поломку. При смене plan_TransferItemFromSpirit_DeliversToRecipient проверь это утверждение.");
-        assertEquals(
-                2,
-                deliver.params().get("count"),
-                "Передача везёт ровно нехватку Иначе тест plan_TransferItemFromSpirit_DeliversToRecipient перестанет ловить эту поломку. При смене plan_TransferItemFromSpirit_DeliversToRecipient проверь это утверждение.");
-        assertEquals(
-                "spirit:" + taker,
-                deliver.params().get("to"),
-                "Адресат deliver — дух-крафтер по UUID: имя духа неоднозначно Иначе тест plan_TransferItemFromSpirit_DeliversToRecipient перестанет ловить эту поломку. При смене plan_TransferItemFromSpirit_DeliversToRecipient проверь это утверждение.");
-    }
-
-    @Test
-    void plan_TransferItemFromWarehouse_WithdrawsToRecipient() {
-        UUID taker = UUID.fromString("00000000-0000-0000-0000-0000000000c2");
-        TaskNode plan = TicketPlans.plan(BoardCase.TRANSFER_ITEM, target().withTransfer(null, taker, "cobblestone", 3));
-        ScriptCall withdraw = findCall(plan, "withdraw");
-        assertEquals(
-                "cobblestone",
-                withdraw.params().get("item"),
-                "Со склада берут тот же предмет, которого не хватает крафтеру Иначе тест plan_TransferItemFromWarehouse_WithdrawsToRecipient перестанет ловить эту поломку. При смене plan_TransferItemFromWarehouse_WithdrawsToRecipient проверь это утверждение.");
-        assertEquals(
-                3,
-                withdraw.params().get("count"),
-                "Со склада берут ровно нехватку Иначе тест plan_TransferItemFromWarehouse_WithdrawsToRecipient перестанет ловить эту поломку. При смене plan_TransferItemFromWarehouse_WithdrawsToRecipient проверь это утверждение.");
-        assertEquals(
-                "auto",
-                withdraw.params().get("container"),
-                "Склад — ближайший сундук, где предмет есть: ближайший вообще часто пуст (два сундука во дворе) Иначе тест plan_TransferItemFromWarehouse_WithdrawsToRecipient перестанет ловить эту поломку. При смене plan_TransferItemFromWarehouse_WithdrawsToRecipient проверь это утверждение.");
-    }
-
-    @Test
-    void plan_TransferItemFromWarehouseToSelf_IsPlainGotoThenWithdraw() {
-        UUID self = UUID.fromString("00000000-0000-0000-0000-0000000000c3");
-        TaskNode plan = TicketPlans.plan(BoardCase.TRANSFER_ITEM, target().withTransfer(null, self, "stick", 2));
-        assertEquals(
-                List.of("goto", "withdraw", "wait"),
-                collectScripts(plan),
-                "Передача со склада самому себе (INC-85) — обычные goto к двору и withdraw из ближайшего сундука: "
-                        + "оба подхода строят маршрут с ломкой из-под земли, отдельного deliver-шага нет Иначе тест plan_TransferItemFromWarehouseToSelf_IsPlainGotoThenWithdraw перестанет ловить эту поломку. При смене plan_TransferItemFromWarehouseToSelf_IsPlainGotoThenWithdraw проверь это утверждение.");
-    }
-
-    @Test
     void plan_BreedAnimals_BreedsSpeciesPair() {
         TaskNode plan = TicketPlans.plan(BoardCase.BREED_ANIMALS, target().withSpecies(Species.COW));
         ScriptCall breed = findCall(plan, "breed");

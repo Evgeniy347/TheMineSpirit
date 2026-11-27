@@ -109,7 +109,7 @@ public final class TransferWatch {
         }
         StackMapper mapper = new StackMapper();
         BlockCoord crafterAt = TransferStockDesk.at(crafter);
-        boolean chest = TransferStockDesk.hasSettlementChest(level, place);
+        boolean chest = TransferStockDesk.hasSettlementChest(crafter);
         List<SpiritEntity> donors = chest || gather
                 ? spirits.stream().filter(spirit -> !busy(spirit)).toList()
                 : spirits;
@@ -121,7 +121,7 @@ public final class TransferWatch {
                 TransferStockDesk.stacks(crafter.getInventory(), mapper),
                 ingredients,
                 sources,
-                chest ? TransferStockDesk.chestStock(level, service, place, craftTicket.id()) : Map.of(),
+                chest ? TransferStockDesk.chestStock(level, service, crafter, craftTicket.id()) : Map.of(),
                 InventoryTables.values(),
                 BoardTuning.transferRadiusBlocks(),
                 BoardTuning.transferMaxCount()));
