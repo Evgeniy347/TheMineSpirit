@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import net.minecraft.server.level.ServerLevel;
 import org.jspecify.annotations.Nullable;
 
@@ -36,28 +37,27 @@ final class StoragePlanWatch {
         }
         BoardLedger ledger = post.service.board().ledger();
         int y = post.scan.stage().anchor().y();
-        for (String id : pending(ledger, town.orElseThrow(), y)) {
-            Optional<StageCatalog.Entry> entry = StageCatalog.entry(id);
-            Optional<BlockCoord> origin = StageCatalog.origin(id, town.orElseThrow(), y);
-            String ticketId = "storage_build:" + id;
-            if (post.open(ticketId)) {
-                continue;
-            }
-            post.submit(
-                    post.ticket(
-                            ticketId,
-                            BoardCase.BUILD_PLACED,
-                            Optional.empty(),
-                            ticket.task().priority(),
-                            ticket.id(),
-                            Map.of()),
-                    StagePlacePost.level(
-                            TicketTarget.at(origin.orElseThrow())
-                                    .withScheme(entry.orElseThrow().scheme())
-                                    .withBuilding(id),
-                            post,
-                            id));
+        Optional<String> next = next(pending(ledger, town.orElseThrow(), y), id -> post.open("storage_build:" + id));
+        if (next.isEmpty()) {
+            return true;
         }
+        String id = next.orElseThrow();
+        Optional<StageCatalog.Entry> entry = StageCatalog.entry(id);
+        Optional<BlockCoord> origin = StageCatalog.origin(id, town.orElseThrow(), y);
+        post.submit(
+                post.ticket(
+                        "storage_build:" + id,
+                        BoardCase.BUILD_PLACED,
+                        Optional.empty(),
+                        ticket.task().priority(),
+                        ticket.id(),
+                        Map.of()),
+                StagePlacePost.level(
+                        TicketTarget.at(origin.orElseThrow())
+                                .withScheme(entry.orElseThrow().scheme())
+                                .withBuilding(id),
+                        post,
+                        id));
         return true;
     }
 
@@ -73,6 +73,12 @@ final class StoragePlanWatch {
             }
         }
         return ids;
+    }
+
+    static Optional<String> next(List<String> pending, Predicate<String> open) {
+        return pending.stream().anyMatch(open)
+                ? Optional.empty()
+                : pending.stream().findFirst();
     }
 
     record Space(int free, int slots) {

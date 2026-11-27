@@ -15,6 +15,7 @@ import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.core.town.TownStreets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 
@@ -53,6 +54,25 @@ class StoragePlanWatchTests {
                 "Пока ни один склад не построен, сторож выдаёт все три задания BUILD_PLACED по участкам "
                         + "плана, иначе стройка складов не начнётся. "
                         + "Иначе тест pending_ThreeLotsWithoutBuild_AreAllWanted перестанет ловить эту поломку. При смене pending_ThreeLotsWithoutBuild_AreAllWanted проверь это утверждение.");
+    }
+
+    @Test
+    void next_OpenLot_DoesNotPostAnotherStorage() {
+        Optional<String> next =
+                StoragePlanWatch.next(List.of("storage", "storage_2", "storage_3"), id -> "storage".equals(id));
+
+        assertEquals(
+                Optional.empty(),
+                next,
+                "Пока один склад открыт, второй не ставится: иначе три недостижимые расчистки забирают "
+                        + "всех духов и останавливают еду, сад и ремонт. При смене "
+                        + "next_OpenLot_DoesNotPostAnotherStorage проверь StoragePlanWatch.post.");
+        assertEquals(
+                Optional.of("storage"),
+                StoragePlanWatch.next(List.of("storage", "storage_2", "storage_3"), id -> false),
+                "После закрытия текущего склада начинается следующий по порядку: иначе расширение "
+                        + "встаёт навсегда. При смене next_OpenLot_DoesNotPostAnotherStorage проверь "
+                        + "StoragePlanWatch.next.");
     }
 
     @Test
