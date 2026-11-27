@@ -83,7 +83,9 @@ public final class StagePlans {
                         origin.y() + value.entry().y(),
                         origin.z() + value.entry().z()))
                 .orElse(origin);
-        steps.add(PlanSteps.gotoPoint(entry));
+        if (!tilled(scheme)) {
+            steps.add(PlanSteps.gotoPoint(entry));
+        }
         preset.ifPresent(value -> PresetLibrary.countMaterials(value.schematic())
                 .forEach((item, count) -> {
                     if (SchematicActions.isActionPlaced(item)) {

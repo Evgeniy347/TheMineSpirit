@@ -39,6 +39,11 @@ class FieldSupplyPlanTests {
                 "Отказ получения факела не проглатывается ожиданием: иначе стройка начинается без света. "
                         + "При смене placed_FieldPlan_RequiresTorchesAndSkipsWaterBuckets проверь acquireStrict.");
         assertFalse(
+                calls.stream().anyMatch(call -> "goto".equals(call.script())),
+                "Пашня не делает лишний goto к входу: иначе готовая схема не успевает провериться и "
+                        + "дух снова застревает в рельефе. При смене placed_FieldPlan_RequiresTorchesAndSkipsWaterBuckets "
+                        + "проверь StagePlans.placed.");
+        assertFalse(
                 calls.stream().anyMatch(call -> "clear_area".equals(call.script())),
                 "Пашня не запускает общую расчистку перед схемой: иначе готовые земля, вода и посевы "
                         + "сносятся повторно. При смене placed_FieldPlan_RequiresTorchesAndSkipsWaterBuckets "

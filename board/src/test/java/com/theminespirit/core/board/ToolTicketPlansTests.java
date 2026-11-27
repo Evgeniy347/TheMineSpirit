@@ -16,7 +16,6 @@ import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.town.PlotLeveling;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 class ToolTicketPlansTests {
@@ -93,20 +92,23 @@ class ToolTicketPlansTests {
     }
 
     @Test
-    void plan_PlacedWithoutLeveling_GoesToSchematicEntrance() {
+    void plan_TilledWithoutLeveling_SkipsEntranceGoto() {
         TaskNode plan = TicketPlans.plan(
                 BoardCase.BUILD_PLACED,
                 1,
                 TicketTarget.at(new BlockCoord(10, 60, -5)).withScheme("wheat_field_1"));
 
-        ScriptCall gotoCall = calls(plan, "goto").get(0);
-
         assertEquals(
-                Map.of("x", 17, "y", 61, "z", -3),
-                gotoCall.params(),
-                "Перед стройкой дух идёт к входу схемы, а не к её углу: иначе wheat_field снова получает "
-                        + "goto в рельеф и clear_area без прогресса. При смене plan_PlacedWithoutLeveling_GoesToSchematicEntrance "
-                        + "проверь StagePlans.placed, Preset.entry и живой участок (-134,64,-467).");
+                0,
+                calls(plan, "goto").size(),
+                "Пашня не делает лишний goto к входу: иначе уже готовое поле снова падает в рельефе "
+                        + "до проверки схемы. При смене plan_TilledWithoutLeveling_SkipsEntranceGoto "
+                        + "проверь StagePlans.placed и живой wheat_field.");
+        assertTrue(
+                scripts(plan).contains("build_schematic"),
+                "После снабжения пашня сразу проверяется схемой: иначе без goto задание вообще "
+                        + "не доходит до стройки. При смене plan_TilledWithoutLeveling_SkipsEntranceGoto "
+                        + "проверь StagePlans.placed.");
     }
 
     private static List<ScriptCall> calls(TaskNode root, String script) {
