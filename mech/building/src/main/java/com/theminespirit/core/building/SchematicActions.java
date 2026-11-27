@@ -34,6 +34,7 @@ public final class SchematicActions {
     private static final String MYCELIUM = "mycelium";
     private static final Set<String> LIGHTS = Set.of(
             "torch", "wall_torch", "soul_torch", "soul_wall_torch", "lantern", "glowstone", "sea_lantern", "campfire");
+    private static final Set<String> CROPS = Set.of("wheat", "carrots", "potatoes", "beetroots");
 
     private SchematicActions() {}
 
@@ -83,6 +84,11 @@ public final class SchematicActions {
     public static boolean isFluidPlaced(String blockId) {
         Objects.requireNonNull(blockId, "Id блока не может быть null: без него неизвестно, льётся ли он ведром");
         return WATER.equals(SchematicBlocks.path(blockId));
+    }
+
+    public static boolean isCrop(String blockId) {
+        Objects.requireNonNull(blockId, "Блок не может быть null: без него неизвестно, посев ли это");
+        return CROPS.contains(SchematicBlocks.path(blockId));
     }
 
     public static int finishOrder(String blockId) {

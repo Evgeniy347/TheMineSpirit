@@ -9,19 +9,8 @@ import java.util.function.ToIntFunction;
 public final class BuildPhase {
     public static final int BAND_HEIGHT = 4;
     private static final List<String> ROUGH_SUFFIXES = List.of("_stairs", "_slab", "_wall");
-    private static final List<String> FINISH = List.of(
-            "chest",
-            "trapped_chest",
-            "torch",
-            "wall_torch",
-            "soul_torch",
-            "soul_wall_torch",
-            "water",
-            "lava",
-            "wheat",
-            "carrots",
-            "potatoes",
-            "beetroots");
+    private static final List<String> FINISH =
+            List.of("chest", "trapped_chest", "torch", "wall_torch", "soul_torch", "soul_wall_torch", "water", "lava");
 
     private BuildPhase() {}
 
@@ -31,7 +20,8 @@ public final class BuildPhase {
         if (path.endsWith("_fence")) {
             return true;
         }
-        if (SchematicBlocks.isEntranceBlock(blockId)
+        if (SchematicActions.isCrop(blockId)
+                || SchematicBlocks.isEntranceBlock(blockId)
                 || SchematicBlocks.isBed(blockId)
                 || SchematicLevelRules.isDecorBlock(blockId)
                 || SchematicLevelRules.isStation(blockId)

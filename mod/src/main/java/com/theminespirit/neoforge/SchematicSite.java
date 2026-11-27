@@ -150,10 +150,14 @@ final class SchematicSite {
         boolean block = current.is(wanted.getBlock())
                 || WoodSpecies.sameRole(BlockStates.idOf(current), BlockStates.idOf(wanted))
                 || EarthCover.covers(BlockStates.idOf(current), BlockStates.idOf(wanted));
-        return block && sameSpecifiedState(current, wanted, entry.state());
+        boolean growingCrop = entry.optional() && SchematicActions.isCrop(entry.block());
+        return block && (growingCrop || sameSpecifiedState(current, wanted, entry.state()));
     }
 
     boolean rightBlockWrongState(Schematic.PlacedEntry entry) {
+        if (entry.optional() && SchematicActions.isCrop(entry.block())) {
+            return false;
+        }
         BlockState current = level.getBlockState(toPos(entry.pos()));
         BlockState wanted = wanted(entry);
         return current.is(wanted.getBlock()) && !sameSpecifiedState(current, wanted, entry.state());

@@ -103,6 +103,18 @@ class SchematicActionsTests {
     }
 
     @Test
+    void isCrop_WheatAndCarrots_ReturnsTrue() {
+        assertTrue(
+                SchematicActions.isCrop("minecraft:wheat") && SchematicActions.isCrop("minecraft:carrots"),
+                "Пшеница и морковь распознаются как посевы: иначе ремонт снова начнёт сбрасывать их "
+                        + "возраст. При смене isCrop_WheatAndCarrots_ReturnsTrue проверь SchematicActions.isCrop.");
+        assertFalse(
+                SchematicActions.isCrop("minecraft:stone"),
+                "Камень не считается посевом: иначе обычная постройка потеряет проверку состояния. "
+                        + "При смене isCrop_WheatAndCarrots_ReturnsTrue проверь набор CROPS.");
+    }
+
+    @Test
     void finishOrder_FieldBlocks_ReturnsWaterLightCropsOrder() {
         assertEquals(
                 0,
