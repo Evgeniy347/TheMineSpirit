@@ -1,10 +1,8 @@
 package com.theminespirit.neoforge.board;
 
-import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.api.BoardCase;
-import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.core.board.graph.GraphPlan;
 import com.theminespirit.core.board.graph.GraphTickets;
 import com.theminespirit.core.board.graph.StoreMinimums;
@@ -13,14 +11,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
-import org.slf4j.Logger;
 
 final class GraphMoreFarmPost {
-    private static final Logger LOGGER = LogUtils.getLogger();
     private static final String MORE5_FUEL = "#more5_fuel";
     private static final int STATION_SCAN_DOWN = 3;
     private static final int STATION_SCAN_UP = 2;
@@ -187,43 +182,8 @@ final class GraphMoreFarmPost {
     }
 
     private static boolean sense(GraphPost post, GraphTickets.Ticket ticket) {
-        boolean posted = false;
-        int stuck = 0;
-        int active = 0;
-        for (GraphFacts.Spirit fact : post.facts.spirits().values()) {
-            if (fact.stuck()) {
-                stuck++;
-                continue;
-            }
-            if (fact.activity() != null && !fact.activity().isBlank()) {
-                active++;
-                continue;
-            }
-            String id = ticket.id() + "@" + fact.id();
-            if (post.done(id)) {
-                post.service.reopen(id);
-            }
-            if (post.open(id)) {
-                continue;
-            }
-            post.submit(
-                    post.ticket(
-                            id,
-                            BoardCase.ACTIVITY_SENSE,
-                            Optional.of(UUID.fromString(fact.id())),
-                            ticket.task().priority(),
-                            ticket.id(),
-                            Map.of()),
-                    TicketTarget.at(post.scan.home()));
-            posted = true;
-        }
-        LOGGER.info(
-                "[idle] scan: духов {}, застрявших {}, занятых {}, поставлено {}",
-                post.facts.spirits().size(),
-                stuck,
-                active,
-                posted ? 1 : 0);
-        return posted;
+        GraphMorePost.submit(post, ticket, BoardCase.ACTIVITY_SENSE, TicketTarget.at(post.scan.home()), Map.of());
+        return true;
     }
 
     private static boolean expandPen(GraphPost post, GraphTickets.Ticket ticket) {

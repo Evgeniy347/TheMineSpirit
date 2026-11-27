@@ -81,14 +81,10 @@ final class GraphPosting {
 
     static boolean retirable(BoardTicket ticket, Set<String> posted, @Nullable BoardStatus status) {
         return ticket.id().startsWith(GraphTickets.PREFIX)
-                && !posted(ticket.id(), posted)
+                && !posted.contains(ticket.id())
                 && (status == BoardStatus.PENDING
                         || status == BoardStatus.WAITING_RESOURCES
                         || status == BoardStatus.BLOCKED);
-    }
-
-    private static boolean posted(String id, Set<String> posted) {
-        return posted.contains(id) || posted.stream().anyMatch(parent -> id.startsWith(parent + "@"));
     }
 
     private boolean retireUnposted() {

@@ -41,13 +41,6 @@ class GraphPostingTests {
                 GraphPosting.retirable(foreign, Set.of(), BoardStatus.PENDING),
                 "Чужой источник не отменяется графиком: иначе склад и расчистка исчезают из очереди. "
                         + "При смене retirable_PostedAssignedOrForeignTicket_IsKept проверь GraphPosting.retirable.");
-        BoardTicket child = ticket("graph:event:more6_spirit_idle:more6_assign_idle@spirit-1");
-        assertFalse(
-                GraphPosting.retirable(
-                        child, Set.of("graph:event:more6_spirit_idle:more6_assign_idle"), BoardStatus.PENDING),
-                "Дочернее локальное задание остаётся живым вместе с родителем графа: иначе "
-                        + "reconciliation снимет scan сразу после постановки. При смене "
-                        + "retirable_PostedAssignedOrForeignTicket_IsKept проверь GraphPosting.posted.");
     }
 
     private static BoardTicket ticket(String id) {
