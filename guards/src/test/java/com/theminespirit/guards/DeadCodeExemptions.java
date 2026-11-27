@@ -6,6 +6,18 @@ import java.util.List;
 final class DeadCodeExemptions {
     static final List<Exemption> OPEN_TASKS = List.of(
             new Exemption(
+                    "core/board/audit/BuildingEnvelopes.java|class|<top>#BuildingEnvelopes",
+                    "Подсистема аудита поселения (ТЗ town-audit): подключит наполнение кэша и группы; снять после блока 7."),
+            new Exemption(
+                    "core/board/audit/ExpectIndex.java|class|<top>#ExpectIndex",
+                    "Подсистема аудита поселения (ТЗ town-audit): подключит наполнение кэша и группы; снять после блока 7."),
+            new Exemption(
+                    "core/board/audit/GroundEnvelopes.java|class|<top>#GroundEnvelopes",
+                    "Подсистема аудита поселения (ТЗ town-audit): подключит наполнение кэша и группы; снять после блока 7."),
+            new Exemption(
+                    "core/board/audit/StreetEnvelopes.java|class|<top>#StreetEnvelopes",
+                    "Подсистема аудита поселения (ТЗ town-audit): подключит наполнение кэша и группы; снять после блока 7."),
+            new Exemption(
                     "core/board/audit/Access.java|class|<top>#Access",
                     "Подсистема аудита поселения (ТЗ town-audit): подключит ExpectIndex, наполнение кэша, группы в графе и билет; снять после блока 7."),
             new Exemption(
