@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge;
 
 import com.theminespirit.core.log.LogCause;
+import com.theminespirit.neoforge.board.TownAuditWatch;
 import com.theminespirit.neoforge.log.SpiritLog;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -37,6 +38,9 @@ public final class SpiritBlocks {
                         basis,
                         LogCause.BREAK,
                         ""));
+        if (changed) {
+            TownAuditWatch.spiritChanged(level, pos, before, level.getBlockState(pos), spirit, basis);
+        }
         return changed;
     }
 
@@ -44,6 +48,7 @@ public final class SpiritBlocks {
         BlockState before = level.getBlockState(pos);
         SpiritLog.playerBlock(
                 level, player.getGameProfile().getName(), "break", before, Blocks.AIR.defaultBlockState(), pos, basis);
+        TownAuditWatch.playerChanged(level, pos, before, Blocks.AIR.defaultBlockState(), basis);
     }
 
     public static void playerPlace(ServerLevel level, BlockPos pos, BlockState placed, Player player, String basis) {
@@ -52,6 +57,7 @@ public final class SpiritBlocks {
             before = Blocks.AIR.defaultBlockState();
         }
         SpiritLog.playerBlock(level, player.getGameProfile().getName(), "place", before, placed, pos, basis);
+        TownAuditWatch.playerChanged(level, pos, before, placed, basis);
     }
 
     public static void record(ServerLevel level, BlockPos pos, BlockState before, SpiritEntity spirit, String basis) {
@@ -68,6 +74,7 @@ public final class SpiritBlocks {
                         basis,
                         LogCause.PLACE,
                         ""));
+        TownAuditWatch.spiritChanged(level, pos, before, level.getBlockState(pos), spirit, basis);
     }
 
     public static void explosion(ServerLevel level, BlockPos pos, BlockState before) {
@@ -84,6 +91,7 @@ public final class SpiritBlocks {
                         "взрыв",
                         LogCause.BREAK,
                         ""));
+        TownAuditWatch.explosionChanged(level, pos, before, Blocks.AIR.defaultBlockState());
     }
 
     public static void refuse(
@@ -108,6 +116,9 @@ public final class SpiritBlocks {
                         basis,
                         "restore".equals(action) ? LogCause.RESTORE : LogCause.PLACE,
                         ""));
+        if (changed) {
+            TownAuditWatch.spiritChanged(level, pos, before, level.getBlockState(pos), spirit, basis);
+        }
         return changed;
     }
 }

@@ -8,6 +8,7 @@ import com.theminespirit.core.movement.network.NetworkRoute;
 import com.theminespirit.core.movement.network.PathNetwork;
 import com.theminespirit.core.movement.network.PathSegment;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.neoforge.board.TownAuditWatch;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -77,9 +78,10 @@ public final class PathNetworkService {
         if (!(event.getLevel() instanceof ServerLevel level)) {
             return;
         }
+        BlockPos pos = event.getPos();
+        TownAuditWatch.naturalChanged(level, pos);
         LevelNetwork network = BY_LEVEL.get(level);
         if (network != null) {
-            BlockPos pos = event.getPos();
             network.blockChanged(new BlockCoord(pos.getX(), pos.getY(), pos.getZ()));
         }
     }

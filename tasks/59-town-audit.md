@@ -30,7 +30,7 @@
 3. [x] `ExpectIndex` по плану (участки, улицы, земля, шахта) + один источник уровня (`levelY` параметром).
       Отложено: конверт стены (`wall:*` как отдельный источник схем) — вместе с группой стены в блоке 7.
 4. [x] Наполнение `ChunkCache` по `ChunkEvent.Load`, бюджеты в `data/.../audit.json`, `planRevision`.
-5. [ ] Инвалидация: `BlockChangeWatch` + `TickQueue` (1/с) + `ChangeRing`; каскад «свой билет не грязним».
+5. [x] Инвалидация: `BlockChangeWatch` + `TickQueue` (1/с) + `ChangeRing`; каскад «свой билет не грязним».
 6. [ ] Фоновая сверка по спирали + `AUDIT-MISS` в три канала + классификация причин.
 7. [ ] Группы и статусы в реестре, вид клиента (`ConstructionAuditService`) и REST.
 8. [ ] Граф: шаблон `audit`, `Task.after`/`Task.requires`, префиксный `find`, веса `audit.json`, маппинг в
