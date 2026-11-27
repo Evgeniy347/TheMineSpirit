@@ -32,7 +32,7 @@ usage() {
     cat <<'EOF'
 Использование: scripts/publish.sh [опции]
 
-Публикует мод одним запуском: сборка → раскладка скриптов и конфигов сервера из server/ →
+Публикует мод одним запуском: сборка с лимитами 6 ГиБ RAM и 3 CPU → раскладка скриптов и конфигов сервера из server/ →
 снимок мира в архив (полная) → jar в mods/ сервера → пак клиента и раздача лаунчера
 (/opt/minecraft/client/publish.sh) → перезапуск сервера → страница «Сервер» (mod.json) →
 тег (полная). Вручную копировать jar, скрипты и править пак/страницу не нужно и запрещено:
@@ -298,10 +298,21 @@ if [ -n "$verify_only" ]; then
     exit 1
 fi
 
+run_gradle() {
+    # Одноразовый демон и все дочерние JVM сборки попадают в общий ограниченный scope.
+    if [ "$PUBLISH_REMOTE" = 0 ] && [ "$SERVER_DIR" = /opt/minecraft/server ]; then
+        systemd-run --user --scope --unit="theminespirit-build-$$" \
+            --property=MemoryMax=6G --property=CPUQuota=300% \
+            ./gradlew --no-daemon --quiet "$@"
+    else
+        ./gradlew --no-daemon --quiet "$@"
+    fi
+}
+
 if $check_build; then
     cd "$MOD_DIR"
     echo "Сборка мода для проверки (без выкладки)…"
-    ./gradlew --quiet assemble
+    run_gradle assemble
     mapfile -t jars < <(find "$JAR_DIR" -maxdepth 1 -name 'theminespirit-*.jar' \
         ! -name '*-sources.jar' ! -name '*-javadoc.jar' -printf '%T@ %p\n' | sort -rn | cut -d' ' -f2-)
     if [ "${#jars[@]}" -eq 0 ]; then
@@ -690,7 +701,7 @@ if $dry_run; then
         exit 0
     fi
     echo "Режим --dry-run: ниже план, изменения не вносятся."
-    echo "  1. сборка мода: ./gradlew --quiet assemble (без тестов — решение владельца 25.10)"
+    echo "  1. сборка мода: ./gradlew --no-daemon --quiet assemble, scope 6 ГиБ RAM / 3 CPU (без тестов — решение владельца 25.10)"
     echo "  2. поиск $MOD_JAR_DIR/theminespirit-*.jar (кроме -sources/-javadoc), берётся самый свежий;"
     echo "     проверка содержимого jar (непустой META-INF/neoforge.mods.toml с modId, >1000 классов)"
     echo "  3. раскладка скриптов и конфигов сервера: $SERVER_FILES → $SERVER_DIR (cron сторожа зависания и ночного анализатора)"
@@ -731,7 +742,7 @@ fi
 
 cd "$MOD_DIR"
 echo "Сборка мода..."
-./gradlew --quiet assemble
+run_gradle assemble
 
 mapfile -t jars < <(find "$JAR_DIR" -maxdepth 1 -name 'theminespirit-*.jar' \
     ! -name '*-sources.jar' ! -name '*-javadoc.jar' -printf '%T@ %p\n' | sort -rn | cut -d' ' -f2-)
