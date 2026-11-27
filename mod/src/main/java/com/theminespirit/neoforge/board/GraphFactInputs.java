@@ -91,7 +91,7 @@ public final class GraphFactInputs {
                             spirit.getAirSupply(),
                             spirit.isInWater(),
                             false,
-                            service.board().stuck().isStuck(spirit.getUUID(), now),
+                            stuck(service, spirit, now),
                             spirit.currentActivity().orElse(null),
                             inventory(spirit),
                             armor(spirit),
@@ -264,20 +264,17 @@ public final class GraphFactInputs {
         return facts;
     }
 
+    private static boolean stuck(BoardService service, SpiritEntity spirit, long now) {
+        return service.board().stuck().isStuck(spirit.getUUID(), now)
+                || PitRescue.trapped(spirit).isPresent();
+    }
+
     private static GraphFacts.@Nullable Position position(
             String id, Optional<TownPlan> town, FirstStepsRunner.StageScan scan) {
         return town.flatMap(plan ->
                         StageCatalog.origin(id, plan, scan.stage().anchor().y()))
                 .map(at -> new GraphFacts.Position(at.x(), at.y(), at.z()))
                 .orElse(null);
-    }
-
-    static Map<String, Integer> stationCounts(SupplyGraph graph, Map<String, Built> buildings) {
-        Map<String, Integer> counts = new LinkedHashMap<>();
-        graph.costs().stationCapacity().keySet().stream()
-                .sorted()
-                .forEach(id -> counts.put(id, buildings.get(id) == Built.BUILT ? 1 : 0));
-        return counts;
     }
 
     private static GraphSiteFacts.StageReqs stageReqs(BoardService service, int stage) {

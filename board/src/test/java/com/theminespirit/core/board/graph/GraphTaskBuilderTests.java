@@ -47,6 +47,19 @@ class GraphTaskBuilderTests {
                         + "GraphTaskBuilder.stationTask и TransferWatch.");
     }
 
+    @Test
+    void stationTask_EnoughPhysicalStations_DoesNotReopenCompletedTicket() {
+        GraphWorld world = GraphWorld.settled().with("oak_planks", 4);
+        world.stations.put("crafting_table", 6);
+
+        assertTrue(
+                builder(world).stationTask("crafting_table", 10, busyScores()).isEmpty(),
+                "Шесть физических верстаков покрывают очередь и не переоткрывают выполненный билет: "
+                        + "иначе каждый цикл тратит доски и ставит ещё один стол. При смене "
+                        + "stationTask_EnoughPhysicalStations_DoesNotReopenCompletedTicket проверь "
+                        + "GraphStationCounts и GraphPosting.");
+    }
+
     private static GraphTaskBuilder builder(GraphWorld world) {
         GraphReach reach = new GraphReach(world.graph, world.state());
         return new GraphTaskBuilder(

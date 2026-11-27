@@ -210,7 +210,7 @@ final class GraphInputWork {
                                 required(events, "BUILDINGS"),
                                 around.world(),
                                 around.distances(),
-                                GraphFactInputs.stationCounts(graph, required(buildings, "BUILDINGS")))
+                                GraphStationCounts.count(level, scan, graph, required(buildings, "BUILDINGS")))
                         .withOrders(required(orders, "BASE_INPUTS"))
                         .withFacts(required(facts, "FACT_BASE"), graph.costs().life());
                 mark("base", started);
