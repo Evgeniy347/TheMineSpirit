@@ -33,7 +33,7 @@ class RescueReachTimeoutTests {
     @Test
     void cache_PendingQueueFull_DoesNotLoseDeferredRequest() {
         RescueReach.Cache cache = RescueReach.cache();
-        for (int index = 0; index < 16; index++) {
+        for (int index = 0; index < 64; index++) {
             cache.request(FLAT, cell -> false, HELPER, FROM, new BlockCoord(index + 1, 64, 0), 0);
         }
         BlockCoord deferredTarget = new BlockCoord(100, 64, 0);
@@ -43,7 +43,7 @@ class RescueReachTimeoutTests {
             cache.advance(200, 10_000_000L);
         }
         cache.request(FLAT, cell -> false, HELPER, FROM, deferredTarget, 200);
-        for (int step = 0; step < 30; step++) {
+        for (int step = 0; step < 100; step++) {
             cache.advance(200, 10_000_000L);
         }
 
@@ -51,7 +51,7 @@ class RescueReachTimeoutTests {
         assertTrue(
                 completed != null && completed.reachable(),
                 "Отложенный запрос не теряется после освобождения очереди: иначе помощник навсегда "
-                        + "остаётся без пути при 16 pending-поисках. При смене "
+                        + "остаётся без пути при 64 pending-поисках. При смене "
                         + "cache_PendingQueueFull_DoesNotLoseDeferredRequest проверь RescueReach.Cache.request.");
     }
 

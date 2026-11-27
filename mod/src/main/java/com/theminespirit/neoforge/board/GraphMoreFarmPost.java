@@ -3,6 +3,7 @@ package com.theminespirit.neoforge.board;
 import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.api.BoardCase;
+import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.core.board.graph.GraphPlan;
 import com.theminespirit.core.board.graph.GraphTickets;
 import com.theminespirit.core.board.graph.StoreMinimums;
@@ -11,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -182,8 +184,27 @@ final class GraphMoreFarmPost {
     }
 
     private static boolean sense(GraphPost post, GraphTickets.Ticket ticket) {
-        GraphMorePost.submit(post, ticket, BoardCase.ACTIVITY_SENSE, TicketTarget.at(post.scan.home()), Map.of());
-        return true;
+        boolean posted = false;
+        for (GraphFacts.Spirit fact : post.facts.spirits().values()) {
+            if (fact.stuck() || (fact.activity() != null && !fact.activity().isBlank())) {
+                continue;
+            }
+            String id = ticket.id() + "@" + fact.id();
+            if (post.open(id)) {
+                continue;
+            }
+            post.submit(
+                    post.ticket(
+                            id,
+                            BoardCase.ACTIVITY_SENSE,
+                            Optional.of(UUID.fromString(fact.id())),
+                            ticket.task().priority(),
+                            ticket.id(),
+                            Map.of()),
+                    TicketTarget.at(post.scan.home()));
+            posted = true;
+        }
+        return posted;
     }
 
     private static boolean expandPen(GraphPost post, GraphTickets.Ticket ticket) {

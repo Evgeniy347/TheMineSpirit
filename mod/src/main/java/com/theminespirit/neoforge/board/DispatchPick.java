@@ -84,7 +84,7 @@ final class DispatchPick {
         String supply = target == null ? null : target.supplyItem();
         if (ticket.assignee().isPresent()) {
             DispatchRound.Candidate own = candidates.get(ticket.assignee().orElseThrow());
-            if (own != null && (localCraft(ticket.boardCase()) || reachable(own, target))) {
+            if (own != null && (localWork(ticket.boardCase()) || reachable(own, target))) {
                 Optional<DispatchRound.Candidate> chosen = round.choose(ticket, List.of(own), supply);
                 if (chosen.isPresent()) {
                     return entities.get(chosen.orElseThrow().id());
@@ -102,7 +102,7 @@ final class DispatchPick {
                     (int) Math.floor(entities.get(spirit.id()).getY()),
                     target.target().y()));
         }
-        preference.removeIf(spirit -> !localCraft(ticket.boardCase()) && !reachable(spirit, target));
+        preference.removeIf(spirit -> !localWork(ticket.boardCase()) && !reachable(spirit, target));
         preference.sort(Comparator.<DispatchRound.Candidate>comparingInt(
                         spirit -> crafter.filter(spirit.id()::equals).isPresent() ? 0 : 1)
                 .thenComparingDouble(spirit -> distance(entities.get(spirit.id()), target))
@@ -138,7 +138,7 @@ final class DispatchPick {
         return StandSearch.nearest(top, cell -> MiningSafety.canStand(cell, view));
     }
 
-    static boolean localCraft(BoardCase boardCase) {
+    static boolean localWork(BoardCase boardCase) {
         return ToolSet.isTool(boardCase)
                 || switch (boardCase) {
                     case CRAFTING_STATION,
@@ -147,7 +147,8 @@ final class DispatchPick {
                             CRAFT_SMOKER,
                             CRAFT_BED,
                             WEAVE_WOOL,
-                            ENCHANT_SHELVES -> true;
+                            ENCHANT_SHELVES,
+                            ACTIVITY_SENSE -> true;
                     default -> false;
                 };
     }

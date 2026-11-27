@@ -15,22 +15,27 @@ import org.junit.jupiter.api.Test;
 
 class DispatchPickTests {
     @Test
-    void localCraft_StationAndTool_DoNotRequireGlobalPath() {
+    void localWork_LocalScripts_DoNotRequireGlobalPath() {
         assertTrue(
-                DispatchPick.localCraft(BoardCase.CRAFTING_STATION),
+                DispatchPick.localWork(BoardCase.CRAFTING_STATION),
                 "Верстак крафтится у ближайшей локальной станции: иначе дальний общий craftPoint снова "
-                        + "блокирует всех свободных духов. При смене localCraft_StationAndTool_DoNotRequireGlobalPath "
+                        + "блокирует всех свободных духов. При смене localWork_LocalScripts_DoNotRequireGlobalPath "
                         + "проверь DispatchPick.pick и TicketFarmPlans.tableNearSpirit.");
         assertTrue(
-                DispatchPick.localCraft(BoardCase.CRAFT_STONE_SHOVEL),
+                DispatchPick.localWork(BoardCase.CRAFT_STONE_SHOVEL),
                 "Инструмент тоже крафтится локально после дистанционного acquire: иначе путь к общему "
                         + "двору не даёт заменить сломанную лопату. При смене "
-                        + "localCraft_StationAndTool_DoNotRequireGlobalPath проверь ToolCraftPlan.");
+                        + "localWork_LocalScripts_DoNotRequireGlobalPath проверь ToolCraftPlan.");
+        assertTrue(
+                DispatchPick.localWork(BoardCase.ACTIVITY_SENSE),
+                "Локальный scan не требует пути к дому: иначе простаивающий дух снова ждёт "
+                        + "недостижимую общую точку вместо полезной работы рядом. При смене "
+                        + "localWork_LocalScripts_DoNotRequireGlobalPath проверь GraphMoreFarmPost.sense.");
         assertFalse(
-                DispatchPick.localCraft(BoardCase.STOCK_CHESTS),
+                DispatchPick.localWork(BoardCase.STOCK_CHESTS),
                 "Сундуки строятся по месту и требуют пути: иначе их начнут ставить в любую удалённую "
-                        + "точку. При смене localCraft_StationAndTool_DoNotRequireGlobalPath проверь "
-                        + "DispatchPick.localCraft.");
+                        + "точку. При смене localWork_LocalScripts_DoNotRequireGlobalPath проверь "
+                        + "DispatchPick.localWork.");
     }
 
     @Test

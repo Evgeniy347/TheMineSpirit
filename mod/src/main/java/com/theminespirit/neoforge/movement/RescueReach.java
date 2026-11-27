@@ -25,7 +25,7 @@ public final class RescueReach {
     private static final long VERDICT_TTL_TICKS = 1200;
     private static final long PROBE_TTL_TICKS = 1200;
     private static final int MAX_VERDICTS = 64;
-    private static final int MAX_PENDING = 16;
+    private static final int MAX_PENDING = 64;
     private static final NavSettings WALK_ONLY =
             new NavSettings(600_000, 600_000, 30_000, 50, 3, 12, 2, 20, 2, false, false);
 

@@ -36,7 +36,7 @@ public final class BoardSources {
     private long roundNow;
     private boolean advanceFailed;
 
-    private static final long RESCUE_SLICE_NANOS = 2_000_000L;
+    private static final long RESCUE_SLICE_NANOS = 4_000_000L;
 
     private BoardSources() {}
 
