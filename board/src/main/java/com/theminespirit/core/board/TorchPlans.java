@@ -91,7 +91,7 @@ final class TorchPlans {
                 new FallbackNode(List.of(
                         new ScriptCall(ACQUIRE, Map.of(ITEM, "minecraft:stick", COUNT, sticks)),
                         new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))),
-                TicketPlans.craft(TORCH, TicketWorkPlans.torchCount(target), target),
+                TicketPlans.craft(TORCH, TicketWorkPlans.torchCount(target)),
                 TicketWorkPlans.store(
                         target,
                         LEFTOVERS.stream().filter(item -> !TORCH.equals(item)).toArray(String[]::new))));

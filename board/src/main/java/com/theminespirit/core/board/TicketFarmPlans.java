@@ -142,7 +142,8 @@ final class TicketFarmPlans {
         BlockCoord point = target.target();
         BlockCoord cell = new BlockCoord(point.x(), point.y() + 1, point.z());
         return sequence(
-                craft(HiveRules.CRAFTED_BEEHIVE, 1, target),
+                gotoTarget(target),
+                craft(HiveRules.CRAFTED_BEEHIVE, 1),
                 new ScriptCall(
                         "place_block",
                         Map.of(BLOCK, HiveRules.CRAFTED_BEEHIVE, "x", cell.x(), "y", cell.y(), "z", cell.z())));

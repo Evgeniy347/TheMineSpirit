@@ -29,7 +29,6 @@ final class ToolCraftPlan {
         int count = Math.min(
                 target.toolCount() > 0 ? target.toolCount() : Math.max(1, target.count()), CatalogLimits.COUNT_MAX);
         List<TaskNode> steps = new ArrayList<>(4);
-        steps.add(TicketPlans.gotoTarget(target));
         steps.addAll(materials(item, count, target.wood()));
         steps.add(new ScriptCall(
                 CRAFT, Map.of(ITEM, item, COUNT, count, "radius", CatalogLimits.STATION_RADIUS_DEFAULT)));

@@ -46,13 +46,13 @@ final class DefaultPlans {
         plans.put(BoardCase.CRAFTING_STATION, (boardCase, target, level) -> TicketFarmPlans.tableNearSpirit(target));
         plans.put(
                 BoardCase.CRAFT_ANVIL,
-                (boardCase, target, level) -> TicketPlans.craft(NamespacedId.MINECRAFT + "anvil", 1, target));
+                (boardCase, target, level) -> TicketPlans.craft(NamespacedId.MINECRAFT + "anvil", 1));
         plans.put(
                 BoardCase.CRAFT_SMITHING_TABLE,
-                (boardCase, target, level) -> TicketPlans.craft(NamespacedId.MINECRAFT + "smithing_table", 1, target));
+                (boardCase, target, level) -> TicketPlans.craft(NamespacedId.MINECRAFT + "smithing_table", 1));
         plans.put(
                 BoardCase.CRAFT_SMOKER,
-                (boardCase, target, level) -> TicketPlans.craft(NamespacedId.MINECRAFT + "smoker", 1, target));
+                (boardCase, target, level) -> TicketPlans.craft(NamespacedId.MINECRAFT + "smoker", 1));
         plans.put(
                 BoardCase.CRAFT_FURNACE,
                 (boardCase, target, level) ->
@@ -85,19 +85,16 @@ final class DefaultPlans {
                 BoardCase.CRAFT_DIAMOND_SWORD)) {
             plans.put(tool, (boardCase, target, level) -> ToolCraftPlan.of(boardCase, target));
         }
-        plans.put(
-                BoardCase.CRAFT_SHEARS,
-                (boardCase, target, level) -> TicketPlans.craft(WoolRules.CRAFTED_SHEARS, 1, target));
+        plans.put(BoardCase.CRAFT_SHEARS, (boardCase, target, level) -> TicketPlans.craft(WoolRules.CRAFTED_SHEARS, 1));
         plans.put(
                 BoardCase.CRAFT_BED,
-                (boardCase, target, level) -> TicketPlans.craft(
-                        TicketPlans.bedItem(target), target.count() > 0 ? target.count() : 1, target));
+                (boardCase, target, level) ->
+                        TicketPlans.craft(TicketPlans.bedItem(target), target.count() > 0 ? target.count() : 1));
         plans.put(
                 BoardCase.WEAVE_WOOL,
                 (boardCase, target, level) -> TicketPlans.craft(
                         target.craftItem() == null ? WoolRules.CRAFTED_WOOL : target.craftItem(),
-                        target.count() > 0 ? target.count() : 1,
-                        target));
+                        target.count() > 0 ? target.count() : 1));
         plans.put(BoardCase.SHEAR_SHEEP, (boardCase, target, level) -> TicketFarmPlans.shearSheep(target));
         plans.put(BoardCase.HUNT_WILD_SHEEP, (boardCase, target, level) -> TicketFarmPlans.huntWildSheep(target));
         plans.put(BoardCase.HARVEST_HIVE, (boardCase, target, level) -> TicketFarmPlans.harvestHive());
@@ -108,7 +105,7 @@ final class DefaultPlans {
         plans.put(BoardCase.BUILD_STREETS, (boardCase, target, level) -> RoutePlans.path(target));
         plans.put(
                 BoardCase.ENCHANT_SHELVES,
-                (boardCase, target, level) -> TicketPlans.craft(NamespacedId.MINECRAFT + "bookshelf", 4, target));
+                (boardCase, target, level) -> TicketPlans.craft(NamespacedId.MINECRAFT + "bookshelf", 4));
         plans.put(BoardCase.DISMANTLE_SHELTER, (boardCase, target, level) -> TicketWorkPlans.dismantleShelter(target));
         plans.put(BoardCase.BREED_ANIMALS, (boardCase, target, level) -> TicketFarmPlans.breedAnimals(target));
         plans.put(BoardCase.HERD_CULL, (boardCase, target, level) -> TicketFarmPlans.herdCull(target));

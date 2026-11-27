@@ -9,6 +9,8 @@ import com.theminespirit.core.board.SpiritView;
 import com.theminespirit.core.board.StandSearch;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.ToolSet;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.hunger.SpiritHunger;
@@ -82,7 +84,7 @@ final class DispatchPick {
         String supply = target == null ? null : target.supplyItem();
         if (ticket.assignee().isPresent()) {
             DispatchRound.Candidate own = candidates.get(ticket.assignee().orElseThrow());
-            if (own != null && reachable(own, target)) {
+            if (own != null && (localCraft(ticket.boardCase()) || reachable(own, target))) {
                 Optional<DispatchRound.Candidate> chosen = round.choose(ticket, List.of(own), supply);
                 if (chosen.isPresent()) {
                     return entities.get(chosen.orElseThrow().id());
@@ -100,7 +102,7 @@ final class DispatchPick {
                     (int) Math.floor(entities.get(spirit.id()).getY()),
                     target.target().y()));
         }
-        preference.removeIf(spirit -> !reachable(spirit, target));
+        preference.removeIf(spirit -> !localCraft(ticket.boardCase()) && !reachable(spirit, target));
         preference.sort(Comparator.<DispatchRound.Candidate>comparingInt(
                         spirit -> crafter.filter(spirit.id()::equals).isPresent() ? 0 : 1)
                 .thenComparingDouble(spirit -> distance(entities.get(spirit.id()), target))
@@ -134,6 +136,20 @@ final class DispatchPick {
         LevelSafetyView view =
                 new LevelSafetyView(entities.values().iterator().next().level());
         return StandSearch.nearest(top, cell -> MiningSafety.canStand(cell, view));
+    }
+
+    static boolean localCraft(BoardCase boardCase) {
+        return ToolSet.isTool(boardCase)
+                || switch (boardCase) {
+                    case CRAFTING_STATION,
+                            CRAFT_ANVIL,
+                            CRAFT_SMITHING_TABLE,
+                            CRAFT_SMOKER,
+                            CRAFT_BED,
+                            WEAVE_WOOL,
+                            ENCHANT_SHELVES -> true;
+                    default -> false;
+                };
     }
 
     static boolean needsStand(TicketTarget target) {

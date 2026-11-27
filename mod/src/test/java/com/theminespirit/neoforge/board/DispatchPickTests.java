@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.PlotLeveling;
 import com.theminespirit.core.town.StageWork;
@@ -13,6 +14,25 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class DispatchPickTests {
+    @Test
+    void localCraft_StationAndTool_DoNotRequireGlobalPath() {
+        assertTrue(
+                DispatchPick.localCraft(BoardCase.CRAFTING_STATION),
+                "Верстак крафтится у ближайшей локальной станции: иначе дальний общий craftPoint снова "
+                        + "блокирует всех свободных духов. При смене localCraft_StationAndTool_DoNotRequireGlobalPath "
+                        + "проверь DispatchPick.pick и TicketFarmPlans.tableNearSpirit.");
+        assertTrue(
+                DispatchPick.localCraft(BoardCase.CRAFT_STONE_SHOVEL),
+                "Инструмент тоже крафтится локально после дистанционного acquire: иначе путь к общему "
+                        + "двору не даёт заменить сломанную лопату. При смене "
+                        + "localCraft_StationAndTool_DoNotRequireGlobalPath проверь ToolCraftPlan.");
+        assertFalse(
+                DispatchPick.localCraft(BoardCase.STOCK_CHESTS),
+                "Сундуки строятся по месту и требуют пути: иначе их начнут ставить в любую удалённую "
+                        + "точку. При смене localCraft_StationAndTool_DoNotRequireGlobalPath проверь "
+                        + "DispatchPick.localCraft.");
+    }
+
     @Test
     void needsStand_WorkWithoutLeveling_SearchesSafeApproach() {
         TicketTarget target =

@@ -151,10 +151,8 @@ public final class TicketPlans {
                 new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN))));
     }
 
-    static TaskNode craft(String item, int count, TicketTarget target) {
-        return sequence(
-                gotoTarget(target),
-                new ScriptCall(CRAFT, Map.of(ITEM, item, COUNT, count, RADIUS, CatalogLimits.STATION_RADIUS_DEFAULT)));
+    static TaskNode craft(String item, int count) {
+        return new ScriptCall(CRAFT, Map.of(ITEM, item, COUNT, count, RADIUS, CatalogLimits.STATION_RADIUS_DEFAULT));
     }
 
     static String bedItem(TicketTarget target) {
