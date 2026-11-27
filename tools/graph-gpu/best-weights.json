@@ -71,7 +71,6 @@
     "way:CAPTURE_ANIMAL": 1.224543,
     "way:CLEAR_GROUNDS": 0.770333,
     "way:COLLECT_DROPS": 0.696495,
-    "way:CRAFTING_STATION": 1.040196,
     "way:CRAFT_BED": 1.0,
     "way:CRAFT_DIAMOND_AXE": 1.0,
     "way:CRAFT_DIAMOND_PICKAXE": 1.0,
@@ -1232,7 +1231,6 @@
       "chests": 0.8739335481262756,
       "mine": 0.8739335481262756,
       "lighting": 0.8739335481262756,
-      "fence": 0.8739335481262756,
       "hut": 0.8739335481262756,
       "streets": 0.8739335481262756,
       "warehouse": 0.9531593995512034,
@@ -1292,9 +1290,6 @@
       "player_house_2": 0.9531593995512034,
       "player_house_3": 1.3217017133666555,
       "player_house_4": 1.0181658372367492,
-      "warehouse_2": 0.9531593995512034,
-      "warehouse_3": 1.3217017133666555,
-      "warehouse_4": 1.0181658372367492,
       "barn_2": 0.9531593995512034,
       "barn_3": 1.3217017133666555,
       "field_2": 0.8739335481262756,
@@ -1322,13 +1317,8 @@
       "outpost_1": 1.3217017133666555,
       "outpost_2": 1.3217017133666555,
       "outpost_3": 1.0181658372367492,
-      "wall_2": 0.8739335481262756,
       "wall_3": 0.9531593995512034,
       "wall_4": 1.3217017133666555,
-      "gate_1": 0.8739335481262756,
-      "gate_2": 0.9531593995512034,
-      "gate_3": 1.3217017133666555,
-      "gate_4": 1.0181658372367492,
       "archer_tower_1": 0.8739335481262756,
       "archer_tower_2": 0.9531593995512034,
       "archer_tower_3": 1.3217017133666555,
@@ -1362,7 +1352,6 @@
       "blast_furnace": 0.8739335481262756,
       "stonecutter": 0.8739335481262756,
       "wheat_field": 0.8739335481262756,
-      "storage_space": 0.8739335481262756,
       "more2_trail": 0.8739335481262756
     },
     "ways": {
@@ -1868,8 +1857,6 @@
       "dig_out": 1.0,
       "bridge": 1.0,
       "pillar": 1.0,
-      "till_soil": 1.027010002740282,
-      "plant_crop": 1.027010002740282,
       "harvest_crop": 1.027010002740282,
       "feed_animals": 0.9081857874748285,
       "lure_animal": 0.7584251112233555,
@@ -1890,7 +1877,6 @@
       "more_secure_door": 0.8748227188921782,
       "more_secure_hopper": 0.770333333861134,
       "more_share_reserve": 1.4741448954318825,
-      "more2_sow_food": 1.027010002740282,
       "more2_breed_food": 0.9081857874748285,
       "more2_unload_carry": 1.4741448954318825,
       "more2_put_out_fire": 0.770333333861134,
@@ -1934,7 +1920,6 @@
       "more5_plant_sapling": 1.2053524036601453,
       "more6_deposit_materials": 1.4741448954318825,
       "more6_refuel_station": 0.8986507316498754,
-      "more6_place_station": 1.0401958864717946,
       "more6_pickup_items": 0.6964954091488219,
       "more6_fetch_water": 1.027010002740282,
       "more6_fetch_lava": 1.027010002740282,
@@ -1960,7 +1945,6 @@
       "orchard_empty": 0.9876631937450304,
       "store_minimum": 1.0085876419781665,
       "transfer_pending": 1.0085876419781665,
-      "storage_full": 1.0085876419781665,
       "furnace_ready": 1.0085876419781665,
       "gear_equip_best": 0.9543000122725515,
       "gear_craft_armor": 0.9543000122725515,
@@ -3180,7 +3164,6 @@
       "chests": 68,
       "mine": 68,
       "lighting": 68,
-      "fence": 68,
       "hut": 68,
       "streets": 54,
       "warehouse": 88,
@@ -3240,9 +3223,6 @@
       "player_house_2": 113,
       "player_house_3": 953,
       "player_house_4": 76,
-      "warehouse_2": 97,
-      "warehouse_3": 804,
-      "warehouse_4": 64,
       "barn_2": 71,
       "barn_3": 612,
       "field_2": 61,
@@ -3270,13 +3250,8 @@
       "outpost_1": 515,
       "outpost_2": 515,
       "outpost_3": 40,
-      "wall_2": 68,
       "wall_3": 88,
       "wall_4": 728,
-      "gate_1": 68,
-      "gate_2": 88,
-      "gate_3": 728,
-      "gate_4": 59,
       "archer_tower_1": 47,
       "archer_tower_2": 61,
       "archer_tower_3": 515,
@@ -3310,7 +3285,6 @@
       "blast_furnace": 0,
       "stonecutter": 0,
       "wheat_field": 59,
-      "storage_space": 61,
       "more2_trail": 46
     },
     "ways": {
@@ -3816,8 +3790,6 @@
       "dig_out": 1.0,
       "bridge": 1.0,
       "pillar": 1.0,
-      "till_soil": 1.73165078,
-      "plant_crop": 1.818233319,
       "harvest_crop": 1.73165078,
       "feed_animals": 0.514231963,
       "lure_animal": 0.095661644,
@@ -3838,7 +3810,6 @@
       "more_secure_door": 1.368762719,
       "more_secure_hopper": 2.315925142,
       "more_share_reserve": 1.93536227,
-      "more2_sow_food": 1.73165078,
       "more2_breed_food": 0.514231963,
       "more2_unload_carry": 1.93536227,
       "more2_put_out_fire": 2.315925142,
@@ -3882,7 +3853,6 @@
       "more5_plant_sapling": 2.140253779,
       "more6_deposit_materials": 3.244334572,
       "more6_refuel_station": 0.902098988,
-      "more6_place_station": 1.000005933,
       "more6_pickup_items": 0.898330481,
       "more6_fetch_water": 2.532715618,
       "more6_fetch_lava": 2.085765804,
@@ -3922,9 +3892,6 @@
       },
       "transfer_pending": {
         "transfer_item": 40
-      },
-      "storage_full": {
-        "add_chest_pair": 55
       },
       "furnace_ready": {
         "take_smelted": 40
@@ -4110,8 +4077,7 @@
         "more6_deposit_materials": 51
       },
       "more6_station_broken": {
-        "more6_refuel_station": 63,
-        "more6_place_station": 55
+        "more6_refuel_station": 63
       },
       "more6_loose_items": {
         "more6_pickup_items": 47

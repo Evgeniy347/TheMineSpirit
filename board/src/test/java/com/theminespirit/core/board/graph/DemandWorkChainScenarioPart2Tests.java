@@ -242,27 +242,6 @@ class DemandWorkChainScenarioPart2Tests {
     }
 
     @Test
-    void case29_NoWorkshopStation_PlacedThroughPlanks() {
-        GraphWorld world = pair(stageTwo()).event("more6_station_broken").with("oak_planks", 0);
-        GraphPlan plan = plan(world, facts(TWO));
-        GraphPlan.Task station = task(plan, "event:more6_station_broken:more6_place_station");
-        assertFalse(
-                station.feasible(),
-                "Досок нет — станок ждёт материал:  Иначе тест case29_NoWorkshopStation_PlacedThroughPlanks перестанет ловить эту поломку. При смене case29_NoWorkshopStation_PlacedThroughPlanks проверь это утверждение."
-                        + ids(plan));
-        assertTrue(
-                task(plan, "craft_oak_planks").raised(),
-                "Досок нет — поднимается крафт досок:  Иначе тест case29_NoWorkshopStation_PlacedThroughPlanks перестанет ловить эту поломку. При смене case29_NoWorkshopStation_PlacedThroughPlanks проверь это утверждение."
-                        + ids(plan));
-        world.with("oak_planks", 64).with("oak_log", 64);
-        GraphPlan stocked = plan(world, facts(TWO));
-        assertTrue(
-                task(stocked, "event:more6_station_broken:more6_place_station").feasible(),
-                "Доски есть — станок ставится:  Иначе тест case29_NoWorkshopStation_PlacedThroughPlanks перестанет ловить эту поломку. При смене case29_NoWorkshopStation_PlacedThroughPlanks проверь это утверждение."
-                        + ids(stocked));
-    }
-
-    @Test
     void case33_NoStairsOutOfPit_PlanksAndStoneRaised() {
         GraphWorld world = GraphWorld.settled().with("oak_planks", 0).with("cobblestone", 0);
         GraphFacts facts = facts(

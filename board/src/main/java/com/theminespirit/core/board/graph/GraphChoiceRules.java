@@ -208,7 +208,7 @@ final class GraphChoiceRules {
 
     private boolean idleStation(SupplyGraph.Way way) {
         String building = way.building();
-        if (building == null || !graph.costs().stationCapacity().containsKey(building)) {
+        if (building == null || !graph.costs().stations().contains(building)) {
             return false;
         }
         return state.facts().stations().values().stream()

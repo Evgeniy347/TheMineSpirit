@@ -68,7 +68,6 @@ class TicketPlansTests {
             Map.entry(BoardCase.REPAIR_BUILDING, "build_schematic"),
             Map.entry(BoardCase.REPAIR_TOOL, "repair_tool"),
             Map.entry(BoardCase.STOCK_CHESTS, "craft"),
-            Map.entry(BoardCase.CRAFTING_STATION, "craft"),
             Map.entry(BoardCase.CRAFT_ANVIL, "craft"),
             Map.entry(BoardCase.CRAFT_SMITHING_TABLE, "craft"),
             Map.entry(BoardCase.CRAFT_SMOKER, "craft"),
@@ -695,7 +694,6 @@ class TicketPlansTests {
     void plan_CraftCases_CarryStationRadius() {
         List<BoardCase> craftCases = new ArrayList<>(TOOL_CASES);
         craftCases.add(BoardCase.STOCK_CHESTS);
-        craftCases.add(BoardCase.CRAFTING_STATION);
         craftCases.add(BoardCase.CRAFT_ANVIL);
         craftCases.add(BoardCase.CRAFT_SMITHING_TABLE);
         craftCases.add(BoardCase.ENCHANT_SHELVES);

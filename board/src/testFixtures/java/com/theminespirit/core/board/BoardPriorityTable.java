@@ -66,7 +66,6 @@ final class BoardPriorityTable {
             Map.entry("CRAFT_SHEARS", 40),
             Map.entry("CRAFT_BED", 40),
             Map.entry("WEAVE_WOOL", 40),
-            Map.entry("CRAFTING_STATION", 40),
             Map.entry("STOCK_CHESTS", 40),
             Map.entry("FILL_CRATER", 35),
             Map.entry("ENCHANT_SHELVES", 30),

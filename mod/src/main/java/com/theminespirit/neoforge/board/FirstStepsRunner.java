@@ -44,11 +44,8 @@ public final class FirstStepsRunner {
     };
     static final Set<BoardCase> WOODEN_BUILDINGS =
             EnumSet.of(BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE, BoardCase.BUILD_ORCHARD);
-    private static final Set<BoardCase> BEFORE_YARD = EnumSet.of(
-            BoardCase.CRAFTING_STATION,
-            BoardCase.CRAFT_WOODEN_PICKAXE,
-            BoardCase.CRAFT_WOODEN_AXE,
-            BoardCase.CRAFT_WOODEN_SHOVEL);
+    private static final Set<BoardCase> BEFORE_YARD =
+            EnumSet.of(BoardCase.CRAFT_WOODEN_PICKAXE, BoardCase.CRAFT_WOODEN_AXE, BoardCase.CRAFT_WOODEN_SHOVEL);
 
     private FirstStepsRunner() {}
 

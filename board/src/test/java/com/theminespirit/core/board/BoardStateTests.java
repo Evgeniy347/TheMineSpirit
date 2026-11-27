@@ -127,14 +127,14 @@ class BoardStateTests {
     @Test
     void restore_EmptyAfterNotedLedger_ClearsLedger() {
         Board board = boardAt(10);
-        board.ledger().note(BoardCase.CRAFTING_STATION, 1);
+        board.ledger().note(BoardCase.CRAFT_FURNACE, 1);
 
         board.restore(BoardState.empty());
 
         assertFalse(
-                board.ledger().has(BoardCase.CRAFTING_STATION, 1),
+                board.ledger().has(BoardCase.CRAFT_FURNACE, 1),
                 "Снимок заменяет отметки ledger, а не дописывает: приёмка «джунгли» начинала с отметок журнала "
-                        + "прошлого прогона (верстак «построен», а его нет — «нужен верстак: рядом нет»)"
+                        + "прошлого прогона (печь «построена», а её нет — «нужна печь: рядом нет»)"
                         + " Иначе тест restore_EmptyAfterNotedLedger_ClearsLedger перестанет ловить эту поломку. При смене restore_EmptyAfterNotedLedger_ClearsLedger проверь это утверждение.");
     }
 

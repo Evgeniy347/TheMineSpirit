@@ -175,30 +175,6 @@ class GraphCostsTests {
     }
 
     @Test
-    void plan_FurnaceOverloaded_SecondFurnaceTask() {
-        GraphWorld world = GraphWorld.settled()
-                .with("oak_log", 40)
-                .with("coal", 10)
-                .with("raw_iron", 6)
-                .with("iron_ingot", 0)
-                .with("sand", 20)
-                .with("glass", 0)
-                .with("cactus", 4);
-        world.stage = 3;
-        GraphPlan plan = world.plan();
-
-        assertTrue(
-                plan.task("station:furnace").isPresent(),
-                "Плавок больше, чем тянет одна печь (2 задания на печь) — задание поставить ещё печь: "
-                        + plan.tasks().stream()
-                                .filter(task ->
-                                        task.feasible() && task.consumes().containsKey("#coals"))
-                                .map(GraphPlan.Task::id)
-                                .toList()
-                        + " Иначе тест plan_FurnaceOverloaded_SecondFurnaceTask перестанет ловить эту поломку. При смене plan_FurnaceOverloaded_SecondFurnaceTask проверь это утверждение.");
-    }
-
-    @Test
     void plan_HutAndPlanks_HutTakesLonger() {
         GraphPlan plan = GraphWorld.settled().with("oak_planks", 0).plan();
 

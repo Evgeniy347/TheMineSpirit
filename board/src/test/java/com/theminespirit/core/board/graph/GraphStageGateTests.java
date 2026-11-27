@@ -11,8 +11,9 @@ import org.junit.jupiter.api.Test;
 class GraphStageGateTests {
     @Test
     void simulate_StageTwoBaseline_ReachesStageThree() {
-        GraphSimulation.Outcome outcome =
-                GraphSimulation.runUntil(GraphMutations.baselines().get(3), 4000, 3);
+        GraphWorld baseline = GraphMutations.baselines().get(3);
+        baseline.built("crafting_table", GraphState.Built.BUILT);
+        GraphSimulation.Outcome outcome = GraphSimulation.runUntil(baseline, 4000, 3);
 
         assertEquals(
                 3,

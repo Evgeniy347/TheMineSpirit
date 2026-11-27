@@ -14,7 +14,7 @@ final class GraphNodeBuilds {
             return StoragePlanWatch.post(post, ticket);
         }
         SupplyGraph.Building building = post.graph.buildings().get(ticket.node());
-        if (building == null) {
+        if (building == null || building.boardCase() == null) {
             return false;
         }
         BoardCase boardCase = building.boardCase();

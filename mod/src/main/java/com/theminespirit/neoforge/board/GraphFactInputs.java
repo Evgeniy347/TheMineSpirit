@@ -234,7 +234,7 @@ public final class GraphFactInputs {
     private static Map<String, GraphFacts.Station> stationFacts(
             SupplyGraph graph, Map<String, Built> buildings, Optional<TownPlan> town, FirstStepsRunner.StageScan scan) {
         Map<String, GraphFacts.Station> stations = new LinkedHashMap<>();
-        graph.costs().stationCapacity().keySet().stream().sorted().forEach(id -> {
+        graph.costs().stations().stream().sorted().forEach(id -> {
             if (buildings.get(id) == Built.BUILT) {
                 stations.put(id, new GraphFacts.Station(id, id, position(id, town, scan), false, null, null, null));
             }

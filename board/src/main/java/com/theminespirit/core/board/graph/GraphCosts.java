@@ -3,7 +3,9 @@ package com.theminespirit.core.board.graph;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.theminespirit.core.board.api.BoardCase;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 
 public record GraphCosts(
         int defaultTicks,
@@ -13,7 +15,7 @@ public record GraphCosts(
         int ticksPerBlock,
         int travelScaleTicks,
         Map<String, Integer> toolDurability,
-        Map<String, Integer> stationCapacity,
+        Set<String> stations,
         GraphChoice choice,
         GraphLife life) {
     public GraphCosts {
@@ -21,7 +23,7 @@ public record GraphCosts(
         wayTicks = Map.copyOf(wayTicks);
         wayUses = Map.copyOf(wayUses);
         toolDurability = Map.copyOf(toolDurability);
-        stationCapacity = Map.copyOf(stationCapacity);
+        stations = Set.copyOf(stations);
         if (choice == null) {
             throw new IllegalArgumentException(
                     "Поправки выбора не могут быть null: нейтральные задаёт GraphChoice.NEUTRAL");
@@ -60,7 +62,7 @@ public record GraphCosts(
         JsonNode costs = root.path("costs");
         GraphLife life = GraphLife.parse(root.path("life"));
         if (costs.isMissingNode()) {
-            return new GraphCosts(1, Map.of(), Map.of(), Map.of(), 0, 1, Map.of(), Map.of(), GraphChoice.NEUTRAL, life);
+            return new GraphCosts(1, Map.of(), Map.of(), Map.of(), 0, 1, Map.of(), Set.of(), GraphChoice.NEUTRAL, life);
         }
         Map<String, Integer> wayTicks = new LinkedHashMap<>();
         Map<String, Integer> wayUses = new LinkedHashMap<>();
@@ -80,8 +82,14 @@ public record GraphCosts(
                 costs.path("ticksPerBlock").asInt(0),
                 costs.path("travelScaleTicks").asInt(1200),
                 GraphEvent.counts(costs.path("toolDurability")),
-                GraphEvent.counts(costs.path("stationCapacity")),
+                stations(costs),
                 GraphChoice.parse(root.path("choice")),
                 life);
+    }
+
+    private static Set<String> stations(JsonNode costs) {
+        Set<String> stations = new LinkedHashSet<>();
+        costs.path("stations").forEach(node -> stations.add(node.asText()));
+        return stations;
     }
 }

@@ -63,8 +63,7 @@ public final class BoardRules {
         return switch (boardCase) {
             case BUILD_FENCE -> priorities.wall();
             case BUILD_HOUSE -> priorities.housing();
-            case BUILD_WAREHOUSE, BUILD_MINE, CRAFTING_STATION, CRAFT_FURNACE, CRAFT_ANVIL, CRAFT_SMITHING_TABLE ->
-                priorities.craft();
+            case BUILD_WAREHOUSE, BUILD_MINE, CRAFT_FURNACE, CRAFT_ANVIL, CRAFT_SMITHING_TABLE -> priorities.craft();
             default -> priorities.decor();
         };
     }
@@ -118,7 +117,6 @@ public final class BoardRules {
         priorities.put(BoardCase.CRAFT_SHEARS, 40);
         priorities.put(BoardCase.CRAFT_BED, 40);
         priorities.put(BoardCase.WEAVE_WOOL, 40);
-        priorities.put(BoardCase.CRAFTING_STATION, 40);
         priorities.put(BoardCase.CRAFT_ANVIL, 50);
         priorities.put(BoardCase.CRAFT_SMITHING_TABLE, 50);
         priorities.put(BoardCase.CRAFT_SMOKER, 50);

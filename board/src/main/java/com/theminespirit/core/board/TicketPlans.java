@@ -35,7 +35,6 @@ public final class TicketPlans {
     static final String FILL = "fill";
     static final String ACQUIRE = "acquire";
     static final String CRAFT = "craft";
-    static final String PLACE = "place";
     static final String WAIT = "wait";
     static final String TICKS = "ticks";
     static final String CLEAR_AREA = "clear_area";
@@ -67,7 +66,6 @@ public final class TicketPlans {
             return Optional.of(ToolSet.itemId(boardCase));
         }
         return switch (boardCase) {
-            case CRAFTING_STATION -> Optional.of("minecraft:crafting_table");
             case CRAFT_ANVIL -> Optional.of("minecraft:anvil");
             case CRAFT_SMITHING_TABLE -> Optional.of("minecraft:smithing_table");
             case CRAFT_SMOKER -> Optional.of("minecraft:smoker");

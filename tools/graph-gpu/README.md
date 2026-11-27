@@ -46,7 +46,7 @@ PYTHONIOENCODING=utf-8 py -3.9 sim_gpu.py
 
 `sim_gpu.py` повторяет `GraphSimulation`: тики заданий из `costs` (`caseTicks`, `way.ticks`),
 дорога до ресурса (`world` → `distances` → `travel`), износ инструментов (`toolDurability`,
-`way.uses`), станции (`stationCapacity`, задания `station:*`), события, этапы 1–3.
+`way.uses`), станции (`stations`), события, этапы 1–3.
 
 Сверка — с Java-прогоном `GraphSimulationTests.simulate_Baselines_WriteTrailReport`
 (`TestResults/mutation/graph-trail.md`): шаги, тики и порядок заданий по 5 базовым мирам

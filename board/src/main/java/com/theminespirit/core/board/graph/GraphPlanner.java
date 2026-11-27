@@ -14,7 +14,7 @@ public final class GraphPlanner {
     static final String TOOL = "tool:";
     static final String EVENT = "event:";
     static final String EXPLORE = "explore:";
-    static final String STATION = "station:";
+
     private static final String ORDER = "order:";
     static final char AT = '@';
     final Map<String, GraphPlan.Notice> notices = new LinkedHashMap<>();
@@ -200,7 +200,6 @@ public final class GraphPlanner {
 
     private GraphPlan result(Map<String, Double> scores) {
         List<GraphPlan.Task> tasks = new ArrayList<>();
-        Map<String, Double> load = new LinkedHashMap<>();
         Set<String> made = new HashSet<>();
         for (Map.Entry<String, Double> score : GraphChoiceRules.ordered(scores)) {
             if (score.getValue() <= 0 || !builder.task(score.getKey())) {
@@ -216,14 +215,8 @@ public final class GraphPlanner {
             if (reason != null) {
                 task = GraphBlocks.blockedTask(task, reason);
             }
-            GraphPlan.Task ready = task;
-            tasks.add(ready);
-            builder.station(score.getKey())
-                    .filter(ignored -> ready.feasible())
-                    .ifPresent(building -> load.merge(building, adjusted, Math::max));
+            tasks.add(task);
         }
-        load.forEach((building, value) ->
-                builder.stationTask(building, value, scores).ifPresent(tasks::add));
         return new GraphPlan(tasks, List.copyOf(notices.values()), advice);
     }
 

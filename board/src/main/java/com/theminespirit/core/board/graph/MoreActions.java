@@ -22,7 +22,6 @@ public final class MoreActions {
             Map.entry("more5_pickup_wood_drop", BoardCase.COLLECT_DROPS),
             Map.entry("more5_plant_sapling", BoardCase.ACTIVITY_BUILD),
             Map.entry("more6_refuel_station", BoardCase.ACTIVITY_SMELT),
-            Map.entry("more6_place_station", BoardCase.CRAFTING_STATION),
             Map.entry("more6_pickup_items", BoardCase.COLLECT_DROPS),
             Map.entry("more6_fetch_water", BoardCase.ACTIVITY_UNLOAD),
             Map.entry("more6_fetch_lava", BoardCase.ACTIVITY_UNLOAD),

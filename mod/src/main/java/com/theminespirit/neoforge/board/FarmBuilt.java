@@ -25,9 +25,11 @@ final class FarmBuilt {
             Optional<TownPlan> town,
             Map<String, Built> buildings) {
         Map<BoardCase, Integer> sharing = new EnumMap<>(BoardCase.class);
-        graph.buildings().values().forEach(building -> sharing.merge(building.boardCase(), 1, Integer::sum));
+        graph.buildings().values().stream()
+                .filter(building -> building.boardCase() != null)
+                .forEach(building -> sharing.merge(building.boardCase(), 1, Integer::sum));
         for (SupplyGraph.Building building : graph.buildings().values()) {
-            if (buildings.containsKey(building.id())) {
+            if (buildings.containsKey(building.id()) || building.boardCase() == null) {
                 continue;
             }
             boolean ownCase = sharing.get(building.boardCase()) == 1;

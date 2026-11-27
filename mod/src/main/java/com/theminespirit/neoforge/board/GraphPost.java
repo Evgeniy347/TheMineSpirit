@@ -136,7 +136,6 @@ final class GraphPost {
                 GraphFood.post(this, ticket.id(), task.priority());
                 yield true;
             }
-            case CRAFTING_STATION -> new GraphCrafting(this).station(ticket, task);
             case GATHER_MATERIALS ->
                 FarmPost.pet(this, ticket) || PortalPost.way(this, ticket, task) || gather(ticket, task);
             case COLLECT_DROPS -> GraphCollect.post(this, around, ticket);

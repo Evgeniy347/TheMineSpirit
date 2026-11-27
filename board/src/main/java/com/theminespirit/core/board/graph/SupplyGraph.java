@@ -46,7 +46,7 @@ public record SupplyGraph(
     public record Building(
             String id,
             String name,
-            BoardCase boardCase,
+            @Nullable BoardCase boardCase,
             int stage,
             int base,
             @Nullable String tool,

@@ -54,6 +54,8 @@ class GraphSimulationTests {
                     .append(base.kits.size())
                     .append(" — шагов ")
                     .append(outcome.steps())
+                    .append(", тиков ")
+                    .append(outcome.ticks())
                     .append(outcome.finished() ? "" : ", ЗАСТРЯЛ: " + outcome.stuck())
                     .append(outcome.strategist().isEmpty() ? "" : "; стратег внёс в план " + outcome.strategist())
                     .append("\n\n");

@@ -29,7 +29,7 @@ public final class StageBuilt {
 
     private static Map<String, Predicate<SettlementFacts>> built() {
         Map<String, Predicate<SettlementFacts>> built = new LinkedHashMap<>();
-        built.put("crafting_table", facts -> done(facts, BoardCase.CRAFTING_STATION) || facts.craftingStation());
+        built.put("crafting_table", SettlementFacts::craftingStation);
         built.put("clearing", facts -> facts.groundsCleared() && facts.plotLevel());
         built.put("chests", SettlementFacts::yard);
         built.put("mine", SettlementFacts::mineEntrance);

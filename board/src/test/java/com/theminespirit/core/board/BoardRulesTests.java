@@ -144,7 +144,6 @@ class BoardRulesTests {
             return 2;
         }
         if (boardCase == BoardCase.SUPPLY_SITE
-                || boardCase == BoardCase.CRAFTING_STATION
                 || boardCase == BoardCase.CRAFT_FURNACE
                 || boardCase == BoardCase.STOCK_CHESTS
                 || boardCase == BoardCase.TRANSFER_ITEM

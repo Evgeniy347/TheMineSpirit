@@ -122,7 +122,9 @@ final class GraphInputs {
             if (building == null || building.stage() > stage || buildings.get(id) == Built.BUILT) {
                 continue;
             }
-            if (building.boardCase() == BoardCase.CLEAR_GROUNDS || booked(service, building.boardCase())) {
+            if (building.boardCase() == null
+                    || building.boardCase() == BoardCase.CLEAR_GROUNDS
+                    || booked(service, building.boardCase())) {
                 materials.put(id, Map.of());
                 continue;
             }

@@ -42,8 +42,10 @@ final class DefaultPlans {
         plans.put(BoardCase.COLLECT_DROPS, (boardCase, target, level) -> TicketWorkPlans.collectDrops(target));
         plans.put(BoardCase.REPAIR_BUILDING, (boardCase, target, level) -> TicketWorkPlans.repairBuilding(target));
         plans.put(BoardCase.REPAIR_TOOL, (boardCase, target, level) -> TicketWorkPlans.repairTool(target));
-        plans.put(BoardCase.STOCK_CHESTS, (boardCase, target, level) -> TicketFarmPlans.yard(target));
-        plans.put(BoardCase.CRAFTING_STATION, (boardCase, target, level) -> TicketFarmPlans.tableNearSpirit(target));
+        plans.put(
+                BoardCase.STOCK_CHESTS,
+                (boardCase, target, level) ->
+                        Leftovers.with(TicketPlans.craft(NamespacedId.MINECRAFT + "chest", 1), target));
         plans.put(
                 BoardCase.CRAFT_ANVIL,
                 (boardCase, target, level) -> TicketPlans.craft(NamespacedId.MINECRAFT + "anvil", 1));
@@ -55,8 +57,7 @@ final class DefaultPlans {
                 (boardCase, target, level) -> TicketPlans.craft(NamespacedId.MINECRAFT + "smoker", 1));
         plans.put(
                 BoardCase.CRAFT_FURNACE,
-                (boardCase, target, level) ->
-                        TicketFarmPlans.placeInYard(NamespacedId.MINECRAFT + "furnace", 1, target));
+                (boardCase, target, level) -> TicketPlans.craft(NamespacedId.MINECRAFT + "furnace", 1));
         plans.put(BoardCase.CRAFT_TORCHES, (boardCase, target, level) -> TorchPlans.plan(target));
         plans.put(BoardCase.SMELT_CHARCOAL, (boardCase, target, level) -> TicketWorkPlans.smeltCharcoal(target));
         for (BoardCase brew : List.of(

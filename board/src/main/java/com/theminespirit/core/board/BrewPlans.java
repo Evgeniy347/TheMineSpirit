@@ -26,7 +26,7 @@ final class BrewPlans {
             case GRIND_BLAZE_POWDER -> grind(target);
             case BREW_POTION -> brew(target);
             case HARVEST_NETHER_WART -> harvest(target);
-            case CRAFT_BREWING_STAND -> stand(target);
+            case CRAFT_BREWING_STAND -> stand();
             default -> throw new IllegalArgumentException("Кейс " + boardCase + " — не зельеварение");
         };
     }
@@ -72,8 +72,8 @@ final class BrewPlans {
                 TicketWorkPlans.store(target, NamespacedId.MINECRAFT + "nether_wart")));
     }
 
-    private static TaskNode stand(TicketTarget target) {
-        return TicketFarmPlans.placeInYard(NamespacedId.MINECRAFT + "brewing_stand", 1, target);
+    private static TaskNode stand() {
+        return TicketPlans.craft(NamespacedId.MINECRAFT + "brewing_stand", 1);
     }
 
     private static String product(@Nullable String craft) {

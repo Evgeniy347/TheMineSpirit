@@ -22,8 +22,9 @@ class GraphStationCountsSourceTests {
                         && compact.contains("found.merge(id,1,Integer::sum)")
                         && compact.contains("buildings.get(id)==Built.BUILT?found.getOrDefault(id,0):0"),
                 "Число станций считается по физическим блокам, а не по одному ledger-флагу: иначе "
-                        + "каждый новый верстак не увеличивает capacity и готовый билет переоткрывается. "
+                        + "каждый новый верстак не увеличит наблюдённое число станций и сигнал простойной "
+                        + "станции останется бедным. "
                         + "При смене count_PhysicalStations_UsesRegistryBlockIds проверь GraphStationCounts.count "
-                        + "и живой graph:station:crafting_table.");
+                        + "и живой facts.stations(\"crafting_table\").");
     }
 }

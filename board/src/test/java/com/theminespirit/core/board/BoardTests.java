@@ -909,7 +909,7 @@ class BoardTests {
         Board board = new Board(() -> now[0]);
         BoardTicket gather = simpleTicket("gather:oak_log", BoardCase.GATHER_MATERIALS);
         BoardTicket blocked = simpleTicket("first:craft_furnace", BoardCase.CRAFT_FURNACE);
-        BoardTicket done = simpleTicket("first:crafting_station", BoardCase.CRAFTING_STATION);
+        BoardTicket done = simpleTicket("first:craft_anvil", BoardCase.CRAFT_ANVIL);
         BoardTicket rest = simpleTicket("rest:keep", BoardCase.LIGHTING);
         BoardTicket assigned = simpleTicket("gather:oak_fence", BoardCase.GATHER_MATERIALS);
         board.submit(gather);

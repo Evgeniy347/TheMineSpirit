@@ -161,6 +161,15 @@ final class GraphExpander {
                                             : "")));
             return;
         }
+        if (building.boardCase() == null) {
+            notices.putIfAbsent(
+                    id,
+                    new GraphPlan.Notice(
+                            id,
+                            "в мире нет постройки " + id + " (" + why + "): духи её не ставят —"
+                                    + " поставьте схемой, иначе крафт цепочки стоит"));
+            return;
+        }
         if (StageCatalog.watcherOwned(building.boardCase()) || GraphAudit.settles(state, building)) return;
         push(from, GraphPlanner.BUILDING + id, amount);
     }

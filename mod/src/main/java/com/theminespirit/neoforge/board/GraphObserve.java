@@ -97,7 +97,7 @@ final class GraphObserve {
             FirstStepsRunner.StageScan scan,
             String id) {
         SupplyGraph.Building building = graph.buildings().get(id);
-        if (building == null || state.built(id) == GraphState.Built.BUILT) {
+        if (building == null || building.boardCase() == null || state.built(id) == GraphState.Built.BUILT) {
             return Optional.empty();
         }
         if (WHEAT_FIELD.equals(id)) {

@@ -36,7 +36,7 @@
 | 26 | мало зелий лечения при частых ранах → алхимия | `BrewGraphPlannerTests.plan_StageThreePotionFullLine_Feasible` | есть |
 | 27 | нет книг/полок этапа 4 → кожа, бумага | `DemandWorkChainScenarioPart2Tests.case27_BooksAndShelvesForStageFour_RaisedThroughLeatherAndPaper` | покрыто |
 | 28 | нет тростника → посадка у воды | `DemandFoodChainScenarioPart2Tests.case28_SugarCaneMissing_PlantingRaisedUntilStocked` | покрыто |
-| 29 | нет станка мастерской → крафт станций | `DemandWorkChainScenarioPart2Tests.case29_NoWorkshopStation_PlacedThroughPlanks` | покрыто |
+| 29 | нет верстака в мире → крафт стоит, граф просит поставить схемой | `ChopToolGraphTests.case68_LogsToPlanksTableAxe_ThenChopWithAxe` | покрыто |
 | 30 | лава у шахты → вода/булыжник до работы | `DemandSafetyChainScenarioTests.case30_LavaNearMine_BlockingAndStoneRaisedBeforeWork` | покрыто |
 | 31 | шахту затопило → блоки, факелы, обход | `DemandSafetyChainScenarioPart2Tests.case31_FloodedMine_BlocksTorchesAndBypassRaised` | покрыто |
 | 32 | обвал/гравий → поддержки, не копать под песком | `DemandSafetyChainScenarioPart2Tests.case32_Collapse_SandAndGravelSupportRaised` | покрыто |

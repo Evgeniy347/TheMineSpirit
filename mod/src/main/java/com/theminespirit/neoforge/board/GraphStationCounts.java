@@ -20,7 +20,7 @@ final class GraphStationCounts {
 
     static Map<String, Integer> count(
             ServerLevel level, FirstStepsRunner.StageScan scan, SupplyGraph graph, Map<String, Built> buildings) {
-        Set<String> stations = graph.costs().stationCapacity().keySet();
+        Set<String> stations = graph.costs().stations();
         Map<String, Integer> found = new LinkedHashMap<>();
         BlockCoord yard = scan.stage().workYard();
         int radius = BoardConfig.current().facts().stationSearchRadius();

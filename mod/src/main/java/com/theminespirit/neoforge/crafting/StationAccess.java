@@ -1,7 +1,6 @@
 package com.theminespirit.neoforge.crafting;
 
 import com.theminespirit.core.board.BoardConfig;
-import com.theminespirit.core.crafting.WorkCorner;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.neoforge.ReachApproach;
@@ -18,12 +17,6 @@ final class StationAccess {
         FAILED
     }
 
-    @FunctionalInterface
-    interface Supply {
-        boolean provide(SpiritEntity spirit);
-    }
-
-    private static final Supply NO_SUPPLY = spirit -> false;
     private static final int SETTLEMENT_SEARCH = 23;
 
     private final SpiritEntity spirit;
@@ -31,24 +24,16 @@ final class StationAccess {
     private final int radius;
     private final StationFinder finder;
     private final ReachApproach approach;
-    private final Supply supply;
     private State state = State.WORKING;
     private BlockPos pos;
-    private BlockPos anchor;
-    private StationFinder cornerFinder;
     private StationFinder settlementFinder;
     private boolean settlementSearched;
     private String failureReason;
 
     StationAccess(SpiritEntity spirit, StationType type, int radius) {
-        this(spirit, type, radius, NO_SUPPLY);
-    }
-
-    StationAccess(SpiritEntity spirit, StationType type, int radius, Supply supply) {
         this.spirit = spirit;
         this.type = type;
         this.radius = radius;
-        this.supply = supply;
         this.finder = new StationFinder(spirit.level(), spirit.blockPosition(), radius, type);
         this.approach = ReachApproach.withRoutes(spirit);
     }
@@ -112,20 +97,7 @@ final class StationAccess {
             }
             settlementSearched = true;
         }
-        if (spirit.getInventory().countItem(type.item()) < 1 && !supply.provide(spirit)) {
-            fail(type.needed() + ": рядом (" + radius + ") нет, в инвентаре нет");
-            return;
-        }
-        BlockPos origin = placementAnchor();
-        if (origin == null) {
-            return;
-        }
-        Optional<BlockPos> placed = StationPlacer.place(spirit, type, origin);
-        if (placed.isEmpty()) {
-            fail("негде поставить " + type.noun() + ": вокруг духа нет свободной клетки на твёрдом полу");
-            return;
-        }
-        headTo(placed.get());
+        fail(type.needed() + ": рядом (" + radius + ") нет и в поселении нет — станции ставят схемы, не духи");
     }
 
     private Optional<BlockPos> settlementCenter() {
@@ -139,31 +111,6 @@ final class StationAccess {
             }
         }
         return Optional.empty();
-    }
-
-    private BlockPos placementAnchor() {
-        if (anchor != null) {
-            return anchor;
-        }
-        if (type != StationType.FURNACE && type != StationType.SMOKER) {
-            anchor = spirit.blockPosition();
-            return anchor;
-        }
-        if (cornerFinder == null) {
-            cornerFinder =
-                    new StationFinder(spirit.level(), spirit.blockPosition(), radius, StationType.CRAFTING_TABLE);
-        }
-        if (!cornerFinder.step()) {
-            return null;
-        }
-        Optional<BlockCoord> table = cornerFinder.found().map(StationAccess::coordOf);
-        BlockCoord chosen = WorkCorner.anchor(coordOf(spirit.blockPosition()), table, radius);
-        anchor = new BlockPos(chosen.x(), chosen.y(), chosen.z());
-        return anchor;
-    }
-
-    private static BlockCoord coordOf(BlockPos pos) {
-        return new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
     }
 
     private void headTo(BlockPos target) {

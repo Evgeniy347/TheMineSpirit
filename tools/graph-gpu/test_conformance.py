@@ -305,12 +305,14 @@ def test_dig_inputs():
 
 def test_area_nodes():
     graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
-    for way in ("transfer_item", "sort_chest", "restock_food", "till_soil", "plant_crop",
+    for way in ("transfer_item", "sort_chest", "restock_food",
                 "harvest_crop", "feed_animals", "lure_animal", "milk_animal"):
         assert graph.way(way) is not None, "Python-модель не видит новый путь области: " + way
-    for building in ("storage_space", "wheat_field"):
+    for way in ("till_soil", "plant_crop"):
+        assert graph.way(way) is None, "Ручные вспашка и посев удалены в Java, Python их вернул: " + way
+    for building in ("warehouse", "wheat_field"):
         assert building in graph.buildings, "Python-модель не видит новую постройку: " + building
-    for event in ("store_minimum", "storage_full", "furnace_ready", "crop_ready",
+    for event in ("store_minimum", "furnace_ready", "crop_ready",
                   "animal_starving", "orchard_empty"):
         assert event in graph.events, "Python-модель не видит новое событие входа: " + event
     print("OK: узлы и события областей store/farm читаются из фрагментов")
@@ -509,7 +511,7 @@ def test_more_inputs():
 
 
 MORE2_READY = {
-    "more2_sow_food", "more2_breed_food", "more2_unload_carry", "more2_put_out_fire",
+    "more2_breed_food", "more2_unload_carry", "more2_put_out_fire",
     "more2_remove_lava", "more2_block_flow", "more2_pen_animal", "more2_lure_wild",
     "more2_guard_villager", "more2_prepare_stage", "more2_make_bed", "more2_build_trail",
 }
@@ -517,7 +519,7 @@ MORE2_READY = {
 
 def test_more2_nodes():
     graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
-    for way in ("more2_sow_food", "more2_breed_food", "more2_unload_carry",
+    for way in ("more2_breed_food", "more2_unload_carry",
                 "more2_put_out_fire", "more2_remove_lava", "more2_block_flow",
                 "more2_pen_animal", "more2_lure_wild", "more2_guard_villager",
                 "more2_prepare_stage", "more2_make_bed", "more2_build_trail"):
@@ -526,8 +528,8 @@ def test_more2_nodes():
             assert graph.implemented(way), "Действие области graphmore2 связано с исполнением: " + way
         else:
             assert not graph.implemented(way), "Сигнал торговли остаётся без отдельного действия: " + way
-    for way in ("more2_load_carry", "more2_batch_carry"):
-        assert graph.way(way) is None, "Перенос и полевой сундук уже в путях склада: " + way
+    for way in ("more2_load_carry", "more2_batch_carry", "more2_sow_food"):
+        assert graph.way(way) is None, "Перенос, полевой сундук и ручной посев уже убраны из путей: " + way
     for item in ("more2:food_plan", "more2:carry_room", "more2:safe",
                  "more2:flow_blocked", "more2:animal_penned", "more2:village_safe",
                  "more2:stage_ready", "more2:bed_ready", "more2:trail"):
@@ -593,11 +595,11 @@ MORE6_EVENTS = (
 
 MORE6_WAYS = (
     "more6_deposit_materials", "more6_refuel_station",
-    "more6_place_station", "more6_pickup_items", "more6_fetch_water",
+    "more6_pickup_items", "more6_fetch_water",
     "more6_fetch_lava", "more6_maintain_stock", "more6_assign_idle",
 )
 MORE6_IMPLEMENTED = {
-    "more6_deposit_materials", "more6_refuel_station", "more6_place_station",
+    "more6_deposit_materials", "more6_refuel_station",
     "more6_pickup_items", "more6_fetch_water", "more6_fetch_lava",
     "more6_maintain_stock", "more6_assign_idle",
 }
@@ -820,8 +822,8 @@ def test_block_feedback():
 def test_baseline_trail():
     graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
     outcome = sim_gpu.run(sim_gpu.baselines(graph)[0], limit=4000)
-    assert outcome["steps"] == 1844 and outcome["ticks"] == 316000, \
-        "Пустой мир обязан повторить Java (1844 шага, 316 000 тиков), а не решение линейной системы: " \
+    assert outcome["steps"] == 1486 and outcome["ticks"] == 263200, \
+        "Пустой мир обязан повторить Java (1486 шагов, 263 200 тиков), а не решение линейной системы: " \
         + str((outcome["steps"], outcome["ticks"]))
     print("OK: пустой мир совпадает с Java (расходящийся поток решается итерациями)")
 
@@ -938,7 +940,7 @@ def test_dead_inputs():
     graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
     worlds = dict(sim_gpu.input_worlds(graph))
     farm = [step[1] for step in sim_gpu.run(worlds["farm"], limit=1600)["trail"]]
-    for way in ("restock_food", "till_soil", "milk_animal"):
+    for way in ("restock_food", "milk_animal"):
         assert way in farm, "Мир фермы обязан вызвать путь '" + way + "': " + str(farm)
     more5 = [step[1] for step in sim_gpu.run(worlds["more5"], limit=1600)["trail"]]
     for way in ("more5_light_crops", "more5_pickup_wood_drop", "more5_light_mine"):
@@ -970,7 +972,8 @@ def test_new_input_worlds():
     for tag in ("more:player_near", "more:dusk_soon", "more:bad_trip_conditions", "more:failures_repeat"):
         assert tag in state.world, "Обратная связь мира обязана дать метку " + tag
     field = [step[1] for step in sim_gpu.run(worlds["field"], limit=1600)["trail"]]
-    assert "building:wheat_field" in field and any("plant_crop" in task for task in field),         "Мир грядки обязан строить wheat_field и сажать: " + str(field)
+    assert "building:wheat_field" in field and any("repair:wheat_field" in task for task in field), \
+        "Мир грядки обязан строить wheat_field и засевать ремонтом схемы: " + str(field)
     print("OK: грязный мир, провалы путей и грядка изображаются симуляцией")
 
 
@@ -1003,9 +1006,16 @@ def test_live_stage_one():
         "Этап 1 обходит лишние постройки: " + str(steps)
     assert any(task.startswith("event:clear_floating") for task in steps), \
         "Этап 1 обходит висящее: " + str(steps)
-    assert len(steps) <= 200, "Этап 1 зациклился: " + str(len(steps)) + " заданий"
-    repeated = Counter(steps).most_common(1)[0][1]
-    assert repeated <= 60, "Одно задание повторяется без продвижения: " + str(repeated)
+    with open(os.path.join(EXPORT, "bases.json"), "r", encoding="utf-8") as handle:
+        base = json.load(handle)["live1"]
+    java_steps = base["steps"]
+    java_repeats = Counter(row["id"] for row in base["trail"])
+    assert len(steps) <= java_steps + 20, \
+        "Этап 1 зациклился: " + str(len(steps)) + " заданий против " + str(java_steps) + " у Java"
+    repeated, count = Counter(steps).most_common(1)[0]
+    assert count <= java_repeats.get(repeated, 0) + 5, \
+        "Задание " + repeated + " повторяется " + str(count) + " раз против " \
+        + str(java_repeats.get(repeated, 0)) + " у Java: продвижения нет"
     print("OK: живой этап 1 закрывается за " + str(len(steps)) + " заданий")
 
 
@@ -1089,8 +1099,10 @@ def test_stage_two_worlds():
     worlds = [("stage2-full", sim_gpu.baselines(graph)[3]),
               ("stage2-all", search.make_world(graph, 2))]
     for name, world in worlds:
-        unbuilt = sim_gpu.unbuilt(world)
-        assert "warehouse" in unbuilt and "pen_cow" in unbuilt,             "Склад и загон строит граф, они обязаны держать этап: " + str(unbuilt)
+        for building_id in ("warehouse", "pen_cow"):
+            building = graph.buildings[building_id]
+            assert building.board_case is not None and not building.optional, \
+                "Склад и загон строит граф, они обязаны держать этап: " + building_id
         outcome = sim_gpu.run(world, limit=4000)
         assert outcome["stage"] >= 3,             "Мир " + name + " обязан пройти этап 2 без сторожей: " + outcome["stuck"]
     print("OK: миры этапа 2 доходят до этапа 3 (склад и загоны не держат этап)")
@@ -1278,9 +1290,9 @@ def test_choice_mechanics():
     tight = sim_gpu.World.empty(tuned(spaceTight=0.3))
     tight.events.add("more4_space_tight")
     quiet = sim_gpu.World.empty(base)
-    fence = lambda world: next(t["priority"] for t in world.plan()["tasks"]
-                               if t["id"] == "building:fence")
-    assert fence(space) > fence(quiet) > fence(tight), \
+    yard = lambda world: next(t["priority"] for t in world.plan()["tasks"]
+                              if t["id"] == "building:chests")
+    assert yard(space) > yard(quiet) > yard(tight), \
         "Python: свободное место поднимает стройку, тесное опускает"
 
     herd = sim_gpu.World.empty(base)
@@ -1294,15 +1306,7 @@ def test_choice_mechanics():
     breed = lambda world: next(t["priority"] for t in world.plan()["tasks"] if t["id"] == "breed_cow")
     assert breed(held) < breed(herd), "Python: полный загон сдерживает разведение"
 
-    field = sim_gpu.World.settled(base)
-    field.events.update({"more2_food_low", "more7_field_full"})
-    full = sim_gpu.World.settled(tuned(fieldFull=0.5))
-    full.events.update({"more2_food_low", "more7_field_full"})
-    sow = "event:more2_food_low:more2_sow_food"
-    assert next(t["priority"] for t in full.plan()["tasks"] if t["id"] == sow) \
-        < next(t["priority"] for t in field.plan()["tasks"] if t["id"] == sow), \
-        "Python: полное поле сдерживает посев"
-    print("OK: поправки выбора (дорога, срок, дубль, цель, место, загон, поле) работают в Python")
+    print("OK: поправки выбора (дорога, срок, дубль, цель, место, загон) работают в Python")
 
 
 def test_recipe_weights():

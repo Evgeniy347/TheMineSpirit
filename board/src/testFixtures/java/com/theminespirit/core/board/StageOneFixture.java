@@ -32,7 +32,6 @@ final class StageOneFixture {
         scenario.board.ledger().notePlan("storage", 1);
         scenario.board.ledger().notePlan("storage_2", 1);
         scenario.board.ledger().notePlan("storage_3", 1);
-        scenario.ticket("first:crafting_station:1", BoardCase.CRAFTING_STATION, List.of(), Map.of("oak_planks", 4));
         scenario.ticket("first:clear_grounds:1", BoardCase.CLEAR_GROUNDS, List.of(), Map.of("oak_planks", 8));
         scenario.ticket(
                 "first:stock_chests:1",

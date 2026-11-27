@@ -31,7 +31,7 @@ public final class StageCatalog {
         Objects.requireNonNull(planId, "id постройки плана не может быть null: по нему берут кейс и схему");
         Optional<SupplyGraph.Building> building = graphBuilding(planId);
         Optional<DemoBuildings.Building> catalog = catalogBuilding(planId);
-        if (building.isEmpty() || catalog.isEmpty()) {
+        if (building.isEmpty() || catalog.isEmpty() || building.orElseThrow().boardCase() == null) {
             return Optional.empty();
         }
         return Optional.of(new Entry(

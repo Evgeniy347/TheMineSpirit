@@ -32,8 +32,7 @@ public final class CraftScript implements ScriptInstance {
     private enum Phase {
         PREPARE,
         STATION,
-        CRAFT,
-        PLACE
+        CRAFT
     }
 
     private record Step(List<Item> consumed, List<ItemStack> produced, int output, boolean target) {}
@@ -47,7 +46,6 @@ public final class CraftScript implements ScriptInstance {
     private int nextStep;
     private int ticksSinceCraft = CraftTuning.CRAFT_INTERVAL_TICKS;
     private StationAccess station;
-    private StationFinder placedFinder;
 
     public CraftScript(SpiritEntity spirit, CraftParams params) {
         this.spirit = spirit;
@@ -62,8 +60,7 @@ public final class CraftScript implements ScriptInstance {
         return switch (phase) {
             case PREPARE -> prepare();
             case STATION -> useStation();
-            case CRAFT -> finish(craft());
-            case PLACE -> place();
+            case CRAFT -> craft();
         };
     }
 
@@ -94,7 +91,7 @@ public final class CraftScript implements ScriptInstance {
     private ScriptStatus prepare() {
         int remaining = params.count() - crafted;
         if (remaining <= 0) {
-            return finish(ScriptStatus.SUCCEEDED);
+            return ScriptStatus.SUCCEEDED;
         }
         String name = ItemIds.normalize(params.item());
         RecipeKnowledge knowledge = RecipeKnowledge.of(spirit.level());
@@ -116,7 +113,7 @@ public final class CraftScript implements ScriptInstance {
         Optional<StationType> needed = Stations.forRecipe(finalRecipe).flatMap(StationType::byId);
         if (needed.isEmpty()) {
             phase = Phase.CRAFT;
-            return finish(craft());
+            return craft();
         }
         station = new StationAccess(spirit, needed.get(), params.radius());
         phase = Phase.STATION;
@@ -212,7 +209,7 @@ public final class CraftScript implements ScriptInstance {
             case WORKING -> ScriptStatus.RUNNING;
             case READY -> {
                 phase = Phase.CRAFT;
-                yield finish(craft());
+                yield craft();
             }
             case FAILED -> fail(station.failureReason());
         };
@@ -242,38 +239,6 @@ public final class CraftScript implements ScriptInstance {
             crafted += step.output();
         }
         return nextStep >= steps.size() ? ScriptStatus.SUCCEEDED : ScriptStatus.RUNNING;
-    }
-
-    private ScriptStatus finish(ScriptStatus status) {
-        if (status != ScriptStatus.SUCCEEDED || !params.place()) {
-            return status;
-        }
-        Optional<StationType> type = StationType.byId(params.item());
-        if (type.isEmpty()) {
-            return placeBlocks();
-        }
-        placedFinder = new StationFinder(spirit.level(), spirit.blockPosition(), params.radius(), type.get());
-        phase = Phase.PLACE;
-        return ScriptStatus.RUNNING;
-    }
-
-    private ScriptStatus place() {
-        if (!placedFinder.step()) {
-            return ScriptStatus.RUNNING;
-        }
-        if (placedFinder.found().isPresent()) {
-            return ScriptStatus.SUCCEEDED;
-        }
-        StationType type = StationType.byId(params.item()).orElseThrow();
-        if (StationPlacer.place(spirit, type).isEmpty()) {
-            return placeBlocks();
-        }
-        return ScriptStatus.SUCCEEDED;
-    }
-
-    private ScriptStatus placeBlocks() {
-        Optional<String> failure = CraftPlacement.placeBlocks(spirit, params, crafted);
-        return failure.map(this::fail).orElse(ScriptStatus.SUCCEEDED);
     }
 
     private static String shortage(CraftPlan plan) {

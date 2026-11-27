@@ -38,8 +38,7 @@ final class MoreInputs {
     private static final int FAILURE_REPEATS = 2;
     private static final String BOARD_PREFIX = "board-";
     private static final Set<String> GOAL_PREFIXES = Set.of("goal:", "strategy:");
-    private static final Set<BoardCase> STATION_CASES =
-            Set.of(BoardCase.ACTIVITY_SMELT, BoardCase.SMELT_CHARCOAL, BoardCase.CRAFTING_STATION);
+    private static final Set<BoardCase> STATION_CASES = Set.of(BoardCase.ACTIVITY_SMELT, BoardCase.SMELT_CHARCOAL);
 
     private MoreInputs() {}
 

@@ -394,7 +394,7 @@ def _life_world(graph):
 def _store_world(graph):
     world = ready_world(graph)
     world.storage_free = 10
-    world.events.update(("store_minimum", "storage_full", "furnace_ready", "transfer_pending"))
+    world.events.update(("store_minimum", "furnace_ready", "transfer_pending"))
     world.with_facts({
         "spirits": {"spirit-1": {"id": "spirit-1", "position": {"x": 0, "y": 64, "z": 0},
                                  "inventory": {"oak_log": 4}}},
@@ -656,7 +656,8 @@ def input_worlds(graph):
 
 def unbuilt(world):
     return [b.id for b in world.graph.buildings.values()
-            if b.stage <= world.stage and not b.optional
+            if b.board_case is not None
+            and b.stage <= world.stage and not b.optional
             and world.buildings.get(b.id) != BUILT]
 
 
@@ -728,7 +729,7 @@ def answer(world, plan, strategist=None):
         wanted = world.graph.buildings.get(building_id)
         if wanted is not None and wanted.stage <= world.stage and world.buildings.get(wanted.id) != BUILT \
                 and warehouse_approved(world, wanted.id):
-            world.buildings[wanted.id] = PLANNED
+            world.buildings[wanted.id] = BUILT if wanted.board_case is None else PLANNED
             if strategist is not None:
                 strategist.append(str(world.stage) + ":" + wanted.id)
 
@@ -751,14 +752,13 @@ def finish(world, work, wear, now):
     if task_id.startswith("explore:"):
         world.world.add(task["makes"])
         return
-    if task_id.startswith("station:"):
-        world.stations[task["makes"]] = world.stations.get(task["makes"], 1) + 1
-        return
     if task_id.startswith("event:"):
         world.events.discard(task_id.split(":", 2)[1])
         return
     if task_id.startswith("building:"):
         world.buildings[task["makes"]] = BUILT
+        if task["makes"] == "chests":
+            world.buildings["crafting_table"] = BUILT
         if task["makes"] == world.graph.storage_building:
             world.storage_free = max(world.storage_free, 60)
         return

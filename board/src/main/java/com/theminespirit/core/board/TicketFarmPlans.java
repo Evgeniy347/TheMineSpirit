@@ -59,49 +59,6 @@ final class TicketFarmPlans {
         return schematic(scheme, target.target(), target);
     }
 
-    static TaskNode placeInYard(String item, int count, TicketTarget target) {
-        return Leftovers.with(
-                sequence(
-                        gotoTarget(target),
-                        new ScriptCall(
-                                CRAFT,
-                                Map.of(
-                                        ITEM,
-                                        item,
-                                        COUNT,
-                                        count,
-                                        RADIUS,
-                                        CatalogLimits.STATION_RADIUS_DEFAULT,
-                                        PLACE,
-                                        true))),
-                target);
-    }
-
-    static TaskNode tableNearSpirit(TicketTarget target) {
-        return Leftovers.with(
-                new ScriptCall(
-                        CRAFT,
-                        Map.of(
-                                ITEM,
-                                "minecraft:crafting_table",
-                                COUNT,
-                                1,
-                                RADIUS,
-                                CatalogLimits.STATION_RADIUS_DEFAULT,
-                                PLACE,
-                                true)),
-                target);
-    }
-
-    static TaskNode yard(TicketTarget target) {
-        return Leftovers.with(
-                sequence(
-                        gotoTarget(target),
-                        new ScriptCall(
-                                CRAFT, Map.of(ITEM, "minecraft:crafting_table", COUNT, 1, RADIUS, 1, PLACE, true))),
-                target);
-    }
-
     static TaskNode breedAnimals(TicketTarget target) {
         Species species = target.species() == null ? Species.COW : target.species();
         return new ScriptCall(

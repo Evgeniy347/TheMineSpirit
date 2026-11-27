@@ -16,7 +16,9 @@ class GraphReachabilityTests {
 
     @Test
     void emptyWorldWithTrees_Simulated_ReachesLastStage() {
-        GraphSimulation.Outcome outcome = GraphSimulation.run(GraphWorld.empty(), 12_000);
+        GraphWorld world = GraphWorld.empty();
+        world.built("crafting_table", GraphState.Built.BUILT);
+        GraphSimulation.Outcome outcome = GraphSimulation.run(world, 12_000);
 
         assertTrue(
                 outcome.finished(),

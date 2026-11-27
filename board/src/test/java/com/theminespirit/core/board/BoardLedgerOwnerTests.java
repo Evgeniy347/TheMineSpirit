@@ -7,32 +7,32 @@ import com.theminespirit.core.board.api.BoardCase;
 import org.junit.jupiter.api.Test;
 
 class BoardLedgerOwnerTests {
-    private static final BoardCase CASE = BoardCase.CRAFTING_STATION;
+    private static final BoardCase CASE = BoardCase.CRAFT_FURNACE;
 
     @Test
-    void reopen_GraphStationAfterLegacyDone_KeepsSharedMark() {
+    void reopen_GraphBuildingAfterLegacyDone_KeepsSharedMark() {
         BoardLedger ledger = new BoardLedger();
-        ledger.complete(CASE, 1, "first:crafting_station");
-        ledger.complete(CASE, 1, "graph:station:crafting_table");
+        ledger.complete(CASE, 1, "first:craft_furnace");
+        ledger.complete(CASE, 1, "graph:building:furnace");
 
-        ledger.reopen(CASE, 1, "graph:station:crafting_table");
+        ledger.reopen(CASE, 1, "graph:building:furnace");
 
         assertTrue(
                 ledger.has(CASE, 1),
-                "Переоткрытие graph-станции не стирает DONE legacy-билета: иначе верстак снова становится "
+                "Переоткрытие graph-постройки не стирает DONE legacy-билета: иначе печь снова становится "
                         + "PLANNED и цепочка инструментов встаёт. При смене "
-                        + "reopen_GraphStationAfterLegacyDone_KeepsSharedMark проверь BoardLedger.owners.");
-        ledger.reopen(CASE, 1, "first:crafting_station");
+                        + "reopen_GraphBuildingAfterLegacyDone_KeepsSharedMark проверь BoardLedger.owners.");
+        ledger.reopen(CASE, 1, "first:craft_furnace");
         assertFalse(
                 ledger.has(CASE, 1),
                 "После снятия обоих владельцев отметка исчезает: иначе устаревший DONE останется навсегда. "
-                        + "При смене reopen_GraphStationAfterLegacyDone_KeepsSharedMark проверь очистку owners.");
+                        + "При смене reopen_GraphBuildingAfterLegacyDone_KeepsSharedMark проверь очистку owners.");
     }
 
     @Test
     void reopen_ForeignTicket_DoesNotEraseBuildingMark() {
         BoardLedger ledger = new BoardLedger();
-        ledger.complete(CASE, 1, "first:crafting_station");
+        ledger.complete(CASE, 1, "first:craft_furnace");
 
         ledger.reopen(CASE, 1, "repair:some_other_station");
 

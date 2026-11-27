@@ -74,14 +74,20 @@ class ChopToolGraphTests {
 
         world.with("oak_planks", 8).with("stick", 4);
         GraphTickets.Result planks = tickets(world);
-        assertTrue(
+        assertFalse(
                 planks.post().stream().anyMatch(ticket -> "crafting_table".equals(ticket.node())),
-                "Доски на складе — граф ставит верстак: " + planks.post()
+                "Верстак не ставится заданием: станции приносит схема двора, духи его только ищут: "
+                        + planks.post()
+                        + " Иначе тест case68_LogsToPlanksTableAxe_ThenChopWithAxe перестанет ловить эту поломку. При смене case68_LogsToPlanksTableAxe_ThenChopWithAxe проверь это утверждение.");
+        assertTrue(
+                world.plan().notices().stream().anyMatch(notice -> "crafting_table".equals(notice.building())),
+                "Без верстака в мире граф обязан сказать об этом явно: иначе цепочка молча не собирается: "
+                        + world.plan().notices()
                         + " Иначе тест case68_LogsToPlanksTableAxe_ThenChopWithAxe перестанет ловить эту поломку. При смене case68_LogsToPlanksTableAxe_ThenChopWithAxe проверь это утверждение.");
         assertFalse(
                 planks.post().stream()
                         .anyMatch(ticket -> "wooden_axe".equals(ticket.task().makes())),
-                "Топор ждёт верстак: без постройки его не крафтят: " + planks.post()
+                "Топор ждёт верстак: без стоящего верстака его не крафтят: " + planks.post()
                         + " Иначе тест case68_LogsToPlanksTableAxe_ThenChopWithAxe перестанет ловить эту поломку. При смене case68_LogsToPlanksTableAxe_ThenChopWithAxe проверь это утверждение.");
 
         world.buildings.put("crafting_table", GraphState.Built.BUILT);

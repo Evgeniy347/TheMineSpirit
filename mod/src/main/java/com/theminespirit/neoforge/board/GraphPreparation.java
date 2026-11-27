@@ -160,7 +160,8 @@ final class GraphPreparation {
                         long started = System.nanoTime();
                         if (builtWork == null) {
                             builtWork = graph.buildings().values().stream()
-                                    .filter(building -> StageBuilt.ids().contains(building.id())
+                                    .filter(building -> building.boardCase() != null
+                                            && StageBuilt.ids().contains(building.id())
                                             && facts.built(building.id()) != GraphState.Built.BUILT)
                                     .toList();
                             builtCursor = 0;

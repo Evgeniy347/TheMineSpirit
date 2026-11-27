@@ -157,16 +157,9 @@ public final class SmeltScript implements ScriptInstance {
             return startFurnace(resumeStation, true);
         }
         resumeStation = null;
-        station = newStation(candidateTypes.get(stationIndex));
+        station = new StationAccess(spirit, candidateTypes.get(stationIndex), params.radius());
         phase = Phase.STATION;
         return ScriptStatus.RUNNING;
-    }
-
-    private StationAccess newStation(StationType type) {
-        if (type == StationType.CAMPFIRE) {
-            return new StationAccess(spirit, type, params.radius(), CampfireKit::ensure);
-        }
-        return new StationAccess(spirit, type, params.radius());
     }
 
     private ScriptStatus useStation() {
@@ -179,7 +172,7 @@ public final class SmeltScript implements ScriptInstance {
             case FAILED -> {
                 if (stationIndex + 1 < candidateTypes.size()) {
                     stationIndex++;
-                    station = newStation(candidateTypes.get(stationIndex));
+                    station = new StationAccess(spirit, candidateTypes.get(stationIndex), params.radius());
                     phase = Phase.STATION;
                     yield ScriptStatus.RUNNING;
                 }

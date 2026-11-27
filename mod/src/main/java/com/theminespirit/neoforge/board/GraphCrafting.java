@@ -112,17 +112,4 @@ final class GraphCrafting {
                 TicketTarget.at(post.craftPoint()).withCraft(item, 1));
         return true;
     }
-
-    boolean station(GraphTickets.Ticket ticket, GraphPlan.Task task) {
-        post.submit(
-                post.ticket(
-                        ticket.id(),
-                        BoardCase.CRAFTING_STATION,
-                        Optional.empty(),
-                        task.priority(),
-                        ticket.id(),
-                        post.items(task)),
-                TicketTarget.at(post.craftPoint()).withSupply("crafting_table", 1));
-        return true;
-    }
 }

@@ -35,7 +35,7 @@ PENALTY = 500
 
 SCALARS = ("decay", "urgentBoost", "buildReadyBoost")
 DIG_WAYS = {"dig_out", "bridge", "pillar"}
-STORE_EVENTS = {"store_minimum", "transfer_pending", "storage_full", "furnace_ready"}
+STORE_EVENTS = {"store_minimum", "transfer_pending", "furnace_ready"}
 FARM_EVENTS = {"crop_ready", "animal_starving", "orchard_empty"}
 MORE3_EVENTS = set(sim_gpu.MORE3_EVENTS)
 MORE4_EVENTS = set(sim_gpu.MORE4_EVENTS)

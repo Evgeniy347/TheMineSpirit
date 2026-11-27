@@ -48,7 +48,7 @@ class ResourceResolverWithdrawTests {
 
         TaskNode plan = ResourceResolver.resolve(
                 "stick", 3, KNOWLEDGE, CoreScripts.defaultCatalog(), ConditionCatalog.empty(), supplies);
-        ScriptCall craft = new ScriptCall("craft", Map.of("item", "stick", "count", 3, "radius", 16, "place", false));
+        ScriptCall craft = new ScriptCall("craft", Map.of("item", "stick", "count", 3, "radius", 16));
 
         assertEquals(
                 new SequenceNode(List.of(new SequenceNode(List.of(withdraw, wood("oak_log", 1))), craft)),

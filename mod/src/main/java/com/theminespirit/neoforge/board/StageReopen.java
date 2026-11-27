@@ -9,7 +9,6 @@ import java.util.Locale;
 
 final class StageReopen {
     static final List<BoardCase> STEPS = List.of(
-            BoardCase.CRAFTING_STATION,
             BoardCase.CLEAR_GROUNDS,
             BoardCase.STOCK_CHESTS,
             BoardCase.BUILD_MINE,

@@ -46,7 +46,6 @@ final class Stations {
 
     private static boolean crafts(BoardCase caseValue) {
         return caseValue.name().startsWith("CRAFT_")
-                && caseValue != BoardCase.CRAFTING_STATION
                 && caseValue != BoardCase.CRAFT_FURNACE
                 && TicketPlans.craftItem(caseValue).isPresent();
     }

@@ -228,7 +228,6 @@ final class GraphFragmentCases {
                     List.of(
                             way("more6_deposit_materials"),
                             way("more6_refuel_station"),
-                            way("more6_place_station"),
                             way("more6_pickup_items"),
                             way("more6_fetch_water"),
                             way("more6_fetch_lava"),

@@ -5,11 +5,7 @@ import com.theminespirit.core.script.api.ScriptArgs;
 import java.util.Map;
 import java.util.Objects;
 
-public record CraftParams(String item, int count, int radius, boolean place) {
-    public CraftParams(String item, int count, int radius) {
-        this(item, count, radius, false);
-    }
-
+public record CraftParams(String item, int count, int radius) {
     public CraftParams {
         if (item == null || item.isBlank()) {
             throw new IllegalArgumentException("Не задан предмет для craft: без него скрипт не знает, что крафтить");
@@ -31,7 +27,6 @@ public record CraftParams(String item, int count, int radius, boolean place) {
         return new CraftParams(
                 ScriptArgs.requireString(params, "item"),
                 ScriptArgs.requireInt(params, "count"),
-                ScriptArgs.requireInt(params, "radius"),
-                ScriptArgs.optionalBoolean(params, "place", false));
+                ScriptArgs.requireInt(params, "radius"));
     }
 }

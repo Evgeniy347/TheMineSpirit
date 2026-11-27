@@ -158,8 +158,7 @@ final class DispatchPick {
     static boolean localWork(BoardCase boardCase) {
         return ToolSet.isTool(boardCase)
                 || switch (boardCase) {
-                    case CRAFTING_STATION,
-                            CRAFT_ANVIL,
+                    case CRAFT_ANVIL,
                             CRAFT_SMITHING_TABLE,
                             CRAFT_SMOKER,
                             CRAFT_BED,

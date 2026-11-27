@@ -20,11 +20,6 @@ class DispatchPickTests {
     @Test
     void localWork_LocalScripts_DoNotRequireGlobalPath() {
         assertTrue(
-                DispatchPick.localWork(BoardCase.CRAFTING_STATION),
-                "Верстак крафтится у ближайшей локальной станции: иначе дальний общий craftPoint снова "
-                        + "блокирует всех свободных духов. При смене localWork_LocalScripts_DoNotRequireGlobalPath "
-                        + "проверь DispatchPick.pick и TicketFarmPlans.tableNearSpirit.");
-        assertTrue(
                 DispatchPick.localWork(BoardCase.CRAFT_STONE_SHOVEL),
                 "Инструмент тоже крафтится локально после дистанционного acquire: иначе путь к общему "
                         + "двору не даёт заменить сломанную лопату. При смене "

@@ -113,6 +113,7 @@ class GraphBaseWorldsTests {
     @Test
     void noAxe_EmptyStart_ChopsByHandBeforeTool() {
         GraphWorld world = GraphBaseWorlds.emptyNoAxe();
+        world.built("crafting_table", GraphState.Built.BUILT);
         GraphPlan plan = world.plan();
         assertTrue(
                 plan.tasks().stream().anyMatch(task -> "oak_log".equals(task.makes()) && task.feasible()),

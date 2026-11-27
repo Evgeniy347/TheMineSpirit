@@ -70,14 +70,9 @@ class More3RulesTests {
                 "mine", station("mine", true));
 
         assertEquals(
-                0,
-                More3Rules.idleStations(stations, Set.of("furnace")),
-                "Занятая станция не простаивает"
-                        + " Иначе тест idleStations_BuiltNotBusy_Counted перестанет ловить эту поломку. При смене idleStations_BuiltNotBusy_Counted проверь это утверждение.");
-        assertEquals(
                 1,
-                More3Rules.idleStations(stations, Set.of()),
-                "Свободная станция требует загрузки"
+                More3Rules.idleStations(stations),
+                "Свободная станция требует загрузки, занятая — нет"
                         + " Иначе тест idleStations_BuiltNotBusy_Counted перестанет ловить эту поломку. При смене idleStations_BuiltNotBusy_Counted проверь это утверждение.");
     }
 

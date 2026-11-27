@@ -136,9 +136,9 @@ gametest/DemoAuditGameTests.java	результат.
 gametest/DemoAuditGameTests.java	результат.
 gametest/DigOutGameTests.java	[флак] 7 ступеней по 3 блока камня деревянной киркой (~70 тиков на ступень) и шаги; запас 2× к ~1000 тиков
 gametest/FarmSafetyGameTests.java	[флак] замер 974 тика: посадка, подкормка и три сбора 9 клеток; потолок 1950 ≈ 2× замера
-gametest/FirstToolsGameTests.java	[флак] длинная цепочка: верстак, кирка, печь, плавка и факелы; запас 2× к замеру. Деревья стоят
-gametest/FirstToolsGameTests.java	компактно (проверка CORNER_DISTANCE). Разнести деревья нельзя — печь уезжает за духом.
-gametest/FirstToolsGameTests.java	кучно у рабочего угла намеренно: стол и печь ставятся рядом с духом, и работа у угла держит их
+gametest/FirstToolsGameTests.java	[флак] длинная цепочка: кирка, плавка и факелы; запас 2× к замеру. Деревья стоят кучно у рабочего
+gametest/FirstToolsGameTests.java	угла намеренно: станции уже стоят в мире (духи их ищут, а не ставят), и работа у угла держит
+gametest/FirstToolsGameTests.java	их компактно (проверка CORNER_DISTANCE). Разнести деревья нельзя — печь уезжает за духом.
 gametest/FullCycleGameTests.java	[флак] вся цепочка: добыча 8 булыжников по одному, крафт, плавка, сундук; замерено 339 тиков духа, запас 2×
 gametest/HouseMovementGameTests.java	[флак] путь из глубины дома — до 60 шагов по лестнице (≈ 600 тиков), под нагрузкой полного прогона запас 4×.
 gametest/MineBuildGameTests.java	[флак] спуск с водой в стене и потолке: пробки и 9 ступеней с выходом; замерено ~750 тиков, запас 2×

@@ -31,7 +31,11 @@ public final class LiveBoardFixture {
         List<BoardState.Entry> entries = new ArrayList<>();
         Set<String> ledger = new LinkedHashSet<>();
         for (JsonNode task : root.get("tasks")) {
-            BoardCase boardCase = BoardCase.valueOf(task.get("case").asText());
+            BoardCase boardCase = knownCase(task.get("case").asText());
+            if (boardCase == null) {
+                // Как BoardStateStore.readEntry: снимок истории содержит устаревшие кейсы, живая доска их теряет.
+                continue;
+            }
             BoardStatus status = BoardStatus.valueOf(task.get("status").asText());
             String id = task.get("id").asText();
             if (id.startsWith("first:") && status == BoardStatus.DONE) {
@@ -56,6 +60,14 @@ public final class LiveBoardFixture {
         Board board = new Board(() -> 0);
         board.restore(new BoardState(entries, ledger));
         return board;
+    }
+
+    private static BoardCase knownCase(String name) {
+        try {
+            return BoardCase.valueOf(name);
+        } catch (IllegalArgumentException retired) {
+            return null;
+        }
     }
 
     private static Optional<UUID> assignee(JsonNode task) {

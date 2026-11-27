@@ -187,10 +187,16 @@ final class GraphSimulation {
     private static void answer(GraphWorld world, GraphPlan plan, List<String> strategist) {
         for (GraphPlan.Notice notice : plan.notices()) {
             SupplyGraph.Building wanted = world.graph.buildings().get(notice.building());
-            if (wanted != null && wanted.stage() <= world.stage && world.buildings.get(wanted.id()) != Built.BUILT) {
-                world.buildings.put(wanted.id(), Built.PLANNED);
-                strategist.add(world.stage + ":" + wanted.id());
+            if (wanted == null || wanted.stage() > world.stage || world.buildings.get(wanted.id()) == Built.BUILT) {
+                continue;
             }
+            if (wanted.boardCase() == null) {
+                // Просьба без кейса уходит игроку: он ставит постройку схемой, и она появляется в мире.
+                world.buildings.put(wanted.id(), Built.BUILT);
+            } else {
+                world.buildings.put(wanted.id(), Built.PLANNED);
+            }
+            strategist.add(world.stage + ":" + wanted.id());
         }
     }
 
@@ -207,20 +213,22 @@ final class GraphSimulation {
 
     static List<String> unbuilt(GraphWorld world) {
         return world.graph.buildings().values().stream()
+                .filter(GraphSimulation::buildable)
                 .filter(building -> building.stage() <= world.stage && !building.optional())
                 .filter(building -> world.buildings.get(building.id()) != Built.BUILT)
                 .map(SupplyGraph.Building::id)
                 .toList();
     }
 
+    // Постройка без кейса — предпосылка мира (станция из схемы): духи её ищут, этапа она не ждёт.
+    private static boolean buildable(SupplyGraph.Building building) {
+        return building.boardCase() != null;
+    }
+
     private static void finish(GraphWorld world, Work work, Map<String, Integer> wear) {
         GraphPlan.Task task = work.task();
         if (task.id().startsWith("explore:")) {
             world.world.add(task.makes());
-            return;
-        }
-        if (task.id().startsWith("station:")) {
-            world.stations.merge(task.makes(), 2, (before, ignored) -> before + 1);
             return;
         }
         if (task.id().startsWith("event:")) {
@@ -231,6 +239,10 @@ final class GraphSimulation {
         }
         if (task.id().startsWith("building:")) {
             world.buildings.put(task.makes(), Built.BUILT);
+            if ("chests".equals(task.makes())) {
+                // Двор ставится схемой, а в ней уже стоит верстак: духи его ищут, а не строят.
+                world.buildings.put("crafting_table", Built.BUILT);
+            }
             if (task.makes().equals(world.graph.storage().building())) {
                 world.storageFree = Math.max(world.storageFree, 60);
             }

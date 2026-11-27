@@ -16,9 +16,6 @@
     {"id": "more6_refuel_station", "case": "ACTIVITY_SMELT", "makes": "more6:station_ready",
      "yield": 1, "weight": 1.003837149, "ticks": 120, "consumes": {"#fuel": 1},
      "implemented": true, "todo": "more6:station_ready"},
-    {"id": "more6_place_station", "case": "CRAFTING_STATION", "makes": "more6:station_ready",
-     "yield": 1, "weight": 0.961363091, "ticks": 120, "consumes": {"#planks": 4},
-     "implemented": true, "todo": "more6:station_ready"},
     {"id": "more6_pickup_items", "case": "COLLECT_DROPS", "makes": "more6:ground_cleared",
      "yield": 1, "weight": 1.289786651, "ticks": 100, "consumes": {},
      "implemented": true, "todo": "more6:ground_cleared"},
@@ -59,12 +56,10 @@
     "more6_station_broken": {
       "tasks": [
         {"id": "more6_refuel_station", "case": "ACTIVITY_SMELT", "base": 66,
-         "consumes": {"#fuel": 1}, "implemented": true},
-        {"id": "more6_place_station", "case": "CRAFTING_STATION", "base": 58,
-         "consumes": {"#planks": 4}, "implemented": true}
+         "consumes": {"#fuel": 1}, "implemented": true}
       ],
       "push": {"more6:station_ready": 8, "#fuel": 4},
-      "advice": ["fuel_furnace_and_put_crafting_table_in_yard"]
+      "advice": ["fuel_furnace_station_comes_from_schemes"]
     },
     "more6_loose_items": {
       "tasks": [

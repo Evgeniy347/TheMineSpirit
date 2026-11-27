@@ -129,11 +129,9 @@ public final class More3Rules {
         return conflicts;
     }
 
-    public static int idleStations(Map<String, GraphFacts.Station> stations, Set<String> busy) {
-        return (int) stations.values().stream()
-                .filter(station -> !station.busy())
-                .filter(station -> !busy.contains(station.id()))
-                .count();
+    public static int idleStations(Map<String, GraphFacts.Station> stations) {
+        return (int)
+                stations.values().stream().filter(station -> !station.busy()).count();
     }
 
     public static boolean workSlow(long actualTicks, int expectedTicks) {

@@ -20,7 +20,7 @@ class GraphChoicePart2Tests {
                 costs.ticksPerBlock(),
                 costs.travelScaleTicks(),
                 costs.toolDurability(),
-                costs.stationCapacity(),
+                costs.stations(),
                 choice,
                 costs.life());
         return new SupplyGraph(

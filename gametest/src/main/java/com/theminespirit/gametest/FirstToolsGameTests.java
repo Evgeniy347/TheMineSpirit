@@ -34,11 +34,11 @@ public final class FirstToolsGameTests {
 
     private FirstToolsGameTests() {}
 
-    // [флак] длинная цепочка: верстак, кирка, печь, плавка и факелы; запас 2× к замеру. Деревья стоят
-    // кучно у рабочего угла намеренно: стол и печь ставятся рядом с духом, и работа у угла держит их
-    // компактно (проверка CORNER_DISTANCE). Разнести деревья нельзя — печь уезжает за духом.
+    // [флак] длинная цепочка: кирка, плавка и факелы; запас 2× к замеру. Деревья стоят кучно у рабочего
+    // угла намеренно: станции уже стоят в мире (духи их ищут, а не ставят), и работа у угла держит
+    // их компактно (проверка CORNER_DISTANCE). Разнести деревья нельзя — печь уезжает за духом.
     @SceneStep(template = "arena", timeoutTicks = 1200, calmMobs = true)
-    public static void firstTools_FromScratch_FurnaceBesideTableAndCharcoalTorches(GameTestHelper helper) {
+    public static void firstTools_InstalledStations_PickaxeCharcoalAndTorches(GameTestHelper helper) {
         field(helper);
         GameTestFixtures.holdDayTime(helper, DAY_TIME);
         FullCycleScene.buildOakTree(helper, new BlockPos(4, 1, 4), WOOD_TREE);
@@ -48,11 +48,14 @@ public final class FirstToolsGameTests {
         helper.setBlock(6, 1, 6, Blocks.COAL_ORE);
         helper.setBlock(3, 1, 3, Blocks.CHEST);
         helper.setBlock(5, 1, 3, Blocks.CHEST);
+        BlockPos table = new BlockPos(2, 1, 2);
+        BlockPos furnace = new BlockPos(4, 1, 2);
+        helper.setBlock(table.getX(), table.getY(), table.getZ(), Blocks.CRAFTING_TABLE);
+        helper.setBlock(furnace.getX(), furnace.getY(), furnace.getZ(), Blocks.FURNACE);
         SpiritEntity spirit = prepare(helper);
         speedUpFurnaces(helper);
         TaskNode plan = sequence("""
                 {"type":"script","script":"acquire","params":{"item":"wooden_pickaxe","count":1}},
-                {"type":"script","script":"acquire","params":{"item":"furnace","count":1}},
                 {"type":"script","script":"acquire","params":{"item":"oak_log","count":2}},
                 {"type":"script","script":"acquire","params":{"item":"coal","count":1}},
                 {"type":"script","script":"smelt","params":{"item":"charcoal","count":1}},
@@ -66,19 +69,15 @@ public final class FirstToolsGameTests {
             assertCount(helper, spirit, Items.TORCH, 4, "факелы из древесного угля");
             assertCount(helper, spirit, Items.CHARCOAL, 0, "древесный уголь израсходован на факелы");
             assertCount(helper, spirit, Items.COAL, 0, "каменный уголь не остался: он был только топливом печи");
-            BlockPos table = findBlock(helper, Blocks.CRAFTING_TABLE);
-            BlockPos furnace = findBlock(helper, Blocks.FURNACE);
-            helper.assertTrue(table != null, "дух обязан поставить верстак: без него не сделать кирку и печь");
             helper.assertTrue(
-                    furnace != null,
-                    "дух обязан поставить печь: без неё не получить древесный уголь; "
-                            + "печей в сцене " + FullCycleScene.countBlocks(helper, Blocks.FURNACE)
+                    findBlock(helper, Blocks.CRAFTING_TABLE) != null,
+                    "Верстак обязан остаться в мире: духи его не ставят, а только ищут; без него нет кирки"
                             + "; станции рядом: " + stationsNear(helper, spirit));
             helper.assertTrue(
-                    table.distSqr(furnace) <= CORNER_DISTANCE * CORNER_DISTANCE,
-                    "Рабочий угол: печь обязана стоять рядом с верстаком (не дальше " + CORNER_DISTANCE
-                            + " блоков), а стоит " + table.distSqr(furnace) + "² от него: верстак " + table
-                            + ", печь " + furnace);
+                    findBlock(helper, Blocks.FURNACE) != null,
+                    "Печь обязана остаться в мире: духи её не ставят, а только ищут; без неё нет угля"
+                            + "; печей в сцене " + FullCycleScene.countBlocks(helper, Blocks.FURNACE)
+                            + "; станции рядом: " + stationsNear(helper, spirit));
             assertCornerChests(helper, table);
             cleanup(helper, spirit);
         });

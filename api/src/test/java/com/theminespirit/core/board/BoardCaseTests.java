@@ -36,7 +36,6 @@ class BoardCaseTests {
             "CLEAR_GROUNDS",
             "COLLECT_DROPS",
             "STOCK_CHESTS",
-            "CRAFTING_STATION",
             "CRAFT_BED",
             "CRAFT_BREWING_STAND",
             "CRAFT_DIAMOND_AXE",

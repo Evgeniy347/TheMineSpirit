@@ -30,14 +30,14 @@ class BoardReserveTests {
     void items_OpenAndClosedTickets_OnlyOpenReserve() {
         Board board = new Board(() -> 0);
         board.submit(ticket("chests", BoardCase.STOCK_CHESTS, Map.of("jungle_planks", 16)));
-        board.submit(ticket("table", BoardCase.CRAFTING_STATION, Map.of("jungle_planks", 4)));
-        board.claim("table", UUID.randomUUID(), 0);
-        board.complete("table");
+        board.submit(ticket("smoker", BoardCase.CRAFT_SMOKER, Map.of("jungle_planks", 4)));
+        board.claim("smoker", UUID.randomUUID(), 0);
+        board.complete("smoker");
 
         assertEquals(
                 Map.of("jungle_planks", 16),
                 BoardReserve.items(board),
-                "Бронируют только открытые задания: закрытый верстак досок не держит"
+                "Бронируют только открытые задания: закрытая коптильня досок не держит"
                         + " Иначе тест items_OpenAndClosedTickets_OnlyOpenReserve перестанет ловить эту поломку. При смене items_OpenAndClosedTickets_OnlyOpenReserve проверь это утверждение.");
     }
 

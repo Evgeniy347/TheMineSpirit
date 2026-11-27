@@ -4,7 +4,6 @@ public final class CraftTuning {
     public static final int CRAFT_INTERVAL_TICKS = 2;
     public static final int POLL_TICKS = 10;
     public static final int STATION_SLICES_PER_TICK = 4;
-    public static final int PLACE_SEARCH_RADIUS = 2;
 
     private CraftTuning() {}
 }

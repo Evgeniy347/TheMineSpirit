@@ -15,18 +15,18 @@ import org.junit.jupiter.api.Test;
 class GraphPostingTests {
     @Test
     void retirable_UnpostedPendingGraphTicket_IsRetired() {
-        BoardTicket ticket = ticket("graph:station:crafting_table");
+        BoardTicket ticket = ticket("graph:building:furnace");
 
         assertTrue(
                 GraphPosting.retirable(ticket, Set.of(), BoardStatus.PENDING),
                 "Невыполнимый graph-билет снимается с доски: иначе свободный дух берёт задание без материала "
                         + "и снова уходит в паузу кейса. При смене retirable_UnpostedPendingGraphTicket_IsRetired "
-                        + "проверь GraphPosting.retireUnposted и живой crafting_table.");
+                        + "проверь GraphPosting.retireUnposted и живой building:furnace.");
     }
 
     @Test
     void retirable_PostedAssignedOrForeignTicket_IsKept() {
-        BoardTicket graph = ticket("graph:station:crafting_table");
+        BoardTicket graph = ticket("graph:building:furnace");
         BoardTicket foreign = ticket("storage_build:storage_3");
 
         assertFalse(
@@ -44,6 +44,6 @@ class GraphPostingTests {
     }
 
     private static BoardTicket ticket(String id) {
-        return new BoardTicket(id, BoardCase.CRAFTING_STATION, Optional.empty(), 10, 1, 1, id, List.of(), Map.of());
+        return new BoardTicket(id, BoardCase.CRAFT_FURNACE, Optional.empty(), 10, 1, 1, id, List.of(), Map.of());
     }
 }

@@ -21,14 +21,14 @@ import org.junit.jupiter.api.Test;
 class BoardCaseV2Tests {
 
     @Test
-    void cases_TotalCount_IsEightySeven() {
+    void cases_TotalCount_IsEightySix() {
         assertEquals(
-                87,
+                86,
                 BoardCase.values().length,
-                "Кейсов доски — 87: 82 прежних плюс BUILD_PLACED и четыре занятия вне очереди (стройка, перемещение, "
-                        + "осмотр, общение). "
+                "Кейсов доски — 86: 82 прежних минус CRAFTING_STATION (станции ставят схемы, не духи), плюс "
+                        + "BUILD_PLACED и четыре занятия вне очереди (стройка, перемещение, осмотр, общение). "
                         + "Новый кейс без приоритета, гейта и плана роняет сортировку выдачи"
-                        + " Иначе тест cases_TotalCount_IsEightySeven перестанет ловить эту поломку. При смене cases_TotalCount_IsEightySeven проверь это утверждение.");
+                        + " Иначе тест cases_TotalCount_IsEightySix перестанет ловить эту поломку. При смене cases_TotalCount_IsEightySix проверь это утверждение.");
     }
 
     @Test

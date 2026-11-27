@@ -492,7 +492,7 @@ class ResourceResolverTests {
     }
 
     private static ScriptCall craft(String item, int count) {
-        return new ScriptCall("craft", Map.of("item", item, "count", count, "radius", STATION_RADIUS, "place", false));
+        return new ScriptCall("craft", Map.of("item", item, "count", count, "radius", STATION_RADIUS));
     }
 
     private static ScriptCall smelt(String item, int count) {

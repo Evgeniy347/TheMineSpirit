@@ -21,7 +21,6 @@ final class GraphMoreFarmPost {
     private static final int STATION_SCAN_UP = 2;
     private static final Set<String> KEYS = Set.of(
             "more6_refuel_station",
-            "more6_place_station",
             "more6_pickup_items",
             "more6_deposit_materials",
             "more6_maintain_stock",
@@ -40,7 +39,6 @@ final class GraphMoreFarmPost {
     static boolean post(GraphPost post, GraphTickets.Ticket ticket, GraphPlan.Task task, String key) {
         return switch (key) {
             case "more6_refuel_station" -> refuelStation(post, ticket);
-            case "more6_place_station" -> placeStation(post, ticket);
             case "more6_pickup_items" -> pickupItems(post, ticket);
             case "more6_deposit_materials" -> unload(post, ticket);
             case "more6_maintain_stock" -> maintainStock(post, ticket);
@@ -107,33 +105,6 @@ final class GraphMoreFarmPost {
             }
         }
         return Optional.ofNullable(best);
-    }
-
-    private static boolean placeStation(GraphPost post, GraphTickets.Ticket ticket) {
-        BlockCoord yard = post.scan.stage().workYard();
-        if (craftingTable(post, yard)) {
-            return true;
-        }
-        GraphMorePost.submit(post, ticket, BoardCase.CRAFTING_STATION, TicketTarget.at(yard), Map.of());
-        return true;
-    }
-
-    private static boolean craftingTable(GraphPost post, BlockCoord yard) {
-        for (int dx = -BoardConfig.current().facts().stationSearchRadius();
-                dx <= BoardConfig.current().facts().stationSearchRadius();
-                dx++) {
-            for (int dz = -BoardConfig.current().facts().stationSearchRadius();
-                    dz <= BoardConfig.current().facts().stationSearchRadius();
-                    dz++) {
-                for (int dy = -STATION_SCAN_DOWN; dy <= STATION_SCAN_UP; dy++) {
-                    BlockPos at = new BlockPos(yard.x() + dx, yard.y() + dy, yard.z() + dz);
-                    if (post.level.isLoaded(at) && post.level.getBlockState(at).is(Blocks.CRAFTING_TABLE)) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
     }
 
     private static boolean pickupItems(GraphPost post, GraphTickets.Ticket ticket) {

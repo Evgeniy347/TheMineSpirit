@@ -170,17 +170,7 @@ public final class StagePlans {
         steps.add(PlanSteps.gotoPoint(yard));
         steps.add(PlanSteps.withdraw("minecraft:blaze_rod", 1));
         steps.add(PlanSteps.withdraw(COBBLESTONE, 3));
-        steps.add(new ScriptCall(
-                "craft",
-                Map.of(
-                        "item",
-                        "minecraft:brewing_stand",
-                        "count",
-                        1,
-                        "radius",
-                        CatalogLimits.STATION_RADIUS_DEFAULT,
-                        "place",
-                        true)));
+        steps.add(PlanSteps.craft(NamespacedId.MINECRAFT + "brewing_stand", 1));
         return new SequenceNode(steps);
     }
 

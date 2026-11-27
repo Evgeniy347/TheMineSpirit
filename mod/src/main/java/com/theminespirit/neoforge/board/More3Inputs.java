@@ -2,7 +2,6 @@ package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.board.BoardLogEntry;
-import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTiming;
 import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.board.graph.GraphFacts;
@@ -13,7 +12,6 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.SiteLevels;
 import com.theminespirit.neoforge.SpiritView;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -32,7 +30,6 @@ final class More3Inputs {
     private static final int DECAY_ABOVE = 8;
     private static final int TRAMPLED_NEIGHBOURS = 2;
     private static final int JOURNAL_LOOKBACK = 512;
-    private static final String STATION = "station:";
     private static final String GRAPH = "graph:";
     private static final char AT = '@';
 
@@ -90,7 +87,7 @@ final class More3Inputs {
                 More3Rules.trash(graph, carried(facts)),
                 More3Rules.unlabeledChests(facts.chests()),
                 More3Rules.workConflicts(facts.spirits().values()),
-                More3Rules.idleStations(facts.stations(), busyStations(service)),
+                More3Rules.idleStations(facts.stations()),
                 level.players().stream().anyMatch(ServerPlayer::isSleeping),
                 decay.sand(),
                 decay.gravel(),
@@ -165,26 +162,6 @@ final class More3Inputs {
         facts.chests()
                 .forEach(chest -> chest.contents().forEach((item, count) -> items.merge(item, count, Integer::sum)));
         return items;
-    }
-
-    private static Set<String> busyStations(BoardService service) {
-        Set<String> busy = new HashSet<>();
-        for (var ticket : service.board().tickets()) {
-            if (!open(service.board().statusOf(ticket.id()).orElse(BoardStatus.DONE))) {
-                continue;
-            }
-            int at = ticket.id().indexOf(STATION);
-            if (at >= 0) {
-                busy.add(ticket.id().substring(at + STATION.length()));
-            }
-        }
-        return busy;
-    }
-
-    private static boolean open(BoardStatus status) {
-        return status == BoardStatus.PENDING
-                || status == BoardStatus.WAITING_RESOURCES
-                || status == BoardStatus.ASSIGNED;
     }
 
     private static Decay decay(ServerLevel level, BlockCoord home) {

@@ -2594,7 +2594,6 @@
   "buildings": {
     "crafting_table": {
       "name": "Верстак",
-      "case": "CRAFTING_STATION",
       "stage": 1,
       "base": 108,
       "materials": {
@@ -3975,7 +3974,6 @@
     },
     "composter": {
       "name": "Компостер",
-      "case": "CRAFTING_STATION",
       "stage": 2,
       "base": 74,
       "materials": {
@@ -10562,7 +10560,6 @@
       "GATHER_MATERIALS": 120,
       "SMELT_CHARCOAL": 200,
       "CRAFT_TORCHES": 40,
-      "CRAFTING_STATION": 60,
       "CRAFT_FURNACE": 80,
       "CLEAR_GROUNDS": 2400,
       "STOCK_CHESTS": 200,
@@ -10603,11 +10600,7 @@
       "iron": 250,
       "diamond": 1561
     },
-    "stationCapacity": {
-      "furnace": 2,
-      "crafting_table": 4,
-      "smoker": 2
-    }
+    "stations": ["crafting_table", "furnace", "smoker"]
   }
 }
 

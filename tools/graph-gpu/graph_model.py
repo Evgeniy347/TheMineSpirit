@@ -18,7 +18,6 @@ TOOL = "tool:"
 BUILDING = "building:"
 EVENT = "event:"
 EXPLORE = "explore:"
-STATION = "station:"
 ORDER = "order:"
 AT = "@"
 
@@ -574,7 +573,7 @@ class Costs:
 
     __slots__ = ("default_ticks", "case_ticks", "way_ticks", "way_uses",
                  "ticks_per_block", "travel_scale_ticks", "tool_durability",
-                 "station_capacity", "choice", "life")
+                 "stations", "choice", "life")
 
     def __init__(self, data, ways):
         costs = data.get("costs")
@@ -589,7 +588,7 @@ class Costs:
             self.ticks_per_block = 0
             self.travel_scale_ticks = 1
             self.tool_durability = {}
-            self.station_capacity = {}
+            self.stations = set()
             return
         self.default_ticks = int(costs.get("defaultTicks", 100))
         self.case_ticks = dict(costs.get("caseTicks") or {})
@@ -603,7 +602,7 @@ class Costs:
         self.ticks_per_block = int(costs.get("ticksPerBlock", 0))
         self.travel_scale_ticks = int(costs.get("travelScaleTicks", 1200))
         self.tool_durability = dict(costs.get("toolDurability") or {})
-        self.station_capacity = dict(costs.get("stationCapacity") or {})
+        self.stations = set(costs.get("stations") or ())
 
     def ticks(self, way_id, board_case):
         if way_id in self.way_ticks:
@@ -1030,9 +1029,6 @@ class State:
     def spirits(self):
         return len(self.kits)
 
-    def station_count(self, building):
-        return int(self.stations.get(building, 1 if self.built(building) == BUILT else 0))
-
     def count(self, item):
         return int(self.stock.get(item, 0))
 
@@ -1382,6 +1378,13 @@ class Planner:
             self.notices.setdefault(building_id, {
                 "building": building_id,
                 "reason": "нужна постройка " + building_id + " (" + why + "), её нет в плане",
+            })
+            return
+        if building is not None and building.board_case is None:
+            self.notices.setdefault(building_id, {
+                "building": building_id,
+                "reason": "в мире нет постройки " + building_id + " (" + why + "): духи её не ставят —"
+                          + " поставьте схемой, иначе крафт цепочки стоит",
             })
             return
         if self.audit_settles(building_id):
@@ -1741,7 +1744,6 @@ class Planner:
 
     def result(self, scores):
         tasks = []
-        load = {}
         made = set()
         for key, raw in sorted(scores.items(), key=lambda entry: (-entry[1], entry[0])):
             if raw <= 0 or not self.is_task(key):
@@ -1755,13 +1757,6 @@ class Planner:
             if reason is not None:
                 task = dict(task, feasible=False, blocked=reason)
             tasks.append(task)
-            building = self.station(key)
-            if building is not None and task["feasible"]:
-                load[building] = max(load.get(building, 0.0), value)
-        for building, value in load.items():
-            extra = self.station_task(building, value, scores)
-            if extra is not None:
-                tasks.append(extra)
         return {"tasks": tasks,
                 "notices": list(self.notices.values()), "advice": list(self.advice)}
 
@@ -1865,7 +1860,7 @@ class Planner:
 
     def idle_station(self, way):
         building = way.building
-        if building is None or building not in self.graph.costs.station_capacity:
+        if building is None or building not in self.graph.costs.stations:
             return False
         return any(not station.get("busy") and
                    (station.get("id") == building or station.get("type") == building)
@@ -1876,35 +1871,6 @@ class Planner:
 
     def sows(self, way):
         return any(item == "#seeds" or item.endswith("_seeds") for item in way.consumes)
-
-    def station(self, key):
-        at = key.find(AT)
-        way = self.graph.way(key if at < 0 else key[:at])
-        if way is not None and way.building in self.graph.costs.station_capacity:
-            return way.building
-        return None
-
-    def station_task(self, building, value, scores):
-        busy = 0
-        for key, score in scores.items():
-            if score <= 0 or not self.is_task(key):
-                continue
-            if self.station(key) != building:
-                continue
-            if self.task(key, 0)["feasible"]:
-                busy += 1
-        capacity = self.graph.costs.station_capacity.get(building, 2 ** 31 - 1)
-        if self.state.built(building) != BUILT or busy <= self.state.station_count(building) * capacity:
-            return None
-        known = self.graph.buildings.get(building)
-        if known is None:
-            raise KeyError("Станция " + building + " не описана среди построек графа")
-        materials = self.materials(building)
-        return {"id": STATION + building, "makes": building, "spirit": None,
-                "priority": priority(value * self.graph.decay, self.graph.work_priority),
-                "consumes": dict(materials), "feasible": self.stocked(materials),
-                "chance": False, "implemented": self.graph.implemented(building),
-                "ticks": self.graph.costs.ticks(STATION + building, known.board_case)}
 
     def travel(self, key):
         at = key.find(AT)

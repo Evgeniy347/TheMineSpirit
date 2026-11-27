@@ -30,7 +30,7 @@ final class SupplyGraphParser {
                     new Building(
                             entry.getKey(),
                             entry.getValue().path("name").asText(""),
-                            BoardCase.valueOf(entry.getValue().path("case").asText()),
+                            caseOf(entry.getValue()),
                             entry.getValue().path(SupplyGraph.STAGE).asInt(1),
                             entry.getValue().path(SupplyGraph.BASE).asInt(),
                             text(entry.getValue(), "tool"),
@@ -40,6 +40,11 @@ final class SupplyGraphParser {
                             entry.getValue().path("optional").asBoolean(false)));
         });
         return buildings;
+    }
+
+    private static @Nullable BoardCase caseOf(JsonNode building) {
+        String name = building.path("case").asText("");
+        return name.isBlank() ? null : BoardCase.valueOf(name);
     }
 
     static List<Way> ways(JsonNode root) {
