@@ -21,7 +21,17 @@ final class StageBacklog {
     }
 
     int openCases(Board board) {
-        return DispatchRound.stageCasesOpen(board);
+        return (int) board.tickets().stream()
+                .filter(ticket -> StageTicket.stage(ticket.id()))
+                .filter(ticket -> {
+                    BoardStatus status = board.statusOf(ticket.id()).orElse(null);
+                    return status == BoardStatus.PENDING
+                            || status == BoardStatus.WAITING_RESOURCES
+                            || status == BoardStatus.ASSIGNED;
+                })
+                .map(BoardTicket::boardCase)
+                .distinct()
+                .count();
     }
 
     long longestWait(Board board, long now) {
@@ -35,14 +45,11 @@ final class StageBacklog {
         return longest;
     }
 
-    void open(Board board, long now, int spirits) {
+    void open(Board board, long now) {
         for (Iterator<BoardTicket> iterator = tickets.iterator(); iterator.hasNext(); ) {
             BoardTicket ticket = iterator.next();
             if (!board.dependenciesMet(ticket)) {
                 continue;
-            }
-            if (DispatchRound.stageCasesOpen(board) >= BoardTuning.stageCaseLimit(spirits)) {
-                return;
             }
             BoardOutcome outcome = board.submit(new BoardTicket(
                     ticket.id(),

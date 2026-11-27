@@ -6,9 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.board.BoardScenario;
 import com.theminespirit.core.board.BoardStatus;
-import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.SettlementFacts;
-import com.theminespirit.core.board.StageTicket;
 import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.api.BoardCase;
@@ -82,41 +80,6 @@ class StageOneAcceptanceTests {
                 scenario.anomalies().isEmpty(),
                 "Выдача не отказывает годным духам и не оставляет задание без владельца: " + scenario.anomalies()
                         + " Иначе тест board_ThreeSpiritsAndStock_StageOneReachesSecondStageWithoutBlocked перестанет ловить эту поломку. При смене board_ThreeSpiritsAndStock_StageOneReachesSecondStageWithoutBlocked проверь это утверждение.");
-    }
-
-    @Test
-    void board_StageOne_NoStepWaitsBehindBusySpirits() {
-        BoardScenario scenario = BoardScenario.stageOne(7);
-        long hold = BoardTuning.boardIntervalTicks() * 2;
-        scenario.hold(hold);
-        int limit = BoardTuning.stageCaseLimit(3);
-        int maxOpen = 0;
-        long longestWait = 0;
-        for (int round = 0; round < BOARD_ROUNDS * 2; round++) {
-            scenario.round(round);
-            maxOpen = Math.max(maxOpen, scenario.openStageCases());
-            longestWait = Math.max(longestWait, scenario.longestStageWaitTicks());
-        }
-
-        assertTrue(
-                maxOpen <= limit,
-                "На этапе 1 одновременно открыто не больше лимита (" + limit + "): иначе 10–20 шагов висят "
-                        + "PENDING за тремя занятыми духами; открыто " + maxOpen
-                        + " При смене board_StageOne_NoStepWaitsBehindBusySpirits проверь это утверждение.");
-        assertTrue(
-                longestWait <= BoardTuning.boardIntervalTicks(),
-                "Шаг этапа 1 не ждёт в PENDING дольше одного раунда доски: иначе доска голодает за занятыми "
-                        + "духами (в живом прогоне «занят» >600 тиков); ждал " + longestWait + " тиков"
-                        + " При смене board_StageOne_NoStepWaitsBehindBusySpirits проверь это утверждение.");
-        assertEquals(
-                2,
-                scenario.settlementStage(),
-                "Ограничение открытых шагов не мешает этапу 1 закрыться и перейти на этап 2: "
-                        + scenario.tickets().stream()
-                                .filter(ticket -> StageTicket.stage(ticket.id()))
-                                .map(ticket -> ticket.id() + "=" + scenario.status(ticket.id()))
-                                .toList()
-                        + " Иначе тест board_StageOne_NoStepWaitsBehindBusySpirits перестанет ловить эту поломку. При смене board_StageOne_NoStepWaitsBehindBusySpirits проверь это утверждение.");
     }
 
     @Test

@@ -1,10 +1,12 @@
 package com.theminespirit.neoforge;
 
 import com.theminespirit.core.movement.WaterCrossingPlanner;
+import com.theminespirit.neoforge.board.SettlementPlotStore;
 import com.theminespirit.neoforge.lease.LeaseRun;
 import com.theminespirit.neoforge.movement.CheapBlocks;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -22,6 +24,12 @@ final class DigOutFloor {
     }
 
     Optional<String> place(BlockPos cell) {
+        if (level instanceof ServerLevel server
+                && SettlementPlotStore.settlementArea(server)
+                        .filter(area -> area.contains(cell.getX(), cell.getZ()))
+                        .isPresent()) {
+            return Optional.of("в поселении временные ступени запрещены");
+        }
         Optional<String> blockId = WaterCrossingPlanner.cheapestAvailable(CheapBlocks.counts(spirit));
         if (blockId.isEmpty()) {
             return Optional.of("в инвентаре нет дешёвых блоков для ступени");

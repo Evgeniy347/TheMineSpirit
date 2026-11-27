@@ -84,10 +84,6 @@ public final class DispatchRound {
         return boardCase == BoardCase.DISMANTLE_SHELTER && spiritY < targetY - 4;
     }
 
-    public static int stageCasesOpen(Board board) {
-        return DispatchStageCases.open(board);
-    }
-
     public static List<BoardTicket> order(List<BoardTicket> claimable) {
         List<BoardTicket> own = new ArrayList<>();
         List<BoardTicket> open = new ArrayList<>();

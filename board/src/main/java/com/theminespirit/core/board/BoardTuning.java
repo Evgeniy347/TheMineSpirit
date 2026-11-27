@@ -124,10 +124,6 @@ public final class BoardTuning {
         return (int) interval("maxActivePerSpirit", MAX_ACTIVE_PER_SPIRIT);
     }
 
-    public static int stageCaseLimit(int spirits) {
-        return Math.max(1, spirits) * Math.max(1, maxActivePerSpirit());
-    }
-
     public static int stockReadBudget() {
         return (int) interval("stockReadBudget", STOCK_READ_BUDGET);
     }

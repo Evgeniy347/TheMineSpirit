@@ -174,7 +174,7 @@ public final class BoardScenario {
 
     void dispatch(int round) {
         if (stageOne) {
-            backlog.open(board, clock[0], spirits.size());
+            backlog.open(board, clock[0]);
         }
         board.prune(clock[0]);
         for (BoardTicket held : assigned()) {

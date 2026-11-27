@@ -74,7 +74,6 @@ class BoardTicketViewTests {
         TransferCarriers.awaitsDelivery(board, "craft");
         TransferCarriers.planned(board, "craft");
         VitalChain.withPath(Map.of("food", "hungry"), board, UUID.randomUUID());
-        DispatchRound.stageCasesOpen(board);
         new AbsentOwners().sweep(board, Set.of(), 0);
 
         assertEquals(

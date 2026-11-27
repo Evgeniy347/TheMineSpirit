@@ -9,8 +9,10 @@ import com.theminespirit.core.board.DemolitionScope;
 import com.theminespirit.core.board.StagePlans;
 import com.theminespirit.core.board.StateChangeLog;
 import com.theminespirit.core.board.SubmitGate;
+import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.board.api.ConfigStamp;
+import com.theminespirit.core.board.graph.GraphFailureMemory;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.ColumnMask;
 import com.theminespirit.core.town.FloatingBlocks;
@@ -21,6 +23,7 @@ import com.theminespirit.neoforge.UnreachableCellsStore;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import net.minecraft.server.level.ServerLevel;
 import org.slf4j.Logger;
@@ -60,6 +63,8 @@ final class PlanDemolition {
         }
         DemolitionScope scope = DemolitionScope.of(cause);
         List<BoardTicket> open = DemolitionHistory.open(service, scope);
+        cancelUnreachable(level, service, open, post, now);
+        open = DemolitionHistory.open(service, scope);
         boolean lost = open.stream().anyMatch(ticket -> !service.hasTarget(ticket.id()));
         if (!lost && DemolitionHistory.busy(service, now, scope)) {
             return;
@@ -119,6 +124,25 @@ final class PlanDemolition {
                         List.of("blocks=" + stray.size(), "first=" + stray.get(0)),
                         null,
                         ConfigStamp.current()));
+    }
+
+    private static void cancelUnreachable(
+            ServerLevel level, BoardService service, List<BoardTicket> open, GraphPost post, long now) {
+        Set<String> unreachable = service.sources.graphUnreachablePoints(
+                now, post.graph.costs().choice().failureHalfLife());
+        for (BoardTicket ticket : open) {
+            Optional<TicketTarget> target = service.targetOf(ticket.id());
+            if (target.isEmpty()) {
+                continue;
+            }
+            BlockCoord at = target.orElseThrow().target();
+            if (!unreachable.contains(GraphFailureMemory.target(at.x(), at.y(), at.z()))) {
+                continue;
+            }
+            if (service.cancel(level, ticket.id())) {
+                LOGGER.info("[tidy] {} снят: цель аудита недостижима, следующая уборка не ждёт её", ticket.id());
+            }
+        }
     }
 
     private static Collected collect(

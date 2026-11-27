@@ -146,8 +146,8 @@ final class TicketStoragePlans {
                     + "конкретный продукт, без имени предмета withdraw нечего взять");
         }
         BlockCoord point = target.deposit();
-        String container = point == null ? NEAREST : containerId(point);
-        ScriptCall withdraw = new ScriptCall(
+        String container = point == null ? NEAREST : "settlement";
+        return new ScriptCall(
                 WITHDRAW,
                 Map.of(
                         CONTAINER,
@@ -158,14 +158,9 @@ final class TicketStoragePlans {
                         RESTOCK_FOOD_COUNT,
                         RADIUS,
                         CatalogLimits.CONTAINER_RADIUS_DEFAULT));
-        return point == null ? withdraw : new SequenceNode(List.of(gotoPoint(point), withdraw));
     }
 
     private static ScriptCall gotoPoint(BlockCoord point) {
         return new ScriptCall("goto", Map.of("x", point.x(), "y", point.y(), "z", point.z()));
-    }
-
-    private static String containerId(BlockCoord point) {
-        return point.x() + "," + point.y() + "," + point.z();
     }
 }

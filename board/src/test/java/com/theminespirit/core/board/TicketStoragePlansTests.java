@@ -70,28 +70,26 @@ class TicketStoragePlansTests {
     }
 
     @Test
-    void restockFood_WithDepositPoint_WalksToContainerFirst() {
+    void restockFood_WithDepositPoint_WithdrawsRemotelyFromSettlement() {
         TicketTarget target = TicketTarget.at(SITE).withSupply("bread", 8).withDeposit(CHEST);
 
-        SequenceNode plan = assertInstanceOf(
-                SequenceNode.class,
+        ScriptCall withdraw = assertInstanceOf(
+                ScriptCall.class,
                 TicketPlans.plan(BoardCase.RESTOCK_FOOD, target),
-                "план еды обязан быть последовательностью «дойти — взять»: иначе дух берёт из пустоты"
-                        + " При смене restockFood_WithDepositPoint_WalksToContainerFirst проверь это утверждение.");
-        List<ScriptCall> calls =
-                plan.steps().stream().map(ScriptCall.class::cast).toList();
-
+                "План еды — один дистанционный withdraw: иначе голодный дух блокирует всю выдачу "
+                        + "из-за недостижимого сундука. При смене "
+                        + "restockFood_WithDepositPoint_WithdrawsRemotelyFromSettlement проверь TicketStoragePlans.restockFood.");
         assertEquals(
-                List.of("goto", "withdraw"),
-                calls.stream().map(ScriptCall::script).toList(),
-                "еда берётся у сундука, до которого дух сначала доходит (аномалия 5: withdraw «nearest» "
-                        + "падал при голоде 0.85)"
-                        + " Иначе тест restockFood_WithDepositPoint_WalksToContainerFirst перестанет ловить эту поломку. При смене restockFood_WithDepositPoint_WalksToContainerFirst проверь это утверждение.");
+                "withdraw",
+                withdraw.script(),
+                "Еду получают штатным скриптом получения: иначе задание не закрывает голод. При смене "
+                        + "restockFood_WithDepositPoint_WithdrawsRemotelyFromSettlement проверь WithdrawScript.");
         assertEquals(
-                CHEST.x() + "," + CHEST.y() + "," + CHEST.z(),
-                calls.get(1).params().get("container"),
-                "withdraw берёт еду из выбранного контейнера, а не из первого попавшегося рядом"
-                        + " Иначе тест restockFood_WithDepositPoint_WalksToContainerFirst перестанет ловить эту поломку. При смене restockFood_WithDepositPoint_WalksToContainerFirst проверь это утверждение.");
+                "settlement",
+                withdraw.params().get("container"),
+                "Внутри поселения поиск идёт по всем разрешённым сундукам без физического пути: "
+                        + "иначе источник еды снова становится недостижимым. При смене "
+                        + "restockFood_WithDepositPoint_WithdrawsRemotelyFromSettlement проверь ContainerScan.");
     }
 
     @Test

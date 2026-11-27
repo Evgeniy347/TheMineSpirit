@@ -156,9 +156,6 @@ final class GraphPost {
     private boolean building(GraphTickets.Ticket ticket) {
         GraphPlan.Task task = ticket.task();
         BoardCase boardCase = graph.buildings().get(ticket.node()).boardCase();
-        if (StageOpen.full(service.board(), spirits.size())) {
-            return true;
-        }
         Map<String, Integer> missing =
                 FirstStepsRunner.open(this, new FirstStepsRunner.StepOrder(boardCase, task.priority(), ticket.id()));
         missing.forEach((item, count) -> {

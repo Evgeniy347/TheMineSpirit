@@ -1,14 +1,33 @@
 package com.theminespirit.neoforge.board;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.ColumnMask;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class PlanDemolitionOrderTests {
+    @Test
+    void tick_UnreachableOpenDemolition_CancelsBeforeBusyCheck() throws IOException {
+        String source =
+                Files.readString(Path.of("mod/src/main/java/com/theminespirit/neoforge/board/PlanDemolition.java"));
+        String compact = source.replaceAll("\\s+", "");
+
+        assertTrue(
+                compact.contains("cancelUnreachable(level,service,open,post,now);")
+                        && compact.contains("service.sources.graphUnreachablePoints(")
+                        && compact.contains("service.cancel(level,ticket.id())"),
+                "Недостижимая уборка снимается до проверки busy: иначе один дальний кусок аудита "
+                        + "блокирует удаление всех остальных помеченных блоков. При смене "
+                        + "tick_UnreachableOpenDemolition_CancelsBeforeBusyCheck проверь PlanDemolition.tick.");
+    }
+
     @Test
     void order_FenceAmongTallerStrays_FenceGoesFirst() {
         BlockCoord highDirt = new BlockCoord(0, 70, 0);
