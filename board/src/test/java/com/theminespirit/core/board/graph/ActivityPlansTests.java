@@ -30,6 +30,13 @@ class ActivityPlansTests {
                 "После уборки пшеницу засевает только ремонт схемы: иначе появляется второй, ручной путь посадки "
                         + "в обход wheat_field_1. При смене harvestCrop_Plan_DoesNotReplantOutsideSchematic проверь "
                         + "farm.json field_empty и RepairAudit.");
+        assertEquals(
+                16,
+                harvest.params().get("radius"),
+                "Уборка покрывает тот же радиус 16, на котором граф находит зрелые посевы: иначе событие "
+                        + "crop_ready появляется для культур за пределами рабочего радиуса и задание падает. "
+                        + "При смене harvestCrop_Plan_DoesNotReplantOutsideSchematic проверь FarmInputs.crops "
+                        + "и FarmSessions.harvestCrop.");
     }
 
     @Test

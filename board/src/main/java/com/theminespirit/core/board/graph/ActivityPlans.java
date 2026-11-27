@@ -42,7 +42,7 @@ public final class ActivityPlans {
                         gotoPoint(at),
                         new ScriptCall(
                                 "harvest_crop",
-                                Map.of(CROP, crop, RADIUS, CatalogLimits.FARM_RADIUS_DEFAULT, "replant", false))));
+                                Map.of(CROP, crop, RADIUS, CatalogLimits.FARM_RADIUS_MAX, "replant", false))));
     }
 
     public static Plan milk(BlockCoord at, int count) {

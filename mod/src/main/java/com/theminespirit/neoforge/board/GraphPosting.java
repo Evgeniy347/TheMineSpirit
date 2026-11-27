@@ -3,11 +3,15 @@ package com.theminespirit.neoforge.board;
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardActivities;
 import com.theminespirit.core.board.BoardStatus;
+import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.graph.GraphPlan;
 import com.theminespirit.core.board.graph.GraphTickets;
 import com.theminespirit.core.log.Perf;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 final class GraphPosting {
@@ -16,6 +20,7 @@ final class GraphPosting {
     static final int PRIORITY_BUDGET = 32;
 
     private enum Phase {
+        RETIRE,
         POST,
         FLUSH,
         PRIORITIES,
@@ -27,11 +32,13 @@ final class GraphPosting {
     private final GraphSource.Half half;
     private final GraphPost post;
     private final List<GraphTickets.Ticket> tickets;
+    private final List<BoardTicket> retire;
     private final List<Priority> priorities = new ArrayList<>();
     private final List<String> unconnected = new ArrayList<>();
+    private int retireCursor;
     private int cursor;
     private int priorityCursor;
-    private Phase phase = Phase.POST;
+    private Phase phase = Phase.RETIRE;
 
     GraphPosting(GraphSource.Half half, PetWork pets) {
         this.half = half;
@@ -44,6 +51,14 @@ final class GraphPosting {
                 half.graph(),
                 half.now());
         this.tickets = half.result().post();
+        Set<String> posted = new HashSet<>();
+        tickets.forEach(ticket -> posted.add(ticket.id()));
+        this.retire = half.service().board().tickets().stream()
+                .filter(ticket -> retirable(
+                        ticket,
+                        posted,
+                        half.service().board().statusOf(ticket.id()).orElse(null)))
+                .toList();
         GraphStanding.seed(post, half.plan().tasks(), half.result().live());
         for (GraphPlan.Task task : half.plan().tasks()) {
             if (task.implemented() && task.priority() > 0) {
@@ -56,11 +71,36 @@ final class GraphPosting {
 
     boolean advance() {
         return switch (phase) {
+            case RETIRE -> retireUnposted();
             case POST -> postTickets();
             case FLUSH -> flush();
             case PRIORITIES -> updatePriorities();
             case DONE -> true;
         };
+    }
+
+    static boolean retirable(BoardTicket ticket, Set<String> posted, @Nullable BoardStatus status) {
+        return ticket.id().startsWith(GraphTickets.PREFIX)
+                && !posted.contains(ticket.id())
+                && (status == BoardStatus.PENDING
+                        || status == BoardStatus.WAITING_RESOURCES
+                        || status == BoardStatus.BLOCKED);
+    }
+
+    private boolean retireUnposted() {
+        int end = Math.min(retire.size(), retireCursor + TICKET_BUDGET);
+        while (retireCursor < end) {
+            BoardTicket ticket = retire.get(retireCursor++);
+            if (half.service().cancel(half.level(), ticket.id())) {
+                LOGGER.info(
+                        "[board] граф снял невыполнимое или устаревшее задание {}: его нет в текущем плане",
+                        ticket.id());
+            }
+        }
+        if (retireCursor >= retire.size()) {
+            phase = Phase.POST;
+        }
+        return false;
     }
 
     private boolean postTickets() {

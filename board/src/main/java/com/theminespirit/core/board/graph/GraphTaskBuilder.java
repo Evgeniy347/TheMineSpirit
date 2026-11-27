@@ -60,7 +60,7 @@ final class GraphTaskBuilder {
         }
         SupplyGraph.Building known = Objects.requireNonNull(
                 graph.buildings().get(building), "Станция " + building + " не описана среди построек графа");
-        Map<String, Integer> materials = GraphLack.materials(graph, state, building);
+        Map<String, Integer> materials = known.materials();
         return Optional.of(new GraphPlan.Task(
                 STATION + building,
                 known.boardCase(),

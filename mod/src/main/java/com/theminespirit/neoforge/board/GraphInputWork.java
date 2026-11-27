@@ -245,33 +245,33 @@ final class GraphInputWork {
             }
             case MORE4 -> {
                 long started = System.nanoTime();
-                state = More4Inputs.apply(required(state, "BASE"), level, spirits, scan, graph);
+                state = More4Inputs.apply(required(state, "MORE3"), level, spirits, scan, graph);
                 mark("more4", started);
                 step = Step.MORE5;
                 yield null;
             }
             case MORE5 -> {
                 long started = System.nanoTime();
-                state = More5World.apply(required(state, "BASE"), level, graph, scan, around);
+                state = More5World.apply(required(state, "MORE4"), level, graph, scan, around);
                 mark("more5", started);
                 step = Step.MORE7;
                 yield null;
             }
             case MORE7 -> {
                 long started = System.nanoTime();
-                state = More7Inputs.apply(required(state, "BASE"), level, graph, scan);
+                state = More7Inputs.apply(required(state, "MORE5"), level, graph, scan);
                 mark("more7", started);
                 step = Step.MORE6;
                 yield null;
             }
             case MORE6 -> {
                 long started = System.nanoTime();
-                state = More6Inputs.apply(required(state, "BASE"), level, around, scan);
+                state = More6Inputs.apply(required(state, "MORE7"), level, around, scan);
                 mark("more6", started);
                 step = Step.DONE;
                 yield null;
             }
-            case DONE -> required(state, "BASE").withBlocks(required(blocks, "BLOCKS"));
+            case DONE -> required(state, "MORE6").withBlocks(required(blocks, "BLOCKS"));
         };
     }
 
