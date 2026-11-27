@@ -37,27 +37,26 @@ class GraphPlannerPart3Tests {
     }
 
     @Test
-    void plan_PetsBeesComposter_AskForResources() {
+    void plan_PetsBees_AskForResources() {
         GraphWorld world = GraphWorld.settled()
                 .built("kennel", Built.BUILT)
-                .built("composter", Built.BUILT)
                 .with("bone", 8)
                 .with("wheat", 16);
         world.stage = 3;
         GraphPlan plan = world.plan();
         assertTrue(
                 plan.task("tame_wolf").map(GraphPlan.Task::feasible).orElse(false)
-                        && plan.task("compost_crop")
+                        && plan.task("grind_bone_meal")
                                 .map(GraphPlan.Task::feasible)
                                 .orElse(false),
-                "Волк приручается костью, излишки урожая идут в компостер: " + plan.task("tame_wolf") + ", "
+                "Волк приручается костью, кость мелется в костную муку: " + plan.task("tame_wolf") + ", "
                         + plan.task(
-                                "compost_crop Иначе тест plan_PetsBeesComposter_AskForResources перестанет ловить эту поломку. При смене plan_PetsBeesComposter_AskForResources проверь это утверждение."));
+                                "grind_bone_meal Иначе тест plan_PetsBees_AskForResources перестанет ловить эту поломку. При смене plan_PetsBees_AskForResources проверь это утверждение."));
         assertTrue(
                 plan.task("relocate_beehive").map(task -> !task.implemented()).orElse(false),
                 "Перенос улья (шёлковое касание) — «в разработке»: "
                         + plan.task(
-                                "relocate_beehive Иначе тест plan_PetsBeesComposter_AskForResources перестанет ловить эту поломку. При смене plan_PetsBeesComposter_AskForResources проверь это утверждение."));
+                                "relocate_beehive Иначе тест plan_PetsBees_AskForResources перестанет ловить эту поломку. При смене plan_PetsBees_AskForResources проверь это утверждение."));
     }
 
     @Test

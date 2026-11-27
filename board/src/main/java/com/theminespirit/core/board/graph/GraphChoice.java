@@ -16,14 +16,13 @@ public record GraphChoice(
         double spaceTight,
         double petAlone,
         double herdFull,
-        double fieldFull,
         double failureBackoff,
         double failureTargets,
         double failureHalfLife,
         double failureSoft,
         double failureTargetRadius) {
     public static final GraphChoice NEUTRAL = new GraphChoice(
-            1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.55, 2.0, 3000.0, 0.5, 6.0);
+            1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 0.55, 2.0, 3000.0, 0.5, 6.0);
 
     public GraphChoice {
         requireNonNegative("дальняя дорога", farTrip);
@@ -39,7 +38,6 @@ public record GraphChoice(
         requireNonNegative("тесное место", spaceTight);
         requireNonNegative("приручённый питомец", petAlone);
         requireNonNegative("полный загон", herdFull);
-        requireNonNegative("полное поле", fieldFull);
         requireNonNegative("память неудач", failureBackoff);
         if (!Double.isFinite(failureTargets) || failureTargets < 1) {
             throw new IllegalArgumentException("Порог разных целей «память неудач» = " + failureTargets
@@ -71,7 +69,6 @@ public record GraphChoice(
                 root.path("spaceTight").asDouble(NEUTRAL.spaceTight()),
                 root.path("petAlone").asDouble(NEUTRAL.petAlone()),
                 root.path("herdFull").asDouble(NEUTRAL.herdFull()),
-                root.path("fieldFull").asDouble(NEUTRAL.fieldFull()),
                 root.path("failureBackoff").asDouble(NEUTRAL.failureBackoff()),
                 root.path("failureTargets").asDouble(NEUTRAL.failureTargets()),
                 root.path("failureHalfLife").asDouble(NEUTRAL.failureHalfLife()),

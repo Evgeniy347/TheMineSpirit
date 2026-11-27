@@ -85,9 +85,6 @@ final class GraphChoiceRules {
             if (state.events().contains(More7Rules.PEN_FULL) && addsHerd(way)) {
                 factor *= tuning.herdFull();
             }
-            if (state.events().contains(More7Rules.FIELD_FULL) && sows(way)) {
-                factor *= tuning.fieldFull();
-            }
         }
         if (repeat) {
             if (state.world().contains(MoreRules.WORK_DUPLICATE)) {
@@ -218,9 +215,5 @@ final class GraphChoiceRules {
 
     private boolean addsHerd(SupplyGraph.Way way) {
         return way.boardCase() == BoardCase.BREED_ANIMALS || way.boardCase() == BoardCase.CAPTURE_ANIMAL;
-    }
-
-    private boolean sows(SupplyGraph.Way way) {
-        return way.consumes().keySet().stream().anyMatch(item -> "#seeds".equals(item) || item.endsWith("_seeds"));
     }
 }

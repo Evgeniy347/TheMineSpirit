@@ -422,7 +422,7 @@ def main():
         print(HELP)
         return
     parser = argparse.ArgumentParser(add_help=False)
-    parser.add_argument("--main", action="store_true")
+    argv, main_first = pop_main(sys.argv[1:])
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("status").set_defaults(run=status)
     one = sub.add_parser("spirit")
@@ -457,8 +457,15 @@ def main():
     ok.add_argument("--wait", type=int, default=0)
     ok.add_argument("--version", default="")
     ok.set_defaults(run=check)
-    args = parser.parse_args()
-    args.run(Target(args.main), args)
+    args = parser.parse_args(argv)
+    args.run(Target(main_first), args)
+
+
+def pop_main(argv):
+    """Флаг цели работает до подкоманды и после неё: `check --main` и `--main check` — одно и то же."""
+    if "--main" not in argv:
+        return argv, False
+    return [item for item in argv if item != "--main"], True
 
 
 if __name__ == "__main__":

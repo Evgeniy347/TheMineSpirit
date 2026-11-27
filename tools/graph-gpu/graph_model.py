@@ -535,13 +535,13 @@ class Choice:
 
     NAMES = ("farTrip", "slowWork", "duplicate", "conflict", "pileup", "strategicBoost",
              "bottleneckBoost", "idleStationBoost", "nightHome", "spaceFoundBoost",
-             "spaceTight", "petAlone", "herdFull", "fieldFull", "failureBackoff",
+             "spaceTight", "petAlone", "herdFull", "failureBackoff",
              "failureTargets", "failureHalfLife", "failureSoft", "failureTargetRadius")
     NEUTRAL = {
         "farTrip": 1.0, "slowWork": 1.0, "duplicate": 1.0, "conflict": 1.0, "pileup": 1.0,
         "strategicBoost": 0.0, "bottleneckBoost": 0.0, "idleStationBoost": 0.0,
         "nightHome": 1.0, "spaceFoundBoost": 0.0, "spaceTight": 1.0,
-        "petAlone": 1.0, "herdFull": 1.0, "fieldFull": 1.0, "failureBackoff": 0.5,
+        "petAlone": 1.0, "herdFull": 1.0, "failureBackoff": 0.55,
         "failureTargets": 2.0, "failureHalfLife": 3000.0, "failureSoft": 0.5,
         "failureTargetRadius": 6.0,
     }
@@ -1365,7 +1365,7 @@ class Planner:
         grounded = building is None or all(self.state.built(required) == BUILT for required in building.requires)
         if tooled and grounded and self.stocked(self.materials(building_id)):
             return 1.0
-        return self.graph.decay ** 3
+        return self.graph.decay
 
     def push_tool(self, source, kind, amount):
         spirits = self.state.spirits()
@@ -1794,8 +1794,6 @@ class Planner:
                 factor *= tuning.petAlone
             if "more7_pen_full" in self.state.events and self.holds_herd(way):
                 factor *= tuning.herdFull
-            if "more7_field_full" in self.state.events and self.sows(way):
-                factor *= tuning.fieldFull
         if repeat:
             if "more:work_duplicate" in self.state.world:
                 factor *= tuning.duplicate
@@ -1868,9 +1866,6 @@ class Planner:
 
     def holds_herd(self, way):
         return way.board_case in ("BREED_ANIMALS", "CAPTURE_ANIMAL")
-
-    def sows(self, way):
-        return any(item == "#seeds" or item.endswith("_seeds") for item in way.consumes)
 
     def travel(self, key):
         at = key.find(AT)

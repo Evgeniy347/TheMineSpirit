@@ -15,7 +15,7 @@ from collections import Counter
 
 import search
 import sim_gpu
-from graph_model import ABSENT, BUILT, DEFAULT_LIFE, PLANNED, Graph, Planner, State, plan
+from graph_model import ABSENT, BUILT, DEFAULT_LIFE, PLANNED, Choice, Graph, Planner, State, plan
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
@@ -822,8 +822,10 @@ def test_block_feedback():
 def test_baseline_trail():
     graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
     outcome = sim_gpu.run(sim_gpu.baselines(graph)[0], limit=4000)
-    assert outcome["steps"] == 1486 and outcome["ticks"] == 263200, \
-        "Пустой мир обязан повторить Java (1486 шагов, 263 200 тиков), а не решение линейной системы: " \
+    assert outcome["steps"] == 1454 and outcome["ticks"] == 259360, \
+        "Пустой мир обязан повторить Java (1454 шагов, 259 360 тиков), а не решение линейной системы; " \
+        "истину перерегенерирует ./gradlew :board:mutationTest --tests *GraphSimulationTests* " \
+        "(строка «Старт: этап 1» в TestResults/mutation/graph-trail.md): " \
         + str((outcome["steps"], outcome["ticks"]))
     print("OK: пустой мир совпадает с Java (расходящийся поток решается итерациями)")
 
@@ -1348,6 +1350,17 @@ def test_best_weights():
                 if key not in ids)
     assert not dead, ("в best-weights.json ключи, которых нет в графе: их веса мёртвые и вводят в заблуждение: "
                       + ", ".join(sorted(dead)[:5]))
+    names = set(Choice.NAMES)
+    categories = set(search.parameters(graph))
+    orphan = []
+    for key in (weights.get("weights") or {}).get("choice", {}):
+        if key not in names:
+            orphan.append("weights.choice:" + key)
+    for key in weights.get("parameters") or {}:
+        if key not in categories:
+            orphan.append("parameters." + key)
+    assert not orphan, ("в best-weights.json ключи удалённых правил выбора и категорий путей: поиск их не "
+                        "меняет, а читатель считает их действующими весами: " + ", ".join(sorted(orphan)[:5]))
     print("OK: в best-weights.json нет исторических auto_*-ключей и ключей вне графа")
 
 

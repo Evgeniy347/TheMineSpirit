@@ -11,6 +11,8 @@
 | `best-weights.json` | Результат поиска `--generations 10 --population 16 --seeds 1` |
 
 Граф загружается как в Java: `board/graph.json` + `board/graph-recipes.json`.
+Отчёт — снимок эксперимента на дату запуска: имена путей `till_soil`, `plant_crop`, `use_idle_station`
+и станционные билеты `station:*` из него уже удалены из графа, читать их как историю, не как текущее поведение.
 Добавлены `costs`, `buildStartShare`, `distances`/`stations`, задания `station:*`,
 дорога (`travelFactor`), `share` при старте постройки, одна запись пути по id — первая, как `SupplyGraph.way`.
 
