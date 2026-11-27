@@ -101,6 +101,9 @@ public final class PlotProtection {
                     "уход за садом не распространяется на клетку " + cell + " (" + area
                             + "): сад снимают и чинят только его заданием");
         }
+        if (ground == Ground.NONE && building == PlanBuilding.FIELD && action == Action.HARVEST) {
+            return new Allowed(ground, building, area);
+        }
         if (ground == Ground.PLAN_EXCAVATE) {
             if (building == PlanBuilding.MINE) {
                 return new Allowed(ground, building, area);
