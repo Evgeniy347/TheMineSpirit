@@ -291,4 +291,10 @@ code=$?
     && ok "публикация с ПК: расхождение веток — код=1, просьба синхронизировать вручную, ничего не выложено" \
     || fail "публикация с ПК при расхождении: код=$code, вывод: $out"
 
+grep -q -- '--property=MemoryMax=6G' scripts/publish.sh \
+    && grep -q -- '--property=CPUQuota=300%' scripts/publish.sh \
+    && grep -q -- './gradlew --no-daemon --quiet' scripts/publish.sh \
+    && ok "сборка публикации: одноразовый Gradle в scope 6 ГиБ RAM / 3 CPU" \
+    || fail "сборка публикации: нет лимита 6 ГиБ RAM / 3 CPU или --no-daemon"
+
 exit $failed
