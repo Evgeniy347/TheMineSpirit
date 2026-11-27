@@ -24,13 +24,11 @@ final class DeadCodeExemptions {
                     "core/board/audit/AuditMiss.java|class|<top>#AuditMiss",
                     "Подсистема аудита поселения (ТЗ town-audit): подключит ExpectIndex, наполнение кэша, группы в графе и билет; снять после блока 7."),
             new Exemption(
-                    "core/board/audit/BlockDict.java|class|<top>#BlockDict",
-                    "Подсистема аудита поселения (ТЗ town-audit): подключит ExpectIndex, наполнение кэша, группы в графе и билет; снять после блока 7."),
+                    "core/board/audit/ChunkCache.java|method|ChunkCache#surfaceAt",
+                    "Подсистема аудита поселения (ТЗ town-audit): поверхность столба понадобится группе ground и"
+                            + " фоновой сверке; снять после блока 7."),
             new Exemption(
                     "core/board/audit/ChangeRing.java|class|<top>#ChangeRing",
-                    "Подсистема аудита поселения (ТЗ town-audit): подключит ExpectIndex, наполнение кэша, группы в графе и билет; снять после блока 7."),
-            new Exemption(
-                    "core/board/audit/ChunkCache.java|class|<top>#ChunkCache",
                     "Подсистема аудита поселения (ТЗ town-audit): подключит ExpectIndex, наполнение кэша, группы в графе и билет; снять после блока 7."),
             new Exemption(
                     "core/board/audit/DiffItem.java|class|<top>#DiffItem",

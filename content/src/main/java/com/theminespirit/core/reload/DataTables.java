@@ -7,6 +7,7 @@ import com.theminespirit.core.board.DemandRules;
 import com.theminespirit.core.board.LevelingRules;
 import com.theminespirit.core.board.StageRules;
 import com.theminespirit.core.board.WoodRules;
+import com.theminespirit.core.board.audit.AuditBudgets;
 import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.building.BuildData;
 import com.theminespirit.core.building.PresetLibrary;
@@ -229,6 +230,10 @@ public final class DataTables {
 
     public TableHolder<RepairData> repair() {
         return worldTables.repair();
+    }
+
+    public TableHolder<AuditBudgets> audit() {
+        return worldTables.audit();
     }
 
     public TableHolder<ProcessingRules> processing() {

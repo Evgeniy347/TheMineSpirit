@@ -6,6 +6,7 @@ import com.theminespirit.core.board.DemandRules;
 import com.theminespirit.core.board.LevelingRules;
 import com.theminespirit.core.board.StageRules;
 import com.theminespirit.core.board.api.ConfigStamp;
+import com.theminespirit.core.board.audit.AuditBudgets;
 import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.board.graph.VitalNeeds;
 import com.theminespirit.core.building.PresetLibrary;
@@ -59,6 +60,7 @@ final class DataTableBindings {
         SpiritReach.useSource(() -> tables.building().current().reach());
         TownRules.useSource(() -> tables.town().current());
         RepairData.useSource(() -> tables.repair().current());
+        AuditBudgets.useSource(() -> tables.audit().current());
         HungerRules.useSource(() -> tables.hunger().current());
         DescentData.useSource(() -> tables.descent().current());
         DescentLevels.useSource(() -> tables.descentLevels().current());

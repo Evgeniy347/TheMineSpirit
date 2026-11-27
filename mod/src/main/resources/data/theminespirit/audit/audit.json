@@ -1,0 +1,6 @@
+{
+  "fillCellsPerTick": 2048,
+  "verifyCellsPerTick": 4096,
+  "drainCellsPerTick": 512,
+  "groupsPerCycle": 64
+}

@@ -86,6 +86,12 @@ public final class BlockEquivalence {
         return rules.ground().contains(path) ? EarthCover.DIRT : path;
     }
 
+    public static boolean solid(String id) {
+        String path = bare(SchematicBlocks.path(id));
+        return !Rules.DEFAULT.voidish().contains(path)
+                && !Rules.DEFAULT.replaceable().contains(path);
+    }
+
     public static boolean stateOk(Wanted wanted, String actual) {
         return stateOk(wanted.state(), actual);
     }

@@ -6,6 +6,8 @@ import com.theminespirit.neoforge.TickMeter;
 import com.theminespirit.neoforge.TickWatch;
 import net.minecraft.server.level.ServerLevel;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.event.level.ChunkEvent;
+import net.neoforged.neoforge.event.level.LevelEvent;
 import net.neoforged.neoforge.event.server.ServerStoppingEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import org.slf4j.Logger;
@@ -21,7 +23,16 @@ public final class BoardLifecycle {
         }
         bus.addListener((ServerTickEvent.Pre event) -> TickMeter.start());
         bus.addListener((ServerTickEvent.Post event) -> onServerTick(event));
+        bus.addListener((ChunkEvent.Load event) -> TownAuditWatch.onChunkLoad(event));
+        bus.addListener((ChunkEvent.Unload event) -> TownAuditWatch.onChunkUnload(event));
+        bus.addListener((LevelEvent.Unload event) -> onLevelUnload(event));
         bus.addListener((ServerStoppingEvent event) -> onServerStopping());
+    }
+
+    private static void onLevelUnload(LevelEvent.Unload event) {
+        if (event.getLevel() instanceof ServerLevel level) {
+            TownAuditWatch.forget(level);
+        }
     }
 
     private static void onServerTick(ServerTickEvent.Post event) {
@@ -31,6 +42,7 @@ public final class BoardLifecycle {
         }
         for (ServerLevel level : event.getServer().getAllLevels()) {
             FloatingWatch.tick(level);
+            TownAuditWatch.tick(level);
             long watch = TickWatch.start();
             long tick = level.getGameTime();
             try {

@@ -50,6 +50,7 @@ public final class SettlementPlotStore extends SavedData {
     private @Nullable TownPlan town;
     private @Nullable String mapText;
     private int mapRevision;
+    private int planRevision;
     private @Nullable BlockCoord home;
     private final Map<Integer, StageSite> sites = new HashMap<>();
     private String levelRule = "";
@@ -82,10 +83,15 @@ public final class SettlementPlotStore extends SavedData {
         return mapRevision;
     }
 
+    public int planRevision() {
+        return planRevision;
+    }
+
     public void putMap(String xml, TownPlan next, int revision) {
         mapText = Objects.requireNonNull(xml, "Текст карты не может быть null: применять нечего");
         town = Objects.requireNonNull(next, "План карты не может быть null: по нему строят духи");
         mapRevision = revision;
+        planRevision++;
         forgetHome();
         sites.clear();
         setDirty();
@@ -93,6 +99,7 @@ public final class SettlementPlotStore extends SavedData {
 
     public void settlePlan(TownPlan next) {
         town = Objects.requireNonNull(next, "План не может быть null: без него поселение пустое");
+        planRevision++;
     }
 
     public Optional<BlockCoord> home() {
@@ -116,6 +123,7 @@ public final class SettlementPlotStore extends SavedData {
 
     public void fixTown(TownPlan next) {
         town = Objects.requireNonNull(next, "План поселения не может быть null: фиксируется размеченный план");
+        planRevision++;
         plot = null;
         forgetHome();
         sites.clear();
@@ -172,6 +180,7 @@ public final class SettlementPlotStore extends SavedData {
             woods = BuildingWoods.NONE;
         }
         plot = next;
+        planRevision++;
         forgetHome();
         sites.clear();
         setDirty();
@@ -186,6 +195,7 @@ public final class SettlementPlotStore extends SavedData {
         TownPlan plan = town;
         if (plan != null) {
             town = plan.atLevel(SettlementLevel.of(next));
+            planRevision++;
         }
         levelRule = SettlementLevel.RULE;
         sites.clear();
@@ -198,10 +208,12 @@ public final class SettlementPlotStore extends SavedData {
 
     public void fixWoods(BuildingWoods next) {
         woods = Objects.requireNonNull(next, "Породы построек не могут быть null: фиксируется выбор построек");
+        planRevision++;
         setDirty();
     }
 
     public void clear() {
+        planRevision++;
         plot = null;
         town = null;
         home = null;

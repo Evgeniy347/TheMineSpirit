@@ -1,6 +1,7 @@
 package com.theminespirit.core.reload;
 
 import com.theminespirit.core.base.RespawnRules;
+import com.theminespirit.core.board.audit.AuditBudgets;
 import com.theminespirit.core.doors.DoorTuning;
 import com.theminespirit.core.doors.DoorTuning.DoorRules;
 import com.theminespirit.core.fishing.FishingData;
@@ -30,7 +31,8 @@ record WorldTables(
         TableHolder<DescentData> descent,
         TableHolder<DescentLevels> descentLevels,
         TableHolder<RepairData> repair,
-        TableHolder<ProcessingRules> processing) {
+        TableHolder<ProcessingRules> processing,
+        TableHolder<AuditBudgets> audit) {
     static WorldTables register(TableRegistry registry) {
         return new WorldTables(
                 DataTableDefinitions.single(
@@ -74,6 +76,8 @@ record WorldTables(
                         "processing",
                         ProcessingRules.RESOURCE,
                         ProcessingRules::parse,
-                        ProcessingRules::load));
+                        ProcessingRules::load),
+                DataTableDefinitions.single(
+                        registry, "audit", AuditBudgets.RESOURCE, AuditBudgets::parse, AuditBudgets::load));
     }
 }

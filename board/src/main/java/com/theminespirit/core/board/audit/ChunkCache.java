@@ -19,6 +19,7 @@ public final class ChunkCache {
     private final short[] surface;
     private long filledTick = -1;
     private long lastVisit = -1;
+    private int cursor;
     private int unknown;
 
     public ChunkCache(ChunkCell chunk, BlockDict dict, int minY, int layers) {
@@ -88,7 +89,37 @@ public final class ChunkCache {
         Arrays.fill(cells, BlockDict.UNKNOWN);
         Arrays.fill(surface, (short) 0);
         unknown = cells.length;
+        cursor = 0;
         filledTick = -1;
+    }
+
+    public int total() {
+        return cells.length;
+    }
+
+    public int cursor() {
+        return cursor;
+    }
+
+    public boolean scanned() {
+        return cursor >= cells.length;
+    }
+
+    public void advance(int step) {
+        if (step < 0) {
+            throw new IllegalArgumentException(
+                    "Шаг курсора " + step + " отрицательный: наполнение вернётся к уже прочитанным клеткам бесконечно");
+        }
+        cursor = Math.min(cells.length, cursor + step);
+    }
+
+    public BlockCoord cellAt(int at) {
+        if (at < 0 || at >= cells.length) {
+            throw new IllegalArgumentException("Индекс клетки " + at + " вне окна чанка " + chunk + " (0…"
+                    + (cells.length - 1) + "): чтение ушло бы в соседний чанк");
+        }
+        int column = at % COLUMNS;
+        return new BlockCoord(chunk.x() * 16 + column % 16, minY + at / COLUMNS, chunk.z() * 16 + column / 16);
     }
 
     public ChunkCell chunk() {
