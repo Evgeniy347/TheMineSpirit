@@ -29,6 +29,10 @@ public final class TownPlanCodec {
         lines.add("region" + FIELD + plan.region().encode());
         lines.add("main" + FIELD + plan.streets().main().encode());
         lines.add("side" + FIELD + plan.streets().side().encode());
+        for (TownStreets.Street street : plan.streets().named()) {
+            lines.add("street" + FIELD + street.id() + FIELD + street.kind() + FIELD
+                    + street.cells().encode());
+        }
         lines.add("posts" + FIELD
                 + String.join(
                         ";",
@@ -69,6 +73,7 @@ public final class TownPlanCodec {
         Map<String, String> single = new LinkedHashMap<>();
         List<Placement> places = new ArrayList<>();
         List<PathLine> paths = new ArrayList<>();
+        List<TownStreets.Street> streetLines = new ArrayList<>();
         for (String line : text.split("\n", -1)) {
             int bar = line.indexOf(FIELD);
             if (bar < 0) {
@@ -78,6 +83,8 @@ public final class TownPlanCodec {
             String value = line.substring(bar + 1);
             if ("place".equals(key)) {
                 places.add(place(value));
+            } else if ("street".equals(key)) {
+                streetLines.add(street(value));
             } else if ("path".equals(key)) {
                 paths.add(path(value));
             } else {
@@ -88,8 +95,8 @@ public final class TownPlanCodec {
         if (anchor.length != 3) {
             throw broken("anchor|" + need(single, "anchor"));
         }
-        TownStreets streets =
-                new TownStreets(ColumnMask.decode(need(single, "main")), ColumnMask.decode(need(single, "side")));
+        TownStreets streets = new TownStreets(
+                ColumnMask.decode(need(single, "main")), ColumnMask.decode(need(single, "side")), streetLines);
         FenceLine fence = new FenceLine(cells(need(single, "posts")), numbers(need(single, "gates")));
         return new TownPlan(
                 new BlockCoord(Integer.parseInt(anchor[0]), Integer.parseInt(anchor[1]), Integer.parseInt(anchor[2])),
@@ -99,6 +106,14 @@ public final class TownPlanCodec {
                 fence,
                 words(need(single, "unplaced")),
                 paths);
+    }
+
+    private static TownStreets.Street street(String value) {
+        String[] parts = value.split(FIELD_SPLIT, -1);
+        if (parts.length != 3) {
+            throw broken("street|" + value);
+        }
+        return new TownStreets.Street(parts[0], parts[1], ColumnMask.decode(parts[2]));
     }
 
     public static byte[] encodePacked(TownPlan plan) {

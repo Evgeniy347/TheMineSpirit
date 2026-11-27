@@ -54,21 +54,36 @@ public final class TownMapRules {
     public static TownStreets streets(TownMap map, ColumnMask region) {
         Objects.requireNonNull(map, "Карта не может быть null: улицы берутся из неё");
         Objects.requireNonNull(region, "Граница не может быть null: улицы идут внутри неё");
-        BitSet main = new BitSet(region.width() * region.depth());
-        BitSet side = new BitSet(region.width() * region.depth());
+        List<TownStreets.Street> named = new ArrayList<>();
         for (TownMap.MapStreet street : map.streets()) {
-            BitSet target = MAIN.equals(street.kind()) ? main : side;
-            for (int x = street.minX(); x <= street.maxX(); x++) {
-                for (int z = street.minZ(); z <= street.maxZ(); z++) {
-                    if (region.contains(x, z)) {
-                        target.set((z - region.minZ()) * region.width() + x - region.minX());
-                    }
+            named.add(new TownStreets.Street(street.id(), street.kind(), clip(street, region)));
+        }
+        return new TownStreets(mask(named, region, true), mask(named, region, false), named);
+    }
+
+    private static ColumnMask clip(TownMap.MapStreet street, ColumnMask region) {
+        BitSet bits = new BitSet(region.width() * region.depth());
+        for (int x = street.minX(); x <= street.maxX(); x++) {
+            for (int z = street.minZ(); z <= street.maxZ(); z++) {
+                if (region.contains(x, z)) {
+                    bits.set((z - region.minZ()) * region.width() + x - region.minX());
                 }
             }
         }
-        return new TownStreets(
-                new ColumnMask(region.minX(), region.minZ(), region.width(), region.depth(), main),
-                new ColumnMask(region.minX(), region.minZ(), region.width(), region.depth(), side));
+        return new ColumnMask(region.minX(), region.minZ(), region.width(), region.depth(), bits);
+    }
+
+    private static ColumnMask mask(List<TownStreets.Street> named, ColumnMask region, boolean main) {
+        BitSet bits = new BitSet(region.width() * region.depth());
+        for (TownStreets.Street street : named) {
+            if (street.isMain() != main) {
+                continue;
+            }
+            for (ColumnMask.Cell cell : street.cells().cells()) {
+                bits.set((cell.z() - region.minZ()) * region.width() + cell.x() - region.minX());
+            }
+        }
+        return new ColumnMask(region.minX(), region.minZ(), region.width(), region.depth(), bits);
     }
 
     public static Optional<FenceLine> wallLine(TownMap map, TownStreets streets, ColumnMask region) {
@@ -94,7 +109,7 @@ public final class TownMapRules {
         }
         List<Integer> gates = new ArrayList<>();
         for (int index = 0; index < loop.size(); index++) {
-            if (streets.contains(loop.get(index).x(), loop.get(index).z())) {
+            if (streets.idAt(loop.get(index).x(), loop.get(index).z()).isPresent()) {
                 gates.add(index);
             }
         }

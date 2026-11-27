@@ -25,7 +25,7 @@
 
 1. [x] Пакет `core/board/audit`: `Wanted`, `Access`, `SourceRef`, `DiffItem`, `Group`, `Expectation`,
       `BlockDict`, `ChunkCache`, `ChangeRing`, `BlockEquivalence`, `AuditMiss` + юнит-тесты.
-2. [ ] Id улиц возвращаются в план: `TownMap.MapStreet` → `List<Street>`, `TownMapRules`, `TownStreets`,
+2. [x] Id улиц возвращаются в план: `TownMap.MapStreet` → `List<Street>`, `TownMapRules`, `TownStreets`,
       `TownPlanCodec` и ~14 потребителей маски.
 3. [ ] `ExpectIndex` по плану (участки, улицы, стены, земля, шахта) + один источник уровня; envelope из ТЗ.
 4. [ ] Наполнение `ChunkCache` по `ChunkEvent.Load`, бюджеты в `data/.../audit.json`, `planRevision`.
