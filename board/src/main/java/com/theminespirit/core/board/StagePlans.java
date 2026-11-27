@@ -92,9 +92,11 @@ public final class StagePlans {
                         return;
                     }
                     String id = target.wood() == null ? item : WoodSpecies.swap(item, target.wood());
-                    steps.add(PlanSteps.acquireStrict(
-                            id.contains(":") ? id : NamespacedId.MINECRAFT + id,
-                            Math.min(count, CatalogLimits.COUNT_MAX)));
+                    if (!"minecraft:water_bucket".equals(id)) {
+                        steps.add(PlanSteps.acquireStrict(
+                                id.contains(":") ? id : NamespacedId.MINECRAFT + id,
+                                Math.min(count, CatalogLimits.COUNT_MAX)));
+                    }
                 }));
         Map<String, Object> params = new LinkedHashMap<>();
         params.put("file", scheme);
