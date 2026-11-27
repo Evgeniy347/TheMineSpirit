@@ -1,6 +1,7 @@
 package com.theminespirit.core.board.graph;
 
 import com.theminespirit.core.board.GraphBlock;
+import com.theminespirit.core.board.audit.AuditGraphKeys;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -197,6 +198,11 @@ public record GraphState(
         Objects.requireNonNull(life, "Формула жизни не может быть null: без неё слабого игрока не распознать");
         Set<String> derived = new LinkedHashSet<>(events);
         derived.addAll(GraphDomainEvents.of(known, stage, life));
+        Set<String> knownWorld = new LinkedHashSet<>(world);
+        known.auditGroups().stream()
+                .filter(AuditGraphKeys::active)
+                .map(AuditGraphKeys::key)
+                .forEach(knownWorld::add);
         return new GraphState(
                 stock,
                 stage,
@@ -205,7 +211,7 @@ public record GraphState(
                 materials,
                 storageFreePercent,
                 derived,
-                world,
+                knownWorld,
                 distances,
                 stations,
                 orders,

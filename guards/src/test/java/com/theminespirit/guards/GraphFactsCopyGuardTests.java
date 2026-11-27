@@ -2,7 +2,9 @@ package com.theminespirit.guards;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import com.theminespirit.core.board.ConstructionBatches.ChunkCell;
 import com.theminespirit.core.board.GraphBlock;
+import com.theminespirit.core.board.audit.Group;
 import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.core.board.graph.GraphFactsUpdates;
 import com.theminespirit.core.board.graph.GraphFeedback;
@@ -27,6 +29,7 @@ class GraphFactsCopyGuardTests {
             "withWorld", GraphFactsCopyGuardTests::world,
             "withPlayers", GraphFacts::players,
             "withPlanBreaches", GraphFacts::planBreaches,
+            "withAuditGroups", GraphFacts::auditGroups,
             "withStations", GraphFacts::stations,
             "withStageReqs", GraphFacts::stageReqs);
 
@@ -90,14 +93,14 @@ class GraphFactsCopyGuardTests {
         List<Constructor<?>> constructors =
                 Arrays.stream(GraphFacts.class.getConstructors()).toList();
         assertEquals(
-                List.of(12),
+                List.of(13),
                 constructors.stream().map(Constructor::getParameterCount).toList(),
                 "У GraphFacts есть конструктор не на все компоненты: короткий конструктор подставляет пустые "
-                        + "игроки/проломы, и факты мира молча не доходят до графа. Компоненты задают все "
-                        + "двенадцать, явно."
+                        + "игроки/проломы/группы, и факты мира молча не доходят до графа. Компоненты задают все "
+                        + "тринадцать, явно."
                         + " Иначе тест graphFacts_ShortConstructor_IsAbsent перестанет ловить эту поломку. При смене graphFacts_ShortConstructor_IsAbsent проверь это утверждение.");
         assertEquals(
-                12,
+                13,
                 GraphFacts.class.getRecordComponents().length,
                 "Компоненты GraphFacts читаются рефлексией: сторож перечисляет их и сверяет каждую копию"
                         + " Иначе тест graphFacts_ShortConstructor_IsAbsent перестанет ловить эту поломку. При смене graphFacts_ShortConstructor_IsAbsent проверь это утверждение.");
@@ -199,6 +202,7 @@ class GraphFactsCopyGuardTests {
                         List.of(new GraphFeedback.Failure(
                                 "make:dirt", "0,64,0", 2, new GraphBlock.Path("0,64,0"), 100, 1.5))),
                 List.of(new GraphFacts.Player("Steve", new GraphFacts.Position(1, 64, 1), 20, 20, 20)),
-                List.of(new GraphFacts.Position(2, 64, 2)));
+                List.of(new GraphFacts.Position(2, 64, 2)),
+                List.of(Group.pending(Group.Kind.GROUND, "", new ChunkCell(0, 0), List.of(), 0)));
     }
 }

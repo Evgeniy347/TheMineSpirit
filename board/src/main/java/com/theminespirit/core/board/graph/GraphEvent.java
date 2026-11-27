@@ -21,9 +21,25 @@ public record GraphEvent(
             @Nullable String world,
             @Nullable String onlyWhenEmpty,
             @Nullable String owner,
+            @Nullable String after,
+            List<String> requires,
             boolean implemented) {
         public Task {
             consumes = Map.copyOf(consumes);
+            requires = List.copyOf(requires);
+        }
+
+        public Task(
+                String id,
+                BoardCase boardCase,
+                int base,
+                Map<String, Integer> consumes,
+                @Nullable String building,
+                @Nullable String world,
+                @Nullable String onlyWhenEmpty,
+                @Nullable String owner,
+                boolean implemented) {
+            this(id, boardCase, base, consumes, building, world, onlyWhenEmpty, owner, null, List.of(), implemented);
         }
     }
 
@@ -43,12 +59,14 @@ public record GraphEvent(
 
     static @Nullable Task find(GraphEvent event, String taskId) {
         Task prefix = null;
+        int longest = -1;
         for (Task task : event.tasks()) {
             if (task.id().equals(taskId)) {
                 return task;
             }
-            if (taskId.startsWith(task.id() + ":")) {
+            if (taskId.startsWith(task.id()) && task.id().length() > longest) {
                 prefix = task;
+                longest = task.id().length();
             }
         }
         return prefix;
@@ -77,6 +95,8 @@ public record GraphEvent(
                         task.world(),
                         task.onlyWhenEmpty(),
                         task.owner(),
+                        task.after(),
+                        task.requires(),
                         task.implemented()));
             }
             repaired.put(
@@ -100,6 +120,8 @@ public record GraphEvent(
                         text(task, "world"),
                         text(task, "onlyWhenEmpty"),
                         text(task, "owner"),
+                        text(task, "after"),
+                        texts(task.path("requires")),
                         task.path("implemented").asBoolean(true)));
             }
             List<String> advice = new ArrayList<>();
@@ -167,6 +189,12 @@ public record GraphEvent(
         node.properties()
                 .forEach(entry -> counts.put(entry.getKey(), entry.getValue().asInt()));
         return counts;
+    }
+
+    private static List<String> texts(JsonNode node) {
+        List<String> values = new ArrayList<>();
+        node.forEach(value -> values.add(value.asText()));
+        return List.copyOf(values);
     }
 
     private static @Nullable String text(JsonNode node, String field) {

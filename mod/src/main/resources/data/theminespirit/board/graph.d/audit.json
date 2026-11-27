@@ -1,0 +1,112 @@
+{
+  "events": {
+    "audit": {
+      "tasks": [
+        {
+          "id": "ground:pit",
+          "case": "CLEAR_GROUNDS",
+          "base": 85
+        },
+        {
+          "id": "ground:stray",
+          "case": "CLEAR_GROUNDS",
+          "base": 78
+        },
+        {
+          "id": "ground:pillar",
+          "case": "CLEAR_GROUNDS",
+          "base": 75
+        },
+        {
+          "id": "ground:floating",
+          "case": "CLEAR_GROUNDS",
+          "base": 72
+        },
+        {
+          "id": "wall:access",
+          "case": "BUILD_FENCE",
+          "base": 74,
+          "after": "audit:street:s-1"
+        },
+        {
+          "id": "wall",
+          "case": "BUILD_FENCE",
+          "base": 53,
+          "after": "audit:street:s-1"
+        },
+        {
+          "id": "street:s-1",
+          "case": "BUILD_STREETS",
+          "base": 72,
+          "after": "audit:ground:pit"
+        },
+        {
+          "id": "building:storage",
+          "case": "REPAIR_BUILDING",
+          "base": 68,
+          "after": "audit:street:s-1"
+        },
+        {
+          "id": "street:s-2",
+          "case": "BUILD_STREETS",
+          "base": 66,
+          "after": "audit:building:storage"
+        },
+        {
+          "id": "ground:mound",
+          "case": "CLEAR_GROUNDS",
+          "base": 66
+        },
+        {
+          "id": "building:orchard",
+          "case": "REPAIR_BUILDING",
+          "base": 64,
+          "after": "audit:street:s-2"
+        },
+        {
+          "id": "mine",
+          "case": "BUILD_MINE",
+          "base": 64,
+          "after": "audit:street:s-2"
+        },
+        {
+          "id": "street:s-3",
+          "case": "BUILD_STREETS",
+          "base": 62,
+          "after": "audit:building:orchard"
+        },
+        {
+          "id": "building:field_wheat",
+          "case": "REPAIR_BUILDING",
+          "base": 60,
+          "after": "audit:street:s-3"
+        },
+        {
+          "id": "building:field",
+          "case": "REPAIR_BUILDING",
+          "base": 58
+        },
+        {
+          "id": "lighting",
+          "case": "REPAIR_BUILDING",
+          "base": 52
+        },
+        {
+          "id": "ground",
+          "case": "CLEAR_GROUNDS",
+          "base": 45
+        },
+        {
+          "id": "building",
+          "case": "REPAIR_BUILDING",
+          "base": 55
+        },
+        {
+          "id": "street",
+          "case": "BUILD_STREETS",
+          "base": 55
+        }
+      ]
+    }
+  }
+}

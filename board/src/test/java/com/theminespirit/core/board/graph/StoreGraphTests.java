@@ -124,6 +124,7 @@ class StoreGraphTests {
                     stageReqs,
                     GraphFeedback.none(),
                     List.of(),
+                    List.of(),
                     List.of());
         }
     }

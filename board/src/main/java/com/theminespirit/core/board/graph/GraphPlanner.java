@@ -1,5 +1,6 @@
 package com.theminespirit.core.board.graph;
 
+import com.theminespirit.core.board.audit.Group;
 import com.theminespirit.core.board.graph.GraphState.Built;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -121,6 +122,10 @@ public final class GraphPlanner {
             if (event == null) {
                 continue;
             }
+            if ("audit".equals(name)) {
+                audit(event);
+                continue;
+            }
             for (GraphEvent.Task task : event.tasks()) {
                 String key = EVENT + name + ":" + task.id();
                 flow.root(key, GraphEventFacts.weight(graph, state, task));
@@ -134,6 +139,28 @@ public final class GraphPlanner {
             event.push().forEach((node, weight) -> boost(node, weight, name));
             event.advice().forEach(rule -> advice.add(new GraphPlan.Advice(name, rule)));
             VitalPaths.note(graph, state, name, event, notices);
+        }
+    }
+
+    private void audit(GraphEvent event) {
+        for (String world : state.world().stream()
+                .filter(key -> key.startsWith("audit:"))
+                .sorted()
+                .toList()) {
+            String taskId = world.substring("audit:".length());
+            GraphEvent.Task chosen = GraphEvent.find(event, taskId);
+            Group group = AuditGraphFacts.group(state, taskId);
+            if (chosen == null || group == null) {
+                continue;
+            }
+            String key = EVENT + "audit:" + taskId;
+            flow.root(key, AuditGraphFacts.weight(state, group, chosen.base()));
+            for (Map.Entry<String, Integer> input :
+                    AuditGraphFacts.materials(group).entrySet()) {
+                if (count(input.getKey()) < input.getValue()) {
+                    expander.push(key, input.getKey(), graph.decay());
+                }
+            }
         }
     }
 

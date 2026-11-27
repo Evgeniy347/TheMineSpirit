@@ -179,6 +179,7 @@ final class GraphMutations {
                 new StageReqs(Map.of(), Map.of()),
                 GraphFeedback.none(),
                 List.of(),
+                List.of(),
                 List.of());
         world.event("demolish_stray").event("clear_floating");
         return world;

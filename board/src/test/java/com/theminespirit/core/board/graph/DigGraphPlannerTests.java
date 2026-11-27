@@ -211,7 +211,8 @@ class DigGraphPlannerTests {
                 new GraphSiteFacts.StageReqs(Map.of(), Map.of()),
                 GraphFeedback.none(),
                 List.of(),
-                breaches);
+                breaches,
+                List.of());
     }
 
     private static GraphFacts.Spirit spirit(boolean trapped, String trap) {

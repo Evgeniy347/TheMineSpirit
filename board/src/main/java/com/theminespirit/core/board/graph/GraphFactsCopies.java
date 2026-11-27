@@ -1,5 +1,6 @@
 package com.theminespirit.core.board.graph;
 
+import com.theminespirit.core.board.audit.Group;
 import java.util.List;
 import java.util.Map;
 
@@ -19,7 +20,25 @@ final class GraphFactsCopies {
                 new GraphSiteFacts.StageReqs(Map.of(), Map.of()),
                 GraphFeedback.none(),
                 List.of(),
+                List.of(),
                 List.of());
+    }
+
+    static GraphFacts auditGroups(GraphFacts base, List<Group> known) {
+        return new GraphFacts(
+                base.spirits(),
+                base.threats(),
+                base.chests(),
+                base.resources(),
+                base.stations(),
+                base.buildings(),
+                base.strays(),
+                base.terrain(),
+                base.stageReqs(),
+                base.feedback(),
+                base.players(),
+                base.planBreaches(),
+                known);
     }
 
     static GraphFacts chests(GraphFacts base, List<GraphFacts.Chest> known) {
@@ -35,7 +54,8 @@ final class GraphFactsCopies {
                 base.stageReqs(),
                 base.feedback(),
                 base.players(),
-                base.planBreaches());
+                base.planBreaches(),
+                base.auditGroups());
     }
 
     static GraphFacts threats(GraphFacts base, List<GraphFacts.Threat> known) {
@@ -51,7 +71,8 @@ final class GraphFactsCopies {
                 base.stageReqs(),
                 base.feedback(),
                 base.players(),
-                base.planBreaches());
+                base.planBreaches(),
+                base.auditGroups());
     }
 
     static GraphFacts spirits(GraphFacts base, Map<String, GraphFacts.Spirit> known) {
@@ -67,7 +88,8 @@ final class GraphFactsCopies {
                 base.stageReqs(),
                 base.feedback(),
                 base.players(),
-                base.planBreaches());
+                base.planBreaches(),
+                base.auditGroups());
     }
 
     static GraphFacts feedback(GraphFacts base, GraphFeedback known) {
@@ -83,7 +105,8 @@ final class GraphFactsCopies {
                 base.stageReqs(),
                 known,
                 base.players(),
-                base.planBreaches());
+                base.planBreaches(),
+                base.auditGroups());
     }
 
     static GraphFacts world(GraphFacts base, GraphWorldFacts world) {
@@ -99,7 +122,8 @@ final class GraphFactsCopies {
                 base.stageReqs(),
                 base.feedback(),
                 base.players(),
-                base.planBreaches());
+                base.planBreaches(),
+                base.auditGroups());
     }
 
     static GraphFacts players(GraphFacts base, List<GraphFacts.Player> known) {
@@ -115,7 +139,8 @@ final class GraphFactsCopies {
                 base.stageReqs(),
                 base.feedback(),
                 known,
-                base.planBreaches());
+                base.planBreaches(),
+                base.auditGroups());
     }
 
     static GraphFacts planBreaches(GraphFacts base, List<GraphFacts.Position> known) {
@@ -131,6 +156,7 @@ final class GraphFactsCopies {
                 base.stageReqs(),
                 base.feedback(),
                 base.players(),
-                known);
+                known,
+                base.auditGroups());
     }
 }

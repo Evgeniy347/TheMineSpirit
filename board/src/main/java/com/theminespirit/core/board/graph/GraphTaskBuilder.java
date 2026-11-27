@@ -1,6 +1,8 @@
 package com.theminespirit.core.board.graph;
 
 import com.theminespirit.core.board.api.BoardCase;
+import com.theminespirit.core.board.audit.AuditGraphMapping;
+import com.theminespirit.core.board.audit.Group;
 import com.theminespirit.core.board.graph.GraphState.Built;
 import java.util.Map;
 import java.util.Objects;
@@ -52,6 +54,9 @@ final class GraphTaskBuilder {
                     false,
                     false,
                     EXPLORE_TICKS);
+        }
+        if (key.startsWith(EVENT + "audit:")) {
+            return auditTask(key, priority);
         }
         if (key.startsWith(EVENT)) {
             String[] parts = key.split(":", 3);
@@ -115,5 +120,34 @@ final class GraphTaskBuilder {
                 chances.contains(key),
                 graph.implemented(wayId),
                 choices.wayTicks(key, way));
+    }
+
+    private GraphPlan.Task auditTask(String key, int priority) {
+        String taskId = key.substring((EVENT + "audit:").length());
+        GraphEvent event = Objects.requireNonNull(
+                graph.events().get("audit"), "Событие audit не описано в графе: группа не получит кейс");
+        GraphEvent.Task chosen =
+                Objects.requireNonNull(GraphEvent.find(event, taskId), "Шаблон audit не описывает группу " + taskId);
+        Group group = Objects.requireNonNull(
+                AuditGraphFacts.group(state, taskId), "Группа аудита " + taskId + " исчезла из фактов графа");
+        if (AuditGraphMapping.UNMAPPED.contains(group.kind().name())) {
+            throw new IllegalStateException("Группа " + taskId + " оставлена без маппинга: граф не выдаст действие");
+        }
+        if (chosen.boardCase() != AuditGraphMapping.caseOf(group.kind())) {
+            throw new IllegalStateException("Группа " + taskId + ": шаблон audit задаёт " + chosen.boardCase()
+                    + ", маппинг требует " + AuditGraphMapping.caseOf(group.kind()));
+        }
+        Map<String, Integer> materials = AuditGraphFacts.materials(group);
+        return new GraphPlan.Task(
+                key,
+                chosen.boardCase(),
+                taskId,
+                GraphEventFacts.owner(state, chosen),
+                priority,
+                materials,
+                GraphEventFacts.feasible(graph, state, chosen) && GraphLack.stocked(graph, state, materials),
+                false,
+                chosen.implemented(),
+                graph.costs().ticks(key, chosen.boardCase()));
     }
 }

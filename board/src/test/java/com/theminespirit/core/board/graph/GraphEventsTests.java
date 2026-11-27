@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.board.api.BoardCase;
+import com.theminespirit.core.inventory.api.JsonResource;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -86,5 +87,41 @@ class GraphEventsTests {
                 created.base(),
                 "вес ремонта берётся из шаблона"
                         + " Иначе тест withRepairs_RepairTask_KeepsWorldConditionsAndBuilding перестанет ловить эту поломку. При смене withRepairs_RepairTask_KeepsWorldConditionsAndBuilding проверь это утверждение.");
+    }
+
+    @Test
+    void parse_AuditTask_ReadsDependenciesAndLongestPrefix() {
+        String json = "{"
+                + "\"events\":{\"audit\":{\"tasks\":["
+                + "{\"id\":\"building\",\"case\":\"REPAIR_BUILDING\",\"base\":55},"
+                + "{\"id\":\"building:storage\",\"case\":\"REPAIR_BUILDING\",\"base\":68,"
+                + "\"after\":\"audit:street:s-1\",\"requires\":[\"audit:ground:pit\"]}]}}}";
+
+        GraphEvent event =
+                GraphEvent.parse(JsonResource.parse(json, "audit-test")).get("audit");
+        GraphEvent.Task chosen = GraphEvent.find(event, "building:storage_3");
+
+        assertEquals(
+                "building:storage",
+                chosen.id(),
+                "Префиксный поиск выбирает самый длинный шаблон:"
+                        + " иначе склад получит общий вес постройки вместо своего места в лестнице. При смене поиска"
+                        + " перепроверь GraphEvent.find.");
+        assertEquals(
+                "audit:street:s-1",
+                chosen.after(),
+                "Предшественник читается из данных: иначе улица"
+                        + " и склад смогут выполняться одновременно. При смене формата перепроверь GraphEvent.parse.");
+        assertEquals(
+                List.of("audit:ground:pit"),
+                chosen.requires(),
+                "Список обязательных групп читается из данных: иначе зависимость от ямы потеряется, а склад"
+                        + " начнёт строиться до расчистки. При смене формата перепроверь texts и GraphEvent.parse.");
+        assertEquals(
+                "building",
+                GraphEvent.find(event, "building:other").id(),
+                "Общий шаблон остаётся"
+                        + " запасным для построек без специального префикса: иначе аудит не найдёт кейс. При смене"
+                        + " поиска перепроверь GraphEvent.find.");
     }
 }

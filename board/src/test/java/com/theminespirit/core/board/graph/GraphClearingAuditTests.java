@@ -28,6 +28,7 @@ class GraphClearingAuditTests {
                 new GraphSiteFacts.StageReqs(Map.of(), Map.of()),
                 GraphFeedback.none(),
                 List.of(),
+                List.of(),
                 List.of());
 
         GraphPlan result = plan(world, facts);

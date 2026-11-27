@@ -28,7 +28,8 @@ public final class GraphEventFacts {
             return false;
         }
         return GraphLack.stocked(graph, state, consumes(state, task))
-                && (task.building() == null || repairTarget(state, task.building()));
+                && (task.building() == null || repairTarget(state, task.building()))
+                && AuditGraphFacts.ready(state, task);
     }
 
     private static boolean repairTarget(GraphState state, String building) {

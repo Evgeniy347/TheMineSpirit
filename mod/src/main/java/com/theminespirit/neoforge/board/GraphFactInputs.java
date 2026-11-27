@@ -46,7 +46,7 @@ public final class GraphFactInputs {
             FirstStepsRunner.StageScan scan,
             Optional<TownPlan> town,
             GraphSurroundings.Around around) {
-        return new GraphFacts(
+        GraphFacts facts = new GraphFacts(
                 spiritFacts(service, spirits, graph),
                 List.of(),
                 List.of(),
@@ -58,7 +58,9 @@ public final class GraphFactInputs {
                 stageReqs(service, service.board().ledger().stage()),
                 GraphFeedback.none(),
                 List.of(),
+                List.of(),
                 List.of());
+        return facts.withAuditGroups(AuditGroupsStore.get());
     }
 
     static List<GraphFacts.Position> planBreaches(ServerLevel level) {

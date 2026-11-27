@@ -1,5 +1,6 @@
 package com.theminespirit.core.board.graph;
 
+import com.theminespirit.core.board.audit.Group;
 import com.theminespirit.core.board.graph.GraphSiteFacts.StageReqs;
 import com.theminespirit.core.board.graph.GraphSiteFacts.Stray;
 import com.theminespirit.core.board.graph.GraphSiteFacts.Terrain;
@@ -20,7 +21,9 @@ public record GraphFacts(
         StageReqs stageReqs,
         GraphFeedback feedback,
         List<Player> players,
-        List<Position> planBreaches) {
+        List<Position> planBreaches,
+        List<Group> auditGroups)
+        implements GraphFactsMutations {
     public enum Reach {
         UNKNOWN,
         PATH,
@@ -263,37 +266,11 @@ public record GraphFacts(
                 List.copyOf(Objects.requireNonNull(players, "Игроки не могут быть null: без игроков — пустой список"));
         planBreaches = List.copyOf(
                 Objects.requireNonNull(planBreaches, "Проломы плана не могут быть null: без них — пустой список"));
+        auditGroups = List.copyOf(
+                Objects.requireNonNull(auditGroups, "Группы аудита не могут быть null: без них — пустой список"));
     }
 
     public static GraphFacts empty() {
         return GraphFactsCopies.empty();
-    }
-
-    public GraphFacts withChests(List<Chest> known) {
-        return GraphFactsCopies.chests(this, known);
-    }
-
-    public GraphFacts withThreats(List<Threat> known) {
-        return GraphFactsCopies.threats(this, known);
-    }
-
-    public GraphFacts withSpirits(Map<String, Spirit> known) {
-        return GraphFactsCopies.spirits(this, known);
-    }
-
-    public GraphFacts withFeedback(GraphFeedback known) {
-        return GraphFactsCopies.feedback(this, known);
-    }
-
-    public GraphFacts withWorld(GraphWorldFacts world) {
-        return GraphFactsCopies.world(this, world);
-    }
-
-    public GraphFacts withPlayers(List<Player> known) {
-        return GraphFactsCopies.players(this, known);
-    }
-
-    public GraphFacts withPlanBreaches(List<Position> known) {
-        return GraphFactsCopies.planBreaches(this, known);
     }
 }
