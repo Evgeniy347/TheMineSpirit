@@ -52,12 +52,12 @@ final class RescueGroupPost {
             if (spirit == null || spirit.isRemoved()) {
                 continue;
             }
-            Optional<StuckSpirits.Stuck> mark = post.service.board().stuck().of(spirit.getUUID(), post.now);
-            if (mark.isEmpty()) {
-                pending = true;
-                continue;
-            }
             BlockCoord at = GraphRescuePost.at(spirit);
+            Optional<StuckSpirits.Stuck> mark = Optional.of(post.service
+                    .board()
+                    .stuck()
+                    .of(spirit.getUUID(), post.now)
+                    .orElseGet(() -> new StuckSpirits.Stuck(at, post.now, false)));
             Optional<BlockCoord> target = HomePoint.of(spirit).or(() -> settlement);
             if (target.isEmpty()) {
                 pending = true;
