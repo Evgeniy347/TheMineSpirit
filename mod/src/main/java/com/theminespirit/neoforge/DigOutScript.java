@@ -151,7 +151,7 @@ public final class DigOutScript implements ScriptInstance {
         }
         BlockPos step = sideways ? ahead : ahead.above();
         BlockPos floor = step.below();
-        if (DigOutSpace.passable(level, floor) || DigOutSpace.water(level, floor)) {
+        if (DigOutSpace.passable(level, floor)) {
             Optional<String> refusal = stepFloor.place(floor);
             if (refusal.isPresent()) {
                 return turnOrFail("пол ступени " + floor.toShortString() + " не подложить: " + refusal.get());
@@ -194,6 +194,7 @@ public final class DigOutScript implements ScriptInstance {
             next = null;
             steps++;
             turns = 0;
+            direction = null;
             return ScriptStatus.RUNNING;
         }
         if (StepFall.fell(feet.getY(), next.getY(), spirit.onGround())) {
