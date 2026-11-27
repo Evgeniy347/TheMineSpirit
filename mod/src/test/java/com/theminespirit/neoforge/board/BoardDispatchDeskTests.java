@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 
 class BoardDispatchDeskTests {
     @Test
-    void issueAll_NoEndlessIdleSenseFallback() throws IOException {
+    void issueAll_IdleSpirit_HasNoEndlessSenseFallback() throws IOException {
         String dispatch =
                 Files.readString(Path.of("mod/src/main/java/com/theminespirit/neoforge/board/BoardDispatchDesk.java"));
         String activities =
@@ -21,7 +21,7 @@ class BoardDispatchDeskTests {
                 dispatch.contains("fillIdle") || activities.contains("idle_sense") || activities.contains("fillIdle"),
                 "Свободный дух не получает бесконечный ACTIVITY_SENSE каждые пять секунд: иначе осмотр "
                         + "подменяет реальную работу и никогда не заканчивается. При смене "
-                        + "issueAll_NoEndlessIdleSenseFallback проверь BoardDispatchDesk.issueAll и живой spirit-6.");
+                        + "issueAll_IdleSpirit_HasNoEndlessSenseFallback проверь BoardDispatchDesk.issueAll и живой spirit-6.");
     }
 
     @Test

@@ -3,9 +3,24 @@ package com.theminespirit.neoforge;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 
 class DigOutRouteTests {
+    @Test
+    void tick_AscentRouteMissing_RetriesBeforeManualFallback() throws IOException {
+        String source = Files.readString(Path.of("mod/src/main/java/com/theminespirit/neoforge/DigOutRoute.java"));
+        String compact = source.replaceAll("\\s+", "");
+
+        assertTrue(
+                compact.contains("if(route==null&&retries<RETRIES&&!routeFailed){returnState.RUNNING;}"),
+                "Подъём повторяет поиск до лимита, прежде чем перейти к ручным ступеням: иначе первый "
+                        + "временный NO_ROUTE снова превращается в кружение вокруг поля. При смене "
+                        + "tick_AscentRouteMissing_RetriesBeforeManualFallback проверь DigOutRoute.tick и spirit-6.");
+    }
+
     @Test
     void mode_SpiritBobsWhileFollowingRoute_RouteKept() {
         assertFalse(

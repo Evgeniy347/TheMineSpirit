@@ -63,6 +63,9 @@ final class DigOutRoute {
             route = pending.walk();
             pending = null;
         }
+        if (route == null && retries < RETRIES && !routeFailed) {
+            return State.RUNNING;
+        }
         if (descending && route == null && retries >= RETRIES) {
             return State.DESCENT_FAILED;
         }

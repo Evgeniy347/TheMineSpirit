@@ -193,17 +193,17 @@ public final class ReachApproach {
         return Approach.State.STUCK;
     }
 
-    private boolean standReachable(BlockCoord feet) {
+    private boolean standReachable(BlockCoord stand) {
         probes++;
         boolean reachable = routes
                 && spirit.level() instanceof ServerLevel level
-                && PathNetworkService.route(level, feet(), feet).isPresent();
+                && PathNetworkService.route(level, feet(), stand).isPresent();
         if (!reachable) {
-            Path path = spirit.getNavigation().createPath(new BlockPos(feet.x(), feet.y(), feet.z()), 1);
+            Path path = spirit.getNavigation().createPath(new BlockPos(stand.x(), stand.y(), stand.z()), 1);
             reachable = path != null && path.canReach();
         }
         if (!reachable) {
-            reachable = twoWayWalk(feet);
+            reachable = twoWayWalk(stand);
         }
         if (!reachable) {
             rejected++;

@@ -85,7 +85,7 @@ final class StationAccess {
         if (!finder.step()) {
             return;
         }
-        Optional<BlockPos> existing = finder.found();
+        Optional<BlockPos> existing = finder.next();
         if (existing.isPresent()) {
             headTo(existing.get());
             return;
@@ -105,12 +105,12 @@ final class StationAccess {
             if (!settlementFinder.step()) {
                 return;
             }
-            settlementSearched = true;
-            Optional<BlockPos> shared = settlementFinder.found();
+            Optional<BlockPos> shared = settlementFinder.next();
             if (shared.isPresent()) {
                 headTo(shared.get());
                 return;
             }
+            settlementSearched = true;
         }
         if (spirit.getInventory().countItem(type.item()) < 1 && !supply.provide(spirit)) {
             fail(type.needed() + ": рядом (" + radius + ") нет, в инвентаре нет");
@@ -175,13 +175,18 @@ final class StationAccess {
     private void walk() {
         if (!stillStanding()) {
             approach.cancel();
-            fail(type.noun() + " в " + pos.toShortString() + " исчез до начала работы");
+            pos = null;
+            search();
             return;
         }
         switch (approach.tick()) {
             case MOVING -> {}
             case ARRIVED -> state = State.READY;
-            case STUCK, TIMEOUT -> fail("не дошёл до станции (" + type.noun() + ") в " + pos.toShortString());
+            case STUCK, TIMEOUT -> {
+                approach.cancel();
+                pos = null;
+                search();
+            }
         }
     }
 

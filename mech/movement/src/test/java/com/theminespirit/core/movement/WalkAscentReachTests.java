@@ -28,6 +28,32 @@ class WalkAscentReachTests {
     }
 
     @Test
+    void next_PartialFloorAtTargetHeight_ArrivesWithoutJump() {
+        Pose onFarmland = new Pose(new BlockCoord(0, 0, 0), 0.5, 0.9375, 0.5);
+        Command command = WalkAscent.next(new BlockCoord(0, 1, 0), onFarmland, new Body(true, false, false));
+
+        assertEquals(
+                Step.ARRIVED,
+                command.step(),
+                "Частичный пол пашни не считается ступенью на блок: иначе blockPosition остаётся y=0, "
+                        + "маршрут снова прыгает и крутится на месте. При смене "
+                        + "next_PartialFloorAtTargetHeight_ArrivesWithoutJump проверь WalkAscent.arrived и живое поле.");
+    }
+
+    @Test
+    void next_PartialFloorNeighbour_StaysMove() {
+        Pose onFarmland = new Pose(new BlockCoord(0, 0, 0), 0.9, 0.9375, 0.5);
+        Command command = WalkAscent.next(new BlockCoord(1, 1, 0), onFarmland, new Body(true, false, false));
+
+        assertEquals(
+                Step.MOVE,
+                command.step(),
+                "Соседняя клетка над частичным полом проходится шагом, а не прыжком: иначе дух снова "
+                        + "топчется на пшенице и теряет маршрут. При смене next_PartialFloorNeighbour_StaysMove "
+                        + "проверь WalkAscent.next и RouteWalk.pose.");
+    }
+
+    @Test
     void next_StepOneAboveOnGround_Jumps() {
         Command command = WalkAscent.next(new BlockCoord(0, 1, 0), FEET, new Body(true, false, false));
 

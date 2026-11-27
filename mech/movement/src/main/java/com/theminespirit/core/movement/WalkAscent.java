@@ -70,7 +70,7 @@ public final class WalkAscent {
         if (arrived(cell, pose, body)) {
             return new Command(Step.ARRIVED, targetX, cell.y(), targetZ);
         }
-        boolean rising = cell.y() > pose.feet().y();
+        boolean rising = cell.y() > pose.y() + ARRIVAL;
         double centerX = pose.feet().x() + CENTER;
         double centerZ = pose.feet().z() + CENTER;
         if (rising && body.onGround() && horizontal(pose, centerX, centerZ) > CellCentering.TOLERANCE) {
@@ -80,7 +80,7 @@ public final class WalkAscent {
             Step swim = cell.y() < pose.feet().y() ? Step.DIVE : Step.SWIM;
             return new Command(swim, targetX, cell.y(), targetZ);
         }
-        if (!rising && pose.feet().y() - cell.y() > 1) {
+        if (!rising && pose.y() - cell.y() > 1.0 + ARRIVAL) {
             Step descent = horizontal(pose, targetX, targetZ) > MAX_JUMP_REACH
                     ? Step.IMPOSSIBLE
                     : body.descentBlocked() ? Step.DESCENT_BLOCKED : Step.DIVE;
@@ -89,7 +89,7 @@ public final class WalkAscent {
         Step step = switch (lift(rising, body)) {
             case HOLD -> horizontal(pose, targetX, targetZ) > MAX_JUMP_REACH ? Step.IMPOSSIBLE : Step.MOVE;
             case JUMP ->
-                cell.y() - pose.feet().y() > 1 || horizontal(pose, targetX, targetZ) > MAX_JUMP_REACH
+                cell.y() - pose.y() > 1.0 + ARRIVAL || horizontal(pose, targetX, targetZ) > MAX_JUMP_REACH
                         ? Step.IMPOSSIBLE
                         : body.headBlocked() ? Step.ASCENT_BLOCKED : Step.JUMP;
             case CLIMB -> Step.CLIMB;
@@ -112,7 +112,9 @@ public final class WalkAscent {
     }
 
     private static boolean arrived(BlockCoord cell, Pose pose, Body body) {
-        return pose.feet().equals(cell)
+        return pose.feet().x() == cell.x()
+                && pose.feet().z() == cell.z()
+                && Math.abs(pose.y() - cell.y()) < ARRIVAL
                 && horizontal(pose, cell.x() + CENTER, cell.z() + CENTER) < ARRIVAL
                 && (body.onGround() || body.inWater() || body.onClimbable());
     }
