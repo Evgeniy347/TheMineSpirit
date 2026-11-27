@@ -2,41 +2,23 @@ package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.BuildGap;
 import com.theminespirit.core.board.RepairAudit;
-import com.theminespirit.core.board.TicketPlans;
+import com.theminespirit.core.board.StageCatalog;
 import com.theminespirit.core.board.api.BoardCase;
+import com.theminespirit.core.board.audit.Group;
+import com.theminespirit.core.board.audit.GroupRegistry;
 import com.theminespirit.core.board.graph.GraphFacts;
-import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicBlocks;
-import com.theminespirit.core.building.SchematicWood;
-import com.theminespirit.core.building.api.BuildRotation;
-import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.reload.DataTables;
-import com.theminespirit.core.repair.RepairData;
-import com.theminespirit.core.town.ColumnMask;
-import com.theminespirit.core.town.SettlementScan;
+import com.theminespirit.core.town.Placement;
 import com.theminespirit.core.town.StageSite;
-import com.theminespirit.core.town.StrayGroups;
 import com.theminespirit.core.town.TownSnapshot;
-import com.theminespirit.neoforge.SchematicResources;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.block.state.BlockState;
+import org.jspecify.annotations.Nullable;
 
 final class BuildingAudit {
-    private static final long CACHE_TICKS = 600;
-    private static final Map<String, RepairAudit.Report> SCHEMES = new HashMap<>();
-    private static final Map<String, BuildingAuditInputs.Audit> GAPS = new HashMap<>();
-    private static long cacheBucket = Long.MIN_VALUE;
-
     private BuildingAudit() {}
 
     static BuildingAuditInputs.Audit first(ServerLevel level, FirstStepsRunner.StageScan scan, BoardCase step) {
@@ -60,101 +42,36 @@ final class BuildingAudit {
     }
 
     static BuildingAuditInputs.Audit streets(ServerLevel level, StageSite site, String fallback) {
-        bucket(level);
-        String key = level.dimension().location() + "|streets|" + site.anchor() + "|" + fallback;
-        BuildingAuditInputs.Audit cached = GAPS.get(key);
-        if (cached != null) {
-            return cached;
-        }
-        String wood = BuildingWoodChoice.stored(level, BoardCase.BUILD_STREETS, site, fallback);
-        TaskNode plan = TicketPlans.plan(
-                BoardCase.BUILD_STREETS, 1, FirstStepsRunner.targetFor(level, BoardCase.BUILD_STREETS, site, wood));
-        BuildGap.Gap gap = BuildGap.trace(plan, wood, streetProbe(level), FirstStepsRunner.SCHEMES);
-        BuildingAuditInputs.Audit audit =
-                new BuildingAuditInputs.Audit(gap.total(), gap.done(), blocks(gap), Map.of(), 0, gap.unknown());
-        GAPS.put(key, audit);
-        return audit;
+        GroupRegistry registry = TownAuditWatch.peekGroups(level);
+        return registry == null
+                ? new BuildingAuditInputs.Audit(0, 0, Map.of(), Map.of(), 0, 1)
+                : GroupAudits.audit(registry, Group.Kind.STREET, "");
     }
 
     static BuildingAuditInputs.Audit clearing(ServerLevel level, StageSite site, long now) {
-        SettlementScan.Strays found = WorldAreaScan.scanOrNull(
-                level, site, SettlementPlotStore.get(level).town());
-        if (found == null || found.unknown() > 0) {
-            return new BuildingAuditInputs.Audit(0, 0, Map.of(), Map.of(), 0, 1);
-        }
-        Set<ColumnMask.Cell> defective = new LinkedHashSet<>();
-        found.pits().keySet().forEach(at -> defective.add(new ColumnMask.Cell(at.x(), at.z())));
-        Set<ColumnMask.Cell> mounds = columns(found.mounds());
-        Set<ColumnMask.Cell> pillars = columns(found.pillars());
-        defective.addAll(mounds);
-        defective.addAll(pillars);
-        for (StrayGroups.Cell stray : found.strays()) {
-            defective.add(new ColumnMask.Cell(stray.at().x(), stray.at().z()));
-        }
-        Map<String, Integer> extra = new LinkedHashMap<>();
-        countBlocks(level, found.mounds(), extra);
-        countBlocks(level, found.pillars(), extra);
-        for (StrayGroups.Cell stray : found.strays()) {
-            extra.merge(stray.blockId(), 1, Integer::sum);
-        }
-        int total = site.zone().count();
-        Map<String, Integer> missing = found.pits().isEmpty()
-                ? Map.of()
-                : Map.of("minecraft:dirt", found.pits().size());
-        return new BuildingAuditInputs.Audit(
-                total,
-                Math.max(0, total - defective.size()),
-                missing,
-                extra,
-                0,
-                0,
-                new BuildingAuditInputs.Defects(found.pits().size(), mounds.size(), pillars.size()));
-    }
-
-    private static Set<ColumnMask.Cell> columns(List<BlockCoord> cells) {
-        Set<ColumnMask.Cell> columns = new LinkedHashSet<>();
-        for (BlockCoord at : cells) {
-            columns.add(new ColumnMask.Cell(at.x(), at.z()));
-        }
-        return columns;
-    }
-
-    private static void countBlocks(ServerLevel level, List<BlockCoord> cells, Map<String, Integer> counts) {
-        for (BlockCoord at : cells) {
-            BlockState state = level.getBlockState(new BlockPos(at.x(), at.y(), at.z()));
-            counts.merge(id(BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString()), 1, Integer::sum);
-        }
+        GroupRegistry registry = TownAuditWatch.peekGroups(level);
+        return registry == null
+                ? new BuildingAuditInputs.Audit(0, 0, Map.of(), Map.of(), 0, 1)
+                : GroupAudits.audit(registry, Group.Kind.GROUND, "");
     }
 
     static BuildingAuditInputs.Audit stageOrchard(ServerLevel level, GraphFacts.Position at, String wood, long now) {
         Optional<String> scheme = DataTables.INSTANCE.stages().current().scheme(BoardCase.BUILD_ORCHARD, 1);
-        if (scheme.isEmpty()) {
-            return new BuildingAuditInputs.Audit(0, 0, Map.of(), Map.of(), 0, 0);
-        }
-        return scheme(level, scheme.orElseThrow(), at, wood, now);
+        return scheme.isEmpty()
+                ? new BuildingAuditInputs.Audit(0, 0, Map.of(), Map.of(), 0, 0)
+                : scheme(level, scheme.orElseThrow(), at, wood, now);
     }
 
     static BuildingAuditInputs.Audit scheme(
             ServerLevel level, String scheme, GraphFacts.Position at, String wood, long now) {
-        return report(schemeReport(level, scheme, at, wood, now));
+        Group group = groupForScheme(level, scheme, at);
+        return group == null ? new BuildingAuditInputs.Audit(0, 0, Map.of(), Map.of(), 0, 1) : GroupAudits.audit(group);
     }
 
-    static RepairAudit.Report schemeReport(
+    static RepairAudit.@Nullable Report schemeReport(
             ServerLevel level, String scheme, GraphFacts.Position at, String wood, long now) {
-        bucket(level);
-        String key = level.dimension().location() + "|" + scheme + "|" + at + "|" + wood;
-        RepairAudit.Report report = SCHEMES.get(key);
-        if (report == null) {
-            Schematic wanted = SchematicWood.swap(SchematicResources.load(scheme), wood);
-            report = RepairAudit.audit(
-                    wanted,
-                    new BlockCoord(at.x(), at.y(), at.z()),
-                    BuildRotation.NONE,
-                    new AuditWorld(level),
-                    RepairData.loadDefault());
-            SCHEMES.put(key, report);
-        }
-        return report;
+        Group group = groupForScheme(level, scheme, at);
+        return group == null ? null : GroupAudits.report(group);
     }
 
     static BuildingAuditInputs.Audit report(RepairAudit.Report report) {
@@ -177,6 +94,27 @@ final class BuildingAudit {
                 report.total(), report.total() - report.missing(), missing, extra, wrong, report.unknown());
     }
 
+    private static @Nullable Group groupForScheme(ServerLevel level, String scheme, GraphFacts.Position at) {
+        GroupRegistry registry = TownAuditWatch.peekGroups(level);
+        if (registry == null) {
+            return null;
+        }
+        Optional<String> planId = SettlementPlotStore.get(level).town().stream()
+                .flatMap(plan -> plan.placements().stream())
+                .filter(place -> place.x() == at.x() && place.z() == at.z())
+                .filter(place -> StageCatalog.scheme(place.id(), place.stage())
+                        .filter(scheme::equals)
+                        .isPresent())
+                .map(Placement::id)
+                .findFirst();
+        return planId.map(registry::group)
+                .orElseGet(() -> registry.groups().stream()
+                        .filter(group -> group.kind() == Group.Kind.BUILDING)
+                        .filter(group -> group.subject().equals(planId.orElse("")))
+                        .findFirst()
+                        .orElse(null));
+    }
+
     private static Map<String, Integer> blocks(BuildGap.Gap gap) {
         Map<String, Integer> missing = new LinkedHashMap<>();
         for (String block : gap.missingCells().values()) {
@@ -193,59 +131,5 @@ final class BuildingAudit {
 
     private static String id(String block) {
         return block.contains(":") ? block : "minecraft:" + block;
-    }
-
-    private static void bucket(ServerLevel level) {
-        long bucket = level.getGameTime() / CACHE_TICKS;
-        if (bucket != cacheBucket) {
-            cacheBucket = bucket;
-            SCHEMES.clear();
-            GAPS.clear();
-        }
-    }
-
-    private static BuildGap.Probe streetProbe(ServerLevel level) {
-        BuildGap.Probe base = WorldProbe.of(level);
-        return new BuildGap.Probe() {
-            @Override
-            public String block(BlockCoord at) {
-                String block = base.block(at);
-                String path = SchematicBlocks.path(block);
-                return switch (path) {
-                    case "dirt", "grass_block", "dirt_path", "path", "coarse_dirt" -> "minecraft:dirt";
-                    default -> block;
-                };
-            }
-
-            @Override
-            public boolean passable(BlockCoord at) {
-                return base.passable(at);
-            }
-
-            @Override
-            public String rawBlock(BlockCoord at) {
-                return base.block(at);
-            }
-
-            @Override
-            public boolean loaded(BlockCoord at) {
-                return base.loaded(at);
-            }
-        };
-    }
-
-    private record AuditWorld(ServerLevel level) implements RepairAudit.WorldView {
-        @Override
-        public String blockAt(BlockCoord cell) {
-            return BuiltInRegistries.BLOCK
-                    .getKey(level.getBlockState(new BlockPos(cell.x(), cell.y(), cell.z()))
-                            .getBlock())
-                    .toString();
-        }
-
-        @Override
-        public boolean loaded(BlockCoord cell) {
-            return level.isLoaded(new BlockPos(cell.x(), cell.y(), cell.z()));
-        }
     }
 }

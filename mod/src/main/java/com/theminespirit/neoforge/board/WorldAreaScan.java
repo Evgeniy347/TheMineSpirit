@@ -1,23 +1,24 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.board.audit.DiffItem;
+import com.theminespirit.core.board.audit.Group;
+import com.theminespirit.core.board.audit.GroupRegistry;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.reload.DataTables;
-import com.theminespirit.core.town.ColumnMask;
-import com.theminespirit.core.town.PitGroups;
 import com.theminespirit.core.town.Placement;
 import com.theminespirit.core.town.PlotCells;
 import com.theminespirit.core.town.SettlementScan;
 import com.theminespirit.core.town.StageSite;
+import com.theminespirit.core.town.StrayGroups;
 import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.neoforge.BlockStates;
 import com.theminespirit.neoforge.SettlementChestStore;
 import com.theminespirit.neoforge.lease.LeaseData;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
@@ -33,18 +34,7 @@ import net.minecraft.world.level.levelgen.Heightmap;
 import org.jspecify.annotations.Nullable;
 
 final class WorldAreaScan {
-    private static final long CACHE_TICKS = 600;
-    private static final int SLICE_COLUMNS = 128;
     private static final Map<String, Boolean> PLANTS = new HashMap<>();
-    private static final Map<String, Sweep> LAST = new HashMap<>();
-
-    private record Cached(long bucket, StageSite site, SettlementScan.Strays found) implements Sweep {}
-
-    private record Sliced(
-            long bucket, StageSite site, ColumnMask area, int levelY, List<ColumnMask.Cell> columns, int nextIndex)
-            implements Sweep {}
-
-    private sealed interface Sweep permits Cached, Sliced {}
 
     private WorldAreaScan() {}
 
@@ -54,59 +44,32 @@ final class WorldAreaScan {
     }
 
     static SettlementScan.@Nullable Strays scanOrNull(ServerLevel level, StageSite site, Optional<TownPlan> town) {
-        Sweep sweep = sweep(level, site, town);
-        if (sweep instanceof Cached cached) {
-            return cached.found();
-        }
-        Sliced sliced = (Sliced) sweep;
-        BlockProtection rules = DataTables.INSTANCE.protection().current();
-        SettlementScan.Slice slice = SettlementScan.scanSlice(
-                sliced.columns(),
-                sliced.nextIndex(),
-                SLICE_COLUMNS,
-                sliced.levelY(),
-                rules,
-                new Live(level, site, town, sliced.levelY()));
-        if (slice.more()) {
-            LAST.put(
-                    key(level),
-                    new Sliced(
-                            sliced.bucket(),
-                            sliced.site(),
-                            sliced.area(),
-                            sliced.levelY(),
-                            sliced.columns(),
-                            slice.nextIndex()));
-            return null;
-        }
-        SettlementScan.Strays found =
-                Objects.requireNonNull(slice.done(), "Последний срез скана обязан вернуть результат");
-        LAST.put(key(level), new Cached(sliced.bucket(), sliced.site(), found));
-        return found;
+        return fromGroups(level);
     }
 
-    private static Sweep sweep(ServerLevel level, StageSite site, Optional<TownPlan> town) {
-        long bucket = level.getGameTime() / CACHE_TICKS;
-        Sweep before = LAST.get(key(level));
-        if (before instanceof Cached cached
-                && cached.bucket() == bucket
-                && cached.site().equals(site)) {
-            return cached;
+    private static SettlementScan.@Nullable Strays fromGroups(ServerLevel level) {
+        GroupRegistry registry = TownAuditWatch.peekGroups(level);
+        if (registry == null) {
+            return null;
         }
-        if (before instanceof Sliced sliced
-                && sliced.bucket() == bucket
-                && sliced.site().equals(site)) {
-            return sliced;
+        Map<BlockCoord, Integer> pits = new LinkedHashMap<>();
+        List<StrayGroups.Cell> strays = new ArrayList<>();
+        int unknown = 0;
+        for (Group group : registry.groups()) {
+            unknown += group.unknown();
+            if (group.kind() != Group.Kind.GROUND) {
+                continue;
+            }
+            for (DiffItem item : group.items()) {
+                if ("pit".equals(group.subject()) && item.action() != DiffItem.Action.BREAK) {
+                    pits.put(item.cell(), 1);
+                } else if (("stray".equals(group.subject()) || "floating".equals(group.subject()))
+                        && item.action() == DiffItem.Action.BREAK) {
+                    strays.add(new StrayGroups.Cell(item.cell(), item.found()));
+                }
+            }
         }
-        BlockProtection rules = DataTables.INSTANCE.protection().current();
-        ColumnMask area = town.isEmpty() || rules.straysInsideFenceOnly()
-                ? site.zone()
-                : town.orElseThrow().region();
-        int levelY = SettlementPlotStore.get(level)
-                .plot()
-                .map(plot -> plot.anchor().y())
-                .orElse(site.anchor().y());
-        return new Sliced(bucket, site, area, levelY, area.cells(), 0);
+        return new SettlementScan.Strays(pits, List.of(), List.of(), strays, unknown, 0);
     }
 
     static SettlementScan.World view(ServerLevel level, StageSite site) {
@@ -118,16 +81,11 @@ final class WorldAreaScan {
     }
 
     static Optional<SettlementScan.Strays> last(ServerLevel level) {
-        return Optional.ofNullable(LAST.get(key(level)))
-                .filter(Cached.class::isInstance)
-                .map(Cached.class::cast)
-                .map(Cached::found);
+        return Optional.ofNullable(fromGroups(level));
     }
 
     static SettlementScan.Strays cachedOrScan(ServerLevel level, StageSite site) {
-        return last(level)
-                .orElseGet(
-                        () -> scan(level, site, SettlementPlotStore.get(level).town()));
+        return scan(level, site, SettlementPlotStore.get(level).town());
     }
 
     static boolean demolishStrays() {
@@ -142,13 +100,7 @@ final class WorldAreaScan {
     }
 
     static List<BlockCoord> holes(SettlementScan.Strays found) {
-        List<BlockCoord> cells = new ArrayList<>();
-        PitGroups.group(found.pits()).forEach(pit -> cells.addAll(pit.cells()));
-        return cells;
-    }
-
-    private static String key(ServerLevel level) {
-        return level.dimension().location().toString();
+        return List.copyOf(found.pits().keySet());
     }
 
     private static final class Live implements SettlementScan.World {

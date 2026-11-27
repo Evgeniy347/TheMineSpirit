@@ -2,12 +2,13 @@ package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.BoardLogEntry;
 import com.theminespirit.core.board.RepairAudit;
+import com.theminespirit.core.board.audit.Group;
+import com.theminespirit.core.board.audit.GroupRegistry;
 import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.core.board.graph.GraphSiteFacts;
 import com.theminespirit.core.board.graph.GraphWorldFacts;
+import com.theminespirit.core.building.SchematicBlocks;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.repair.RepairData;
-import com.theminespirit.core.town.FloatingBlocks;
 import com.theminespirit.core.town.SettlementScan;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.StrayGroups;
@@ -15,12 +16,10 @@ import com.theminespirit.core.town.TownPlan;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Predicate;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -31,11 +30,6 @@ final class WorldAreaInputs {
     private static final int PLACEMENT_SCAN = 256;
     private static final String PLACE = "place:";
     private static final String POS = "pos=";
-
-    private static RepairAudit.@Nullable Report cachedHouse;
-    private static @Nullable StageSite cachedHouseSite;
-    private static String cachedHouseWood = "";
-    private static long cachedHouseAt = Long.MIN_VALUE;
 
     record Marks(Map<String, Integer> cut, Map<String, Integer> fill, Map<String, Integer> floating, int natural) {
         Marks(Map<String, Integer> cut, Map<String, Integer> fill, Map<String, Integer> floating) {
@@ -60,16 +54,7 @@ final class WorldAreaInputs {
             Optional<TownPlan> town,
             Map<String, GraphFacts.Building> buildings,
             SettlementScan.Strays found) {
-        StageSite site = scan.stage();
-        List<GraphSiteFacts.Stray> strays = new ArrayList<>(strays(found, placements(service)));
-        Set<GraphFacts.Position> seen = new HashSet<>();
-        strays.forEach(stray -> seen.add(stray.position()));
-        town.ifPresent(plan -> FarmStray.facts(level, site, plan).stream()
-                .filter(stray -> seen.add(stray.position()))
-                .forEach(strays::add));
-        List<FloatingBlocks.Finding> floating = town.map(plan -> FloatingScanCycle.find(level, site, plan.region()))
-                .orElse(List.of());
-        List<FloatingBlocks.Finding> counted = FloatingBlocks.countedInGraph(floating);
+        List<GraphSiteFacts.Stray> strays = strays(found, placements(service));
         Map<String, Boolean> lots = town.map(plan -> PlotLots.of(found, plan)).orElse(Map.of());
         List<BlockCoord> raised = new ArrayList<>(found.mounds());
         raised.addAll(found.pillars());
@@ -77,13 +62,13 @@ final class WorldAreaInputs {
                 List.copyOf(found.pits().keySet()),
                 found.pits(),
                 raised,
-                FloatingBlocks.hangingCount(floating),
+                0,
                 new Marks(
                         blockCounts(level, raised),
                         found.pits().isEmpty()
                                 ? Map.of()
                                 : Map.of("minecraft:dirt", found.pits().size()),
-                        floatingCounts(counted),
+                        Map.of(),
                         found.natural()),
                 found.unknown() > 0);
         return new GraphWorldFacts(strays, terrain, PlotLots.ready(buildings, lots));
@@ -97,14 +82,15 @@ final class WorldAreaInputs {
             }
         }
         List<GraphSiteFacts.Stray> facts = new ArrayList<>();
-        for (StrayGroups.Group group : StrayGroups.of(found.strays(), builders)) {
-            BlockCoord at = group.position();
+        for (StrayGroups.Cell cell : found.strays()) {
+            BlockCoord at = cell.at();
+            String type = SchematicBlocks.path(cell.blockId());
             facts.add(new GraphSiteFacts.Stray(
-                    "stray:" + group.type() + "@" + key(at),
-                    group.type(),
+                    "stray:" + type + "@" + key(at),
+                    type,
                     new GraphFacts.Position(at.x(), at.y(), at.z()),
-                    group.builder(),
-                    group.blocks()));
+                    builders.get(at),
+                    Map.of(type, 1)));
         }
         return List.copyOf(facts);
     }
@@ -191,14 +177,6 @@ final class WorldAreaInputs {
         return Map.copyOf(counts);
     }
 
-    private static Map<String, Integer> floatingCounts(List<FloatingBlocks.Finding> findings) {
-        Map<String, Integer> counts = new LinkedHashMap<>();
-        for (FloatingBlocks.Finding finding : findings) {
-            counts.merge(finding.blockId(), finding.cells().size(), Integer::sum);
-        }
-        return Map.copyOf(counts);
-    }
-
     static Map<String, GraphFacts.Building> buildings(
             Map<String, GraphFacts.Building> base, RepairAudit.@Nullable Report house) {
         Map<String, GraphFacts.Building> facts = new LinkedHashMap<>();
@@ -226,23 +204,15 @@ final class WorldAreaInputs {
     }
 
     static RepairAudit.@Nullable Report houseReport(ServerLevel level, StageSite site, String wood, long now) {
-        long interval = RepairData.loadDefault().auditIntervalTicks();
-        RepairAudit.Report cached = cachedHouse;
-        if (cached != null
-                && site.equals(cachedHouseSite)
-                && wood.equals(cachedHouseWood)
-                && now >= cachedHouseAt
-                && now - cachedHouseAt < interval) {
-            return cached;
+        GroupRegistry registry = TownAuditWatch.peekGroups(level);
+        if (registry == null) {
+            return null;
         }
-        RepairAudit.Report report = RepairAuditWatch.houseReport(level, site, wood, now);
-        if (report != null) {
-            cachedHouse = report;
-            cachedHouseSite = site;
-            cachedHouseWood = wood;
-            cachedHouseAt = now;
-        }
-        return report;
+        return registry.groups().stream()
+                .filter(group -> group.kind() == Group.Kind.BUILDING && "hut".equals(group.subject()))
+                .findFirst()
+                .map(GroupAudits::report)
+                .orElse(null);
     }
 
     private static int percent(RepairAudit.Report report) {

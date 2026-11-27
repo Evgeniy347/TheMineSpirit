@@ -16,10 +16,10 @@ import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.board.route.RouteRetired;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.api.CatalogLimits;
-import com.theminespirit.core.town.PitGroups;
 import com.theminespirit.core.town.PlotLeveling;
 import com.theminespirit.core.town.SettlementScan;
 import com.theminespirit.core.town.StageSite;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -147,10 +147,16 @@ final class WorldPost {
         }
         FillIndex fills = openFills(post);
         int posted = 0;
-        for (PitGroups.Pit pit : PitGroups.group(found.pits())) {
-            String id = fills.covering(pit.cells()).orElse(null);
+        for (Map.Entry<BlockCoord, Integer> pit : found.pits().entrySet()) {
+            BlockCoord top = pit.getKey();
+            int depth = pit.getValue();
+            List<BlockCoord> cells = new ArrayList<>();
+            for (int y = top.y() - depth + 1; y <= top.y(); y++) {
+                cells.add(new BlockCoord(top.x(), y, top.z()));
+            }
+            String id = fills.covering(cells).orElse(null);
             if (id == null) {
-                id = BACKFILL_PREFIX + pit.key();
+                id = BACKFILL_PREFIX + top.x() + "," + top.y() + "," + top.z();
                 if (post.done(id)) {
                     continue;
                 }
@@ -161,9 +167,9 @@ final class WorldPost {
             if (post.open(id)) {
                 continue;
             }
-            TicketTarget target = TicketTarget.at(pit.anchor())
-                    .withCraterBlocks(Math.min(pit.blocks(), CatalogLimits.COUNT_MAX))
-                    .withLeveling(LevelRepair.leveling(pit.cells(), List.of()));
+            TicketTarget target = TicketTarget.at(top)
+                    .withCraterBlocks(Math.min(cells.size(), CatalogLimits.COUNT_MAX))
+                    .withLeveling(LevelRepair.leveling(cells, List.of()));
             post.submit(
                     post.ticket(
                             id,

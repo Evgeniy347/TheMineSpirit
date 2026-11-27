@@ -90,7 +90,7 @@ class WorldAreaInputsTests {
     }
 
     @Test
-    void strays_WorldScan_GroupsConnectedBlocksAndKeepsJournalBuilder() {
+    void strays_WorldScan_KeepsEachCellAndJournalBuilder() {
         SettlementScan.Strays found = new SettlementScan.Strays(
                 Map.of(),
                 List.of(),
@@ -104,20 +104,20 @@ class WorldAreaInputsTests {
         List<GraphSiteFacts.Stray> strays = WorldAreaInputs.strays(found, placed);
 
         assertEquals(
-                1,
+                2,
                 strays.size(),
-                "связные клетки сканера — один кусок лишнего"
-                        + " Иначе тест strays_WorldScan_GroupsConnectedBlocksAndKeepsJournalBuilder перестанет ловить эту поломку. При смене strays_WorldScan_GroupsConnectedBlocksAndKeepsJournalBuilder проверь это утверждение.");
+                "каждая клетка группы остаётся отдельным фактом: иначе обратный индекс потеряет адрес"
+                        + " Иначе тест strays_WorldScan_KeepsEachCellAndJournalBuilder перестанет ловить эту поломку. При смене strays_WorldScan_KeepsEachCellAndJournalBuilder проверь это утверждение.");
         assertEquals(
-                Map.of("oak_fence", 2),
+                Map.of("oak_fence", 1),
                 strays.get(0).blocks(),
-                "у куска есть тип и количество"
-                        + " Иначе тест strays_WorldScan_GroupsConnectedBlocksAndKeepsJournalBuilder перестанет ловить эту поломку. При смене strays_WorldScan_GroupsConnectedBlocksAndKeepsJournalBuilder проверь это утверждение.");
+                "у клетки есть тип и количество: иначе граф сложит два адреса в один предмет"
+                        + " Иначе тест strays_WorldScan_KeepsEachCellAndJournalBuilder перестанет ловить эту поломку. При смене strays_WorldScan_KeepsEachCellAndJournalBuilder проверь это утверждение.");
         assertEquals(
                 "spirit-1",
-                strays.get(0).builder(),
+                strays.get(1).builder(),
                 "строитель куска берётся из журнала, если запись есть"
-                        + " Иначе тест strays_WorldScan_GroupsConnectedBlocksAndKeepsJournalBuilder перестанет ловить эту поломку. При смене strays_WorldScan_GroupsConnectedBlocksAndKeepsJournalBuilder проверь это утверждение.");
+                        + " Иначе тест strays_WorldScan_KeepsEachCellAndJournalBuilder перестанет ловить эту поломку. При смене strays_WorldScan_KeepsEachCellAndJournalBuilder проверь это утверждение.");
     }
 
     @Test

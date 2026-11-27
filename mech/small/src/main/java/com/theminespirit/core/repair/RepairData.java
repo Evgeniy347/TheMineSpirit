@@ -11,7 +11,6 @@ import org.jspecify.annotations.Nullable;
 
 public record RepairData(
         int maxDurabilityPercent,
-        int auditIntervalTicks,
         int cellBudgetPerTick,
         int rebuildPercent,
         List<String> softBlocks,
@@ -21,19 +20,13 @@ public record RepairData(
     public static final int PERCENT_MIN = 0;
     public static final int PERCENT_MAX = 100;
     public static final int PERCENT_DEFAULT = 90;
-    public static final int AUDIT_INTERVAL_DEFAULT = 24000;
     public static final int CELL_BUDGET_DEFAULT = 256;
     public static final int REBUILD_PERCENT_DEFAULT = 50;
 
     private static final TableSlot<RepairData> SOURCE = new TableSlot<>(RepairData::load);
 
-    private static final Set<String> FIELDS = Set.of(
-            "maxDurabilityPercent",
-            "auditIntervalTicks",
-            "cellBudgetPerTick",
-            "rebuildPercent",
-            "softBlocks",
-            "priorities");
+    private static final Set<String> FIELDS =
+            Set.of("maxDurabilityPercent", "cellBudgetPerTick", "rebuildPercent", "softBlocks", "priorities");
     private static final Set<String> PRIORITY_FIELDS = Set.of("wall", "housing", "craft", "decor");
     private static final List<String> SOFT_DEFAULT = List.of(
             "poppy",
@@ -49,7 +42,6 @@ public record RepairData(
             "white_carpet");
     private static final RepairData DEFAULTS = new RepairData(
             PERCENT_DEFAULT,
-            AUDIT_INTERVAL_DEFAULT,
             CELL_BUDGET_DEFAULT,
             REBUILD_PERCENT_DEFAULT,
             SOFT_DEFAULT,
@@ -67,7 +59,6 @@ public record RepairData(
     public RepairData {
         checkDurability(maxDurabilityPercent);
         checkPercent(rebuildPercent, "Порог перестройки");
-        checkPositive(auditIntervalTicks, "Интервал обхода");
         checkPositive(cellBudgetPerTick, "Бюджет клеток на тик");
         softBlocks = List.copyOf(Objects.requireNonNull(
                 softBlocks, "Мягкие блоки не могут быть null: пустой список задают пустым списком"));
@@ -82,7 +73,6 @@ public record RepairData(
     public RepairData(int maxDurabilityPercent) {
         this(
                 maxDurabilityPercent,
-                DEFAULTS.auditIntervalTicks(),
                 DEFAULTS.cellBudgetPerTick(),
                 DEFAULTS.rebuildPercent(),
                 DEFAULTS.softBlocks(),
@@ -116,7 +106,6 @@ public record RepairData(
         try {
             return new RepairData(
                     percent,
-                    optionalInteger(root, "auditIntervalTicks", origin, DEFAULTS.auditIntervalTicks()),
                     optionalInteger(root, "cellBudgetPerTick", origin, DEFAULTS.cellBudgetPerTick()),
                     optionalInteger(root, "rebuildPercent", origin, DEFAULTS.rebuildPercent()),
                     softBlocks(root, origin),

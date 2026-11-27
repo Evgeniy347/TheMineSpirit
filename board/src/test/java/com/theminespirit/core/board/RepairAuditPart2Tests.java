@@ -191,35 +191,31 @@ class RepairAuditPart2Tests {
     }
 
     @Test
-    void defaults_AuditNumbers_ComeFromData() {
+    void defaults_RepairNumbers_ComeFromData() {
         RepairData rules = RepairData.defaults();
-        assertEquals(
-                24000,
-                rules.auditIntervalTicks(),
-                "Плановый обход — раз в игровой день из repair.json Иначе тест defaults_AuditNumbers_ComeFromData перестанет ловить эту поломку. При смене defaults_AuditNumbers_ComeFromData проверь это утверждение.");
         assertEquals(
                 256,
                 rules.cellBudgetPerTick(),
-                "Бюджет обхода — число из repair.json Иначе тест defaults_AuditNumbers_ComeFromData перестанет ловить эту поломку. При смене defaults_AuditNumbers_ComeFromData проверь это утверждение.");
+                "Бюджет обхода — число из repair.json Иначе тест defaults_RepairNumbers_ComeFromData перестанет ловить эту поломку. При смене defaults_RepairNumbers_ComeFromData проверь это утверждение.");
         assertEquals(
                 50,
                 rules.rebuildPercent(),
-                "Порог перестройки — 50% из repair.json Иначе тест defaults_AuditNumbers_ComeFromData перестанет ловить эту поломку. При смене defaults_AuditNumbers_ComeFromData проверь это утверждение.");
+                "Порог перестройки — 50% из repair.json Иначе тест defaults_RepairNumbers_ComeFromData перестанет ловить эту поломку. При смене defaults_RepairNumbers_ComeFromData проверь это утверждение.");
         assertEquals(
                 95,
                 rules.priorities().wall(),
-                "Приоритет стены — число из repair.json Иначе тест defaults_AuditNumbers_ComeFromData перестанет ловить эту поломку. При смене defaults_AuditNumbers_ComeFromData проверь это утверждение.");
+                "Приоритет стены — число из repair.json Иначе тест defaults_RepairNumbers_ComeFromData перестанет ловить эту поломку. При смене defaults_RepairNumbers_ComeFromData проверь это утверждение.");
         assertEquals(
                 70,
                 rules.priorities().housing(),
-                "Приоритет жилья — число из repair.json Иначе тест defaults_AuditNumbers_ComeFromData перестанет ловить эту поломку. При смене defaults_AuditNumbers_ComeFromData проверь это утверждение.");
+                "Приоритет жилья — число из repair.json Иначе тест defaults_RepairNumbers_ComeFromData перестанет ловить эту поломку. При смене defaults_RepairNumbers_ComeFromData проверь это утверждение.");
         assertEquals(
                 60,
                 rules.priorities().craft(),
-                "Приоритет ремесла и склада — число из repair.json Иначе тест defaults_AuditNumbers_ComeFromData перестанет ловить эту поломку. При смене defaults_AuditNumbers_ComeFromData проверь это утверждение.");
+                "Приоритет ремесла и склада — число из repair.json Иначе тест defaults_RepairNumbers_ComeFromData перестанет ловить эту поломку. При смене defaults_RepairNumbers_ComeFromData проверь это утверждение.");
         assertEquals(
                 30,
                 rules.priorities().decor(),
-                "Приоритет декора — число из repair.json Иначе тест defaults_AuditNumbers_ComeFromData перестанет ловить эту поломку. При смене defaults_AuditNumbers_ComeFromData проверь это утверждение.");
+                "Приоритет декора — число из repair.json Иначе тест defaults_RepairNumbers_ComeFromData перестанет ловить эту поломку. При смене defaults_RepairNumbers_ComeFromData проверь это утверждение.");
     }
 }

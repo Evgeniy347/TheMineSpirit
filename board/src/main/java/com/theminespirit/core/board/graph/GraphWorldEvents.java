@@ -15,6 +15,9 @@ public final class GraphWorldEvents {
     private GraphWorldEvents() {}
 
     public static Set<String> of(GraphFacts facts) {
+        if (!facts.auditGroups().isEmpty()) {
+            return Set.of();
+        }
         Set<String> events = new LinkedHashSet<>();
         if (!facts.strays().isEmpty()) {
             events.add(DEMOLISH_STRAY);

@@ -1,6 +1,5 @@
 {
   "maxDurabilityPercent": 90,
-  "auditIntervalTicks": 24000,
   "cellBudgetPerTick": 256,
   "rebuildPercent": 50,
   "softBlocks": [

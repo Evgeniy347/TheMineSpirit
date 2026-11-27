@@ -173,7 +173,11 @@ public final class FirstStepsRunner {
     }
 
     static Placed audit(ServerLevel level, BoardCase step, int buildingLevel, StageSite stage, String fallback) {
-        return BuiltAuditCache.of(level, step, buildingLevel, stage, fallback);
+        String key = level.dimension().location() + "|" + step.name() + "|" + buildingLevel + "|" + stage.anchor() + "|"
+                + fallback;
+        BuildGap.Gap gap = gap(level, step, buildingLevel, stage, fallback);
+        AuditJournal.watch(level, step, key, gap);
+        return new Placed(gap.done(), gap.total(), gap.unknown());
     }
 
     static BuildGap.Gap gap(ServerLevel level, BoardCase step, StageSite stage, String fallback) {
