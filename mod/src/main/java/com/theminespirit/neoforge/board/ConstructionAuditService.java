@@ -2,22 +2,13 @@ package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.ConstructionBatches;
-import com.theminespirit.core.board.ConstructionMarks;
-import com.theminespirit.core.board.RepairAudit;
-import com.theminespirit.core.board.StageCatalog;
-import com.theminespirit.core.board.graph.GraphFacts;
-import com.theminespirit.core.building.api.WoodSpecies;
+import com.theminespirit.core.board.ConstructionBatches.ChunkCell;
+import com.theminespirit.core.board.audit.DiffItem;
+import com.theminespirit.core.board.audit.Group;
+import com.theminespirit.core.board.audit.GroupRegistry;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.town.ColumnMask;
-import com.theminespirit.core.town.OrchardSites;
-import com.theminespirit.core.town.Placement;
-import com.theminespirit.core.town.SettlementPlot;
-import com.theminespirit.core.town.SettlementScan;
-import com.theminespirit.core.town.StageSite;
-import com.theminespirit.core.town.TownPlan;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -37,129 +28,43 @@ public final class ConstructionAuditService {
     private ConstructionAuditService() {}
 
     public static Batch batch(ServerLevel level, BlockPos center, int index) {
-        Optional<TownPlan> town = SettlementPlotStore.get(level).town();
-        Optional<StageSite> site = SettlementPlotStore.liveSite(level);
-        Optional<SettlementPlot> plot = SettlementPlotStore.get(level).plot();
-        if (town.isEmpty() || site.isEmpty() || plot.isEmpty()) {
-            LOGGER.debug("Аудит подсветки: поселение не размечено, пачка {}", index);
+        GroupRegistry registry = TownAuditWatch.peekGroups(level);
+        if (registry == null) {
+            LOGGER.debug("Аудит подсветки: группы ещё не собраны, пачка {}", index);
             return new Batch(List.of(), List.of(), index, false);
         }
-        List<ConstructionBatches.ChunkCell> order = ConstructionBatches.order(
-                settlementChunks(town.orElseThrow(), site.orElseThrow()), center.getX() >> 4, center.getZ() >> 4);
-        LOGGER.debug(
-                "Аудит подсветки: чанков поселения {}, размещений {}, пачка {}",
-                order.size(),
-                town.orElseThrow().placements().size(),
-                index);
-        List<ConstructionBatches.ChunkCell> chunks = ConstructionBatches.batch(order, index);
+        List<Group> groups = registry.groups();
+        Set<ChunkCell> included = new LinkedHashSet<>();
+        for (Group group : groups) {
+            for (DiffItem item : group.items()) {
+                included.add(ConstructionBatches.at(item.cell().x(), item.cell().z()));
+            }
+        }
+        List<ChunkCell> order = ConstructionBatches.order(included, center.getX() >> 4, center.getZ() >> 4);
+        List<ChunkCell> chunks = ConstructionBatches.batch(order, index);
         if (chunks.isEmpty()) {
             return new Batch(List.of(), List.of(), index, false);
         }
-        boolean hasMore = ConstructionBatches.hasMore(order, index);
-        Set<ConstructionBatches.ChunkCell> selected = Set.copyOf(chunks);
+        Set<ChunkCell> selected = Set.copyOf(chunks);
         Set<BlockPos> demolish = new LinkedHashSet<>();
         Set<BlockPos> place = new LinkedHashSet<>();
-        addSchemes(
-                level,
-                town.orElseThrow(),
-                site.orElseThrow(),
-                plot.orElseThrow().wood(),
-                selected,
-                demolish,
-                place);
-        SettlementScan.Strays strays = WorldAreaScan.cachedOrScan(level, site.orElseThrow());
-        addCells(level, selected, demolish, WorldAreaScan.raised(strays));
-        addCells(level, selected, place, WorldAreaScan.holes(strays));
-        return new Batch(List.copyOf(demolish), List.copyOf(place), index, hasMore);
-    }
-
-    private static void addSchemes(
-            ServerLevel level,
-            TownPlan town,
-            StageSite site,
-            String settlementWood,
-            Set<ConstructionBatches.ChunkCell> selected,
-            Set<BlockPos> demolish,
-            Set<BlockPos> place) {
-        BlockCoord anchor = site.anchor();
-        for (Placement at : town.placements()) {
-            if (!intersects(at, selected)) {
-                continue;
-            }
-            Optional<StageCatalog.Entry> entry = StageCatalog.entry(at.id());
-            if (entry.isEmpty()) {
-                continue;
-            }
-            GraphFacts.Position origin = new GraphFacts.Position(at.x(), anchor.y(), at.z());
-            RepairAudit.Report report = BuildingAudit.schemeReport(
-                    level, entry.orElseThrow().scheme(), origin, wood(at, settlementWood), level.getGameTime());
-            ConstructionMarks.Marks marks = ConstructionMarks.in(report, selected);
-            add(level, demolish, marks.demolish());
-            add(level, place, marks.place());
-        }
-    }
-
-    private static Set<ConstructionBatches.ChunkCell> settlementChunks(TownPlan town, StageSite site) {
-        Set<ConstructionBatches.ChunkCell> chunks = new LinkedHashSet<>();
-        for (ColumnMask.Cell cell : town.region().cells()) {
-            chunks.add(ConstructionBatches.at(cell.x(), cell.z()));
-        }
-        for (ColumnMask.Cell cell : site.zone().cells()) {
-            chunks.add(ConstructionBatches.at(cell.x(), cell.z()));
-        }
-        return chunks;
-    }
-
-    private static boolean intersects(Placement place, Set<ConstructionBatches.ChunkCell> chunks) {
-        int minX = place.x() >> 4;
-        int maxX = (place.x() + place.width() - 1) >> 4;
-        int minZ = place.z() >> 4;
-        int maxZ = (place.z() + place.depth() - 1) >> 4;
-        for (int x = minX; x <= maxX; x++) {
-            for (int z = minZ; z <= maxZ; z++) {
-                if (chunks.contains(new ConstructionBatches.ChunkCell(x, z))) {
-                    return true;
+        for (Group group : groups) {
+            for (DiffItem item : group.ordered()) {
+                if (demolish.size() + place.size() >= LIMIT_PER_BATCH) {
+                    break;
+                }
+                BlockCoord cell = item.cell();
+                if (!selected.contains(ConstructionBatches.at(cell.x(), cell.z()))) {
+                    continue;
+                }
+                BlockPos pos = new BlockPos(cell.x(), cell.y(), cell.z());
+                if (item.action() == DiffItem.Action.BREAK) {
+                    demolish.add(pos);
+                } else {
+                    place.add(pos);
                 }
             }
         }
-        return false;
-    }
-
-    private static void add(ServerLevel level, Set<BlockPos> target, Set<BlockCoord> cells) {
-        for (BlockCoord cell : cells) {
-            if (target.size() >= LIMIT_PER_BATCH) {
-                return;
-            }
-            BlockPos pos = new BlockPos(cell.x(), cell.y(), cell.z());
-            if (level.isLoaded(pos)) {
-                target.add(pos);
-            }
-        }
-    }
-
-    private static void addCells(
-            ServerLevel level,
-            Set<ConstructionBatches.ChunkCell> chunks,
-            Set<BlockPos> target,
-            List<BlockCoord> cells) {
-        for (BlockCoord cell : cells) {
-            if (target.size() >= LIMIT_PER_BATCH) {
-                return;
-            }
-            if (!chunks.contains(ConstructionBatches.at(cell.x(), cell.z()))) {
-                continue;
-            }
-            BlockPos pos = new BlockPos(cell.x(), cell.y(), cell.z());
-            if (level.isLoaded(pos)) {
-                target.add(pos);
-            }
-        }
-    }
-
-    private static String wood(Placement place, String settlementWood) {
-        if (OrchardSites.MAIN_PLACEMENT.equals(place.id())) {
-            return WoodSpecies.OAK;
-        }
-        return OrchardSites.speciesOfBuilding(place.id()).orElse(settlementWood);
+        return new Batch(List.copyOf(demolish), List.copyOf(place), index, ConstructionBatches.hasMore(order, index));
     }
 }

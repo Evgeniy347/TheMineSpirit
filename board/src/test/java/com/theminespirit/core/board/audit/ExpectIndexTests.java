@@ -4,12 +4,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.building.Schematic;
+import com.theminespirit.core.building.SchematicBlocks;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.ColumnMask;
+import com.theminespirit.core.town.ColumnMask.Cell;
 import com.theminespirit.core.town.FenceLine;
 import com.theminespirit.core.town.Placement;
 import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.core.town.TownStreets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -37,7 +40,13 @@ class ExpectIndexTests {
     }
 
     private static ExpectIndex.Index indexOf(TownPlan plan, Map<String, Schematic> schemes, Set<String> mines) {
-        return ExpectIndex.of(plan, 1, LEVEL, mines, (planId, levelY) -> Optional.ofNullable(schemes.get(planId)));
+        return ExpectIndex.of(
+                plan,
+                1,
+                LEVEL,
+                mines,
+                (planId, level) -> Optional.ofNullable(schemes.get(planId))
+                        .map(schematic -> new ExpectIndex.Scheme(schematic, new BlockCoord(0, 0, 0))));
     }
 
     @Test
@@ -97,7 +106,7 @@ class ExpectIndexTests {
                         "hut",
                         new Schematic(1, 1, 1, List.of(new Schematic.Entry(0, 0, 0, "minecraft:oak_stairs[half=top]"))),
                         "mine_1",
-                        new Schematic(1, 1, 1, List.of(new Schematic.Entry(0, 0, 0, "minecraft:air")))),
+                        new Schematic(1, 1, 1, List.of(), List.of(new Schematic.Cell(0, 0, 0)))),
                 Set.of("mine_1"));
 
         assertEquals(
@@ -112,6 +121,81 @@ class ExpectIndexTests {
                 "Ствол шахты помнит источник mine: иначе спуск попадёт в группу постройки, и ремонт шахты "
                         + "перемешается с ремонтом склада. При смене классификации перепроверь mineIds в "
                         + "ExpectIndex.of и карты StageSite.");
+    }
+
+    @Test
+    void expectIndex_MineRepeat_UnfoldsDescentToTargetY() {
+        Schematic descent = new Schematic(
+                1,
+                2,
+                1,
+                List.of(new Schematic.Entry(0, 0, 0, SchematicBlocks.FLOOR)),
+                List.of(new Schematic.Cell(0, 1, 0)),
+                new Schematic.Repeat(1, -1, 0, new Schematic.Repeat.TargetY(-2)));
+        TownPlan town = new TownPlan(
+                new BlockCoord(0, LEVEL, 0),
+                ColumnMask.rect(-1, 0, 70, 4),
+                STREETS,
+                List.of(new Placement("mine_descent", "Спуск", 1, 0, 2, 1, 1, Placement.Facing.NORTH)),
+                new FenceLine(List.of(), List.of()),
+                List.of());
+
+        ExpectIndex.Index index = indexOf(town, Map.of("mine_descent", descent), Set.of("mine_descent"));
+
+        assertEquals(
+                Wanted.block(SchematicBlocks.FLOOR),
+                index.at(new BlockCoord(65, -2, 2)).orElseThrow().wanted(),
+                "Повтор спуска разворачивается до целевого y: иначе глубокий ствол никогда не попадёт в кэш"
+                        + " и аудит шахты. При смене правил перепроверь MineLayout.place и BuildingEnvelopes.mine.");
+        assertEquals(
+                Wanted.air(),
+                index.at(new BlockCoord(65, -1, 2)).orElseThrow().wanted(),
+                "Над ступенью остаётся воздух прохода: иначе порода над спуском будет считаться дефектом"
+                        + " и дух начнёт ломать её без схемы. При смене правил перепроверь MineLayout.air.");
+    }
+
+    @Test
+    void expectIndex_FencePostsAndGates_CreateWallSource() {
+        TownPlan town = new TownPlan(
+                new BlockCoord(0, LEVEL, 0),
+                ColumnMask.rect(0, 0, 5, 3),
+                STREETS,
+                List.of(),
+                new FenceLine(List.of(new Cell(5, 3), new Cell(4, 3)), List.of(1)),
+                List.of());
+
+        ExpectIndex.Index index = indexOf(town, Map.of(), Set.of());
+
+        assertEquals(
+                SourceRef.wall("loop"),
+                index.at(new BlockCoord(5, LEVEL, 3)).orElseThrow().source(),
+                "Столб ограды принадлежит стене, а не земле: иначе групповая очистка снимет его как лишний"
+                        + " блок. При смене источника перепроверь FenceEnvelopes и порядок продюсеров.");
+        assertEquals(
+                Wanted.block("minecraft:oak_fence_gate"),
+                index.at(new BlockCoord(4, LEVEL, 3)).orElseThrow().wanted(),
+                "Ворота отличаются от столба: иначе аудит поставит забор в проезд, и дух застрянет у входа."
+                        + " При смене правила перепроверь FenceLine.gates и FenceEnvelopes.");
+    }
+
+    @Test
+    void expectIndex_SchemeLevel_ComesFromPlacementStage() {
+        TownPlan town = plan(List.of(new Placement("hut", "Хижина", 2, 0, 2, 1, 1, Placement.Facing.SOUTH)));
+        List<Integer> levels = new ArrayList<>();
+
+        ExpectIndex.of(town, 2, LEVEL, Set.of(), (planId, level) -> {
+            levels.add(level);
+            return Optional.of(new ExpectIndex.Scheme(
+                    new Schematic(1, 1, 1, List.of(new Schematic.Entry(0, 0, 0, "minecraft:stone"))),
+                    new BlockCoord(0, 0, 0)));
+        });
+
+        assertEquals(
+                List.of(2),
+                levels,
+                "Уровень схемы берётся из этапа участка, а не из мирового y: иначе"
+                        + " StageCatalog попросит схему уровня 63 и все постройки останутся без ожиданий. При смене"
+                        + " правила перепроверь BuildingEnvelopes.collect.");
     }
 
     @Test

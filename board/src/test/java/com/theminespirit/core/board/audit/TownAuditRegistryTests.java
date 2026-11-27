@@ -211,4 +211,74 @@ class TownAuditRegistryTests {
                 "Высота окна = below + above + 1: иначе верхние слои схемы остались"
                         + " бы непрочитанными. При смене формулы перепроверь конструктор ChunkCache.");
     }
+
+    @Test
+    void auditRegistry_DeepBands_CoverMineAndPruneIndependently() {
+        AuditRegistry registry = new AuditRegistry(AuditBudgets.DEFAULT, 1, 1);
+        registry.plan(1, 64);
+        registry.retain(Set.of(CHUNK));
+        registry.ensure(CHUNK);
+
+        assertTrue(
+                registry.ensureBand(CHUNK, -58, 64),
+                "Глубокая полоса шахты создаётся отдельно: иначе"
+                        + " спуск до бедрока останется вне кэша. При смене окна перепроверь AuditExpectations.reset.");
+        assertTrue(
+                registry.ensureBand(CHUNK, 6, 64),
+                "Вторая полоса закрывает верх глубокого ствола: иначе"
+                        + " между полосами появятся unknown клетки. При смене размера перепроверь ChunkCache.MAX_LAYERS.");
+        assertFalse(
+                registry.ensureBand(CHUNK, -58, 64),
+                "Повторная полоса того же диапазона не дублируется:"
+                        + " иначе RAM и бюджет наполнения вырастут вдвое. При смене поиска перепроверь DeepCaches.ensure.");
+        registry.fill(40000, cell -> "minecraft:stone", 2L);
+
+        assertEquals(
+                "minecraft:stone",
+                registry.blockAt(new BlockCoord(0, -58, 0)),
+                "Дно шахты читается"
+                        + " из глубокой полосы: иначе соответствие схемы спуска не проверить. При смене поиска перепроверь"
+                        + " AuditRegistry.cache и DeepCaches.cache.");
+        assertEquals(
+                "minecraft:stone",
+                registry.blockAt(new BlockCoord(0, 69, 0)),
+                "Верх глубокого ствола"
+                        + " тоже заполнен: иначе вход и спуск разойдутся по разным фактам. При смене полос перепроверь ensureBand.");
+        assertEquals(
+                "minecraft:stone",
+                registry.blockAt(new BlockCoord(0, 64, 0)),
+                "Поверхностный кэш"
+                        + " сохраняется рядом с шахтой: иначе улица над спуском станет unknown. При смене поиска перепроверь cache.");
+
+        registry.unloaded(CHUNK);
+        registry.loaded(CHUNK);
+        assertEquals(
+                3,
+                registry.caches(),
+                "После повторной загрузки чанка глубокие полосы восстанавливаются:"
+                        + " иначе шахта останется unknown до смены всего плана. При смене правила перепроверь DeepCaches.loaded.");
+        registry.fill(40000, cell -> "minecraft:stone", 3L);
+        assertEquals(
+                "minecraft:stone",
+                registry.blockAt(new BlockCoord(0, -58, 0)),
+                "Восстановленная"
+                        + " полоса снова читает дно: иначе повторная загрузка не вернёт факты. При смене правила"
+                        + " перепроверь loaded и fill.");
+        registry.pruneDeepBands();
+        assertNull(
+                registry.blockAt(new BlockCoord(0, -58, 0)),
+                "Смена плана убирает старые глубокие полосы:"
+                        + " иначе удалённая шахта продолжит занимать RAM. При смене правила перепроверь pruneDeepBands.");
+        assertEquals(
+                "minecraft:stone",
+                registry.blockAt(new BlockCoord(0, 64, 0)),
+                "Поверхность переживает"
+                        + " очистку глубоких полос: иначе каждый ремонт плана перечитывал бы весь посёлок. При смене правила"
+                        + " перепроверь DeepCaches.clear.");
+        registry.unloaded(CHUNK);
+        assertNull(
+                registry.blockAt(new BlockCoord(0, 64, 0)),
+                "Выгрузка чанка убирает все полосы: иначе"
+                        + " глубокий кэш останется призраком после выгрузки. При смене правила перепроверь unloaded.");
+    }
 }

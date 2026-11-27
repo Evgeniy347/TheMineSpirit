@@ -15,7 +15,14 @@ import java.util.Set;
 public final class ExpectIndex {
 
     public interface Schemes {
-        Optional<Schematic> scheme(String planId, int levelY);
+        Optional<Scheme> scheme(String planId, int level);
+    }
+
+    public record Scheme(Schematic schematic, BlockCoord entry) {
+        public Scheme {
+            Objects.requireNonNull(schematic, "Схема не может быть null: ожидания строятся по ней");
+            Objects.requireNonNull(entry, "Вход схемы не может быть null: шахтный разворот начинается с него");
+        }
     }
 
     public record Index(Map<BlockCoord, Expectation> cells, int missingSchemes, int collisions) {
@@ -45,6 +52,7 @@ public final class ExpectIndex {
         List<Expectation> taken = new ArrayList<>();
         int missing = BuildingEnvelopes.collect(plan, stage, levelY, mineIds, taken, schemes);
         StreetEnvelopes.collect(plan, levelY, taken);
+        FenceEnvelopes.collect(plan, levelY, taken);
         GroundEnvelopes.collect(plan, stage, levelY, taken);
         Map<BlockCoord, Expectation> cells = new LinkedHashMap<>();
         int collisions = 0;

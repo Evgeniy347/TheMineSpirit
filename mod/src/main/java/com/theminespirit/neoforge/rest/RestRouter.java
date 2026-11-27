@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.rest;
 
+import com.theminespirit.core.rest.AuditGroupRoutes;
 import com.theminespirit.core.rest.BoardRoutes;
 import com.theminespirit.core.rest.GraphRoutes;
 import com.theminespirit.core.rest.HealthGateway;
@@ -62,6 +63,7 @@ public final class RestRouter {
                 new TownRoutes(new SpiritTownGateway(gateway.server(), gateway.serverCall()), new IdempotencyCache());
         routes.addAll(townRoutes.routes());
         routes.addAll(new WorldRoutes(new SpiritWorldGateway()).routes());
+        routes.addAll(new AuditGroupRoutes(new SpiritAuditGroupsGateway()).routes());
         return Router.of(routes);
     }
 }

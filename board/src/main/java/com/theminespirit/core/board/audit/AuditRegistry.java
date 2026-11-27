@@ -4,8 +4,6 @@ import com.theminespirit.core.board.ConstructionBatches;
 import com.theminespirit.core.board.ConstructionBatches.ChunkCell;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -19,18 +17,17 @@ public final class AuditRegistry {
     public static final long NO_PLAN = -1L;
 
     private final BlockDict dict = new BlockDict();
+    private final DeepCaches deep = new DeepCaches();
     private final AuditBudgets budgets;
     private final Map<ChunkCell, ChunkCache> caches = new LinkedHashMap<>();
     private final List<ChunkCache> waiting = new ArrayList<>();
-    private final Map<ChunkCell, ChangeRing> rings = new HashMap<>();
-    private final Map<BlockCoord, ChangeRing.Change> pending = new LinkedHashMap<>();
-    private final Set<BlockCoord> dirty = new HashSet<>();
-    private final Map<String, String> issuedTickets = new HashMap<>();
+    private final AuditInvalidation invalid = new AuditInvalidation();
     private Set<ChunkCell> region = Set.of();
     private final int below;
     private final int layers;
     private int levelY = NO_LEVEL;
     private long planRevision = NO_PLAN;
+    private long fillVersion;
 
     public AuditRegistry(AuditBudgets budgets, int below, int above) {
         this.budgets = Objects.requireNonNull(
@@ -52,14 +49,15 @@ public final class AuditRegistry {
             return false;
         }
         boolean windowMoved = this.levelY != NO_LEVEL && this.levelY != levelY;
+        invalid.releaseAll();
         planRevision = revision;
         this.levelY = levelY;
         if (windowMoved) {
             int minY = levelY - below;
             caches.replaceAll((chunk, ignored) -> new ChunkCache(chunk, dict, minY, layers));
-            rings.clear();
-            pending.clear();
-            dirty.clear();
+            invalid.clearAll();
+            deep.clear(waiting);
+            fillVersion++;
             restart();
         }
         return true;
@@ -76,6 +74,10 @@ public final class AuditRegistry {
         } else if (cache.scanned()) {
             cache.clear();
             waiting.add(cache);
+            fillVersion++;
+        }
+        if (deep.loaded(chunk, dict, waiting) > 0) {
+            fillVersion++;
         }
     }
 
@@ -89,91 +91,68 @@ public final class AuditRegistry {
         waiting.add(cache);
     }
 
+    public boolean ensureBand(ChunkCell chunk, int minY, int layers) {
+        return deep.ensure(chunk, dict, minY, layers, waiting);
+    }
+
+    public void pruneDeepBands() {
+        if (deep.size() > 0) {
+            deep.clear(waiting);
+            fillVersion++;
+        }
+    }
+
     public void retain(Set<ChunkCell> chunks) {
         Objects.requireNonNull(chunks, "Чанки региона не могут быть null: кэш очистился бы целиком");
         region = Set.copyOf(chunks);
+        int before = caches.size();
         caches.keySet().retainAll(region);
+        boolean deepChanged = deep.retain(region, waiting);
+        if (caches.size() != before || deepChanged) {
+            fillVersion++;
+        }
         waiting.removeIf(cache -> !region.contains(cache.chunk()));
-        rings.keySet().retainAll(region);
-        pending.keySet().removeIf(cell -> !region.contains(ConstructionBatches.at(cell.x(), cell.z())));
-        dirty.removeIf(cell -> !region.contains(ConstructionBatches.at(cell.x(), cell.z())));
+        invalid.retain(region);
     }
 
     public void unloaded(ChunkCell chunk) {
-        caches.remove(chunk);
+        boolean removed = caches.remove(chunk) != null;
+        removed |= deep.unload(chunk, waiting);
+        if (removed) {
+            fillVersion++;
+        }
         waiting.removeIf(cache -> cache.chunk().equals(chunk));
-        rings.remove(chunk);
-        pending.keySet().removeIf(cell -> chunk.equals(ConstructionBatches.at(cell.x(), cell.z())));
-        dirty.removeIf(cell -> chunk.equals(ConstructionBatches.at(cell.x(), cell.z())));
+        invalid.unload(chunk);
     }
 
     public void reload(ChunkCell chunk) {
         ChunkCache cache = caches.get(chunk);
-        if (cache == null || waiting.contains(cache)) {
-            return;
+        boolean changed = false;
+        if (cache != null && !waiting.contains(cache)) {
+            cache.clear();
+            waiting.add(cache);
+            changed = true;
         }
-        cache.clear();
-        waiting.add(cache);
+        changed |= deep.reload(chunk, waiting) > 0;
+        if (changed) {
+            fillVersion++;
+        }
     }
 
     public void issued(String ticket, String group) {
-        if (ticket.isBlank() || group.isBlank()) {
-            throw new IllegalArgumentException("Билет '" + ticket + "' и группа '" + group
-                    + "' не могут быть пустыми: иначе своё изменение духа станет чужой грязью");
-        }
-        issuedTickets.put(ticket, group);
+        invalid.issued(ticket, group);
     }
 
     public void released(String ticket) {
-        issuedTickets.remove(ticket);
+        invalid.released(ticket);
+    }
+
+    public void releaseAllIssued() {
+        invalid.releaseAll();
     }
 
     public boolean record(ChangeRing.Change change) {
-        Objects.requireNonNull(change, "Изменение блока не может быть null: инвалидации нечем");
-        if (change.before().equals(change.after())) {
-            return false;
-        }
-        String group = change.group();
-        if (group.isBlank() && !change.ticket().isBlank()) {
-            group = issuedTickets.getOrDefault(change.ticket(), "");
-        }
-        ChangeRing.Change normalized = group.equals(change.group())
-                ? change
-                : new ChangeRing.Change(
-                        change.tick(),
-                        change.cell(),
-                        change.before(),
-                        change.after(),
-                        change.actor(),
-                        change.basis(),
-                        change.ticket(),
-                        group);
-        ChunkCache cache = cache(change.cell());
-        if (cache == null) {
-            return false;
-        }
-        ChunkCell chunk =
-                ConstructionBatches.at(change.cell().x(), change.cell().z());
-        boolean own =
-                !normalized.ticket().isBlank() && normalized.group().equals(issuedTickets.get(normalized.ticket()));
-        if (own) {
-            if (normalized.after().equals(cache.block(change.cell()))) {
-                return false;
-            }
-            rings.computeIfAbsent(chunk, ignored -> new ChangeRing()).add(normalized);
-            cache.put(change.cell(), normalized.after());
-            pending.remove(change.cell());
-            dirty.remove(change.cell());
-            return false;
-        }
-        ChangeRing.Change previous = pending.get(change.cell());
-        if (previous != null && previous.tick() == change.tick()) {
-            return false;
-        }
-        rings.computeIfAbsent(chunk, ignored -> new ChangeRing()).add(normalized);
-        pending.put(change.cell(), normalized);
-        dirty.add(change.cell());
-        return true;
+        return invalid.record(change, this);
     }
 
     public List<ChangeRing.Change> drain() {
@@ -181,35 +160,23 @@ public final class AuditRegistry {
     }
 
     public List<ChangeRing.Change> drain(int budget) {
-        if (budget <= 0) {
-            throw new IllegalArgumentException("Бюджет разбора изменений " + budget
-                    + " не положителен: очередь переполнится и инцидент потеряет последний блок");
-        }
-        List<ChangeRing.Change> taken = new ArrayList<>();
-        Iterator<Map.Entry<BlockCoord, ChangeRing.Change>> iterator =
-                pending.entrySet().iterator();
-        while (iterator.hasNext() && taken.size() < budget) {
-            Map.Entry<BlockCoord, ChangeRing.Change> entry = iterator.next();
-            taken.add(entry.getValue());
-            iterator.remove();
-        }
-        return List.copyOf(taken);
+        return invalid.drain(budget);
     }
 
     public Set<BlockCoord> dirty() {
-        return Set.copyOf(dirty);
+        return invalid.dirty();
     }
 
     public void clean(BlockCoord cell) {
-        dirty.remove(cell);
+        invalid.clean(cell);
     }
 
     public @Nullable ChangeRing ring(BlockCoord cell) {
-        return rings.get(ConstructionBatches.at(cell.x(), cell.z()));
+        return invalid.ring(cell);
     }
 
     public int pending() {
-        return pending.size();
+        return invalid.pending();
     }
 
     public int fill(AuditFill.Reader world, long tick) {
@@ -224,14 +191,19 @@ public final class AuditRegistry {
             spent += AuditFill.fill(cache, budget - spent, world, tick);
             if (cache.scanned()) {
                 iterator.remove();
+                fillVersion++;
             }
         }
         return spent;
     }
 
     public @Nullable ChunkCache cache(BlockCoord cell) {
-        ChunkCache found = caches.get(ConstructionBatches.at(cell.x(), cell.z()));
-        return found != null && found.holds(cell) ? found : null;
+        ChunkCell chunk = ConstructionBatches.at(cell.x(), cell.z());
+        ChunkCache found = caches.get(chunk);
+        if (found != null && found.holds(cell)) {
+            return found;
+        }
+        return deep.cache(cell);
     }
 
     public @Nullable String blockAt(BlockCoord cell) {
@@ -240,7 +212,7 @@ public final class AuditRegistry {
     }
 
     public int caches() {
-        return caches.size();
+        return caches.size() + deep.size();
     }
 
     public int waiting() {
@@ -259,8 +231,13 @@ public final class AuditRegistry {
         return planRevision;
     }
 
+    public long fillVersion() {
+        return fillVersion;
+    }
+
     private void restart() {
         waiting.clear();
         waiting.addAll(caches.values());
+        waiting.addAll(deep.all());
     }
 }

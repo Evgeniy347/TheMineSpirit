@@ -1,10 +1,13 @@
 package com.theminespirit.core.board.audit;
 
+import com.theminespirit.core.building.MineLayout;
 import com.theminespirit.core.building.Schematic;
+import com.theminespirit.core.building.SchematicBlocks;
 import com.theminespirit.core.building.api.BuildRotation;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.Placement;
 import com.theminespirit.core.town.TownPlan;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -26,25 +29,41 @@ final class BuildingEnvelopes {
         Objects.requireNonNull(schemes, "Источник схем не может быть null: без схемы клетка не известна");
         int missing = 0;
         for (Placement place : plan.upToStage(stage)) {
-            Optional<Schematic> scheme = schemes.scheme(place.id(), levelY);
-            if (scheme.isEmpty()) {
+            Optional<ExpectIndex.Scheme> found = schemes.scheme(place.id(), place.stage());
+            if (found.isEmpty()) {
                 missing++;
                 continue;
             }
-            for (Schematic.PlacedEntry entry :
-                    scheme.get().entries(new BlockCoord(place.x(), levelY, place.z()), BuildRotation.NONE)) {
-                if (entry.optional()) {
-                    continue;
+            ExpectIndex.Scheme scheme = found.orElseThrow();
+            BlockCoord origin = new BlockCoord(place.x(), levelY, place.z());
+            if (mineIds.contains(place.id())) {
+                mine(scheme, origin, place.id(), out);
+            } else {
+                for (Schematic.PlacedEntry entry : scheme.schematic().entries(origin, BuildRotation.NONE)) {
+                    if (entry.optional()) {
+                        continue;
+                    }
+                    out.add(new Expectation(
+                            entry.pos(), wanted(entry.block()), SourceRef.building(place.id()), Access.SPIRIT));
                 }
-                out.add(new Expectation(
-                        entry.pos(), wanted(entry.block()), source(place.id(), mineIds), Access.SPIRIT));
             }
         }
         return missing;
     }
 
-    static SourceRef source(String planId, Set<String> mineIds) {
-        return mineIds.contains(planId) ? SourceRef.mine(planId) : SourceRef.building(planId);
+    private static void mine(ExpectIndex.Scheme scheme, BlockCoord origin, String planId, List<Expectation> out) {
+        MineLayout layout = MineLayout.place(
+                scheme.schematic(), scheme.entry(), origin, BuildRotation.NONE, MineLayout.Extent.NONE);
+        Set<BlockCoord> optional = new HashSet<>();
+        layout.optional().forEach(entry -> optional.add(entry.pos()));
+        for (BlockCoord cell : layout.floors()) {
+            out.add(new Expectation(cell, Wanted.block(SchematicBlocks.FLOOR), SourceRef.mine(planId), Access.SPIRIT));
+        }
+        for (BlockCoord cell : layout.air()) {
+            if (!optional.contains(cell)) {
+                out.add(new Expectation(cell, Wanted.air(), SourceRef.mine(planId), Access.SPIRIT));
+            }
+        }
     }
 
     private static Wanted wanted(String block) {

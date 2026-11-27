@@ -22,14 +22,6 @@ final class DeadCodeExemptions {
                     "Подсистема аудита поселения (ТЗ town-audit): вид промаха FOREIGN_BLOCK подключит тактика"
                             + " при одиночной проверке факта в блоке 10; снять после блока 10."),
             new Exemption(
-                    "core/board/audit/DiffItem.java|method|DiffItem#breakAt",
-                    "Подсистема аудита поселения (ТЗ town-audit): фабрику BREAK подключит тактика исполнения"
-                            + " групп в блоке 10; снять после блока 10."),
-            new Exemption(
-                    "core/board/audit/DiffItem.java|method|DiffItem#fixState",
-                    "Подсистема аудита поселения (ТЗ town-audit): фабрику FIX_STATE подключит тактика"
-                            + " исполнения групп в блоке 10; снять после блока 10."),
-            new Exemption(
                     "core/board/audit/DiffItem.java|method|DiffItem#satisfiedBy",
                     "Подсистема аудита поселения (ТЗ town-audit): проверку готового предмета подключит"
                             + " тактика в блоке 10; снять после блока 10."),
@@ -37,10 +29,6 @@ final class DeadCodeExemptions {
                     "core/board/audit/Group.java|method|Group#pendingPercent",
                     "Подсистема аудита поселения (ТЗ town-audit): долю невыполненного подключит граф и REST"
                             + " в блоках 7–8; снять после блока 8."),
-            new Exemption(
-                    "core/board/audit/Group.java|method|Group#quarantined",
-                    "Подсистема аудита поселения (ТЗ town-audit): карантин группы подключит реестр групп"
-                            + " в блоке 7; снять после блока 7."),
             new Exemption(
                     "core/board/audit/ChunkCache.java|method|ChunkCache#surfaceAt",
                     "Подсистема аудита поселения (ТЗ town-audit): поверхность столба понадобится группе ground и"

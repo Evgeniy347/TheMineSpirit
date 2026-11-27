@@ -3,19 +3,17 @@ package com.theminespirit.neoforge.board;
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.ConstructionBatches.ChunkCell;
-import com.theminespirit.core.board.StageCatalog;
 import com.theminespirit.core.board.audit.AuditBudgets;
 import com.theminespirit.core.board.audit.AuditFill;
 import com.theminespirit.core.board.audit.AuditRegistry;
 import com.theminespirit.core.board.audit.AuditVerifier;
 import com.theminespirit.core.board.audit.ChangeRing;
 import com.theminespirit.core.board.audit.ExpectIndex;
-import com.theminespirit.core.building.Schematic;
+import com.theminespirit.core.board.audit.GroupRegistry;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.ColumnMask;
 import com.theminespirit.core.town.SettlementPlot;
 import com.theminespirit.core.town.TownPlan;
-import com.theminespirit.neoforge.SchematicResources;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.lease.LeaseStates;
 import java.util.HashSet;
@@ -37,10 +35,10 @@ public final class TownAuditWatch {
     private static final int BELOW = 16;
     private static final int ABOVE = 31;
     private static final int DRAIN_TICKS = 20;
-    private static final Set<String> MINE_IDS = Set.of("mine_entrance", "mine_descent", "mine_tunnel");
     private static final Map<ServerLevel, AuditRegistry> BY_LEVEL = new ConcurrentHashMap<>();
     private static final Map<ServerLevel, AuditVerifier> VERIFIERS = new ConcurrentHashMap<>();
     private static final Map<ServerLevel, Integer> STAGES = new ConcurrentHashMap<>();
+    private static final Map<ServerLevel, GroupRegistry> GROUPS = new ConcurrentHashMap<>();
 
     private TownAuditWatch() {}
 
@@ -76,6 +74,8 @@ public final class TownAuditWatch {
                 BY_LEVEL.remove(level);
                 VERIFIERS.remove(level);
                 STAGES.remove(level);
+                GROUPS.remove(level);
+                AuditGroupsStore.clear(level);
                 return;
             }
             int levelY = plot.orElseThrow().anchor().y();
@@ -85,12 +85,20 @@ public final class TownAuditWatch {
             boolean stageChanged = previousStage == null || previousStage != stage;
             STAGES.put(level, stage);
             if (registry.plan(store.planRevision(), levelY) || stageChanged) {
+                ExpectIndex.Index index = AuditExpectations.index(town.orElseThrow(), stage, levelY);
                 Set<ChunkCell> chunks = regionChunks(town.orElseThrow().region());
+                index.cells()
+                        .values()
+                        .forEach(expectation -> chunks.add(new ChunkCell(
+                                expectation.cell().x() >> 4, expectation.cell().z() >> 4)));
                 registry.retain(chunks);
                 chunks.forEach(registry::ensure);
-                ExpectIndex.Index index =
-                        ExpectIndex.of(town.orElseThrow(), stage, levelY, MINE_IDS, TownAuditWatch::scheme);
+                AuditExpectations.deepBands(registry, index);
                 AuditVerifier verifier = VERIFIERS.computeIfAbsent(level, ignored -> new AuditVerifier());
+                GroupRegistry groupRegistry = GROUPS.computeIfAbsent(level, ignored -> new GroupRegistry());
+                groupRegistry.rebuild(index, registry.planRevision());
+                groupRegistry.sync(registry, registry.planRevision(), Integer.MAX_VALUE);
+                AuditGroupsStore.publish(level, groupRegistry.groups());
                 verifier.reset(
                         index,
                         plot.orElseThrow().anchor().x(),
@@ -123,8 +131,20 @@ public final class TownAuditWatch {
                         AuditBudgets.current().verifyCellsPerTick(),
                         level.getGameTime(),
                         registry.planRevision());
-                result.misses().forEach(miss -> AuditIncidents.report(level, miss));
+                result.misses().forEach(miss -> {
+                    GroupRegistry groups = GROUPS.get(level);
+                    if (groups != null) {
+                        groups.quarantine(miss.context().groupKey());
+                    }
+                    AuditIncidents.report(level, miss);
+                });
                 result.refill().forEach(registry::reload);
+                if (!result.misses().isEmpty()) {
+                    GroupRegistry groups = GROUPS.get(level);
+                    if (groups != null) {
+                        AuditGroupsStore.publish(level, groups.groups());
+                    }
+                }
                 LOGGER.debug(
                         "[audit] сверено {}, неизвестно {}, промахов {}, осталось {}",
                         result.checked(),
@@ -133,6 +153,16 @@ public final class TownAuditWatch {
                         verifier.pending());
             }
             registry.fill((AuditFill.Reader) cell -> blockAt(level, cell), level.getGameTime());
+            if (level.getGameTime() % DRAIN_TICKS == 0) {
+                GroupRegistry groups = GROUPS.get(level);
+                if (groups != null) {
+                    groups.sync(
+                            registry,
+                            registry.planRevision(),
+                            AuditBudgets.current().groupsPerCycle());
+                    AuditGroupsStore.publish(level, groups.groups());
+                }
+            }
         } catch (RuntimeException error) {
             LOGGER.warn("[audit] наполнение кэша поселения не продвинулось: {}", error.getMessage(), error);
         }
@@ -170,10 +200,16 @@ public final class TownAuditWatch {
         return BY_LEVEL.get(level);
     }
 
+    public static @Nullable GroupRegistry peekGroups(ServerLevel level) {
+        return GROUPS.get(level);
+    }
+
     public static void forget(ServerLevel level) {
         BY_LEVEL.remove(level);
         VERIFIERS.remove(level);
         STAGES.remove(level);
+        GROUPS.remove(level);
+        AuditGroupsStore.clear(level);
     }
 
     static Set<ChunkCell> regionChunks(ColumnMask region) {
@@ -182,10 +218,6 @@ public final class TownAuditWatch {
             chunks.add(new ChunkCell(cell.x() >> 4, cell.z() >> 4));
         }
         return chunks;
-    }
-
-    private static Optional<Schematic> scheme(String planId, int levelY) {
-        return StageCatalog.scheme(planId, levelY).map(SchematicResources::load);
     }
 
     private static AuditRegistry registry(ServerLevel level) {

@@ -108,7 +108,7 @@ public final class AuditVerifier {
                     cached,
                     actual,
                     expectation.wanted(),
-                    context(expectation, cell, cache, ring, lastVisit, planRevision));
+                    context(expectation, cache, ring, lastVisit, planRevision));
             misses.add(miss);
             refill.add(cache.chunk());
         }
@@ -120,35 +120,15 @@ public final class AuditVerifier {
     }
 
     private static AuditMiss.Context context(
-            Expectation expectation,
-            BlockCoord cell,
-            ChunkCache cache,
-            @Nullable ChangeRing ring,
-            long lastVisit,
-            long planRevision) {
+            Expectation expectation, ChunkCache cache, @Nullable ChangeRing ring, long lastVisit, long planRevision) {
         ChangeRing.Change last = ring == null ? null : ring.last();
         return new AuditMiss.Context(
-                groupKey(expectation, cell),
+                GroupKeys.key(expectation),
                 (int) Math.min(Integer.MAX_VALUE, planRevision),
                 cache.filledTick(),
                 lastVisit,
                 ring == null ? 0 : ring.size(),
                 last == null ? "" : last.text(),
                 AuditMiss.CACHE_STALE);
-    }
-
-    private static String groupKey(Expectation expectation, BlockCoord cell) {
-        SourceRef source = expectation.source();
-        Group.Kind kind = switch (source.kind()) {
-            case BUILDING -> Group.Kind.BUILDING;
-            case STREET -> Group.Kind.STREET;
-            case WALL -> Group.Kind.WALL;
-            case MINE -> Group.Kind.MINE;
-            case GROUND, NONE -> Group.Kind.GROUND;
-        };
-        ChunkCell chunk = kind == Group.Kind.BUILDING || kind == Group.Kind.MINE
-                ? null
-                : ConstructionBatches.at(cell.x(), cell.z());
-        return Group.pending(kind, source.subject(), chunk, List.of(), 0).key();
     }
 }

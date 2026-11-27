@@ -240,4 +240,22 @@ class TownAuditChangeTests {
                         + " фоновая сверка пыталась читать отсутствующий чанк и застревала. При смене правила"
                         + " перепроверь dirty.removeIf.");
     }
+
+    @Test
+    void auditChanges_PlanRevision_ReleasesIssuedTickets() {
+        AuditRegistry registry = registry(AuditBudgets.DEFAULT);
+        registry.issued("ticket-1", "group:building:storage_3");
+
+        registry.plan(2, 64);
+
+        assertTrue(
+                registry.record(change(CELL, "minecraft:stone", "minecraft:air", ChangeRing.Actor.SPIRIT, "ticket-1")),
+                "Смена плана освобождает старые билеты: иначе дух продолжит менять мир по устаревшей"
+                        + " группе и скроет расхождение от аудита. При смене правила перепроверь plan и releaseAll.");
+        assertEquals(
+                Set.of(CELL),
+                registry.dirty(),
+                "После смены плана изменение снова грязное: иначе"
+                        + " новая ревизия ожиданий не увидит чужую работу. При смене правила перепроверь own.");
+    }
 }
