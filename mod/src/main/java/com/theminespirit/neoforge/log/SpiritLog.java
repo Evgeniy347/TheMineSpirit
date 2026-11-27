@@ -57,6 +57,23 @@ public final class SpiritLog {
         ModLog.append(record);
     }
 
+    public static void auditMiss(ServerLevel level, BlockPos pos, String cached, String actual, String reason) {
+        LogRecord.Builder record = ModLog.record(LogType.BLOCK_CHANGE, System.currentTimeMillis(), level.getGameTime());
+        if (record == null) {
+            return;
+        }
+        record.put("actor_type", "audit")
+                .put("actor", "аудит")
+                .put("action", "audit-miss")
+                .put("block_before", cached)
+                .put("block_after", actual)
+                .at(pos.getX(), pos.getY(), pos.getZ())
+                .put("basis", "audit-miss")
+                .cause(LogCause.UNKNOWN)
+                .put(REASON, reason);
+        ModLog.append(record);
+    }
+
     public static void blockRefused(
             ServerLevel level,
             @Nullable SpiritEntity spirit,

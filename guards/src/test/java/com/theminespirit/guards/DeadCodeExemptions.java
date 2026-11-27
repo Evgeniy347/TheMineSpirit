@@ -6,39 +6,45 @@ import java.util.List;
 final class DeadCodeExemptions {
     static final List<Exemption> OPEN_TASKS = List.of(
             new Exemption(
-                    "core/board/audit/BuildingEnvelopes.java|class|<top>#BuildingEnvelopes",
-                    "Подсистема аудита поселения (ТЗ town-audit): подключит наполнение кэша и группы; снять после блока 7."),
+                    "core/board/audit/Access.java|method|Access#temp",
+                    "Подсистема аудита поселения (ТЗ town-audit): временную аренду подключит слой разрешений"
+                            + " и группы в блоке 7; снять после блока 7."),
             new Exemption(
-                    "core/board/audit/ExpectIndex.java|class|<top>#ExpectIndex",
-                    "Подсистема аудита поселения (ТЗ town-audit): подключит наполнение кэша и группы; снять после блока 7."),
+                    "core/board/audit/Access.java|method|Access#touchable",
+                    "Подсистема аудита поселения (ТЗ town-audit): право касания подключит тактика DiffItem"
+                            + " в блоке 10; снять после блока 10."),
             new Exemption(
-                    "core/board/audit/GroundEnvelopes.java|class|<top>#GroundEnvelopes",
-                    "Подсистема аудита поселения (ТЗ town-audit): подключит наполнение кэша и группы; снять после блока 7."),
+                    "core/board/audit/AuditMiss.java|field|AuditMiss#ALREADY_DONE",
+                    "Подсистема аудита поселения (ТЗ town-audit): вид промаха ALREADY_DONE подключит тактика"
+                            + " при одиночной проверке факта в блоке 10; снять после блока 10."),
             new Exemption(
-                    "core/board/audit/StreetEnvelopes.java|class|<top>#StreetEnvelopes",
-                    "Подсистема аудита поселения (ТЗ town-audit): подключит наполнение кэша и группы; снять после блока 7."),
+                    "core/board/audit/AuditMiss.java|field|AuditMiss#FOREIGN_BLOCK",
+                    "Подсистема аудита поселения (ТЗ town-audit): вид промаха FOREIGN_BLOCK подключит тактика"
+                            + " при одиночной проверке факта в блоке 10; снять после блока 10."),
             new Exemption(
-                    "core/board/audit/Access.java|class|<top>#Access",
-                    "Подсистема аудита поселения (ТЗ town-audit): подключит ExpectIndex, наполнение кэша, группы в графе и билет; снять после блока 7."),
+                    "core/board/audit/DiffItem.java|method|DiffItem#breakAt",
+                    "Подсистема аудита поселения (ТЗ town-audit): фабрику BREAK подключит тактика исполнения"
+                            + " групп в блоке 10; снять после блока 10."),
             new Exemption(
-                    "core/board/audit/AuditMiss.java|class|<top>#AuditMiss",
-                    "Подсистема аудита поселения (ТЗ town-audit): подключит ExpectIndex, наполнение кэша, группы в графе и билет; снять после блока 7."),
+                    "core/board/audit/DiffItem.java|method|DiffItem#fixState",
+                    "Подсистема аудита поселения (ТЗ town-audit): фабрику FIX_STATE подключит тактика"
+                            + " исполнения групп в блоке 10; снять после блока 10."),
+            new Exemption(
+                    "core/board/audit/DiffItem.java|method|DiffItem#satisfiedBy",
+                    "Подсистема аудита поселения (ТЗ town-audit): проверку готового предмета подключит"
+                            + " тактика в блоке 10; снять после блока 10."),
+            new Exemption(
+                    "core/board/audit/Group.java|method|Group#pendingPercent",
+                    "Подсистема аудита поселения (ТЗ town-audit): долю невыполненного подключит граф и REST"
+                            + " в блоках 7–8; снять после блока 8."),
+            new Exemption(
+                    "core/board/audit/Group.java|method|Group#quarantined",
+                    "Подсистема аудита поселения (ТЗ town-audit): карантин группы подключит реестр групп"
+                            + " в блоке 7; снять после блока 7."),
             new Exemption(
                     "core/board/audit/ChunkCache.java|method|ChunkCache#surfaceAt",
                     "Подсистема аудита поселения (ТЗ town-audit): поверхность столба понадобится группе ground и"
                             + " фоновой сверке; снять после блока 7."),
-            new Exemption(
-                    "core/board/audit/ChangeRing.java|class|<top>#ChangeRing",
-                    "Подсистема аудита поселения (ТЗ town-audit): подключит ExpectIndex, наполнение кэша, группы в графе и билет; снять после блока 7."),
-            new Exemption(
-                    "core/board/audit/DiffItem.java|class|<top>#DiffItem",
-                    "Подсистема аудита поселения (ТЗ town-audit): подключит ExpectIndex, наполнение кэша, группы в графе и билет; снять после блока 7."),
-            new Exemption(
-                    "core/board/audit/Expectation.java|class|<top>#Expectation",
-                    "Подсистема аудита поселения (ТЗ town-audit): подключит ExpectIndex, наполнение кэша, группы в графе и билет; снять после блока 7."),
-            new Exemption(
-                    "core/board/audit/Group.java|class|<top>#Group",
-                    "Подсистема аудита поселения (ТЗ town-audit): подключит ExpectIndex, наполнение кэша, группы в графе и билет; снять после блока 7."),
             new Exemption(
                     "core/board/graph/RecipeImport.java|class|<top>#RecipeImport",
                     "Генератор graph-recipes.json (export-задача): рецепты импортируются при генерации, "

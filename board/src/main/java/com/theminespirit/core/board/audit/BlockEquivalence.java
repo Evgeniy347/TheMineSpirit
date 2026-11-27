@@ -4,6 +4,7 @@ import com.theminespirit.core.building.BlockMatch;
 import com.theminespirit.core.building.EarthCover;
 import com.theminespirit.core.building.SchematicBlocks;
 import com.theminespirit.core.building.SchematicGround;
+import com.theminespirit.core.building.api.WoodSpecies;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -103,6 +104,9 @@ public final class BlockEquivalence {
         }
         if (wanted.state().isBlank() && SchematicGround.walkwayPlaced(wanted.id(), actual)) {
             return Verdict.DONE;
+        }
+        if (WoodSpecies.sameRole(wanted.id(), actual)) {
+            return stateOk(wanted.state(), actual) ? Verdict.DONE : Verdict.STATE;
         }
         if (BlockMatch.matches(actual, wanted.id())) {
             return stateOk(wanted.state(), actual) ? Verdict.DONE : Verdict.STATE;

@@ -107,6 +107,15 @@ public final class AuditRegistry {
         dirty.removeIf(cell -> chunk.equals(ConstructionBatches.at(cell.x(), cell.z())));
     }
 
+    public void reload(ChunkCell chunk) {
+        ChunkCache cache = caches.get(chunk);
+        if (cache == null || waiting.contains(cache)) {
+            return;
+        }
+        cache.clear();
+        waiting.add(cache);
+    }
+
     public void issued(String ticket, String group) {
         if (ticket.isBlank() || group.isBlank()) {
             throw new IllegalArgumentException("Билет '" + ticket + "' и группа '" + group

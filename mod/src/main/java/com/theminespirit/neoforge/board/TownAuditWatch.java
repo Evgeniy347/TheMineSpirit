@@ -3,14 +3,19 @@ package com.theminespirit.neoforge.board;
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.ConstructionBatches.ChunkCell;
+import com.theminespirit.core.board.StageCatalog;
 import com.theminespirit.core.board.audit.AuditBudgets;
 import com.theminespirit.core.board.audit.AuditFill;
 import com.theminespirit.core.board.audit.AuditRegistry;
+import com.theminespirit.core.board.audit.AuditVerifier;
 import com.theminespirit.core.board.audit.ChangeRing;
+import com.theminespirit.core.board.audit.ExpectIndex;
+import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.ColumnMask;
 import com.theminespirit.core.town.SettlementPlot;
 import com.theminespirit.core.town.TownPlan;
+import com.theminespirit.neoforge.SchematicResources;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.lease.LeaseStates;
 import java.util.HashSet;
@@ -32,7 +37,10 @@ public final class TownAuditWatch {
     private static final int BELOW = 16;
     private static final int ABOVE = 31;
     private static final int DRAIN_TICKS = 20;
+    private static final Set<String> MINE_IDS = Set.of("mine_entrance", "mine_descent", "mine_tunnel");
     private static final Map<ServerLevel, AuditRegistry> BY_LEVEL = new ConcurrentHashMap<>();
+    private static final Map<ServerLevel, AuditVerifier> VERIFIERS = new ConcurrentHashMap<>();
+    private static final Map<ServerLevel, Integer> STAGES = new ConcurrentHashMap<>();
 
     private TownAuditWatch() {}
 
@@ -66,23 +74,38 @@ public final class TownAuditWatch {
             Optional<TownPlan> town = store.town();
             if (plot.isEmpty() || town.isEmpty()) {
                 BY_LEVEL.remove(level);
+                VERIFIERS.remove(level);
+                STAGES.remove(level);
                 return;
             }
             int levelY = plot.orElseThrow().anchor().y();
             AuditRegistry registry = registry(level);
-            if (registry.plan(store.planRevision(), levelY)) {
+            int stage = SettlementPlotStore.currentStage(BoardRegistry.get(level));
+            Integer previousStage = STAGES.get(level);
+            boolean stageChanged = previousStage == null || previousStage != stage;
+            STAGES.put(level, stage);
+            if (registry.plan(store.planRevision(), levelY) || stageChanged) {
                 Set<ChunkCell> chunks = regionChunks(town.orElseThrow().region());
                 registry.retain(chunks);
                 chunks.forEach(registry::ensure);
+                ExpectIndex.Index index =
+                        ExpectIndex.of(town.orElseThrow(), stage, levelY, MINE_IDS, TownAuditWatch::scheme);
+                AuditVerifier verifier = VERIFIERS.computeIfAbsent(level, ignored -> new AuditVerifier());
+                verifier.reset(
+                        index,
+                        plot.orElseThrow().anchor().x(),
+                        plot.orElseThrow().anchor().z());
                 LOGGER.info(
-                        "[audit] окно кэша поселения: levelY={}, y={}, ревизия {}, чанков={}, в очереди={}",
+                        "[audit] окно кэша поселения: levelY={}, y={}, ревизия {}, чанков={}, ожиданий={}, "
+                                + "нет схем={}, в очереди={}",
                         levelY,
                         registry.minY(),
                         registry.planRevision(),
                         registry.caches(),
+                        index.size(),
+                        index.missingSchemes(),
                         registry.waiting());
             }
-            registry.fill((AuditFill.Reader) cell -> blockAt(level, cell), level.getGameTime());
             if (level.getGameTime() % DRAIN_TICKS == 0) {
                 List<ChangeRing.Change> drained = registry.drain();
                 if (!drained.isEmpty()) {
@@ -92,6 +115,24 @@ public final class TownAuditWatch {
                             registry.dirty().size());
                 }
             }
+            AuditVerifier verifier = VERIFIERS.get(level);
+            if (verifier != null) {
+                AuditVerifier.Result result = verifier.verify(
+                        registry,
+                        (AuditFill.Reader) cell -> blockAt(level, cell),
+                        AuditBudgets.current().verifyCellsPerTick(),
+                        level.getGameTime(),
+                        registry.planRevision());
+                result.misses().forEach(miss -> AuditIncidents.report(level, miss));
+                result.refill().forEach(registry::reload);
+                LOGGER.debug(
+                        "[audit] сверено {}, неизвестно {}, промахов {}, осталось {}",
+                        result.checked(),
+                        result.unknown(),
+                        result.misses().size(),
+                        verifier.pending());
+            }
+            registry.fill((AuditFill.Reader) cell -> blockAt(level, cell), level.getGameTime());
         } catch (RuntimeException error) {
             LOGGER.warn("[audit] наполнение кэша поселения не продвинулось: {}", error.getMessage(), error);
         }
@@ -131,6 +172,8 @@ public final class TownAuditWatch {
 
     public static void forget(ServerLevel level) {
         BY_LEVEL.remove(level);
+        VERIFIERS.remove(level);
+        STAGES.remove(level);
     }
 
     static Set<ChunkCell> regionChunks(ColumnMask region) {
@@ -139,6 +182,10 @@ public final class TownAuditWatch {
             chunks.add(new ChunkCell(cell.x() >> 4, cell.z() >> 4));
         }
         return chunks;
+    }
+
+    private static Optional<Schematic> scheme(String planId, int levelY) {
+        return StageCatalog.scheme(planId, levelY).map(SchematicResources::load);
     }
 
     private static AuditRegistry registry(ServerLevel level) {

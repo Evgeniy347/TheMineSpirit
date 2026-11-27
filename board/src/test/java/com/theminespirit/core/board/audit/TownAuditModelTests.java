@@ -80,6 +80,23 @@ class TownAuditModelTests {
     }
 
     @Test
+    void blockEquivalence_WoodSpeciesSameRole_AcceptsAndChecksState() {
+        Wanted wanted = Wanted.of("minecraft:oak_stairs[facing=north,half=bottom]");
+
+        assertEquals(
+                BlockEquivalence.Verdict.DONE,
+                BlockEquivalence.check(wanted, "minecraft:spruce_stairs[facing=north,half=bottom]"),
+                "Порода с той же ролью принимается: иначе выбранная игроком ель заставит духа ломать дубовую"
+                        + " лестницу и ставить её обратно до конца задания. При смене правила перепроверь"
+                        + " WoodSpecies.sameRole и BlockEquivalence.block.");
+        assertEquals(
+                BlockEquivalence.Verdict.STATE,
+                BlockEquivalence.check(wanted, "minecraft:spruce_stairs[facing=south,half=bottom]"),
+                "У другой породы состояние всё равно значимо: иначе лестница развернётся не туда, а DiffItem"
+                        + " останется без FIX_STATE. При смене правила перепроверь stateOk и SchematicSite.repairState.");
+    }
+
+    @Test
     void expectation_ForeignAccessAndSource_StayVisibleAndRoundTrip() {
         Expectation tile = new Expectation(
                 new BlockCoord(-100, 63, 40),
