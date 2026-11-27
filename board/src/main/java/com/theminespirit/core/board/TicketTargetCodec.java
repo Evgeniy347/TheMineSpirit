@@ -1,5 +1,6 @@
 package com.theminespirit.core.board;
 
+import com.theminespirit.core.board.audit.GroupRefCodec;
 import com.theminespirit.core.husbandry.api.Species;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.PlotLeveling;
@@ -72,6 +73,7 @@ public final class TicketTargetCodec {
         map.put(COUNT, target.count());
         put(map, WOOD, target.wood());
         put(map, BUILDING, target.building());
+        GroupRefCodec.put(map, target.group());
         putLeveling(map, target.leveling());
         putCoord(map, DEPOSIT, target.deposit());
         TargetCellsCodec.put(map, target.fenceCells());
@@ -112,7 +114,8 @@ public final class TicketTargetCodec {
                 coord(map, DEPOSIT),
                 null,
                 TargetCellsCodec.decode(map),
-                strings(map, CELL_BLOCKS));
+                strings(map, CELL_BLOCKS),
+                GroupRefCodec.decode(map));
     }
 
     private static void putLeveling(Map<String, Object> map, @Nullable PlotLeveling leveling) {

@@ -5,7 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.board.api.BoardCase;
+import com.theminespirit.core.board.audit.GroupRef;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.plan.ScriptCall;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -110,5 +112,38 @@ class TicketTargetsTests {
                 TicketTarget.fillsBuilding(known, known.withBuilding("Сад")),
                 "Цель с подписью объекта не перезаписывается: после переименования задачу переоткрывают, а не подменяют"
                         + " Иначе тест fillsBuilding_KnownTargetWithBuilding_IsNotReplaced перестанет ловить эту поломку. При смене fillsBuilding_KnownTargetWithBuilding_IsNotReplaced проверь это утверждение.");
+    }
+
+    @Test
+    void fillBuilding_KnownPlanAndGroup_SurviveIncomingLabel() {
+        ScriptCall plan = new ScriptCall("audit_group", Map.of("group", "group:building:hut"));
+        GroupRef ref = new GroupRef("group:building:hut", 2);
+        TicketTarget known =
+                TicketTarget.at(new BlockCoord(1, 64, 2)).withPlan(plan).withGroup(ref);
+        TicketTarget incoming =
+                TicketTarget.at(new BlockCoord(9, 64, 9)).withBuilding("hut").withScheme("hut_v1");
+
+        TicketTarget merged = TicketTargets.fillBuilding(known, incoming);
+
+        assertEquals(
+                plan,
+                merged.plan(),
+                "Повторная постановка с подписью постройки сохраняет явный план:"
+                        + " иначе тактика снова пересчитает мир вместо выданной работы. При смене merge перепроверь plan.");
+        assertEquals(
+                ref,
+                merged.group(),
+                "GroupRef переживает заполнение подписи: иначе билет потеряет"
+                        + " снимок группы и промах кэша станет невидимым. При смене merge перепроверь group.");
+        assertEquals(
+                "hut",
+                merged.building(),
+                "Подпись постройки из новой цели применяется: иначе граф"
+                        + " не сможет связать задание с участком. При смене merge перепроверь withBuilding.");
+        assertEquals(
+                "hut_v1",
+                merged.schemeFile(),
+                "Пустая схема известной цели дополняется новой:"
+                        + " иначе дух не узнает породу и уровень постройки. При смене merge перепроверь withScheme.");
     }
 }

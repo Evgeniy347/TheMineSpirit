@@ -35,8 +35,8 @@
 7. [x] Группы и статусы в реестре, вид клиента (`ConstructionAuditService`) и REST.
 8. [x] Граф: шаблон `audit`, маппинг в `BoardCase`, поля `after`/`requires`, префиксный `find`, веса в данных,
       тесты порядка и сторожи.
-9. [ ] Билет: `GroupRef` в `TicketTarget`, починка потери `plan` в `PlanStatesInputs.copyTarget`,
-      `StageBuilds.of` вне пути выдачи.
+9. [x] Билет: `GroupRef` в `TicketTarget`, починка потери `plan` при повторной постановке,
+      `StageBuilds.of` вне пути выдачи аудита.
 10. [ ] Тактика выполняет `DiffItem` с одиночной проверкой факта; `SchematicClearance.missing()/toClear()`
        вне боевого пути; `StrayGroups`/`PitGroups` уплотнены.
 11. [ ] Удаление старого: `WorldAreaScan.LAST/Sliced/CACHE_TICKS`, `BuiltAuditCache`, `BuildingAudit.SCHEMES/GAPS`,

@@ -27,6 +27,9 @@ final class GraphEventPost {
     private GraphEventPost() {}
 
     static boolean post(GraphPost post, GraphTickets.Ticket ticket) {
+        if ("audit".equals(ticket.node())) {
+            return AuditPost.post(post, ticket);
+        }
         if (GraphMorePost.handles(ticket)) {
             return GraphMorePost.post(post, ticket, ticket.task());
         }

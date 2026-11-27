@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.board.audit.GroupRef;
 import com.theminespirit.core.husbandry.api.Species;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
@@ -42,6 +43,7 @@ class TicketTargetCodecTests {
                 .withCraft("torch", 9)
                 .withWood("oak")
                 .withBuilding("hut")
+                .withGroup(new GroupRef("group:building:hut", 4))
                 .withLeveling(leveling)
                 .withDeposit(DEPOSIT);
 
@@ -145,5 +147,37 @@ class TicketTargetCodecTests {
                 TicketTargetCodec.encode(target).map(TicketTargetCodec::decode),
                 "Даже простая цель (точка) восстанавливается: без неё задание снова уйдёт в дом"
                         + " Иначе тест encode_EmptyTarget_IsStillSaved перестанет ловить эту поломку. При смене encode_EmptyTarget_IsStillSaved проверь это утверждение.");
+    }
+
+    @Test
+    void ticketTarget_WithGroup_PreservesExplicitPlan() {
+        ScriptCall plan = new ScriptCall("audit_group", Map.of("group", "group:street:s-7@0,0"));
+        GroupRef ref = new GroupRef("group:street:s-7@0,0", 3);
+        TicketTarget target =
+                TicketTarget.at(TARGET).withPlan(plan).withGroup(ref).withScheme("street.json");
+
+        assertEquals(
+                plan,
+                target.plan(),
+                "Копия цели с GroupRef сохраняет явный план: иначе тактика снова"
+                        + " начнёт строить геометрию из мира вместо выданного снимка. При смене Builder перепроверь"
+                        + " поле plan и withGroup.");
+        assertEquals(
+                ref,
+                target.group(),
+                "Ссылка на группу переживает остальные сбросы цели: иначе билет"
+                        + " потеряет адрес работы. При смене Builder перепроверь поле group.");
+    }
+
+    @Test
+    void decode_GroupWithoutRevision_RejectsBrokenReference() {
+        Map<String, Object> broken =
+                Map.of("Target", List.of(TARGET.x(), TARGET.y(), TARGET.z()), "Group", "group:building:hut");
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> TicketTargetCodec.decode(broken),
+                "Группа без ревизии не читается: иначе билет возьмёт свежий снимок вместо выданного и"
+                        + " промах кэша станет незаметным. При смене кодека перепроверь group и GROUP_REVISION.");
     }
 }

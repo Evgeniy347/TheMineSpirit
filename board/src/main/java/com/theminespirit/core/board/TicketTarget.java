@@ -1,5 +1,6 @@
 package com.theminespirit.core.board;
 
+import com.theminespirit.core.board.audit.GroupRef;
 import com.theminespirit.core.husbandry.api.Species;
 import com.theminespirit.core.movement.SelfEscape;
 import com.theminespirit.core.observation.BlockCoord;
@@ -38,7 +39,8 @@ public record TicketTarget(
         @Nullable BlockCoord deposit,
         @Nullable TaskNode plan,
         List<BlockCoord> fenceCells,
-        List<String> fenceCellBlocks) {
+        List<String> fenceCellBlocks,
+        @Nullable GroupRef group) {
 
     public TicketTarget {
         dropItems = List.copyOf(Objects.requireNonNull(
@@ -190,6 +192,13 @@ public record TicketTarget(
         return builder.build();
     }
 
+    public TicketTarget withGroup(GroupRef group) {
+        Builder builder = new Builder(this);
+        builder.group = Objects.requireNonNull(
+                group, "Ссылка на группу не может быть null: без неё билет не получит снимок работы");
+        return builder.build();
+    }
+
     private static final class Builder {
         private BlockCoord target;
         private @Nullable String schemeFile;
@@ -217,6 +226,7 @@ public record TicketTarget(
         private @Nullable TaskNode plan;
         private List<BlockCoord> fenceCells = List.of();
         private List<String> fenceCellBlocks = List.of();
+        private @Nullable GroupRef group;
 
         Builder(BlockCoord target) {
             this.target = Objects.requireNonNull(target, "Цель задания не может быть null: от неё строится план");
@@ -249,6 +259,7 @@ public record TicketTarget(
             plan = source.plan;
             fenceCells = source.fenceCells;
             fenceCellBlocks = source.fenceCellBlocks;
+            group = source.group;
         }
 
         TicketTarget build() {
@@ -278,7 +289,8 @@ public record TicketTarget(
                     deposit,
                     plan,
                     fenceCells,
-                    fenceCellBlocks);
+                    fenceCellBlocks,
+                    group);
         }
     }
 }

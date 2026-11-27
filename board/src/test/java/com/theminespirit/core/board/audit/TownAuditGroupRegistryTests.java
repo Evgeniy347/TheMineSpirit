@@ -247,4 +247,28 @@ class TownAuditGroupRegistryTests {
                 "Клетка вне ожиданий не имеет владельца: иначе"
                         + " инвалидация припишет её случайной группе. При смене индекса перепроверь owners.");
     }
+
+    @Test
+    void groupRegistry_Snapshot_MatchesIdAndRevision() {
+        Map<BlockCoord, String> world = new LinkedHashMap<>();
+        world.put(BUILDING, "minecraft:oak_planks");
+        AuditRegistry facts = facts(world);
+        GroupRegistry groups = new GroupRegistry();
+        groups.rebuild(
+                index(expectation(BUILDING, Wanted.block("minecraft:stone"), SourceRef.building("storage_3"))), 1L);
+        groups.sync(facts, 1L, 10);
+        Group group = groups.group("group:building:storage_3");
+
+        assertEquals(
+                group,
+                groups.snapshot(new GroupRef(group.key(), group.revision())),
+                "Снимок по"
+                        + " точной ссылке возвращает выданную ревизию: иначе дух не получит список клеток. При смене"
+                        + " поиска перепроверь GroupRegistry.snapshot.");
+        assertNull(
+                groups.snapshot(new GroupRef(group.key(), group.revision() + 1)),
+                "Устаревшая ревизия"
+                        + " не выдаёт свежий снимок: иначе билет продолжит работу по старому кэшу. При смене поиска"
+                        + " перепроверь revision в snapshot.");
+    }
 }

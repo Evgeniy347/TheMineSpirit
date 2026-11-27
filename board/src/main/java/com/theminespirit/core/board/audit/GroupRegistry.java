@@ -77,6 +77,12 @@ public final class GroupRegistry {
         return groups.get(key);
     }
 
+    public @Nullable Group snapshot(GroupRef ref) {
+        Objects.requireNonNull(ref, "Ссылка на группу не может быть null: снимок ищется по ней");
+        Group group = groups.get(ref.id());
+        return group != null && group.revision() == ref.revision() ? group : null;
+    }
+
     public @Nullable String owner(BlockCoord cell) {
         return owners.get(cell);
     }
