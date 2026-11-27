@@ -23,7 +23,7 @@ final class GraphStationCounts {
         Set<String> stations = graph.costs().stationCapacity().keySet();
         Map<String, Integer> found = new LinkedHashMap<>();
         BlockCoord yard = scan.stage().workYard();
-        int radius = BoardConfig.current().facts().stationRadius();
+        int radius = BoardConfig.current().facts().stationSearchRadius();
         for (int dx = -radius; dx <= radius; dx++) {
             for (int dz = -radius; dz <= radius; dz++) {
                 for (int dy = -STATION_BELOW; dy <= STATION_ABOVE; dy++) {

@@ -21,7 +21,6 @@ import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 public final class ReachApproach {
-    private static final int MAX_STANDS = 8;
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final double STAND_ARRIVAL = 0.8;
 
@@ -99,9 +98,6 @@ public final class ReachApproach {
                 tried.add(stand);
                 stand = null;
                 search = null;
-            }
-            if (tried.size() >= MAX_STANDS) {
-                return refuse();
             }
             Probe probe = probeStand();
             if (probe == Probe.SKIPPED) {

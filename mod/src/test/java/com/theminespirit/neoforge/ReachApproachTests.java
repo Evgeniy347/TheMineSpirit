@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
@@ -8,6 +9,17 @@ import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 
 class ReachApproachTests {
+    @Test
+    void probeStand_MoreThanEightCandidates_SearchesUntilExhausted() throws IOException {
+        String source = Files.readString(Path.of("mod/src/main/java/com/theminespirit/neoforge/ReachApproach.java"));
+
+        assertFalse(
+                source.contains("MAX_STANDS"),
+                "Подход перебирает все стоянки до исчерпания поиска: иначе девятая пригодная стоянка "
+                        + "снова объявляется недостижимой и крафт падает. При смене "
+                        + "probeStand_MoreThanEightCandidates_SearchesUntilExhausted проверь ReachApproach.tick.");
+    }
+
     @Test
     void standReachable_NetworkProbe_UsesCandidateInsteadOfCurrentFeet() throws IOException {
         String source = Files.readString(Path.of("mod/src/main/java/com/theminespirit/neoforge/ReachApproach.java"));

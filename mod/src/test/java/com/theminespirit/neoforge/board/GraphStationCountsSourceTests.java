@@ -18,6 +18,7 @@ class GraphStationCountsSourceTests {
                 compact.contains("staticStringid(BlockStatestate)")
                         && compact.contains("BuiltInRegistries.BLOCK.getKey(state.getBlock()).getPath()")
                         && compact.contains("Stringid=id(level.getBlockState(at));")
+                        && compact.contains("intradius=BoardConfig.current().facts().stationSearchRadius();")
                         && compact.contains("found.merge(id,1,Integer::sum)")
                         && compact.contains("buildings.get(id)==Built.BUILT?found.getOrDefault(id,0):0"),
                 "Число станций считается по физическим блокам, а не по одному ledger-флагу: иначе "
