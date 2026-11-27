@@ -6,6 +6,7 @@ import com.theminespirit.core.building.Preset;
 import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.building.SchematicActions;
 import com.theminespirit.core.building.SchematicBlocks;
+import com.theminespirit.core.building.SchematicGround;
 import com.theminespirit.core.building.api.WoodSpecies;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
@@ -73,7 +74,7 @@ public final class StagePlans {
         }
         BlockCoord origin = target.target();
         List<TaskNode> steps = new ArrayList<>();
-        if (target.leveling() != null) {
+        if (target.leveling() != null && !tilled(scheme)) {
             steps.add(LevelRepair.plan(target));
         }
         Optional<Preset> preset = PresetLibrary.current().byId(scheme);
@@ -105,6 +106,13 @@ public final class StagePlans {
         }
         steps.add(new ScriptCall("build_schematic", Map.copyOf(params)));
         return new SequenceNode(steps);
+    }
+
+    private static boolean tilled(String scheme) {
+        return PresetLibrary.current()
+                .byId(scheme)
+                .map(preset -> SchematicGround.tilled(preset.schematic()))
+                .orElse(false);
     }
 
     private static TaskNode hut(TicketTarget target, StageSite site) {

@@ -1,6 +1,7 @@
 package com.theminespirit.core.board;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.board.api.BoardCase;
@@ -52,7 +53,7 @@ class ToolTicketPlansTests {
     }
 
     @Test
-    void plan_PlacedWithLeveling_LevelsBeforeBuild() {
+    void plan_TilledWithLeveling_SkipsLevelingAndBuilds() {
         PlotLeveling leveling = new PlotLeveling(
                 List.of(new PlotLeveling.Box(0, 65, 0, 6, 65, 11)), List.of(), PlotLeveling.DEFAULT_BLOCK);
         TaskNode plan = TicketPlans.plan(
@@ -62,17 +63,33 @@ class ToolTicketPlansTests {
                         .withScheme("wheat_field_1")
                         .withLeveling(leveling));
 
-        SequenceNode root = (SequenceNode) plan;
-        TaskNode first = root.steps().get(0);
-        assertTrue(
-                first instanceof SequenceNode && scripts(first).contains("clear_area"),
-                "Грядка на неровной земле сначала выравнивается: иначе пашня ставится в воздух/камень — "
-                        + scripts(first)
-                        + " При смене plan_PlacedWithLeveling_LevelsBeforeBuild проверь это утверждение.");
+        assertFalse(
+                scripts(plan).contains("clear_area"),
+                "Пашня не запускает LevelRepair: иначе готовая земля, вода и посевы сносятся перед "
+                        + "повторной стройкой. При смене plan_TilledWithLeveling_SkipsLevelingAndBuilds "
+                        + "проверь StagePlans.placed и живой wheat_field.");
         assertTrue(
                 scripts(plan).contains("build_schematic"),
-                "После выравнивания грядка строится по схеме — " + scripts(plan)
-                        + " Иначе тест plan_PlacedWithLeveling_LevelsBeforeBuild перестанет ловить эту поломку. При смене plan_PlacedWithLeveling_LevelsBeforeBuild проверь это утверждение.");
+                "Пашня строится по схеме — " + scripts(plan)
+                        + " Иначе тест plan_TilledWithLeveling_SkipsLevelingAndBuilds перестанет ловить эту поломку. "
+                        + "При смене plan_TilledWithLeveling_SkipsLevelingAndBuilds проверь StagePlans.placed.");
+    }
+
+    @Test
+    void plan_BuildingWithLeveling_LevelsBeforeBuild() {
+        PlotLeveling leveling = new PlotLeveling(
+                List.of(new PlotLeveling.Box(0, 65, 0, 6, 65, 11)), List.of(), PlotLeveling.DEFAULT_BLOCK);
+        TaskNode plan = TicketPlans.plan(
+                BoardCase.BUILD_PLACED,
+                1,
+                TicketTarget.at(new BlockCoord(0, 64, 0))
+                        .withScheme("stone_house")
+                        .withLeveling(leveling));
+
+        assertTrue(
+                scripts(plan).contains("clear_area") && scripts(plan).contains("build_schematic"),
+                "Обычная постройка на неровной земле сначала выравнивается: иначе дом ставится в воздух. "
+                        + "При смене plan_BuildingWithLeveling_LevelsBeforeBuild проверь StagePlans.placed.");
     }
 
     @Test

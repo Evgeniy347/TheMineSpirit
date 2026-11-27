@@ -38,6 +38,11 @@ class FieldSupplyPlanTests {
                 calls.stream().anyMatch(call -> "wait".equals(call.script())),
                 "Отказ получения факела не проглатывается ожиданием: иначе стройка начинается без света. "
                         + "При смене placed_FieldPlan_RequiresTorchesAndSkipsWaterBuckets проверь acquireStrict.");
+        assertFalse(
+                calls.stream().anyMatch(call -> "clear_area".equals(call.script())),
+                "Пашня не запускает общую расчистку перед схемой: иначе готовые земля, вода и посевы "
+                        + "сносятся повторно. При смене placed_FieldPlan_RequiresTorchesAndSkipsWaterBuckets "
+                        + "проверь StagePlans.placed.");
     }
 
     private static void collect(TaskNode node, List<ScriptCall> calls) {
