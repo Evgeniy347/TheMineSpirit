@@ -6,6 +6,30 @@ import java.util.List;
 final class DeadCodeExemptions {
     static final List<Exemption> OPEN_TASKS = List.of(
             new Exemption(
+                    "core/board/audit/Access.java|class|<top>#Access",
+                    "Подсистема аудита поселения (ТЗ town-audit): подключит ExpectIndex, наполнение кэша, группы в графе и билет; снять после блока 7."),
+            new Exemption(
+                    "core/board/audit/AuditMiss.java|class|<top>#AuditMiss",
+                    "Подсистема аудита поселения (ТЗ town-audit): подключит ExpectIndex, наполнение кэша, группы в графе и билет; снять после блока 7."),
+            new Exemption(
+                    "core/board/audit/BlockDict.java|class|<top>#BlockDict",
+                    "Подсистема аудита поселения (ТЗ town-audit): подключит ExpectIndex, наполнение кэша, группы в графе и билет; снять после блока 7."),
+            new Exemption(
+                    "core/board/audit/ChangeRing.java|class|<top>#ChangeRing",
+                    "Подсистема аудита поселения (ТЗ town-audit): подключит ExpectIndex, наполнение кэша, группы в графе и билет; снять после блока 7."),
+            new Exemption(
+                    "core/board/audit/ChunkCache.java|class|<top>#ChunkCache",
+                    "Подсистема аудита поселения (ТЗ town-audit): подключит ExpectIndex, наполнение кэша, группы в графе и билет; снять после блока 7."),
+            new Exemption(
+                    "core/board/audit/DiffItem.java|class|<top>#DiffItem",
+                    "Подсистема аудита поселения (ТЗ town-audit): подключит ExpectIndex, наполнение кэша, группы в графе и билет; снять после блока 7."),
+            new Exemption(
+                    "core/board/audit/Expectation.java|class|<top>#Expectation",
+                    "Подсистема аудита поселения (ТЗ town-audit): подключит ExpectIndex, наполнение кэша, группы в графе и билет; снять после блока 7."),
+            new Exemption(
+                    "core/board/audit/Group.java|class|<top>#Group",
+                    "Подсистема аудита поселения (ТЗ town-audit): подключит ExpectIndex, наполнение кэша, группы в графе и билет; снять после блока 7."),
+            new Exemption(
                     "core/board/graph/RecipeImport.java|class|<top>#RecipeImport",
                     "Генератор graph-recipes.json (export-задача): рецепты импортируются при генерации, "
                             + "в игре читается готовый файл; TestResults/task.md"),
