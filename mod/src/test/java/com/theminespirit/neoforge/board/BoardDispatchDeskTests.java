@@ -4,9 +4,26 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.board.BoardTuning;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 
 class BoardDispatchDeskTests {
+    @Test
+    void issueAll_NoEndlessIdleSenseFallback() throws IOException {
+        String dispatch =
+                Files.readString(Path.of("mod/src/main/java/com/theminespirit/neoforge/board/BoardDispatchDesk.java"));
+        String activities =
+                Files.readString(Path.of("mod/src/main/java/com/theminespirit/neoforge/board/BoardActivityDesk.java"));
+
+        assertFalse(
+                dispatch.contains("fillIdle") || activities.contains("idle_sense") || activities.contains("fillIdle"),
+                "Свободный дух не получает бесконечный ACTIVITY_SENSE каждые пять секунд: иначе осмотр "
+                        + "подменяет реальную работу и никогда не заканчивается. При смене "
+                        + "issueAll_NoEndlessIdleSenseFallback проверь BoardDispatchDesk.issueAll и живой spirit-6.");
+    }
+
     @Test
     void due_BeforeRetryInterval_DoesNotRescanQueue() {
         assertFalse(

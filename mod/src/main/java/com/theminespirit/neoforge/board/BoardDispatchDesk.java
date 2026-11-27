@@ -146,7 +146,6 @@ final class BoardDispatchDesk {
                 explained++;
             }
         }
-        activities.fillIdle(spirits, now);
     }
 
     private record Batch(

@@ -5,25 +5,18 @@ import com.theminespirit.core.board.ActivityTickets;
 import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardActivities;
 import com.theminespirit.core.board.BoardOutcome;
-import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
-import com.theminespirit.core.board.MoreActivityPlans;
 import com.theminespirit.core.board.TicketTarget;
-import com.theminespirit.core.board.api.BoardCase;
-import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.neoforge.SpiritEntity;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.UUID;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 final class BoardActivityDesk {
-    static final int FALLBACK_PRIORITY = 1;
     private static final Logger LOGGER = LogUtils.getLogger();
 
     private final BoardService host;
@@ -31,9 +24,9 @@ final class BoardActivityDesk {
     private final Map<String, TicketTarget> targets;
 
     BoardActivityDesk(BoardService host, Board board, Map<String, TicketTarget> targets) {
-        this.host = Objects.requireNonNull(host, "host не может быть null: занятие ставится доской");
-        this.board = Objects.requireNonNull(board, "board не может быть null: занятие живёт на доске");
-        this.targets = Objects.requireNonNull(targets, "targets не может быть null: цель занятия общая с доской");
+        this.host = Objects.requireNonNull(host, "занятие ставит доска: service не может быть null");
+        this.board = Objects.requireNonNull(board, "занятие живёт на доске: board не может быть null");
+        this.targets = Objects.requireNonNull(targets, "цель занятия общая с доской: targets не может быть null");
     }
 
     boolean post(ActivityTickets.Request request, BlockCoord at, @Nullable String hold) {
@@ -60,48 +53,6 @@ final class BoardActivityDesk {
             return false;
         }
         return true;
-    }
-
-    void fillIdle(List<SpiritEntity> spirits, long now) {
-        for (SpiritEntity spirit : spirits) {
-            if (spirit.isRemoved()
-                    || spirit.tactics().wantsControl()
-                    || spirit.currentTaskScript().isPresent()
-                    || spirit.taskStatus().orElse(null) == RunStatus.RUNNING
-                    || !board.assignedTo(spirit.getUUID()).isEmpty()
-                    || !SpiritVitals.needs(spirit).isEmpty()) {
-                continue;
-            }
-            String id = "activity:idle_sense:" + spirit.getUUID();
-            BoardStatus status = board.statusOf(id).orElse(null);
-            if (status != null && status.open()) {
-                continue;
-            }
-            if (status == BoardStatus.DONE) {
-                board.reopen(id);
-            } else if (status != null) {
-                board.cancel(id);
-                targets.remove(id);
-            }
-            BlockCoord at = new BlockCoord(
-                    spirit.blockPosition().getX(),
-                    spirit.blockPosition().getY(),
-                    spirit.blockPosition().getZ());
-            post(idleSense(spirit.getUUID(), at, now), at, null);
-        }
-    }
-
-    static ActivityTickets.Request idleSense(UUID spirit, BlockCoord at, long now) {
-        TicketTarget target = TicketTarget.at(at);
-        TaskNode plan = MoreActivityPlans.plan(BoardCase.ACTIVITY_SENSE, target);
-        return new ActivityTickets.Request(
-                new ActivityTickets.Identity(
-                        "activity:idle_sense:" + spirit, BoardCase.ACTIVITY_SENSE, BoardTicket.ALWAYS_CAUSE),
-                new ActivityTickets.Crew(Optional.of(spirit), List.of()),
-                FALLBACK_PRIORITY,
-                now,
-                new ActivityTickets.Plan("scan_blocks", "", 0, plan),
-                Map.of());
     }
 
     boolean start(String id, SpiritEntity spirit, TaskNode plan, long now) {
