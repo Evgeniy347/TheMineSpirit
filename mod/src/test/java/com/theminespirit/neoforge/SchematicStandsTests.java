@@ -23,4 +23,17 @@ class SchematicStandsTests {
                         + "moveTowards_WalkNetworkHasNoStand_FallsBackToDirectStands проверь SchematicStands.moveTowards "
                         + "и живое поле.");
     }
+
+    @Test
+    void schematicStanding_FenceFloor_IsRejected() throws IOException {
+        String source =
+                Files.readString(Path.of("mod/src/main/java/com/theminespirit/neoforge/SchematicStanding.java"));
+        String compact = source.replaceAll("\\s+", "");
+
+        assertTrue(
+                compact.contains("feet.y()-1") && compact.contains("!FenceWatch.isFence("),
+                "Стойка на заборе обязана быть запрещена: иначе строитель выбирает стоянку на перилах, путь"
+                        + " обрывается у преграды и перенос зависает. При смене стоянок перепроверь"
+                        + " SchematicStanding.standable и BoardV2GameTests.relocate_PenMoved_OldClearedNewStands.");
+    }
 }

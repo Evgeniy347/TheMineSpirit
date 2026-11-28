@@ -51,9 +51,7 @@ public final class HouseMovementGameTests {
     private static final int SETTLE_TICKS = 5;
     private static final int MAX_DROP = 3;
     private static final int UPPER_FLOOR_RISE = 4;
-    private static final int BALCONY_RISE = 3;
     private static final int GROUND_FLOOR_RISE = 2;
-    private static final int FRONT_WALL_Z = 2;
     private static final double CARPET_HEIGHT = 0.1;
     private static final double STEP_HEIGHT = 0.6;
     private static final double JUMP_HEIGHT = 1.125;
@@ -91,8 +89,9 @@ public final class HouseMovementGameTests {
         int sizeX = rotation.rotatedSizeX(schematic.sizeX(), schematic.sizeZ());
         int sizeZ = rotation.rotatedSizeZ(schematic.sizeX(), schematic.sizeZ());
         Map<BlockPos, BlockPos> parents = new HashMap<>();
+        List<BlockPos> balconyRails = HouseBalcony.rails(schematic, origin, rotation);
         Area area = new Area(anchor, sizeX, sizeZ, schematic.sizeY(), floorSize);
-        BlockPos start = farthest(helper, area, front, spot, parents);
+        BlockPos start = farthest(helper, area, front, spot, parents, balconyRails);
         BlockPos relative = start.subtract(helper.absolutePos(BlockPos.ZERO));
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), relative);
         spirit.setDemo(true);
@@ -186,7 +185,12 @@ public final class HouseMovementGameTests {
     private record Area(BlockPos anchor, int sizeX, int sizeZ, int sizeY, int floorSize) {}
 
     private static BlockPos farthest(
-            GameTestHelper helper, Area area, BlockPos front, Spot spot, Map<BlockPos, BlockPos> parents) {
+            GameTestHelper helper,
+            Area area,
+            BlockPos front,
+            Spot spot,
+            Map<BlockPos, BlockPos> parents,
+            List<BlockPos> balconyRails) {
         BlockPos anchor = area.anchor();
         int sizeX = area.sizeX();
         int sizeZ = area.sizeZ();
@@ -235,7 +239,7 @@ public final class HouseMovementGameTests {
             boolean fits = switch (spot) {
                 case UPPER_FLOOR -> covered && cell.getY() >= ground + UPPER_FLOOR_RISE;
                 case GROUND_FAR -> covered && cell.getY() <= ground + GROUND_FLOOR_RISE;
-                case BALCONY -> cell.getZ() < anchor.getZ() + FRONT_WALL_Z && cell.getY() >= ground + BALCONY_RISE;
+                case BALCONY -> HouseBalcony.at(balconyRails, cell);
             };
             if (fits
                     && (entry.getValue() > bestDistance

@@ -63,6 +63,7 @@ public final class FarmScenesGameTests {
         spirit.getInventory().setItem(2, new ItemStack(Items.WHEAT_SEEDS, 64));
         spirit.getInventory().setItem(3, new ItemStack(Items.WATER_BUCKET));
         spirit.getInventory().setItem(4, new ItemStack(Items.WATER_BUCKET));
+        spirit.getInventory().setItem(5, new ItemStack(Items.DIRT, 64));
         SpiritRun run = SpiritRun.launch(
                 helper,
                 spirit,

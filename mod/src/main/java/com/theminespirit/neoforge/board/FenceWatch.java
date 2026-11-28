@@ -71,7 +71,7 @@ public final class FenceWatch {
         return live;
     }
 
-    static boolean isFence(BlockState state) {
+    public static boolean isFence(BlockState state) {
         Block block = state.getBlock();
         return block instanceof FenceBlock
                 || block instanceof WallBlock

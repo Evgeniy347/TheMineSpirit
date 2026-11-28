@@ -7,6 +7,7 @@ import com.theminespirit.core.mining.api.Cell;
 import com.theminespirit.core.mining.api.MiningSafety;
 import com.theminespirit.core.mining.api.SafetyView;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.neoforge.board.FenceWatch;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -52,7 +53,8 @@ final class SchematicStanding {
     }
 
     boolean standable(BlockCoord feet) {
-        return MiningSafety.canStand(feet, site.safety);
+        BlockPos below = new BlockPos(feet.x(), feet.y() - 1, feet.z());
+        return MiningSafety.canStand(feet, site.safety) && !FenceWatch.isFence(site.level.getBlockState(below));
     }
 
     BuildBox networkBox(int ring) {

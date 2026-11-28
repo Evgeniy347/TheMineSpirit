@@ -119,6 +119,22 @@ class AuditTicketGuardTests {
     }
 
     @Test
+    void buildGapProbe_CacheOnly_HasNoWorldRead() throws IOException {
+        String source = Files.readString(Path.of("mod/src/main/java/com/theminespirit/neoforge/board/WorldProbe.java"));
+        String compact = source.replaceAll("\\s+", "");
+
+        assertTrue(
+                compact.contains("TownAuditWatch.peek(level)") && compact.contains("registry.blockAt(at)"),
+                "Проба BuildGap обязана читать RAM-кэш аудита: иначе stage-готовность снова обходит мир"
+                        + " мимо единой подсистемы. При смене пробы перепроверь WorldProbe.of и AuditRegistry.blockAt.");
+        assertFalse(
+                compact.contains("getBlockState("),
+                "Прямое чтение ServerLevel в пробе BuildGap создаёт второй пересчёт: без этого запрета"
+                        + " незагруженная клетка начнёт синхронно грузить чанк и лагать холодный граф. При смене"
+                        + " пробы перепроверь WorldProbe и сторожи AuditTicketGuardTests.");
+    }
+
+    @Test
     void buildSchematic_PlanGroup_PrecedesLegacyFallback() throws IOException {
         String source =
                 Files.readString(Path.of("mod/src/main/java/com/theminespirit/neoforge/BuildingScriptPack.java"));

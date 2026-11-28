@@ -13,6 +13,7 @@ import com.theminespirit.core.board.lease.LeaseCell;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.PlotLeveling;
 import com.theminespirit.neoforge.ModEntities;
+import com.theminespirit.neoforge.SettlementChestStore;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.BoardRegistry;
 import com.theminespirit.neoforge.board.BoardService;
@@ -111,6 +112,7 @@ public final class BoardGameTests {
             }
         }
         helper.setBlock(new BlockPos(2, 1, 3), Blocks.CHEST);
+        SettlementChestStore.get(helper.getLevel()).track(helper.absolutePos(new BlockPos(2, 1, 3)));
         board.submit(
                 new BoardTicket(
                         BoardSupplyScene.BUILD_ID,

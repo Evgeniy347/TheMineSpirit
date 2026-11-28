@@ -12,13 +12,16 @@ import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.plan.PlanParser;
 import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.neoforge.SettlementChestStore;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.SpiritScripts;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
@@ -48,6 +51,11 @@ public final class FirstToolsGameTests {
         helper.setBlock(6, 1, 6, Blocks.COAL_ORE);
         helper.setBlock(3, 1, 3, Blocks.CHEST);
         helper.setBlock(5, 1, 3, Blocks.CHEST);
+        SettlementChestStore chests = SettlementChestStore.get(helper.getLevel());
+        chests.track(helper.absolutePos(new BlockPos(3, 1, 3)));
+        chests.track(helper.absolutePos(new BlockPos(5, 1, 3)));
+        ChestBlockEntity supplies = (ChestBlockEntity) helper.getBlockEntity(new BlockPos(3, 1, 3));
+        supplies.setItem(0, new ItemStack(Items.OAK_LOG, 4));
         BlockPos table = new BlockPos(2, 1, 2);
         BlockPos furnace = new BlockPos(4, 1, 2);
         helper.setBlock(table.getX(), table.getY(), table.getZ(), Blocks.CRAFTING_TABLE);
