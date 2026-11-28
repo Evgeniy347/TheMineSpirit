@@ -25,7 +25,7 @@ public final class ConstructionAuditChannel {
     public static final CustomPacketPayload.Type<Reply> REPLY = new CustomPacketPayload.Type<>(
             ResourceLocation.fromNamespaceAndPath(ModIdentity.MOD_ID, "construction_audit_reply"));
 
-    private static final String PROTOCOL_VERSION = "1";
+    private static final String PROTOCOL_VERSION = "2";
     private static final Logger LOGGER = LogUtils.getLogger();
     private static volatile Consumer<Reply> clientReceiver = reply -> {};
 
@@ -48,7 +48,8 @@ public final class ConstructionAuditChannel {
         }
     }
 
-    public record Reply(List<BlockPos> demolish, List<BlockPos> place, int batch, boolean hasMore)
+    public record Reply(
+            List<BlockPos> demolish, List<BlockPos> place, List<BlockPos> streetFlaws, int batch, boolean hasMore)
             implements CustomPacketPayload {
         public static final StreamCodec<FriendlyByteBuf, Reply> STREAM_CODEC =
                 StreamCodec.of(ConstructionAuditChannel::writeReply, ConstructionAuditChannel::readReply);
@@ -58,6 +59,8 @@ public final class ConstructionAuditChannel {
                     Objects.requireNonNull(demolish, "Набор на снос не может быть null: пустой — List.of()"));
             place = List.copyOf(
                     Objects.requireNonNull(place, "Набор к постановке не может быть null: пустой — List.of()"));
+            streetFlaws = List.copyOf(
+                    Objects.requireNonNull(streetFlaws, "Набор нарушений улиц не может быть null: пустой — List.of()"));
             if (batch < 0) {
                 throw new IllegalArgumentException("Пачка " + batch + ": пачки считаются с нуля");
             }
@@ -89,14 +92,15 @@ public final class ConstructionAuditChannel {
             ConstructionAuditService.Batch batch =
                     ConstructionAuditService.batch(player.serverLevel(), request.center(), request.batch());
             LOGGER.debug(
-                    "Аудит подсветки у {}: пачка {}, снести {}, поставить {}, дальше {}, {} мс",
+                    "Аудит подсветки у {}: пачка {}, снести {}, поставить {}, улицы {}, дальше {}, {} мс",
                     player.getName().getString(),
                     batch.index(),
                     batch.demolish().size(),
                     batch.place().size(),
+                    batch.street().size(),
                     batch.hasMore(),
                     (System.nanoTime() - started) / 1_000_000L);
-            context.reply(new Reply(batch.demolish(), batch.place(), batch.index(), batch.hasMore()));
+            context.reply(new Reply(batch.demolish(), batch.place(), batch.street(), batch.index(), batch.hasMore()));
         }
     }
 
@@ -113,6 +117,7 @@ public final class ConstructionAuditChannel {
     private static void writeReply(FriendlyByteBuf buf, Reply reply) {
         writePositions(buf, reply.demolish());
         writePositions(buf, reply.place());
+        writePositions(buf, reply.streetFlaws());
         buf.writeVarInt(reply.batch());
         buf.writeBoolean(reply.hasMore());
     }
@@ -120,7 +125,8 @@ public final class ConstructionAuditChannel {
     private static Reply readReply(FriendlyByteBuf buf) {
         List<BlockPos> demolish = readPositions(buf);
         List<BlockPos> place = readPositions(buf);
-        return new Reply(demolish, place, buf.readVarInt(), buf.readBoolean());
+        List<BlockPos> streetFlaws = readPositions(buf);
+        return new Reply(demolish, place, streetFlaws, buf.readVarInt(), buf.readBoolean());
     }
 
     private static void writePositions(FriendlyByteBuf buf, List<BlockPos> positions) {

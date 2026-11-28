@@ -18,10 +18,12 @@ public final class ConstructionAuditService {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final int LIMIT_PER_BATCH = 2000;
 
-    public record Batch(List<BlockPos> demolish, List<BlockPos> place, int index, boolean hasMore) {
+    public record Batch(
+            List<BlockPos> demolish, List<BlockPos> place, List<BlockPos> street, int index, boolean hasMore) {
         public Batch {
             demolish = List.copyOf(demolish);
             place = List.copyOf(place);
+            street = List.copyOf(street);
         }
     }
 
@@ -31,7 +33,7 @@ public final class ConstructionAuditService {
         GroupRegistry registry = TownAuditWatch.peekGroups(level);
         if (registry == null) {
             LOGGER.debug("Аудит подсветки: группы ещё не собраны, пачка {}", index);
-            return new Batch(List.of(), List.of(), index, false);
+            return new Batch(List.of(), List.of(), List.of(), index, false);
         }
         List<Group> groups = registry.groups();
         Set<ChunkCell> included = new LinkedHashSet<>();
@@ -43,14 +45,16 @@ public final class ConstructionAuditService {
         List<ChunkCell> order = ConstructionBatches.order(included, center.getX() >> 4, center.getZ() >> 4);
         List<ChunkCell> chunks = ConstructionBatches.batch(order, index);
         if (chunks.isEmpty()) {
-            return new Batch(List.of(), List.of(), index, false);
+            return new Batch(List.of(), List.of(), List.of(), index, false);
         }
         Set<ChunkCell> selected = Set.copyOf(chunks);
         Set<BlockPos> demolish = new LinkedHashSet<>();
         Set<BlockPos> place = new LinkedHashSet<>();
+        Set<BlockPos> street = new LinkedHashSet<>();
         for (Group group : groups) {
+            boolean streetGroup = group.kind() == Group.Kind.STREET;
             for (DiffItem item : group.ordered()) {
-                if (demolish.size() + place.size() >= LIMIT_PER_BATCH) {
+                if (demolish.size() + place.size() + street.size() >= LIMIT_PER_BATCH) {
                     break;
                 }
                 BlockCoord cell = item.cell();
@@ -58,13 +62,20 @@ public final class ConstructionAuditService {
                     continue;
                 }
                 BlockPos pos = new BlockPos(cell.x(), cell.y(), cell.z());
-                if (item.action() == DiffItem.Action.BREAK) {
+                if (streetGroup) {
+                    street.add(pos);
+                } else if (item.action() == DiffItem.Action.BREAK) {
                     demolish.add(pos);
                 } else {
                     place.add(pos);
                 }
             }
         }
-        return new Batch(List.copyOf(demolish), List.copyOf(place), index, ConstructionBatches.hasMore(order, index));
+        return new Batch(
+                List.copyOf(demolish),
+                List.copyOf(place),
+                List.copyOf(street),
+                index,
+                ConstructionBatches.hasMore(order, index));
     }
 }
