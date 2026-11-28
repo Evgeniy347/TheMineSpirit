@@ -244,6 +244,13 @@ public final class GroupRegistry {
                         expectation.cell(), found, expectation.wanted(), expectation.source(), expectation.access()));
             } else if (expectation.wanted().kind() == Wanted.Kind.AIR) {
                 items.add(DiffItem.breakAt(expectation.cell(), found, expectation.source(), expectation.access()));
+            } else if (expectation.wanted().kind() == Wanted.Kind.PAVEMENT && !BlockEquivalence.ground(found)) {
+                items.add(DiffItem.place(
+                        expectation.cell(),
+                        found,
+                        Wanted.ground(expectation.wanted().level()),
+                        expectation.source(),
+                        expectation.access()));
             } else {
                 items.add(DiffItem.place(
                         expectation.cell(), found, expectation.wanted(), expectation.source(), expectation.access()));

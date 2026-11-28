@@ -17,7 +17,8 @@ public final class BlockEquivalence {
         DIFFER
     }
 
-    public record Rules(Set<String> voidish, Set<String> replaceable, Set<String> soft, Set<String> ground) {
+    public record Rules(
+            Set<String> voidish, Set<String> replaceable, Set<String> soft, Set<String> ground, Set<String> paved) {
         public static final Rules DEFAULT = new Rules(
                 Set.of("air", "cave_air", "void_air"),
                 Set.of(
@@ -44,7 +45,8 @@ public final class BlockEquivalence {
                         "vine",
                         "snow",
                         "white_carpet"),
-                Set.of("dirt", "grass_block", "dirt_path", "path", "coarse_dirt", "podzol", "mycelium", "farmland"));
+                Set.of("dirt", "grass_block", "dirt_path", "path", "coarse_dirt", "podzol", "mycelium", "farmland"),
+                Set.of("dirt_path", "path", "gravel"));
 
         public Rules {
             voidish = Set.copyOf(
@@ -55,6 +57,8 @@ public final class BlockEquivalence {
                     Objects.requireNonNull(soft, "Мягкие блоки не могут быть null: иначе трава станет дефектом"));
             ground = Set.copyOf(
                     Objects.requireNonNull(ground, "Класс земли не может быть null: тропа перестанет грунтом"));
+            paved = Set.copyOf(Objects.requireNonNull(
+                    paved, "Класс мощения не может быть null: иначе голая земля станет готовой улицей"));
         }
     }
 
@@ -74,6 +78,7 @@ public final class BlockEquivalence {
                         ? Verdict.DONE
                         : Verdict.DIFFER;
             case GROUND -> rules.ground().contains(standing) ? Verdict.DONE : Verdict.DIFFER;
+            case PAVEMENT -> rules.paved().contains(standing) ? Verdict.DONE : Verdict.DIFFER;
             case BLOCK -> block(wanted, actual, standing, rules);
         };
     }
@@ -85,6 +90,10 @@ public final class BlockEquivalence {
     public static String cover(String id, Rules rules) {
         String path = bare(SchematicBlocks.path(id));
         return rules.ground().contains(path) ? EarthCover.DIRT : path;
+    }
+
+    public static boolean ground(String id) {
+        return Rules.DEFAULT.ground().contains(bare(SchematicBlocks.path(id)));
     }
 
     public static boolean solid(String id) {

@@ -45,8 +45,19 @@ class ExpectIndexTests {
                 1,
                 LEVEL,
                 mines,
-                (planId, level) -> Optional.ofNullable(schemes.get(planId))
-                        .map(schematic -> new ExpectIndex.Scheme(schematic, new BlockCoord(0, 0, 0))));
+                (planId, level) -> planId.startsWith("street")
+                        ? tile(planId, level)
+                        : Optional.ofNullable(schemes.get(planId))
+                                .map(schematic -> new ExpectIndex.Scheme(schematic, new BlockCoord(0, 0, 0))));
+    }
+
+    private static Optional<ExpectIndex.Scheme> tile(String planId, int level) {
+        if (!planId.startsWith("street")) {
+            return Optional.empty();
+        }
+        String surface = level >= 2 ? "minecraft:dirt_path" : "minecraft:dirt";
+        return Optional.of(new ExpectIndex.Scheme(
+                new Schematic(5, 4, 5, List.of(new Schematic.Entry(0, 0, 0, surface))), new BlockCoord(0, 0, 0)));
     }
 
     @Test
@@ -232,7 +243,9 @@ class ExpectIndexTests {
         List<Integer> levels = new ArrayList<>();
 
         ExpectIndex.of(town, 2, LEVEL, Set.of(), (planId, level) -> {
-            levels.add(level);
+            if ("hut".equals(planId)) {
+                levels.add(level);
+            }
             return Optional.of(new ExpectIndex.Scheme(
                     new Schematic(1, 1, 1, List.of(new Schematic.Entry(0, 0, 0, "minecraft:stone"))),
                     new BlockCoord(0, 0, 0)));

@@ -95,6 +95,14 @@ public final class StageCatalog {
                         .findFirst());
     }
 
+    public static Optional<Integer> streetLevel(int stage) {
+        return StageRules.current().stages().stream()
+                .filter(value -> value.stage() <= stage)
+                .map(value -> value.buildings().get(BoardCase.BUILD_STREETS))
+                .filter(Objects::nonNull)
+                .max(Integer::compareTo);
+    }
+
     public static int maxLevel(String planId) {
         Objects.requireNonNull(planId, "id постройки плана не может быть null: по нему ищут высший уровень");
         return catalogBuilding(planId)

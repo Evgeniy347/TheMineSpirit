@@ -51,7 +51,7 @@ public final class ExpectIndex {
         Objects.requireNonNull(schemes, "Схемы не могут быть null: без них постройка неизвестна");
         List<Expectation> taken = new ArrayList<>();
         int missing = BuildingEnvelopes.collect(plan, stage, levelY, mineIds, taken, schemes);
-        StreetEnvelopes.collect(plan, levelY, taken);
+        missing += StreetEnvelopes.collect(plan, stage, levelY, taken, schemes);
         missing += FenceEnvelopes.collect(plan, levelY, taken, schemes);
         GroundEnvelopes.collect(plan, stage, levelY, taken);
         Map<BlockCoord, Expectation> cells = new LinkedHashMap<>();

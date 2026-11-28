@@ -24,6 +24,10 @@ public final class StreetLayout {
         this.patchZ = cell.dz();
     }
 
+    public static String tileId(int size, String shape) {
+        return "street" + size + shape;
+    }
+
     public static StreetLayout of(PresetLibrary presets) {
         return new StreetLayout(presets.byId(PATCH)
                 .orElseThrow(() ->
@@ -83,16 +87,16 @@ public final class StreetLayout {
             sides += open[side] ? 1 : 0;
         }
         if (sides == SIDES.length) {
-            return new StreetTile("street" + size + "_cross", BuildRotation.NONE, x, z);
+            return new StreetTile(tileId(size, "_cross"), BuildRotation.NONE, x, z);
         }
         boolean[] shape = sides == 3 ? TEE : sides == 2 && open[0] != open[2] ? TURN : STRAIGHT;
         String kind = sides == 3 ? "_t" : sides == 2 && open[0] != open[2] ? "_turn" : "_straight";
         for (BuildRotation rotation : BuildRotation.values()) {
             if (matches(shape, open, rotation.quarterTurns(), sides)) {
-                return new StreetTile("street" + size + kind, rotation, x, z);
+                return new StreetTile(tileId(size, kind), rotation, x, z);
             }
         }
-        return new StreetTile("street" + size + "_straight", BuildRotation.NONE, x, z);
+        return new StreetTile(tileId(size, "_straight"), BuildRotation.NONE, x, z);
     }
 
     private static boolean matches(boolean[] shape, boolean[] open, int turns, int sides) {

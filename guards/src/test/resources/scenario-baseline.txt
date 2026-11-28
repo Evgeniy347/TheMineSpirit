@@ -176,3 +176,4 @@ mech/building/com/theminespirit/core/building/SchematicTextParserTestsPart2.java
 mech/movement/com/theminespirit/core/movement/PitExitPlannerTestsPart2.java # разделение PitExitPlannerTests по пределу 300 строк, тесты перенесены из него
 mech/movement/com/theminespirit/core/movement/ProjectileDodgeTestsPart2.java # разделение ProjectileDodgeTests по пределу 300 строк, тесты перенесены из него
 mech/movement/com/theminespirit/core/navigation/NavAStarTestsPart2.java # разделение NavAStarTests по пределу 300 строк, тесты перенесены из него
+mech/building/com/theminespirit/core/building/SchematicToolSlicesTests.java # срезы схемы для scripts/schematic.sh show: вывод инструмента, дух в сцене не участвует

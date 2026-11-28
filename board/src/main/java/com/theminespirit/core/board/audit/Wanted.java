@@ -6,7 +6,8 @@ public record Wanted(Kind kind, String id, String state, int level) {
     public enum Kind {
         AIR,
         BLOCK,
-        GROUND
+        GROUND,
+        PAVEMENT
     }
 
     public static final Wanted AIR = new Wanted(Kind.AIR, "", "", 0);
@@ -16,13 +17,13 @@ public record Wanted(Kind kind, String id, String state, int level) {
         Objects.requireNonNull(kind, "Вид ожидания не может быть null: без него не выбрать правило сверки");
         Objects.requireNonNull(id, "Id ожидания не может быть null: отсутствие блока — пустая строка, не null");
         Objects.requireNonNull(state, "Свойства ожидания не могут быть null: пустые — пустая строка");
-        if (kind == Kind.BLOCK && id.isBlank()) {
-            throw new IllegalArgumentException("Ожидание BLOCK с пустым id: сверка блока без имени ложна всегда, "
-                    + "и дух получит задачу на клетку, которой нет в плане");
+        if ((kind == Kind.BLOCK || kind == Kind.PAVEMENT) && id.isBlank()) {
+            throw new IllegalArgumentException("Ожидание " + kind + " с пустым id: сверка блока без имени ложна"
+                    + " всегда, и дух получит задачу на клетку, которой нет в плане");
         }
-        if (kind == Kind.GROUND && level == NO_LEVEL) {
-            throw new IllegalArgumentException("Ожидание GROUND без уровня: грунт сверяется по опорной высоте "
-                    + "поселения, без неё группа земли не соберётся");
+        if ((kind == Kind.GROUND || kind == Kind.PAVEMENT) && level == NO_LEVEL) {
+            throw new IllegalArgumentException("Ожидание " + kind + " без уровня: грунт сверяется по опорной высоте"
+                    + " поселения, без неё группа земли не соберётся");
         }
     }
 
@@ -49,6 +50,11 @@ public record Wanted(Kind kind, String id, String state, int level) {
 
     public static Wanted ground(int level) {
         return new Wanted(Kind.GROUND, "dirt", "", level);
+    }
+
+    public static Wanted pavement(String surface, int level) {
+        Objects.requireNonNull(surface, "Покрытие улицы не может быть null: иначе нечем сверять слой");
+        return new Wanted(Kind.PAVEMENT, surface, "", level);
     }
 
     public static Wanted air() {

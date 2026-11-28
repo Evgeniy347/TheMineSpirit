@@ -121,28 +121,35 @@ public final class SchematicTool {
     static String slices(Schematic schematic, BuildRotation rotation) {
         int sx = rotation.rotatedSizeX(schematic.sizeX(), schematic.sizeZ());
         int sz = rotation.rotatedSizeZ(schematic.sizeX(), schematic.sizeZ());
-        char[][][] grid = new char[schematic.sizeY()][sz][sx];
+        List<Schematic.PlacedEntry> entries = schematic.entries(new BlockCoord(0, 0, 0), rotation);
+        List<BlockCoord> air = schematic.airCells(new BlockCoord(0, 0, 0), rotation);
+        int low = Math.min(
+                entries.stream().mapToInt(entry -> entry.pos().y()).min().orElse(0),
+                air.stream().mapToInt(BlockCoord::y).min().orElse(0));
+        int high = Math.max(
+                entries.stream().mapToInt(entry -> entry.pos().y()).max().orElse(-1),
+                air.stream().mapToInt(BlockCoord::y).max().orElse(-1));
+        char[][][] grid = new char[high - low + 1][sz][sx];
         for (char[][] layer : grid) {
             for (char[] row : layer) {
                 Arrays.fill(row, ' ');
             }
         }
-        BlockCoord origin = new BlockCoord(0, 0, 0);
-        for (BlockCoord cell : schematic.airCells(origin, rotation)) {
-            grid[cell.y()][cell.z()][cell.x()] = '.';
+        for (BlockCoord cell : air) {
+            grid[cell.y() - low][cell.z()][cell.x()] = '.';
         }
         Map<String, Character> symbols = new LinkedHashMap<>();
-        for (Schematic.PlacedEntry entry : schematic.entries(origin, rotation)) {
+        for (Schematic.PlacedEntry entry : entries) {
             char symbol = symbols.computeIfAbsent(entry.block(), block -> symbolFor(symbols.size()));
-            grid[entry.pos().y()][entry.pos().z()][entry.pos().x()] = symbol;
+            grid[entry.pos().y() - low][entry.pos().z()][entry.pos().x()] = symbol;
         }
         StringBuilder out = new StringBuilder("Легенда среза:");
         symbols.forEach(
                 (block, symbol) -> out.append(' ').append(symbol).append('=').append(SchematicBlocks.path(block)));
         out.append('\n');
-        for (int y = 0; y < grid.length; y++) {
-            out.append("y").append(y).append(":\n");
-            for (char[] row : grid[y]) {
+        for (int layer = 0; layer < grid.length; layer++) {
+            out.append("y").append(low + layer).append(":\n");
+            for (char[] row : grid[layer]) {
                 out.append("  |").append(row).append("|\n");
             }
         }
