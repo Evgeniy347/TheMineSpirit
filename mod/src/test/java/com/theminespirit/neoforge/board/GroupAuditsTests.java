@@ -2,6 +2,7 @@ package com.theminespirit.neoforge.board;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import com.theminespirit.core.board.ConstructionBatches.ChunkCell;
 import com.theminespirit.core.board.RepairAudit;
 import com.theminespirit.core.board.audit.Access;
 import com.theminespirit.core.board.audit.DiffItem;
@@ -21,7 +22,7 @@ class GroupAuditsTests {
         Group group = Group.pending(
                 Group.Kind.BUILDING,
                 "hut",
-                null,
+                new ChunkCell(0, 0),
                 List.of(
                         DiffItem.breakAt(CELL, "minecraft:oak_fence", SourceRef.building("hut"), Access.SPIRIT),
                         DiffItem.place(
@@ -61,5 +62,50 @@ class GroupAuditsTests {
                 "BREAK остаётся CLEAR"
                         + " в legacy-контракте: иначе потребитель попытается поставить воздух. При смене маппинга"
                         + " перепроверь GroupAudits.report.");
+    }
+
+    @Test
+    void groupAudits_ChunkGroups_AggregateTotalsAndFixes() {
+        Group first = Group.pending(
+                Group.Kind.BUILDING,
+                "hut",
+                new ChunkCell(0, 0),
+                List.of(DiffItem.place(
+                        CELL,
+                        "minecraft:air",
+                        Wanted.block("minecraft:stone"),
+                        SourceRef.building("hut"),
+                        Access.SPIRIT)),
+                1);
+        Group second = Group.pending(
+                Group.Kind.BUILDING,
+                "hut",
+                new ChunkCell(1, 0),
+                List.of(DiffItem.place(
+                        new BlockCoord(16, 64, 0),
+                        "minecraft:air",
+                        Wanted.block("minecraft:stone"),
+                        SourceRef.building("hut"),
+                        Access.SPIRIT)),
+                1);
+
+        BuildingAuditInputs.Audit audit = GroupAudits.audit(List.of(first, second));
+        RepairAudit.Report report = GroupAudits.report(List.of(first, second));
+
+        assertEquals(
+                2,
+                audit.total(),
+                "Сводка склада обязана суммировать все чанковые группы: иначе процент готовности обрежется"
+                        + " на границе чанка. При смене дробления перепроверь GroupAudits.audit(List).");
+        assertEquals(
+                Map.of("minecraft:stone", 2),
+                audit.missing(),
+                "Материалы чанковых групп складываются один раз: иначе стратег закажет только часть кладки"
+                        + " и дух остановится на NO_MATERIAL. При смене адаптера перепроверь Audit.plus.");
+        assertEquals(
+                2,
+                report.fixes().size(),
+                "Legacy-отчёт несёт все клетки группы: иначе клиент потеряет работу соседнего чанка."
+                        + " При смене дробления перепроверь GroupAudits.report(List).");
     }
 }

@@ -83,6 +83,27 @@ class AuditTicketGuardTests {
     }
 
     @Test
+    void stageAudit_GroupSummary_HasNoWorldRescan() throws IOException {
+        String source = Files.readString(
+                        Path.of("mod/src/main/java/com/theminespirit/neoforge/board/BuildingAudit.java"))
+                + Files.readString(
+                        Path.of("mod/src/main/java/com/theminespirit/neoforge/board/BuildingAuditInputs.java"))
+                + Files.readString(Path.of("mod/src/main/java/com/theminespirit/neoforge/board/WorldAreaInputs.java"));
+        String compact = source.replaceAll("\\s+", "");
+
+        assertTrue(
+                compact.contains("GroupAudits.audit(")
+                        && compact.contains("GroupAudits.report(")
+                        && !compact.contains("FirstStepsRunner.gap(")
+                        && !compact.contains("BuildGap.trace(")
+                        && !compact.contains("RepairAudit.audit(")
+                        && !compact.contains("SettlementScan.scan"),
+                "Сводка этапа обязана читать группы аудита: иначе /v1/world снова запускает полный пересчёт"
+                        + " мира и четыре источника истины возвращаются в граф. При смене сводки перепроверь"
+                        + " BuildingAudit, BuildingAuditInputs и WorldAreaInputs.");
+    }
+
+    @Test
     void buildSchematic_PlanGroup_PrecedesLegacyFallback() throws IOException {
         String source =
                 Files.readString(Path.of("mod/src/main/java/com/theminespirit/neoforge/BuildingScriptPack.java"));

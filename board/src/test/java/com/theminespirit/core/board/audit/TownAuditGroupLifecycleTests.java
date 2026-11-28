@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 
 class TownAuditGroupLifecycleTests {
     private static final BlockCoord CELL = new BlockCoord(0, 64, 0);
-    private static final String KEY = "group:building:storage_3";
+    private static final String KEY = "group:building:storage_3@0,0";
 
     private static GroupRegistry groups(AuditRegistry facts) {
         Map<BlockCoord, Expectation> cells = new LinkedHashMap<>();

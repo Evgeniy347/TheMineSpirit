@@ -80,7 +80,7 @@ class TownAuditVerifyTests {
                         + " разбор будет искать причину в аренде вместо пропущенного события. При смене классификации"
                         + " перепроверь AuditMiss.classify.");
         assertEquals(
-                "group:building:storage_3",
+                "group:building:storage_3@0,0",
                 miss.context().groupKey(),
                 "Инцидент называет группу"
                         + " постройки: иначе перезаливка чанка не свяжется с заданием. При смене ключа перепроверь groupKey.");

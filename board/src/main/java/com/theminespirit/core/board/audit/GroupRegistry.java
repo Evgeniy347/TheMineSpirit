@@ -1,5 +1,6 @@
 package com.theminespirit.core.board.audit;
 
+import com.theminespirit.core.board.ConstructionBatches;
 import com.theminespirit.core.board.ConstructionBatches.ChunkCell;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.PlotCells;
@@ -84,6 +85,17 @@ public final class GroupRegistry {
 
     public @Nullable Group group(String key) {
         return groups.get(key);
+    }
+
+    public @Nullable Group group(Group.Kind kind, String subject, int x, int z) {
+        ChunkCell chunk = ConstructionBatches.at(x, z);
+        return groups.get(Group.pending(kind, subject, chunk, List.of(), 0).key());
+    }
+
+    public List<Group> groups(Group.Kind kind, String subject) {
+        return groups.values().stream()
+                .filter(group -> group.kind() == kind && group.subject().equals(subject))
+                .toList();
     }
 
     public @Nullable Group snapshot(GroupRef ref) {

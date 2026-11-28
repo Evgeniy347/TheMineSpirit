@@ -29,6 +29,14 @@ final class GroupAudits {
         return found ? total : new BuildingAuditInputs.Audit(0, 0, Map.of(), Map.of(), 0, 1);
     }
 
+    static BuildingAuditInputs.Audit audit(List<Group> groups) {
+        BuildingAuditInputs.Audit total = new BuildingAuditInputs.Audit(0, 0, Map.of(), Map.of(), 0, 0);
+        for (Group group : groups) {
+            total = total.plus(audit(group));
+        }
+        return groups.isEmpty() ? new BuildingAuditInputs.Audit(0, 0, Map.of(), Map.of(), 0, 1) : total;
+    }
+
     static BuildingAuditInputs.Audit audit(Group group) {
         int pending = 0;
         int wrong = 0;
@@ -64,18 +72,29 @@ final class GroupAudits {
     }
 
     static RepairAudit.Report report(Group group) {
+        return report(List.of(group));
+    }
+
+    static RepairAudit.Report report(List<Group> groups) {
         List<RepairAudit.Fix> fixes = new ArrayList<>();
+        int total = 0;
         int missing = 0;
-        for (DiffItem item : group.items()) {
-            if (item.action() == DiffItem.Action.BREAK) {
-                fixes.add(new RepairAudit.Fix(item.cell(), RepairAudit.Action.CLEAR, "minecraft:air", item.found()));
-            } else {
-                missing++;
-                fixes.add(new RepairAudit.Fix(
-                        item.cell(), RepairAudit.Action.PLACE, item.wanted().text(), item.found()));
+        int unknown = 0;
+        for (Group group : groups) {
+            total += group.total();
+            unknown += group.unknown();
+            for (DiffItem item : group.items()) {
+                if (item.action() == DiffItem.Action.BREAK) {
+                    fixes.add(
+                            new RepairAudit.Fix(item.cell(), RepairAudit.Action.CLEAR, "minecraft:air", item.found()));
+                } else {
+                    missing++;
+                    fixes.add(new RepairAudit.Fix(
+                            item.cell(), RepairAudit.Action.PLACE, item.wanted().text(), item.found()));
+                }
             }
         }
-        return new RepairAudit.Report(group.total(), missing, false, fixes, group.unknown());
+        return new RepairAudit.Report(total, missing, false, fixes, unknown);
     }
 
     private static String block(Wanted wanted) {

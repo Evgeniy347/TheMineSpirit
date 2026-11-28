@@ -65,7 +65,7 @@ class TownAuditChangeTests {
     @Test
     void auditChanges_OwnIssuedTicket_UpdatesCacheWithoutDirty() {
         AuditRegistry registry = registry(AuditBudgets.DEFAULT);
-        registry.issued("ticket-1", "group:building:storage_3");
+        registry.issued("ticket-1", "group:building:storage_3@0,0");
         ChangeRing.Change change = change(
                 CELL, "minecraft:stone", "minecraft:oak_stairs[facing=north]", ChangeRing.Actor.SPIRIT, "ticket-1");
 
@@ -89,7 +89,7 @@ class TownAuditChangeTests {
                 "Своё изменение не ждёт чужой сверки: иначе секундная очередь"
                         + " будет считать штатный прогресс духов промахом кэша. При смене очереди перепроверь pending.remove.");
         assertEquals(
-                "group:building:storage_3",
+                "group:building:storage_3@0,0",
                 registry.ring(CELL).last().group(),
                 "Билет получает группу"
                         + " в журнале: иначе инцидент не свяжет блок с выданным заданием. При смене формата перепроверь"
@@ -194,7 +194,7 @@ class TownAuditChangeTests {
     @Test
     void auditChanges_OwnAfterForeignSameTick_ClearsPending() {
         AuditRegistry registry = registry(AuditBudgets.DEFAULT);
-        registry.issued("ticket-1", "group:building:storage_3");
+        registry.issued("ticket-1", "group:building:storage_3@0,0");
         registry.record(change(CELL, "minecraft:stone", "minecraft:air", ChangeRing.Actor.PLAYER, ""));
 
         assertFalse(
@@ -244,7 +244,7 @@ class TownAuditChangeTests {
     @Test
     void auditChanges_PlanRevision_ReleasesIssuedTickets() {
         AuditRegistry registry = registry(AuditBudgets.DEFAULT);
-        registry.issued("ticket-1", "group:building:storage_3");
+        registry.issued("ticket-1", "group:building:storage_3@0,0");
 
         registry.plan(2, 64);
 

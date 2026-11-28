@@ -60,7 +60,7 @@ class TownAuditGroupRegistryTests {
                 groups.sync(facts, 1L, 10),
                 "Все источники собираются в свои группы: иначе улица"
                         + " и склад смешаются в одну работу с разным приоритетом. При смене группировки перепроверь GroupKeys.");
-        Group building = groups.group("group:building:storage_3");
+        Group building = groups.group("group:building:storage_3@0,0");
         Group street = groups.group("group:street:s-7@0,0");
         Group ground = groups.group("group:ground:pit@0,0");
         assertEquals(
@@ -94,7 +94,7 @@ class TownAuditGroupRegistryTests {
                 "Земляной класс не требует работы: иначе каждая"
                         + " тропа снова попадёт в расчистку. При смене правила перепроверь BlockEquivalence.GROUND.");
         assertEquals(
-                "group:building:storage_3",
+                "group:building:storage_3@0,0",
                 groups.owner(BUILDING),
                 "Обратный индекс ведёт клетку в"
                         + " единственную группу: иначе инвалидация не найдёт владельца блока. При смене индекса перепроверь owners.");
@@ -109,7 +109,7 @@ class TownAuditGroupRegistryTests {
 
         groups.sync(facts, 1L, 10);
 
-        Group group = groups.group("group:building:storage_3");
+        Group group = groups.group("group:building:storage_3@0,0");
         assertEquals(
                 1,
                 group.total(),
@@ -146,7 +146,7 @@ class TownAuditGroupRegistryTests {
 
         groups.sync(facts, 1L, 10);
 
-        Group group = groups.group("group:building:storage_3");
+        Group group = groups.group("group:building:storage_3@0,0");
         assertEquals(
                 1,
                 group.items().size(),
@@ -169,7 +169,7 @@ class TownAuditGroupRegistryTests {
         groups.rebuild(
                 index(expectation(BUILDING, Wanted.block("minecraft:stone"), SourceRef.building("storage_3"))), 1L);
         groups.sync(facts, 1L, 10);
-        String key = "group:building:storage_3";
+        String key = "group:building:storage_3@0,0";
 
         groups.issue("ticket-1", key);
         assertEquals(
@@ -223,7 +223,7 @@ class TownAuditGroupRegistryTests {
         groups.sync(facts, 1L, 10);
         assertEquals(
                 Group.Status.BLOCKED,
-                groups.group("group:building:storage_3").status(),
+                groups.group("group:building:storage_3@0,0").status(),
                 "До наполнения"
                         + " группа заблокирована: иначе клиент покажет готовность на пустом кэше. При смене правила"
                         + " перепроверь sync и build.");
@@ -231,7 +231,7 @@ class TownAuditGroupRegistryTests {
         facts.fill(2048, cell -> cell.equals(BUILDING) ? "minecraft:oak_planks" : "minecraft:air", 2L);
         groups.sync(facts, 1L, 10);
 
-        Group group = groups.group("group:building:storage_3");
+        Group group = groups.group("group:building:storage_3@0,0");
         assertEquals(
                 Group.Status.PENDING,
                 group.status(),
@@ -257,7 +257,7 @@ class TownAuditGroupRegistryTests {
         groups.rebuild(
                 index(expectation(BUILDING, Wanted.block("minecraft:stone"), SourceRef.building("storage_3"))), 1L);
         groups.sync(facts, 1L, 10);
-        Group group = groups.group("group:building:storage_3");
+        Group group = groups.group("group:building:storage_3@0,0");
 
         assertEquals(
                 group,

@@ -14,35 +14,31 @@ class TownAuditGroupTests {
     private static final BlockCoord CELL = new BlockCoord(1, 64, 1);
 
     @Test
-    void group_KeyForStreetAndGround_CarriesChunkOnlyWherePlanBreaksItUp() {
+    void group_Key_AlwaysCarriesExactlyOneChunk() {
         Group street = Group.pending(Group.Kind.STREET, "s-7", new ChunkCell(-16, -32), List.of(), 12);
-        Group building = Group.pending(Group.Kind.BUILDING, "storage_3", null, List.of(), 40);
+        Group building = Group.pending(Group.Kind.BUILDING, "storage_3", new ChunkCell(0, 0), List.of(), 40);
         Group ground = Group.pending(Group.Kind.GROUND, "", new ChunkCell(-16, -33), List.of(), 6);
 
         assertEquals(
                 "group:street:s-7@-16,-32",
                 street.key(),
-                "Ключ улицы обязан нести чанк: ТЗ требует обрабатывать каждый чанк индивидуально, иначе одна "
-                        + "группа растянется на регион и дух уйдёт через всю карту. При смене ключа перепроверь "
-                        + "Group.CHUNK_KINDS и ConstructionBatches.at.");
+                "Ключ улицы обязан нести чанк: иначе одна группа растянется на регион и дух уйдёт через всю"
+                        + " карту. При смене ключа перепроверь Group.key и ConstructionBatches.at.");
         assertEquals(
-                "group:building:storage_3",
+                "group:building:storage_3@0,0",
                 building.key(),
-                "Постройка привязана к участку, а не к чанку: иначе склад развалится на четыре группы, и ни "
-                        + "одна не закроется до конца стройки. При смене ключа перепроверь группировку "
-                        + "BuildingAuditInputs.grouped.");
+                "Постройка дробится по чанкам так же, как улица: иначе большой склад нарушит И-1 и локальная"
+                        + " перезаливка затронет весь участок. При смене ключа перепроверь GroupKeys.chunk.");
         assertEquals(
                 "group:ground@-16,-33",
                 ground.key(),
-                "У земли нет предмета — только чанк: иначе обратный индекс клетка→группа даст два ключа для "
-                        + "одной клетки, и инвалидация промахнётся. При смене ключа перепроверь парсинг в "
-                        + "REST-сводке групп.");
+                "У земли нет предмета — только чанк: иначе обратный индекс клетка→группа даст два ключа для"
+                        + " одной клетки. При смене ключа перепроверь парсинг в REST-сводке групп.");
         assertThrows(
                 IllegalArgumentException.class,
-                () -> Group.pending(Group.Kind.STREET, "s-7", null, List.of(), 4),
-                "Улица без чанка невозможна: иначе группа уйдёт в граф без адреса, и приоритет «улица до "
-                        + "склада» не выдержится ни на одном весе. При смене правила перепроверь "
-                        + "Group.CHUNK_KINDS и дробление в block 7.");
+                () -> Group.pending(Group.Kind.BUILDING, "storage_3", null, List.of(), 4),
+                "Любая группа без чанка невозможна: иначе узел графа не получит адрес локальной перезаливки"
+                        + " и инвариант И-1 будет нарушен. При смене правила перепроверь Group и GroupKeys.");
     }
 
     @Test
@@ -52,7 +48,7 @@ class TownAuditGroupTests {
                 () -> new Group(
                         Group.Kind.BUILDING,
                         "storage_3",
-                        null,
+                        new ChunkCell(0, 0),
                         List.of(DiffItem.breakAt(CELL, "stone", SourceRef.building("storage_3"), Access.SPIRIT)),
                         0,
                         Group.Status.PENDING,

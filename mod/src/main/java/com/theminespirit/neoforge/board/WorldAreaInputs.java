@@ -208,11 +208,8 @@ final class WorldAreaInputs {
         if (registry == null) {
             return null;
         }
-        return registry.groups().stream()
-                .filter(group -> group.kind() == Group.Kind.BUILDING && "hut".equals(group.subject()))
-                .findFirst()
-                .map(GroupAudits::report)
-                .orElse(null);
+        List<Group> groups = registry.groups(Group.Kind.BUILDING, "hut");
+        return groups.isEmpty() ? null : GroupAudits.report(groups);
     }
 
     private static int percent(RepairAudit.Report report) {

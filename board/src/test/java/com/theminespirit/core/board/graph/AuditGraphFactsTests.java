@@ -23,8 +23,7 @@ class AuditGraphFactsTests {
     private static final BlockCoord CELL = new BlockCoord(0, 64, 0);
 
     private static Group group(Group.Kind kind, String subject, Group.Status status, List<DiffItem> items, int total) {
-        ChunkCell chunk = kind == Group.Kind.BUILDING || kind == Group.Kind.MINE ? null : new ChunkCell(0, 0);
-        return Group.pending(kind, subject, chunk, items, total).withStatus(status, "");
+        return Group.pending(kind, subject, new ChunkCell(0, 0), items, total).withStatus(status, "");
     }
 
     private static GraphState state(Group... groups) {

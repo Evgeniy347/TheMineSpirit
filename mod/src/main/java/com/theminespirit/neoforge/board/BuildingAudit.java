@@ -1,6 +1,5 @@
 package com.theminespirit.neoforge.board;
 
-import com.theminespirit.core.board.BuildGap;
 import com.theminespirit.core.board.RepairAudit;
 import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.board.audit.Group;
@@ -11,6 +10,7 @@ import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.TownSnapshot;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import net.minecraft.server.level.ServerLevel;
@@ -20,8 +20,18 @@ final class BuildingAudit {
     private BuildingAudit() {}
 
     static BuildingAuditInputs.Audit first(ServerLevel level, FirstStepsRunner.StageScan scan, BoardCase step) {
-        BuildGap.Gap gap = FirstStepsRunner.gap(level, step, scan.stage(), scan.wood());
-        return new BuildingAuditInputs.Audit(gap.total(), gap.done(), blocks(gap), Map.of(), 0, gap.unknown());
+        GroupRegistry registry = TownAuditWatch.peekGroups(level);
+        if (registry == null) {
+            return new BuildingAuditInputs.Audit(0, 0, Map.of(), Map.of(), 0, 1);
+        }
+        return switch (step) {
+            case BUILD_MINE -> GroupAudits.audit(registry, Group.Kind.MINE, "");
+            case BUILD_FENCE -> GroupAudits.audit(registry, Group.Kind.WALL, "");
+            case BUILD_ORCHARD -> GroupAudits.audit(registry, Group.Kind.BUILDING, "orchard");
+            case STOCK_CHESTS -> GroupAudits.audit(registry, Group.Kind.BUILDING, "yard");
+            case CRAFT_FURNACE, LIGHTING -> new BuildingAuditInputs.Audit(0, 0, Map.of(), Map.of(), 0, 0);
+            default -> throw new IllegalStateException("Аудит этапа не использует группы для кейса " + step);
+        };
     }
 
     static BuildingAuditInputs.Audit floor(ServerLevel level, FirstStepsRunner.StageScan scan) {
@@ -62,14 +72,16 @@ final class BuildingAudit {
 
     static BuildingAuditInputs.Audit scheme(
             ServerLevel level, String scheme, GraphFacts.Position at, String wood, long now) {
-        Group group = groupForScheme(level, scheme, at);
-        return group == null ? new BuildingAuditInputs.Audit(0, 0, Map.of(), Map.of(), 0, 1) : GroupAudits.audit(group);
+        List<Group> groups = AuditGroupLookup.findAll(level, scheme, at.x(), at.z());
+        return groups.isEmpty()
+                ? new BuildingAuditInputs.Audit(0, 0, Map.of(), Map.of(), 0, 1)
+                : GroupAudits.audit(groups);
     }
 
     static RepairAudit.@Nullable Report schemeReport(
             ServerLevel level, String scheme, GraphFacts.Position at, String wood, long now) {
-        Group group = groupForScheme(level, scheme, at);
-        return group == null ? null : GroupAudits.report(group);
+        List<Group> groups = AuditGroupLookup.findAll(level, scheme, at.x(), at.z());
+        return groups.isEmpty() ? null : GroupAudits.report(groups);
     }
 
     static BuildingAuditInputs.Audit report(RepairAudit.Report report) {
@@ -90,20 +102,6 @@ final class BuildingAudit {
         }
         return new BuildingAuditInputs.Audit(
                 report.total(), report.total() - report.missing(), missing, extra, wrong, report.unknown());
-    }
-
-    private static @Nullable Group groupForScheme(ServerLevel level, String scheme, GraphFacts.Position at) {
-        return AuditGroupLookup.find(level, scheme, at.x(), at.z());
-    }
-
-    private static Map<String, Integer> blocks(BuildGap.Gap gap) {
-        Map<String, Integer> missing = new LinkedHashMap<>();
-        for (String block : gap.missingCells().values()) {
-            if (!air(block)) {
-                missing.merge(id(block), 1, Integer::sum);
-            }
-        }
-        return missing;
     }
 
     private static boolean air(String block) {

@@ -5,7 +5,6 @@ import com.theminespirit.core.board.ConstructionBatches.ChunkCell;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.List;
 import java.util.Objects;
-import org.jspecify.annotations.Nullable;
 
 final class GroupKeys {
     private GroupKeys() {}
@@ -21,11 +20,9 @@ final class GroupKeys {
         };
     }
 
-    static @Nullable ChunkCell chunk(SourceRef source, BlockCoord cell) {
-        Group.Kind kind = kind(source);
-        return kind == Group.Kind.BUILDING || kind == Group.Kind.MINE
-                ? null
-                : ConstructionBatches.at(cell.x(), cell.z());
+    static ChunkCell chunk(SourceRef source, BlockCoord cell) {
+        kind(source);
+        return ConstructionBatches.at(cell.x(), cell.z());
     }
 
     static String key(Expectation expectation) {
