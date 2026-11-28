@@ -2,7 +2,7 @@
 name: "Улица: заплатка"
 type: infrastructure
 stage: 2
-size: 1x2x1   # Ш×В×Д
+size: 1x4x1   # Ш×В×Д
 entrance: 0,1,0
 exemptions:
   - rule: entrance_step
@@ -15,4 +15,8 @@ layers:
   - y0 покрытие: |
       p
   - y1 над улицей — воздух: |
+      .
+  - y2 над улицей — воздух: |
+      .
+  - y3 над улицей — воздух: |
       .
