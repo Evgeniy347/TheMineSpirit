@@ -52,7 +52,7 @@ public final class ExpectIndex {
         List<Expectation> taken = new ArrayList<>();
         int missing = BuildingEnvelopes.collect(plan, stage, levelY, mineIds, taken, schemes);
         StreetEnvelopes.collect(plan, levelY, taken);
-        FenceEnvelopes.collect(plan, levelY, taken);
+        missing += FenceEnvelopes.collect(plan, levelY, taken, schemes);
         GroundEnvelopes.collect(plan, stage, levelY, taken);
         Map<BlockCoord, Expectation> cells = new LinkedHashMap<>();
         int collisions = 0;

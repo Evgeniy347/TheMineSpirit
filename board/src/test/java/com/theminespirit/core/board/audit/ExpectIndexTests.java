@@ -179,6 +179,54 @@ class ExpectIndexTests {
     }
 
     @Test
+    void expectIndex_WallSchemes_MapFragmentsAndSupports() {
+        Schematic post = new Schematic(
+                1,
+                4,
+                1,
+                List.of(
+                        new Schematic.Entry(0, 0, 0, "minecraft:cobblestone_wall"),
+                        new Schematic.Entry(0, 1, 0, "minecraft:cobblestone"),
+                        new Schematic.Entry(0, 2, 0, "minecraft:cobblestone"),
+                        new Schematic.Entry(0, 3, 0, "minecraft:cobblestone")));
+        Schematic gate = new Schematic(1, 3, 1, List.of(new Schematic.Entry(0, 0, 0, "minecraft:oak_fence_gate")));
+        TownPlan town = new TownPlan(
+                new BlockCoord(0, LEVEL, 0),
+                ColumnMask.rect(0, 0, 5, 3),
+                STREETS,
+                List.of(),
+                new FenceLine(List.of(new Cell(5, 3), new Cell(4, 3)), List.of(1)),
+                List.of());
+
+        ExpectIndex.Index index = indexOf(town, Map.of("wall_3_post", post, "gate_3", gate), Set.of());
+
+        assertEquals(
+                SourceRef.wall("wall_3_post#0"),
+                index.at(new BlockCoord(5, LEVEL + 1, 3)).orElseThrow().source(),
+                "Фрагмент стены обязан нести схему и номер позиции, иначе группы разных участков сливаются"
+                        + " в один wall:loop. При смене раскладки перепроверь WallLayout и FenceEnvelopes.");
+        assertEquals(
+                Wanted.block("minecraft:cobblestone_wall"),
+                index.at(new BlockCoord(5, LEVEL + 1, 3)).orElseThrow().wanted(),
+                "Нижний слой wall_3_post обязан быть каменной стеной, а не дубовым забором: иначе аудит"
+                        + " разрушит новую стену как лишний блок. При смене схемы перепроверь wall_3_post.txt.");
+        assertEquals(
+                Wanted.block("minecraft:oak_fence_gate"),
+                index.at(new BlockCoord(4, LEVEL + 1, 3)).orElseThrow().wanted(),
+                "Калитка стены остаётся проходом: без этого аудит поставит глухой каменный блок"
+                        + " и закроет дорогу. При смене ворот перепроверь gate_3.txt и WallLayout.piece.");
+        assertEquals(
+                Wanted.ground(LEVEL),
+                index.at(new BlockCoord(5, LEVEL, 3)).orElseThrow().wanted(),
+                "Под стеной обязан быть опорный грунт на уровне поселения: иначе земляная подсыпка StageBuilds"
+                        + " снова станет stray и будет разобрана. При смене высоты перепроверь SiteLevels.fenceY.");
+        assertTrue(
+                index.missingSchemes() >= 6,
+                "Незагруженные фрагменты wall_3* остаются видимы в missingSchemes: иначе аудит молча"
+                        + " откатится к дубовому забору. При смене набора перепроверь StageSchemes.wall и тест.");
+    }
+
+    @Test
     void expectIndex_SchemeLevel_ComesFromPlacementStage() {
         TownPlan town = plan(List.of(new Placement("hut", "Хижина", 2, 0, 2, 1, 1, Placement.Facing.SOUTH)));
         List<Integer> levels = new ArrayList<>();

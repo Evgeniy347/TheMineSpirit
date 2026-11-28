@@ -9,6 +9,7 @@ import com.theminespirit.core.board.audit.Expectation;
 import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.town.StageSchemes;
 import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.neoforge.SchematicResources;
 import java.util.LinkedHashMap;
@@ -51,10 +52,12 @@ final class AuditExpectations {
     }
 
     private static Optional<ExpectIndex.Scheme> scheme(String planId, int level) {
-        return StageCatalog.scheme(planId, level).map(file -> {
-            Schematic schematic = SchematicResources.load(file);
+        Optional<String> file =
+                StageSchemes.wall().contains(planId) ? Optional.of(planId) : StageCatalog.scheme(planId, level);
+        return file.map(value -> {
+            Schematic schematic = SchematicResources.load(value);
             BlockCoord entry = PresetLibrary.current()
-                    .byId(file)
+                    .byId(value)
                     .map(preset -> preset.entry())
                     .orElseGet(() -> new BlockCoord(0, 0, 0));
             return new ExpectIndex.Scheme(schematic, entry);
