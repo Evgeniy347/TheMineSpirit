@@ -15,6 +15,7 @@ import com.theminespirit.core.plan.PlanParser;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.SpiritScripts;
+import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
@@ -27,6 +28,7 @@ public final class FullCycleGameTests {
     private static final int SETTLE_TICKS = 1;
     private static final int COBBLESTONE_FOR_FURNACE = 8;
     private static final int IRON_TICKS_LIMIT = 510;
+    private static final BlockPos FURNACE = new BlockPos(5, 1, 5);
 
     private FullCycleGameTests() {}
 
@@ -35,6 +37,7 @@ public final class FullCycleGameTests {
     public static void fullCycle_GatherCobbleCraftFurnaceSmeltDeposit_IngotInChestFurnaceOnce(GameTestHelper helper) {
         field(helper);
         helper.setBlock(TABLE, Blocks.CRAFTING_TABLE);
+        helper.setBlock(FURNACE, Blocks.FURNACE);
         FullCycleScene.placeCobblestoneRow(helper, COBBLESTONE_FOR_FURNACE);
         FullCycleScene.placeUnsortedChest(helper);
         SpiritEntity spirit =
@@ -55,7 +58,12 @@ public final class FullCycleGameTests {
             FullCycleScene.assertChestHolds(helper, Items.IRON_INGOT, FullCycleScene.INGOTS_BEFORE + 1);
             assertCount(helper, spirit, Items.IRON_INGOT, 0, "слиток у духа после deposit");
             assertCount(helper, spirit, Items.COBBLESTONE, 0, "булыжник: все 8 ушли в печь");
-            assertCount(helper, spirit, Items.FURNACE, 0, "печь в инвентаре: smelt поставил её в мир");
+            assertCount(
+                    helper,
+                    spirit,
+                    Items.FURNACE,
+                    1,
+                    "печь в инвентаре: станции ставит схема, smelt использует готовую");
             helper.assertTrue(
                     FullCycleScene.countBlocks(helper, Blocks.FURNACE) == 1,
                     "в мире обязана стоять ровно одна печь (скрафченная и поставленная), фактически "

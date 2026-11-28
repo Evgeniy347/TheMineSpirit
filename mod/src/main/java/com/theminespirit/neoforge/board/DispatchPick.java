@@ -115,7 +115,7 @@ final class DispatchPick {
 
     private boolean worksWithoutApproach(
             BoardTicket ticket, @Nullable TicketTarget target, DispatchRound.Candidate spirit) {
-        if (localWork(ticket.boardCase())) {
+        if (localWork(ticket.boardCase()) || ownRescue(ticket, spirit)) {
             return true;
         }
         if (!remoteFood(ticket, target)) {
@@ -123,6 +123,11 @@ final class DispatchPick {
         }
         SpiritEntity entity = entities.get(spirit.id());
         return entity != null && ChestWithdrawal.inside(entity);
+    }
+
+    static boolean ownRescue(BoardTicket ticket, DispatchRound.Candidate spirit) {
+        return ticket.boardCase() == BoardCase.RESCUE_SPIRIT
+                && ticket.assignee().filter(spirit.id()::equals).isPresent();
     }
 
     static boolean remoteFood(BoardTicket ticket, @Nullable TicketTarget target) {

@@ -58,14 +58,15 @@ public final class WarehouseGameTests {
 
     // [флак] 176 блоков склада дух ставит по одному за тик с подходом к каждой клетке; запас двойной,
     // иначе тест меряет скорость стройки, а не её результат.
-    @SceneStep(template = "arena", timeoutTicks = 12000)
+    @SceneStep(template = "big_arena", timeoutTicks = 12000)
     public static void warehouse_LevelOneBuilt_AllChestsOpenable(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
-        GameTestFixtures.buildFloor(helper, Blocks.STONE);
         Schematic schematic = SchematicResources.load("storage_v1");
+        int floorSize = Math.max(GameTestFixtures.FLOOR_SIZE, Math.max(schematic.sizeX(), schematic.sizeZ()) + 4);
+        floor(helper, floorSize);
         SpiritEntity spirit = spawnWith(
                 helper,
-                new BlockPos(7, 1, 4),
+                new BlockPos(floorSize / 2, 1, floorSize - 1),
                 new ItemStack(Items.OAK_PLANKS, 64),
                 new ItemStack(Items.OAK_PLANKS, 64),
                 new ItemStack(Items.OAK_PLANKS, 64),
@@ -73,7 +74,7 @@ public final class WarehouseGameTests {
                 new ItemStack(Items.CHEST, 18),
                 new ItemStack(Items.OAK_STAIRS, 1),
                 new ItemStack(Items.TORCH, 1));
-        BlockPos anchor = new BlockPos(1, 1, 1);
+        BlockPos anchor = new BlockPos(2, 1, 2);
         clearRegistry(helper.getLevel());
         SpiritRun run = SpiritRun.launch(helper, spirit, build(helper, "storage_v1", anchor), SETTLE_TICKS);
         SpiritRun[] drain = new SpiritRun[1];
@@ -98,6 +99,14 @@ public final class WarehouseGameTests {
             salvage[0].assertDone();
             GameTestFixtures.finish(helper);
         });
+    }
+
+    private static void floor(GameTestHelper helper, int size) {
+        for (int x = 0; x < size; x++) {
+            for (int z = 0; z < size; z++) {
+                helper.setBlock(x, 0, z, Blocks.STONE);
+            }
+        }
     }
 
     private static void assertWarehouseBuilt(

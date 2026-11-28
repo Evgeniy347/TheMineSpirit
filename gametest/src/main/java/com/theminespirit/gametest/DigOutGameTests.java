@@ -1,6 +1,7 @@
 package com.theminespirit.gametest;
 
 import com.theminespirit.core.ModIdentity;
+import com.theminespirit.core.board.BoardOutcome;
 import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardState;
 import com.theminespirit.core.board.BoardStatus;
@@ -79,6 +80,7 @@ public final class DigOutGameTests {
         DigOutBudget budget = DigOutBudget.start(board);
         helper.onEachTick(budget::sample);
         PocketScene scene = new PocketScene(board, spirits, tickets, starts, planks);
+        helper.onEachTick(scene::cancelUnassignedTasks);
         helper.succeedWhen(() -> assertPocket(helper, scene, pillar, budget));
     }
 
@@ -87,7 +89,16 @@ public final class DigOutGameTests {
             List<SpiritEntity> spirits,
             List<String> tickets,
             List<Integer> starts,
-            List<BlockPos> planks) {}
+            List<BlockPos> planks) {
+        void cancelUnassignedTasks() {
+            for (int index = 0; index < spirits.size(); index++) {
+                if (board.board().statusOf(tickets.get(index)).orElse(null) != BoardStatus.ASSIGNED
+                        && spirits.get(index).currentTaskScript().isPresent()) {
+                    spirits.get(index).cancelTask();
+                }
+            }
+        }
+    }
 
     private static void assertPocket(
             GameTestHelper helper, PocketScene scene, DigOutPillarScene.Pillar pillar, DigOutBudget budget) {
@@ -176,9 +187,12 @@ public final class DigOutGameTests {
             List<Integer> starts) {
         BlockPos feetRelative = cells.get(0);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), feetRelative);
+        spirit.setInvulnerable(true);
         spirit.getInventory().setItem(0, new ItemStack(Items.WOODEN_PICKAXE));
         spirit.getInventory().setItem(1, new ItemStack(Items.COBBLESTONE, 48));
-        BlockPos home = helper.absolutePos(new BlockPos(8, TOP + 1, 5));
+        BlockPos homeRelative =
+                feetRelative.above(TOP - feetRelative.getY() + 1).east();
+        BlockPos home = helper.absolutePos(homeRelative);
         spirit.setHome(new BlockCoord(home.getX(), home.getY(), home.getZ()));
         BlockPos feet = spirit.blockPosition();
         BlockCoord at = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
@@ -189,7 +203,7 @@ public final class DigOutGameTests {
         board.board().stuck().see(id, at, now);
         board.board().stuck().mark(id, now, "сцена: дух замурован в яме");
         TaskNode plan = new ScriptCall("dig_out", Map.of("x", goal.x(), "y", goal.y(), "z", goal.z()));
-        board.submit(
+        BoardOutcome outcome = board.submit(
                 new BoardTicket(
                         ticket,
                         BoardCase.RESCUE_SPIRIT,
@@ -201,6 +215,10 @@ public final class DigOutGameTests {
                         List.of(),
                         Map.of()),
                 TicketTarget.at(at).withPlan(plan));
+        helper.assertTrue(
+                outcome == BoardOutcome.ACCEPTED,
+                "Ручной rescue-билет обязан быть принят доской: иначе сцена проверяет автоспасение вместо"
+                        + " DigOutScript, исход " + outcome + " для " + ticket);
         tickets.add(ticket);
         starts.add(feet.getY());
         return spirit;

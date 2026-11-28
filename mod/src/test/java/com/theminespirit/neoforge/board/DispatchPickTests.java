@@ -5,6 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.DispatchRound;
+import com.theminespirit.core.board.EatNeed;
+import com.theminespirit.core.board.SpiritView;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.observation.BlockCoord;
@@ -14,6 +17,7 @@ import com.theminespirit.core.town.TownFixtures;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 class DispatchPickTests {
@@ -34,6 +38,44 @@ class DispatchPickTests {
                 "Сундуки строятся по месту и требуют пути: иначе их начнут ставить в любую удалённую "
                         + "точку. При смене localWork_LocalScripts_DoNotRequireGlobalPath проверь "
                         + "DispatchPick.localWork.");
+    }
+
+    @Test
+    void ownRescue_TrappedOwner_DoesNotRequireApproach() {
+        UUID owner = UUID.randomUUID();
+        BoardTicket ticket = new BoardTicket(
+                "rescue:" + owner,
+                BoardCase.RESCUE_SPIRIT,
+                Optional.of(owner),
+                90,
+                0L,
+                1,
+                BoardTicket.ALWAYS_CAUSE,
+                List.of(),
+                Map.of());
+        DispatchRound.Candidate candidate = new DispatchRound.Candidate(
+                owner, "spirit", null, List.of(), new EatNeed(20, 20, 20, 20), SpiritView.free());
+
+        assertTrue(
+                DispatchPick.ownRescue(ticket, candidate),
+                "Собственный rescue обязан выдаваться без проверки пути к стоянке: иначе замурованный дух"
+                        + " в воде никогда не получит dig_out. При смене диспетчера перепроверь DispatchPick.pick"
+                        + " и DigOutGameTests.");
+        assertFalse(
+                DispatchPick.ownRescue(
+                        new BoardTicket(
+                                "rescue:other",
+                                BoardCase.RESCUE_SPIRIT,
+                                Optional.of(UUID.randomUUID()),
+                                90,
+                                0L,
+                                1,
+                                BoardTicket.ALWAYS_CAUSE,
+                                List.of(),
+                                Map.of()),
+                        candidate),
+                "Чужой rescue по-прежнему требует достижимой помощи: иначе диспетчер отправит к карману"
+                        + " недостижимого духа. При смене правила перепроверь DispatchRound.refusal.");
     }
 
     @Test
