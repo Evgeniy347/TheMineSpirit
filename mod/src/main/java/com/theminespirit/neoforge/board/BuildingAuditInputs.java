@@ -182,6 +182,10 @@ public final class BuildingAuditInputs {
                 BuildingAudit.first(level, scan, BoardCase.BUILD_ORCHARD));
     }
 
+    static Optional<String> scheme(Placement place) {
+        return StageCatalog.scheme(place.id(), place.stage());
+    }
+
     static Map<String, List<Placement>> grouped(TownPlan plan) {
         Map<String, List<Placement>> groups = new LinkedHashMap<>();
         for (Placement place : plan.placements()) {
@@ -213,9 +217,8 @@ public final class BuildingAuditInputs {
                 GraphFacts.Position spot =
                         new GraphFacts.Position(place.x(), scan.stage().anchor().y(), place.z());
                 spots.add(spot);
-                Optional<StageCatalog.Entry> entry = StageCatalog.entry(place.id());
-                audits.add(entry.map(value ->
-                                BuildingAudit.scheme(level, value.scheme(), spot, orchardWood(place, scan), now))
+                Optional<String> scheme = scheme(place);
+                audits.add(scheme.map(file -> BuildingAudit.scheme(level, file, spot, orchardWood(place, scan), now))
                         .orElseGet(() -> BuildingAudit.stageOrchard(level, spot, orchardWood(place, scan), now)));
             }
             GraphFacts.Position at = spots.get(incomplete(audits));

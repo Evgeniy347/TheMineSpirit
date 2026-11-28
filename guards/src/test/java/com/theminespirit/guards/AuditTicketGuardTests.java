@@ -94,6 +94,7 @@ class AuditTicketGuardTests {
         assertTrue(
                 compact.contains("GroupAudits.audit(")
                         && compact.contains("GroupAudits.report(")
+                        && compact.contains("StageCatalog.scheme(place.id(),place.stage())")
                         && !compact.contains("FirstStepsRunner.gap(")
                         && !compact.contains("BuildGap.trace(")
                         && !compact.contains("RepairAudit.audit(")
@@ -101,6 +102,20 @@ class AuditTicketGuardTests {
                 "Сводка этапа обязана читать группы аудита: иначе /v1/world снова запускает полный пересчёт"
                         + " мира и четыре источника истины возвращаются в граф. При смене сводки перепроверь"
                         + " BuildingAudit, BuildingAuditInputs и WorldAreaInputs.");
+    }
+
+    @Test
+    void stageAudit_PlacementScheme_UsesPlacementStage() throws IOException {
+        String source = Files.readString(
+                Path.of("mod/src/main/java/com/theminespirit/neoforge/board/BuildingAuditInputs.java"));
+        String compact = source.replaceAll("\\s+", "");
+
+        assertTrue(
+                compact.contains("StageCatalog.scheme(place.id(),place.stage())")
+                        && !compact.contains("StageCatalog.entry(place.id())"),
+                "Сводка участка обязана брать схему того же этапа, что ExpectIndex: иначе многоуровневый дом"
+                        + " сравнивается с уровнем 1 и /v1/world показывает unknown. При смене сводки перепроверь"
+                        + " BuildingAuditInputs.placements и BuildingEnvelopes.collect.");
     }
 
     @Test
