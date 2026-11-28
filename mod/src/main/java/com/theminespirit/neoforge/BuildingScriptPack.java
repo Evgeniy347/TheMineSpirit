@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.board.audit.Group;
 import com.theminespirit.core.building.BuildingType;
 import com.theminespirit.core.building.MineLayout;
 import com.theminespirit.core.building.Preset;
@@ -18,12 +19,15 @@ import com.theminespirit.core.script.PlaceBlockParams;
 import com.theminespirit.core.script.api.BuildSchematicParams;
 import com.theminespirit.neoforge.blocks.OpenScript;
 import com.theminespirit.neoforge.blocks.UseBlockScript;
+import com.theminespirit.neoforge.board.AuditGroupLookup;
+import com.theminespirit.neoforge.board.TownAuditWatch;
 import com.theminespirit.neoforge.crater.CraterResolver;
 import com.theminespirit.neoforge.crater.FillCraterScript;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import net.minecraft.server.level.ServerLevel;
 
 final class BuildingScriptPack extends SpiritScriptPack {
     @Override
@@ -70,6 +74,22 @@ final class BuildingScriptPack extends SpiritScriptPack {
     }
 
     private static ScriptInstance buildSchematic(SpiritEntity spirit, BuildSchematicParams params) {
+        if (spirit.level() instanceof ServerLevel server) {
+            Group group = AuditGroupLookup.find(server, params.file(), params.x(), params.z());
+            if (group != null) {
+                String ticket = AuditGroupLookup.ticketOf(spirit);
+                if (ticket.isBlank()) {
+                    throw new IllegalStateException("Схема " + params.file() + " принадлежит группе аудита без билета");
+                }
+                AuditGroupScript script =
+                        new AuditGroupScript(spirit, Map.of("group", group.key(), "revision", group.revision()));
+                if (group.status() == Group.Status.PENDING) {
+                    Objects.requireNonNull(TownAuditWatch.peekGroups(server), "Группа найдена, но реестр исчез")
+                            .issue(ticket, group.key());
+                }
+                return script;
+            }
+        }
         Optional<Preset> preset = DataTables.INSTANCE.presets().current().byId(params.file());
         BuildRotation rotation = Objects.requireNonNullElse(params.rotation(), BuildRotation.NONE);
         if (preset.isPresent() && preset.get().type() == BuildingType.UNDERGROUND) {

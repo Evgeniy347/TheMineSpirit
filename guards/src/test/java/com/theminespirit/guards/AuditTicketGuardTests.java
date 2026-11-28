@@ -54,7 +54,7 @@ class AuditTicketGuardTests {
                         && compact.contains(".limit(MAX_ITEMS)")
                         && compact.contains("AuditFactCheck.of(item,actual)")
                         && compact.contains("AuditMisses.of(")
-                        && compact.contains("groups.quarantine(ref.id())"),
+                        && compact.contains("TownAuditWatch.quarantine("),
                 "Тактика аудита берёт до 64 предметов, делает одну проверку факта и сразу пишет инцидент:"
                         + " иначе повторный diff скроет промах, а огромный билет займёт весь тик. При смене"
                         + " тактики перепроверь AuditGroupScript.tick.");
@@ -67,5 +67,35 @@ class AuditTicketGuardTests {
                         || compact.contains("SchematicClearance"),
                 "Тактика исполняет готовый DiffItem без пересчёта схемы: иначе инвариант И-2 нарушен, и"
                         + " дух снова читает мир целиком. При смене тактики перепроверь запрещённые вызовы.");
+    }
+
+    @Test
+    void auditVerifier_Center_UsesChunkCoordinates() throws IOException {
+        String source =
+                Files.readString(Path.of("mod/src/main/java/com/theminespirit/neoforge/board/TownAuditWatch.java"));
+        String compact = source.replaceAll("\\s+", "");
+
+        assertTrue(
+                compact.contains("anchor().x()>>4") && compact.contains("anchor().z()>>4"),
+                "Центр спирали аудита обязан быть в чанках: передача блочных координат создаёт радиус"
+                        + " около 10 000 и сотни миллионов элементов, иначе сервер падает OOM. При смене"
+                        + " вызова перепроверь TownAuditWatch.tick и AuditVerifier.reset.");
+    }
+
+    @Test
+    void buildSchematic_PlanGroup_PrecedesLegacyFallback() throws IOException {
+        String source =
+                Files.readString(Path.of("mod/src/main/java/com/theminespirit/neoforge/BuildingScriptPack.java"));
+        String compact = source.replaceAll("\\s+", "");
+        int group = compact.indexOf("AuditGroupLookup.find(");
+        int fallback = compact.indexOf("newBuildSchematicScript(");
+
+        assertTrue(
+                group >= 0
+                        && fallback > group
+                        && compact.contains("ticket.isBlank()")
+                        && !compact.contains("group!=null&&AuditGroupLookup.hasTicket(spirit)"),
+                "Схема из плана сначала ищется в группе аудита: иначе старый build_schematic снова начнёт"
+                        + " пересчитывать мир. При смене маршрута перепроверь BuildingScriptPack.buildSchematic.");
     }
 }

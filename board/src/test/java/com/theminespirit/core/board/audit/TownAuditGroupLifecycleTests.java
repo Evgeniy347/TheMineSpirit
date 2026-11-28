@@ -39,6 +39,11 @@ class TownAuditGroupLifecycleTests {
         AuditRegistry facts = facts();
         GroupRegistry groups = groups(facts);
         groups.issue("ticket-1", KEY);
+        assertEquals(
+                "ticket-1",
+                groups.ticketFor(KEY),
+                "Выданная группа помнит свой билет: иначе второй"
+                        + " дух выполнит чужой снимок одновременно. При смене индекса перепроверь ticketFor.");
         facts.record(new ChangeRing.Change(
                 5L,
                 CELL,

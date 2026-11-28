@@ -6,8 +6,6 @@ import com.theminespirit.core.board.audit.DiffItem;
 import com.theminespirit.core.board.audit.Group;
 import com.theminespirit.core.board.audit.GroupRef;
 import com.theminespirit.core.board.audit.GroupRegistry;
-import com.theminespirit.core.board.audit.Wanted;
-import com.theminespirit.core.building.SchematicBlocks;
 import com.theminespirit.core.engine.ConditionRegistry;
 import com.theminespirit.core.engine.FailureFact;
 import com.theminespirit.core.engine.RunStatus;
@@ -19,6 +17,7 @@ import com.theminespirit.core.mining.StandSpots;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.script.api.ScriptArgs;
+import com.theminespirit.neoforge.board.AuditGroupLookup;
 import com.theminespirit.neoforge.board.AuditIncidents;
 import com.theminespirit.neoforge.board.AuditMisses;
 import com.theminespirit.neoforge.board.TownAuditWatch;
@@ -32,6 +31,7 @@ import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
@@ -59,11 +59,21 @@ final class AuditGroupScript implements ScriptInstance {
         this.approach = new Approach(spirit);
         this.level = spirit.level();
         this.ref = new GroupRef(ScriptArgs.requireString(params, "group"), ScriptArgs.requireInt(params, "revision"));
-        this.ticket = ScriptArgs.requireString(params, "ticket");
+        String suppliedTicket = ScriptArgs.optionalString(params, "ticket", "");
+        this.ticket = suppliedTicket.isBlank() ? AuditGroupLookup.ticketOf(spirit) : suppliedTicket;
+        if (ticket.isBlank()) {
+            throw new IllegalStateException("Билет группы " + ref.text() + " отсутствует: группу нельзя исполнять");
+        }
         this.groups = Objects.requireNonNull(
                 TownAuditWatch.peekGroups((ServerLevel) level), "Группы аудита ещё не собраны: билет не исполняется");
         Group snapshot = Objects.requireNonNull(
                 groups.snapshot(ref), "Снимок группы " + ref.text() + " устарел: билет исполняется заново");
+        if (snapshot.status() == Group.Status.BLOCKED || snapshot.status() == Group.Status.QUARANTINED) {
+            throw new IllegalStateException("Группа " + ref.text() + " не исполняется: статус " + snapshot.status());
+        }
+        if (snapshot.status() == Group.Status.ISSUED && !ticket.equals(groups.ticketFor(ref.id()))) {
+            throw new IllegalStateException("Группа " + ref.text() + " уже выдана другому билету");
+        }
         this.items = snapshot.ordered().stream().limit(MAX_ITEMS).toList();
     }
 
@@ -87,7 +97,7 @@ final class AuditGroupScript implements ScriptInstance {
         if (!approached && approachTick(item)) {
             return outcome;
         }
-        BlockPos pos = toPos(item.cell());
+        BlockPos pos = AuditGroupSupport.pos(item.cell());
         String actual = LeaseStates.text(level.getBlockState(pos));
         AuditFactCheck.Decision decision = AuditFactCheck.of(item, actual);
         if (decision == AuditFactCheck.Decision.ALREADY_DONE) {
@@ -97,9 +107,14 @@ final class AuditGroupScript implements ScriptInstance {
             return miss(item, actual, AuditMiss.FOREIGN_BLOCK);
         }
         if (item.action() == DiffItem.Action.FIX_STATE) {
-            BlockState wanted = LeaseStates.state(wantedText(item));
+            BlockState wanted = LeaseStates.state(AuditGroupSupport.wantedText(item));
             if (!SpiritBlocks.place((ServerLevel) level, pos, wanted, spirit, "AUDIT_GROUP")) {
-                return fail("состояние " + item.cell() + " не изменилось: блок уже защищён", null);
+                groups.block(ref.id(), "состояние " + item.cell() + " не изменилось: блок защищён");
+                return fail("состояние " + item.cell() + " не изменилось: блок защищён", null);
+            }
+            BlockState updated = Block.updateFromNeighbourShapes(wanted, level, pos);
+            if (!updated.equals(wanted)) {
+                SpiritBlocks.place((ServerLevel) level, pos, updated, spirit, "AUDIT_GROUP");
             }
             advance();
             return ScriptStatus.RUNNING;
@@ -126,22 +141,23 @@ final class AuditGroupScript implements ScriptInstance {
         }
         String failure = running.failureReason().orElse("действие группы завершилось без причины");
         FailureFact failureFact = running.failureFact().orElse(null);
-        if (failureFact == FailureFact.NO_PATH) {
-            groups.block(ref.id(), failure);
-        } else {
+        if (failureFact == FailureFact.NO_MATERIAL || failureFact == FailureFact.NO_TOOL) {
             groups.release(ticket);
+        } else {
+            groups.block(ref.id(), failure);
         }
         return fail(failure, failureFact);
     }
 
     private boolean approachTick(DiffItem item) {
-        BlockPos pos = toPos(item.cell());
+        BlockPos pos = AuditGroupSupport.pos(item.cell());
         if (spirit.getEyePosition().distanceTo(Vec3.atCenterOf(pos)) <= BlockBreaker.REACH) {
             approached = true;
             return false;
         }
         if (stands.isEmpty()) {
-            stands.addAll(StandSpots.of(item.cell(), new LevelSafetyView(level), spiritCoord()));
+            stands.addAll(
+                    StandSpots.of(item.cell(), new LevelSafetyView(level), AuditGroupSupport.spiritCoord(spirit)));
             if (stands.isEmpty()) {
                 StandSpots.above(item.cell(), new LevelSafetyView(level)).ifPresent(stands::add);
             }
@@ -169,8 +185,8 @@ final class AuditGroupScript implements ScriptInstance {
     }
 
     private ScriptStatus miss(DiffItem item, String actual, String kind) {
-        groups.quarantine(ref.id());
         AuditMiss miss = AuditMisses.of((ServerLevel) level, ref, item, actual, kind);
+        TownAuditWatch.quarantine((ServerLevel) level, ref.id(), item.cell());
         AuditIncidents.report((ServerLevel) level, miss);
         return fail(miss.text(), null);
     }
@@ -183,13 +199,8 @@ final class AuditGroupScript implements ScriptInstance {
         if (item.action() == DiffItem.Action.BREAK) {
             return new ScriptCall("break_block", params);
         }
-        params.put("block", wantedText(item));
+        params.put("block", AuditGroupSupport.wantedText(item));
         return new ScriptCall("place_block", params);
-    }
-
-    private static String wantedText(DiffItem item) {
-        Wanted wanted = item.wanted();
-        return SchematicBlocks.isFloor(wanted.id()) ? SchematicBlocks.placementBlock(wanted.text()) : wanted.text();
     }
 
     private void advance() {
@@ -206,15 +217,6 @@ final class AuditGroupScript implements ScriptInstance {
         outcome = ScriptStatus.FAILED;
         groups.release(ticket);
         return outcome;
-    }
-
-    private BlockCoord spiritCoord() {
-        BlockPos pos = spirit.blockPosition();
-        return new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
-    }
-
-    private static BlockPos toPos(BlockCoord cell) {
-        return new BlockPos(cell.x(), cell.y(), cell.z());
     }
 
     @Override

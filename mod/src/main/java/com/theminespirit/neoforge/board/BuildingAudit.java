@@ -2,14 +2,12 @@ package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.BuildGap;
 import com.theminespirit.core.board.RepairAudit;
-import com.theminespirit.core.board.StageCatalog;
 import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.board.audit.Group;
 import com.theminespirit.core.board.audit.GroupRegistry;
 import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.core.building.SchematicBlocks;
 import com.theminespirit.core.reload.DataTables;
-import com.theminespirit.core.town.Placement;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.TownSnapshot;
 import java.util.LinkedHashMap;
@@ -95,24 +93,7 @@ final class BuildingAudit {
     }
 
     private static @Nullable Group groupForScheme(ServerLevel level, String scheme, GraphFacts.Position at) {
-        GroupRegistry registry = TownAuditWatch.peekGroups(level);
-        if (registry == null) {
-            return null;
-        }
-        Optional<String> planId = SettlementPlotStore.get(level).town().stream()
-                .flatMap(plan -> plan.placements().stream())
-                .filter(place -> place.x() == at.x() && place.z() == at.z())
-                .filter(place -> StageCatalog.scheme(place.id(), place.stage())
-                        .filter(scheme::equals)
-                        .isPresent())
-                .map(Placement::id)
-                .findFirst();
-        return planId.map(registry::group)
-                .orElseGet(() -> registry.groups().stream()
-                        .filter(group -> group.kind() == Group.Kind.BUILDING)
-                        .filter(group -> group.subject().equals(planId.orElse("")))
-                        .findFirst()
-                        .orElse(null));
+        return AuditGroupLookup.find(level, scheme, at.x(), at.z());
     }
 
     private static Map<String, Integer> blocks(BuildGap.Gap gap) {

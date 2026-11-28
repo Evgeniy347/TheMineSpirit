@@ -30,7 +30,7 @@ public final class AuditVerifier {
     private List<BlockCoord> order = List.of();
     private int cursor;
 
-    public void reset(ExpectIndex.Index index, int centerX, int centerZ) {
+    public void reset(ExpectIndex.Index index, int centerChunkX, int centerChunkZ) {
         this.index = Objects.requireNonNull(index, "Индекс ожиданий не может быть null: сверять нечего");
         Map<ChunkCell, List<BlockCoord>> byChunk = new LinkedHashMap<>();
         for (Expectation expectation : index.cells().values()) {
@@ -39,7 +39,7 @@ public final class AuditVerifier {
                     .add(cell);
         }
         List<BlockCoord> next = new ArrayList<>();
-        for (ChunkCell chunk : ConstructionBatches.order(byChunk.keySet(), centerX, centerZ)) {
+        for (ChunkCell chunk : ConstructionBatches.order(byChunk.keySet(), centerChunkX, centerChunkZ)) {
             List<BlockCoord> cells =
                     Objects.requireNonNull(byChunk.get(chunk), "У чанка спирали обязана быть своя очередь клеток");
             cells.sort(Comparator.comparingInt(BlockCoord::y)

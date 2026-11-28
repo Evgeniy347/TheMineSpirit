@@ -70,6 +70,25 @@ public record AuditMiss(Cause cause, BlockCoord cell, String cached, String actu
                         kind));
     }
 
+    public AuditMiss withGroupKey(String groupKey) {
+        Objects.requireNonNull(groupKey, "Ключ группы промаха не может быть null: карантин теряет клетку");
+        Context context = this.context;
+        return new AuditMiss(
+                cause,
+                cell,
+                cached,
+                actual,
+                wanted,
+                new Context(
+                        groupKey,
+                        context.revision(),
+                        context.loadedTick(),
+                        context.lastVisit(),
+                        context.changes(),
+                        context.lastChange(),
+                        context.kind()));
+    }
+
     public record Signs(boolean filled, boolean changeInRing, boolean equivalentByRule, boolean ticketStale) {}
 
     public static Cause classify(Signs signs) {

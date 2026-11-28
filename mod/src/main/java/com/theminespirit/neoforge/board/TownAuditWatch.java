@@ -2,6 +2,7 @@ package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.ConstructionBatches;
 import com.theminespirit.core.board.ConstructionBatches.ChunkCell;
 import com.theminespirit.core.board.audit.AuditBudgets;
 import com.theminespirit.core.board.audit.AuditFill;
@@ -10,6 +11,7 @@ import com.theminespirit.core.board.audit.AuditVerifier;
 import com.theminespirit.core.board.audit.ChangeRing;
 import com.theminespirit.core.board.audit.ExpectIndex;
 import com.theminespirit.core.board.audit.GroupRegistry;
+import com.theminespirit.core.log.Perf;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.ColumnMask;
 import com.theminespirit.core.town.SettlementPlot;
@@ -101,8 +103,8 @@ public final class TownAuditWatch {
                 AuditGroupsStore.publish(level, groupRegistry.groups());
                 verifier.reset(
                         index,
-                        plot.orElseThrow().anchor().x(),
-                        plot.orElseThrow().anchor().z());
+                        plot.orElseThrow().anchor().x() >> 4,
+                        plot.orElseThrow().anchor().z() >> 4);
                 LOGGER.info(
                         "[audit] окно кэша поселения: levelY={}, y={}, ревизия {}, чанков={}, ожиданий={}, "
                                 + "нет схем={}, в очереди={}",
@@ -124,6 +126,7 @@ public final class TownAuditWatch {
                 }
             }
             AuditVerifier verifier = VERIFIERS.get(level);
+            long verifyStarted = System.nanoTime();
             if (verifier != null) {
                 AuditVerifier.Result result = verifier.verify(
                         registry,
@@ -133,12 +136,11 @@ public final class TownAuditWatch {
                         registry.planRevision());
                 result.misses().forEach(miss -> {
                     GroupRegistry groups = GROUPS.get(level);
-                    if (groups != null) {
-                        groups.quarantine(miss.context().groupKey());
-                    }
-                    AuditIncidents.report(level, miss);
+                    String owner = groups == null ? null : groups.owner(miss.cell());
+                    String groupKey = owner == null ? miss.context().groupKey() : owner;
+                    quarantine(level, groupKey, miss.cell());
+                    AuditIncidents.report(level, miss.withGroupKey(groupKey));
                 });
-                result.refill().forEach(registry::reload);
                 if (!result.misses().isEmpty()) {
                     GroupRegistry groups = GROUPS.get(level);
                     if (groups != null) {
@@ -151,8 +153,11 @@ public final class TownAuditWatch {
                         result.unknown(),
                         result.misses().size(),
                         verifier.pending());
+                Perf.record("audit.verify", System.nanoTime() - verifyStarted);
             }
+            long fillStarted = System.nanoTime();
             registry.fill((AuditFill.Reader) cell -> blockAt(level, cell), level.getGameTime());
+            Perf.record("audit.fill", System.nanoTime() - fillStarted);
             if (level.getGameTime() % DRAIN_TICKS == 0) {
                 GroupRegistry groups = GROUPS.get(level);
                 if (groups != null) {
@@ -165,6 +170,18 @@ public final class TownAuditWatch {
             }
         } catch (RuntimeException error) {
             LOGGER.warn("[audit] наполнение кэша поселения не продвинулось: {}", error.getMessage(), error);
+        }
+    }
+
+    public static void quarantine(ServerLevel level, String groupKey, BlockCoord cell) {
+        GroupRegistry groups = GROUPS.get(level);
+        if (groups != null) {
+            groups.quarantine(groupKey);
+            AuditGroupsStore.publish(level, groups.groups());
+        }
+        AuditRegistry registry = BY_LEVEL.get(level);
+        if (registry != null) {
+            registry.reload(ConstructionBatches.at(cell.x(), cell.z()));
         }
     }
 

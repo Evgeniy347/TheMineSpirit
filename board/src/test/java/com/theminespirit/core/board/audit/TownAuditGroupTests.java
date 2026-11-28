@@ -212,5 +212,12 @@ class TownAuditGroupTests {
                         + "и что делать: без любого из этих полей промах кэша не воспроизвести, иначе разбор "
                         + "уйдёт в догадки. При смене формата перепроверь три канала (events.db, журнал доски, "
                         + "warn в чат) и шаблон assertion из программы steady-vent-lynx.");
+        AuditMiss moved = miss.withGroupKey("group:ground:pit@0,0");
+        assertTrue(
+                moved.text().contains("группа group:ground:pit@0,0@2")
+                        && miss.text().contains("группа group:street:s-7@0,0@2"),
+                "Инцидент сверки получает фактического владельца клетки без изменения исходного снимка:"
+                        + " иначе ground-подгруппа останется без карантина. При смене контекста перепроверь"
+                        + " AuditMiss.withGroupKey и TownAuditWatch.quarantine.");
     }
 }

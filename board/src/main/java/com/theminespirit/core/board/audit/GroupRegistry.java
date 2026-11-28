@@ -107,6 +107,14 @@ public final class GroupRegistry {
         facts().issued(ticket, group);
     }
 
+    public @Nullable String ticketFor(String group) {
+        return tickets.entrySet().stream()
+                .filter(entry -> entry.getValue().equals(group))
+                .map(Map.Entry::getKey)
+                .findFirst()
+                .orElse(null);
+    }
+
     public void release(String ticket) {
         String group = tickets.remove(ticket);
         facts().released(ticket);

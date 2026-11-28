@@ -229,6 +229,7 @@ class ScriptCatalogTestsSupport {
                         Map.of("x", new long[] {WORLD_MIN, WORLD_MAX}, "y", new long[] {-64, 319}, "z", new long[] {
                             WORLD_MIN, WORLD_MAX
                         })),
+                spec("audit_group", List.of("group", "revision"), Map.of("revision", new long[] {0, 2147483647L})),
                 spec(
                         "build_farm",
                         List.of("crop", "x1", "z1", "x2", "z2"),

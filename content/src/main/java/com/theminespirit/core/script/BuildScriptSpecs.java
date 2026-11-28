@@ -176,6 +176,15 @@ final class BuildScriptSpecs {
                         List.of("файл схемы существует"),
                         List.of("схема построена")),
                 spec(
+                        "audit_group",
+                        "выполнить готовую группу расхождений аудита",
+                        List.of(
+                                ParamSpec.text("group", true),
+                                ParamSpec.integer("revision", true, 0, Integer.MAX_VALUE),
+                                ParamSpec.text("ticket", false, "")),
+                        List.of("снимок группы найден по GroupRef", "группа не заблокирована и не quarantined"),
+                        List.of("предметы группы выполнены", "промах кэша quarantined и чанк перезалит")),
+                spec(
                         "build_farm",
                         "разбить грядку прямоугольником: вспахать землю у воды и посадить культуру",
                         List.of(
