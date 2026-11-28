@@ -44,11 +44,19 @@
 
 ## Приёмка
 
-`scripts/test.sh unit` и `gametest` зелёные; `Perf` (`audit.verify`, `audit.fill`, `world.area`,
+`scripts/test.sh unit` зелёный (10305 тестов), аудит-сцены `gametest` — 3/3; полный `gametest` блокируют
+три старые пачки ниже. `Perf` (`audit.verify`, `audit.fill`, `world.area`,
 `graph.in.world.audit`) не хуже базлайна; `/v1/world` сохраняет прежний контракт, группы отдаёт
 `/v1/audit/groups`. Живая проверка на копии мира (`scripts/dev-server.sh up`) без клиента: полный набор групп,
 изменение блока игроком даёт `AUDIT-MISS` и возврат группы в работу. Публикация и перезапуск сервера — только
 по согласованию владельца.
+
+## Блокер приёмки
+
+`gametest --full` остаётся красным из-за трёх старых пачек, повторённых отдельно на финальном дереве:
+`minescene_minearenasteps_allpass` (`DigOutGameTests`, нет обхода через обрыв),
+`buildscene_arenasteps_allpass` (`WarehouseGameTests`, недостижимые стоянки схемы),
+`gatherscene_arenasteps_allpass` (`FullCycleGameTests`, нет печи). Аудит-сцены — 3/3.
 
 ## Технический долг
 
